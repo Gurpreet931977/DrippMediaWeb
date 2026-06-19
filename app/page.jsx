@@ -80,6 +80,9 @@ export default function ComingSoon() {
       }
       // Mobile Touch
       if (e.touches && e.touches.length > 0) {
+        if (activeGameRef.current !== 'none' && gameStateRef.current === 'playing' && !isPausedRef.current) {
+          e.preventDefault(); // Stop mobile scrolling/refreshing while playing
+        }
         mouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         if (cursor) cursor.style.display = 'none'; // Hide cursor on touch
       }
@@ -97,8 +100,8 @@ export default function ComingSoon() {
     };
     
     window.addEventListener("mousemove", moveCursor);
-    window.addEventListener("touchmove", moveCursor, { passive: true });
-    window.addEventListener("touchstart", moveCursor, { passive: true });
+    window.addEventListener("touchmove", moveCursor, { passive: false });
+    window.addEventListener("touchstart", moveCursor, { passive: false });
 
     // --- GAME LOGIC ---
     const canvas = canvasRef.current;
@@ -1037,9 +1040,9 @@ export default function ComingSoon() {
            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 20
         }}>
-           <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--brand-yellow)', fontSize: '2.5rem', margin: 0 }}>HOW TO PLAY</h2>
+           <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--brand-yellow)', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', margin: 0, textAlign: 'center' }}>HOW TO PLAY</h2>
            
-           <div style={{ maxWidth: '600px', textAlign: 'center', marginTop: '20px', fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: '1.2rem', lineHeight: 1.6 }}>
+           <div style={{ width: '90%', maxWidth: '600px', textAlign: 'center', marginTop: '20px', fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', lineHeight: 1.6, overflowY: 'auto', maxHeight: '60vh' }}>
              {activeGame === 'dripp' ? (
                <>
                  <p>Catch <span style={{color: 'var(--brand-yellow)'}}>Yellow Drops</span> for +1 point.</p>
@@ -1066,12 +1069,12 @@ export default function ComingSoon() {
       )}
 
       {/* Bottom Left Buttons */}
-      <div style={{ position: 'absolute', bottom: '25px', left: '25px', zIndex: 10, display: 'flex', gap: '15px', alignItems: 'center' }}>
+      <div className="bottom-controls">
         <div 
           className="easter-egg"
           onClick={() => setActiveGame(prev => prev === 'breaker' ? 'dripp' : 'breaker')}
           style={{
-            width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', cursor: 'pointer',
+            width: '40px', height: '40px', flexShrink: 0, borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', cursor: 'pointer',
             border: '1px solid rgba(235, 215, 63, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center',
             transition: 'all 0.3s ease', boxShadow: '0 0 10px rgba(235, 215, 63, 0.2)'
           }}
@@ -1104,10 +1107,10 @@ export default function ComingSoon() {
              }
           }}
           style={{
-             height: '40px', padding: '0 15px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer',
+             height: '40px', padding: '0 15px', flexShrink: 0, borderRadius: '20px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer',
              border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center',
              color: activeGame === 'none' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.8rem', textTransform: 'uppercase',
-             transition: 'all 0.3s ease'
+             transition: 'all 0.3s ease', whiteSpace: 'nowrap'
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = activeGame === 'none' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
@@ -1120,11 +1123,11 @@ export default function ComingSoon() {
              if (activeGame !== 'none') setHideHero(prev => !prev);
           }}
           style={{
-             height: '40px', padding: '0 15px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', 
+             height: '40px', padding: '0 15px', flexShrink: 0, borderRadius: '20px', background: 'rgba(255,255,255,0.05)', 
              cursor: activeGame === 'none' ? 'not-allowed' : 'pointer',
              border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center',
              color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.7rem', textTransform: 'uppercase',
-             transition: 'all 0.3s ease',
+             transition: 'all 0.3s ease', whiteSpace: 'nowrap',
              opacity: activeGame === 'none' ? 0.3 : 1
           }}
           onMouseEnter={(e) => { 
