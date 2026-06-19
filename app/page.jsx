@@ -7,26 +7,58 @@ import { useGSAP } from "@gsap/react";
 export default function ComingSoon() {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
+  
+  // States
+  const [activeGame, setActiveGame] = useState('dripp'); // 'dripp' or 'breaker'
+  const activeGameRef = useRef('dripp');
+  
   const [score, setScore] = useState(0);
-  const [isCapturing, setIsCapturing] = useState(false);
   const scoreRef = useRef(0);
+  
+  const [breakerScore, setBreakerScore] = useState(0);
+  const breakerScoreRef = useRef(0);
+  
+  const [isCapturing, setIsCapturing] = useState(false);
   const mouseRef = useRef({ x: -100, y: -100 });
   const cursorActiveRef = useRef(false);
   const lastMilestoneRef = useRef(0);
 
+  // Sync state to ref for the animation loop
   useEffect(() => {
-    // Add loaded class to body as required by globals.css
+    activeGameRef.current = activeGame;
+    // Reset scores when switching
+    if (activeGame === 'breaker') {
+      breakerScoreRef.current = 0;
+      setBreakerScore(0);
+      initBreaker(); // The global function inside the effect will catch this via a trigger logic
+    } else {
+      scoreRef.current = 0;
+      setScore(0);
+    }
+  }, [activeGame]);
+
+  // Game Engine
+  useEffect(() => {
     document.body.classList.add('loaded');
     
     // Custom cursor functionality
     const cursor = document.querySelector('.cursor');
     
     const moveCursor = (e) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-      if (cursor) {
+      // Desktop
+      if (e.clientX) {
+        mouseRef.current = { x: e.clientX, y: e.clientY };
+      }
+      // Mobile Touch
+      if (e.touches && e.touches.length > 0) {
+        mouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        if (cursor) cursor.style.display = 'none'; // Hide cursor on touch
+      }
+      
+      if (cursor && cursor.style.display !== 'none') {
         gsap.to(cursor, {
-          x: e.clientX,
-          y: e.clientY,
+          x: mouseRef.current.x,
+          y: mouseRef.current.y,
           duration: 0.1,
           ease: "power2.out"
         });
@@ -34,6 +66,8 @@ export default function ComingSoon() {
     };
     
     window.addEventListener("mousemove", moveCursor);
+    window.addEventListener("touchmove", moveCursor, { passive: true });
+    window.addEventListener("touchstart", moveCursor, { passive: true });
 
     // --- GAME LOGIC ---
     const canvas = canvasRef.current;
@@ -41,11 +75,18 @@ export default function ComingSoon() {
     const ctx = canvas.getContext('2d');
     
     let animationFrameId;
+    
+    // Dripp Game Arrays
     let drops = [];
     let splashes = [];
     let miniParticles = [];
     let fireworks = [];
-    let lastDropTime = 0;
+    
+    // Breaker Game Arrays
+    let bricks = [];
+    let balls = [];
+    let powerUps = [];
+    let paddle = null;
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -54,6 +95,9 @@ export default function ComingSoon() {
     window.addEventListener('resize', resize);
     resize();
 
+    // ==========================================
+    // DRIPP CATCHER CLASSES
+    // ==========================================
     class Drop {
       constructor(isRed = false) {
         this.x = Math.random() * canvas.width;
@@ -83,22 +127,18 @@ export default function ComingSoon() {
 
         if (this.y > canvas.height + this.length) {
           this.markedForDeletion = true;
-          // Missing a red drop decreases points
           if (this.isRed) {
             scoreRef.current = Math.max(0, scoreRef.current - 5);
             setScore(scoreRef.current);
           }
         }
         
-        // Collision with mouse
         const dx = mouseRef.current.x - this.x;
         const dy = mouseRef.current.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // Use a larger hit radius if cursor is active
         const hitRadius = cursorActiveRef.current ? 40 : 25;
 
-        // We check collision around the head of the drop (this.x, this.y)
         if (distance < hitRadius) {
           this.markedForDeletion = true;
           
@@ -110,13 +150,11 @@ export default function ComingSoon() {
           
           setScore(scoreRef.current);
           
-          // Check milestone every 50 points
           if (scoreRef.current > 0 && scoreRef.current % 50 === 0 && scoreRef.current !== lastMilestoneRef.current) {
             lastMilestoneRef.current = scoreRef.current;
             triggerMilestoneAnimation(this.x, this.y);
           }
 
-          // Poppy Burst Effect
           splashes.push(new Splash(this.x, this.y, this.isRed));
           for (let i = 0; i < 6; i++) {
             miniParticles.push(new MiniParticle(this.x, this.y, this.isRed));
@@ -125,24 +163,172 @@ export default function ComingSoon() {
       }
       draw(ctx) {
         ctx.beginPath();
-        // 2D teardrop shape
         const stretch = Math.min(this.vy * 1.2, this.radius * 5);
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
         ctx.lineTo(this.x, this.y - stretch);
         ctx.fillStyle = this.color;
         ctx.fill();
         ctx.closePath();
-        
-        // Glow
         ctx.shadowBlur = 15;
         ctx.shadowColor = this.isRed ? 'rgba(235, 63, 63, 0.6)' : 'rgba(235, 215, 63, 0.5)';
       }
     }
 
+    // ==========================================
+    // BRICK BREAKER CLASSES
+    // ==========================================
+    class Paddle {
+      constructor() {
+        this.w = 140;
+        this.h = 16;
+        this.x = canvas.width / 2 - this.w / 2;
+        this.y = canvas.height - 80;
+      }
+      update() {
+        // Smoothly follow touch/mouse
+        this.x += (mouseRef.current.x - this.w / 2 - this.x) * 0.2;
+        if (this.x < 0) this.x = 0;
+        if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
+      }
+      draw(ctx) {
+        ctx.fillStyle = 'var(--pure-white)';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = 'rgba(255,255,255,0.4)';
+        ctx.beginPath();
+        ctx.roundRect(this.x, this.y, this.w, this.h, 8);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    class Ball {
+      constructor() {
+        this.radius = 8;
+        this.x = canvas.width / 2;
+        this.y = canvas.height - 120;
+        this.vx = 4 * (Math.random() > 0.5 ? 1 : -1);
+        this.vy = -6;
+      }
+      update(paddle, bricks) {
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        // Walls
+        if (this.x - this.radius <= 0 || this.x + this.radius >= canvas.width) this.vx *= -1;
+        if (this.y - this.radius <= 0) this.vy *= -1;
+        
+        // Floor (Lost Ball)
+        if (this.y > canvas.height + 20) {
+           this.x = canvas.width / 2;
+           this.y = canvas.height - 120;
+           this.vy = -6;
+           this.vx = 4 * (Math.random() > 0.5 ? 1 : -1);
+        }
+        
+        // Paddle Collision
+        if (
+          this.y + this.radius >= paddle.y &&
+          this.y - this.radius <= paddle.y + paddle.h &&
+          this.x >= paddle.x &&
+          this.x <= paddle.x + paddle.w &&
+          this.vy > 0
+        ) {
+          this.vy *= -1.02; // Speed up slightly
+          let hitPoint = this.x - (paddle.x + paddle.w / 2);
+          this.vx = hitPoint * 0.15;
+          for(let i=0; i<3; i++) miniParticles.push(new MiniParticle(this.x, this.y, false));
+        }
+        
+        // Brick Collision
+        for(let b of bricks) {
+           if (!b.markedForDeletion) {
+              if (
+                 this.x + this.radius > b.x && this.x - this.radius < b.x + b.w &&
+                 this.y + this.radius > b.y && this.y - this.radius < b.y + b.h
+              ) {
+                 b.markedForDeletion = true;
+                 this.vy *= -1;
+                 breakerScoreRef.current += 10;
+                 setBreakerScore(breakerScoreRef.current);
+                 
+                 // Spawn powerup chance
+                 if (Math.random() < 0.25) {
+                    powerUps.push(new PowerUp(b.x + b.w/2, b.y + b.h/2));
+                 }
+                 for(let i=0; i<5; i++) miniParticles.push(new MiniParticle(this.x, this.y, false));
+                 break; // Hit one brick at a time
+              }
+           }
+        }
+      }
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+        ctx.fillStyle = 'var(--brand-yellow)';
+        ctx.fill();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'var(--brand-yellow)';
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    class Brick {
+       constructor(x, y, w, h, row) {
+         this.x = x; this.y = y; this.w = w; this.h = h;
+         this.markedForDeletion = false;
+         const colors = ['#ff3333', '#ebd73f', '#33ff33', '#3333ff', '#ff33ff'];
+         this.color = colors[row % colors.length];
+       }
+       draw(ctx) {
+         ctx.fillStyle = this.color;
+         ctx.beginPath();
+         ctx.roundRect(this.x, this.y, this.w, this.h, 4);
+         ctx.fill();
+         ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+         ctx.stroke();
+       }
+    }
+
+    class PowerUp {
+       constructor(x, y) {
+          this.x = x; this.y = y;
+          this.vy = 2.5;
+          this.radius = 6;
+          this.markedForDeletion = false;
+       }
+       update(paddle) {
+          this.y += this.vy;
+          if (this.y > canvas.height + 20) this.markedForDeletion = true;
+          
+          if (
+            this.y + this.radius >= paddle.y &&
+            this.y - this.radius <= paddle.y + paddle.h &&
+            this.x >= paddle.x &&
+            this.x <= paddle.x + paddle.w
+          ) {
+             this.markedForDeletion = true;
+             breakerScoreRef.current += 50; 
+             setBreakerScore(breakerScoreRef.current);
+             for(let i=0; i<8; i++) miniParticles.push(new MiniParticle(this.x, this.y, false));
+          }
+       }
+       draw(ctx) {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+          ctx.fillStyle = '#00ffcc';
+          ctx.fill();
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = '#00ffcc';
+          ctx.shadowBlur = 0;
+       }
+    }
+
+    // ==========================================
+    // SHARED PARTICLES
+    // ==========================================
     class MiniParticle {
       constructor(x, y, isRed) {
-        this.x = x;
-        this.y = y;
+        this.x = x; this.y = y;
         const angle = Math.random() * Math.PI * 2;
         const speed = 2 + Math.random() * 6;
         this.vx = Math.cos(angle) * speed;
@@ -158,12 +344,11 @@ export default function ComingSoon() {
         this.vy *= this.friction;
         this.x += this.vx;
         this.y += this.vy;
-        this.alpha = Math.max(0, this.alpha - 0.04); // Clamped to prevent negative alpha
+        this.alpha = Math.max(0, this.alpha - 0.04); 
         if (this.alpha === 0) this.markedForDeletion = true;
       }
       draw(ctx) {
         ctx.globalAlpha = this.alpha;
-        ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
@@ -174,24 +359,22 @@ export default function ComingSoon() {
 
     class Splash {
       constructor(x, y, isRed) {
-        this.x = x;
-        this.y = y;
+        this.x = x; this.y = y;
         this.radius = 2;
         this.alpha = 1;
         this.isRed = isRed;
         this.markedForDeletion = false;
-        this.expansionSpeed = 8; // Slightly smoother expansion
+        this.expansionSpeed = 8;
       }
       update() {
         this.radius += this.expansionSpeed;
-        this.expansionSpeed *= 0.88; // Smoother deceleration
-        this.alpha = Math.max(0, this.alpha - 0.04); // Clamped to prevent invalid rgba string
+        this.expansionSpeed *= 0.88; 
+        this.alpha = Math.max(0, this.alpha - 0.04); 
         if (this.alpha === 0) {
           this.markedForDeletion = true;
         }
       }
       draw(ctx) {
-        ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.strokeStyle = this.isRed ? `rgba(235, 63, 63, ${this.alpha})` : `rgba(235, 215, 63, ${this.alpha})`;
@@ -203,8 +386,7 @@ export default function ComingSoon() {
 
     class FireworkParticle {
       constructor(x, y) {
-        this.x = x;
-        this.y = y;
+        this.x = x; this.y = y;
         const angle = Math.random() * Math.PI * 2;
         const velocity = 3 + Math.random() * 15;
         this.speedX = Math.cos(angle) * velocity;
@@ -222,7 +404,7 @@ export default function ComingSoon() {
         this.speedY += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY;
-        this.alpha = Math.max(0, this.alpha - 0.02); // Clamped
+        this.alpha = Math.max(0, this.alpha - 0.02); 
         if (this.alpha === 0) this.markedForDeletion = true;
       }
       draw(ctx) {
@@ -236,12 +418,8 @@ export default function ComingSoon() {
     }
 
     const triggerMilestoneAnimation = (x, y) => {
-      // 1. Canvas Fireworks at the point of the milestone drop
-      for(let i = 0; i < 80; i++) {
-        fireworks.push(new FireworkParticle(x, y));
-      }
+      for(let i = 0; i < 80; i++) fireworks.push(new FireworkParticle(x, y));
       
-      // 2. GSAP Poppy Text Animation
       gsap.to(".char", {
         scale: 1.35,
         color: "#ffffff",
@@ -262,61 +440,95 @@ export default function ComingSoon() {
         }
       });
       
-      // 3. Screen shake
       gsap.fromTo(canvas, 
         { x: -15 }, 
         { x: 15, duration: 0.05, yoyo: true, repeat: 7, ease: "none", onComplete: () => gsap.set(canvas, {x: 0}) }
       );
     };
 
-    const animate = (timestamp) => {
+    // Breaker Initialization
+    window.initBreakerGame = () => {
+      bricks = [];
+      balls = [new Ball()];
+      powerUps = [];
+      paddle = new Paddle();
+      
+      const rows = 5;
+      const w = Math.min(70, canvas.width / 6); // Responsive bricks
+      const padding = 10;
+      const cols = Math.floor(canvas.width / (w + padding));
+      const offsetX = (canvas.width - (cols * (w + padding))) / 2;
+      
+      for(let r=0; r<rows; r++) {
+         for(let c=0; c<cols; c++) {
+            bricks.push(new Brick(offsetX + c*(w+padding), 80 + r*(h=25 + padding), w, 25, r));
+         }
+      }
+    };
+
+    let lastActiveGame = 'dripp';
+
+    const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Spawn rain drops per frame instead of by time to look like rain
-      // Rain becomes heavier with levels (every 10 points)
-      const level = Math.floor(scoreRef.current / 10);
-      const rainIntensity = Math.min(1.0, 0.02 + (level * 0.015));
-      
-      if (Math.random() < rainIntensity) {
-        drops.push(new Drop(Math.random() < 0.15));
+      // Handle active game switch initialization
+      if (activeGameRef.current !== lastActiveGame) {
+         if (activeGameRef.current === 'breaker') {
+            window.initBreakerGame();
+         }
+         lastActiveGame = activeGameRef.current;
       }
       
-      // Secondary chance for an extra drop
-      if (Math.random() < rainIntensity * 0.2) {
-        drops.push(new Drop(Math.random() < 0.15));
+      if (activeGameRef.current === 'dripp') {
+        const level = Math.floor(scoreRef.current / 10);
+        const rainIntensity = Math.min(1.0, 0.02 + (level * 0.015));
+        
+        if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
+        if (Math.random() < rainIntensity * 0.2) drops.push(new Drop(Math.random() < 0.15));
+        
+        drops.forEach(drop => { drop.update(); drop.draw(ctx); });
+        drops = drops.filter(drop => !drop.markedForDeletion);
+        
+        splashes.forEach(splash => { splash.update(); splash.draw(ctx); });
+        splashes = splashes.filter(splash => !splash.markedForDeletion);
+        
+      } else if (activeGameRef.current === 'breaker') {
+        
+        if (paddle) {
+          paddle.update();
+          paddle.draw(ctx);
+        }
+        
+        balls.forEach(ball => { ball.update(paddle, bricks); ball.draw(ctx); });
+        
+        bricks.forEach(brick => brick.draw(ctx));
+        bricks = bricks.filter(b => !b.markedForDeletion);
+        
+        // Win condition / Next level
+        if (bricks.length === 0) {
+           window.initBreakerGame();
+        }
+        
+        powerUps.forEach(pu => { pu.update(paddle); pu.draw(ctx); });
+        powerUps = powerUps.filter(pu => !pu.markedForDeletion);
       }
-      
-      drops.forEach(drop => {
-        drop.update();
-        drop.draw(ctx);
-      });
-      drops = drops.filter(drop => !drop.markedForDeletion);
-      
-      splashes.forEach(splash => {
-        splash.update();
-        splash.draw(ctx);
-      });
-      splashes = splashes.filter(splash => !splash.markedForDeletion);
 
-      miniParticles.forEach(mp => {
-        mp.update();
-        mp.draw(ctx);
-      });
+      // Shared particles
+      miniParticles.forEach(mp => { mp.update(); mp.draw(ctx); });
       miniParticles = miniParticles.filter(mp => !mp.markedForDeletion);
       
-      fireworks.forEach(fw => {
-        fw.update();
-        fw.draw(ctx);
-      });
+      fireworks.forEach(fw => { fw.update(); fw.draw(ctx); });
       fireworks = fireworks.filter(fw => !fw.markedForDeletion);
       
       animationFrameId = requestAnimationFrame(animate);
     };
     
-    animate(0);
+    animate();
 
     return () => {
       window.removeEventListener("mousemove", moveCursor);
+      window.removeEventListener("touchmove", moveCursor);
+      window.removeEventListener("touchstart", moveCursor);
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationFrameId);
     };
@@ -351,25 +563,22 @@ export default function ComingSoon() {
   const handleShare = async () => {
     try {
       setIsCapturing(true);
-      
-      // Dynamically import html2canvas
       const html2canvas = (await import('html2canvas')).default;
-      
-      // Temporarily hide cursor if visible
       const cursor = document.querySelector('.cursor');
       if (cursor) cursor.style.opacity = '0';
 
       const canvas = await html2canvas(containerRef.current, {
         backgroundColor: '#050505',
         scale: 2,
-        ignoreElements: (element) => element.classList.contains('cursor')
+        ignoreElements: (element) => element.classList.contains('cursor') || element.classList.contains('easter-egg')
       });
       
       if (cursor) cursor.style.opacity = '1';
 
       const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
-      link.download = `DrippMedia-Score-${score}.png`;
+      const currentScore = activeGame === 'dripp' ? score : breakerScore;
+      link.download = `DrippMedia-Score-${currentScore}.png`;
       link.href = dataUrl;
       link.click();
       
@@ -390,11 +599,31 @@ export default function ComingSoon() {
       alignItems: 'center',
       background: 'var(--deep-black)',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      touchAction: 'none' // Prevent scrolling while dragging on mobile
     }}>
       <div className="cursor"></div>
 
-      {/* Canvas for Game */}
+      {/* Easter Egg Button */}
+      <div 
+        className="easter-egg"
+        onClick={() => setActiveGame(prev => prev === 'dripp' ? 'breaker' : 'dripp')}
+        style={{
+          position: 'absolute',
+          bottom: '20px',
+          left: '20px',
+          width: '20px',
+          height: '20px',
+          borderRadius: '50%',
+          background: 'rgba(235, 215, 63, 0.05)', // Very subtle
+          cursor: 'pointer',
+          zIndex: 10,
+          border: '1px solid rgba(255,255,255,0.02)'
+        }}
+        title="Toggle Easter Egg"
+      />
+
+      {/* Canvas for Games */}
       <canvas 
         ref={canvasRef}
         style={{
@@ -411,8 +640,8 @@ export default function ComingSoon() {
       {/* Game UI */}
       <div className="game-ui" style={{
         position: 'absolute',
-        top: '40px',
-        right: '40px',
+        top: '5%',
+        right: '5%',
         zIndex: 2,
         fontFamily: "'Clash Display', sans-serif",
         display: 'flex',
@@ -421,22 +650,22 @@ export default function ComingSoon() {
         gap: '10px'
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-          <div style={{ fontSize: '0.8rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-            Dripps Caught
+          <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+            {activeGame === 'dripp' ? 'Dripps Caught' : 'Bricks Smashed'}
           </div>
-          <div style={{ fontSize: '3.5rem', fontWeight: 600, color: 'var(--brand-yellow)', lineHeight: 1, textShadow: '0 0 20px rgba(235, 215, 63, 0.4)' }}>
-            {score}
+          <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: 'var(--brand-yellow)', lineHeight: 1, textShadow: '0 0 20px rgba(235, 215, 63, 0.4)' }}>
+            {activeGame === 'dripp' ? score : breakerScore}
           </div>
         </div>
 
-        {/* Share Button - Shows only when score >= 50 and hides during capture */}
+        {/* Share Button */}
         <button 
           onClick={handleShare}
           disabled={isCapturing}
           style={{
-            opacity: (score >= 50 && !isCapturing) ? 1 : 0,
-            pointerEvents: (score >= 50 && !isCapturing) ? 'auto' : 'none',
-            transform: (score >= 50 && !isCapturing) ? 'translateY(0)' : 'translateY(-10px)',
+            opacity: ((activeGame === 'dripp' && score >= 50) || (activeGame === 'breaker' && breakerScore >= 50)) && !isCapturing ? 1 : 0,
+            pointerEvents: ((activeGame === 'dripp' && score >= 50) || (activeGame === 'breaker' && breakerScore >= 50)) && !isCapturing ? 'auto' : 'none',
+            transform: ((activeGame === 'dripp' && score >= 50) || (activeGame === 'breaker' && breakerScore >= 50)) && !isCapturing ? 'translateY(0)' : 'translateY(-10px)',
             transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
             background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid rgba(235, 215, 63, 0.3)',
@@ -444,7 +673,7 @@ export default function ComingSoon() {
             padding: '8px 16px',
             borderRadius: '30px',
             fontFamily: "'Clash Display', sans-serif",
-            fontSize: '0.75rem',
+            fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)',
             letterSpacing: '1px',
             textTransform: 'uppercase',
             display: 'flex',
@@ -508,12 +737,12 @@ export default function ComingSoon() {
       {/* Main Title */}
       <h1 style={{
         fontFamily: "'Panchang', sans-serif",
-        fontSize: 'clamp(3rem, 10vw, 8rem)',
+        fontSize: 'clamp(2rem, 10vw, 8rem)',
         fontWeight: 800,
         textTransform: 'uppercase',
         letterSpacing: '-2px',
         display: 'flex',
-        gap: '5px',
+        gap: 'clamp(2px, 1vw, 5px)',
         margin: 0,
         zIndex: 2,
         overflow: 'visible',
@@ -534,9 +763,9 @@ export default function ComingSoon() {
       <div style={{ overflow: 'hidden', marginTop: '2rem', pointerEvents: 'none' }}>
         <p className="subtitle" style={{
           fontFamily: "'Clash Display', sans-serif",
-          fontSize: 'clamp(1rem, 2vw, 1.5rem)',
+          fontSize: 'clamp(0.8rem, 2vw, 1.5rem)',
           color: 'rgba(255, 255, 255, 0.7)',
-          letterSpacing: '5px',
+          letterSpacing: 'clamp(2px, 1vw, 5px)',
           textTransform: 'uppercase',
           zIndex: 2,
           textAlign: 'center',
@@ -549,7 +778,9 @@ export default function ComingSoon() {
       {/* Social Links */}
       <div style={{
         display: 'flex',
-        gap: '2rem',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 'clamp(1rem, 3vw, 2rem)',
         marginTop: '4rem',
         zIndex: 2
       }}>
@@ -562,7 +793,7 @@ export default function ComingSoon() {
             color: 'var(--pure-white)',
             textDecoration: 'none',
             fontFamily: "'Clash Display', sans-serif",
-            fontSize: '0.9rem',
+            fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)',
             letterSpacing: '2px',
             textTransform: 'uppercase',
             borderBottom: '1px solid transparent',
