@@ -4129,3 +4129,24 @@
                 animation: none !important;
             }
         }
+
+        /* ============================================
+           UI Overlay Animations
+        ============================================ */
+        @keyframes popupEnter {
+            0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .ui-popup-enter {
+            animation: popupEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes overlayFadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .ui-overlay-fade {
+            animation: overlayFadeIn 0.4s ease forwards;
+        }

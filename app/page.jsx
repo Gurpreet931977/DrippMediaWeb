@@ -1397,13 +1397,19 @@ export default function ComingSoon() {
 
       {/* Pause Overlay */}
       {isPaused && gameState === 'playing' && activeGame !== 'none' && !isHelpOpen && (
-        <div className="ui-overlay" style={{
+        <div className="ui-overlay ui-overlay-fade" style={{
            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
            background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 10
         }}>
-           <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--pure-white)', fontSize: '3rem', margin: 0 }}>PAUSED</h2>
-           <PrimaryButton onClick={() => setIsPaused(false)}>Resume Game</PrimaryButton>
+           <div className="ui-popup-enter" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+             <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--pure-white)', fontSize: '3rem', margin: 0, marginBottom: '20px' }}>PAUSED</h2>
+             <PrimaryButton onClick={() => {
+                 gsap.to('.ui-overlay', { opacity: 0, duration: 0.2, onComplete: () => {
+                     setIsPaused(false);
+                     gsap.set('.ui-overlay', { opacity: 1 });
+                 }});
+             }}>Resume Game</PrimaryButton>
            {!showShareOptions ? (
              <PrimaryButton onClick={prepareShare}>
                Brag your score
@@ -1418,18 +1424,19 @@ export default function ComingSoon() {
                </PrimaryButton>
              </div>
            )}
+           </div>
         </div>
       )}
 
       {/* Game Over / Pause Overlays */}
       {gameState === 'failed' && !isHelpOpen && (
-        <div className="ui-overlay" style={{
+        <div className="ui-overlay ui-overlay-fade" style={{
            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
            background: 'radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%)', 
            backdropFilter: 'blur(15px)',
            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 10
         }}>
-           <div style={{
+           <div className="ui-popup-enter" style={{
               background: 'linear-gradient(145deg, rgba(20,20,20,0.9) 0%, rgba(5,5,5,0.95) 100%)',
               border: '1px solid rgba(235, 63, 63, 0.3)',
               borderRadius: '24px',
@@ -1455,17 +1462,20 @@ export default function ComingSoon() {
 
              <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                <PrimaryButton onClick={() => {
-                  scoreRef.current = 0;
-                  setScore(0);
-                  breakerScoreRef.current = 0;
-                  setBreakerScore(0);
-                  breakerLevelRef.current = 1;
-                  setBreakerLevel(1);
-                  setGameState('playing');
-                  setIsPaused(false);
-                  setShowShareOptions(false);
-                  if(activeGame === 'breaker') window.initBreakerGame(1);
-                  else if(activeGame === 'dripp') window.initDrippGame();
+                  gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
+                      scoreRef.current = 0;
+                      setScore(0);
+                      breakerScoreRef.current = 0;
+                      setBreakerScore(0);
+                      breakerLevelRef.current = 1;
+                      setBreakerLevel(1);
+                      setGameState('playing');
+                      setIsPaused(false);
+                      setShowShareOptions(false);
+                      if(activeGame === 'breaker') window.initBreakerGame(1);
+                      else if(activeGame === 'dripp') window.initDrippGame();
+                      gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
+                  }});
                }}>Play Again</PrimaryButton>
                
                {!showShareOptions ? (
@@ -1489,13 +1499,13 @@ export default function ComingSoon() {
 
       {/* Level Complete Overlay */}
       {gameState === 'level-complete' && !isHelpOpen && (
-        <div className="ui-overlay" style={{
+        <div className="ui-overlay ui-overlay-fade" style={{
            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
            background: 'radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%)', 
            backdropFilter: 'blur(15px)',
            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 10
         }}>
-           <div style={{
+           <div className="ui-popup-enter" style={{
               background: 'linear-gradient(145deg, rgba(20,20,20,0.9) 0%, rgba(5,5,5,0.95) 100%)',
               border: '1px solid rgba(51, 255, 51, 0.3)',
               borderRadius: '24px',
@@ -1521,10 +1531,13 @@ export default function ComingSoon() {
 
              <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                <PrimaryButton onClick={() => {
-                  breakerLevelRef.current += 1;
-                  setBreakerLevel(breakerLevelRef.current);
-                  setGameState('playing');
-                  window.initBreakerGame(breakerLevelRef.current);
+                  gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
+                      breakerLevelRef.current += 1;
+                      setBreakerLevel(breakerLevelRef.current);
+                      setGameState('playing');
+                      window.initBreakerGame(breakerLevelRef.current);
+                      gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
+                  }});
                }}>Next Level</PrimaryButton>
              </div>
            </div>
