@@ -1450,11 +1450,11 @@ export default function ComingSoon() {
         top: '50%', left: '50%', transform: 'translate(-50%, -50%)', filter: 'blur(60px)', opacity: 0.5, pointerEvents: 'none', zIndex: 0
       }}></div>
 
-      <div style={{ opacity: hideHero ? 0 : 1, pointerEvents: hideHero ? 'none' : 'auto', transition: 'opacity 0.5s ease', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ opacity: hideHero ? 0 : 1, pointerEvents: hideHero ? 'none' : 'auto', transition: 'opacity 0.5s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', willChange: 'opacity', transform: 'translateZ(0)' }}>
         <h1 className="hero-title-container" style={{
           fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(2.5rem, 10vw, 8rem)', fontWeight: 800, textTransform: 'uppercase',
           letterSpacing: '-2px', display: 'flex', gap: 'clamp(0px, 1vw, 20px)', margin: 0, zIndex: 2, overflow: 'visible', pointerEvents: 'none',
-          justifyContent: 'center', alignItems: 'center'
+          justifyContent: 'center', alignItems: 'center', lineHeight: 0.8
         }}>
           <div style={{ display: 'flex', gap: 'clamp(2px, 1vw, 5px)' }}>
             {"DRIPP".split('').map((char, index) => (
@@ -1476,7 +1476,7 @@ export default function ComingSoon() {
           </div>
         </h1>
 
-        <div style={{ overflow: 'hidden', marginTop: 'clamp(0.5rem, 3vh, 2rem)', pointerEvents: 'none' }}>
+        <div style={{ overflow: 'hidden', marginTop: 'clamp(0px, 1vh, 0.5rem)', pointerEvents: 'none' }}>
           <p className="subtitle" style={{
             fontFamily: "'Clash Display', sans-serif", fontSize: 'clamp(0.8rem, 2vw, 1.5rem)', color: 'rgba(255, 255, 255, 0.7)',
             letterSpacing: 'clamp(2px, 1vw, 5px)', textTransform: 'uppercase', zIndex: 2, textAlign: 'center', margin: 0
