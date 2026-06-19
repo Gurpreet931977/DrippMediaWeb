@@ -23,6 +23,7 @@ export default function ComingSoon() {
   
   const [hideHero, setHideHero] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
   const isPausedRef = useRef(false);
   
   const [gameState, setGameState] = useState('playing'); // 'playing', 'failed'
@@ -1061,11 +1062,17 @@ export default function ComingSoon() {
         <div 
           className="game-free-btn"
           onClick={() => {
-             setActiveGame(prev => {
-                const next = prev === 'none' ? 'dripp' : 'none';
-                if (next === 'none') setHideHero(false); // Automatically enable intro when game disabled
-                return next;
-             });
+             if (activeGame !== 'none') {
+                 // Trigger fade out
+                 setIsFadingOut(true);
+                 setTimeout(() => {
+                    setActiveGame('none');
+                    setHideHero(false); // Automatically enable intro when game disabled
+                    setIsFadingOut(false);
+                 }, 500); // 500ms fade out
+             } else {
+                 setActiveGame('dripp');
+             }
           }}
           style={{
              height: '40px', padding: '0 15px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer',
@@ -1176,13 +1183,23 @@ export default function ComingSoon() {
       )}
 
       {/* Canvas for Games */}
-      <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none', display: activeGame === 'none' ? 'none' : 'block' }} />
+      <canvas 
+        ref={canvasRef} 
+        style={{ 
+           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none', 
+           display: activeGame === 'none' ? 'none' : 'block',
+           opacity: isFadingOut ? 0 : 1,
+           transition: 'opacity 0.5s ease'
+        }} 
+      />
 
       {/* Game UI Score */}
       {activeGame !== 'none' && (
         <div className="game-ui" style={{
           position: 'absolute', top: '5%', right: '5%', zIndex: 2,
-          fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px'
+          fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px',
+          opacity: isFadingOut ? 0 : 1,
+          transition: 'opacity 0.5s ease'
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
