@@ -155,17 +155,7 @@ export default function ComingSoon() {
         ))}
       </div>
       
-      {/* Decorative lines */}
-      <div style={{
-          position: 'absolute',
-          bottom: '40px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '1px',
-          height: '60px',
-          background: 'linear-gradient(to bottom, var(--brand-yellow), transparent)',
-          opacity: 0.5
-      }}></div>
+
     </div>
   );
 }
