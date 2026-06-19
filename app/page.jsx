@@ -24,6 +24,7 @@ export default function ComingSoon() {
   const [hideHero, setHideHero] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
   const isPausedRef = useRef(false);
   
   const [gameState, setGameState] = useState('playing'); // 'playing', 'failed'
@@ -842,7 +843,7 @@ export default function ComingSoon() {
 
   const titleChars = "DRIPPMEDIA".split("");
 
-  const handleShare = async () => {
+  const handleShare = async (action) => {
     try {
       setIsPaused(true); 
       setIsCapturing(true);
@@ -859,13 +860,34 @@ export default function ComingSoon() {
       if (cursor) cursor.style.opacity = '1';
 
       const dataUrl = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
       const currentScore = activeGame === 'dripp' ? score : breakerScore;
-      link.download = `DrippMedia-Score-${currentScore}.png`;
-      link.href = dataUrl;
-      link.click();
+      
+      if (action === 'download') {
+         const link = document.createElement('a');
+         link.download = `DrippMedia-Score-${currentScore}.png`;
+         link.href = dataUrl;
+         link.click();
+      } else if (action === 'instagram') {
+         const blob = await (await fetch(dataUrl)).blob();
+         const file = new File([blob], `DrippMedia-Score-${currentScore}.png`, { type: 'image/png' });
+         
+         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+             await navigator.share({
+                 files: [file],
+                 title: 'My Dripp Media Score',
+                 text: `I just scored ${currentScore} points! Can you beat me?`
+             });
+         } else {
+             const link = document.createElement('a');
+             link.download = `DrippMedia-Score-${currentScore}.png`;
+             link.href = dataUrl;
+             link.click();
+             alert("Instagram sharing via browser is unsupported on this device. The image has been downloaded so you can share it manually!");
+         }
+      }
       
       setIsCapturing(false);
+      setShowShareOptions(false);
     } catch (error) {
       console.error("Screenshot failed:", error);
       setIsCapturing(false);
@@ -1124,9 +1146,20 @@ export default function ComingSoon() {
         }}>
            <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--pure-white)', fontSize: '3rem', margin: 0 }}>PAUSED</h2>
            <PrimaryButton onClick={() => setIsPaused(false)}>Resume Game</PrimaryButton>
-           <PrimaryButton onClick={handleShare} disabled={isCapturing}>
-             {isCapturing ? "Capturing..." : "Brag your score"}
-           </PrimaryButton>
+           {!showShareOptions ? (
+             <PrimaryButton onClick={() => setShowShareOptions(true)}>
+               Brag your score
+             </PrimaryButton>
+           ) : (
+             <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
+               <PrimaryButton onClick={() => handleShare('download')} disabled={isCapturing}>
+                 {isCapturing ? "Saving..." : "Download"}
+               </PrimaryButton>
+               <PrimaryButton onClick={() => handleShare('instagram')} disabled={isCapturing}>
+                 {isCapturing ? "Sharing..." : "IG Story"}
+               </PrimaryButton>
+             </div>
+           )}
         </div>
       )}
 
@@ -1172,11 +1205,24 @@ export default function ComingSoon() {
                   setBreakerLevel(1);
                   setGameState('playing');
                   setIsPaused(false);
+                  setShowShareOptions(false);
                   if(activeGame === 'breaker') window.initBreakerGame(1);
                }}>Play Again</PrimaryButton>
-               <PrimaryButton onClick={handleShare} disabled={isCapturing}>
-                 {isCapturing ? 'Capturing...' : 'Share Score'}
-               </PrimaryButton>
+               
+               {!showShareOptions ? (
+                 <PrimaryButton onClick={() => setShowShareOptions(true)}>
+                   Share Score
+                 </PrimaryButton>
+               ) : (
+                 <div style={{ display: 'flex', gap: '10px' }}>
+                   <PrimaryButton onClick={() => handleShare('download')} disabled={isCapturing}>
+                     {isCapturing ? "Saving..." : "Download"}
+                   </PrimaryButton>
+                   <PrimaryButton onClick={() => handleShare('instagram')} disabled={isCapturing}>
+                     {isCapturing ? "Sharing..." : "IG Story"}
+                   </PrimaryButton>
+                 </div>
+               )}
              </div>
            </div>
         </div>
