@@ -200,7 +200,25 @@ export default function ComingSoon() {
           
           if (this.isBomb) {
              setGameState('failed');
-             for(let i=0; i<50; i++) fireworks.push(new FireworkParticle(this.x, this.y, '#ff0000'));
+             for(let i=0; i<30; i++) fireworks.push(new FireworkParticle(this.x, this.y, null, true));
+             
+             // Playful Screen Shake Effect
+             const canvasEl = document.querySelector('canvas');
+             if (canvasEl) {
+                canvasEl.style.transition = 'none';
+                let shakes = 15;
+                const shakeInterval = setInterval(() => {
+                   const offsetX = (Math.random() - 0.5) * 40;
+                   const offsetY = (Math.random() - 0.5) * 40;
+                   canvasEl.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                   shakes--;
+                   if (shakes <= 0) {
+                      clearInterval(shakeInterval);
+                      canvasEl.style.transform = `translate(0px, 0px) translateZ(0)`;
+                      canvasEl.style.transition = 'opacity 0.5s ease';
+                   }
+                }, 40);
+             }
              return;
           } else if (this.isWhite) {
              scoreRef.current += 69;
@@ -675,7 +693,7 @@ export default function ComingSoon() {
     }
 
     class FireworkParticle {
-      constructor(x, y, overrideColor = null) {
+      constructor(x, y, overrideColor = null, isPlayful = false) {
         this.x = x; this.y = y;
         const angle = Math.random() * Math.PI * 2;
         const velocity = 3 + Math.random() * 15;
@@ -687,6 +705,15 @@ export default function ComingSoon() {
         this.friction = 0.95;
         this.gravity = 0.2;
         this.markedForDeletion = false;
+        
+        this.isPlayful = isPlayful;
+        if (this.isPlayful) {
+           const emojis = ['💥', '💀', '😵', '🧨', '💣', '💨'];
+           this.emoji = emojis[Math.floor(Math.random() * emojis.length)];
+           this.radius = 15 + Math.random() * 25; // Size of emoji
+           this.rotation = Math.random() * Math.PI * 2;
+           this.rotSpeed = (Math.random() - 0.5) * 0.4;
+        }
       }
       update() {
         this.speedX *= this.friction;
@@ -694,15 +721,27 @@ export default function ComingSoon() {
         this.speedY += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY;
+        if (this.isPlayful) this.rotation += this.rotSpeed;
         this.alpha = Math.max(0, this.alpha - 0.02); 
         if (this.alpha === 0) this.markedForDeletion = true;
       }
       draw(ctx) {
         ctx.globalAlpha = this.alpha;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
+        if (this.isPlayful) {
+           ctx.save();
+           ctx.translate(this.x, this.y);
+           ctx.rotate(this.rotation);
+           ctx.font = `${this.radius}px Arial`;
+           ctx.textAlign = 'center';
+           ctx.textBaseline = 'middle';
+           ctx.fillText(this.emoji, 0, 0);
+           ctx.restore();
+        } else {
+           ctx.beginPath();
+           ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+           ctx.fillStyle = this.color;
+           ctx.fill();
+        }
         ctx.globalAlpha = 1.0;
       }
     }
