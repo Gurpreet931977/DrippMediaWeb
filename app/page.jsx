@@ -132,14 +132,14 @@ export default function ComingSoon() {
         this.isBomb = Math.random() < 0.04; // 4% chance of bomb
         this.isRed = !this.isBomb && isRed;
         
-        // Slower progression: speed increases gradually every 30 points
-        const speedMult = 1 + (scoreRef.current * 0.008); 
+        // Logarithmic difficulty scaling prevents sudden spikes when catching 69-point White drops
+        const speedMult = 1 + Math.log10(1 + scoreRef.current / 80) * 0.6; 
         
-        this.vy = (0.5 + Math.random() * 1) * speedMult; 
-        this.gravity = (0.02 + Math.random() * 0.01) * speedMult; 
+        this.vy = (1.5 + Math.random() * 1.5) * speedMult; // Base speed a bit higher so it's not boring at start
+        this.gravity = (0.01 + Math.random() * 0.01) * speedMult; 
         
         this.radius = 2 + Math.random() * 2; 
-        this.length = this.vy * 2; 
+        this.length = this.vy * 3; // Make trail slightly longer
         this.markedForDeletion = false;
         
         if (this.isBomb) {
@@ -758,11 +758,13 @@ export default function ComingSoon() {
       }
       
       if (activeGameRef.current === 'dripp') {
-        // Smooth and slower spawn rate increase
-        const rainIntensity = Math.min(0.6, 0.02 + (scoreRef.current * 0.0015));
+        // Logarithmic intensity curve so it scales gently over time
+        const baseIntensity = 0.025; 
+        const scaling = Math.log10(1 + scoreRef.current / 100) * 0.15;
+        const rainIntensity = Math.min(0.35, baseIntensity + scaling);
         
         if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
-        if (Math.random() < rainIntensity * 0.2) drops.push(new Drop(Math.random() < 0.15));
+        if (Math.random() < rainIntensity * 0.15) drops.push(new Drop(Math.random() < 0.15));
         
         drops.forEach(drop => { drop.update(); drop.draw(ctx); });
         drops = drops.filter(drop => !drop.markedForDeletion);
