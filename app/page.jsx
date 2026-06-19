@@ -58,15 +58,15 @@ export default function ComingSoon() {
       constructor(isRed = false) {
         this.x = Math.random() * canvas.width;
         this.y = -50;
-        this.vy = 2 + Math.random() * 3; // Slower, more animated falling
-        this.gravity = 0.08; // Softer acceleration
-        this.radius = 2 + Math.random() * 2; // Slightly thicker
+        this.vy = 0.5 + Math.random() * 1; // Much slower, floating fall
+        this.gravity = 0.02 + Math.random() * 0.01; // Very gentle acceleration
+        this.radius = 2 + Math.random() * 2; 
         this.length = this.vy * 2; 
         this.markedForDeletion = false;
         this.isRed = isRed;
         this.color = isRed ? 'rgba(235, 63, 63, 0.9)' : 'rgba(235, 215, 63, 0.9)'; 
         this.wobble = Math.random() * Math.PI * 2;
-        this.wobbleSpeed = 0.03 + Math.random() * 0.04;
+        this.wobbleSpeed = 0.02 + Math.random() * 0.02; // Slower, calmer wobble
       }
       update() {
         this.vy += this.gravity;
@@ -266,16 +266,15 @@ export default function ComingSoon() {
     const animate = (timestamp) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Spawn rain drops per frame instead of by time to look like rain
-      // Rain becomes heavier as score increases, balanced for slower animated drops
-      const rainIntensity = Math.min(1.0, 0.05 + scoreRef.current * 0.003);
+      // Spawning fewer drops initially to balance the slow falling speed
+      const rainIntensity = Math.min(1.0, 0.02 + scoreRef.current * 0.001);
       
       if (Math.random() < rainIntensity) {
         drops.push(new Drop(Math.random() < 0.15));
       }
       
-      // Chance for a second drop per frame for a heavier downpour
-      if (Math.random() < rainIntensity * 0.3) {
+      // Secondary chance for an extra drop
+      if (Math.random() < rainIntensity * 0.2) {
         drops.push(new Drop(Math.random() < 0.15));
       }
       
