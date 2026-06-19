@@ -1060,7 +1060,13 @@ export default function ComingSoon() {
 
         <div 
           className="game-free-btn"
-          onClick={() => setActiveGame(prev => prev === 'none' ? 'dripp' : 'none')}
+          onClick={() => {
+             setActiveGame(prev => {
+                const next = prev === 'none' ? 'dripp' : 'none';
+                if (next === 'none') setHideHero(false); // Automatically enable intro when game disabled
+                return next;
+             });
+          }}
           style={{
              height: '40px', padding: '0 15px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer',
              border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center',
@@ -1074,15 +1080,29 @@ export default function ComingSoon() {
         </div>
         
         <div 
-          onClick={() => setHideHero(prev => !prev)}
+          onClick={() => {
+             if (activeGame !== 'none') setHideHero(prev => !prev);
+          }}
           style={{
-             height: '40px', padding: '0 15px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer',
+             height: '40px', padding: '0 15px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', 
+             cursor: activeGame === 'none' ? 'not-allowed' : 'pointer',
              border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center',
              color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.7rem', textTransform: 'uppercase',
-             transition: 'all 0.3s ease'
+             transition: 'all 0.3s ease',
+             opacity: activeGame === 'none' ? 0.3 : 1
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+          onMouseEnter={(e) => { 
+             if (activeGame !== 'none') {
+                e.currentTarget.style.color = 'white'; 
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; 
+             }
+          }}
+          onMouseLeave={(e) => { 
+             if (activeGame !== 'none') {
+                e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; 
+                e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; 
+             }
+          }}
         >
           {hideHero ? 'Show Intro' : 'Hide Intro'}
         </div>
