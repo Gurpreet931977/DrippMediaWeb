@@ -107,6 +107,9 @@ export default function ComingSoon() {
     window.addEventListener("mousemove", moveCursor);
     window.addEventListener("touchmove", moveCursor, { passive: false });
     window.addEventListener("touchstart", moveCursor, { passive: false });
+    window.addEventListener("touchend", () => {
+       mouseRef.current = { x: -100, y: -100 };
+    });
 
     // --- GAME LOGIC ---
     const canvas = canvasRef.current;
@@ -910,8 +913,31 @@ export default function ComingSoon() {
          return;
       }
       
-      // Pause/Fail/LevelComplete logic stops physics but keeps rendering the frozen frame
-      if (isPausedRef.current || gameStateRef.current === 'failed' || gameStateRef.current === 'level-complete') {
+      // Pause logic stops entirely
+      if (isPausedRef.current) {
+          animationFrameId = requestAnimationFrame(animate);
+          return;
+      }
+      
+      // Fail/LevelComplete logic stops physics but keeps rendering the frozen frame + animates particles
+      if (gameStateRef.current === 'failed' || gameStateRef.current === 'level-complete') {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          if (activeGameRef.current === 'dripp') {
+             drops.forEach(drop => drop.draw(ctx));
+             splashes.forEach(splash => splash.draw(ctx));
+          } else if (activeGameRef.current === 'breaker') {
+             if (paddle) paddle.draw(ctx);
+             balls.forEach(ball => ball.draw(ctx));
+             bricks.forEach(brick => brick.draw(ctx));
+             powerUps.forEach(pu => pu.draw(ctx));
+          }
+          
+          miniParticles.forEach(mp => { mp.update(); mp.draw(ctx); });
+          miniParticles = miniParticles.filter(mp => !mp.markedForDeletion);
+          fireworks.forEach(fw => { fw.update(); fw.draw(ctx); });
+          fireworks = fireworks.filter(fw => !fw.markedForDeletion);
+          
           animationFrameId = requestAnimationFrame(animate);
           return;
       }
@@ -983,6 +1009,7 @@ export default function ComingSoon() {
       window.removeEventListener("mousemove", moveCursor);
       window.removeEventListener("touchmove", moveCursor);
       window.removeEventListener("touchstart", moveCursor);
+      window.removeEventListener("touchend", () => {});
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationFrameId);
     };
