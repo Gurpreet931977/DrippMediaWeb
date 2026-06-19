@@ -663,12 +663,30 @@ export default function ComingSoon() {
         className="easter-egg"
         onClick={() => setActiveGame(prev => prev === 'dripp' ? 'breaker' : 'dripp')}
         style={{
-          position: 'absolute', bottom: '20px', left: '20px', width: '20px', height: '20px',
-          borderRadius: '50%', background: 'rgba(235, 215, 63, 0.05)', cursor: 'pointer', zIndex: 10,
-          border: '1px solid rgba(255,255,255,0.02)'
+          position: 'absolute', bottom: '25px', left: '25px', width: '40px', height: '40px',
+          borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', cursor: 'pointer', zIndex: 10,
+          border: '1px solid rgba(235, 215, 63, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+          transition: 'all 0.3s ease',
+          boxShadow: '0 0 10px rgba(235, 215, 63, 0.2)'
         }}
-        title="Toggle Easter Egg"
-      />
+        title="Play Jardinains!"
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.background = 'rgba(235, 215, 63, 0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)';
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+          <line x1="6" y1="12" x2="10" y2="12"></line>
+          <line x1="8" y1="10" x2="8" y2="14"></line>
+          <line x1="15" y1="13" x2="15.01" y2="13"></line>
+          <line x1="18" y1="11" x2="18.01" y2="11"></line>
+        </svg>
+      </div>
 
       {/* Top Left Pause Button */}
       {activeGame === 'dripp' && gameState === 'playing' && !isPaused && (
