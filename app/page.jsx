@@ -1448,7 +1448,7 @@ export default function ComingSoon() {
         top: '50%', left: '50%', transform: 'translate(-50%, -50%)', filter: 'blur(60px)', opacity: 0.5, pointerEvents: 'none', zIndex: 0
       }}></div>
 
-      <div style={{ opacity: hideHero ? 0 : 1, transition: 'opacity 0.5s ease', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ opacity: hideHero ? 0 : 1, pointerEvents: hideHero ? 'none' : 'auto', transition: 'opacity 0.5s ease', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <h1 className="hero-title-container" style={{
           fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(2.5rem, 10vw, 8rem)', fontWeight: 800, textTransform: 'uppercase',
           letterSpacing: '-2px', display: 'flex', gap: 'clamp(10px, 2vw, 20px)', margin: 0, zIndex: 2, overflow: 'visible', pointerEvents: 'none',
