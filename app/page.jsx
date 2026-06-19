@@ -1400,6 +1400,35 @@ export default function ComingSoon() {
             <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
               {activeGame === 'dripp' ? 'Score' : `Level ${breakerLevel}`}
             </div>
+            {activeGame === 'breaker' && (
+              <div style={{ fontSize: 'clamp(0.5rem, 1.5vw, 0.65rem)', letterSpacing: '1px', color: 'var(--brand-yellow)', textTransform: 'uppercase', opacity: 0.8, marginBottom: '5px' }}>
+                {(() => {
+                   switch(breakerLevel % 20) {
+                      case 1: return "The Cluster";
+                      case 2: return "Triangle";
+                      case 3: return "Hollow Box";
+                      case 4: return "Checkerboard";
+                      case 5: return "The X";
+                      case 6: return "Twin Pillars";
+                      case 7: return "Diamond";
+                      case 8: return "The V";
+                      case 9: return "Smiley";
+                      case 10: return "Mini-Boss Wall";
+                      case 11: return "Arrow Up";
+                      case 12: return "Hourglass";
+                      case 13: return "Invader";
+                      case 14: return "The Cross";
+                      case 15: return "Double Diamonds";
+                      case 16: return "Stairway";
+                      case 17: return "The Spiral";
+                      case 18: return "Fortress";
+                      case 19: return "DNA Twist";
+                      case 0: return "Ultimate Boss";
+                      default: return "";
+                   }
+                })()}
+              </div>
+            )}
             <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)' }}>
               {activeGame === 'dripp' ? score : breakerScore}
             </div>
