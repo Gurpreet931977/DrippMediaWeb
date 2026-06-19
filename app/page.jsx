@@ -32,6 +32,7 @@ export default function ComingSoon() {
   
   const [isCapturing, setIsCapturing] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
   
   const mouseRef = useRef({ x: -100, y: -100 });
   const cursorActiveRef = useRef(false);
@@ -67,6 +68,7 @@ export default function ComingSoon() {
 
   // Game Engine
   useEffect(() => {
+    setIsTouch(typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
     document.body.classList.add('loaded');
     
     // Custom cursor functionality
@@ -1140,7 +1142,7 @@ export default function ComingSoon() {
            box-shadow: 0 0 15px rgba(235, 215, 63, 0.3) !important;
         }
       `}</style>
-      <div className="cursor"></div>
+      {!isTouch && <div className="cursor"></div>}
 
       {/* Control Buttons (Top Left) */}
       <div style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 4, display: 'flex', gap: '15px' }}>
@@ -1451,7 +1453,7 @@ export default function ComingSoon() {
       <div style={{ opacity: hideHero ? 0 : 1, pointerEvents: hideHero ? 'none' : 'auto', transition: 'opacity 0.5s ease', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <h1 className="hero-title-container" style={{
           fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(2.5rem, 10vw, 8rem)', fontWeight: 800, textTransform: 'uppercase',
-          letterSpacing: '-2px', display: 'flex', gap: 'clamp(10px, 2vw, 20px)', margin: 0, zIndex: 2, overflow: 'visible', pointerEvents: 'none',
+          letterSpacing: '-2px', display: 'flex', gap: 'clamp(0px, 1vw, 20px)', margin: 0, zIndex: 2, overflow: 'visible', pointerEvents: 'none',
           justifyContent: 'center', alignItems: 'center'
         }}>
           <div style={{ display: 'flex', gap: 'clamp(2px, 1vw, 5px)' }}>
@@ -1474,7 +1476,7 @@ export default function ComingSoon() {
           </div>
         </h1>
 
-        <div style={{ overflow: 'hidden', marginTop: '2rem', pointerEvents: 'none' }}>
+        <div style={{ overflow: 'hidden', marginTop: 'clamp(0.5rem, 3vh, 2rem)', pointerEvents: 'none' }}>
           <p className="subtitle" style={{
             fontFamily: "'Clash Display', sans-serif", fontSize: 'clamp(0.8rem, 2vw, 1.5rem)', color: 'rgba(255, 255, 255, 0.7)',
             letterSpacing: 'clamp(2px, 1vw, 5px)', textTransform: 'uppercase', zIndex: 2, textAlign: 'center', margin: 0
