@@ -58,15 +58,21 @@ export default function ComingSoon() {
       constructor(isRed = false) {
         this.x = Math.random() * canvas.width;
         this.y = -50;
-        this.vy = 0.5 + Math.random() * 1; // Much slower, floating fall
-        this.gravity = 0.02 + Math.random() * 0.01; // Very gentle acceleration
+        
+        // Level up every 10 points
+        const level = Math.floor(scoreRef.current / 10);
+        const speedMult = 1 + (level * 0.4); // 40% faster each level
+        
+        this.vy = (0.5 + Math.random() * 1) * speedMult; 
+        this.gravity = (0.02 + Math.random() * 0.01) * speedMult; 
+        
         this.radius = 2 + Math.random() * 2; 
         this.length = this.vy * 2; 
         this.markedForDeletion = false;
         this.isRed = isRed;
         this.color = isRed ? 'rgba(235, 63, 63, 0.9)' : 'rgba(235, 215, 63, 0.9)'; 
         this.wobble = Math.random() * Math.PI * 2;
-        this.wobbleSpeed = 0.02 + Math.random() * 0.02; // Slower, calmer wobble
+        this.wobbleSpeed = (0.02 + Math.random() * 0.02) * (1 + level * 0.2);
       }
       update() {
         this.vy += this.gravity;
@@ -266,8 +272,10 @@ export default function ComingSoon() {
     const animate = (timestamp) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Spawning fewer drops initially to balance the slow falling speed
-      const rainIntensity = Math.min(1.0, 0.02 + scoreRef.current * 0.001);
+      // Spawn rain drops per frame instead of by time to look like rain
+      // Rain becomes heavier with levels (every 10 points)
+      const level = Math.floor(scoreRef.current / 10);
+      const rainIntensity = Math.min(1.0, 0.02 + (level * 0.015));
       
       if (Math.random() < rainIntensity) {
         drops.push(new Drop(Math.random() < 0.15));
