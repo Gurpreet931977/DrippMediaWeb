@@ -124,8 +124,8 @@ export default function ComingSoon() {
         this.isBomb = Math.random() < 0.04; // 4% chance of bomb
         this.isRed = !this.isBomb && isRed;
         
-        const level = Math.floor(scoreRef.current / 10);
-        const speedMult = 1 + (level * 0.4); 
+        // Slower progression: speed increases gradually every 30 points
+        const speedMult = 1 + (scoreRef.current * 0.008); 
         
         this.vy = (0.5 + Math.random() * 1) * speedMult; 
         this.gravity = (0.02 + Math.random() * 0.01) * speedMult; 
@@ -144,7 +144,7 @@ export default function ComingSoon() {
         }
         
         this.wobble = Math.random() * Math.PI * 2;
-        this.wobbleSpeed = (0.02 + Math.random() * 0.02) * (1 + level * 0.2);
+        this.wobbleSpeed = (0.02 + Math.random() * 0.02) * (1 + scoreRef.current * 0.005);
       }
       update() {
         this.vy += this.gravity;
@@ -168,7 +168,8 @@ export default function ComingSoon() {
           
           const cursor = document.querySelector('.cursor');
           if (cursor) {
-             gsap.to(cursor, { scale: 1.3, duration: 0.1, yoyo: true, repeat: 1 });
+             cursor.classList.add('eating');
+             setTimeout(() => cursor.classList.remove('eating'), 150);
           }
           
           if (this.isBomb) {
@@ -676,8 +677,8 @@ export default function ComingSoon() {
       }
       
       if (activeGameRef.current === 'dripp') {
-        const level = Math.floor(scoreRef.current / 10);
-        const rainIntensity = Math.min(1.0, 0.02 + (level * 0.015));
+        // Smooth and slower spawn rate increase
+        const rainIntensity = Math.min(0.6, 0.02 + (scoreRef.current * 0.0015));
         
         if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
         if (Math.random() < rainIntensity * 0.2) drops.push(new Drop(Math.random() < 0.15));
@@ -850,25 +851,53 @@ export default function ComingSoon() {
     }}>
       <style>{`
         .cursor {
-           width: 50px !important;
-           height: 50px !important;
-           border: 2px solid rgba(255,255,255,0.3) !important;
-           background: rgba(0,0,0,0.5) !important;
-           backdrop-filter: blur(2px) !important;
+           width: 60px !important;
+           height: 60px !important;
+           border: 1px solid rgba(255,255,255,0.3) !important;
+           background: rgba(0,0,0,0.2) !important;
+           backdrop-filter: blur(4px) !important;
+           border-radius: 50% !important;
            display: flex !important;
            justify-content: center !important;
            align-items: center !important;
-           font-size: 25px !important;
-           border-radius: 50% !important;
+           transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.15s, background 0.15s, width 0.2s, height 0.2s !important;
+           z-index: 100000 !important;
+        }
+        .cursor::after {
+           content: '';
+           width: 14px;
+           height: 14px;
+           background: var(--brand-yellow);
+           border-radius: 4px;
+           transform: rotate(45deg);
+           transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+           box-shadow: 0 0 15px var(--brand-yellow);
+        }
+        .cursor.eating {
+           transform: scale(1.3) !important;
+           border-color: var(--brand-yellow) !important;
+           background: rgba(235, 215, 63, 0.15) !important;
+        }
+        .cursor.eating::after {
+           width: 4px;
+           height: 4px;
+           background: #ffffff;
+           box-shadow: 0 0 30px #ffffff;
+           transform: rotate(225deg) scale(0.3);
         }
         .cursor.active {
            width: 80px !important;
            height: 80px !important;
-           font-size: 40px !important;
            border-color: rgba(255,255,255,0.8) !important;
+           background: rgba(255,255,255,0.1) !important;
+        }
+        .cursor.active::after {
+           transform: rotate(90deg) scale(0.8);
+           background: #ffffff;
+           box-shadow: 0 0 20px #ffffff;
         }
       `}</style>
-      <div className="cursor">😋</div>
+      <div className="cursor"></div>
 
       {/* Control Buttons (Top Left) */}
       <div style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 4, display: 'flex', gap: '15px' }}>
