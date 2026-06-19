@@ -8,15 +8,21 @@ export default function ComingSoon() {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   
-  // States
+  // Game States
   const [activeGame, setActiveGame] = useState('dripp'); // 'dripp' or 'breaker'
   const activeGameRef = useRef('dripp');
   
-  const [score, setScore] = useState(0);
-  const scoreRef = useRef(0);
+  const [score, setScore] = useState(50); // Dripp starts at 50
+  const scoreRef = useRef(50);
   
   const [breakerScore, setBreakerScore] = useState(0);
   const breakerScoreRef = useRef(0);
+  
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
+  
+  const [gameState, setGameState] = useState('playing'); // 'playing', 'failed'
+  const gameStateRef = useRef('playing');
   
   const [isCapturing, setIsCapturing] = useState(false);
   const mouseRef = useRef({ x: -100, y: -100 });
@@ -30,12 +36,24 @@ export default function ComingSoon() {
     if (activeGame === 'breaker') {
       breakerScoreRef.current = 0;
       setBreakerScore(0);
-      initBreaker(); // The global function inside the effect will catch this via a trigger logic
+      setGameState('playing');
+      setIsPaused(false);
+      if (window.initBreakerGame) window.initBreakerGame(); 
     } else {
-      scoreRef.current = 0;
-      setScore(0);
+      scoreRef.current = 50;
+      setScore(50);
+      setGameState('playing');
+      setIsPaused(false);
     }
   }, [activeGame]);
+
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
 
   // Game Engine
   useEffect(() => {
@@ -45,6 +63,8 @@ export default function ComingSoon() {
     const cursor = document.querySelector('.cursor');
     
     const moveCursor = (e) => {
+      if (isPausedRef.current || gameStateRef.current === 'failed') return;
+
       // Desktop
       if (e.clientX) {
         mouseRef.current = { x: e.clientX, y: e.clientY };
@@ -95,17 +115,13 @@ export default function ComingSoon() {
     window.addEventListener('resize', resize);
     resize();
 
-    // ==========================================
-    // DRIPP CATCHER CLASSES
-    // ==========================================
     class Drop {
       constructor(isRed = false) {
         this.x = Math.random() * canvas.width;
         this.y = -50;
         
-        // Level up every 10 points
         const level = Math.floor(scoreRef.current / 10);
-        const speedMult = 1 + (level * 0.4); // 40% faster each level
+        const speedMult = 1 + (level * 0.4); 
         
         this.vy = (0.5 + Math.random() * 1) * speedMult; 
         this.gravity = (0.02 + Math.random() * 0.01) * speedMult; 
@@ -121,16 +137,25 @@ export default function ComingSoon() {
       update() {
         this.vy += this.gravity;
         this.y += this.vy;
-        this.x += Math.sin(this.wobble) * 1.2; // Animated wobble
+        this.x += Math.sin(this.wobble) * 1.2; 
         this.wobble += this.wobbleSpeed;
         this.length = this.vy * 2;
 
         if (this.y > canvas.height + this.length) {
           this.markedForDeletion = true;
+          
+          // Penalty
           if (this.isRed) {
-            scoreRef.current = Math.max(0, scoreRef.current - 5);
-            setScore(scoreRef.current);
+            scoreRef.current -= 5;
+          } else {
+            scoreRef.current -= 1; 
           }
+          
+          if (scoreRef.current <= 0) {
+            scoreRef.current = 0;
+            setGameState('failed');
+          }
+          setScore(scoreRef.current);
         }
         
         const dx = mouseRef.current.x - this.x;
@@ -145,12 +170,11 @@ export default function ComingSoon() {
           if (!this.isRed) {
             scoreRef.current += 1;
           } else {
-            scoreRef.current += 2; // Catching a red drop adds 2 points
+            scoreRef.current += 2; 
           }
-          
           setScore(scoreRef.current);
           
-          if (scoreRef.current > 0 && scoreRef.current % 50 === 0 && scoreRef.current !== lastMilestoneRef.current) {
+          if (scoreRef.current > 50 && scoreRef.current % 50 === 0 && scoreRef.current !== lastMilestoneRef.current) {
             lastMilestoneRef.current = scoreRef.current;
             triggerMilestoneAnimation(this.x, this.y);
           }
@@ -174,9 +198,6 @@ export default function ComingSoon() {
       }
     }
 
-    // ==========================================
-    // BRICK BREAKER CLASSES
-    // ==========================================
     class Paddle {
       constructor() {
         this.w = 140;
@@ -185,7 +206,6 @@ export default function ComingSoon() {
         this.y = canvas.height - 80;
       }
       update() {
-        // Smoothly follow touch/mouse
         this.x += (mouseRef.current.x - this.w / 2 - this.x) * 0.2;
         if (this.x < 0) this.x = 0;
         if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
@@ -213,11 +233,9 @@ export default function ComingSoon() {
         this.x += this.vx;
         this.y += this.vy;
         
-        // Walls
         if (this.x - this.radius <= 0 || this.x + this.radius >= canvas.width) this.vx *= -1;
         if (this.y - this.radius <= 0) this.vy *= -1;
         
-        // Floor (Lost Ball)
         if (this.y > canvas.height + 20) {
            this.x = canvas.width / 2;
            this.y = canvas.height - 120;
@@ -225,7 +243,6 @@ export default function ComingSoon() {
            this.vx = 4 * (Math.random() > 0.5 ? 1 : -1);
         }
         
-        // Paddle Collision
         if (
           this.y + this.radius >= paddle.y &&
           this.y - this.radius <= paddle.y + paddle.h &&
@@ -233,13 +250,12 @@ export default function ComingSoon() {
           this.x <= paddle.x + paddle.w &&
           this.vy > 0
         ) {
-          this.vy *= -1.02; // Speed up slightly
+          this.vy *= -1.02; 
           let hitPoint = this.x - (paddle.x + paddle.w / 2);
           this.vx = hitPoint * 0.15;
           for(let i=0; i<3; i++) miniParticles.push(new MiniParticle(this.x, this.y, false));
         }
         
-        // Brick Collision
         for(let b of bricks) {
            if (!b.markedForDeletion) {
               if (
@@ -251,12 +267,11 @@ export default function ComingSoon() {
                  breakerScoreRef.current += 10;
                  setBreakerScore(breakerScoreRef.current);
                  
-                 // Spawn powerup chance
                  if (Math.random() < 0.25) {
                     powerUps.push(new PowerUp(b.x + b.w/2, b.y + b.h/2));
                  }
                  for(let i=0; i<5; i++) miniParticles.push(new MiniParticle(this.x, this.y, false));
-                 break; // Hit one brick at a time
+                 break; 
               }
            }
         }
@@ -323,9 +338,6 @@ export default function ComingSoon() {
        }
     }
 
-    // ==========================================
-    // SHARED PARTICLES
-    // ==========================================
     class MiniParticle {
       constructor(x, y, isRed) {
         this.x = x; this.y = y;
@@ -446,7 +458,6 @@ export default function ComingSoon() {
       );
     };
 
-    // Breaker Initialization
     window.initBreakerGame = () => {
       bricks = [];
       balls = [new Ball()];
@@ -454,14 +465,15 @@ export default function ComingSoon() {
       paddle = new Paddle();
       
       const rows = 5;
-      const w = Math.min(70, canvas.width / 6); // Responsive bricks
+      const w = Math.min(70, canvas.width / 6); 
       const padding = 10;
       const cols = Math.floor(canvas.width / (w + padding));
       const offsetX = (canvas.width - (cols * (w + padding))) / 2;
       
       for(let r=0; r<rows; r++) {
          for(let c=0; c<cols; c++) {
-            bricks.push(new Brick(offsetX + c*(w+padding), 80 + r*(h=25 + padding), w, 25, r));
+            let h = 25;
+            bricks.push(new Brick(offsetX + c*(w+padding), 80 + r*(h + padding), w, 25, r));
          }
       }
     };
@@ -469,12 +481,20 @@ export default function ComingSoon() {
     let lastActiveGame = 'dripp';
 
     const animate = () => {
+      // By returning completely, we freeze the canvas at its exact current state!
+      if (isPausedRef.current || gameStateRef.current === 'failed') {
+          animationFrameId = requestAnimationFrame(animate);
+          return;
+      }
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Handle active game switch initialization
       if (activeGameRef.current !== lastActiveGame) {
          if (activeGameRef.current === 'breaker') {
             window.initBreakerGame();
+         } else {
+            drops = [];
+            splashes = [];
          }
          lastActiveGame = activeGameRef.current;
       }
@@ -493,30 +513,17 @@ export default function ComingSoon() {
         splashes = splashes.filter(splash => !splash.markedForDeletion);
         
       } else if (activeGameRef.current === 'breaker') {
-        
-        if (paddle) {
-          paddle.update();
-          paddle.draw(ctx);
-        }
-        
+        if (paddle) { paddle.update(); paddle.draw(ctx); }
         balls.forEach(ball => { ball.update(paddle, bricks); ball.draw(ctx); });
-        
         bricks.forEach(brick => brick.draw(ctx));
         bricks = bricks.filter(b => !b.markedForDeletion);
-        
-        // Win condition / Next level
-        if (bricks.length === 0) {
-           window.initBreakerGame();
-        }
-        
+        if (bricks.length === 0) window.initBreakerGame();
         powerUps.forEach(pu => { pu.update(paddle); pu.draw(ctx); });
         powerUps = powerUps.filter(pu => !pu.markedForDeletion);
       }
 
-      // Shared particles
       miniParticles.forEach(mp => { mp.update(); mp.draw(ctx); });
       miniParticles = miniParticles.filter(mp => !mp.markedForDeletion);
-      
       fireworks.forEach(fw => { fw.update(); fw.draw(ctx); });
       fireworks = fireworks.filter(fw => !fw.markedForDeletion);
       
@@ -562,6 +569,7 @@ export default function ComingSoon() {
 
   const handleShare = async () => {
     try {
+      setIsPaused(true); // Automatically pause when attempting to share
       setIsCapturing(true);
       const html2canvas = (await import('html2canvas')).default;
       const cursor = document.querySelector('.cursor');
@@ -570,7 +578,7 @@ export default function ComingSoon() {
       const canvas = await html2canvas(containerRef.current, {
         backgroundColor: '#050505',
         scale: 2,
-        ignoreElements: (element) => element.classList.contains('cursor') || element.classList.contains('easter-egg')
+        ignoreElements: (element) => element.classList.contains('cursor') || element.classList.contains('easter-egg') || element.classList.contains('ui-overlay')
       });
       
       if (cursor) cursor.style.opacity = '1';
@@ -589,6 +597,53 @@ export default function ComingSoon() {
     }
   };
 
+  const PrimaryButton = ({ onClick, children, disabled = false }) => (
+    <button 
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        background: 'rgba(255, 255, 255, 0.05)',
+        border: '1px solid rgba(235, 215, 63, 0.3)',
+        color: 'var(--pure-white)',
+        padding: '10px 24px',
+        borderRadius: '30px',
+        fontFamily: "'Clash Display', sans-serif",
+        fontSize: 'clamp(0.8rem, 1.5vw, 1rem)',
+        letterSpacing: '1px',
+        textTransform: 'uppercase',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        backdropFilter: 'blur(10px)',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        marginTop: '15px'
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.background = 'rgba(235, 215, 63, 0.15)';
+        e.target.style.borderColor = 'var(--brand-yellow)';
+        e.target.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.3)';
+        const cursor = document.querySelector('.cursor');
+        if(cursor) {
+          cursor.classList.add('active');
+          cursorActiveRef.current = true;
+        }
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+        e.target.style.borderColor = 'rgba(235, 215, 63, 0.3)';
+        e.target.style.boxShadow = 'none';
+        const cursor = document.querySelector('.cursor');
+        if(cursor) {
+          cursor.classList.remove('active');
+          cursorActiveRef.current = false;
+        }
+      }}
+    >
+      {children}
+    </button>
+  );
+
   return (
     <div ref={containerRef} style={{
       width: '100vw',
@@ -600,189 +655,124 @@ export default function ComingSoon() {
       background: 'var(--deep-black)',
       position: 'relative',
       overflow: 'hidden',
-      touchAction: 'none' // Prevent scrolling while dragging on mobile
+      touchAction: 'none' 
     }}>
       <div className="cursor"></div>
 
-      {/* Easter Egg Button */}
       <div 
         className="easter-egg"
         onClick={() => setActiveGame(prev => prev === 'dripp' ? 'breaker' : 'dripp')}
         style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '20px',
-          width: '20px',
-          height: '20px',
-          borderRadius: '50%',
-          background: 'rgba(235, 215, 63, 0.05)', // Very subtle
-          cursor: 'pointer',
-          zIndex: 10,
+          position: 'absolute', bottom: '20px', left: '20px', width: '20px', height: '20px',
+          borderRadius: '50%', background: 'rgba(235, 215, 63, 0.05)', cursor: 'pointer', zIndex: 10,
           border: '1px solid rgba(255,255,255,0.02)'
         }}
         title="Toggle Easter Egg"
       />
 
-      {/* Canvas for Games */}
-      <canvas 
-        ref={canvasRef}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 1, 
-          pointerEvents: 'none' 
-        }}
-      />
+      {/* Top Left Pause Button */}
+      {activeGame === 'dripp' && gameState === 'playing' && !isPaused && (
+        <div style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 3 }}>
+          <PrimaryButton onClick={() => setIsPaused(true)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            Pause
+          </PrimaryButton>
+        </div>
+      )}
 
-      {/* Game UI */}
+      {/* Pause Overlay */}
+      {isPaused && gameState === 'playing' && (
+        <div className="ui-overlay" style={{
+           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+           background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+           display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 10
+        }}>
+           <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--pure-white)', fontSize: '3rem', margin: 0 }}>PAUSED</h2>
+           <PrimaryButton onClick={() => setIsPaused(false)}>Resume Game</PrimaryButton>
+           <PrimaryButton onClick={handleShare} disabled={isCapturing}>
+             {isCapturing ? "Capturing..." : "Brag your score"}
+           </PrimaryButton>
+        </div>
+      )}
+
+      {/* Game Over Overlay */}
+      {gameState === 'failed' && (
+        <div className="ui-overlay" style={{
+           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+           background: 'rgba(235, 63, 63, 0.15)', backdropFilter: 'blur(10px)',
+           display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 10
+        }}>
+           <h2 style={{ fontFamily: "'Panchang', sans-serif", color: '#eb3f3f', fontSize: 'clamp(3rem, 8vw, 5rem)', margin: 0, textShadow: '0 0 30px rgba(235, 63, 63, 0.5)' }}>
+             DRIPPED OUT!
+           </h2>
+           <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: '1.2rem', marginTop: '10px' }}>
+             You let too many slip away.
+           </p>
+           <div style={{ marginTop: '30px', display: 'flex', gap: '20px' }}>
+             <PrimaryButton onClick={() => {
+                scoreRef.current = 50;
+                setScore(50);
+                setGameState('playing');
+                setIsPaused(false);
+             }}>Play Again</PrimaryButton>
+             <PrimaryButton onClick={handleShare} disabled={isCapturing}>
+               {isCapturing ? "Capturing..." : "Brag your score"}
+             </PrimaryButton>
+           </div>
+        </div>
+      )}
+
+      {/* Canvas for Games */}
+      <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }} />
+
+      {/* Game UI Score */}
       <div className="game-ui" style={{
-        position: 'absolute',
-        top: '5%',
-        right: '5%',
-        zIndex: 2,
-        fontFamily: "'Clash Display', sans-serif",
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        gap: '10px'
+        position: 'absolute', top: '5%', right: '5%', zIndex: 2,
+        fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px'
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-            {activeGame === 'dripp' ? 'Dripps Caught' : 'Bricks Smashed'}
+            {activeGame === 'dripp' ? 'Dripp Health' : 'Bricks Smashed'}
           </div>
-          <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: 'var(--brand-yellow)', lineHeight: 1, textShadow: '0 0 20px rgba(235, 215, 63, 0.4)' }}>
+          <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)' }}>
             {activeGame === 'dripp' ? score : breakerScore}
           </div>
         </div>
-
-        {/* Share Button */}
-        <button 
-          onClick={handleShare}
-          disabled={isCapturing}
-          style={{
-            opacity: ((activeGame === 'dripp' && score >= 50) || (activeGame === 'breaker' && breakerScore >= 50)) && !isCapturing ? 1 : 0,
-            pointerEvents: ((activeGame === 'dripp' && score >= 50) || (activeGame === 'breaker' && breakerScore >= 50)) && !isCapturing ? 'auto' : 'none',
-            transform: ((activeGame === 'dripp' && score >= 50) || (activeGame === 'breaker' && breakerScore >= 50)) && !isCapturing ? 'translateY(0)' : 'translateY(-10px)',
-            transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(235, 215, 63, 0.3)',
-            color: 'var(--pure-white)',
-            padding: '8px 16px',
-            borderRadius: '30px',
-            fontFamily: "'Clash Display', sans-serif",
-            fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)',
-            letterSpacing: '1px',
-            textTransform: 'uppercase',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            backdropFilter: 'blur(10px)',
-            marginTop: '10px',
-            cursor: 'none'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.background = 'rgba(235, 215, 63, 0.15)';
-            e.target.style.borderColor = 'var(--brand-yellow)';
-            e.target.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.3)';
-            const cursor = document.querySelector('.cursor');
-            if(cursor) {
-              cursor.classList.add('active');
-              cursorActiveRef.current = true;
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.background = 'rgba(255, 255, 255, 0.05)';
-            e.target.style.borderColor = 'rgba(235, 215, 63, 0.3)';
-            e.target.style.boxShadow = 'none';
-            const cursor = document.querySelector('.cursor');
-            if(cursor) {
-              cursor.classList.remove('active');
-              cursorActiveRef.current = false;
-            }
-          }}
-        >
-          {isCapturing ? (
-            "Capturing..."
-          ) : (
-            <>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Brag your score
-            </>
-          )}
-        </button>
       </div>
 
-      {/* Background Glow */}
       <div style={{
-        position: 'absolute',
-        width: '40vw',
-        height: '40vw',
+        position: 'absolute', width: '40vw', height: '40vw',
         background: 'radial-gradient(circle, var(--brand-glow) 0%, transparent 60%)',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        filter: 'blur(60px)',
-        opacity: 0.5,
-        pointerEvents: 'none',
-        zIndex: 0
+        top: '50%', left: '50%', transform: 'translate(-50%, -50%)', filter: 'blur(60px)', opacity: 0.5, pointerEvents: 'none', zIndex: 0
       }}></div>
 
-      {/* Main Title */}
       <h1 style={{
-        fontFamily: "'Panchang', sans-serif",
-        fontSize: 'clamp(2rem, 10vw, 8rem)',
-        fontWeight: 800,
-        textTransform: 'uppercase',
-        letterSpacing: '-2px',
-        display: 'flex',
-        gap: 'clamp(2px, 1vw, 5px)',
-        margin: 0,
-        zIndex: 2,
-        overflow: 'visible',
-        pointerEvents: 'none'
+        fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(2rem, 10vw, 8rem)', fontWeight: 800, textTransform: 'uppercase',
+        letterSpacing: '-2px', display: 'flex', gap: 'clamp(2px, 1vw, 5px)', margin: 0, zIndex: 2, overflow: 'visible', pointerEvents: 'none'
       }}>
         {titleChars.map((char, index) => (
           <span key={index} className="char" style={{ 
-            display: 'inline-block',
-            color: index < 5 ? 'var(--pure-white)' : 'var(--brand-yellow)',
-            textShadow: index >= 5 ? '0 0 30px var(--brand-glow)' : 'none'
+            display: 'inline-block', color: index < 5 ? 'var(--pure-white)' : 'var(--brand-yellow)', textShadow: index >= 5 ? '0 0 30px var(--brand-glow)' : 'none'
           }}>
             {char}
           </span>
         ))}
       </h1>
 
-      {/* Subtitle */}
       <div style={{ overflow: 'hidden', marginTop: '2rem', pointerEvents: 'none' }}>
         <p className="subtitle" style={{
-          fontFamily: "'Clash Display', sans-serif",
-          fontSize: 'clamp(0.8rem, 2vw, 1.5rem)',
-          color: 'rgba(255, 255, 255, 0.7)',
-          letterSpacing: 'clamp(2px, 1vw, 5px)',
-          textTransform: 'uppercase',
-          zIndex: 2,
-          textAlign: 'center',
-          margin: 0
+          fontFamily: "'Clash Display', sans-serif", fontSize: 'clamp(0.8rem, 2vw, 1.5rem)', color: 'rgba(255, 255, 255, 0.7)',
+          letterSpacing: 'clamp(2px, 1vw, 5px)', textTransform: 'uppercase', zIndex: 2, textAlign: 'center', margin: 0
         }}>
           Coming Soon
         </p>
       </div>
 
-      {/* Social Links */}
       <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: 'clamp(1rem, 3vw, 2rem)',
-        marginTop: '4rem',
-        zIndex: 2
+        display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(1rem, 3vw, 2rem)', marginTop: '4rem', zIndex: 2
       }}>
         {[
           { label: 'Instagram', url: 'https://www.instagram.com/drippmedia_', target: '_blank' },
@@ -790,33 +780,20 @@ export default function ComingSoon() {
           { label: '+91 78189 95147', url: 'tel:+917818995147', target: '_self' }
         ].map((item) => (
           <a key={item.label} href={item.url} target={item.target} rel={item.target === '_blank' ? 'noopener noreferrer' : undefined} className="social-link" style={{
-            color: 'var(--pure-white)',
-            textDecoration: 'none',
-            fontFamily: "'Clash Display', sans-serif",
-            fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)',
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            borderBottom: '1px solid transparent',
-            transition: 'border-color 0.3s ease, color 0.3s ease',
-            paddingBottom: '5px'
+            color: 'var(--pure-white)', textDecoration: 'none', fontFamily: "'Clash Display', sans-serif", fontSize: 'clamp(0.7rem, 1.5vw, 0.9rem)',
+            letterSpacing: '2px', textTransform: 'uppercase', borderBottom: '1px solid transparent', transition: 'border-color 0.3s ease, color 0.3s ease', paddingBottom: '5px'
           }}
           onMouseEnter={(e) => {
             e.target.style.borderColor = 'var(--brand-yellow)';
             e.target.style.color = 'var(--brand-yellow)';
             const cursor = document.querySelector('.cursor');
-            if(cursor) {
-              cursor.classList.add('active');
-              cursorActiveRef.current = true;
-            }
+            if(cursor) { cursor.classList.add('active'); cursorActiveRef.current = true; }
           }}
           onMouseLeave={(e) => {
             e.target.style.borderColor = 'transparent';
             e.target.style.color = 'var(--pure-white)';
             const cursor = document.querySelector('.cursor');
-            if(cursor) {
-              cursor.classList.remove('active');
-              cursorActiveRef.current = false;
-            }
+            if(cursor) { cursor.classList.remove('active'); cursorActiveRef.current = false; }
           }}
           >
             {item.label}
