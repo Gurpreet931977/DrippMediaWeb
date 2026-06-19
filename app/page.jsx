@@ -33,6 +33,7 @@ export default function ComingSoon() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
+  const [pregeneratedShareUrl, setPregeneratedShareUrl] = useState(null);
   
   const mouseRef = useRef({ x: -100, y: -100 });
   const cursorActiveRef = useRef(false);
@@ -1041,9 +1042,20 @@ export default function ComingSoon() {
 
   const titleChars = "DRIPPMEDIA".split("");
 
-  const handleShare = async (action) => {
+  const dataURItoBlob = (dataURI) => {
+    const byteString = atob(dataURI.split(',')[1]);
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], {type: mimeString});
+  };
+
+  const prepareShare = async () => {
     try {
-      setIsPaused(true); 
+      setShowShareOptions(true);
       setIsCapturing(true);
       const html2canvas = (await import('html2canvas')).default;
       const cursor = document.querySelector('.cursor');
@@ -1052,21 +1064,31 @@ export default function ComingSoon() {
       const canvas = await html2canvas(containerRef.current, {
         backgroundColor: '#050505',
         scale: 2,
-        ignoreElements: (element) => element.classList.contains('cursor') || element.classList.contains('easter-egg') || element.classList.contains('ui-overlay') || element.classList.contains('game-free-btn')
+        ignoreElements: (element) => element.classList.contains('cursor') || element.classList.contains('easter-egg') || element.classList.contains('ui-overlay') || element.classList.contains('game-free-btn') || element.classList.contains('share-container')
       });
       
       if (cursor) cursor.style.opacity = '1';
 
-      const dataUrl = canvas.toDataURL('image/png');
+      setPregeneratedShareUrl(canvas.toDataURL('image/png'));
+      setIsCapturing(false);
+    } catch (error) {
+      console.error("Screenshot pre-generation failed:", error);
+      setIsCapturing(false);
+    }
+  };
+
+  const handleShare = async (action) => {
+    if (!pregeneratedShareUrl) return;
+    try {
       const currentScore = activeGame === 'dripp' ? score : breakerScore;
       
       if (action === 'download') {
          const link = document.createElement('a');
          link.download = `DrippMedia-Score-${currentScore}.png`;
-         link.href = dataUrl;
+         link.href = pregeneratedShareUrl;
          link.click();
       } else if (action === 'instagram') {
-         const blob = await (await fetch(dataUrl)).blob();
+         const blob = dataURItoBlob(pregeneratedShareUrl);
          const file = new File([blob], `DrippMedia-Score-${currentScore}.png`, { type: 'image/png' });
          
          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1078,17 +1100,16 @@ export default function ComingSoon() {
          } else {
              const link = document.createElement('a');
              link.download = `DrippMedia-Score-${currentScore}.png`;
-             link.href = dataUrl;
+             link.href = pregeneratedShareUrl;
              link.click();
              alert("Instagram sharing via browser is unsupported on this device. The image has been downloaded so you can share it manually!");
          }
       }
       
-      setIsCapturing(false);
       setShowShareOptions(false);
+      setPregeneratedShareUrl(null);
     } catch (error) {
-      console.error("Screenshot failed:", error);
-      setIsCapturing(false);
+      console.error("Sharing failed:", error);
     }
   };
 
@@ -1345,16 +1366,16 @@ export default function ComingSoon() {
            <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--pure-white)', fontSize: '3rem', margin: 0 }}>PAUSED</h2>
            <PrimaryButton onClick={() => setIsPaused(false)}>Resume Game</PrimaryButton>
            {!showShareOptions ? (
-             <PrimaryButton onClick={() => setShowShareOptions(true)}>
+             <PrimaryButton onClick={prepareShare}>
                Brag your score
              </PrimaryButton>
            ) : (
-             <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
+             <div className="share-container" style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
                <PrimaryButton onClick={() => handleShare('download')} disabled={isCapturing}>
-                 {isCapturing ? "Saving..." : "Download"}
+                 {isCapturing ? "Preparing..." : "Download"}
                </PrimaryButton>
                <PrimaryButton onClick={() => handleShare('instagram')} disabled={isCapturing}>
-                 {isCapturing ? "Sharing..." : "IG Story"}
+                 {isCapturing ? "Preparing..." : "IG Story"}
                </PrimaryButton>
              </div>
            )}
@@ -1409,16 +1430,16 @@ export default function ComingSoon() {
                }}>Play Again</PrimaryButton>
                
                {!showShareOptions ? (
-                 <PrimaryButton onClick={() => setShowShareOptions(true)}>
+                 <PrimaryButton onClick={prepareShare}>
                    Share Score
                  </PrimaryButton>
                ) : (
-                 <div style={{ display: 'flex', gap: '10px' }}>
+                 <div className="share-container" style={{ display: 'flex', gap: '10px' }}>
                    <PrimaryButton onClick={() => handleShare('download')} disabled={isCapturing}>
-                     {isCapturing ? "Saving..." : "Download"}
+                     {isCapturing ? "Preparing..." : "Download"}
                    </PrimaryButton>
                    <PrimaryButton onClick={() => handleShare('instagram')} disabled={isCapturing}>
-                     {isCapturing ? "Sharing..." : "IG Story"}
+                     {isCapturing ? "Preparing..." : "IG Story"}
                    </PrimaryButton>
                  </div>
                )}
