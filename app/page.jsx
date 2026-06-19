@@ -146,7 +146,7 @@ export default function ComingSoon() {
         this.x = Math.random() * canvas.width;
         this.y = -50;
         this.isWhite = !isRed && Math.random() < 0.05; // 5% chance of white drop
-        this.isBomb = Math.random() < 0.03; // 3% chance of bomb (Rare)
+        this.isBomb = Math.random() < 0.15; // 15% chance of bomb
         this.isRed = !this.isBomb && isRed;
         
         // Logarithmic difficulty scaling prevents sudden spikes when catching 69-point White drops
