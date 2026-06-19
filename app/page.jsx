@@ -15,9 +15,13 @@ export default function ComingSoon() {
   const [score, setScore] = useState(0); // Dripp starts at 0
   const scoreRef = useRef(0);
   
-  const [breakerScore, setBreakerScore] = useState(50); // Breaker starts at 50
-  const breakerScoreRef = useRef(50);
+  const [breakerScore, setBreakerScore] = useState(0); 
+  const breakerScoreRef = useRef(0);
   
+  const [breakerLevel, setBreakerLevel] = useState(1);
+  const breakerLevelRef = useRef(1);
+  
+  const [hideHero, setHideHero] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const isPausedRef = useRef(false);
   
@@ -36,11 +40,13 @@ export default function ComingSoon() {
     activeGameRef.current = activeGame;
     // Reset scores when switching
     if (activeGame === 'breaker') {
-      breakerScoreRef.current = 50;
-      setBreakerScore(50);
+      breakerScoreRef.current = 0;
+      setBreakerScore(0);
+      breakerLevelRef.current = 1;
+      setBreakerLevel(1);
       setGameState('playing');
       setIsPaused(false);
-      if (window.initBreakerGame) window.initBreakerGame(); 
+      if (window.initBreakerGame) window.initBreakerGame(1); 
     } else if (activeGame === 'dripp') {
       scoreRef.current = 0;
       setScore(0);
@@ -624,14 +630,14 @@ export default function ComingSoon() {
       );
     };
 
-    window.initBreakerGame = () => {
+    window.initBreakerGame = (level = 1) => {
       bricks = []; // storing TargetRings here for compatibility
       balls = [new Ball()];
       powerUps = [];
       paddle = new Paddle();
       
-      const cols = 7;
-      const rows = 5;
+      const cols = Math.min(10, 4 + level);
+      const rows = Math.min(8, 3 + level);
       const spacingX = 60;
       const spacingY = 50;
       
@@ -694,21 +700,18 @@ export default function ComingSoon() {
         balls.forEach(ball => { ball.update(paddle, bricks); ball.draw(ctx); });
         balls = balls.filter(b => !b.markedForDeletion);
         
-        // Breaker Penalty Logic
+        // Breaker Penalty Logic - Dropping ball fails instantly
         if (balls.length === 0 && gameStateRef.current === 'playing') {
-           breakerScoreRef.current -= 20;
-           if (breakerScoreRef.current <= 0) {
-              breakerScoreRef.current = 0;
-              setGameState('failed');
-           } else {
-              balls.push(new Ball(canvas.width / 2, canvas.height - 120, 5, -6));
-           }
-           setBreakerScore(breakerScoreRef.current);
+           setGameState('failed');
         }
         
         bricks.forEach(brick => { brick.update(); brick.draw(ctx); });
         bricks = bricks.filter(b => !b.markedForDeletion);
-        if (bricks.length === 0 && balls.length > 0) window.initBreakerGame();
+        if (bricks.length === 0 && balls.length > 0) {
+           breakerLevelRef.current += 1;
+           setBreakerLevel(breakerLevelRef.current);
+           window.initBreakerGame(breakerLevelRef.current);
+        }
         
         powerUps.forEach(pu => { pu.update(paddle); pu.draw(ctx); });
         powerUps = powerUps.filter(pu => !pu.markedForDeletion);
@@ -902,13 +905,23 @@ export default function ComingSoon() {
       {/* Control Buttons (Top Left) */}
       <div style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 4, display: 'flex', gap: '15px' }}>
         {activeGame !== 'none' && gameState === 'playing' && !isPaused && (
-          <PrimaryButton onClick={() => setIsPaused(true)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+          <div 
+            onClick={() => setIsPaused(true)}
+            style={{
+              width: '40px', height: '40px', marginTop: '15px',
+              borderRadius: '50%', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', 
+              border: '1px solid rgba(255,255,255,0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+              color: 'white', transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+            title="Pause"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="4" width="4" height="16"></rect>
               <rect x="14" y="4" width="4" height="16"></rect>
             </svg>
-            Pause
-          </PrimaryButton>
+          </div>
         )}
         <div 
           onClick={() => setIsHelpOpen(true)}
@@ -948,7 +961,8 @@ export default function ComingSoon() {
                  <p>Catch falling <span style={{color: '#00ffcc'}}>Cyan Drops</span> for +50 points.</p>
                  <p>Catch falling <span style={{color: '#ff00ff'}}>Magenta Drops</span> to trigger MULTI-BALL chaos!</p>
                  <br/>
-                 <p>If you drop the ball, you lose 20 points. Hit 0 and you fail!</p>
+                 <p>If you drop the ball once, you fail instantly!</p>
+                 <p>Clear all targets to advance to the next Level.</p>
                </>
              ) : (
                <p>The game is currently disabled. Toggle the Easter Egg icon in the bottom left to play!</p>
@@ -983,17 +997,31 @@ export default function ComingSoon() {
 
         <div 
           className="game-free-btn"
-          onClick={() => setActiveGame('none')}
+          onClick={() => setActiveGame(prev => prev === 'none' ? 'dripp' : 'none')}
           style={{
-            height: '40px', padding: '0 15px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer',
-            border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-            color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.8rem', textTransform: 'uppercase',
-            transition: 'all 0.3s ease'
+             height: '40px', padding: '0 15px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer',
+             border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+             color: activeGame === 'none' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.8rem', textTransform: 'uppercase',
+             transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = activeGame === 'none' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+        >
+          {activeGame === 'none' ? 'Ignite Canvas' : 'Disable Game'}
+        </div>
+        
+        <div 
+          onClick={() => setHideHero(prev => !prev)}
+          style={{
+             height: '40px', padding: '0 15px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer',
+             border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+             color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.7rem', textTransform: 'uppercase',
+             transition: 'all 0.3s ease'
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
         >
-          Disable Game
+          {hideHero ? 'Show Intro' : 'Hide Intro'}
         </div>
       </div>
 
@@ -1034,17 +1062,19 @@ export default function ComingSoon() {
                DRIPPED OUT!
              </h2>
              <p style={{ marginTop: '20px', fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', letterSpacing: '1px' }}>
-               {activeGame === 'dripp' ? 'You caught a bomb! Game Over.' : 'Your breaker health reached 0!'}
+               {activeGame === 'dripp' ? 'You caught a bomb! Game Over.' : 'You dropped the ball! Game Over.'}
              </p>
              <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                <PrimaryButton onClick={() => {
                   scoreRef.current = 0;
                   setScore(0);
-                  breakerScoreRef.current = 50;
-                  setBreakerScore(50);
+                  breakerScoreRef.current = 0;
+                  setBreakerScore(0);
+                  breakerLevelRef.current = 1;
+                  setBreakerLevel(1);
                   setGameState('playing');
                   setIsPaused(false);
-                  if(activeGame === 'breaker') window.initBreakerGame();
+                  if(activeGame === 'breaker') window.initBreakerGame(1);
                }}>Play Again</PrimaryButton>
                <PrimaryButton onClick={handleShare} disabled={isCapturing}>
                  {isCapturing ? 'Capturing...' : 'Share Score'}
@@ -1065,7 +1095,7 @@ export default function ComingSoon() {
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-              {activeGame === 'dripp' ? 'Score' : 'Breaker Health'}
+              {activeGame === 'dripp' ? 'Score' : `Level ${breakerLevel}`}
             </div>
             <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)' }}>
               {activeGame === 'dripp' ? score : breakerScore}
@@ -1080,31 +1110,32 @@ export default function ComingSoon() {
         top: '50%', left: '50%', transform: 'translate(-50%, -50%)', filter: 'blur(60px)', opacity: 0.5, pointerEvents: 'none', zIndex: 0
       }}></div>
 
-      <h1 style={{
-        fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(2rem, 10vw, 8rem)', fontWeight: 800, textTransform: 'uppercase',
-        letterSpacing: '-2px', display: 'flex', gap: 'clamp(2px, 1vw, 5px)', margin: 0, zIndex: 2, overflow: 'visible', pointerEvents: 'none'
-      }}>
-        {titleChars.map((char, index) => (
-          <span key={index} className="char" style={{ 
-            display: 'inline-block', color: index < 5 ? 'var(--pure-white)' : 'var(--brand-yellow)', textShadow: index >= 5 ? '0 0 30px var(--brand-glow)' : 'none'
-          }}>
-            {char}
-          </span>
-        ))}
-      </h1>
-
-      <div style={{ overflow: 'hidden', marginTop: '2rem', pointerEvents: 'none' }}>
-        <p className="subtitle" style={{
-          fontFamily: "'Clash Display', sans-serif", fontSize: 'clamp(0.8rem, 2vw, 1.5rem)', color: 'rgba(255, 255, 255, 0.7)',
-          letterSpacing: 'clamp(2px, 1vw, 5px)', textTransform: 'uppercase', zIndex: 2, textAlign: 'center', margin: 0
+      <div style={{ opacity: hideHero ? 0 : 1, transition: 'opacity 0.5s ease', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <h1 style={{
+          fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(2rem, 10vw, 8rem)', fontWeight: 800, textTransform: 'uppercase',
+          letterSpacing: '-2px', display: 'flex', gap: 'clamp(2px, 1vw, 5px)', margin: 0, zIndex: 2, overflow: 'visible', pointerEvents: 'none'
         }}>
-          Coming Soon
-        </p>
-      </div>
+          {titleChars.map((char, index) => (
+            <span key={index} className="char" style={{ 
+              display: 'inline-block', color: index < 5 ? 'var(--pure-white)' : 'var(--brand-yellow)', textShadow: index >= 5 ? '0 0 30px var(--brand-glow)' : 'none'
+            }}>
+              {char}
+            </span>
+          ))}
+        </h1>
 
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(1rem, 3vw, 2rem)', marginTop: '4rem', zIndex: 2
-      }}>
+        <div style={{ overflow: 'hidden', marginTop: '2rem', pointerEvents: 'none' }}>
+          <p className="subtitle" style={{
+            fontFamily: "'Clash Display', sans-serif", fontSize: 'clamp(0.8rem, 2vw, 1.5rem)', color: 'rgba(255, 255, 255, 0.7)',
+            letterSpacing: 'clamp(2px, 1vw, 5px)', textTransform: 'uppercase', zIndex: 2, textAlign: 'center', margin: 0
+          }}>
+            Coming Soon
+          </p>
+        </div>
+
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(1rem, 3vw, 2rem)', marginTop: '4rem', zIndex: 2
+        }}>
         {[
           { label: 'Instagram', url: 'https://www.instagram.com/drippmedia_', target: '_blank' },
           { label: 'WhatsApp', url: 'https://wa.me/917300595147', target: '_blank' },
@@ -1130,6 +1161,7 @@ export default function ComingSoon() {
             {item.label}
           </a>
         ))}
+        </div>
       </div>
     </div>
   );
