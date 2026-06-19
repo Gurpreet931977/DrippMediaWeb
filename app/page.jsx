@@ -423,7 +423,9 @@ export default function ComingSoon() {
                  breakerScoreRef.current += 10;
                  setBreakerScore(breakerScoreRef.current);
                  
-                 if (Math.random() < 0.25) powerUps.push(new PowerUp(t.x, t.y));
+                 // Drop chance starts at 25% and drops by 1% per level, floor at 10%
+                 const dropChance = Math.max(0.1, 0.25 - (breakerLevelRef.current * 0.01));
+                 if (Math.random() < dropChance) powerUps.push(new PowerUp(t.x, t.y, breakerLevelRef.current));
                  
                  if (piercingTimer <= 0) break; // If piercing, can hit multiple in one frame!
               }
@@ -512,18 +514,28 @@ export default function ComingSoon() {
     }
 
     class PowerUp {
-       constructor(x, y) {
+       constructor(x, y, level = 1) {
           this.x = x; this.y = y;
           this.vy = 2.5 + Math.random() * 1.5;
           this.radius = 6;
           
+          // Difficulty scaling for powerups
+          // Base bad chance is 30%. Increases by 5% per level up to max 80%.
+          const badChance = Math.min(0.8, 0.3 + (level * 0.05)); 
+          
           const rand = Math.random();
-          if (rand < 0.2) this.type = 'multiball'; // Magenta
-          else if (rand < 0.4) this.type = 'points'; // Cyan
-          else if (rand < 0.55) this.type = 'wide_paddle'; // Green
-          else if (rand < 0.7) this.type = 'piercing'; // Yellow
-          else if (rand < 0.85) this.type = 'shrink_paddle'; // Red
-          else this.type = 'shield_targets'; // Blue
+          
+          if (rand < badChance) {
+             // Split bad drops evenly between shrink and shield
+             this.type = Math.random() < 0.5 ? 'shrink_paddle' : 'shield_targets';
+          } else {
+             // Split good drops among the remaining probability pool
+             const goodRand = Math.random();
+             if (goodRand < 0.25) this.type = 'multiball';
+             else if (goodRand < 0.5) this.type = 'points';
+             else if (goodRand < 0.75) this.type = 'wide_paddle';
+             else this.type = 'piercing';
+          }
           
           this.markedForDeletion = false;
        }
@@ -897,8 +909,8 @@ export default function ComingSoon() {
          return;
       }
       
-      // Pause/Fail logic stops physics but keeps rendering the frozen frame
-      if (isPausedRef.current || gameStateRef.current === 'failed') {
+      // Pause/Fail/LevelComplete logic stops physics but keeps rendering the frozen frame
+      if (isPausedRef.current || gameStateRef.current === 'failed' || gameStateRef.current === 'level-complete') {
           animationFrameId = requestAnimationFrame(animate);
           return;
       }
@@ -944,10 +956,8 @@ export default function ComingSoon() {
         
         bricks.forEach(brick => { brick.update(); brick.draw(ctx); });
         bricks = bricks.filter(b => !b.markedForDeletion);
-        if (bricks.length === 0 && balls.length > 0) {
-           breakerLevelRef.current += 1;
-           setBreakerLevel(breakerLevelRef.current);
-           window.initBreakerGame(breakerLevelRef.current);
+        if (bricks.length === 0 && balls.length > 0 && gameStateRef.current === 'playing') {
+           setGameState('level-complete');
         }
         
         powerUps.forEach(pu => { pu.update(paddle, bricks); pu.draw(ctx); });
@@ -1380,6 +1390,50 @@ export default function ComingSoon() {
                    </PrimaryButton>
                  </div>
                )}
+             </div>
+           </div>
+        </div>
+      )}
+
+      {/* Level Complete Overlay */}
+      {gameState === 'level-complete' && !isHelpOpen && (
+        <div className="ui-overlay" style={{
+           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+           background: 'radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%)', 
+           backdropFilter: 'blur(15px)',
+           display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 10
+        }}>
+           <div style={{
+              background: 'linear-gradient(145deg, rgba(20,20,20,0.9) 0%, rgba(5,5,5,0.95) 100%)',
+              border: '1px solid rgba(51, 255, 51, 0.3)',
+              borderRadius: '24px',
+              padding: '50px 80px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(51, 255, 51, 0.1)'
+           }}>
+             <h2 style={{ fontFamily: "'Panchang', sans-serif", color: '#33ff33', fontSize: 'clamp(3rem, 6vw, 5rem)', margin: 0, textShadow: '0 0 20px rgba(51, 255, 51, 0.6), 0 0 40px rgba(51, 255, 51, 0.4)', textAlign: 'center', letterSpacing: '2px' }}>
+               LEVEL CLEARED!
+             </h2>
+             <p style={{ marginTop: '10px', fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', letterSpacing: '1px' }}>
+               You destroyed the layout. Get ready for the next one.
+             </p>
+             
+             <div style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+               <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px' }}>Current Score</span>
+               <span style={{ fontSize: '3.5rem', fontWeight: 600, color: 'var(--brand-yellow)', textShadow: '0 0 20px rgba(235, 215, 63, 0.4)', lineHeight: 1, marginTop: '5px' }}>
+                  {breakerScore}
+               </span>
+             </div>
+
+             <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
+               <PrimaryButton onClick={() => {
+                  breakerLevelRef.current += 1;
+                  setBreakerLevel(breakerLevelRef.current);
+                  setGameState('playing');
+                  window.initBreakerGame(breakerLevelRef.current);
+               }}>Next Level</PrimaryButton>
              </div>
            </div>
         </div>
