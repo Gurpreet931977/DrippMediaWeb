@@ -8,6 +8,7 @@ export default function ComingSoon() {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
+  const [isCapturing, setIsCapturing] = useState(false);
   const scoreRef = useRef(0);
   const mouseRef = useRef({ x: -100, y: -100 });
   const cursorActiveRef = useRef(false);
@@ -57,14 +58,14 @@ export default function ComingSoon() {
       constructor(isRed = false) {
         this.x = Math.random() * canvas.width;
         this.y = -20;
-        this.vy = 1 + Math.random() * 2; // Initial fall velocity
-        this.gravity = 0.15 + Math.random() * 0.1; // Acceleration
+        this.vy = 0.5 + Math.random() * 0.8; // Slower initial fall velocity
+        this.gravity = 0.05 + Math.random() * 0.04; // Gentler acceleration
         this.radius = 3 + Math.random() * 3;
         this.markedForDeletion = false;
         this.isRed = isRed;
         this.color = isRed ? 'rgba(235, 63, 63, 0.9)' : 'rgba(235, 215, 63, 0.9)'; // Red or Yellow
         this.wobble = Math.random() * Math.PI * 2;
-        this.wobbleSpeed = 0.05 + Math.random() * 0.05;
+        this.wobbleSpeed = 0.03 + Math.random() * 0.03;
       }
       update() {
         this.vy += this.gravity;
@@ -74,6 +75,11 @@ export default function ComingSoon() {
 
         if (this.y > canvas.height + 50) {
           this.markedForDeletion = true;
+          // Missing a red drop decreases points
+          if (this.isRed) {
+            scoreRef.current = Math.max(0, scoreRef.current - 5);
+            setScore(scoreRef.current);
+          }
         }
         
         // Collision with mouse
@@ -87,11 +93,10 @@ export default function ComingSoon() {
         if (distance < this.radius + hitRadius) {
           this.markedForDeletion = true;
           
-          if (this.isRed) {
-            scoreRef.current = Math.max(0, scoreRef.current - 5);
-          } else {
+          if (!this.isRed) {
             scoreRef.current += 1;
           }
+          // Catching a red drop does not decrease points now, you successfully avoided the penalty
           
           setScore(scoreRef.current);
           
@@ -111,7 +116,7 @@ export default function ComingSoon() {
       draw(ctx) {
         ctx.beginPath();
         // Dynamic teardrop shape stretching with speed
-        const stretch = Math.min(this.vy * 0.8, this.radius * 4);
+        const stretch = Math.min(this.vy * 1.2, this.radius * 4);
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
         ctx.lineTo(this.x, this.y - stretch);
         ctx.fillStyle = this.color;
@@ -257,8 +262,8 @@ export default function ComingSoon() {
     const animate = (timestamp) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Spawn rate based on score (gets slightly faster)
-      const spawnRate = Math.max(200, 1000 - scoreRef.current * 8);
+      // Spawn rate: Drops spawn more frequently now
+      const spawnRate = Math.max(100, 350 - scoreRef.current * 4);
 
       if (timestamp - lastDropTime > spawnRate) {
         // 15% chance for a red (minus) drop
@@ -329,10 +334,36 @@ export default function ComingSoon() {
 
   const titleChars = "DRIPPMEDIA".split("");
 
-  const handleShare = () => {
-    const text = `I just caught ${score} dripps on the Dripp Media site! Can you beat my score? 💧🔥`;
-    const url = "https://www.drippmedia.com";
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+  const handleShare = async () => {
+    try {
+      setIsCapturing(true);
+      
+      // Dynamically import html2canvas
+      const html2canvas = (await import('html2canvas')).default;
+      
+      // Temporarily hide cursor if visible
+      const cursor = document.querySelector('.cursor');
+      if (cursor) cursor.style.opacity = '0';
+
+      const canvas = await html2canvas(containerRef.current, {
+        backgroundColor: '#050505',
+        scale: 2,
+        ignoreElements: (element) => element.classList.contains('cursor')
+      });
+      
+      if (cursor) cursor.style.opacity = '1';
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `DrippMedia-Score-${score}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      setIsCapturing(false);
+    } catch (error) {
+      console.error("Screenshot failed:", error);
+      setIsCapturing(false);
+    }
   };
 
   return (
@@ -384,13 +415,14 @@ export default function ComingSoon() {
           </div>
         </div>
 
-        {/* Share Button - Shows only when score > 0 to encourage playing first */}
+        {/* Share Button - Shows only when score >= 50 and hides during capture */}
         <button 
           onClick={handleShare}
+          disabled={isCapturing}
           style={{
-            opacity: score > 0 ? 1 : 0,
-            pointerEvents: score > 0 ? 'auto' : 'none',
-            transform: score > 0 ? 'translateY(0)' : 'translateY(-10px)',
+            opacity: (score >= 50 && !isCapturing) ? 1 : 0,
+            pointerEvents: (score >= 50 && !isCapturing) ? 'auto' : 'none',
+            transform: (score >= 50 && !isCapturing) ? 'translateY(0)' : 'translateY(-10px)',
             transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
             background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid rgba(235, 215, 63, 0.3)',
@@ -405,7 +437,8 @@ export default function ComingSoon() {
             alignItems: 'center',
             gap: '8px',
             backdropFilter: 'blur(10px)',
-            marginTop: '10px'
+            marginTop: '10px',
+            cursor: 'none'
           }}
           onMouseEnter={(e) => {
             e.target.style.background = 'rgba(235, 215, 63, 0.15)';
@@ -428,12 +461,18 @@ export default function ComingSoon() {
             }
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-            <polyline points="16 6 12 2 8 6"></polyline>
-            <line x1="12" y1="2" x2="12" y2="15"></line>
-          </svg>
-          Brag on X
+          {isCapturing ? (
+            "Capturing..."
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Brag your score
+            </>
+          )}
         </button>
       </div>
 
@@ -500,7 +539,7 @@ export default function ComingSoon() {
         marginTop: '4rem',
         zIndex: 2
       }}>
-        {['Instagram', 'Twitter', 'Contact'].map((item) => (
+        {['Instagram', 'Contact'].map((item) => (
           <a key={item} href="#" className="social-link" style={{
             color: 'var(--pure-white)',
             textDecoration: 'none',
