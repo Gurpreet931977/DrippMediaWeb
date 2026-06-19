@@ -57,23 +57,21 @@ export default function ComingSoon() {
     class Drop {
       constructor(isRed = false) {
         this.x = Math.random() * canvas.width;
-        this.y = -20;
-        this.vy = 0.5 + Math.random() * 0.8; // Slower initial fall velocity
-        this.gravity = 0.05 + Math.random() * 0.04; // Gentler acceleration
-        this.radius = 3 + Math.random() * 3;
+        this.y = -50;
+        this.vy = 8 + Math.random() * 10; // Fast rain velocity
+        this.gravity = 0.15; // Realistic acceleration
+        this.radius = 1.5 + Math.random() * 1.5; // Thinner drop width
+        this.length = this.vy * 2; // Rain streak length
         this.markedForDeletion = false;
         this.isRed = isRed;
         this.color = isRed ? 'rgba(235, 63, 63, 0.9)' : 'rgba(235, 215, 63, 0.9)'; // Red or Yellow
-        this.wobble = Math.random() * Math.PI * 2;
-        this.wobbleSpeed = 0.03 + Math.random() * 0.03;
       }
       update() {
         this.vy += this.gravity;
         this.y += this.vy;
-        this.x += Math.sin(this.wobble) * 1.5;
-        this.wobble += this.wobbleSpeed;
+        this.length = this.vy * 2; // Stretch dynamically
 
-        if (this.y > canvas.height + 50) {
+        if (this.y > canvas.height + this.length) {
           this.markedForDeletion = true;
           // Missing a red drop decreases points
           if (this.isRed) {
@@ -90,7 +88,8 @@ export default function ComingSoon() {
         // Use a larger hit radius if cursor is active
         const hitRadius = cursorActiveRef.current ? 40 : 25;
 
-        if (distance < this.radius + hitRadius) {
+        // We check collision around the head of the drop (this.x, this.y)
+        if (distance < hitRadius) {
           this.markedForDeletion = true;
           
           if (!this.isRed) {
@@ -109,50 +108,24 @@ export default function ComingSoon() {
 
           // Poppy Burst Effect
           splashes.push(new Splash(this.x, this.y, this.isRed));
-          for (let i = 0; i < 8; i++) {
+          for (let i = 0; i < 6; i++) {
             miniParticles.push(new MiniParticle(this.x, this.y, this.isRed));
           }
         }
       }
       draw(ctx) {
         ctx.beginPath();
-        // Realistic curved teardrop shape
-        const stretch = Math.min(this.vy * 1.5, this.radius * 6);
+        // 2D teardrop shape
+        const stretch = Math.min(this.vy * 1.2, this.radius * 5);
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
-        // Bezier curves for a smooth tail
-        ctx.bezierCurveTo(
-          this.x + this.radius, this.y - stretch * 0.5,
-          this.x + this.radius * 0.3, this.y - stretch * 0.8,
-          this.x, this.y - stretch
-        );
-        ctx.bezierCurveTo(
-          this.x - this.radius * 0.3, this.y - stretch * 0.8,
-          this.x - this.radius, this.y - stretch * 0.5,
-          this.x - this.radius, this.y
-        );
+        ctx.lineTo(this.x, this.y - stretch);
+        ctx.fillStyle = this.color;
+        ctx.fill();
         ctx.closePath();
         
-        // 3D Glass Gradient Look
-        const gradient = ctx.createRadialGradient(
-          this.x, this.y + this.radius * 0.3, this.radius * 0.1,
-          this.x, this.y, this.radius * 1.2
-        );
-        if (this.isRed) {
-          gradient.addColorStop(0, '#ffffff'); // intense core
-          gradient.addColorStop(0.3, '#ff3333');
-          gradient.addColorStop(1, 'rgba(235, 63, 63, 0.8)');
-        } else {
-          gradient.addColorStop(0, '#ffffff'); // intense core
-          gradient.addColorStop(0.3, '#ebd73f');
-          gradient.addColorStop(1, 'rgba(235, 215, 63, 0.8)');
-        }
-        
-        ctx.fillStyle = gradient;
-        ctx.fill();
-        
-        // Enhance highlight glow significantly
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = this.isRed ? 'rgba(255, 50, 50, 0.9)' : 'rgba(255, 230, 50, 0.9)';
+        // Glow
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = this.isRed ? 'rgba(235, 63, 63, 0.6)' : 'rgba(235, 215, 63, 0.5)';
       }
     }
 
@@ -289,14 +262,17 @@ export default function ComingSoon() {
     const animate = (timestamp) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Spawn rate: Drops spawn more frequently now
-      const spawnRate = Math.max(100, 350 - scoreRef.current * 4);
-
-      if (timestamp - lastDropTime > spawnRate) {
-        // 15% chance for a red (minus) drop
-        const isRed = Math.random() < 0.15;
-        drops.push(new Drop(isRed));
-        lastDropTime = timestamp;
+      // Spawn rain drops per frame instead of by time to look like rain
+      // Rain becomes heavier as score increases
+      const rainIntensity = Math.min(1.0, 0.15 + scoreRef.current * 0.005);
+      
+      if (Math.random() < rainIntensity) {
+        drops.push(new Drop(Math.random() < 0.15));
+      }
+      
+      // Chance for a second drop per frame for a heavier downpour
+      if (Math.random() < rainIntensity * 0.4) {
+        drops.push(new Drop(Math.random() < 0.15));
       }
       
       drops.forEach(drop => {
