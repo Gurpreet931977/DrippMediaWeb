@@ -58,18 +58,22 @@ export default function ComingSoon() {
       constructor(isRed = false) {
         this.x = Math.random() * canvas.width;
         this.y = -50;
-        this.vy = 8 + Math.random() * 10; // Fast rain velocity
-        this.gravity = 0.15; // Realistic acceleration
-        this.radius = 1.5 + Math.random() * 1.5; // Thinner drop width
-        this.length = this.vy * 2; // Rain streak length
+        this.vy = 2 + Math.random() * 3; // Slower, more animated falling
+        this.gravity = 0.08; // Softer acceleration
+        this.radius = 2 + Math.random() * 2; // Slightly thicker
+        this.length = this.vy * 2; 
         this.markedForDeletion = false;
         this.isRed = isRed;
-        this.color = isRed ? 'rgba(235, 63, 63, 0.9)' : 'rgba(235, 215, 63, 0.9)'; // Red or Yellow
+        this.color = isRed ? 'rgba(235, 63, 63, 0.9)' : 'rgba(235, 215, 63, 0.9)'; 
+        this.wobble = Math.random() * Math.PI * 2;
+        this.wobbleSpeed = 0.03 + Math.random() * 0.04;
       }
       update() {
         this.vy += this.gravity;
         this.y += this.vy;
-        this.length = this.vy * 2; // Stretch dynamically
+        this.x += Math.sin(this.wobble) * 1.2; // Animated wobble
+        this.wobble += this.wobbleSpeed;
+        this.length = this.vy * 2;
 
         if (this.y > canvas.height + this.length) {
           this.markedForDeletion = true;
@@ -263,15 +267,15 @@ export default function ComingSoon() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // Spawn rain drops per frame instead of by time to look like rain
-      // Rain becomes heavier as score increases
-      const rainIntensity = Math.min(1.0, 0.15 + scoreRef.current * 0.005);
+      // Rain becomes heavier as score increases, balanced for slower animated drops
+      const rainIntensity = Math.min(1.0, 0.05 + scoreRef.current * 0.003);
       
       if (Math.random() < rainIntensity) {
         drops.push(new Drop(Math.random() < 0.15));
       }
       
       // Chance for a second drop per frame for a heavier downpour
-      if (Math.random() < rainIntensity * 0.4) {
+      if (Math.random() < rainIntensity * 0.3) {
         drops.push(new Drop(Math.random() < 0.15));
       }
       
