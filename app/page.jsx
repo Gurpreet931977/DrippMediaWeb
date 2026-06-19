@@ -11,6 +11,7 @@ export default function ComingSoon() {
   const scoreRef = useRef(0);
   const mouseRef = useRef({ x: -100, y: -100 });
   const cursorActiveRef = useRef(false);
+  const lastMilestoneRef = useRef(0);
 
   useEffect(() => {
     // Add loaded class to body as required by globals.css
@@ -41,7 +42,8 @@ export default function ComingSoon() {
     let animationFrameId;
     let drops = [];
     let splashes = [];
-    let bursts = [];
+    let miniParticles = [];
+    let fireworks = [];
     let lastDropTime = 0;
 
     const resize = () => {
@@ -52,23 +54,26 @@ export default function ComingSoon() {
     resize();
 
     class Drop {
-      constructor() {
+      constructor(isRed = false) {
         this.x = Math.random() * canvas.width;
         this.y = -20;
-        this.speed = 3 + Math.random() * 4;
+        this.vy = 1 + Math.random() * 2; // Initial fall velocity
+        this.gravity = 0.15 + Math.random() * 0.1; // Acceleration
         this.radius = 3 + Math.random() * 3;
         this.markedForDeletion = false;
-        this.color = 'rgba(235, 215, 63, 0.9)'; // var(--brand-yellow)
+        this.isRed = isRed;
+        this.color = isRed ? 'rgba(235, 63, 63, 0.9)' : 'rgba(235, 215, 63, 0.9)'; // Red or Yellow
         this.wobble = Math.random() * Math.PI * 2;
+        this.wobbleSpeed = 0.05 + Math.random() * 0.05;
       }
       update() {
-        this.y += this.speed;
-        this.x += Math.sin(this.wobble) * 1;
-        this.wobble += 0.05;
+        this.vy += this.gravity;
+        this.y += this.vy;
+        this.x += Math.sin(this.wobble) * 1.5;
+        this.wobble += this.wobbleSpeed;
 
-        if (this.y > canvas.height + 20) {
+        if (this.y > canvas.height + 50) {
           this.markedForDeletion = true;
-          // Reset score if missed to make it a bit challenging? No, let's keep it chill.
         }
         
         // Collision with mouse
@@ -76,54 +81,96 @@ export default function ComingSoon() {
         const dy = mouseRef.current.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // Use a larger hit radius if cursor is active (hovering links) or just default 30
+        // Use a larger hit radius if cursor is active
         const hitRadius = cursorActiveRef.current ? 40 : 25;
 
         if (distance < this.radius + hitRadius) {
           this.markedForDeletion = true;
-          scoreRef.current += 1;
+          
+          if (this.isRed) {
+            scoreRef.current = Math.max(0, scoreRef.current - 5);
+          } else {
+            scoreRef.current += 1;
+          }
+          
           setScore(scoreRef.current);
-          splashes.push(new Splash(this.x, this.y));
+          
+          // Check milestone every 50 points
+          if (scoreRef.current > 0 && scoreRef.current % 50 === 0 && scoreRef.current !== lastMilestoneRef.current) {
+            lastMilestoneRef.current = scoreRef.current;
+            triggerMilestoneAnimation(this.x, this.y);
+          }
 
-          if (scoreRef.current > 0 && scoreRef.current % 50 === 0) {
-            for (let i = 0; i < 60; i++) {
-              bursts.push(new BurstParticle(this.x, this.y));
-            }
-            // Add screen shake effect via gsap
-            gsap.fromTo(canvas, 
-              { x: -10, y: -10 },
-              { x: 0, y: 0, duration: 0.5, ease: "elastic.out(1, 0.3)", clearProps: "all" }
-            );
+          // Poppy Burst Effect
+          splashes.push(new Splash(this.x, this.y, this.isRed));
+          for (let i = 0; i < 8; i++) {
+            miniParticles.push(new MiniParticle(this.x, this.y, this.isRed));
           }
         }
       }
       draw(ctx) {
         ctx.beginPath();
-        // Draw teardrop shape roughly
+        // Dynamic teardrop shape stretching with speed
+        const stretch = Math.min(this.vy * 0.8, this.radius * 4);
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
-        ctx.lineTo(this.x, this.y - this.radius * 2);
+        ctx.lineTo(this.x, this.y - stretch);
         ctx.fillStyle = this.color;
         ctx.fill();
         ctx.closePath();
         
         // Glow
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = 'rgba(235, 215, 63, 0.5)';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = this.isRed ? 'rgba(235, 63, 63, 0.6)' : 'rgba(235, 215, 63, 0.5)';
+      }
+    }
+
+    class MiniParticle {
+      constructor(x, y, isRed) {
+        this.x = x;
+        this.y = y;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 6;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.radius = 1 + Math.random() * 2.5;
+        this.color = isRed ? 'rgba(235, 63, 63, 1)' : 'rgba(235, 215, 63, 1)';
+        this.alpha = 1;
+        this.friction = 0.90;
+        this.markedForDeletion = false;
+      }
+      update() {
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= 0.03;
+        if (this.alpha <= 0) this.markedForDeletion = true;
+      }
+      draw(ctx) {
+        ctx.globalAlpha = this.alpha;
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.globalAlpha = 1;
       }
     }
 
     class Splash {
-      constructor(x, y) {
+      constructor(x, y, isRed) {
         this.x = x;
         this.y = y;
-        this.radius = 5;
-        this.maxRadius = 30 + Math.random() * 20;
+        this.radius = 2;
         this.alpha = 1;
+        this.isRed = isRed;
         this.markedForDeletion = false;
+        this.expansionSpeed = 10;
       }
       update() {
-        this.radius += 2;
-        this.alpha -= 0.04;
+        this.radius += this.expansionSpeed;
+        this.expansionSpeed *= 0.85; // Fast expansion slowing down (poppy)
+        this.alpha -= 0.05;
         if (this.alpha <= 0) {
           this.markedForDeletion = true;
         }
@@ -132,58 +179,91 @@ export default function ComingSoon() {
         ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(235, 215, 63, ${this.alpha})`;
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = this.isRed ? `rgba(235, 63, 63, ${this.alpha})` : `rgba(235, 215, 63, ${this.alpha})`;
+        ctx.lineWidth = 3 * this.alpha;
         ctx.stroke();
         ctx.closePath();
       }
     }
 
-    class BurstParticle {
+    class FireworkParticle {
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = Math.random() * 4 + 2;
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 10 + 5;
-        this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed;
+        const velocity = 3 + Math.random() * 15;
+        this.speedX = Math.cos(angle) * velocity;
+        this.speedY = Math.sin(angle) * velocity;
+        this.radius = 1.5 + Math.random() * 4;
+        this.color = Math.random() > 0.5 ? '#ebd73f' : '#ffffff';
         this.alpha = 1;
-        this.color = Math.random() > 0.5 ? '235, 215, 63' : '255, 255, 255';
-        this.markedForDeletion = false;
         this.friction = 0.95;
         this.gravity = 0.2;
+        this.markedForDeletion = false;
       }
       update() {
-        this.vx *= this.friction;
-        this.vy *= this.friction;
-        this.vy += this.gravity;
-        this.x += this.vx;
-        this.y += this.vy;
-        this.alpha -= 0.02;
-        if (this.alpha <= 0) {
-          this.markedForDeletion = true;
-        }
+        this.speedX *= this.friction;
+        this.speedY *= this.friction;
+        this.speedY += this.gravity;
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.alpha -= 0.015;
+        if (this.alpha <= 0) this.markedForDeletion = true;
       }
       draw(ctx) {
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+        ctx.globalAlpha = this.alpha;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
+        ctx.fillStyle = this.color;
         ctx.fill();
-        ctx.closePath();
+        ctx.globalAlpha = 1.0;
       }
     }
+
+    const triggerMilestoneAnimation = (x, y) => {
+      // 1. Canvas Fireworks at the point of the milestone drop
+      for(let i = 0; i < 80; i++) {
+        fireworks.push(new FireworkParticle(x, y));
+      }
+      
+      // 2. GSAP Poppy Text Animation
+      gsap.to(".char", {
+        scale: 1.35,
+        color: "#ffffff",
+        textShadow: "0 0 50px rgba(255,255,255,0.9)",
+        duration: 0.1,
+        yoyo: true,
+        repeat: 3,
+        stagger: 0.02,
+        ease: "power2.out",
+        onComplete: () => {
+          gsap.to(".char", {
+            scale: 1,
+            color: (i) => i < 5 ? 'var(--pure-white)' : 'var(--brand-yellow)',
+            textShadow: (i) => i >= 5 ? '0 0 30px var(--brand-glow)' : 'none',
+            duration: 0.5,
+            ease: "power2.out"
+          });
+        }
+      });
+      
+      // 3. Screen shake
+      gsap.fromTo(canvas, 
+        { x: -15 }, 
+        { x: 15, duration: 0.05, yoyo: true, repeat: 7, ease: "none", onComplete: () => gsap.set(canvas, {x: 0}) }
+      );
+    };
 
     const animate = (timestamp) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // Spawn rate based on score (gets slightly faster)
-      const spawnRate = Math.max(300, 1000 - scoreRef.current * 10);
+      const spawnRate = Math.max(200, 1000 - scoreRef.current * 8);
 
       if (timestamp - lastDropTime > spawnRate) {
-        drops.push(new Drop());
+        // 15% chance for a red (minus) drop
+        const isRed = Math.random() < 0.15;
+        drops.push(new Drop(isRed));
         lastDropTime = timestamp;
       }
       
@@ -198,12 +278,18 @@ export default function ComingSoon() {
         splash.draw(ctx);
       });
       splashes = splashes.filter(splash => !splash.markedForDeletion);
-      
-      bursts.forEach(burst => {
-        burst.update();
-        burst.draw(ctx);
+
+      miniParticles.forEach(mp => {
+        mp.update();
+        mp.draw(ctx);
       });
-      bursts = bursts.filter(burst => !burst.markedForDeletion);
+      miniParticles = miniParticles.filter(mp => !mp.markedForDeletion);
+      
+      fireworks.forEach(fw => {
+        fw.update();
+        fw.draw(ctx);
+      });
+      fireworks = fireworks.filter(fw => !fw.markedForDeletion);
       
       animationFrameId = requestAnimationFrame(animate);
     };
@@ -243,6 +329,12 @@ export default function ComingSoon() {
 
   const titleChars = "DRIPPMEDIA".split("");
 
+  const handleShare = () => {
+    const text = `I just caught ${score} dripps on the Dripp Media site! Can you beat my score? 💧🔥`;
+    const url = "https://www.drippmedia.com";
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div ref={containerRef} style={{
       width: '100vw',
@@ -278,22 +370,71 @@ export default function ComingSoon() {
         right: '40px',
         zIndex: 2,
         fontFamily: "'Clash Display', sans-serif",
-        color: 'var(--pure-white)',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'flex-end'
+        alignItems: 'flex-end',
+        gap: '10px'
       }}>
-        <div style={{ fontSize: '0.8rem', letterSpacing: '2px', opacity: 0.5, textTransform: 'uppercase' }}>
-          Dripps Caught
-        </div>
-        <div style={{ fontSize: '3rem', fontWeight: 600, color: 'var(--brand-yellow)', lineHeight: 1 }}>
-          {score}
-        </div>
-        {score >= 50 && (
-          <div style={{ fontSize: '0.8rem', color: 'var(--brand-yellow)', marginTop: '5px', letterSpacing: '1px' }}>
-            Maximum Dripp Achieved!
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div style={{ fontSize: '0.8rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+            Dripps Caught
           </div>
-        )}
+          <div style={{ fontSize: '3.5rem', fontWeight: 600, color: 'var(--brand-yellow)', lineHeight: 1, textShadow: '0 0 20px rgba(235, 215, 63, 0.4)' }}>
+            {score}
+          </div>
+        </div>
+
+        {/* Share Button - Shows only when score > 0 to encourage playing first */}
+        <button 
+          onClick={handleShare}
+          style={{
+            opacity: score > 0 ? 1 : 0,
+            pointerEvents: score > 0 ? 'auto' : 'none',
+            transform: score > 0 ? 'translateY(0)' : 'translateY(-10px)',
+            transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(235, 215, 63, 0.3)',
+            color: 'var(--pure-white)',
+            padding: '8px 16px',
+            borderRadius: '30px',
+            fontFamily: "'Clash Display', sans-serif",
+            fontSize: '0.75rem',
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            backdropFilter: 'blur(10px)',
+            marginTop: '10px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = 'rgba(235, 215, 63, 0.15)';
+            e.target.style.borderColor = 'var(--brand-yellow)';
+            e.target.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.3)';
+            const cursor = document.querySelector('.cursor');
+            if(cursor) {
+              cursor.classList.add('active');
+              cursorActiveRef.current = true;
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+            e.target.style.borderColor = 'rgba(235, 215, 63, 0.3)';
+            e.target.style.boxShadow = 'none';
+            const cursor = document.querySelector('.cursor');
+            if(cursor) {
+              cursor.classList.remove('active');
+              cursorActiveRef.current = false;
+            }
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+            <polyline points="16 6 12 2 8 6"></polyline>
+            <line x1="12" y1="2" x2="12" y2="15"></line>
+          </svg>
+          Brag on X
+        </button>
       </div>
 
       {/* Background Glow */}
@@ -322,7 +463,7 @@ export default function ComingSoon() {
         gap: '5px',
         margin: 0,
         zIndex: 2,
-        overflow: 'hidden',
+        overflow: 'visible',
         pointerEvents: 'none'
       }}>
         {titleChars.map((char, index) => (
