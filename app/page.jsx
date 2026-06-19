@@ -152,8 +152,8 @@ export default function ComingSoon() {
         this.vy *= this.friction;
         this.x += this.vx;
         this.y += this.vy;
-        this.alpha -= 0.03;
-        if (this.alpha <= 0) this.markedForDeletion = true;
+        this.alpha = Math.max(0, this.alpha - 0.04); // Clamped to prevent negative alpha
+        if (this.alpha === 0) this.markedForDeletion = true;
       }
       draw(ctx) {
         ctx.globalAlpha = this.alpha;
@@ -174,13 +174,13 @@ export default function ComingSoon() {
         this.alpha = 1;
         this.isRed = isRed;
         this.markedForDeletion = false;
-        this.expansionSpeed = 10;
+        this.expansionSpeed = 8; // Slightly smoother expansion
       }
       update() {
         this.radius += this.expansionSpeed;
-        this.expansionSpeed *= 0.85; // Fast expansion slowing down (poppy)
-        this.alpha -= 0.05;
-        if (this.alpha <= 0) {
+        this.expansionSpeed *= 0.88; // Smoother deceleration
+        this.alpha = Math.max(0, this.alpha - 0.04); // Clamped to prevent invalid rgba string
+        if (this.alpha === 0) {
           this.markedForDeletion = true;
         }
       }
@@ -189,7 +189,7 @@ export default function ComingSoon() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.strokeStyle = this.isRed ? `rgba(235, 63, 63, ${this.alpha})` : `rgba(235, 215, 63, ${this.alpha})`;
-        ctx.lineWidth = 3 * this.alpha;
+        ctx.lineWidth = Math.max(0.1, 3 * this.alpha);
         ctx.stroke();
         ctx.closePath();
       }
@@ -216,8 +216,8 @@ export default function ComingSoon() {
         this.speedY += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY;
-        this.alpha -= 0.015;
-        if (this.alpha <= 0) this.markedForDeletion = true;
+        this.alpha = Math.max(0, this.alpha - 0.02); // Clamped
+        if (this.alpha === 0) this.markedForDeletion = true;
       }
       draw(ctx) {
         ctx.globalAlpha = this.alpha;
