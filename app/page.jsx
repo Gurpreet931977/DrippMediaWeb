@@ -95,8 +95,9 @@ export default function ComingSoon() {
           
           if (!this.isRed) {
             scoreRef.current += 1;
+          } else {
+            scoreRef.current += 2; // Catching a red drop adds 2 points
           }
-          // Catching a red drop does not decrease points now, you successfully avoided the penalty
           
           setScore(scoreRef.current);
           
@@ -115,17 +116,43 @@ export default function ComingSoon() {
       }
       draw(ctx) {
         ctx.beginPath();
-        // Dynamic teardrop shape stretching with speed
-        const stretch = Math.min(this.vy * 1.2, this.radius * 4);
+        // Realistic curved teardrop shape
+        const stretch = Math.min(this.vy * 1.5, this.radius * 6);
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
-        ctx.lineTo(this.x, this.y - stretch);
-        ctx.fillStyle = this.color;
-        ctx.fill();
+        // Bezier curves for a smooth tail
+        ctx.bezierCurveTo(
+          this.x + this.radius, this.y - stretch * 0.5,
+          this.x + this.radius * 0.3, this.y - stretch * 0.8,
+          this.x, this.y - stretch
+        );
+        ctx.bezierCurveTo(
+          this.x - this.radius * 0.3, this.y - stretch * 0.8,
+          this.x - this.radius, this.y - stretch * 0.5,
+          this.x - this.radius, this.y
+        );
         ctx.closePath();
         
-        // Glow
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = this.isRed ? 'rgba(235, 63, 63, 0.6)' : 'rgba(235, 215, 63, 0.5)';
+        // 3D Glass Gradient Look
+        const gradient = ctx.createRadialGradient(
+          this.x, this.y + this.radius * 0.3, this.radius * 0.1,
+          this.x, this.y, this.radius * 1.2
+        );
+        if (this.isRed) {
+          gradient.addColorStop(0, '#ffffff'); // intense core
+          gradient.addColorStop(0.3, '#ff3333');
+          gradient.addColorStop(1, 'rgba(235, 63, 63, 0.8)');
+        } else {
+          gradient.addColorStop(0, '#ffffff'); // intense core
+          gradient.addColorStop(0.3, '#ebd73f');
+          gradient.addColorStop(1, 'rgba(235, 215, 63, 0.8)');
+        }
+        
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        // Enhance highlight glow significantly
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = this.isRed ? 'rgba(255, 50, 50, 0.9)' : 'rgba(255, 230, 50, 0.9)';
       }
     }
 
