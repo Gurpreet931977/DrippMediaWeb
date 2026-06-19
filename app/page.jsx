@@ -265,14 +265,25 @@ export default function ComingSoon() {
 
     class Paddle {
       constructor() {
+        this.baseW = 120;
         this.w = 120;
         this.h = 10;
         this.x = canvas.width / 2;
         this.y = canvas.height - 100;
         this.vx = 0;
         this.tilt = 0;
+        this.widthModifier = 1;
+        this.modifierTimer = 0;
       }
       update() {
+        if (this.modifierTimer > 0) {
+           this.modifierTimer -= 16; // approx 16ms per frame
+           if (this.modifierTimer <= 0) this.widthModifier = 1;
+        }
+        
+        // Smoothly interpolate current width to target width
+        const targetW = this.baseW * this.widthModifier;
+        this.w += (targetW - this.w) * 0.1;
         const targetX = mouseRef.current.x;
         const dx = targetX - this.x;
         this.vx = dx * 0.2; 
@@ -387,24 +398,33 @@ export default function ComingSoon() {
               if (dist < this.radius + t.radius) {
                  t.hit();
                  
-                 // Reflect vector
-                 const nx = (this.x - t.x) / dist;
-                 const ny = (this.y - t.y) / dist;
-                 const dot = this.vx * nx + this.vy * ny;
-                 this.vx = this.vx - 2 * dot * nx;
-                 this.vy = this.vy - 2 * dot * ny;
+                 if (piercingTimer <= 0) {
+                   // Reflect vector
+                   const nx = (this.x - t.x) / dist;
+                   const ny = (this.y - t.y) / dist;
+                   const dot = this.vx * nx + this.vy * ny;
+                   this.vx = this.vx - 2 * dot * nx;
+                   this.vy = this.vy - 2 * dot * ny;
+                 }
                  
                  breakerScoreRef.current += 10;
                  setBreakerScore(breakerScoreRef.current);
                  
-                 if (Math.random() < 0.2) powerUps.push(new PowerUp(t.x, t.y));
+                 if (Math.random() < 0.25) powerUps.push(new PowerUp(t.x, t.y));
                  
-                 break; // Hit one target per frame max
+                 if (piercingTimer <= 0) break; // If piercing, can hit multiple in one frame!
               }
            }
         }
       }
       draw(ctx) {
+        // Piercing Fireball effect
+        if (piercingTimer > 0) {
+           ctx.beginPath();
+           ctx.arc(this.x, this.y, this.radius * 4, 0, Math.PI*2);
+           ctx.fillStyle = 'rgba(235, 63, 63, 0.3)';
+           ctx.fill();
+        }
         // High Performance Fading Trail
         for (let i = 0; i < this.trail.length; i++) {
            const point = this.trail[i];
@@ -440,20 +460,30 @@ export default function ComingSoon() {
          this.markedForDeletion = false;
          this.color = Math.random() > 0.5 ? '#ebd73f' : '#ffffff';
          this.phase = Math.random() * Math.PI * 2;
+         this.health = 1;
        }
        update() {
          this.phase += 0.05;
          this.radius = this.baseRadius + Math.sin(this.phase) * 3;
+         if (this.health > 1) {
+            this.color = '#33ccff'; // Shield color
+         }
        }
        hit() {
-         this.markedForDeletion = true;
+         this.health -= 1;
          fireworks.push(new Shockwave(this.x, this.y, this.color));
+         if (this.health <= 0) {
+            this.markedForDeletion = true;
+         } else {
+            // Revert color when shield broken
+            this.color = Math.random() > 0.5 ? '#ebd73f' : '#ffffff';
+         }
        }
        draw(ctx) {
          ctx.beginPath();
          ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
          ctx.strokeStyle = this.color;
-         ctx.lineWidth = 2;
+         ctx.lineWidth = this.health > 1 ? 4 : 2;
          ctx.stroke();
          
          // Inner dot
@@ -467,12 +497,33 @@ export default function ComingSoon() {
     class PowerUp {
        constructor(x, y) {
           this.x = x; this.y = y;
-          this.vy = 3;
-          this.radius = 5;
-          this.type = Math.random() < 0.3 ? 'multiball' : 'points';
+          this.vy = 2.5 + Math.random() * 1.5;
+          this.radius = 6;
+          
+          const rand = Math.random();
+          if (rand < 0.2) this.type = 'multiball'; // Magenta
+          else if (rand < 0.4) this.type = 'points'; // Cyan
+          else if (rand < 0.55) this.type = 'wide_paddle'; // Green
+          else if (rand < 0.7) this.type = 'piercing'; // Yellow
+          else if (rand < 0.85) this.type = 'shrink_paddle'; // Red
+          else this.type = 'shield_targets'; // Blue
+          
           this.markedForDeletion = false;
        }
-       update(paddle) {
+       
+       getColor() {
+          switch(this.type) {
+             case 'multiball': return '#ff00ff';
+             case 'points': return '#00ffcc';
+             case 'wide_paddle': return '#33ff33';
+             case 'piercing': return '#ebd73f';
+             case 'shrink_paddle': return '#ff3333';
+             case 'shield_targets': return '#33ccff';
+             default: return '#ffffff';
+          }
+       }
+       
+       update(paddle, targets) {
           this.y += this.vy;
           if (this.y > canvas.height + 20) this.markedForDeletion = true;
           
@@ -487,26 +538,45 @@ export default function ComingSoon() {
              if (this.type === 'multiball') {
                  balls.push(new Ball(paddle.x, paddle.y - 20, -4, -6));
                  balls.push(new Ball(paddle.x, paddle.y - 20, 4, -6));
-             } else {
+             } else if (this.type === 'points') {
                  breakerScoreRef.current += 50; 
                  setBreakerScore(breakerScoreRef.current);
+             } else if (this.type === 'wide_paddle') {
+                 paddle.widthModifier = 1.5;
+                 paddle.modifierTimer = 10000; // 10 seconds
+             } else if (this.type === 'shrink_paddle') {
+                 paddle.widthModifier = 0.6;
+                 paddle.modifierTimer = 5000; // 5 seconds
+             } else if (this.type === 'piercing') {
+                 piercingTimer = 5000; // 5 seconds
+             } else if (this.type === 'shield_targets') {
+                 // Add shield to 3 random targets
+                 const unshielded = targets.filter(t => t.health === 1);
+                 for (let i = 0; i < 3 && unshielded.length > 0; i++) {
+                    const idx = Math.floor(Math.random() * unshielded.length);
+                    unshielded[idx].health = 2;
+                    unshielded.splice(idx, 1);
+                 }
              }
              
-             const particleColor = this.type === 'multiball' ? '#ff00ff' : '#00ffcc';
-             fireworks.push(new Shockwave(this.x, this.y, particleColor));
+             const color = this.getColor();
+             fireworks.push(new Shockwave(this.x, this.y, color));
           }
        }
        draw(ctx) {
+          const color = this.getColor();
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-          ctx.fillStyle = this.type === 'multiball' ? '#ff00ff' : '#00ffcc';
+          ctx.fillStyle = color;
           ctx.fill();
           
           // Fake glow
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.radius * 2.5, 0, Math.PI*2);
-          ctx.fillStyle = this.type === 'multiball' ? 'rgba(255,0,255,0.2)' : 'rgba(0,255,204,0.2)';
+          ctx.globalAlpha = 0.2;
+          ctx.fillStyle = color;
           ctx.fill();
+          ctx.globalAlpha = 1;
        }
     }
 
@@ -632,11 +702,14 @@ export default function ComingSoon() {
       );
     };
 
+    let piercingTimer = 0;
+
     window.initBreakerGame = (level = 1) => {
       bricks = []; // storing TargetRings here for compatibility
       balls = [new Ball()];
       powerUps = [];
       paddle = new Paddle();
+      piercingTimer = 0;
       
       const cols = Math.min(10, 4 + level);
       const rows = Math.min(8, 3 + level);
@@ -707,6 +780,8 @@ export default function ComingSoon() {
            setGameState('failed');
         }
         
+        if (piercingTimer > 0) piercingTimer -= 16;
+        
         bricks.forEach(brick => { brick.update(); brick.draw(ctx); });
         bricks = bricks.filter(b => !b.markedForDeletion);
         if (bricks.length === 0 && balls.length > 0) {
@@ -715,7 +790,7 @@ export default function ComingSoon() {
            window.initBreakerGame(breakerLevelRef.current);
         }
         
-        powerUps.forEach(pu => { pu.update(paddle); pu.draw(ctx); });
+        powerUps.forEach(pu => { pu.update(paddle, bricks); pu.draw(ctx); });
         powerUps = powerUps.filter(pu => !pu.markedForDeletion);
       }
 
@@ -944,11 +1019,11 @@ export default function ComingSoon() {
              ) : activeGame === 'breaker' ? (
                <>
                  <p>Smash the glowing capsules with your magnetic paddle.</p>
-                 <p>Catch falling <span style={{color: '#00ffcc'}}>Cyan Drops</span> for +50 points.</p>
-                 <p>Catch falling <span style={{color: '#ff00ff'}}>Magenta Drops</span> to trigger MULTI-BALL chaos!</p>
+                 <p>Catch <span style={{color: '#00ffcc'}}>Cyan</span> for Points, <span style={{color: '#ff00ff'}}>Magenta</span> for Multi-Ball.</p>
+                 <p>Catch <span style={{color: '#33ff33'}}>Green</span> for Wider Paddle, <span style={{color: '#ebd73f'}}>Yellow</span> for Piercing Fireball!</p>
                  <br/>
+                 <p>Avoid <span style={{color: '#ff3333'}}>Red</span> (Shrinks Paddle) and <span style={{color: '#33ccff'}}>Blue</span> (Shields Targets).</p>
                  <p>If you drop the ball once, you fail instantly!</p>
-                 <p>Clear all targets to advance to the next Level.</p>
                </>
              ) : (
                <p>The game is currently disabled. Toggle the Easter Egg icon in the bottom left to play!</p>
@@ -1047,9 +1122,17 @@ export default function ComingSoon() {
              <h2 style={{ fontFamily: "'Panchang', sans-serif", color: '#eb3f3f', fontSize: 'clamp(3rem, 6vw, 5rem)', margin: 0, textShadow: '0 0 20px rgba(235, 63, 63, 0.6), 0 0 40px rgba(235, 63, 63, 0.4)', textAlign: 'center', letterSpacing: '2px' }}>
                DRIPPED OUT!
              </h2>
-             <p style={{ marginTop: '20px', fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', letterSpacing: '1px' }}>
+             <p style={{ marginTop: '10px', fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', letterSpacing: '1px' }}>
                {activeGame === 'dripp' ? 'You caught a bomb! Game Over.' : 'You dropped the ball! Game Over.'}
              </p>
+             
+             <div style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+               <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px' }}>Final Score</span>
+               <span style={{ fontSize: '3.5rem', fontWeight: 600, color: 'var(--brand-yellow)', textShadow: '0 0 20px rgba(235, 215, 63, 0.4)', lineHeight: 1, marginTop: '5px' }}>
+                  {activeGame === 'dripp' ? score : breakerScore}
+               </span>
+             </div>
+
              <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                <PrimaryButton onClick={() => {
                   scoreRef.current = 0;
