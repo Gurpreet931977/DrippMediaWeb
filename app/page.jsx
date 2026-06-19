@@ -133,7 +133,7 @@ export default function ComingSoon() {
         this.isRed = !this.isBomb && isRed;
         
         // Logarithmic difficulty scaling prevents sudden spikes when catching 69-point White drops
-        const speedMult = 1 + Math.log10(1 + scoreRef.current / 80) * 0.6; 
+        const speedMult = 1 + Math.log10(1 + scoreRef.current / 300) * 0.4; 
         
         this.vy = (1.5 + Math.random() * 1.5) * speedMult; // Base speed a bit higher so it's not boring at start
         this.gravity = (0.01 + Math.random() * 0.01) * speedMult; 
@@ -760,8 +760,8 @@ export default function ComingSoon() {
       if (activeGameRef.current === 'dripp') {
         // Logarithmic intensity curve so it scales gently over time
         const baseIntensity = 0.025; 
-        const scaling = Math.log10(1 + scoreRef.current / 100) * 0.15;
-        const rainIntensity = Math.min(0.35, baseIntensity + scaling);
+        const scaling = Math.log10(1 + scoreRef.current / 300) * 0.1;
+        const rainIntensity = Math.min(0.25, baseIntensity + scaling);
         
         if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
         if (Math.random() < rainIntensity * 0.15) drops.push(new Drop(Math.random() < 0.15));
