@@ -50,6 +50,49 @@ export default function ComingSoon() {
     window.addEventListener('resize', resize);
     resize();
 
+    const triggerMilestone = () => {
+      // 1. Canvas burst of particles
+      for (let i = 0; i < 100; i++) {
+        splashes.push(new MilestoneParticle(canvas.width / 2, canvas.height / 2));
+      }
+
+      // 2. GSAP animation for the text
+      const tl = gsap.timeline();
+      tl.to(".char", {
+        y: -40,
+        scale: 1.3,
+        color: "#ffffff",
+        textShadow: "0 0 50px #ffffff",
+        duration: 0.2,
+        stagger: 0.05,
+        ease: "back.out(2)"
+      })
+      .to(".char", {
+        y: 0,
+        scale: 1,
+        color: (i) => i < 5 ? 'var(--pure-white)' : 'var(--brand-yellow)',
+        textShadow: (i) => i >= 5 ? '0 0 30px var(--brand-glow)' : 'none',
+        duration: 0.4,
+        stagger: 0.05,
+        ease: "bounce.out"
+      }, "-=0.2");
+
+      // 3. Flash background
+      gsap.to(".bg-glow", {
+        opacity: 0.9,
+        scale: 1.2,
+        duration: 0.3,
+        yoyo: true,
+        repeat: 1
+      });
+      
+      // 4. Flash Score
+      gsap.fromTo(".score-text", 
+        { scale: 1 },
+        { scale: 1.5, color: "#ffffff", duration: 0.3, yoyo: true, repeat: 1, ease: "power2.out" }
+      );
+    };
+
     class Drop {
       constructor() {
         this.x = Math.random() * canvas.width;
@@ -67,7 +110,6 @@ export default function ComingSoon() {
 
         if (this.y > canvas.height + 20) {
           this.markedForDeletion = true;
-          // Reset score if missed to make it a bit challenging? No, let's keep it chill.
         }
         
         // Collision with mouse
@@ -75,7 +117,6 @@ export default function ComingSoon() {
         const dy = mouseRef.current.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // Use a larger hit radius if cursor is active (hovering links) or just default 30
         const hitRadius = cursorActiveRef.current ? 40 : 25;
 
         if (distance < this.radius + hitRadius) {
@@ -83,18 +124,21 @@ export default function ComingSoon() {
           scoreRef.current += 1;
           setScore(scoreRef.current);
           splashes.push(new Splash(this.x, this.y));
+
+          // Trigger milestone animation every 50 dripps
+          if (scoreRef.current > 0 && scoreRef.current % 50 === 0) {
+            triggerMilestone();
+          }
         }
       }
       draw(ctx) {
         ctx.beginPath();
-        // Draw teardrop shape roughly
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
         ctx.lineTo(this.x, this.y - this.radius * 2);
         ctx.fillStyle = this.color;
         ctx.fill();
         ctx.closePath();
         
-        // Glow
         ctx.shadowBlur = 10;
         ctx.shadowColor = 'rgba(235, 215, 63, 0.5)';
       }
@@ -127,10 +171,40 @@ export default function ComingSoon() {
       }
     }
 
+    class MilestoneParticle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 5 + Math.random() * 20;
+        this.vx = Math.cos(angle) * velocity;
+        this.vy = Math.sin(angle) * velocity;
+        this.radius = 2 + Math.random() * 6;
+        this.alpha = 1;
+        this.color = Math.random() > 0.5 ? '235, 215, 63' : '255, 255, 255';
+        this.markedForDeletion = false;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.3; // gravity
+        this.alpha -= 0.015;
+        if (this.alpha <= 0) this.markedForDeletion = true;
+      }
+      draw(ctx) {
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
+        ctx.fill();
+        ctx.closePath();
+      }
+    }
+
     const animate = (timestamp) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Spawn rate based on score (gets slightly faster)
       const spawnRate = Math.max(300, 1000 - scoreRef.current * 10);
 
       if (timestamp - lastDropTime > spawnRate) {
@@ -202,7 +276,6 @@ export default function ComingSoon() {
     }}>
       <div className="cursor"></div>
 
-      {/* Canvas for Game */}
       <canvas 
         ref={canvasRef}
         style={{
@@ -216,7 +289,6 @@ export default function ComingSoon() {
         }}
       />
 
-      {/* Game UI */}
       <div className="game-ui" style={{
         position: 'absolute',
         top: '40px',
@@ -231,18 +303,17 @@ export default function ComingSoon() {
         <div style={{ fontSize: '0.8rem', letterSpacing: '2px', opacity: 0.5, textTransform: 'uppercase' }}>
           Dripps Caught
         </div>
-        <div style={{ fontSize: '3rem', fontWeight: 600, color: 'var(--brand-yellow)', lineHeight: 1 }}>
+        <div className="score-text" style={{ fontSize: '3rem', fontWeight: 600, color: 'var(--brand-yellow)', lineHeight: 1 }}>
           {score}
         </div>
         {score >= 50 && (
           <div style={{ fontSize: '0.8rem', color: 'var(--brand-yellow)', marginTop: '5px', letterSpacing: '1px' }}>
-            Maximum Dripp Achieved!
+            Level {Math.floor(score / 50)} Dripp!
           </div>
         )}
       </div>
 
-      {/* Background Glow */}
-      <div style={{
+      <div className="bg-glow" style={{
         position: 'absolute',
         width: '40vw',
         height: '40vw',
@@ -256,7 +327,6 @@ export default function ComingSoon() {
         zIndex: 0
       }}></div>
 
-      {/* Main Title */}
       <h1 style={{
         fontFamily: "'Panchang', sans-serif",
         fontSize: 'clamp(3rem, 10vw, 8rem)',
@@ -267,7 +337,7 @@ export default function ComingSoon() {
         gap: '5px',
         margin: 0,
         zIndex: 2,
-        overflow: 'hidden',
+        overflow: 'visible',
         pointerEvents: 'none'
       }}>
         {titleChars.map((char, index) => (
@@ -281,7 +351,6 @@ export default function ComingSoon() {
         ))}
       </h1>
 
-      {/* Subtitle */}
       <div style={{ overflow: 'hidden', marginTop: '2rem', pointerEvents: 'none' }}>
         <p className="subtitle" style={{
           fontFamily: "'Clash Display', sans-serif",
@@ -297,7 +366,6 @@ export default function ComingSoon() {
         </p>
       </div>
 
-      {/* Social Links */}
       <div style={{
         display: 'flex',
         gap: '2rem',
