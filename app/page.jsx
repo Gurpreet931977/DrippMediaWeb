@@ -539,8 +539,12 @@ export default function ComingSoon() {
         marginTop: '4rem',
         zIndex: 2
       }}>
-        {['Instagram', 'Contact'].map((item) => (
-          <a key={item} href="#" className="social-link" style={{
+        {[
+          { label: 'Instagram', url: 'https://www.instagram.com/drippmedia_', target: '_blank' },
+          { label: 'WhatsApp', url: 'https://wa.me/917300595147', target: '_blank' },
+          { label: '+91 78189 95147', url: 'tel:+917818995147', target: '_self' }
+        ].map((item) => (
+          <a key={item.label} href={item.url} target={item.target} rel={item.target === '_blank' ? 'noopener noreferrer' : undefined} className="social-link" style={{
             color: 'var(--pure-white)',
             textDecoration: 'none',
             fontFamily: "'Clash Display', sans-serif",
@@ -570,7 +574,7 @@ export default function ComingSoon() {
             }
           }}
           >
-            {item}
+            {item.label}
           </a>
         ))}
       </div>
