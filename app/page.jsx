@@ -470,8 +470,12 @@ export default function ComingSoon() {
        update() {
          this.phase += 0.05;
          this.radius = this.baseRadius + Math.sin(this.phase) * 3;
-         if (this.health > 1) {
+         if (this.health >= 3) {
+            this.color = '#ff00ff'; // Magenta for very high health
+         } else if (this.health === 2) {
             this.color = '#33ccff'; // Shield color
+         } else if (this.health === 1 && (this.color === '#33ccff' || this.color === '#ff00ff')) {
+            this.color = Math.random() > 0.5 ? '#ebd73f' : '#ffffff'; // Revert back when shield breaks
          }
        }
        hit() {
@@ -716,22 +720,85 @@ export default function ComingSoon() {
       paddle = new Paddle();
       piercingTimer = 0;
       
-      const cols = Math.min(10, 4 + level);
-      const rows = Math.min(8, 3 + level);
+      const pattern = level % 10;
       const spacingX = 60;
       const spacingY = 50;
-      
       const offsetX = canvas.width / 2;
       const offsetY = 120;
       
-      for(let r=0; r<rows; r++) {
-         const itemsInRow = cols - Math.abs(2 - r);
-         const rowOffsetX = offsetX - ((itemsInRow - 1) * spacingX) / 2;
-         
-         for(let c=0; c<itemsInRow; c++) {
-            bricks.push(new TargetRing(rowOffsetX + c * spacingX, offsetY + r * spacingY));
+      const addBrick = (r, c, health = 1) => {
+         const br = new TargetRing(offsetX + c * spacingX, offsetY + r * spacingY);
+         br.health = health;
+         bricks.push(br);
+      };
+
+      if (pattern === 1) {
+         // Level 1: Standard 5x3
+         for(let r=0; r<3; r++) {
+            for(let c=-2; c<=2; c++) addBrick(r, c);
+         }
+      } else if (pattern === 2) {
+         // Triangle
+         for(let r=0; r<5; r++) {
+            for(let c=-r; c<=r; c++) addBrick(r, c);
+         }
+      } else if (pattern === 3) {
+         // Hollow Box
+         for(let r=0; r<5; r++) {
+            for(let c=-3; c<=3; c++) {
+               if (r === 0 || r === 4 || c === -3 || c === 3) addBrick(r, c);
+            }
+         }
+      } else if (pattern === 4) {
+         // Checkerboard
+         for(let r=0; r<6; r++) {
+            for(let c=-4; c<=4; c++) {
+               if ((r + c) % 2 === 0) addBrick(r, c);
+            }
+         }
+      } else if (pattern === 5) {
+         // X Shape
+         for(let r=0; r<7; r++) {
+            for(let c=-3; c<=3; c++) {
+               if (c === r - 3 || c === -(r - 3)) addBrick(r, c, 2); // Harder health
+            }
+         }
+      } else if (pattern === 6) {
+         // Two Pillars
+         for(let r=0; r<6; r++) {
+            for(let c=-4; c<=4; c++) {
+               if (c === -3 || c === -2 || c === 2 || c === 3) addBrick(r, c);
+            }
+         }
+      } else if (pattern === 7) {
+         // Diamond
+         for(let r=0; r<7; r++) {
+            const width = 3 - Math.abs(3 - r);
+            for(let c=-width; c<=width; c++) addBrick(r, c, width === 0 ? 2 : 1);
+         }
+      } else if (pattern === 8) {
+         // V Shape
+         for(let r=0; r<6; r++) {
+            addBrick(r, -(5 - r));
+            addBrick(r, 5 - r);
+         }
+      } else if (pattern === 9) {
+         // Smiley Face
+         addBrick(0, -2); addBrick(0, 2);
+         addBrick(1, -2); addBrick(1, 2);
+         addBrick(3, -3); addBrick(3, 3);
+         addBrick(4, -2); addBrick(4, -1); addBrick(4, 0); addBrick(4, 1); addBrick(4, 2);
+      } else if (pattern === 0) {
+         // Level 10 (Boss/Wall)
+         for(let r=0; r<5; r++) {
+            for(let c=-4; c<=4; c++) addBrick(r, c, r === 0 ? 3 : (r === 1 ? 2 : 1));
          }
       }
+
+      // Ball speed scaling based on level cycles (every 10 levels it gets slightly faster)
+      const speedMult = 1 + Math.floor((level - 1) / 10) * 0.2;
+      balls[0].speedX *= speedMult;
+      balls[0].speedY *= speedMult;
     };
     
     window.initDrippGame = () => {
