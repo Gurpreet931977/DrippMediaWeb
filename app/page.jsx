@@ -139,7 +139,7 @@ export default function ComingSoon() {
         this.x = Math.random() * canvas.width;
         this.y = -50;
         this.isWhite = !isRed && Math.random() < 0.05; // 5% chance of white drop
-        this.isBomb = Math.random() < 0.04; // 4% chance of bomb
+        this.isBomb = Math.random() < 0.09; // 9% chance of bomb (Increased by 5%)
         this.isRed = !this.isBomb && isRed;
         
         // Logarithmic difficulty scaling prevents sudden spikes when catching 69-point White drops
@@ -933,8 +933,13 @@ export default function ComingSoon() {
         const scaling = Math.log10(1 + scoreRef.current / 300) * 0.1;
         const rainIntensity = Math.min(0.25, baseIntensity + scaling);
         
-        if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
-        if (Math.random() < rainIntensity * 0.15) drops.push(new Drop(Math.random() < 0.15));
+        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+        const spawnAttempts = isMobile ? 3 : 1; // 3x more drops on mobile
+        
+        for (let i = 0; i < spawnAttempts; i++) {
+           if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
+           if (Math.random() < rainIntensity * 0.15) drops.push(new Drop(Math.random() < 0.15));
+        }
         
         drops.forEach(drop => { drop.update(); drop.draw(ctx); });
         drops = drops.filter(drop => !drop.markedForDeletion);
