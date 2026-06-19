@@ -81,7 +81,10 @@ export default function ComingSoon() {
       // Mobile Touch
       if (e.touches && e.touches.length > 0) {
         if (activeGameRef.current !== 'none' && gameStateRef.current === 'playing' && !isPausedRef.current) {
-          e.preventDefault(); // Stop mobile scrolling/refreshing while playing
+          const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+          if (tag === 'canvas' || tag === 'body' || (e.target.classList && e.target.classList.contains('hero'))) {
+             e.preventDefault(); // Stop mobile scrolling/refreshing while playing on canvas
+          }
         }
         mouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         if (cursor) cursor.style.display = 'none'; // Hide cursor on touch
@@ -139,9 +142,11 @@ export default function ComingSoon() {
         
         // Logarithmic difficulty scaling prevents sudden spikes when catching 69-point White drops
         const speedMult = 1 + Math.log10(1 + scoreRef.current / 300) * 0.4; 
+        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+        const mobileSpeedMult = isMobile ? 1.5 : 1.0;
         
-        this.vy = (1.5 + Math.random() * 1.5) * speedMult; // Base speed a bit higher so it's not boring at start
-        this.gravity = (0.01 + Math.random() * 0.01) * speedMult; 
+        this.vy = (1.5 + Math.random() * 1.5) * speedMult * mobileSpeedMult; 
+        this.gravity = (0.01 + Math.random() * 0.01) * speedMult * mobileSpeedMult; 
         
         this.radius = 2 + Math.random() * 2; 
         this.length = this.vy * 3; // Make trail slightly longer
@@ -174,7 +179,8 @@ export default function ComingSoon() {
         const dy = mouseRef.current.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        const hitRadius = cursorActiveRef.current ? 40 : 35;
+        const isMobileHit = typeof window !== 'undefined' && window.innerWidth <= 768;
+        const hitRadius = cursorActiveRef.current ? 40 : (isMobileHit ? 20 : 35);
 
         if (distance < hitRadius) {
           this.markedForDeletion = true;
@@ -1443,17 +1449,29 @@ export default function ComingSoon() {
       }}></div>
 
       <div style={{ opacity: hideHero ? 0 : 1, transition: 'opacity 0.5s ease', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h1 style={{
-          fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(2rem, 10vw, 8rem)', fontWeight: 800, textTransform: 'uppercase',
-          letterSpacing: '-2px', display: 'flex', gap: 'clamp(2px, 1vw, 5px)', margin: 0, zIndex: 2, overflow: 'visible', pointerEvents: 'none'
+        <h1 className="hero-title-container" style={{
+          fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(2.5rem, 10vw, 8rem)', fontWeight: 800, textTransform: 'uppercase',
+          letterSpacing: '-2px', display: 'flex', gap: 'clamp(10px, 2vw, 20px)', margin: 0, zIndex: 2, overflow: 'visible', pointerEvents: 'none',
+          justifyContent: 'center', alignItems: 'center'
         }}>
-          {titleChars.map((char, index) => (
-            <span key={index} className="char" style={{ 
-              display: 'inline-block', color: index < 5 ? 'var(--pure-white)' : 'var(--brand-yellow)', textShadow: index >= 5 ? '0 0 30px var(--brand-glow)' : 'none'
-            }}>
-              {char}
-            </span>
-          ))}
+          <div style={{ display: 'flex', gap: 'clamp(2px, 1vw, 5px)' }}>
+            {"DRIPP".split('').map((char, index) => (
+              <span key={`d-${index}`} className="char" style={{ 
+                display: 'inline-block', color: 'var(--pure-white)'
+              }}>
+                {char}
+              </span>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 'clamp(2px, 1vw, 5px)' }}>
+            {"MEDIA".split('').map((char, index) => (
+              <span key={`m-${index}`} className="char" style={{ 
+                display: 'inline-block', color: 'var(--brand-yellow)', textShadow: '0 0 30px var(--brand-glow)'
+              }}>
+                {char}
+              </span>
+            ))}
+          </div>
         </h1>
 
         <div style={{ overflow: 'hidden', marginTop: '2rem', pointerEvents: 'none' }}>

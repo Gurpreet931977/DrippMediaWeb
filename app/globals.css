@@ -249,6 +249,24 @@
                 padding: 0 10px !important;
                 font-size: 0.65rem !important;
             }
+            .cursor {
+                display: none !important;
+            }
+            .hero-title-container {
+                flex-direction: column !important;
+                gap: 5px !important;
+            }
+            .social-link {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                border-radius: 20px;
+                padding: 12px 24px !important;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                max-width: 250px;
+            }
         }
         
         section.hero {
