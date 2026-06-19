@@ -146,7 +146,7 @@ export default function ComingSoon() {
         this.x = Math.random() * canvas.width;
         this.y = -50;
         this.isWhite = !isRed && Math.random() < 0.05; // 5% chance of white drop
-        this.isBomb = Math.random() < 0.09; // 9% chance of bomb (Increased by 5%)
+        this.isBomb = Math.random() < 0.03; // 3% chance of bomb (Rare)
         this.isRed = !this.isBomb && isRed;
         
         // Logarithmic difficulty scaling prevents sudden spikes when catching 69-point White drops
@@ -1547,6 +1547,12 @@ export default function ComingSoon() {
             <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)' }}>
               {activeGame === 'dripp' ? score : breakerScore}
             </div>
+            {activeGame === 'dripp' && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: '5px' }}>
+                <div style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>Keep scoring to level up</div>
+                <div style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: '#eb3f3f', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Caution: Avoid bombs</div>
+              </div>
+            )}
           </div>
         </div>
       )}
