@@ -730,6 +730,13 @@ export default function ComingSoon() {
          }
       }
     };
+    
+    window.initDrippGame = () => {
+      drops = [];
+      splashes = [];
+      miniParticles = [];
+      fireworks = [];
+    };
 
     let lastActiveGame = 'dripp';
 
@@ -1207,6 +1214,7 @@ export default function ComingSoon() {
                   setIsPaused(false);
                   setShowShareOptions(false);
                   if(activeGame === 'breaker') window.initBreakerGame(1);
+                  else if(activeGame === 'dripp') window.initDrippGame();
                }}>Play Again</PrimaryButton>
                
                {!showShareOptions ? (
