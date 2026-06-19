@@ -720,7 +720,7 @@ export default function ComingSoon() {
       paddle = new Paddle();
       piercingTimer = 0;
       
-      const pattern = level % 10;
+      const pattern = level % 20;
       const spacingX = 60;
       const spacingY = 50;
       const offsetX = canvas.width / 2;
@@ -760,7 +760,7 @@ export default function ComingSoon() {
          // X Shape
          for(let r=0; r<7; r++) {
             for(let c=-3; c<=3; c++) {
-               if (c === r - 3 || c === -(r - 3)) addBrick(r, c, 2); // Harder health
+               if (c === r - 3 || c === -(r - 3)) addBrick(r, c, 2);
             }
          }
       } else if (pattern === 6) {
@@ -788,15 +788,86 @@ export default function ComingSoon() {
          addBrick(1, -2); addBrick(1, 2);
          addBrick(3, -3); addBrick(3, 3);
          addBrick(4, -2); addBrick(4, -1); addBrick(4, 0); addBrick(4, 1); addBrick(4, 2);
-      } else if (pattern === 0) {
-         // Level 10 (Boss/Wall)
+      } else if (pattern === 10) {
+         // Level 10 (Mini-Boss Wall)
          for(let r=0; r<5; r++) {
             for(let c=-4; c<=4; c++) addBrick(r, c, r === 0 ? 3 : (r === 1 ? 2 : 1));
          }
+      } else if (pattern === 11) {
+         // Arrow Up
+         addBrick(0, 0, 2);
+         addBrick(1, -1); addBrick(1, 0, 2); addBrick(1, 1);
+         addBrick(2, -2); addBrick(2, 0, 2); addBrick(2, 2);
+         addBrick(3, -3); addBrick(3, 0, 2); addBrick(3, 3);
+         addBrick(4, 0, 2); addBrick(5, 0, 2); addBrick(6, 0, 2);
+      } else if (pattern === 12) {
+         // Hourglass
+         for(let r=0; r<7; r++) {
+            const width = Math.abs(3 - r);
+            for(let c=-width; c<=width; c++) addBrick(r, c, width === 0 ? 3 : 1);
+         }
+      } else if (pattern === 13) {
+         // Space Invader
+         addBrick(0, -2); addBrick(0, 2);
+         addBrick(1, -3); addBrick(1, -2); addBrick(1, -1); addBrick(1, 0); addBrick(1, 1); addBrick(1, 2); addBrick(1, 3);
+         addBrick(2, -4); addBrick(2, -3); addBrick(2, -1); addBrick(2, 0); addBrick(2, 1); addBrick(2, 3); addBrick(2, 4);
+         addBrick(3, -4); addBrick(3, -3); addBrick(3, -2); addBrick(3, -1); addBrick(3, 0); addBrick(3, 1); addBrick(3, 2); addBrick(3, 3); addBrick(3, 4);
+         addBrick(4, -2); addBrick(4, 2);
+         addBrick(5, -3); addBrick(5, -1); addBrick(5, 1); addBrick(5, 3);
+      } else if (pattern === 14) {
+         // Cross
+         for(let r=0; r<7; r++) {
+            for(let c=-3; c<=3; c++) {
+               if (r >= 2 && r <= 4) addBrick(r, c, 2);
+               else if (c >= -1 && c <= 1) addBrick(r, c, 2);
+            }
+         }
+      } else if (pattern === 15) {
+         // Double Diamonds
+         for(let r=0; r<5; r++) {
+            const width = 2 - Math.abs(2 - r);
+            for(let c=-width; c<=width; c++) {
+               addBrick(r, c - 2);
+               addBrick(r, c + 2);
+            }
+         }
+      } else if (pattern === 16) {
+         // Stairs
+         for(let r=0; r<6; r++) {
+            for(let c=-4; c<=(r - 2); c++) addBrick(r, c);
+         }
+      } else if (pattern === 17) {
+         // "S" Shape / Spiral
+         for(let c=-2; c<=2; c++) { addBrick(0, c); addBrick(3, c); addBrick(6, c); }
+         addBrick(1, -2); addBrick(2, -2);
+         addBrick(4, 2); addBrick(5, 2);
+      } else if (pattern === 18) {
+         // Fortress
+         for(let r=0; r<7; r++) {
+            for(let c=-4; c<=4; c++) {
+               if (r === 0 || r === 6 || c === -4 || c === 4) addBrick(r, c, 3);
+               else if (r === 3 && c === 0) addBrick(r, c, 5); // The king
+            }
+         }
+      } else if (pattern === 19) {
+         // DNA Twist
+         for(let r=0; r<8; r++) {
+            const offset = Math.round(Math.sin(r) * 3);
+            addBrick(r, offset, 2);
+            addBrick(r, -offset, 2);
+         }
+      } else if (pattern === 0) {
+         // Ultimate Boss (Level 20)
+         for(let r=0; r<6; r++) {
+            for(let c=-4; c<=4; c++) {
+               const dist = Math.max(Math.abs(3 - r), Math.abs(c));
+               addBrick(r, c, 5 - dist); // Center has 5 health
+            }
+         }
       }
 
-      // Ball speed scaling based on level cycles (every 10 levels it gets slightly faster)
-      const speedMult = 1 + Math.floor((level - 1) / 10) * 0.2;
+      // Ball speed scaling based on level cycles (every 20 levels it gets slightly faster)
+      const speedMult = 1 + Math.floor((level - 1) / 20) * 0.2;
       balls[0].speedX *= speedMult;
       balls[0].speedY *= speedMult;
     };
