@@ -86,8 +86,10 @@ export default function ComingSoon() {
         gsap.to(cursor, {
           x: mouseRef.current.x,
           y: mouseRef.current.y,
-          duration: 0.1,
-          ease: "power2.out"
+          xPercent: -50,
+          yPercent: -50,
+          duration: 0.05,
+          ease: "power3.out"
         });
       }
     };
@@ -854,50 +856,34 @@ export default function ComingSoon() {
     }}>
       <style>{`
         .cursor {
-           width: 60px !important;
-           height: 60px !important;
-           border: 1px solid rgba(255,255,255,0.3) !important;
-           background: rgba(0,0,0,0.2) !important;
-           backdrop-filter: blur(4px) !important;
+           position: fixed !important;
+           top: 0; left: 0;
+           width: 50px !important;
+           height: 50px !important;
+           background: var(--brand-yellow) !important;
+           border: 0px solid transparent !important;
            border-radius: 50% !important;
            display: flex !important;
            justify-content: center !important;
            align-items: center !important;
-           transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.15s, background 0.15s, width 0.2s, height 0.2s !important;
+           transition: background 0.1s ease, border 0.1s ease, width 0.15s ease, height 0.15s ease, box-shadow 0.15s ease !important;
            z-index: 100000 !important;
-        }
-        .cursor::after {
-           content: '';
-           width: 14px;
-           height: 14px;
-           background: var(--brand-yellow);
-           border-radius: 4px;
-           transform: rotate(45deg);
-           transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-           box-shadow: 0 0 15px var(--brand-yellow);
+           pointer-events: none !important;
+           box-shadow: 0 0 20px rgba(235, 215, 63, 0.5) !important;
         }
         .cursor.eating {
-           transform: scale(1.3) !important;
-           border-color: var(--brand-yellow) !important;
-           background: rgba(235, 215, 63, 0.15) !important;
-        }
-        .cursor.eating::after {
-           width: 4px;
-           height: 4px;
-           background: #ffffff;
-           box-shadow: 0 0 30px #ffffff;
-           transform: rotate(225deg) scale(0.3);
+           background: transparent !important;
+           border: 8px solid var(--pure-white) !important;
+           width: 70px !important;
+           height: 70px !important;
+           box-shadow: 0 0 30px rgba(255, 255, 255, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
         }
         .cursor.active {
+           background: rgba(235, 215, 63, 0.1) !important;
+           border: 2px solid var(--brand-yellow) !important;
            width: 80px !important;
            height: 80px !important;
-           border-color: rgba(255,255,255,0.8) !important;
-           background: rgba(255,255,255,0.1) !important;
-        }
-        .cursor.active::after {
-           transform: rotate(90deg) scale(0.8);
-           background: #ffffff;
-           box-shadow: 0 0 20px #ffffff;
+           box-shadow: 0 0 15px rgba(235, 215, 63, 0.3) !important;
         }
       `}</style>
       <div className="cursor"></div>
