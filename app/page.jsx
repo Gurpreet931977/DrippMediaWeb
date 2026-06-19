@@ -12,8 +12,8 @@ export default function ComingSoon() {
   const [activeGame, setActiveGame] = useState('dripp'); // 'dripp', 'breaker', 'none'
   const activeGameRef = useRef('dripp');
   
-  const [score, setScore] = useState(50); // Dripp starts at 50
-  const scoreRef = useRef(50);
+  const [score, setScore] = useState(0); // Dripp starts at 0
+  const scoreRef = useRef(0);
   
   const [breakerScore, setBreakerScore] = useState(50); // Breaker starts at 50
   const breakerScoreRef = useRef(50);
@@ -42,8 +42,8 @@ export default function ComingSoon() {
       setIsPaused(false);
       if (window.initBreakerGame) window.initBreakerGame(); 
     } else if (activeGame === 'dripp') {
-      scoreRef.current = 50;
-      setScore(50);
+      scoreRef.current = 0;
+      setScore(0);
       setGameState('playing');
       setIsPaused(false);
     }
@@ -120,8 +120,9 @@ export default function ComingSoon() {
       constructor(isRed = false) {
         this.x = Math.random() * canvas.width;
         this.y = -50;
-        this.isGold = !isRed && Math.random() < 0.05; // 5% chance of golden drop
-        this.isRed = isRed;
+        this.isWhite = !isRed && Math.random() < 0.05; // 5% chance of white drop
+        this.isBomb = Math.random() < 0.04; // 4% chance of bomb
+        this.isRed = !this.isBomb && isRed;
         
         const level = Math.floor(scoreRef.current / 10);
         const speedMult = 1 + (level * 0.4); 
@@ -133,10 +134,13 @@ export default function ComingSoon() {
         this.length = this.vy * 2; 
         this.markedForDeletion = false;
         
-        if (this.isGold) {
-           this.color = '#ffd700'; // Gold
+        if (this.isBomb) {
+           this.color = '#333333'; // Bomb color
+           this.radius = 4;
+        } else if (this.isWhite) {
+           this.color = '#ffffff'; // White
         } else {
-           this.color = isRed ? 'rgba(235, 63, 63, 0.9)' : 'rgba(235, 215, 63, 0.9)'; 
+           this.color = this.isRed ? 'rgba(235, 63, 63, 0.9)' : 'rgba(235, 215, 63, 0.9)'; 
         }
         
         this.wobble = Math.random() * Math.PI * 2;
@@ -151,39 +155,33 @@ export default function ComingSoon() {
 
         if (this.y > canvas.height + this.length) {
           this.markedForDeletion = true;
-          
-          if (this.isGold) {
-             // Missed gold drop doesn't penalize heavily, maybe just -1
-             scoreRef.current -= 1;
-          } else if (this.isRed) {
-             scoreRef.current -= 5;
-          } else {
-             scoreRef.current -= 1; 
-          }
-          
-          if (scoreRef.current <= 0) {
-            scoreRef.current = 0;
-            setGameState('failed');
-          }
-          setScore(scoreRef.current);
         }
         
         const dx = mouseRef.current.x - this.x;
         const dy = mouseRef.current.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        const hitRadius = cursorActiveRef.current ? 40 : 25;
+        const hitRadius = cursorActiveRef.current ? 40 : 35;
 
         if (distance < hitRadius) {
           this.markedForDeletion = true;
           
-          if (this.isGold) {
-             scoreRef.current += 20;
-             for(let i=0; i<40; i++) fireworks.push(new FireworkParticle(this.x, this.y, '#ffd700'));
-          } else if (!this.isRed) {
-             scoreRef.current += 1;
+          const cursor = document.querySelector('.cursor');
+          if (cursor) {
+             gsap.to(cursor, { scale: 1.3, duration: 0.1, yoyo: true, repeat: 1 });
+          }
+          
+          if (this.isBomb) {
+             setGameState('failed');
+             for(let i=0; i<50; i++) fireworks.push(new FireworkParticle(this.x, this.y, '#ff0000'));
+             return;
+          } else if (this.isWhite) {
+             scoreRef.current += 69;
+             for(let i=0; i<40; i++) fireworks.push(new FireworkParticle(this.x, this.y, '#ffffff'));
+          } else if (this.isRed) {
+             scoreRef.current += 5; 
           } else {
-             scoreRef.current += 2; 
+             scoreRef.current += 1;
           }
           setScore(scoreRef.current);
           
@@ -192,22 +190,37 @@ export default function ComingSoon() {
             triggerMilestoneAnimation(this.x, this.y);
           }
 
-          splashes.push(new Splash(this.x, this.y, this.isRed, this.isGold));
+          splashes.push(new Splash(this.x, this.y, this.isRed, this.isWhite));
           for (let i = 0; i < 6; i++) {
-            miniParticles.push(new MiniParticle(this.x, this.y, this.isRed, this.isGold ? '#ffd700' : null));
+            miniParticles.push(new MiniParticle(this.x, this.y, this.isRed, this.isWhite ? '#ffffff' : null));
           }
         }
       }
       draw(ctx) {
         ctx.beginPath();
-        const stretch = Math.min(this.vy * 1.2, this.radius * 5);
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
-        ctx.lineTo(this.x, this.y - stretch);
-        ctx.fillStyle = this.color;
-        ctx.fill();
+        if (this.isBomb) {
+           ctx.arc(this.x, this.y, this.radius * 1.5, 0, Math.PI * 2);
+           ctx.fillStyle = '#111';
+           ctx.fill();
+           ctx.strokeStyle = '#ff0000';
+           ctx.lineWidth = 1.5;
+           ctx.stroke();
+           ctx.beginPath();
+           ctx.moveTo(this.x, this.y - this.radius * 1.5);
+           ctx.lineTo(this.x + 3, this.y - this.radius * 2.5);
+           ctx.strokeStyle = '#fff';
+           ctx.stroke();
+        } else {
+           const stretch = Math.min(this.vy * 1.2, this.radius * 5);
+           ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
+           ctx.lineTo(this.x, this.y - stretch);
+           ctx.fillStyle = this.color;
+           ctx.fill();
+        }
         ctx.closePath();
         ctx.shadowBlur = 15;
-        if (this.isGold) ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+        if (this.isWhite) ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+        else if (this.isBomb) ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
         else ctx.shadowColor = this.isRed ? 'rgba(235, 63, 63, 0.6)' : 'rgba(235, 215, 63, 0.5)';
       }
     }
@@ -227,7 +240,7 @@ export default function ComingSoon() {
       draw(ctx) {
         let grad = ctx.createLinearGradient(this.x, this.y, this.x + this.w, this.y);
         grad.addColorStop(0, '#050505');
-        grad.addColorStop(0.5, 'var(--pure-white)');
+        grad.addColorStop(0.5, '#ffffff');
         grad.addColorStop(1, '#050505');
         
         ctx.fillStyle = grad;
@@ -235,7 +248,7 @@ export default function ComingSoon() {
         ctx.roundRect(this.x, this.y, this.w, this.h, this.h/2);
         ctx.fill();
         
-        ctx.strokeStyle = 'var(--brand-yellow)';
+        ctx.strokeStyle = '#ebd73f';
         ctx.lineWidth = 2;
         ctx.stroke();
       }
@@ -315,7 +328,7 @@ export default function ComingSoon() {
         ctx.fillStyle = '#fff';
         ctx.fill();
         ctx.shadowBlur = 15;
-        ctx.shadowColor = 'var(--brand-yellow)';
+        ctx.shadowColor = '#ebd73f';
         ctx.shadowBlur = 0;
       }
     }
@@ -418,12 +431,12 @@ export default function ComingSoon() {
     }
 
     class Splash {
-      constructor(x, y, isRed, isGold = false) {
+      constructor(x, y, isRed, isWhite = false) {
         this.x = x; this.y = y;
         this.radius = 2;
         this.alpha = 1;
         this.isRed = isRed;
-        this.isGold = isGold;
+        this.isWhite = isWhite;
         this.markedForDeletion = false;
         this.expansionSpeed = 8;
       }
@@ -438,7 +451,7 @@ export default function ComingSoon() {
       draw(ctx) {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        if (this.isGold) ctx.strokeStyle = `rgba(255, 215, 0, ${this.alpha})`;
+        if (this.isWhite) ctx.strokeStyle = `rgba(255, 255, 255, ${this.alpha})`;
         else ctx.strokeStyle = this.isRed ? `rgba(235, 63, 63, ${this.alpha})` : `rgba(235, 215, 63, ${this.alpha})`;
         ctx.lineWidth = Math.max(0.1, 3 * this.alpha);
         ctx.stroke();
@@ -729,7 +742,27 @@ export default function ComingSoon() {
       overflow: 'hidden',
       touchAction: 'none' 
     }}>
-      <div className="cursor"></div>
+      <style>{`
+        .cursor {
+           width: 50px !important;
+           height: 50px !important;
+           border: 2px solid rgba(255,255,255,0.3) !important;
+           background: rgba(0,0,0,0.5) !important;
+           backdrop-filter: blur(2px) !important;
+           display: flex !important;
+           justify-content: center !important;
+           align-items: center !important;
+           font-size: 25px !important;
+           border-radius: 50% !important;
+        }
+        .cursor.active {
+           width: 80px !important;
+           height: 80px !important;
+           font-size: 40px !important;
+           border-color: rgba(255,255,255,0.8) !important;
+        }
+      `}</style>
+      <div className="cursor">😋</div>
 
       {/* Control Buttons (Top Left) */}
       <div style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 4, display: 'flex', gap: '15px' }}>
@@ -769,10 +802,10 @@ export default function ComingSoon() {
              {activeGame === 'dripp' ? (
                <>
                  <p>Catch <span style={{color: 'var(--brand-yellow)'}}>Yellow Drops</span> for +1 point.</p>
-                 <p>Catch <span style={{color: '#eb3f3f'}}>Red Drops</span> for +2 points.</p>
-                 <p>Catch rare <span style={{color: '#ffd700'}}>Golden Drops</span> for +20 points!</p>
+                 <p>Catch <span style={{color: '#eb3f3f'}}>Red Drops</span> for +5 points.</p>
+                 <p>Catch rare <span style={{color: '#ffffff'}}>White Drops</span> for +69 points!</p>
                  <br/>
-                 <p>Missing a yellow drop subtracts 1 point. Missing a red drop subtracts 5. If your score hits 0, you fail!</p>
+                 <p>Avoid the <span style={{color: '#777'}}>Bombs</span>! Catching a bomb will instantly fail the game.</p>
                </>
              ) : activeGame === 'breaker' ? (
                <>
@@ -794,7 +827,7 @@ export default function ComingSoon() {
       <div style={{ position: 'absolute', bottom: '25px', left: '25px', zIndex: 10, display: 'flex', gap: '15px', alignItems: 'center' }}>
         <div 
           className="easter-egg"
-          onClick={() => setActiveGame(prev => prev === 'dripp' ? 'breaker' : 'dripp')}
+          onClick={() => setActiveGame(prev => prev === 'breaker' ? 'dripp' : 'breaker')}
           style={{
             width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', cursor: 'pointer',
             border: '1px solid rgba(235, 215, 63, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center',
@@ -859,8 +892,8 @@ export default function ComingSoon() {
            </p>
            <div style={{ marginTop: '30px', display: 'flex', gap: '20px' }}>
              <PrimaryButton onClick={() => {
-                scoreRef.current = 50;
-                setScore(50);
+                scoreRef.current = 0;
+                setScore(0);
                 breakerScoreRef.current = 50;
                 setBreakerScore(50);
                 setGameState('playing');
@@ -885,7 +918,7 @@ export default function ComingSoon() {
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-              {activeGame === 'dripp' ? 'Dripp Health' : 'Breaker Health'}
+              {activeGame === 'dripp' ? 'Score' : 'Breaker Health'}
             </div>
             <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)' }}>
               {activeGame === 'dripp' ? score : breakerScore}
