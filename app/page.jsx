@@ -218,149 +218,248 @@ export default function ComingSoon() {
            ctx.fill();
         }
         ctx.closePath();
-        ctx.shadowBlur = 15;
-        if (this.isWhite) ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-        else if (this.isBomb) ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
-        else ctx.shadowColor = this.isRed ? 'rgba(235, 63, 63, 0.6)' : 'rgba(235, 215, 63, 0.5)';
+        
+        // Fake Glow (Performance optimized)
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * 2.5, 0, Math.PI * 2);
+        if (this.isWhite) ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+        else if (this.isBomb) ctx.fillStyle = 'rgba(255, 0, 0, 0.15)';
+        else ctx.fillStyle = this.isRed ? 'rgba(235, 63, 63, 0.15)' : 'rgba(235, 215, 63, 0.15)';
+        ctx.fill();
+        ctx.closePath();
+      }
+    }
+
+    class Shockwave {
+      constructor(x, y, color) {
+         this.x = x; this.y = y;
+         this.radius = 5;
+         this.alpha = 1;
+         this.color = color;
+         this.markedForDeletion = false;
+      }
+      update() {
+         this.radius += 8;
+         this.alpha -= 0.05;
+         if (this.alpha <= 0) this.markedForDeletion = true;
+      }
+      draw(ctx) {
+         ctx.globalAlpha = Math.max(0, this.alpha);
+         ctx.beginPath();
+         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+         ctx.strokeStyle = this.color;
+         ctx.lineWidth = 2 + (this.alpha * 3);
+         ctx.stroke();
+         ctx.globalAlpha = 1;
       }
     }
 
     class Paddle {
       constructor() {
-        this.w = 140;
-        this.h = 16;
-        this.x = canvas.width / 2 - this.w / 2;
-        this.y = canvas.height - 80;
+        this.w = 120;
+        this.h = 10;
+        this.x = canvas.width / 2;
+        this.y = canvas.height - 100;
+        this.vx = 0;
+        this.tilt = 0;
       }
       update() {
-        this.x += (mouseRef.current.x - this.w / 2 - this.x) * 0.2;
-        if (this.x < 0) this.x = 0;
-        if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
+        const targetX = mouseRef.current.x;
+        const dx = targetX - this.x;
+        this.vx = dx * 0.2; 
+        this.x += this.vx;
+        
+        // Tilt physics based on velocity
+        const targetTilt = (this.vx / 30) * (Math.PI / 8); // Max tilt ~22.5 deg
+        this.tilt += (targetTilt - this.tilt) * 0.3;
+        
+        // Clamp to screen
+        if (this.x - this.w/2 < 0) this.x = this.w/2;
+        if (this.x + this.w/2 > canvas.width) this.x = canvas.width - this.w/2;
       }
       draw(ctx) {
-        let grad = ctx.createLinearGradient(this.x, this.y, this.x + this.w, this.y);
-        grad.addColorStop(0, '#050505');
-        grad.addColorStop(0.5, '#ffffff');
-        grad.addColorStop(1, '#050505');
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.tilt);
         
-        ctx.fillStyle = grad;
+        // Fake Glow
         ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.w, this.h, this.h/2);
+        ctx.roundRect(-this.w/2, -this.h/2, this.w, this.h, this.h/2);
+        ctx.fillStyle = 'rgba(235, 215, 63, 0.15)';
+        ctx.lineWidth = 15;
+        ctx.strokeStyle = 'rgba(235, 215, 63, 0.1)';
+        ctx.stroke();
+        
+        // Core Line
+        ctx.beginPath();
+        ctx.roundRect(-this.w/2, -this.h/2, this.w, this.h, this.h/2);
+        ctx.fillStyle = '#ffffff';
         ctx.fill();
         
-        ctx.strokeStyle = '#ebd73f';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.restore();
       }
     }
 
     class Ball {
       constructor(x, y, vx, vy) {
-        this.radius = 8;
+        this.radius = 6;
         this.x = x || canvas.width / 2;
-        this.y = y || canvas.height - 120;
-        this.vx = vx || 5 * (Math.random() > 0.5 ? 1 : -1);
-        this.vy = vy || -6;
+        this.y = y || canvas.height - 140;
+        this.vx = vx || 6 * (Math.random() > 0.5 ? 1 : -1);
+        this.vy = vy || -7;
         this.trail = [];
         this.markedForDeletion = false;
+        this.speedLimit = 12;
       }
-      update(paddle, bricks) {
+      update(paddle, targets) {
         this.trail.push({x: this.x, y: this.y});
-        if (this.trail.length > 8) this.trail.shift();
+        if (this.trail.length > 10) this.trail.shift();
 
         this.x += this.vx;
         this.y += this.vy;
         
-        if (this.x - this.radius <= 0 || this.x + this.radius >= canvas.width) this.vx *= -1;
-        if (this.y - this.radius <= 0) this.vy *= -1;
+        // Wall Bounces
+        if (this.x - this.radius <= 0) { this.x = this.radius; this.vx *= -1; }
+        if (this.x + this.radius >= canvas.width) { this.x = canvas.width - this.radius; this.vx *= -1; }
+        if (this.y - this.radius <= 0) { this.y = this.radius; this.vy *= -1; }
         
         // Floor drop
         if (this.y > canvas.height + 20) {
            this.markedForDeletion = true;
         }
         
+        // Paddle Collision (Physics based on Tilt)
+        // Simple bounding circle vs rotated line approximation
+        const dx = this.x - paddle.x;
+        const dy = this.y - paddle.y;
+        
+        // Rotate ball position backwards by paddle tilt to do AABB logic
+        const cos = Math.cos(-paddle.tilt);
+        const sin = Math.sin(-paddle.tilt);
+        const localX = dx * cos - dy * sin;
+        const localY = dx * sin + dy * cos;
+        
         if (
-          this.y + this.radius >= paddle.y &&
-          this.y - this.radius <= paddle.y + paddle.h &&
-          this.x >= paddle.x &&
-          this.x <= paddle.x + paddle.w &&
+          localX > -paddle.w/2 && localX < paddle.w/2 &&
+          Math.abs(localY) < paddle.h/2 + this.radius &&
           this.vy > 0
         ) {
-          this.vy *= -1.02; 
-          let hitPoint = this.x - (paddle.x + paddle.w / 2);
-          this.vx = hitPoint * 0.15;
-          for(let i=0; i<3; i++) miniParticles.push(new MiniParticle(this.x, this.y, false));
+          // Reflect velocity based on paddle tilt
+          // Normal of the paddle is (sin(tilt), -cos(tilt))
+          const nx = Math.sin(paddle.tilt);
+          const ny = -Math.cos(paddle.tilt);
+          
+          const dot = this.vx * nx + this.vy * ny;
+          this.vx = this.vx - 2 * dot * nx;
+          this.vy = this.vy - 2 * dot * ny;
+          
+          // Add some of paddle's horizontal velocity to ball
+          this.vx += paddle.vx * 0.2;
+          
+          // Clamp speed
+          const speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+          if (speed > this.speedLimit) {
+             this.vx = (this.vx / speed) * this.speedLimit;
+             this.vy = (this.vy / speed) * this.speedLimit;
+          }
+          
+          // Force ball slightly upwards to prevent getting stuck
+          if (this.vy > -3) this.vy = -5;
+          this.y -= 5; 
+          
+          // Small shockwave
+          fireworks.push(new Shockwave(this.x, this.y, '#ffffff'));
         }
         
-        for(let b of bricks) {
-           if (!b.markedForDeletion) {
-              if (
-                 this.x + this.radius > b.x && this.x - this.radius < b.x + b.w &&
-                 this.y + this.radius > b.y && this.y - this.radius < b.y + b.h
-              ) {
-                 b.markedForDeletion = true;
-                 this.vy *= -1;
+        // Target Collision
+        for(let t of targets) {
+           if (!t.markedForDeletion) {
+              const dist = Math.hypot(this.x - t.x, this.y - t.y);
+              if (dist < this.radius + t.radius) {
+                 t.hit();
+                 
+                 // Reflect vector
+                 const nx = (this.x - t.x) / dist;
+                 const ny = (this.y - t.y) / dist;
+                 const dot = this.vx * nx + this.vy * ny;
+                 this.vx = this.vx - 2 * dot * nx;
+                 this.vy = this.vy - 2 * dot * ny;
+                 
                  breakerScoreRef.current += 10;
                  setBreakerScore(breakerScoreRef.current);
                  
-                 if (Math.random() < 0.25) {
-                    powerUps.push(new PowerUp(b.x + b.w/2, b.y + b.h/2));
-                 }
-                 for(let i=0; i<5; i++) miniParticles.push(new MiniParticle(this.x, this.y, false));
-                 break; 
+                 if (Math.random() < 0.2) powerUps.push(new PowerUp(t.x, t.y));
+                 
+                 break; // Hit one target per frame max
               }
            }
         }
       }
       draw(ctx) {
-        ctx.beginPath();
-        if (this.trail.length > 0) {
-           ctx.moveTo(this.trail[0].x, this.trail[0].y);
-           for(let i=1; i<this.trail.length; i++) ctx.lineTo(this.trail[i].x, this.trail[i].y);
-           ctx.strokeStyle = `rgba(235, 215, 63, 0.4)`;
-           ctx.lineWidth = this.radius * 1.5;
-           ctx.lineCap = 'round';
-           ctx.stroke();
+        // High Performance Fading Trail
+        for (let i = 0; i < this.trail.length; i++) {
+           const point = this.trail[i];
+           const ratio = i / this.trail.length;
+           ctx.globalAlpha = ratio * 0.5;
+           ctx.beginPath();
+           ctx.arc(point.x, point.y, this.radius * (0.5 + ratio * 0.5), 0, Math.PI*2);
+           ctx.fillStyle = '#ffffff';
+           ctx.fill();
         }
+        ctx.globalAlpha = 1;
         
+        // Main Ball
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = '#ffffff';
         ctx.fill();
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#ebd73f';
-        ctx.shadowBlur = 0;
+        
+        // Fake Glow
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * 3, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fill();
       }
     }
 
-    class Brick {
-       constructor(x, y, w, h, row) {
-         this.x = x; this.y = y; this.w = w; this.h = h;
+    class TargetRing {
+       constructor(x, y) {
+         this.x = x; 
+         this.y = y; 
+         this.baseRadius = 15 + Math.random() * 10;
+         this.radius = this.baseRadius;
          this.markedForDeletion = false;
-         const colors = ['#ff3333', '#ebd73f', '#33ff33', '#3333ff', '#ff33ff'];
-         this.color = colors[row % colors.length];
+         this.color = Math.random() > 0.5 ? '#ebd73f' : '#ffffff';
+         this.phase = Math.random() * Math.PI * 2;
+       }
+       update() {
+         this.phase += 0.05;
+         this.radius = this.baseRadius + Math.sin(this.phase) * 3;
+       }
+       hit() {
+         this.markedForDeletion = true;
+         fireworks.push(new Shockwave(this.x, this.y, this.color));
        }
        draw(ctx) {
+         ctx.beginPath();
+         ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+         ctx.strokeStyle = this.color;
+         ctx.lineWidth = 2;
+         ctx.stroke();
+         
+         // Inner dot
+         ctx.beginPath();
+         ctx.arc(this.x, this.y, 2, 0, Math.PI*2);
          ctx.fillStyle = this.color;
-         ctx.shadowBlur = 10;
-         ctx.shadowColor = this.color;
-         ctx.beginPath();
-         ctx.roundRect(this.x, this.y, this.w, this.h, this.h / 2); // Pill shape
          ctx.fill();
-         // Gloss highlight
-         ctx.fillStyle = 'rgba(255,255,255,0.3)';
-         ctx.beginPath();
-         ctx.roundRect(this.x + 5, this.y + 2, this.w - 10, this.h / 4, this.h / 8);
-         ctx.fill();
-         ctx.shadowBlur = 0;
        }
     }
 
     class PowerUp {
        constructor(x, y) {
           this.x = x; this.y = y;
-          this.vy = 2.5;
-          this.radius = 6;
+          this.vy = 3;
+          this.radius = 5;
           this.type = Math.random() < 0.3 ? 'multiball' : 'points';
           this.markedForDeletion = false;
        }
@@ -369,23 +468,23 @@ export default function ComingSoon() {
           if (this.y > canvas.height + 20) this.markedForDeletion = true;
           
           if (
-            this.y + this.radius >= paddle.y &&
+            this.y + this.radius >= paddle.y - paddle.h &&
             this.y - this.radius <= paddle.y + paddle.h &&
-            this.x >= paddle.x &&
-            this.x <= paddle.x + paddle.w
+            this.x >= paddle.x - paddle.w/2 &&
+            this.x <= paddle.x + paddle.w/2
           ) {
              this.markedForDeletion = true;
              
              if (this.type === 'multiball') {
-                 balls.push(new Ball(paddle.x + paddle.w/2, paddle.y - 10, -4, -6));
-                 balls.push(new Ball(paddle.x + paddle.w/2, paddle.y - 10, 4, -6));
+                 balls.push(new Ball(paddle.x, paddle.y - 20, -4, -6));
+                 balls.push(new Ball(paddle.x, paddle.y - 20, 4, -6));
              } else {
                  breakerScoreRef.current += 50; 
                  setBreakerScore(breakerScoreRef.current);
              }
              
              const particleColor = this.type === 'multiball' ? '#ff00ff' : '#00ffcc';
-             for(let i=0; i<8; i++) miniParticles.push(new MiniParticle(this.x, this.y, false, particleColor));
+             fireworks.push(new Shockwave(this.x, this.y, particleColor));
           }
        }
        draw(ctx) {
@@ -393,9 +492,12 @@ export default function ComingSoon() {
           ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
           ctx.fillStyle = this.type === 'multiball' ? '#ff00ff' : '#00ffcc';
           ctx.fill();
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = this.type === 'multiball' ? '#ff00ff' : '#00ffcc';
-          ctx.shadowBlur = 0;
+          
+          // Fake glow
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius * 2.5, 0, Math.PI*2);
+          ctx.fillStyle = this.type === 'multiball' ? 'rgba(255,0,255,0.2)' : 'rgba(0,255,204,0.2)';
+          ctx.fill();
        }
     }
 
@@ -522,21 +624,25 @@ export default function ComingSoon() {
     };
 
     window.initBreakerGame = () => {
-      bricks = [];
+      bricks = []; // storing TargetRings here for compatibility
       balls = [new Ball()];
       powerUps = [];
       paddle = new Paddle();
       
+      const cols = 7;
       const rows = 5;
-      const w = Math.min(70, canvas.width / 6); 
-      const padding = 15;
-      const cols = Math.floor(canvas.width / (w + padding));
-      const offsetX = (canvas.width - (cols * (w + padding))) / 2;
+      const spacingX = 60;
+      const spacingY = 50;
+      
+      const offsetX = canvas.width / 2;
+      const offsetY = 120;
       
       for(let r=0; r<rows; r++) {
-         for(let c=0; c<cols; c++) {
-            let h = 25;
-            bricks.push(new Brick(offsetX + c*(w+padding), 80 + r*(h + padding), w, 25, r));
+         const itemsInRow = cols - Math.abs(2 - r);
+         const rowOffsetX = offsetX - ((itemsInRow - 1) * spacingX) / 2;
+         
+         for(let c=0; c<itemsInRow; c++) {
+            bricks.push(new TargetRing(rowOffsetX + c * spacingX, offsetY + r * spacingY));
          }
       }
     };
@@ -599,7 +705,7 @@ export default function ComingSoon() {
            setBreakerScore(breakerScoreRef.current);
         }
         
-        bricks.forEach(brick => brick.draw(ctx));
+        bricks.forEach(brick => { brick.update(); brick.draw(ctx); });
         bricks = bricks.filter(b => !b.markedForDeletion);
         if (bricks.length === 0 && balls.length > 0) window.initBreakerGame();
         
@@ -877,32 +983,44 @@ export default function ComingSoon() {
         </div>
       )}
 
-      {/* Game Over Overlay */}
-      {gameState === 'failed' && activeGame !== 'none' && !isHelpOpen && (
+      {/* Game Over / Pause Overlays */}
+      {gameState === 'failed' && !isHelpOpen && (
         <div className="ui-overlay" style={{
            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-           background: 'rgba(235, 63, 63, 0.15)', backdropFilter: 'blur(10px)',
+           background: 'radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%)', 
+           backdropFilter: 'blur(15px)',
            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 10
         }}>
-           <h2 style={{ fontFamily: "'Panchang', sans-serif", color: '#eb3f3f', fontSize: 'clamp(3rem, 8vw, 5rem)', margin: 0, textShadow: '0 0 30px rgba(235, 63, 63, 0.5)' }}>
-             DRIPPED OUT!
-           </h2>
-           <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: '1.2rem', marginTop: '10px' }}>
-             You let too many slip away.
-           </p>
-           <div style={{ marginTop: '30px', display: 'flex', gap: '20px' }}>
-             <PrimaryButton onClick={() => {
-                scoreRef.current = 0;
-                setScore(0);
-                breakerScoreRef.current = 50;
-                setBreakerScore(50);
-                setGameState('playing');
-                setIsPaused(false);
-                if(activeGame === 'breaker') window.initBreakerGame();
-             }}>Play Again</PrimaryButton>
-             <PrimaryButton onClick={handleShare} disabled={isCapturing}>
-               {isCapturing ? "Capturing..." : "Brag your score"}
-             </PrimaryButton>
+           <div style={{
+              background: 'linear-gradient(145deg, rgba(20,20,20,0.9) 0%, rgba(5,5,5,0.95) 100%)',
+              border: '1px solid rgba(235, 63, 63, 0.3)',
+              borderRadius: '24px',
+              padding: '50px 80px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(235, 63, 63, 0.1)'
+           }}>
+             <h2 style={{ fontFamily: "'Panchang', sans-serif", color: '#eb3f3f', fontSize: 'clamp(3rem, 6vw, 5rem)', margin: 0, textShadow: '0 0 20px rgba(235, 63, 63, 0.6), 0 0 40px rgba(235, 63, 63, 0.4)', textAlign: 'center', letterSpacing: '2px' }}>
+               DRIPPED OUT!
+             </h2>
+             <p style={{ marginTop: '20px', fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', letterSpacing: '1px' }}>
+               {activeGame === 'dripp' ? 'You caught a bomb! Game Over.' : 'Your breaker health reached 0!'}
+             </p>
+             <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
+               <PrimaryButton onClick={() => {
+                  scoreRef.current = 0;
+                  setScore(0);
+                  breakerScoreRef.current = 50;
+                  setBreakerScore(50);
+                  setGameState('playing');
+                  setIsPaused(false);
+                  if(activeGame === 'breaker') window.initBreakerGame();
+               }}>Play Again</PrimaryButton>
+               <PrimaryButton onClick={handleShare} disabled={isCapturing}>
+                 {isCapturing ? 'Capturing...' : 'Share Score'}
+               </PrimaryButton>
+             </div>
            </div>
         </div>
       )}
