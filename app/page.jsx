@@ -127,9 +127,12 @@ export default function ComingSoon() {
     let powerUps = [];
     let paddle = null;
 
+    let isMobileCanvas = typeof window !== 'undefined' && window.innerWidth <= 768;
+
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      isMobileCanvas = window.innerWidth <= 768;
     };
     window.addEventListener('resize', resize);
     resize();
@@ -144,8 +147,7 @@ export default function ComingSoon() {
         
         // Logarithmic difficulty scaling prevents sudden spikes when catching 69-point White drops
         const speedMult = 1 + Math.log10(1 + scoreRef.current / 300) * 0.4; 
-        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-        const mobileSpeedMult = isMobile ? 1.5 : 1.0;
+        const mobileSpeedMult = isMobileCanvas ? 1.5 : 1.0;
         
         this.vy = (1.5 + Math.random() * 1.5) * speedMult * mobileSpeedMult; 
         this.gravity = (0.01 + Math.random() * 0.01) * speedMult * mobileSpeedMult; 
@@ -181,8 +183,7 @@ export default function ComingSoon() {
         const dy = mouseRef.current.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        const isMobileHit = typeof window !== 'undefined' && window.innerWidth <= 768;
-        const hitRadius = cursorActiveRef.current ? 40 : (isMobileHit ? 20 : 35);
+        const hitRadius = cursorActiveRef.current ? 40 : (isMobileCanvas ? 20 : 35);
 
         if (distance < hitRadius) {
           this.markedForDeletion = true;
@@ -933,8 +934,7 @@ export default function ComingSoon() {
         const scaling = Math.log10(1 + scoreRef.current / 300) * 0.1;
         const rainIntensity = Math.min(0.25, baseIntensity + scaling);
         
-        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-        const spawnAttempts = isMobile ? 3 : 1; // 3x more drops on mobile
+        const spawnAttempts = isMobileCanvas ? 3 : 1; // 3x more drops on mobile
         
         for (let i = 0; i < spawnAttempts; i++) {
            if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
@@ -1506,7 +1506,7 @@ export default function ComingSoon() {
       <div style={{
         position: 'absolute', width: '40vw', height: '40vw',
         background: 'radial-gradient(circle, var(--brand-glow) 0%, transparent 60%)',
-        top: '50%', left: '50%', transform: 'translate(-50%, -50%)', filter: 'blur(60px)', opacity: 0.5, pointerEvents: 'none', zIndex: 0
+        top: '50%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0.5, pointerEvents: 'none', zIndex: 0
       }}></div>
 
       <div style={{ opacity: hideHero ? 0 : 1, pointerEvents: hideHero ? 'none' : 'auto', transition: 'opacity 0.5s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', willChange: 'opacity', transform: 'translateZ(0)' }}>
