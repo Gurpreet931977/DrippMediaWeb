@@ -10,8 +10,8 @@ export default function ArcadeEngine({ onClose }) {
   const canvasRef = useRef(null);
   
   // Game States
-  const [activeGame, setActiveGame] = useState('scope'); // 'dripp', 'breaker', 'scope', 'none'
-  const activeGameRef = useRef('dripp');
+  const [activeGame, setActiveGame] = useState('none'); // 'dripp', 'breaker', 'scope', 'none'
+  const activeGameRef = useRef('none');
   
   const [score, setScore] = useState(0); // Dripp starts at 0
   const scoreRef = useRef(0);
