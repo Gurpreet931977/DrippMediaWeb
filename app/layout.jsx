@@ -1,5 +1,6 @@
 import './globals.css';
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata = {
   title: 'Dripp Media | Surreal Agency',
@@ -21,6 +22,7 @@ export default function RootLayout({ children }) {
       <body suppressHydrationWarning>
         {children}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

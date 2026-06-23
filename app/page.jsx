@@ -236,7 +236,16 @@ export default function ComingSoon() {
           } else {
              scoreRef.current += 1;
           }
+          
+          let prevScore = scoreRef.current - (this.isWhite ? 69 : (this.isRed ? 5 : 1));
           setScore(scoreRef.current);
+          
+          if (Math.floor(scoreRef.current / 100) > Math.floor(prevScore / 100)) {
+             const scoreCounter = document.querySelector('.score-counter-element');
+             if (scoreCounter) {
+                gsap.fromTo(scoreCounter, { scale: 1.5, color: '#ffffff', textShadow: '0 0 30px #ffffff' }, { scale: 1, color: 'var(--brand-yellow)', textShadow: '0 0 20px rgba(235, 215, 63, 0.4)', duration: 0.8, ease: 'elastic.out(1, 0.4)' });
+             }
+          }
           
           if (scoreRef.current > 50 && scoreRef.current % 50 === 0 && scoreRef.current !== lastMilestoneRef.current) {
             lastMilestoneRef.current = scoreRef.current;
@@ -1692,7 +1701,7 @@ export default function ComingSoon() {
                 })()}
               </div>
             )}
-            <div style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)' }}>
+            <div className="score-counter-element" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)', display: 'inline-block' }}>
               {activeGame === 'dripp' ? score : breakerScore}
             </div>
             {activeGame === 'dripp' && (
