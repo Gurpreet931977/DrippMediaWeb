@@ -1476,7 +1476,7 @@ export default function ComingSoon() {
              <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                {activeGame === 'breaker' ? (
                  <>
-                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                      <PrimaryButton onClick={() => {
                         gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
                             breakerScoreRef.current = 0;
@@ -1488,21 +1488,46 @@ export default function ComingSoon() {
                             gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
                         }});
                      }}>Retry Level</PrimaryButton>
-                     <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginTop: '8px', maxWidth: '160px', textAlign: 'center', lineHeight: '1.2' }}>*Your score will reset if you retry this level</span>
+                     <div 
+                        title="Your score will reset if you retry this level"
+                        onClick={() => alert("Your score will reset if you retry this level")}
+                        style={{
+                           width: '28px', height: '28px', borderRadius: '50%', 
+                           border: '1px solid rgba(255,255,255,0.3)',
+                           display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                           color: 'rgba(255,255,255,0.7)', cursor: 'help', 
+                           fontSize: '0.9rem', marginTop: '15px',
+                           transition: 'all 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                           e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                           e.currentTarget.style.color = 'white';
+                           e.currentTarget.style.borderColor = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                           e.currentTarget.style.background = 'transparent';
+                           e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                           e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                        }}
+                     >
+                       ?
+                     </div>
                    </div>
-                   <PrimaryButton onClick={() => {
-                      gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
-                          breakerScoreRef.current = 0;
-                          setBreakerScore(0);
-                          breakerLevelRef.current = 1;
-                          setBreakerLevel(1);
-                          setGameState('playing');
-                          setIsPaused(false);
-                          setShowShareOptions(false);
-                          window.initBreakerGame(1);
-                          gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
-                      }});
-                   }}>Start Level 1</PrimaryButton>
+                   {breakerLevelRef.current > 1 && (
+                     <PrimaryButton onClick={() => {
+                        gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
+                            breakerScoreRef.current = 0;
+                            setBreakerScore(0);
+                            breakerLevelRef.current = 1;
+                            setBreakerLevel(1);
+                            setGameState('playing');
+                            setIsPaused(false);
+                            setShowShareOptions(false);
+                            window.initBreakerGame(1);
+                            gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
+                        }});
+                     }}>Start Level 1</PrimaryButton>
+                   )}
                  </>
                ) : (
                  <PrimaryButton onClick={() => {
