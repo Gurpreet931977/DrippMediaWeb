@@ -1,4 +1,5 @@
 import './globals.css';
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
   title: 'Dripp Media | Surreal Agency',
@@ -17,7 +18,10 @@ export default function RootLayout({ children }) {
         {/* Unicons */}
         <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css" />
       </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

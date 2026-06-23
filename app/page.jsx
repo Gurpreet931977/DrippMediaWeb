@@ -144,17 +144,24 @@ export default function ComingSoon() {
     class Drop {
       constructor(isRed = false) {
         this.x = Math.random() * canvas.width;
-        this.y = -50;
+        this.y = -50 - Math.random() * 100; // Randomise start Y position slightly
         this.isWhite = !isRed && Math.random() < 0.05; // 5% chance of white drop
         this.isBomb = Math.random() < 0.15; // 15% chance of bomb
         this.isRed = !this.isBomb && isRed;
         
         // Logarithmic difficulty scaling prevents sudden spikes when catching 69-point White drops
-        const speedMult = 1 + Math.log10(1 + scoreRef.current / 300) * 0.4; 
-        const mobileSpeedMult = isMobileCanvas ? 1.5 : 1.0;
+        let speedMult;
+        if (!isMobileCanvas) {
+           // PC version: faster leveling, more difficult from start
+           speedMult = 1.5 + Math.log10(1 + scoreRef.current / 150) * 0.6; 
+        } else {
+           speedMult = 1 + Math.log10(1 + scoreRef.current / 300) * 0.4; 
+        }
+        const mobileSpeedMult = isMobileCanvas ? 0.9 : 1.0;
         
-        this.vy = (1.5 + Math.random() * 1.5) * speedMult * mobileSpeedMult; 
-        this.gravity = (0.01 + Math.random() * 0.01) * speedMult * mobileSpeedMult; 
+        // Randomise speed and gravity more broadly
+        this.vy = (1.0 + Math.random() * 3.5) * speedMult * mobileSpeedMult; 
+        this.gravity = (0.005 + Math.random() * 0.02) * speedMult * mobileSpeedMult; 
         
         this.radius = 2 + Math.random() * 2; 
         this.length = this.vy * 3; // Make trail slightly longer
@@ -170,7 +177,7 @@ export default function ComingSoon() {
         }
         
         this.wobble = Math.random() * Math.PI * 2;
-        this.wobbleSpeed = (0.02 + Math.random() * 0.02) * (1 + scoreRef.current * 0.005);
+        this.wobbleSpeed = (0.02 + Math.random() * 0.04) * (1 + scoreRef.current * 0.005);
       }
       update() {
         this.vy += this.gravity;
@@ -187,7 +194,7 @@ export default function ComingSoon() {
         const dy = mouseRef.current.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        const hitRadius = cursorActiveRef.current ? 40 : (isMobileCanvas ? 20 : 35);
+        const hitRadius = cursorActiveRef.current ? 40 : (isMobileCanvas ? 60 : 35);
 
         if (distance < hitRadius) {
           this.markedForDeletion = true;
@@ -996,11 +1003,17 @@ export default function ComingSoon() {
       
       if (activeGameRef.current === 'dripp') {
         // Logarithmic intensity curve so it scales gently over time
-        const baseIntensity = 0.025; 
-        const scaling = Math.log10(1 + scoreRef.current / 300) * 0.1;
+        let baseIntensity = 0.025; 
+        let scaling = Math.log10(1 + scoreRef.current / 300) * 0.1;
+        
+        if (!isMobileCanvas) {
+           baseIntensity = 0.04;
+           scaling = Math.log10(1 + scoreRef.current / 150) * 0.15;
+        }
+        
         const rainIntensity = Math.min(0.25, baseIntensity + scaling);
         
-        const spawnAttempts = isMobileCanvas ? 3 : 1; // 3x more drops on mobile
+        const spawnAttempts = 1; // Standard spawn rate to prevent lag on mobile
         
         for (let i = 0; i < spawnAttempts; i++) {
            if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
@@ -1461,22 +1474,49 @@ export default function ComingSoon() {
              </div>
 
              <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-               <PrimaryButton onClick={() => {
-                  gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
-                      scoreRef.current = 0;
-                      setScore(0);
-                      breakerScoreRef.current = 0;
-                      setBreakerScore(0);
-                      breakerLevelRef.current = 1;
-                      setBreakerLevel(1);
-                      setGameState('playing');
-                      setIsPaused(false);
-                      setShowShareOptions(false);
-                      if(activeGame === 'breaker') window.initBreakerGame(1);
-                      else if(activeGame === 'dripp') window.initDrippGame();
-                      gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
-                  }});
-               }}>Play Again</PrimaryButton>
+               {activeGame === 'breaker' ? (
+                 <>
+                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                     <PrimaryButton onClick={() => {
+                        gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
+                            breakerScoreRef.current = 0;
+                            setBreakerScore(0);
+                            setGameState('playing');
+                            setIsPaused(false);
+                            setShowShareOptions(false);
+                            window.initBreakerGame(breakerLevelRef.current);
+                            gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
+                        }});
+                     }}>Retry Level</PrimaryButton>
+                     <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginTop: '8px', maxWidth: '160px', textAlign: 'center', lineHeight: '1.2' }}>*Your score will reset if you retry this level</span>
+                   </div>
+                   <PrimaryButton onClick={() => {
+                      gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
+                          breakerScoreRef.current = 0;
+                          setBreakerScore(0);
+                          breakerLevelRef.current = 1;
+                          setBreakerLevel(1);
+                          setGameState('playing');
+                          setIsPaused(false);
+                          setShowShareOptions(false);
+                          window.initBreakerGame(1);
+                          gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
+                      }});
+                   }}>Start Level 1</PrimaryButton>
+                 </>
+               ) : (
+                 <PrimaryButton onClick={() => {
+                    gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
+                        scoreRef.current = 0;
+                        setScore(0);
+                        setGameState('playing');
+                        setIsPaused(false);
+                        setShowShareOptions(false);
+                        window.initDrippGame();
+                        gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
+                    }});
+                 }}>Play Again</PrimaryButton>
+               )}
                
                {!showShareOptions ? (
                  <PrimaryButton onClick={prepareShare}>
