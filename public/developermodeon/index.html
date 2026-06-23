@@ -2736,6 +2736,10 @@
         // --- INIT ---
         document.fonts.ready.then(function () {
             document.body.classList.add('loaded');
+        });
+        setTimeout(function() {
+            document.body.classList.add('loaded');
+        }, 1000);
 
             // --- PORTFOLIO PAGE TRANSITION LOGIC ---
             const portfolioLinks = document.querySelectorAll('.card-wrapper .btn-primary');
