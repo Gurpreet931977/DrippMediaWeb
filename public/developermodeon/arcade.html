@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Mode | Dripp Media</title>
+    <link href="https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&f[]=clash-display@200,300,400,500,600,700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            --brand-yellow: #ebd73f;
+            --deep-black: #050505;
+            --pure-white: #ffffff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--deep-black);
+            color: var(--pure-white);
+            font-family: 'Clash Display', sans-serif;
+            overflow: hidden;
+            width: 100vw; height: 100vh;
+        }
+        #arcade-menu {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 10;
+            background: radial-gradient(circle at center, rgba(5,5,5,0.8) 0%, var(--deep-black) 100%);
+        }
+        .title {
+            font-family: 'Panchang', sans-serif;
+            font-size: 4rem; color: var(--brand-yellow);
+            text-shadow: 0 0 30px rgba(235, 215, 63, 0.5);
+            margin-bottom: 50px;
+        }
+        .games-grid {
+            display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; max-width: 1200px;
+        }
+        .game-card {
+            width: 280px; height: 350px;
+            background: rgba(20,20,20,0.8);
+            border-radius: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+        .game-card:hover { transform: translateY(-10px); }
+        .game-title {
+            font-family: 'Panchang', sans-serif; font-size: 1.5rem; margin-top: 20px; text-align: center;
+        }
+        .game-desc {
+            font-size: 0.9rem; color: rgba(255,255,255,0.6); text-align: center; margin-top: 10px; padding: 0 20px;
+        }
+        #game-container {
+            position: absolute; inset: 0; z-index: 5; display: none;
+        }
+        canvas { display: block; width: 100%; height: 100%; }
+        .back-btn {
+            position: absolute; top: 30px; left: 30px;
+            padding: 10px 24px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.3);
+            color: white; text-decoration: none; font-size: 0.9rem;
+            transition: all 0.3s; z-index: 100; cursor: pointer; background: rgba(0,0,0,0.5);
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.1); border-color: white; }
+        
+        #hud {
+            position: absolute; top: 30px; right: 30px; z-index: 100; display: none;
+            text-align: right;
+        }
+        #score-val {
+            font-family: 'Panchang', sans-serif; font-size: 3rem; color: var(--brand-yellow);
+            text-shadow: 0 0 20px rgba(235, 215, 63, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn" id="home-btn">← Back to Site</a>
+    <button class="back-btn" id="exit-game-btn" style="display: none;">Exit Game</button>
+
+    <div id="arcade-menu">
+        <h1 class="title">ARCADE MODE</h1>
+        <div class="games-grid">
+            <div class="game-card" data-game="dripp" style="border: 1px solid #ebd73f; box-shadow: inset 0 0 30px rgba(235, 215, 63, 0.1);">
+                <h2 class="game-title" style="color: #ebd73f;">DRIPP<br>CATCHER</h2>
+                <p class="game-desc">Catch the elements, avoid the bombs. Scaled up for arcade action.</p>
+            </div>
+            <div class="game-card" data-game="breaker" style="border: 1px solid #33ccff; box-shadow: inset 0 0 30px rgba(51, 204, 255, 0.1);">
+                <h2 class="game-title" style="color: #33ccff;">NEON<br>BREAKER</h2>
+                <p class="game-desc">Smash the glowing capsules with an expanded paddle and faster ball.</p>
+            </div>
+            <div class="game-card" data-game="snake" style="border: 1px solid #33ff33; box-shadow: inset 0 0 30px rgba(51, 255, 51, 0.1);">
+                <h2 class="game-title" style="color: #33ff33;">CYBER<br>SNAKE</h2>
+                <p class="game-desc">The classic game reimagined in the Dripp Media aesthetic.</p>
+            </div>
+            <div class="game-card" data-game="pong" style="border: 1px solid #ff00ff; box-shadow: inset 0 0 30px rgba(255, 0, 255, 0.1);">
+                <h2 class="game-title" style="color: #ff00ff;">RETRO<br>PONG</h2>
+                <p class="game-desc">Face off against the ultimate AI in a neon-drenched arena.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+    </div>
+
+    <div id="hud">
+        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 2px;" id="score-label">Score</div>
+        <div id="score-val">0</div>
+    </div>
+
+    <script src="arcade-engine.js"></script>
+    <script>
+        const menu = document.getElementById('arcade-menu');
+        const container = document.getElementById('game-container');
+        const homeBtn = document.getElementById('home-btn');
+        const exitBtn = document.getElementById('exit-game-btn');
+        const hud = document.getElementById('hud');
+        
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const gameId = card.getAttribute('data-game');
+                
+                // Hide menu, show game
+                gsap.to(menu, { opacity: 0, scale: 0.9, duration: 0.5, onComplete: () => {
+                    menu.style.display = 'none';
+                    container.style.display = 'block';
+                    exitBtn.style.display = 'block';
+                    homeBtn.style.display = 'none';
+                    hud.style.display = 'block';
+                    
+                    // Init Engine
+                    window.ArcadeEngine.startGame(gameId);
+                }});
+            });
+        });
+
+        exitBtn.addEventListener('click', () => {
+            window.ArcadeEngine.stopGame();
+            
+            menu.style.display = 'flex';
+            gsap.fromTo(menu, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5 });
+            
+            container.style.display = 'none';
+            exitBtn.style.display = 'none';
+            homeBtn.style.display = 'block';
+            hud.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
