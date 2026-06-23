@@ -777,8 +777,7 @@ export default function ArcadeEngine({ onClose }) {
     }
 
     
-    class ScopePaddle {
-      constructor() {
+    function ScopePaddle() {
         this.w = 120;
         this.h = 15;
         this.x = canvas.width / 2;
@@ -789,7 +788,7 @@ export default function ArcadeEngine({ onClose }) {
         this.reversed = false;
         this.reverseTimer = 0;
       }
-      update() {
+ScopePaddle.prototype.update = function() {
         if (this.speedTimer > 0) {
           this.speedTimer -= 16;
           if (this.speedTimer <= 0) this.speedMultiplier = 1;
@@ -809,8 +808,8 @@ export default function ArcadeEngine({ onClose }) {
 
         if (this.x - this.w/2 < 0) this.x = this.w/2;
         if (this.x + this.w/2 > canvas.width) this.x = canvas.width - this.w/2;
-      }
-      draw(ctx) {
+      };
+ScopePaddle.prototype.draw = function(ctx) {
         ctx.fillStyle = this.reversed ? '#ff3333' : '#ebd73f';
         ctx.beginPath();
         ctx.roundRect(this.x - this.w/2, this.y - this.h/2, this.w, this.h, 5);
@@ -822,11 +821,9 @@ export default function ArcadeEngine({ onClose }) {
         ctx.strokeStyle = this.reversed ? 'rgba(255, 51, 51, 0.4)' : 'rgba(235, 215, 63, 0.4)';
         ctx.lineWidth = 10;
         ctx.stroke();
-      }
-    }
+      };
 
-    class ScopeDrop {
-      constructor() {
+    function ScopeDrop() {
         this.x = Math.random() * canvas.width;
         this.y = -50;
         const rand = Math.random();
@@ -840,7 +837,7 @@ export default function ArcadeEngine({ onClose }) {
         this.radius = 12;
         this.markedForDeletion = false;
       }
-      update(paddle) {
+ScopeDrop.prototype.update = function(paddle) {
         this.y += this.vy;
         if (this.y > canvas.height + 20) {
            this.markedForDeletion = true;
@@ -881,8 +878,8 @@ export default function ArcadeEngine({ onClose }) {
              for(let i=0; i<5; i++) miniParticles.push(new MiniParticle(this.x, this.y, false));
           }
         }
-      }
-      draw(ctx) {
+      };
+ScopeDrop.prototype.draw = function(ctx) {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
         if (this.type === 'creep') ctx.fillStyle = '#ff3333';
@@ -903,8 +900,7 @@ export default function ArcadeEngine({ onClose }) {
             else ctx.fillStyle = 'rgba(235, 215, 63, 0.3)';
         }
         ctx.fill();
-      }
-    }
+      };
 
     const triggerMilestoneAnimation = (x, y) => {
       for(let i = 0; i < 80; i++) fireworks.push(new FireworkParticle(x, y));
