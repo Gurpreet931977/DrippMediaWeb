@@ -2736,10 +2736,6 @@
         // --- INIT ---
         document.fonts.ready.then(function () {
             document.body.classList.add('loaded');
-        });
-        setTimeout(function() {
-            document.body.classList.add('loaded');
-        }, 1000);
 
             // --- PORTFOLIO PAGE TRANSITION LOGIC ---
             const portfolioLinks = document.querySelectorAll('.card-wrapper .btn-primary');
@@ -3019,6 +3015,9 @@
                     "<0.2"
                 );
         });
+        
+        // Fallback timeout to ensure loaded class is present in case fonts.ready hangs
+        setTimeout(() => { document.body.classList.add('loaded'); }, 1000);
 
         const cursor = document.querySelector('.cursor');
         const velocityFill = document.querySelector('.velocity-fill');
