@@ -25,15 +25,16 @@ export default function ComingSoon() {
   const [isPaused, setIsPaused] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
-  const isPausedRef = useRef(false);
-  
   const [gameState, setGameState] = useState('playing'); // 'playing', 'failed'
-  const gameStateRef = useRef('playing');
-  
   const [isCapturing, setIsCapturing] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
   const [pregeneratedShareUrl, setPregeneratedShareUrl] = useState(null);
+  const [showRetryTooltip, setShowRetryTooltip] = useState(false);
+  
+  const isPausedRef = useRef(false);
+  
+  const gameStateRef = useRef('playing');
   
   const mouseRef = useRef({ x: -100, y: -100 });
   const cursorActiveRef = useRef(false);
@@ -1489,28 +1490,58 @@ export default function ComingSoon() {
                         }});
                      }}>Retry Level</PrimaryButton>
                      <div 
-                        title="Your score will reset if you retry this level"
-                        onClick={() => alert("Your score will reset if you retry this level")}
-                        style={{
-                           width: '28px', height: '28px', borderRadius: '50%', 
-                           border: '1px solid rgba(255,255,255,0.3)',
-                           display: 'flex', justifyContent: 'center', alignItems: 'center', 
-                           color: 'rgba(255,255,255,0.7)', cursor: 'help', 
-                           fontSize: '0.9rem', marginTop: '15px',
-                           transition: 'all 0.3s ease'
-                        }}
+                        style={{ position: 'relative' }}
                         onMouseEnter={(e) => {
-                           e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                           e.currentTarget.style.color = 'white';
-                           e.currentTarget.style.borderColor = 'white';
+                           e.currentTarget.querySelector('.tooltip-trigger').style.background = 'rgba(255,255,255,0.1)';
+                           e.currentTarget.querySelector('.tooltip-trigger').style.color = 'white';
+                           e.currentTarget.querySelector('.tooltip-trigger').style.borderColor = 'white';
+                           setShowRetryTooltip(true);
                         }}
                         onMouseLeave={(e) => {
-                           e.currentTarget.style.background = 'transparent';
-                           e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
-                           e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                           e.currentTarget.querySelector('.tooltip-trigger').style.background = 'transparent';
+                           e.currentTarget.querySelector('.tooltip-trigger').style.color = 'rgba(255,255,255,0.7)';
+                           e.currentTarget.querySelector('.tooltip-trigger').style.borderColor = 'rgba(255,255,255,0.3)';
+                           setShowRetryTooltip(false);
                         }}
                      >
-                       ?
+                       <div 
+                          className="tooltip-trigger"
+                          onClick={() => setShowRetryTooltip(!showRetryTooltip)}
+                          style={{
+                             width: '28px', height: '28px', borderRadius: '50%', 
+                             border: '1px solid rgba(255,255,255,0.3)',
+                             display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                             color: 'rgba(255,255,255,0.7)', cursor: 'help', 
+                             fontSize: '0.9rem', marginTop: '15px',
+                             transition: 'all 0.3s ease'
+                          }}
+                       >
+                         ?
+                       </div>
+                       
+                       {showRetryTooltip && (
+                          <div style={{
+                             position: 'absolute',
+                             bottom: '100%',
+                             left: '50%',
+                             transform: 'translateX(-50%)',
+                             marginBottom: '8px',
+                             background: 'var(--deep-black)',
+                             border: '1px solid rgba(255,255,255,0.2)',
+                             borderRadius: '8px',
+                             padding: '8px 12px',
+                             width: 'max-content',
+                             maxWidth: '200px',
+                             color: 'rgba(255,255,255,0.9)',
+                             fontSize: '0.75rem',
+                             textAlign: 'center',
+                             boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+                             zIndex: 100,
+                             pointerEvents: 'none'
+                          }}>
+                             *Your score will reset if you retry this level.
+                          </div>
+                       )}
                      </div>
                    </div>
                    {breakerLevelRef.current > 1 && (
