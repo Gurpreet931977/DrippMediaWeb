@@ -33,7 +33,7 @@ export default function GlobalError({ error, reset }) {
             width: '100vw', height: '100vh', 
             display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
             background: '#050505', color: '#fff',
-            position: 'relative', overflow: 'hidden'
+            position: 'relative', overflow: 'hidden', cursor: 'auto'
           }}
         >
           <div 

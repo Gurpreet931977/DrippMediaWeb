@@ -9,9 +9,9 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Dashboard', path: '/admin-panel', icon: LayoutDashboard },
-    { name: 'Invoice Maker', path: '/admin-panel/invoice', icon: FileText },
-    { name: 'Quote/Package Maker', path: '/admin-panel/quote', icon: PackagePlus },
+    { name: 'Dashboard', path: '/developermodeon/admin-panel', icon: LayoutDashboard },
+    { name: 'Invoice Maker', path: '/developermodeon/admin-panel/invoice', icon: FileText },
+    { name: 'Quote/Package Maker', path: '/developermodeon/admin-panel/quote', icon: PackagePlus },
     // Future tools can go here
   ];
 
