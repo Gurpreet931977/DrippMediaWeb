@@ -7,6 +7,11 @@ import { useGSAP } from "@gsap/react";
 import PendulumGame from "./games/Pendulum";
 import GravityFlip from "./games/GravityFlip";
 import MandalaMaker from "./games/MandalaMaker";
+import SlingshotNinja from "./games/SlingshotNinja";
+import LiquidSandbox from "./games/LiquidSandbox";
+import BulletHell from "./games/BulletHell";
+import NodeWeaver from "./games/NodeWeaver";
+import HarmonicLooper from "./games/HarmonicLooper";
 
 // ─── MODULE-LEVEL HELPERS (immune to minification TDZ) ────────────────────────
 // These live at module scope so the minifier handles them safely.
@@ -561,6 +566,11 @@ function createGameEngine(canvas, callbacks) {
       if (ag === 'pendulum') activeModule = new PendulumGame(canvas, callbacks);
       else if (ag === 'gravity') activeModule = new GravityFlip(canvas, callbacks);
       else if (ag === 'mandala') activeModule = new MandalaMaker(canvas, callbacks);
+      else if (ag === 'slingshot') activeModule = new SlingshotNinja(canvas, callbacks);
+      else if (ag === 'sandbox') activeModule = new LiquidSandbox(canvas, callbacks);
+      else if (ag === 'bullethell') activeModule = new BulletHell(canvas, callbacks);
+      else if (ag === 'nodeweaver') activeModule = new NodeWeaver(canvas, callbacks);
+      else if (ag === 'looper') activeModule = new HarmonicLooper(canvas, callbacks);
       
       lastActive = ag;
     }

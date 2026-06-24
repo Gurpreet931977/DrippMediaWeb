@@ -10,11 +10,14 @@ const ARCADE_GAMES = [
   { id: 'pendulum', title: 'NEON PENDULUM', color: '#ff3366', desc: 'Swing through the void with physics-based grappling.', category: 'PHYSICS' },
   { id: 'gravity', title: 'GRAVITY FLIP', color: '#33ff33', desc: 'Invert gravity to survive the high-speed neon maze.', category: 'RUNNER' },
   { id: 'slingshot', title: 'SLINGSHOT NINJA', color: '#ff00ff', desc: 'Bullet-time dash attacks. Slice through the grid.', category: 'ACTION' },
+  { id: 'bullethell', title: 'BULLET HELL', color: '#ff0000', desc: 'Dodge an overwhelming barrage of neon lasers.', category: 'BOSS' },
 ];
 
 const CREATIVE_GAMES = [
   { id: 'sandbox', title: 'LIQUID LIGHT', color: '#00d2ff', desc: 'A soothing falling sand and fluid physics sandbox.', category: 'ZEN' },
   { id: 'mandala', title: 'MANDALA MAKER', color: '#b366ff', desc: 'Draw breathtaking geometric light patterns instantly.', category: 'CREATIVE' },
+  { id: 'nodeweaver', title: 'ZEN NODE WEAVER', color: '#33ffcc', desc: 'Connect floating orbs to weave relaxing string art.', category: 'CHILL' },
+  { id: 'looper', title: 'HARMONIC LOOPER', color: '#ff9933', desc: 'Generate expanding ripples and visual beats.', category: 'AUDIO' },
 ];
 
 export default function ArcadeMenu({ onStartGame }) {
