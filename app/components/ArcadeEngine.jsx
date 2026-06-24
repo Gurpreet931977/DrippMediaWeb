@@ -170,7 +170,7 @@ function createGameEngine(canvas, callbacks) {
     const mx = getMouseRef().x, my = getMouseRef().y;
     const distance = Math.sqrt((mx - this.x) ** 2 + (my - this.y) ** 2);
     
-    const hitRadius = getCursorActiveRef().current ? 40 : (isMobile ? 60 : 35);
+    const hitRadius = getCursorActiveRef() ? 40 : (isMobile ? 60 : 35);
 
     if (distance < hitRadius) {
       this.markedForDeletion = true;
@@ -539,7 +539,7 @@ function createGameEngine(canvas, callbacks) {
 
   // ── Main animate loop ────────────────────────────────────────────────────────
   function animate() {
-    const ag = getActiveGameRef().current;
+    const ag = getActiveGameRef();
     if (ag === "none") { ctx.clearRect(0, 0, canvas.width, canvas.height); animId = requestAnimationFrame(animate); return; }
     if (getIsPausedRef()) { animId = requestAnimationFrame(animate); return; }
 
@@ -625,7 +625,7 @@ function createGameEngine(canvas, callbacks) {
         splashes = splashes.filter(s => !s.markedForDeletion);
         
         const mx = getMouseRef().x, my = getMouseRef().y;
-        const hitRadius = getCursorActiveRef().current ? 40 : (isMobile ? 60 : 35);
+        const hitRadius = getCursorActiveRef() ? 40 : (isMobile ? 60 : 35);
         
         ctx.beginPath(); ctx.arc(mx, my, hitRadius * 0.6, 0, Math.PI*2);
         ctx.fillStyle = '#ebd73f';
@@ -792,7 +792,7 @@ function createGameEngine(canvas, callbacks) {
 
         if (runnerState.y === ground && getCursorActiveRef()) {
           runnerState.vy = -16;
-          getCursorActiveRef().current = false;
+          callbacks.setCursorActiveRef(false);
         }
 
         runnerState.frame++;
@@ -967,7 +967,7 @@ function createGameEngine(canvas, callbacks) {
       activeModule.handleKeyDown(e);
       return;
     }
-    const ag = getActiveGameRef().current;
+    const ag = getActiveGameRef();
     if (ag === "snake") {
       const isReversed = snakeReverseTimer > 0;
       const up = isReversed ? 'ArrowDown' : 'ArrowUp';
@@ -1002,8 +1002,8 @@ function createGameEngine(canvas, callbacks) {
       activeModule.handlePointerDown(e);
       return;
     }
-    getCursorActiveRef().current = true;
-    const ag = getActiveGameRef().current;
+    callbacks.setCursorActiveRef(true);
+    const ag = getActiveGameRef();
     if (ag === "simon" && simonState === "waiting") {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.clientX || (e.touches && e.touches[0].clientX);
@@ -1175,6 +1175,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     const engineCallbacks = {
       getMouseRef: () => mouseRef.current,
       getCursorActiveRef: () => cursorActiveRef.current,
+      setCursorActiveRef: (v) => { cursorActiveRef.current = v; },
       getActiveGameRef: () => activeGameRef.current,
       getGameStateRef: () => gameStateRef.current,
       getIsPausedRef: () => isPausedRef.current,
