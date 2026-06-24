@@ -4150,3 +4150,12 @@
         .ui-overlay-fade {
             animation: overlayFadeIn 0.4s ease forwards;
         }
+
+        /* Admin panel and utility pages that skip the main site JS loader */
+        body:has(.admin-body-marker) {
+            opacity: 1 !important;
+            cursor: auto;
+        }
+        body:has(.admin-body-marker) * {
+            cursor: auto !important;
+        }
