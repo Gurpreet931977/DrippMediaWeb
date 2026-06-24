@@ -4,20 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { Play, ChevronLeft, ChevronRight, Gamepad2 } from 'lucide-react';
 import gsap from 'gsap';
 
-const GAMES = [
+const ARCADE_GAMES = [
   { id: 'dripp', title: 'DRIPP DROP', color: '#ebd73f', desc: 'Catch elements, avoid bombs. High score wins.', category: 'ACTION' },
   { id: 'breaker', title: 'NEON BREAKER', color: '#33ccff', desc: 'Smash glowing capsules in this cyberpunk brick breaker.', category: 'ARCADE' },
-  { id: 'scope', title: 'SCOPE CREEP', color: '#ff3366', desc: 'Defend the core from endless waves of neon enemies.', category: 'SHOOTER' },
-  { id: 'snake', title: 'CYBER SNAKE', color: '#33ff33', desc: 'Grow the neon trail and avoid the digital walls.', category: 'CLASSIC' },
-  { id: 'pong', title: 'RETRO PONG', color: '#ff00ff', desc: 'Beat the AI in the ultimate paddle showdown.', category: 'SPORTS' },
-  { id: 'runner', title: 'VOID RUNNER', color: '#ff9900', desc: 'Endless neon run through the cyberspace tunnel.', category: 'ENDLESS' },
-  { id: 'invaders', title: 'INVADERS', color: '#cc33ff', desc: 'Shoot the digital bugs descending from the grid.', category: 'SHOOTER' },
-  { id: 'simon', title: 'NEON SIMON', color: '#ffffff', desc: 'Match the complex light pattern to survive.', category: 'PUZZLE' },
-  { id: 'cyber_racer', title: 'CYBER RACER', color: '#00ffcc', desc: 'Outrun the grid collapse in this high-speed racer.', category: 'RACING' },
-  { id: 'neon_blocks', title: 'NEON BLOCKS', color: '#ff00aa', desc: 'Stack the glowing blocks to clear lines.', category: 'PUZZLE' },
+  { id: 'pendulum', title: 'NEON PENDULUM', color: '#ff3366', desc: 'Swing through the void with physics-based grappling.', category: 'PHYSICS' },
+  { id: 'gravity', title: 'GRAVITY FLIP', color: '#33ff33', desc: 'Invert gravity to survive the high-speed neon maze.', category: 'RUNNER' },
+  { id: 'slingshot', title: 'SLINGSHOT NINJA', color: '#ff00ff', desc: 'Bullet-time dash attacks. Slice through the grid.', category: 'ACTION' },
+];
+
+const CREATIVE_GAMES = [
+  { id: 'sandbox', title: 'LIQUID LIGHT', color: '#00d2ff', desc: 'A soothing falling sand and fluid physics sandbox.', category: 'ZEN' },
+  { id: 'mandala', title: 'MANDALA MAKER', color: '#b366ff', desc: 'Draw breathtaking geometric light patterns instantly.', category: 'CREATIVE' },
 ];
 
 export default function ArcadeMenu({ onStartGame }) {
+  const [activeMode, setActiveMode] = useState('arcade'); // 'arcade' or 'creative'
+  const activeGameList = activeMode === 'arcade' ? ARCADE_GAMES : CREATIVE_GAMES;
+  
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredGameId, setHoveredGameId] = useState(null);
 
@@ -33,7 +36,12 @@ export default function ArcadeMenu({ onStartGame }) {
   const [passwordError, setPasswordError] = useState(false);
   const [pendingGameId, setPendingGameId] = useState(null);
   
-  const activeColor = GAMES[activeIndex].color;
+  const activeColor = activeGameList[activeIndex]?.color || '#ffffff';
+
+  // Reset index when mode changes
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [activeMode]);
 
   useEffect(() => {
     // Animate background color change
@@ -45,11 +53,11 @@ export default function ArcadeMenu({ onStartGame }) {
   }, [activeIndex, activeColor]);
 
   const handleNext = () => {
-    setActiveIndex((prev) => (prev + 1) % GAMES.length);
+    setActiveIndex((prev) => (prev + 1) % activeGameList.length);
   };
 
   const handlePrev = () => {
-    setActiveIndex((prev) => (prev - 1 + GAMES.length) % GAMES.length);
+    setActiveIndex((prev) => (prev - 1 + activeGameList.length) % activeGameList.length);
   };
 
   // Pointer event handlers for dragging
@@ -130,18 +138,42 @@ export default function ArcadeMenu({ onStartGame }) {
             <Gamepad2 size={24} color={activeColor} style={{ filter: `drop-shadow(0 0 10px ${activeColor})`, transition: 'all 0.5s ease' }} />
             <span style={{ fontSize: '13px', letterSpacing: '4px', color: activeColor, fontWeight: 600, transition: 'all 0.5s ease' }}>SYSTEM.ONLINE</span>
           </div>
-          <h1 style={{
-            fontFamily: "'Panchang', sans-serif",
-            fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
-            fontWeight: 800,
-            margin: 0,
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            lineHeight: 1,
-            textShadow: '0 10px 30px rgba(0,0,0,0.5)'
-          }}>
-            ARCADE MODE
-          </h1>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <h1 
+              onClick={() => setActiveMode('arcade')}
+              style={{
+                fontFamily: "'Panchang', sans-serif",
+                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                fontWeight: 800,
+                margin: 0,
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                lineHeight: 1,
+                cursor: 'pointer',
+                color: activeMode === 'arcade' ? '#fff' : 'rgba(255,255,255,0.3)',
+                textShadow: activeMode === 'arcade' ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
+                transition: 'color 0.3s'
+              }}>
+              ARCADE
+            </h1>
+            <h1 
+              onClick={() => setActiveMode('creative')}
+              style={{
+                fontFamily: "'Panchang', sans-serif",
+                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                fontWeight: 800,
+                margin: 0,
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                lineHeight: 1,
+                cursor: 'pointer',
+                color: activeMode === 'creative' ? '#fff' : 'rgba(255,255,255,0.3)',
+                textShadow: activeMode === 'creative' ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
+                transition: 'color 0.3s'
+              }}>
+              CREATIVE
+            </h1>
+          </div>
         </div>
         
         <div style={{
@@ -157,9 +189,9 @@ export default function ArcadeMenu({ onStartGame }) {
           gap: '8px'
         }}>
           <div>
-            <div>DATABANK: {GAMES.length} CARTRIDGES</div>
+            <div>DATABANK: {activeGameList.length} CARTRIDGES</div>
             <div>STATUS: {isDeveloper ? 'DEV_MODE_ACTIVE' : 'AWAITING INPUT'}</div>
-            <div>ROOT: /SYSTEM/GAMES/</div>
+            <div>ROOT: /SYSTEM/{activeMode === 'arcade' ? 'GAMES' : 'CREATIVE'}/</div>
           </div>
           {!isDeveloper && (
             <button 
@@ -205,14 +237,14 @@ export default function ArcadeMenu({ onStartGame }) {
         <div style={{
           position: 'relative',
           width: '100%',
-          height: '500px',
+          height: '420px',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           transformStyle: 'preserve-3d',
           pointerEvents: 'none' // Let the container handle the drag events mostly
         }}>
-          {GAMES.map((game, index) => {
+          {activeGameList.map((game, index) => {
             const offset = index - activeIndex;
             const isActive = index === activeIndex;
             
@@ -265,7 +297,7 @@ export default function ArcadeMenu({ onStartGame }) {
                 style={{
                   position: 'absolute',
                   width: '320px',
-                  height: '400px',
+                  height: '340px',
                   borderRadius: '24px',
                   background: isActive ? 'rgba(15,15,15,0.85)' : 'rgba(20,20,20,0.4)',
                   border: `1px solid ${isActive ? game.color : 'rgba(255,255,255,0.05)'}`,
@@ -396,7 +428,7 @@ export default function ArcadeMenu({ onStartGame }) {
 
       {/* Carousel Controls (Moved below carousel with standard flow layout) */}
       <div style={{
-        padding: '20px 0 40px 0',
+        padding: '0px 0 60px 0',
         display: 'flex',
         gap: '24px',
         alignItems: 'center',
@@ -444,7 +476,7 @@ export default function ArcadeMenu({ onStartGame }) {
         }}>
           <span style={{ color: '#fff', fontWeight: 'bold' }}>{String(activeIndex + 1).padStart(2, '0')}</span> 
           <span style={{ opacity: 0.3 }}>/</span> 
-          <span style={{ opacity: 0.5 }}>{String(GAMES.length).padStart(2, '0')}</span>
+          <span style={{ opacity: 0.5 }}>{String(activeGameList.length).padStart(2, '0')}</span>
         </div>
 
         <button 

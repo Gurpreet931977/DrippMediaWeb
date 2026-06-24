@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
+import PendulumGame from "./games/Pendulum";
+import GravityFlip from "./games/GravityFlip";
+import MandalaMaker from "./games/MandalaMaker";
+
 // ─── MODULE-LEVEL HELPERS (immune to minification TDZ) ────────────────────────
 // These live at module scope so the minifier handles them safely.
 
@@ -106,6 +110,7 @@ function createGameEngine(canvas, callbacks) {
   let piercingTimer = 0;
   let animId;
   let lastActive = "none";
+  let activeModule = null;
 
   // ── Resize ──────────────────────────────────────────────────────────────────
   function resize() {
@@ -529,7 +534,7 @@ function createGameEngine(canvas, callbacks) {
 
   // ── Main animate loop ────────────────────────────────────────────────────────
   function animate() {
-    const ag = getActiveGameRef();
+    const ag = getActiveGameRef().current;
     if (ag === "none") { ctx.clearRect(0, 0, canvas.width, canvas.height); animId = requestAnimationFrame(animate); return; }
     if (getIsPausedRef()) { animId = requestAnimationFrame(animate); return; }
 
@@ -546,7 +551,25 @@ function createGameEngine(canvas, callbacks) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Dynamic Module Routing
     if (ag !== lastActive) {
+      if (activeModule) {
+        activeModule.destroy();
+        activeModule = null;
+      }
+      
+      if (ag === 'pendulum') activeModule = new PendulumGame(canvas, callbacks);
+      else if (ag === 'gravity') activeModule = new GravityFlip(canvas, callbacks);
+      else if (ag === 'mandala') activeModule = new MandalaMaker(canvas, callbacks);
+      
+      lastActive = ag;
+    }
+
+    if (activeModule) {
+      activeModule.update();
+      activeModule.draw();
+    } else {
+        // ---- ORIGINAL HARDCODED GAMES ----
       if (ag === "breaker" && lastActive !== "breaker") initBreaker(getBreakLevelRef());
       else if (ag === "scope" && lastActive !== "scope") initScope();
       else if (ag === "dripp" && lastActive !== "dripp") { drops = []; splashes = []; }
@@ -555,396 +578,369 @@ function createGameEngine(canvas, callbacks) {
       else if (ag === "runner" && lastActive !== "runner") { if(window.initRunnerGame) window.initRunnerGame(); }
       else if (ag === "invaders" && lastActive !== "invaders") initInvaders();
       else if (ag === "simon" && lastActive !== "simon") initSimon();
-      lastActive = ag;
-    }
 
-    // Dripp logic
-    if (ag === "dripp") {
-      let baseIntensity = 0.025; 
-      let scaling = Math.log10(1 + getScoreRef() / 300) * 0.1;
-      
-      if (!isMobile) {
-         baseIntensity = 0.04;
-         scaling = Math.log10(1 + getScoreRef() / 150) * 0.15;
-      }
-      
-      const rainIntensity = Math.min(0.25, baseIntensity + scaling);
-      const spawnAttempts = 1; 
-      
-      for (let i = 0; i < spawnAttempts; i++) {
-         if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
-         if (Math.random() < rainIntensity * 0.15) drops.push(new Drop(Math.random() < 0.15));
-      }
-      
-      // Draw subtle gradient background
-      const glowGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height)/1.5);
-      glowGrad.addColorStop(0, 'rgba(235, 215, 63, 0.05)');
-      glowGrad.addColorStop(1, 'transparent');
-      
-      ctx.fillStyle = "#050505";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = glowGrad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Update and Draw Drops
-      drops.forEach(o => o.update());
-      drops.forEach(o => o.draw(ctx));
-      drops = drops.filter(o => !o.markedForDeletion);
-      
-      splashes.forEach(s => s.update());
-      splashes.forEach(s => s.draw(ctx));
-      splashes = splashes.filter(s => !s.markedForDeletion);
-      
-      // Draw catcher zone at mouse
-      const mx = getMouseRef().x, my = getMouseRef().y;
-      const hitRadius = getCursorActiveRef().current ? 40 : (isMobile ? 60 : 35);
-      
-      ctx.beginPath(); ctx.arc(mx, my, hitRadius * 0.6, 0, Math.PI*2);
-      ctx.fillStyle = '#ebd73f';
-      ctx.fill();
-      
-      ctx.beginPath(); ctx.arc(mx, my, hitRadius, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(235, 215, 63, 0.15)';
-      ctx.fill();
-    }
-
-    // Scope logic
-    if (ag === "scope") {
-      ctx.fillStyle = "rgba(5,5,5,0.3)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      if (Math.random() < 0.03 + getScopeScoreRef() / 10000) scopeDrops.push(new ScopeDrop());
-      if (scopePaddle) { scopePaddle.update(); scopePaddle.draw(ctx); }
-      scopeDrops.forEach(d => { d.update(scopePaddle); d.draw(ctx); });
-      scopeDrops = scopeDrops.filter(d => !d.markedForDeletion);
-    }
-
-    // Snake logic
-    if (ag === "snake") {
-      ctx.fillStyle = "rgba(5,5,5,0.4)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      if (snakeReverseTimer > 0) {
-        snakeReverseTimer -= 16;
-        ctx.fillStyle = "rgba(255,0,0,0.05)";
+      // Dripp logic
+      if (ag === "dripp") {
+        let baseIntensity = 0.025; 
+        let scaling = Math.log10(1 + getScoreRef() / 300) * 0.1;
+        
+        if (!isMobile) {
+           baseIntensity = 0.04;
+           scaling = Math.log10(1 + getScoreRef() / 150) * 0.15;
+        }
+        
+        const rainIntensity = Math.min(0.25, baseIntensity + scaling);
+        const spawnAttempts = 1; 
+        
+        for (let i = 0; i < spawnAttempts; i++) {
+           if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
+           if (Math.random() < rainIntensity * 0.15) drops.push(new Drop(Math.random() < 0.15));
+        }
+        
+        const glowGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height)/1.5);
+        glowGrad.addColorStop(0, 'rgba(235, 215, 63, 0.05)');
+        glowGrad.addColorStop(1, 'transparent');
+        
+        ctx.fillStyle = "#050505";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = glowGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        drops.forEach(o => o.update());
+        drops.forEach(o => o.draw(ctx));
+        drops = drops.filter(o => !o.markedForDeletion);
+        
+        splashes.forEach(s => s.update());
+        splashes.forEach(s => s.draw(ctx));
+        splashes = splashes.filter(s => !s.markedForDeletion);
+        
+        const mx = getMouseRef().x, my = getMouseRef().y;
+        const hitRadius = getCursorActiveRef().current ? 40 : (isMobile ? 60 : 35);
+        
+        ctx.beginPath(); ctx.arc(mx, my, hitRadius * 0.6, 0, Math.PI*2);
+        ctx.fillStyle = '#ebd73f';
+        ctx.fill();
+        
+        ctx.beginPath(); ctx.arc(mx, my, hitRadius, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(235, 215, 63, 0.15)';
+        ctx.fill();
       }
 
-      if (++snakeFrame > Math.max(2, 6 - Math.floor(getScoreRef() / 50))) {
-        snakeFrame = 0;
-        let head = { x: snake[0].x + snakeDir.x, y: snake[0].y + snakeDir.y };
+      // Scope logic
+      if (ag === "scope") {
+        ctx.fillStyle = "rgba(5,5,5,0.3)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (Math.random() < 0.03 + getScopeScoreRef() / 10000) scopeDrops.push(new ScopeDrop());
+        if (scopePaddle) { scopePaddle.update(); scopePaddle.draw(ctx); }
+        scopeDrops.forEach(d => { d.update(scopePaddle); d.draw(ctx); });
+        scopeDrops = scopeDrops.filter(d => !d.markedForDeletion);
+      }
+
+      // Snake logic
+      if (ag === "snake") {
+        ctx.fillStyle = "rgba(5,5,5,0.4)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        const gridX = Math.floor(canvas.width / 25);
-        const gridY = Math.floor(canvas.height / 25);
-        
-        // Screen wrap
-        if(head.x < 0) head.x = gridX - 1;
-        if(head.x >= gridX) head.x = 0;
-        if(head.y < 0) head.y = gridY - 1;
-        if(head.y >= gridY) head.y = 0;
-        
-        // Self collision check
-        for(let i=0; i<snake.length; i++) {
-          if (head.x === snake[i].x && head.y === snake[i].y) {
-             setGameState("failed");
+        if (snakeReverseTimer > 0) {
+          snakeReverseTimer -= 16;
+          ctx.fillStyle = "rgba(255,0,0,0.05)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        if (++snakeFrame > Math.max(2, 6 - Math.floor(getScoreRef() / 50))) {
+          snakeFrame = 0;
+          let head = { x: snake[0].x + snakeDir.x, y: snake[0].y + snakeDir.y };
+          
+          const gridX = Math.floor(canvas.width / 25);
+          const gridY = Math.floor(canvas.height / 25);
+          
+          if(head.x < 0) head.x = gridX - 1;
+          if(head.x >= gridX) head.x = 0;
+          if(head.y < 0) head.y = gridY - 1;
+          if(head.y >= gridY) head.y = 0;
+          
+          for(let i=0; i<snake.length; i++) {
+            if (head.x === snake[i].x && head.y === snake[i].y) {
+               setGameState("failed");
+            }
+          }
+          
+          snake.unshift(head);
+          
+          if (snakeFood && head.x === snakeFood.x && head.y === snakeFood.y) {
+              if (snakeFood.isPowerdown) {
+                  snakeReverseTimer = 5000;
+                  setScoreRef(Math.max(0, getScoreRef() - 5));
+                  triggerGsapMilestone(head.x*25, head.y*25);
+              } else {
+                  setScoreRef(getScoreRef() + 10);
+              }
+              setScore(getScoreRef());
+              spawnSnakeFood();
+          } else {
+              snake.pop();
           }
         }
-        
-        snake.unshift(head);
-        
-        if (snakeFood && head.x === snakeFood.x && head.y === snakeFood.y) {
-            if (snakeFood.isPowerdown) {
-                snakeReverseTimer = 5000;
-                setScoreRef(Math.max(0, getScoreRef() - 5));
-                triggerGsapMilestone(head.x*25, head.y*25); // re-use milestone anim as hit effect
-            } else {
-                setScoreRef(getScoreRef() + 10);
-            }
-            setScore(getScoreRef());
-            spawnSnakeFood();
-        } else {
-            snake.pop();
-        }
-      }
 
-      if (snakeFood) {
-        ctx.fillStyle = snakeFood.isPowerdown ? '#ff3333' : '#ebd73f';
-        ctx.shadowColor = ctx.fillStyle;
-        ctx.shadowBlur = 10;
-        ctx.fillRect(snakeFood.x * 25, snakeFood.y * 25, 23, 23);
+        if (snakeFood) {
+          ctx.fillStyle = snakeFood.isPowerdown ? '#ff3333' : '#ebd73f';
+          ctx.shadowColor = ctx.fillStyle;
+          ctx.shadowBlur = 10;
+          ctx.fillRect(snakeFood.x * 25, snakeFood.y * 25, 23, 23);
+          ctx.shadowBlur = 0;
+        }
+        
+        ctx.fillStyle = '#33ff33';
+        ctx.shadowColor = '#33ff33';
+        for(let i=0; i<snake.length; i++) {
+            ctx.globalAlpha = 1 - (i/snake.length)*0.5;
+            ctx.shadowBlur = i === 0 ? 15 : 5;
+            ctx.fillRect(snake[i].x * 25, snake[i].y * 25, 23, 23);
+        }
+        ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;
       }
-      
-      ctx.fillStyle = '#33ff33';
-      ctx.shadowColor = '#33ff33';
-      for(let i=0; i<snake.length; i++) {
-          ctx.globalAlpha = 1 - (i/snake.length)*0.5;
-          ctx.shadowBlur = i === 0 ? 15 : 5;
-          ctx.fillRect(snake[i].x * 25, snake[i].y * 25, 23, 23);
-      }
-      ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
-    }
 
-    // Pong logic
-    if (ag === "pong") {
-      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      const my = getMouseRef().y;
-      const py = clamp(my - 40, 0, canvas.height - 80);
-      
-      // AI
-      const aiSpeed = 3 + getScoreRef() * 0.5;
-      if (pongAI + 40 < pongBall.y) pongAI += aiSpeed;
-      if (pongAI + 40 > pongBall.y) pongAI -= aiSpeed;
-      pongAI = clamp(pongAI, 0, canvas.height - 80);
-
-      pongBall.x += pongBall.vx;
-      pongBall.y += pongBall.vy;
-      
-      pongTrails.push({x: pongBall.x, y: pongBall.y, alpha: 1});
-      
-      // Bounce top/bottom
-      if (pongBall.y < 0 || pongBall.y > canvas.height) pongBall.vy *= -1;
-      
-      // Hit Player (Left)
-      if (pongBall.x < 40 && pongBall.x > 20 && pongBall.y > py && pongBall.y < py + 80) {
-        pongBall.vx *= -1.1; // Speed up
-        pongBall.vy += (pongBall.y - (py + 40)) * 0.1;
-        pongBall.x = 40;
-        setScoreRef(getScoreRef() + 1); setScore(getScoreRef());
-        triggerGsapMilestone(pongBall.x, pongBall.y);
-      }
-      
-      // Hit AI (Right)
-      if (pongBall.x > canvas.width - 40 && pongBall.x < canvas.width - 20 && pongBall.y > pongAI && pongBall.y < pongAI + 80) {
-        pongBall.vx *= -1;
-        pongBall.x = canvas.width - 40;
-      }
-      
-      // Missed
-      if (pongBall.x < 0) {
-         setGameState("failed");
-      } else if (pongBall.x > canvas.width) {
-         // AI missed? Unlikely but possible.
-         pongBall.x = canvas.width/2; pongBall.vx = -6;
-      }
-      
-      // Draw Trails
-      ctx.fillStyle = '#ff00ff';
-      pongTrails.forEach((t, i) => {
-         t.alpha -= 0.05;
-         ctx.globalAlpha = Math.max(0, t.alpha);
-         if (t.alpha > 0) {
-            ctx.beginPath(); ctx.arc(t.x, t.y, Math.max(0.1, pongBall.r * t.alpha), 0, Math.PI*2); ctx.fill();
-         }
-      });
-      pongTrails = pongTrails.filter(t => t.alpha > 0);
-      ctx.globalAlpha = 1;
-      
-      // Draw Paddles & Ball
-      ctx.shadowBlur = 15; ctx.shadowColor = '#ff00ff';
-      ctx.fillRect(20, py, 10, 80); // Player
-      ctx.fillRect(canvas.width - 30, pongAI, 10, 80); // AI
-      
-      ctx.beginPath(); ctx.arc(pongBall.x, pongBall.y, pongBall.r, 0, Math.PI*2); ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-
-    // Coming Soon placeholders
-    if (ag === "cyber_racer" || ag === "neon_blocks") {
-      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#ebd73f";
-      ctx.font = "bold 40px 'Panchang', sans-serif";
-      ctx.textAlign = "center";
-      ctx.shadowBlur = 20; ctx.shadowColor = "#ebd73f";
-      ctx.fillText("COMING SOON", canvas.width/2, canvas.height/2);
-      ctx.shadowBlur = 0;
-    }
-
-    // Runner logic
-    if (ag === "runner") {
-      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const ground = canvas.height - 100;
-
-      // Update runner
-      runnerState.vy += 0.8; // Gravity
-      runnerState.y += runnerState.vy;
-      if (runnerState.y >= ground) {
-        runnerState.y = ground;
-        runnerState.vy = 0;
-      }
-
-      // Jump Input
-      if (runnerState.y === ground && getCursorActiveRef()) {
-        runnerState.vy = -16;
-        getCursorActiveRef().current = false; // consume jump
-      }
-
-      // Spawning
-      runnerState.frame++;
-      if (runnerState.frame % 60 === 0 && Math.random() < (0.5 + getScoreRef() * 0.01)) {
-        runnerObs.push({x: canvas.width, y: ground, w: 20, h: rnd(30, 80), speed: 6 + getScoreRef()*0.1});
-      }
-
-      // Draw Ground
-      ctx.strokeStyle = '#ff9900'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, ground + 20); ctx.lineTo(canvas.width, ground + 20); ctx.stroke();
-
-      // Draw Player
-      ctx.fillStyle = '#ebd73f'; ctx.shadowBlur = 15; ctx.shadowColor = '#ebd73f';
-      ctx.beginPath(); ctx.arc(100, runnerState.y, 20, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
-
-      // Update & Draw Obstacles
-      ctx.fillStyle = '#ff3333';
-      for (let i = runnerObs.length - 1; i >= 0; i--) {
-        let o = runnerObs[i];
-        o.x -= o.speed;
-        ctx.fillRect(o.x, o.y - o.h + 20, o.w, o.h);
-
-        // Collision Check
-        if (Math.abs(100 - o.x) < 20 && Math.abs(runnerState.y - (o.y - o.h/2 + 10)) < (20 + o.h/2)) {
-          setGameState("failed");
-        }
-
-        if (o.x < -50) {
-          runnerObs.splice(i, 1);
-          setScoreRef(getScoreRef() + 1); setScore(getScoreRef());
-          if (getScoreRef() % 10 === 0) triggerGsapMilestone(100, runnerState.y);
-        }
-      }
-    }
-
-    // Invaders logic
-    if (ag === "invaders") {
-      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Move Player
-      if (invKeys['ArrowLeft']) invPlayer.x -= 8;
-      if (invKeys['ArrowRight']) invPlayer.x += 8;
-      invPlayer.x = clamp(invPlayer.x, 0, canvas.width - invPlayer.w);
-
-      // Auto Fire
-      invFrame++;
-      if (invKeys[' '] && invFrame % 10 === 0) {
-        invLasers.push({x: invPlayer.x + invPlayer.w/2, y: canvas.height - 80, vy: -15});
-      }
-
-      // Spawning Invaders
-      if (invFrame % Math.max(20, 60 - Math.floor(getScoreRef()/10)) === 0) {
-        invaders.push({x: rnd(20, canvas.width - 40), y: -30, w: 30, h: 30, vy: 2 + getScoreRef()*0.05, hp: 1});
-      }
-
-      // Draw Player
-      ctx.fillStyle = '#ebd73f'; ctx.shadowBlur = 10; ctx.shadowColor = '#ebd73f';
-      ctx.fillRect(invPlayer.x, canvas.height - 70, invPlayer.w, invPlayer.h);
-      ctx.shadowBlur = 0;
-
-      // Update Lasers
-      ctx.fillStyle = '#fff';
-      for (let i = invLasers.length - 1; i >= 0; i--) {
-        let l = invLasers[i];
-        l.y += l.vy;
-        ctx.fillRect(l.x - 2, l.y, 4, 15);
-        if (l.y < -20) invLasers.splice(i, 1);
-      }
-
-      // Update Invaders
-      ctx.fillStyle = '#eb3f3f'; ctx.shadowBlur = 10; ctx.shadowColor = '#eb3f3f';
-      for (let i = invaders.length - 1; i >= 0; i--) {
-        let inv = invaders[i];
-        inv.y += inv.vy;
-        ctx.fillRect(inv.x, inv.y, inv.w, inv.h);
+      // Pong logic
+      if (ag === "pong") {
+        ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        if (inv.y > canvas.height) {
+        const my = getMouseRef().y;
+        const py = clamp(my - 40, 0, canvas.height - 80);
+        
+        const aiSpeed = 3 + getScoreRef() * 0.5;
+        if (pongAI + 40 < pongBall.y) pongAI += aiSpeed;
+        if (pongAI + 40 > pongBall.y) pongAI -= aiSpeed;
+        pongAI = clamp(pongAI, 0, canvas.height - 80);
+
+        pongBall.x += pongBall.vx;
+        pongBall.y += pongBall.vy;
+        
+        pongTrails.push({x: pongBall.x, y: pongBall.y, alpha: 1});
+        
+        if (pongBall.y < 0 || pongBall.y > canvas.height) pongBall.vy *= -1;
+        
+        if (pongBall.x < 40 && pongBall.x > 20 && pongBall.y > py && pongBall.y < py + 80) {
+          pongBall.vx *= -1.1; 
+          pongBall.vy += (pongBall.y - (py + 40)) * 0.1;
+          pongBall.x = 40;
+          setScoreRef(getScoreRef() + 1); setScore(getScoreRef());
+          triggerGsapMilestone(pongBall.x, pongBall.y);
+        }
+        
+        if (pongBall.x > canvas.width - 40 && pongBall.x < canvas.width - 20 && pongBall.y > pongAI && pongBall.y < pongAI + 80) {
+          pongBall.vx *= -1;
+          pongBall.x = canvas.width - 40;
+        }
+        
+        if (pongBall.x < 0) {
            setGameState("failed");
+        } else if (pongBall.x > canvas.width) {
+           pongBall.x = canvas.width/2; pongBall.vx = -6;
+        }
+        
+        ctx.fillStyle = '#ff00ff';
+        pongTrails.forEach((t, i) => {
+           t.alpha -= 0.05;
+           ctx.globalAlpha = Math.max(0, t.alpha);
+           if (t.alpha > 0) {
+              ctx.beginPath(); ctx.arc(t.x, t.y, Math.max(0.1, pongBall.r * t.alpha), 0, Math.PI*2); ctx.fill();
+           }
+        });
+        pongTrails = pongTrails.filter(t => t.alpha > 0);
+        ctx.globalAlpha = 1;
+        
+        ctx.shadowBlur = 15; ctx.shadowColor = '#ff00ff';
+        ctx.fillRect(20, py, 10, 80); 
+        ctx.fillRect(canvas.width - 30, pongAI, 10, 80);
+        
+        ctx.beginPath(); ctx.arc(pongBall.x, pongBall.y, pongBall.r, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Coming Soon placeholders
+      if (ag === "cyber_racer" || ag === "neon_blocks") {
+        ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#ebd73f";
+        ctx.font = "bold 40px 'Panchang', sans-serif";
+        ctx.textAlign = "center";
+        ctx.shadowBlur = 20; ctx.shadowColor = "#ebd73f";
+        ctx.fillText("COMING SOON", canvas.width/2, canvas.height/2);
+        ctx.shadowBlur = 0;
+      }
+
+      // Runner logic
+      if (ag === "runner") {
+        ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const ground = canvas.height - 100;
+
+        runnerState.vy += 0.8;
+        runnerState.y += runnerState.vy;
+        if (runnerState.y >= ground) {
+          runnerState.y = ground;
+          runnerState.vy = 0;
         }
 
-        // Collision with Lasers
-        for (let j = invLasers.length - 1; j >= 0; j--) {
-           let l = invLasers[j];
-           if (l.x > inv.x && l.x < inv.x + inv.w && l.y < inv.y + inv.h && l.y > inv.y) {
-               invLasers.splice(j, 1);
-               invaders.splice(i, 1);
-               setScoreRef(getScoreRef() + 1); setScore(getScoreRef());
-               triggerGsapMilestone(inv.x, inv.y);
-               break;
+        if (runnerState.y === ground && getCursorActiveRef()) {
+          runnerState.vy = -16;
+          getCursorActiveRef().current = false;
+        }
+
+        runnerState.frame++;
+        if (runnerState.frame % 60 === 0 && Math.random() < (0.5 + getScoreRef() * 0.01)) {
+          runnerObs.push({x: canvas.width, y: ground, w: 20, h: rnd(30, 80), speed: 6 + getScoreRef()*0.1});
+        }
+
+        ctx.strokeStyle = '#ff9900'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, ground + 20); ctx.lineTo(canvas.width, ground + 20); ctx.stroke();
+
+        ctx.fillStyle = '#ebd73f'; ctx.shadowBlur = 15; ctx.shadowColor = '#ebd73f';
+        ctx.beginPath(); ctx.arc(100, runnerState.y, 20, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+
+        ctx.fillStyle = '#ff3333';
+        for (let i = runnerObs.length - 1; i >= 0; i--) {
+          let o = runnerObs[i];
+          o.x -= o.speed;
+          ctx.fillRect(o.x, o.y - o.h + 20, o.w, o.h);
+
+          if (Math.abs(100 - o.x) < 20 && Math.abs(runnerState.y - (o.y - o.h/2 + 10)) < (20 + o.h/2)) {
+            setGameState("failed");
+          }
+
+          if (o.x < -50) {
+            runnerObs.splice(i, 1);
+            setScoreRef(getScoreRef() + 1); setScore(getScoreRef());
+            if (getScoreRef() % 10 === 0) triggerGsapMilestone(100, runnerState.y);
+          }
+        }
+      }
+
+      // Invaders logic
+      if (ag === "invaders") {
+        ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        if (invKeys['ArrowLeft']) invPlayer.x -= 8;
+        if (invKeys['ArrowRight']) invPlayer.x += 8;
+        invPlayer.x = clamp(invPlayer.x, 0, canvas.width - invPlayer.w);
+
+        invFrame++;
+        if (invKeys[' '] && invFrame % 10 === 0) {
+          invLasers.push({x: invPlayer.x + invPlayer.w/2, y: canvas.height - 80, vy: -15});
+        }
+
+        if (invFrame % Math.max(20, 60 - Math.floor(getScoreRef()/10)) === 0) {
+          invaders.push({x: rnd(20, canvas.width - 40), y: -30, w: 30, h: 30, vy: 2 + getScoreRef()*0.05, hp: 1});
+        }
+
+        ctx.fillStyle = '#ebd73f'; ctx.shadowBlur = 10; ctx.shadowColor = '#ebd73f';
+        ctx.fillRect(invPlayer.x, canvas.height - 70, invPlayer.w, invPlayer.h);
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = '#fff';
+        for (let i = invLasers.length - 1; i >= 0; i--) {
+          let l = invLasers[i];
+          l.y += l.vy;
+          ctx.fillRect(l.x - 2, l.y, 4, 15);
+          if (l.y < -20) invLasers.splice(i, 1);
+        }
+
+        ctx.fillStyle = '#eb3f3f'; ctx.shadowBlur = 10; ctx.shadowColor = '#eb3f3f';
+        for (let i = invaders.length - 1; i >= 0; i--) {
+          let inv = invaders[i];
+          inv.y += inv.vy;
+          ctx.fillRect(inv.x, inv.y, inv.w, inv.h);
+          
+          if (inv.y > canvas.height) {
+             setGameState("failed");
+          }
+
+          for (let j = invLasers.length - 1; j >= 0; j--) {
+             let l = invLasers[j];
+             if (l.x > inv.x && l.x < inv.x + inv.w && l.y < inv.y + inv.h && l.y > inv.y) {
+                 invLasers.splice(j, 1);
+                 invaders.splice(i, 1);
+                 setScoreRef(getScoreRef() + 1); setScore(getScoreRef());
+                 triggerGsapMilestone(inv.x, inv.y);
+                 break;
+             }
+          }
+        }
+        ctx.shadowBlur = 0;
+      }
+
+      // Simon logic
+      if (ag === "simon") {
+        ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        
+        const colors = ['#ff3366', '#33ccff', '#ebd73f', '#33ff33'];
+        const pads = [
+           {x: 0, y: 0, w: cx, h: cy},
+           {x: cx, y: 0, w: cx, h: cy},
+           {x: 0, y: cy, w: cx, h: cy},
+           {x: cx, y: cy, w: cx, h: cy}
+        ];
+        
+        if (simonState === "showing") {
+           simonTimer--;
+           if (simonTimer <= 0) {
+              simonActiveBtn = simonSeq[simonPlayerSeq.length];
+              simonTimer = 40;
+              simonPlayerSeq.push(-1); 
+           } else if (simonTimer === 10) {
+              simonActiveBtn = -1;
+           }
+           
+           if (simonPlayerSeq.length > simonSeq.length) {
+              simonState = "waiting";
+              simonPlayerSeq = [];
+              simonActiveBtn = -1;
+           }
+        } else if (simonState === "success") {
+           simonTimer--;
+           if (simonTimer <= 0) {
+              simonSeq.push(Math.floor(Math.random() * 4));
+              simonState = "showing";
+              simonPlayerSeq = [];
+              simonTimer = 60;
            }
         }
+        
+        pads.forEach((p, i) => {
+           const isActive = simonActiveBtn === i || (simonState === "success" && simonTimer % 20 > 10);
+           ctx.fillStyle = isActive ? colors[i] : 'transparent';
+           ctx.fillRect(p.x, p.y, p.w, p.h);
+           
+           ctx.strokeStyle = isActive ? '#fff' : colors[i];
+           ctx.lineWidth = isActive ? 5 : 2;
+           ctx.globalAlpha = isActive ? 1 : 0.3;
+           ctx.strokeRect(p.x + 10, p.y + 10, p.w - 20, p.h - 20);
+           ctx.globalAlpha = 1;
+        });
+        
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 24px 'Panchang', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(simonState === "showing" ? "WATCH" : simonState === "waiting" ? "REPEAT" : "NICE!", cx, cy);
       }
-      ctx.shadowBlur = 0;
-    }
 
-    // Simon logic
-    if (ag === "simon") {
-      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-      
-      const colors = ['#ff3366', '#33ccff', '#ebd73f', '#33ff33'];
-      const pads = [
-         {x: 0, y: 0, w: cx, h: cy},
-         {x: cx, y: 0, w: cx, h: cy},
-         {x: 0, y: cy, w: cx, h: cy},
-         {x: cx, y: cy, w: cx, h: cy}
-      ];
-      
-      if (simonState === "showing") {
-         simonTimer--;
-         if (simonTimer <= 0) {
-            simonActiveBtn = simonSeq[simonPlayerSeq.length];
-            simonTimer = 40;
-            simonPlayerSeq.push(-1); 
-         } else if (simonTimer === 10) {
-            simonActiveBtn = -1;
-         }
-         
-         if (simonPlayerSeq.length > simonSeq.length) {
-            simonState = "waiting";
-            simonPlayerSeq = [];
-            simonActiveBtn = -1;
-         }
-      } else if (simonState === "success") {
-         simonTimer--;
-         if (simonTimer <= 0) {
-            simonSeq.push(Math.floor(Math.random() * 4));
-            simonState = "showing";
-            simonPlayerSeq = [];
-            simonTimer = 60;
-         }
+      // Breaker logic
+      if (ag === "breaker") {
+        ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (piercingTimer > 0) piercingTimer -= 16;
+        if (paddle) { paddle.update(); paddle.draw(ctx); }
+        balls.forEach(b => { b.update(paddle, bricks); b.draw(ctx); });
+        balls = balls.filter(b => !b.markedForDeletion);
+        bricks.forEach(b => { b.update(); b.draw(ctx); }); bricks = bricks.filter(b => !b.markedForDeletion);
+        powerUps.forEach(p => { p.update(paddle, bricks); p.draw(ctx); }); powerUps = powerUps.filter(p => !p.markedForDeletion);
+        if (balls.length === 0 && bricks.length > 0) setGameState("failed");
+        if (bricks.length === 0 && balls.length > 0) {
+          const nl = getBreakLevelRef() + 1; setBreakLevelRef(nl); setBreakLevel(nl);
+          setGameState("level-complete");
+          setTimeout(() => { initBreaker(nl); setGameState("playing"); }, 2000);
+        }
       }
-      
-      pads.forEach((p, i) => {
-         const isActive = simonActiveBtn === i || (simonState === "success" && simonTimer % 20 > 10);
-         ctx.fillStyle = isActive ? colors[i] : 'transparent';
-         ctx.fillRect(p.x, p.y, p.w, p.h);
-         
-         ctx.strokeStyle = isActive ? '#fff' : colors[i];
-         ctx.lineWidth = isActive ? 5 : 2;
-         ctx.globalAlpha = isActive ? 1 : 0.3;
-         ctx.strokeRect(p.x + 10, p.y + 10, p.w - 20, p.h - 20);
-         ctx.globalAlpha = 1;
-      });
-      
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 24px 'Panchang', sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(simonState === "showing" ? "WATCH" : simonState === "waiting" ? "REPEAT" : "NICE!", cx, cy);
-    }
-
-    // Breaker logic
-    if (ag === "breaker") {
-      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      if (piercingTimer > 0) piercingTimer -= 16;
-      if (paddle) { paddle.update(); paddle.draw(ctx); }
-      balls.forEach(b => { b.update(paddle, bricks); b.draw(ctx); });
-      balls = balls.filter(b => !b.markedForDeletion);
-      bricks.forEach(b => { b.update(); b.draw(ctx); }); bricks = bricks.filter(b => !b.markedForDeletion);
-      powerUps.forEach(p => { p.update(paddle, bricks); p.draw(ctx); }); powerUps = powerUps.filter(p => !p.markedForDeletion);
-      if (balls.length === 0 && bricks.length > 0) setGameState("failed");
-      if (bricks.length === 0 && balls.length > 0) {
-        const nl = getBreakLevelRef() + 1; setBreakLevelRef(nl); setBreakLevel(nl);
-        setGameState("level-complete");
-        setTimeout(() => { initBreaker(nl); setGameState("playing"); }, 2000);
-      }
+        // ---- END ORIGINAL HARDCODED GAMES ----
     }
 
     // Common particles
@@ -957,7 +953,11 @@ function createGameEngine(canvas, callbacks) {
   animate();
 
   function handleKeyDown(e) {
-    const ag = getActiveGameRef();
+    if (activeModule && activeModule.handleKeyDown) {
+      activeModule.handleKeyDown(e);
+      return;
+    }
+    const ag = getActiveGameRef().current;
     if (ag === "snake") {
       const isReversed = snakeReverseTimer > 0;
       const up = isReversed ? 'ArrowDown' : 'ArrowUp';
@@ -988,9 +988,12 @@ function createGameEngine(canvas, callbacks) {
   window.addEventListener('keyup', handleKeyUp);
 
   function handlePointerDown(e) {
+    if (activeModule && activeModule.handlePointerDown) {
+      activeModule.handlePointerDown(e);
+      return;
+    }
     getCursorActiveRef().current = true;
-    const ag = getActiveGameRef();
-    
+    const ag = getActiveGameRef().current;
     if (ag === "simon" && simonState === "waiting") {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.clientX || (e.touches && e.touches[0].clientX);
@@ -1025,8 +1028,24 @@ function createGameEngine(canvas, callbacks) {
       }
     }
   }
+  function handlePointerUp(e) {
+    if (activeModule && activeModule.handlePointerUp) {
+      activeModule.handlePointerUp(e);
+    }
+  }
+
+  function handlePointerMove(e) {
+    if (activeModule && activeModule.handlePointerMove) {
+      activeModule.handlePointerMove(e);
+    }
+  }
+
   window.addEventListener('pointerdown', handlePointerDown);
   window.addEventListener('mousedown', handlePointerDown);
+  window.addEventListener('pointerup', handlePointerUp);
+  window.addEventListener('mouseup', handlePointerUp);
+  window.addEventListener('pointermove', handlePointerMove);
+  window.addEventListener('mousemove', handlePointerMove);
 
   return {
     destroy() {
