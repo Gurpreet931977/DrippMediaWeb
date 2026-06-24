@@ -344,66 +344,77 @@ export default function ArcadeMenu({ onStartGame }) {
             return (
               <div
                 key={game.id}
-                onClick={(e) => {
-                  // Prevent click if we were dragging
-                  if (Math.abs(dragOffset) > 10) { e.preventDefault(); e.stopPropagation(); return; }
-                  
-                  if (isActive) {
-                    const isOriginalGame = game.id === 'dripp' || game.id === 'breaker' || game.id === 'scope';
-                    if (!isOriginalGame && !isDeveloper) {
-                      setPendingGameId(game.id);
-                      setShowPasswordModal(true);
-                    } else {
-                      onStartGame(game.id);
-                    }
-                  } else {
-                    setActiveIndex(index);
-                  }
-                }}
-                onMouseEnter={(e) => {
-                  setHoveredGameId(game.id);
-                  if (activeMode === 'arcade') {
-                    gsap.to(e.currentTarget, { 
-                      scale: isActive ? 1.05 : 0.9, 
-                      y: isActive ? -15 : -5,
-                      rotationZ: (Math.random() - 0.5) * 4,
-                      duration: 0.5, 
-                      ease: "elastic.out(1, 0.4)" 
-                    });
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  setHoveredGameId(null);
-                  if (activeMode === 'arcade') {
-                    gsap.to(e.currentTarget, { 
-                      scale: isActive ? 1 : 0.85, 
-                      y: 0,
-                      rotationZ: 0,
-                      duration: 0.5, 
-                      ease: "elastic.out(1, 0.4)" 
-                    });
-                  }
-                }}
                 style={{
                   position: 'absolute',
                   width: '320px',
                   height: '340px',
-                  borderRadius: '24px',
-                  background: isActive ? 'rgba(15,15,15,0.85)' : 'rgba(20,20,20,0.4)',
-                  border: `1px solid ${isActive ? game.color : 'rgba(255,255,255,0.05)'}`,
-                  boxShadow: isActive ? `0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px ${game.color}20` : '0 10px 30px rgba(0,0,0,0.5)',
-                  backdropFilter: 'blur(25px)',
-                  WebkitBackdropFilter: 'blur(25px)',
                   transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-                  transition: `${baseTransition}, background 0.5s ease, border 0.5s ease, box-shadow 0.5s ease`,
+                  transition: baseTransition,
                   zIndex: zIndex,
                   opacity: opacity,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  padding: '30px',
-                  pointerEvents: opacity === 0 ? 'none' : 'auto'
+                  cursor: activeMode === 'arcade' ? 'none' : 'pointer'
                 }}
               >
+                <div
+                  className={`card-visual card-${index}`}
+                  onClick={(e) => {
+                    if (Math.abs(dragOffset) > 10) { e.preventDefault(); e.stopPropagation(); return; }
+                    
+                    if (isActive) {
+                      const isOriginalGame = game.id === 'dripp' || game.id === 'breaker' || game.id === 'scope';
+                      if (!isOriginalGame && !isDeveloper) {
+                        setPendingGameId(game.id);
+                        setShowPasswordModal(true);
+                      } else {
+                        onStartGame(game.id);
+                      }
+                    } else {
+                      if (activeMode === 'arcade' && !isActive) {
+                        gsap.fromTo(`.card-${index}`, { scale: 0.8, rotationY: 180 }, { scale: 1, rotationY: 0, duration: 1, ease: "elastic.out(1, 0.4)" });
+                      }
+                      setActiveIndex(index);
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    setHoveredGameId(game.id);
+                    if (activeMode === 'arcade') {
+                      gsap.to(e.currentTarget, { 
+                        scale: isActive ? 1.05 : 0.9, 
+                        y: isActive ? -15 : -5,
+                        rotationZ: (Math.random() - 0.5) * 4,
+                        duration: 0.5, 
+                        ease: "elastic.out(1, 0.4)" 
+                      });
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    setHoveredGameId(null);
+                    if (activeMode === 'arcade') {
+                      gsap.to(e.currentTarget, { 
+                        scale: isActive ? 1 : 0.85, 
+                        y: 0,
+                        rotationZ: 0,
+                        duration: 0.5, 
+                        ease: "elastic.out(1, 0.4)" 
+                      });
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '24px',
+                    background: isActive ? 'rgba(15,15,15,0.85)' : 'rgba(20,20,20,0.4)',
+                    border: `1px solid ${isActive ? game.color : 'rgba(255,255,255,0.05)'}`,
+                    boxShadow: isActive ? `0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px ${game.color}20` : '0 10px 30px rgba(0,0,0,0.5)',
+                    backdropFilter: 'blur(25px)',
+                    WebkitBackdropFilter: 'blur(25px)',
+                    transition: `background 0.5s ease, border 0.5s ease, box-shadow 0.5s ease`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: '30px',
+                    pointerEvents: opacity === 0 ? 'none' : 'auto'
+                  }}
+                >
                 {/* Top of Card */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'auto' }}>
                   <span style={{ 
@@ -523,6 +534,7 @@ export default function ArcadeMenu({ onStartGame }) {
                   >
                     Play Now
                   </button>
+                </div>
                 </div>
               </div>
             );
