@@ -81,22 +81,22 @@ function createGameEngine(canvas, callbacks) {
     const mx = getMouseRef().x, my = getMouseRef().y;
     const dx = mx - this.x, dy = my - this.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const hr = getCursorActiveRef() ? 40 : (isMobile ? 60 : 35);
+    const hr = 50;
     if (dist < hr) {
       this.markedForDeletion = true;
       const cursor = document.querySelector(".cursor");
       if (cursor) { cursor.classList.add("eating"); setTimeout(() => cursor.classList.remove("eating"), 150); }
       if (this.isBomb) {
-        setGameState("failed");
+        setScoreRef(0); setScore(0);
         for (let i = 0; i < 30; i++) fireworks.push(new FWParticle(this.x, this.y, null, true));
         const el = document.querySelector("canvas");
         if (el) { let s = 15; const iv = setInterval(() => { el.style.transform = `translate(${rnd(-20,20)}px,${rnd(-20,20)}px)`; if(--s<=0){ clearInterval(iv); el.style.transform=""; } }, 40); }
         return;
       }
       const prev = getScoreRef();
-      if (this.isWhite) { getScoreRef._setter(getScoreRef() + 69); for (let i = 0; i < 40; i++) fireworks.push(new FWParticle(this.x, this.y, "#fff")); }
-      else if (this.isRed) { getScoreRef._setter(getScoreRef() + 5); }
-      else { getScoreRef._setter(getScoreRef() + 1); }
+      if (this.isWhite) { setScoreRef(getScoreRef() + 69); for (let i = 0; i < 40; i++) fireworks.push(new FWParticle(this.x, this.y, "#fff")); }
+      else if (this.isRed) { setScoreRef(getScoreRef() + 5); }
+      else { setScoreRef(getScoreRef() + 1); }
       setScore(getScoreRef());
       if (Math.floor(getScoreRef() / 100) > Math.floor(prev / 100)) {
         const el = document.querySelector(".score-counter-element");
@@ -463,9 +463,12 @@ function createGameEngine(canvas, callbacks) {
       const ri = Math.min(0.25, bi + sc2);
       if (Math.random() < ri) drops.push(new Drop(Math.random() < 0.15));
       if (Math.random() < ri * 0.15) drops.push(new Drop(Math.random() < 0.15));
-      // Trail
+      // Trail and Catcher Ring
       ctx.fillStyle = "rgba(5,5,5,0.4)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const mx = getMouseRef().x, my = getMouseRef().y;
+      ctx.beginPath(); ctx.arc(mx, my, 50, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1; ctx.stroke();
       drops.forEach(d => { d.update(); d.draw(ctx); });
       drops = drops.filter(d => !d.markedForDeletion);
       splashes.forEach(s => { s.update(); s.draw(ctx); }); splashes = splashes.filter(s => !s.markedForDeletion);
@@ -655,9 +658,16 @@ export default function ArcadeEngine({ onClose }) {
     <div ref={containerRef} style={{ width: "100vw", height: "100vh", position: "relative", overflow: "hidden", background: "#050505" }}>
       <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
 
+      {/* Top Left Close Button */}
+      <a onClick={() => { setActiveGame("none"); if (onClose) onClose(); }}
+         style={{ position: "absolute", top: "30px", left: "30px", padding: "10px 24px", borderRadius: "30px", border: "1px solid rgba(255,255,255,0.3)", color: "white", textDecoration: "none", fontSize: "0.9rem", transition: "all 0.3s", zIndex: 100, cursor: "pointer", background: "rgba(0,0,0,0.5)" }}
+         onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.borderColor = "white"; }}
+         onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.5)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)"; }}
+      >← Close Arcade</a>
+
       {/* Score HUD */}
       {activeGame !== "none" && gameState === "playing" && !hideHero && (
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", textAlign: "center", pointerEvents: "none", zIndex: 10 }}>
+        <div style={{ position: "absolute", top: "30px", right: "30px", textAlign: "right", pointerEvents: "none", zIndex: 100 }}>
           {activeGame === "dripp" && (
             <div>
               <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Score</div>
@@ -688,7 +698,7 @@ export default function ArcadeEngine({ onClose }) {
           </div>
           <div style={{ display: "flex", gap: "15px" }}>
             <PrimaryButton onClick={() => { setGameState("playing"); if (activeGame === "dripp") { scoreRef.current = 0; setScore(0); } else if (activeGame === "scope") { scopeScoreRef.current = 0; setScopeScore(0); if (window.initScopeGame) window.initScopeGame(); } else if (activeGame === "breaker") { breakerScoreRef.current = 0; setBreakerScore(0); breakerLevelRef.current = 1; setBreakerLevel(1); if (window.initBreakerGame) window.initBreakerGame(1); } }}>Try Again</PrimaryButton>
-            <PrimaryButton onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ color: "rgba(255,255,255,.5)", borderColor: "rgba(255,255,255,.2)", background: "rgba(255,255,255,.05)" }}>Exit</PrimaryButton>
+            <PrimaryButton onClick={() => setActiveGame("none")} style={{ color: "rgba(255,255,255,.5)", borderColor: "rgba(255,255,255,.2)", background: "rgba(255,255,255,.05)" }}>Back to Menu</PrimaryButton>
           </div>
         </div>
       )}
@@ -716,12 +726,12 @@ export default function ArcadeEngine({ onClose }) {
         </div>
 
         {/* Play/Stop */}
-        <div onClick={() => { if (activeGame !== "none") { setIsFadingOut(true); setTimeout(() => { setActiveGame("none"); setIsFadingOut(false); if (onClose) onClose(); }, 300); } else setActiveGame("dripp"); }}
+        <div onClick={() => { if (activeGame !== "none") { setIsFadingOut(true); setTimeout(() => { setActiveGame("none"); setIsFadingOut(false); }, 300); } else setActiveGame("dripp"); }}
           style={{ height: "40px", padding: "0 15px", borderRadius: "20px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", cursor: "pointer", color: activeGame === "none" ? "var(--brand-yellow)" : "rgba(255,255,255,.5)", fontFamily: "'Clash Display',sans-serif", fontSize: "0.8rem", textTransform: "uppercase", transition: "all 0.3s", gap: "6px" }}
           onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,.1)"; }}
           onMouseLeave={e => { e.currentTarget.style.color = activeGame === "none" ? "var(--brand-yellow)" : "rgba(255,255,255,.5)"; e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}
         >
-          {activeGame === "none" ? "▶ Start Game" : "■ Stop"}
+          {activeGame === "none" ? "▶ Start Game" : "■ Back to Menu"}
         </div>
 
         {/* Pause (only when playing) */}
@@ -742,12 +752,7 @@ export default function ArcadeEngine({ onClose }) {
           onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,.5)"; e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}
         >? Help</div>
 
-        {/* Close Arcade */}
-        <div onClick={() => { setActiveGame("none"); if (onClose) onClose(); }}
-          style={{ height: "40px", padding: "0 15px", borderRadius: "20px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", cursor: "pointer", color: "rgba(255,100,100,.7)", fontFamily: "'Clash Display',sans-serif", fontSize: "0.8rem", textTransform: "uppercase", transition: "all 0.3s" }}
-          onMouseEnter={e => { e.currentTarget.style.color = "#f66"; e.currentTarget.style.background = "rgba(255,100,100,.1)"; }}
-          onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,100,100,.7)"; e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}
-        >✕ Close Arcade</div>
+
       </div>
 
       {/* Game Name Label */}

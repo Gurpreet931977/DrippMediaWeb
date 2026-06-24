@@ -119,6 +119,15 @@
             backdrop-filter: blur(2px);
         }
 
+        .cursor.eating {
+            transform: translate(-50%, -50%) scale(1.5) !important;
+            background-color: var(--brand-yellow) !important;
+            border-color: var(--brand-yellow) !important;
+            mix-blend-mode: normal !important;
+            opacity: 0.8;
+            box-shadow: 0 0 20px var(--brand-glow);
+        }
+
         #trail-canvas {
             position: fixed;
             top: 0;
