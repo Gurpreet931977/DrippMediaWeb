@@ -158,7 +158,7 @@ export default function ArcadeMenu3D({ onStartGame }) {
       </div>
 
       <Canvas camera={{ position: [0, 2, 10], fov: 50 }}>
-        <React.Suspense fallback={null}>
+        <React.Suspense fallback={<mesh position={[0,0,0]}><boxGeometry args={[2,2,2]}/><meshBasicMaterial color="red"/></mesh>}>
           <color attach="background" args={['#050505']} />
           <ambientLight intensity={0.5} />
           <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
@@ -167,7 +167,7 @@ export default function ArcadeMenu3D({ onStartGame }) {
           <Carousel onStartGame={onStartGame} />
 
           <ContactShadows position={[0, -3, 0]} opacity={0.4} scale={20} blur={2} far={4} />
-          <Environment preset="city" />
+          {/* <Environment preset="city" /> Removed to prevent CDN hang */}
         </React.Suspense>
       </Canvas>
     </div>
