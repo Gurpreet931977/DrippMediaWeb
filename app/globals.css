@@ -4161,10 +4161,10 @@
         }
 
         /* Admin panel and utility pages that skip the main site JS loader */
-        body:has(.admin-body-marker) {
+        body:has(.admin-body-marker), body:has(.arcade-body-marker) {
             opacity: 1 !important;
             cursor: auto;
         }
-        body:has(.admin-body-marker) * {
+        body:has(.admin-body-marker) *, body:has(.arcade-body-marker) * {
             cursor: auto !important;
         }
