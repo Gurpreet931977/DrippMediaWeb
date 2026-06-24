@@ -1067,6 +1067,13 @@ function createGameEngine(canvas, callbacks) {
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('mouseup', handlePointerUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('mousemove', handlePointerMove);
+    },
+    restart() {
+      lastActive = null;
     },
     handlePointerDown,
     milestone,
@@ -1278,6 +1285,21 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
             <button onClick={() => setIsPaused(false)} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid #ebd73f", color: "#ebd73f", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; e.currentTarget.style.boxShadow = "0 0 20px rgba(235,215,63,0.3)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}>
               RESUME GAME
             </button>
+            <button onClick={() => { 
+              if (engineRef.current && engineRef.current.restart) engineRef.current.restart();
+              setGameState("playing"); 
+              setIsPaused(false);
+              if (activeGame === "dripp") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "snake") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "pong") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "runner") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "invaders") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "simon") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "scope") { scopeScoreRef.current = 0; setScopeScore(0); } 
+              else if (activeGame === "breaker") { breakerScoreRef.current = 0; setBreakerScore(0); breakerLevelRef.current = 1; setBreakerLevel(1); } 
+            }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
+              RESTART GAME
+            </button>
             <button style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
               BRAG YOUR SCORE
             </button>
@@ -1294,15 +1316,16 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
           </div>
           <div style={{ display: "flex", gap: "15px", marginTop: "20px" }}>
             <button onClick={() => { 
+              if (engineRef.current && engineRef.current.restart) engineRef.current.restart();
               setGameState("playing"); 
               if (activeGame === "dripp") { scoreRef.current = 0; setScore(0); } 
-              else if (activeGame === "snake") { scoreRef.current = 0; setScore(0); if (window.initSnakeGame) window.initSnakeGame(); } 
-              else if (activeGame === "pong") { scoreRef.current = 0; setScore(0); if (window.initPongGame) window.initPongGame(); } 
-              else if (activeGame === "runner") { scoreRef.current = 0; setScore(0); if (window.initRunnerGame) window.initRunnerGame(); } 
-              else if (activeGame === "invaders") { scoreRef.current = 0; setScore(0); if (window.initInvadersGame) window.initInvadersGame(); } 
-              else if (activeGame === "simon") { scoreRef.current = 0; setScore(0); if (window.initSimonGame) window.initSimonGame(); } 
-              else if (activeGame === "scope") { scopeScoreRef.current = 0; setScopeScore(0); if (window.initScopeGame) window.initScopeGame(); } 
-              else if (activeGame === "breaker") { breakerScoreRef.current = 0; setBreakerScore(0); breakerLevelRef.current = 1; setBreakerLevel(1); if (window.initBreakerGame) window.initBreakerGame(1); } 
+              else if (activeGame === "snake") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "pong") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "runner") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "invaders") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "simon") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "scope") { scopeScoreRef.current = 0; setScopeScore(0); } 
+              else if (activeGame === "breaker") { breakerScoreRef.current = 0; setBreakerScore(0); breakerLevelRef.current = 1; setBreakerLevel(1); } 
             }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid #ebd73f", color: "#ebd73f", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; e.currentTarget.style.boxShadow = "0 0 20px rgba(235,215,63,0.3)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}>
               PLAY AGAIN
             </button>
