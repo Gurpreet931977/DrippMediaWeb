@@ -861,12 +861,10 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
 
-  // Handle game switch logic (reset scores etc.) — skip on first mount
+  // Handle game switch logic (reset scores etc.)
   useEffect(() => {
-    if (!isMountedRef.current) {
-      isMountedRef.current = true;
-      return; // Don't fire on initial render (activeGame = 'none' would instantly close)
-    }
+    if (activeGame === "none") return;
+    
     if (activeGame === "breaker") {
       breakerScoreRef.current = 0; setBreakerScore(0);
       breakerLevelRef.current = 1; setBreakerLevel(1);
