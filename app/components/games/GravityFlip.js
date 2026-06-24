@@ -5,12 +5,14 @@ export default class GravityFlip {
     this.ctx = canvas.getContext('2d');
     
     this.player = { x: canvas.width * 0.2, y: canvas.height / 2, size: 24, vy: 0, gravity: 0.8 };
-    this.speed = 8;
+    this.speed = 10;
     this.obstacles = [];
     this.particles = [];
     this.score = 0;
     this.frame = 0;
     this.state = "playing";
+    this.screenShake = 0;
+    this.flashAlpha = 0;
     
     this.callbacks.setScoreRef(0);
     this.callbacks.setScore(0);
@@ -46,13 +48,17 @@ export default class GravityFlip {
     this.player.gravity *= -1;
     this.player.vy = 0; // Cancel current vertical momentum for instant snap feel
     
+    // JUICE: Screenshake and Flash
+    this.screenShake = 10;
+    this.flashAlpha = 0.5;
+
     // Spawn burst
-    for(let i=0; i<10; i++) {
+    for(let i=0; i<15; i++) {
        this.particles.push({
          x: this.player.x, y: this.player.y,
-         vx: (Math.random() - 0.5) * 5 - this.speed * 0.5,
-         vy: (Math.random() - 0.5) * 5,
-         life: 20
+         vx: (Math.random() - 0.5) * 8 - this.speed * 0.5,
+         vy: (Math.random() - 0.5) * 8,
+         life: 25
        });
     }
   }
@@ -63,9 +69,10 @@ export default class GravityFlip {
     if (this.state === "failed") return;
     this.frame++;
     
-    this.speed += 0.002; // Gradually increase speed
+    if (this.flashAlpha > 0) this.flashAlpha -= 0.05;
+    this.speed += 0.003; // Gradually increase speed faster
 
-    if (this.frame % Math.max(20, Math.floor(100 - this.speed*2)) === 0) {
+    if (this.frame % Math.max(15, Math.floor(80 - this.speed*2)) === 0) {
       this.spawnObstacle(this.canvas.width + 100);
     }
 
@@ -123,8 +130,23 @@ export default class GravityFlip {
 
   draw() {
     const ctx = this.ctx;
+    ctx.save();
+    
+    // JUICE: Screenshake
+    if (this.screenShake > 0) {
+      ctx.translate((Math.random()-0.5)*this.screenShake, (Math.random()-0.5)*this.screenShake);
+      this.screenShake *= 0.8;
+      if (this.screenShake < 0.5) this.screenShake = 0;
+    }
+
     ctx.fillStyle = "rgba(10,15,10,0.5)";
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // JUICE: Flash
+    if (this.flashAlpha > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${this.flashAlpha})`;
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
 
     // Draw Floor & Ceil
     ctx.fillStyle = "#33ff33";
@@ -176,6 +198,8 @@ export default class GravityFlip {
       
       ctx.shadowBlur = 0;
     }
+    
+    ctx.restore();
   }
 
   destroy() {}

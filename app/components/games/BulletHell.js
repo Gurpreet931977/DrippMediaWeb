@@ -14,6 +14,11 @@ export default class BulletHell {
     this.state = "playing";
     this.targetPos = { x: this.player.x, y: this.player.y };
     
+    // JUICE properties
+    this.hype = 0;
+    this.screenShake = 0;
+    this.flashAlpha = 0;
+    
     this.callbacks.setScoreRef(0);
     this.callbacks.setScore(0);
   }
@@ -90,13 +95,16 @@ export default class BulletHell {
     if (this.frame % 10 === 0) this.callbacks.setScore(Math.floor(this.score / 10));
 
     // Move player towards target
-    const dx = this.targetPos.x - this.player.x;
-    const dy = this.targetPos.y - this.player.y;
-    const dist = Math.hypot(dx, dy);
+    this.playerDx = this.targetPos.x - this.player.x;
+    this.playerDy = this.targetPos.y - this.player.y;
+    const dist = Math.hypot(this.playerDx, this.playerDy);
+    
+    // Hype decay
+    if (this.hype > 0) this.hype *= 0.95;
     
     if (dist > this.player.speed) {
-      this.player.x += (dx / dist) * this.player.speed;
-      this.player.y += (dy / dist) * this.player.speed;
+      this.player.x += (this.playerDx / dist) * this.player.speed;
+      this.player.y += (this.playerDy / dist) * this.player.speed;
     } else {
       this.player.x = this.targetPos.x;
       this.player.y = this.targetPos.y;
@@ -115,15 +123,31 @@ export default class BulletHell {
       b.y += b.vy;
       
       // Collision with player
-      if (Math.hypot(b.x - this.player.x, b.y - this.player.y) < b.r + this.player.r - 2) {
+      const bulletDist = Math.hypot(b.x - this.player.x, b.y - this.player.y);
+      if (bulletDist < b.r + this.player.r - 2) {
          this.state = "failed";
          this.callbacks.setGameState("failed");
+         this.screenShake = 20;
          for(let p=0; p<40; p++) {
             this.particles.push({
                x: this.player.x, y: this.player.y,
                vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
-               life: 60
+               life: 60, color: "#ffffff"
             });
+         }
+      } else if (bulletDist < b.r + this.player.r + 15) {
+         // JUICE: Graze mechanic!
+         this.score += 5;
+         this.hype += 5;
+         if (this.hype > 100) this.hype = 100;
+         
+         if (Math.random() > 0.5) {
+           this.particles.push({
+             x: this.player.x + (b.x - this.player.x) * 0.5,
+             y: this.player.y + (b.y - this.player.y) * 0.5,
+             vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4,
+             life: 15, color: "#00ffff"
+           });
          }
       }
       
@@ -138,8 +162,23 @@ export default class BulletHell {
 
   draw() {
     const ctx = this.ctx;
+    ctx.save();
+    
+    // Screenshake
+    if (this.screenShake > 0) {
+      ctx.translate((Math.random()-0.5)*this.screenShake, (Math.random()-0.5)*this.screenShake);
+      this.screenShake *= 0.8;
+      if (this.screenShake < 0.5) this.screenShake = 0;
+    }
+
     ctx.fillStyle = "rgba(5,5,5,0.4)";
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    // Hype flash
+    if (this.hype > 50) {
+       ctx.fillStyle = `rgba(0, 255, 255, ${(this.hype - 50) / 200})`;
+       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
 
     // Draw Boss
     ctx.shadowBlur = 20;
@@ -187,30 +226,39 @@ export default class BulletHell {
 
     // Draw Player
     if (this.state === "playing") {
+      ctx.save();
+      ctx.translate(this.player.x, this.player.y);
+      // JUICE: Tilt player based on horizontal movement
+      ctx.rotate((this.playerDx || 0) * 0.02);
+
       ctx.fillStyle = "#ffffff";
       ctx.shadowBlur = 15;
       ctx.shadowColor = "#ffffff";
+      if (this.hype > 80) ctx.shadowColor = "#00ffff"; // Hype glow
+
       ctx.beginPath();
-      ctx.arc(this.player.x, this.player.y, this.player.r, 0, Math.PI*2);
+      ctx.arc(0, 0, this.player.r, 0, Math.PI*2);
       ctx.fill();
       
       // Core
       ctx.fillStyle = "#000000";
       ctx.beginPath();
-      ctx.arc(this.player.x, this.player.y, 3, 0, Math.PI*2);
+      ctx.arc(0, 0, 3, 0, Math.PI*2);
       ctx.fill();
       ctx.shadowBlur = 0;
+      ctx.restore();
     }
 
     // Draw Particles
     this.particles.forEach(p => {
       ctx.globalAlpha = p.life / 60;
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = p.color || "#ffffff";
       ctx.beginPath();
       ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
       ctx.fill();
     });
     ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
   destroy() {}

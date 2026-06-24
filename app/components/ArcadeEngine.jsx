@@ -1233,7 +1233,8 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     >{children}</button>
   );
 
-  const gameName = activeGame === "breaker" ? "NEON BREAKER" : activeGame === "scope" ? "SCOPE CREEP" : "DRIPP DROP";
+  const gameName = activeGame === "breaker" ? "NEON BREAKER" : activeGame === "scope" ? "SCOPE CREEP" : activeGame === "pendulum" ? "NEON PENDULUM" : activeGame === "gravity" ? "GRAVITY FLIP" : activeGame === "slingshot" ? "SLINGSHOT NINJA" : activeGame === "bullethell" ? "BULLET HELL" : activeGame === "sandbox" ? "LIQUID LIGHT" : activeGame === "mandala" ? "MANDALA MAKER" : activeGame === "nodeweaver" ? "ZEN NODE WEAVER" : activeGame === "looper" ? "HARMONIC LOOPER" : "DRIPP DROP";
+  const isCreativeGame = ['sandbox', 'mandala', 'nodeweaver', 'looper'].includes(activeGame);
 
   return (
     <div ref={containerRef} style={{ width: "100vw", height: "100vh", position: "relative", overflow: "hidden", background: "#050505", fontFamily: "'Clash Display', sans-serif" }}>
@@ -1250,10 +1251,10 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
       </div>
 
       {/* Top Right: Exact Score HUD */}
-      {activeGame !== "none" && activeGame !== "cyber_racer" && activeGame !== "neon_blocks" && (
+      {activeGame !== "none" && activeGame !== "cyber_racer" && activeGame !== "neon_blocks" && !isCreativeGame && (
         <div style={{ position: "absolute", top: "30px", right: "30px", textAlign: "right", pointerEvents: "none", zIndex: 100, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
           <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>
-             {activeGame === "simon" ? "ROUND" : activeGame === "snake" ? "LENGTH" : activeGame === "runner" ? "DISTANCE" : "SCORE"}
+             {activeGame === "simon" ? "ROUND" : (activeGame === "snake" || activeGame === "slingshot") ? "SCORE" : activeGame === "gravity" ? "DISTANCE" : "SCORE"}
           </div>
           <div className="score-counter-element" style={{ fontSize: "3rem", fontWeight: "bold", color: "var(--brand-yellow)", lineHeight: 1, textShadow: "0 0 20px rgba(235,215,63,.4)" }}>
              {activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : score}
@@ -1300,9 +1301,11 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
             }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
               RESTART GAME
             </button>
-            <button style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
-              BRAG YOUR SCORE
-            </button>
+            {!isCreativeGame && (
+              <button style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
+                BRAG YOUR SCORE
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -1311,9 +1314,11 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
       {gameState === "failed" && (
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(5,5,5,0.85)", zIndex: 110, gap: "20px" }}>
           <div style={{ fontSize: "clamp(3rem,8vw,5rem)", fontFamily: "'Panchang',sans-serif", color: "#eb3f3f", textShadow: "0 0 40px rgba(235,63,63,.5)" }}>GAME OVER</div>
-          <div style={{ color: "rgba(255,255,255,.6)", fontFamily: "'Clash Display',sans-serif", fontSize: "1.2rem", letterSpacing: "2px" }}>
-            FINAL SCORE: <strong style={{ color: "var(--brand-yellow)", fontSize: "1.5rem" }}>{activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : score}</strong>
-          </div>
+          {!isCreativeGame && (
+            <div style={{ color: "rgba(255,255,255,.6)", fontFamily: "'Clash Display',sans-serif", fontSize: "1.2rem", letterSpacing: "2px" }}>
+              FINAL SCORE: <strong style={{ color: "var(--brand-yellow)", fontSize: "1.5rem" }}>{activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : score}</strong>
+            </div>
+          )}
           <div style={{ display: "flex", gap: "15px", marginTop: "20px" }}>
             <button onClick={() => { 
               if (engineRef.current && engineRef.current.restart) engineRef.current.restart();
@@ -1351,7 +1356,11 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
               {activeGame === "runner" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>DISTANCE: {score}</div>}
               {activeGame === "invaders" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>SCORE: {score}</div>}
               {activeGame === "simon" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>ROUND: {score}</div>}
-              {['cyber_racer', 'neon_blocks'].includes(activeGame) && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>PREVIEW</div>}
+              {activeGame === "pendulum" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>SCORE: {score}</div>}
+              {activeGame === "gravity" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>DISTANCE: {score}</div>}
+              {activeGame === "slingshot" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>SCORE: {score}</div>}
+              {activeGame === "bullethell" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>SCORE: {score}</div>}
+              {isCreativeGame && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>ZEN MODE</div>}
             </div>
 
             {activeGame === "dripp" && <><p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your cursor to catch falling <span style={{ color: "#ebd73f" }}>Yellow</span> drops.</p><p style={{ color: "rgba(255,255,255,.7)", lineHeight: "1.5" }}>Avoid the <span style={{ color: "#eb3f3f" }}>Red Bombs</span> to stay alive.</p></>}
@@ -1362,7 +1371,18 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
             {activeGame === "runner" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Press SPACE or UP Arrow to jump. Avoid the glowing red obstacles and survive as long as you can.</p>}
             {activeGame === "invaders" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your mouse left and right to control the ship. Left Click to shoot the falling invaders.</p>}
             {activeGame === "simon" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Watch the sequence of glowing quadrants carefully. When it says "REPEAT", click them in the exact same order.</p>}
-            {['cyber_racer', 'neon_blocks'].includes(activeGame) && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>This game is currently in development. Check back later!</p>}
+            
+            {/* New Games */}
+            {activeGame === "pendulum" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click or tap to grapple onto the ceiling. Build momentum and swing through the void. Don't hit the obstacles or fall off the screen!</p>}
+            {activeGame === "gravity" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click or press SPACE to instantly invert gravity. Dodge the neon spikes as the speed keeps increasing.</p>}
+            {activeGame === "slingshot" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click and drag backwards to aim and enter <span style={{color:"#ff00ff"}}>Bullet-Time</span>. Release to dash and slice enemies. Chain dashes to survive!</p>}
+            {activeGame === "bullethell" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your mouse to dodge the laser barrage. Graze lasers closely for bonus points! Survive until the boss is defeated.</p>}
+            
+            {/* Creative Games */}
+            {activeGame === "sandbox" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click and drag to drop fluid pixels. Watch the soothing cellular automata react. Switch elements using the on-screen buttons.</p>}
+            {activeGame === "mandala" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click and drag to draw mirrored geometric light patterns. Unwind and create something beautiful.</p>}
+            {activeGame === "nodeweaver" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Watch the nodes organically connect into beautiful string art. Move your mouse to influence the particles.</p>}
+            {activeGame === "looper" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click to spawn rippling harmonic beats. Layer them to create relaxing visual patterns.</p>}
             <div style={{ marginTop: "30px" }}>
               <button onClick={() => setIsHelpOpen(false)} style={{ padding: "10px 24px", borderRadius: "30px", background: "transparent", border: "1px solid #ebd73f", color: "#ebd73f", fontFamily: "'Clash Display', sans-serif", cursor: "pointer", transition: "all 0.3s", textTransform: "uppercase", letterSpacing: "1px" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>Close</button>
             </div>

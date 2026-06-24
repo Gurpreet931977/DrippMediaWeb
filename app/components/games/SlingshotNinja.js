@@ -12,6 +12,9 @@ export default class SlingshotNinja {
     this.dragCurrent = null;
     this.isAiming = false;
     
+    this.flashAlpha = 0;
+    this.hitstop = 0;
+    
     this.timeScale = 1.0;
     this.score = 0;
     this.frame = 0;
@@ -60,9 +63,9 @@ export default class SlingshotNinja {
     const dx = this.dragStart.x - this.dragCurrent.x;
     const dy = this.dragStart.y - this.dragCurrent.y;
     
-    // Launch player
-    this.player.vx = dx * 0.15;
-    this.player.vy = dy * 0.15;
+    // Launch player (extreme speed)
+    this.player.vx = dx * 0.25;
+    this.player.vy = dy * 0.25;
     
     this.dragStart = null;
     this.dragCurrent = null;
@@ -70,6 +73,12 @@ export default class SlingshotNinja {
 
   update() {
     if (this.state === "failed") return;
+    
+    // JUICE: Hitstop
+    if (this.hitstop > 0) {
+      this.hitstop -= this.timeScale;
+      return;
+    }
     
     // We use actual frame counting scaled by timeScale
     this.frame += this.timeScale;
@@ -112,6 +121,12 @@ export default class SlingshotNinja {
       const dist = Math.hypot(this.player.x - en.x, this.player.y - en.y);
       if (dist < this.player.r + en.r) {
         if (speed > 10) {
+          // JUICE: Hitstop and Flash on slice
+          this.hitstop = 3;
+          this.flashAlpha = 0.5;
+          this.player.vx *= 1.05;
+          this.player.vy *= 1.05;
+          
           // Slice kill
           this.enemies.splice(i, 1);
           this.score += 10;
@@ -222,6 +237,14 @@ export default class SlingshotNinja {
       ctx.arc(this.player.x, this.player.y, this.player.r, 0, Math.PI*2);
       ctx.fill();
       ctx.shadowBlur = 0;
+    }
+
+    // JUICE: Flash effect
+    if (this.flashAlpha > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${this.flashAlpha})`;
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.flashAlpha -= 0.05 * this.timeScale;
+      if (this.flashAlpha < 0) this.flashAlpha = 0;
     }
   }
 

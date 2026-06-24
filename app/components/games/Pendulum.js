@@ -12,6 +12,9 @@ export default class PendulumGame {
     this.score = 0;
     this.frame = 0;
     this.state = "playing";
+    this.hitstop = 0;
+    this.screenShake = 0;
+    this.speedMultiplier = 1;
     
     this.callbacks.setScoreRef(0);
     this.callbacks.setScore(0);
@@ -42,6 +45,17 @@ export default class PendulumGame {
       y: 0,
       length: Math.sqrt(200*200 + this.player.y * this.player.y)
     };
+    
+    // JUICE: Hitstop & Screenshake & Particles on grapple
+    this.hitstop = 4;
+    this.screenShake = 12;
+    for(let i=0; i<15; i++) {
+      this.particles.push({
+        x: this.player.x, y: this.player.y,
+        vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12,
+        life: 25
+      });
+    }
   }
 
   handlePointerUp() {
@@ -50,9 +64,19 @@ export default class PendulumGame {
 
   update() {
     if (this.state === "failed") return;
+    
+    // JUICE: Hitstop freeze
+    if (this.hitstop > 0) {
+      this.hitstop--;
+      return; 
+    }
+    
     this.frame++;
+    this.speedMultiplier += 0.0002; // Gradually increase speed
 
-    if (this.frame % 100 === 0) {
+    // Spawn obstacles more frequently as speed increases
+    const spawnRate = Math.max(40, Math.floor(100 / this.speedMultiplier));
+    if (this.frame % spawnRate === 0) {
       this.spawnObstacle(this.canvas.width + 100);
     }
 
@@ -78,12 +102,13 @@ export default class PendulumGame {
       }
     }
     
-    this.player.vy += this.gravity;
+    this.player.vy += this.gravity * this.speedMultiplier;
     this.player.vx *= 0.99;
     this.player.vy *= 0.99;
     
-    if (this.player.vx < 4) this.player.vx += 0.2;
-    if (this.player.vx > 15) this.player.vx = 15;
+    if (this.player.vx < 4 * this.speedMultiplier) this.player.vx += 0.2 * this.speedMultiplier;
+    const maxSpeed = 15 * this.speedMultiplier;
+    if (this.player.vx > maxSpeed) this.player.vx = maxSpeed;
 
     this.player.x += this.player.vx;
     this.player.y += this.player.vy;
@@ -131,6 +156,15 @@ export default class PendulumGame {
 
   draw() {
     const ctx = this.ctx;
+    ctx.save();
+    
+    // JUICE: Screenshake
+    if (this.screenShake > 0) {
+      ctx.translate((Math.random()-0.5)*this.screenShake, (Math.random()-0.5)*this.screenShake);
+      this.screenShake *= 0.8;
+      if (this.screenShake < 0.5) this.screenShake = 0;
+    }
+
     ctx.fillStyle = "rgba(5,5,5,0.4)";
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -177,10 +211,13 @@ export default class PendulumGame {
       ctx.shadowBlur = 20;
       ctx.shadowColor = "#ff3366";
       ctx.beginPath();
-      ctx.arc(this.player.x, this.player.y, this.player.r, 0, Math.PI*2);
+      // Elastic stretch based on velocity
+      ctx.ellipse(this.player.x, this.player.y, this.player.r + (this.player.vx * 0.2), this.player.r, 0, 0, Math.PI*2);
       ctx.fill();
       ctx.shadowBlur = 0;
     }
+    
+    ctx.restore();
   }
 
   destroy() {
