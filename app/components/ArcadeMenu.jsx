@@ -249,11 +249,6 @@ export default function ArcadeMenu({ onStartGame }) {
                   if (Math.abs(dragOffset) > 10) { e.preventDefault(); e.stopPropagation(); return; }
                   
                   if (isActive) {
-                    if (game.id === 'cyber_racer' || game.id === 'neon_blocks') {
-                      // These two are currently visually only
-                      return;
-                    }
-                    
                     const isOriginalGame = game.id === 'dripp' || game.id === 'breaker' || game.id === 'scope';
                     if (!isOriginalGame && !isDeveloper) {
                       setPendingGameId(game.id);
@@ -270,7 +265,7 @@ export default function ArcadeMenu({ onStartGame }) {
                 style={{
                   position: 'absolute',
                   width: '320px',
-                  height: '460px',
+                  height: '400px',
                   borderRadius: '24px',
                   background: isActive ? 'rgba(15,15,15,0.85)' : 'rgba(20,20,20,0.4)',
                   border: `1px solid ${isActive ? game.color : 'rgba(255,255,255,0.05)'}`,
@@ -283,7 +278,7 @@ export default function ArcadeMenu({ onStartGame }) {
                   opacity: opacity,
                   display: 'flex',
                   flexDirection: 'column',
-                  padding: '35px',
+                  padding: '30px',
                   pointerEvents: opacity === 0 ? 'none' : 'auto'
                 }}
               >

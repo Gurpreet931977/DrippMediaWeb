@@ -729,11 +729,12 @@ function createGameEngine(canvas, callbacks) {
       }
       
       // Draw Trails
-      ctx.fillStyle = '#ff00ff';
       pongTrails.forEach((t, i) => {
          t.alpha -= 0.05;
          ctx.globalAlpha = Math.max(0, t.alpha);
-         ctx.beginPath(); ctx.arc(t.x, t.y, pongBall.r * t.alpha, 0, Math.PI*2); ctx.fill();
+         if (t.alpha > 0) {
+            ctx.beginPath(); ctx.arc(t.x, t.y, Math.max(0.1, pongBall.r * t.alpha), 0, Math.PI*2); ctx.fill();
+         }
       });
       pongTrails = pongTrails.filter(t => t.alpha > 0);
       ctx.globalAlpha = 1;
@@ -744,6 +745,17 @@ function createGameEngine(canvas, callbacks) {
       ctx.fillRect(canvas.width - 30, pongAI, 10, 80); // AI
       
       ctx.beginPath(); ctx.arc(pongBall.x, pongBall.y, pongBall.r, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Coming Soon placeholders
+    if (ag === "cyber_racer" || ag === "neon_blocks") {
+      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ebd73f";
+      ctx.font = "bold 40px 'Panchang', sans-serif";
+      ctx.textAlign = "center";
+      ctx.shadowBlur = 20; ctx.shadowColor = "#ebd73f";
+      ctx.fillText("COMING SOON", canvas.width/2, canvas.height/2);
       ctx.shadowBlur = 0;
     }
 
@@ -1273,7 +1285,14 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
           <div style={{ background: "#111", border: "1px solid #333", borderRadius: "16px", padding: "40px", maxWidth: "500px", width: "90%", fontFamily: "'Clash Display',sans-serif", textAlign: "center" }}>
             <h2 style={{ color: "var(--brand-yellow)", marginBottom: "20px", fontFamily: "'Panchang',sans-serif", fontSize: "2rem" }}>{gameName}</h2>
             {activeGame === "dripp" && <><p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your cursor to catch falling <span style={{ color: "#ebd73f" }}>Yellow</span> drops.</p><p style={{ color: "rgba(255,255,255,.7)", lineHeight: "1.5" }}>Avoid the <span style={{ color: "#eb3f3f" }}>Red Bombs</span> to stay alive.</p></>}
-            {activeGame !== "dripp" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Follow the on-screen rules to survive and get the highest score!</p>}
+            {activeGame === "breaker" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your mouse to control the paddle. Bounce the balls to break all the bricks. Catch falling power-ups!</p>}
+            {activeGame === "scope" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Drag the scope paddle to block the incoming red projectiles from hitting the center.</p>}
+            {activeGame === "snake" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Use Arrow Keys to change direction. Eat yellow neon squares to grow. Avoid the red blocks which reduce your length!</p>}
+            {activeGame === "pong" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your mouse up and down to control the left paddle. Defeat the AI by hitting the ball past them.</p>}
+            {activeGame === "runner" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Press SPACE or UP Arrow to jump. Avoid the glowing red obstacles and survive as long as you can.</p>}
+            {activeGame === "invaders" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your mouse left and right to control the ship. Left Click to shoot the falling invaders.</p>}
+            {activeGame === "simon" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Watch the sequence of glowing quadrants carefully. When it says "REPEAT", click them in the exact same order.</p>}
+            {['cyber_racer', 'neon_blocks'].includes(activeGame) && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>This game is currently in development. Check back later!</p>}
             <div style={{ marginTop: "30px" }}>
               <button onClick={() => setIsHelpOpen(false)} style={{ padding: "10px 24px", borderRadius: "30px", background: "transparent", border: "1px solid #ebd73f", color: "#ebd73f", fontFamily: "'Clash Display', sans-serif", cursor: "pointer", transition: "all 0.3s", textTransform: "uppercase", letterSpacing: "1px" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>Close</button>
             </div>
