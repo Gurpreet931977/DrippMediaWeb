@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useState } from 'react';
-import ArcadeEngine from '../components/ArcadeEngine';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
@@ -8,8 +7,7 @@ import Link from "next/link";
 import Preloader from "../components/Preloader";
 
 export default function Page() {
-  const [isArcadeOpen, setIsArcadeOpen] = useState(false);
-
+  
   useEffect(() => {
     // Register GSAP
 
@@ -2883,7 +2881,7 @@ export default function Page() {
             )}
             
             <div 
-                onClick={() => setIsArcadeOpen(true)}
+                onClick={() => window.location.href = '/arcade'}
                 style={{
                     position: 'fixed',
                     bottom: '30px',

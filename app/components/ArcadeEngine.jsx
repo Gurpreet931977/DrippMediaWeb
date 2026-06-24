@@ -69,8 +69,7 @@ function createGameEngine(canvas, callbacks) {
     if (dist < 50) {
       this.markedForDeletion = true;
       if (this.isBomb) {
-        setScoreRef(0);
-        setScore(0);
+        setGameState("failed");
       } else {
         setScoreRef(getScoreRef() + 1);
         setScore(getScoreRef());
@@ -78,10 +77,17 @@ function createGameEngine(canvas, callbacks) {
     }
   };
   Drop.prototype.draw = function (ctx) {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
+    if (this.isBomb) {
+      ctx.font = Math.max(16, this.radius * 3) + "px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("💣", this.x, this.y);
+    } else {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+    }
   };
 
   // ── Shockwave ────────────────────────────────────────────────────────────────
@@ -483,12 +489,12 @@ function createGameEngine(canvas, callbacks) {
 
 // ─── REACT COMPONENT ──────────────────────────────────────────────────────────
 
-export default function ArcadeEngine({ onClose }) {
+export default function ArcadeEngine({ onClose, forcedGame }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const engineRef = useRef(null);
 
-  const [activeGame, setActiveGame] = useState("none");
+  const [activeGame, setActiveGame] = useState(forcedGame || "none");
   const activeGameRef = useRef("none");
   const [score, setScore] = useState(0);
   const scoreRef = useRef(0);
