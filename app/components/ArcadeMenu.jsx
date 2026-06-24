@@ -202,8 +202,8 @@ export default function ArcadeMenu({ onStartGame }) {
             <span style={{ fontSize: '13px', letterSpacing: '4px', color: activeColor, fontWeight: 600, transition: 'all 0.5s ease' }}>SYSTEM.ONLINE</span>
           </div>
           <div style={{ 
-            display: 'flex', 
-            alignItems: 'stretch',
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr',
             background: 'rgba(255,255,255,0.03)',
             borderRadius: '100px',
             padding: '8px',
@@ -253,7 +253,7 @@ export default function ArcadeMenu({ onStartGame }) {
                 position: 'relative',
                 zIndex: 2,
                 transition: 'color 0.4s ease',
-                width: 'clamp(140px, 15vw, 200px)',
+                width: '100%',
                 textAlign: 'center',
                 display: 'flex',
                 justifyContent: 'center',
@@ -286,7 +286,7 @@ export default function ArcadeMenu({ onStartGame }) {
                 position: 'relative',
                 zIndex: 2,
                 transition: 'color 0.4s ease',
-                width: 'clamp(140px, 15vw, 200px)',
+                width: '100%',
                 textAlign: 'center',
                 display: 'flex',
                 justifyContent: 'center',
