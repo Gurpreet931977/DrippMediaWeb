@@ -1299,53 +1299,81 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
         </button>
       </div>
 
-      {/* Sandbox Toolbar */}
+      {/* Sandbox Toolbar (Vertical Left) */}
       {activeGame === "sandbox" && (
         <div style={{
-          position: "absolute", bottom: "30px", left: "50%", transform: "translateX(-50%)",
-          display: "flex", gap: "15px", alignItems: "center", zIndex: 100,
+          position: "absolute", top: "50%", left: "30px", transform: "translateY(-50%)",
+          display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", zIndex: 100,
           background: "rgba(10, 10, 10, 0.4)", backdropFilter: "blur(10px)",
-          padding: "10px 25px", borderRadius: "40px", border: "1px solid rgba(255,255,255,0.1)",
+          padding: "20px 15px", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.1)",
           boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
         }}>
-          <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", marginRight: "5px", letterSpacing: "2px" }}>TOOLS</div>
+          <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", marginBottom: "5px", writingMode: "vertical-rl", transform: "rotate(180deg)" }}>TOOLS</div>
           
           {[
-            { id: 1, name: "SAND", color: "#ebd73f" },
-            { id: 2, name: "WATER", color: "#00d2ff" },
-            { id: 3, name: "WALL", color: "#b366ff" },
-            { id: 4, name: "CLOUD", color: "#e0f7fa" },
-            { id: 5, name: "GRASS", color: "#39ff14" }
+            { id: 1, name: "SAND", color: "#ebd73f", desc: "Classic falling sand. Piles up naturally." },
+            { id: 2, name: "WATER", color: "#00d2ff", desc: "Flowing liquid. Puts out fire and cools lava." },
+            { id: 3, name: "WALL", color: "#b366ff", desc: "Indestructible solid barrier." },
+            { id: 4, name: "CLOUD", color: "#e0f7fa", desc: "Floats upwards. Condenses into rain." },
+            { id: 5, name: "GRASS", color: "#39ff14", desc: "Organically grows upwards. Highly flammable." },
+            { id: 6, name: "WOOD", color: "#8b5a2b", desc: "Solid structure. Burns slowly when exposed to fire." },
+            { id: 7, name: "FIRE", color: "#ff5722", desc: "Intense heat. Burns wood/grass and boils water." },
+            { id: 8, name: "LAVA", color: "#ff0000", desc: "Heavy glowing liquid. Sets things on fire." },
+            { id: 9, name: "STEAM", color: "#cccccc", desc: "Floats up rapidly and dissipates into the air." },
+            { id: 10, name: "STONE", color: "#555555", desc: "Heavy solid mass. Formed by mixing lava and water." }
           ].map(brush => (
-            <button key={brush.id} onClick={() => handleSandboxBrush(brush.id)}
-              style={{
-                width: "30px", height: "30px", borderRadius: "50%",
-                background: brush.color, 
-                border: (!sandboxAuto && sandboxBrush === brush.id) ? "3px solid #fff" : "2px solid transparent",
-                cursor: "pointer", transition: "all 0.2s ease",
-                boxShadow: (!sandboxAuto && sandboxBrush === brush.id) ? `0 0 15px ${brush.color}` : "none",
-                opacity: (!sandboxAuto && sandboxBrush !== brush.id) ? 0.4 : 1
-              }}
-              title={brush.name}
-              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.2)"}
-              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-            />
+            <div key={brush.id} style={{ position: "relative" }}>
+              <button onClick={() => handleSandboxBrush(brush.id)}
+                style={{
+                  width: "28px", height: "28px", borderRadius: "50%",
+                  background: brush.color, 
+                  border: (!sandboxAuto && sandboxBrush === brush.id) ? "3px solid #fff" : "2px solid transparent",
+                  cursor: "pointer", transition: "all 0.2s ease",
+                  boxShadow: (!sandboxAuto && sandboxBrush === brush.id) ? `0 0 15px ${brush.color}` : "none",
+                  opacity: (!sandboxAuto && sandboxBrush !== brush.id) ? 0.4 : 1
+                }}
+                onMouseEnter={e => { 
+                  e.currentTarget.style.transform = "scale(1.2)";
+                  const tooltip = e.currentTarget.nextElementSibling;
+                  if(tooltip) { tooltip.style.opacity = "1"; tooltip.style.visibility = "visible"; tooltip.style.transform = "translateY(-50%) translateX(0)"; }
+                }}
+                onMouseLeave={e => { 
+                  e.currentTarget.style.transform = "scale(1)";
+                  const tooltip = e.currentTarget.nextElementSibling;
+                  if(tooltip) { tooltip.style.opacity = "0"; tooltip.style.visibility = "hidden"; tooltip.style.transform = "translateY(-50%) translateX(-10px)"; }
+                }}
+              />
+              <div style={{
+                position: "absolute", left: "45px", top: "50%", transform: "translateY(-50%) translateX(-10px)",
+                background: "rgba(15,15,15,0.9)", backdropFilter: "blur(10px)",
+                border: `1px solid ${brush.color}40`,
+                padding: "10px 15px", borderRadius: "10px", width: "200px",
+                opacity: 0, visibility: "hidden", transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                pointerEvents: "none", zIndex: 1000
+              }}>
+                <div style={{ color: brush.color, fontFamily: "'Panchang', sans-serif", fontSize: "0.8rem", marginBottom: "5px" }}>{brush.name}</div>
+                <div style={{ color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.75rem", lineHeight: 1.4 }}>{brush.desc}</div>
+              </div>
+            </div>
           ))}
 
-          <div style={{ width: "1px", height: "24px", background: "rgba(255,255,255,0.2)", margin: "0 10px" }} />
+          <div style={{ width: "24px", height: "1px", background: "rgba(255,255,255,0.2)", margin: "5px 0" }} />
           
           <button onClick={handleSandboxAuto} style={{
-             padding: "8px 16px", borderRadius: "20px",
+             padding: "10px", borderRadius: "50%",
              background: sandboxAuto ? "rgba(235, 215, 63, 0.15)" : "transparent",
              border: `1px solid ${sandboxAuto ? "rgba(235,215,63,0.5)" : "rgba(255,255,255,0.2)"}`,
              color: sandboxAuto ? "#ebd73f" : "rgba(255,255,255,0.5)",
-             cursor: "pointer", fontSize: "0.75rem", letterSpacing: "1px", transition: "all 0.3s",
-             fontFamily: "'Clash Display', sans-serif"
+             cursor: "pointer", transition: "all 0.3s",
+             display: "flex", alignItems: "center", justifyContent: "center"
           }}
+          title={`Auto-Switch: ${sandboxAuto ? "ON" : "OFF"}`}
           onMouseEnter={e => { if(!sandboxAuto) e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}
           onMouseLeave={e => { if(!sandboxAuto) e.currentTarget.style.background = "transparent" }}
           >
-             AUTO: {sandboxAuto ? "ON" : "OFF"}
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+               <polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+             </svg>
           </button>
         </div>
       )}

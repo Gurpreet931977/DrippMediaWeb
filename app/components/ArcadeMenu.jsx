@@ -286,7 +286,7 @@ export default function ArcadeMenu({ onStartGame }) {
                 flex: 1,
                 textAlign: 'center'
               }}>
-              CREATIVE
+              ZEN
             </h1>
           </div>
         </div>
