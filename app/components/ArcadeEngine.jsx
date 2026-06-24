@@ -1489,26 +1489,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
               {isCreativeGame && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>ZEN MODE</div>}
             </div>
 
-            {activeGame === "dripp" && <><p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your cursor to catch falling <span style={{ color: "#ebd73f" }}>Yellow</span> drops.</p><p style={{ color: "rgba(255,255,255,.7)", lineHeight: "1.5" }}>Avoid the <span style={{ color: "#eb3f3f" }}>Red Bombs</span> to stay alive.</p></>}
-            {activeGame === "breaker" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your mouse to control the paddle. Bounce the balls to break all the bricks. Catch falling power-ups!</p>}
-            {activeGame === "scope" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Drag the scope paddle to block the incoming red projectiles from hitting the center.</p>}
-            {activeGame === "snake" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Use Arrow Keys to change direction. Eat yellow neon squares to grow. Avoid the red blocks which reduce your length!</p>}
-            {activeGame === "pong" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your mouse up and down to control the left paddle. Defeat the AI by hitting the ball past them.</p>}
-            {activeGame === "runner" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Press SPACE or UP Arrow to jump. Avoid the glowing red obstacles and survive as long as you can.</p>}
-            {activeGame === "invaders" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your mouse left and right to control the ship. Left Click to shoot the falling invaders.</p>}
-            {activeGame === "simon" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Watch the sequence of glowing quadrants carefully. When it says "REPEAT", click them in the exact same order.</p>}
-            
-            {/* New Games */}
-            {activeGame === "pendulum" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click or tap to grapple onto the ceiling. Build momentum and swing through the void. Don't hit the obstacles or fall off the screen!</p>}
-            {activeGame === "gravity" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click or press SPACE to instantly invert gravity. Dodge the neon spikes as the speed keeps increasing.</p>}
-            {activeGame === "slingshot" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click and drag backwards to aim and enter <span style={{color:"#ff00ff"}}>Bullet-Time</span>. Release to dash and slice enemies. Chain dashes to survive!</p>}
-            {activeGame === "bullethell" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your mouse to dodge the laser barrage. Graze lasers closely for bonus points! Survive until the boss is defeated.</p>}
-            
-            {/* Creative Games */}
-            {activeGame === "sandbox" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click and drag to drop fluid pixels. Watch the soothing cellular automata react. Switch elements using the on-screen buttons.</p>}
-            {activeGame === "mandala" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click and drag to draw mirrored geometric light patterns. Unwind and create something beautiful.</p>}
-            {activeGame === "nodeweaver" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Watch the nodes organically connect into beautiful string art. Move your mouse to influence the particles.</p>}
-            {activeGame === "looper" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Click to spawn rippling harmonic beats. Layer them to create relaxing visual patterns.</p>}
+            {getHelpText(activeGame)}
             <div style={{ marginTop: "30px" }}>
               <button onClick={() => setIsHelpOpen(false)} style={{ padding: "10px 24px", borderRadius: "30px", background: "transparent", border: "1px solid #ebd73f", color: "#ebd73f", fontFamily: "'Clash Display', sans-serif", cursor: "pointer", transition: "all 0.3s", textTransform: "uppercase", letterSpacing: "1px" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>Close</button>
             </div>

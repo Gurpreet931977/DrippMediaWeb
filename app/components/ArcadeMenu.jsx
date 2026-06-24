@@ -253,8 +253,11 @@ export default function ArcadeMenu({ onStartGame }) {
                 position: 'relative',
                 zIndex: 2,
                 transition: 'color 0.4s ease',
-                flex: 1,
-                textAlign: 'center'
+                width: 'clamp(140px, 15vw, 200px)',
+                textAlign: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
               }}>
               ARCADE
             </h1>
@@ -283,8 +286,11 @@ export default function ArcadeMenu({ onStartGame }) {
                 position: 'relative',
                 zIndex: 2,
                 transition: 'color 0.4s ease',
-                flex: 1,
-                textAlign: 'center'
+                width: 'clamp(140px, 15vw, 200px)',
+                textAlign: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
               }}>
               ZEN
             </h1>
