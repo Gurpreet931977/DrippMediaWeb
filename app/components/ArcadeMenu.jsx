@@ -55,11 +55,80 @@ export default function ArcadeMenu({ onStartGame }) {
     });
   }, [activeIndex, activeColor]);
 
-  const handleNext = () => {
+  // Playful Gamified Sparks on Click
+  useEffect(() => {
+    if (activeMode !== 'arcade') return;
+    const handleGlobalClick = (e) => {
+      // Create 4-6 sparks
+      const sparkCount = Math.floor(Math.random() * 3) + 4;
+      const colors = ['#ff3366', '#33ccff', '#ebd73f', '#33ff33', '#ff00ff'];
+      for (let i = 0; i < sparkCount; i++) {
+        const spark = document.createElement('div');
+        spark.style.position = 'fixed';
+        spark.style.left = e.clientX + 'px';
+        spark.style.top = e.clientY + 'px';
+        spark.style.width = Math.random() > 0.5 ? '6px' : '10px';
+        spark.style.height = spark.style.width;
+        spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        spark.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        spark.style.pointerEvents = 'none';
+        spark.style.zIndex = 9999;
+        spark.style.boxShadow = `0 0 10px ${spark.style.backgroundColor}`;
+        document.body.appendChild(spark);
+        
+        gsap.to(spark, {
+          x: (Math.random() - 0.5) * 140,
+          y: (Math.random() - 0.5) * 140,
+          rotation: Math.random() * 360,
+          scale: 0,
+          opacity: 0,
+          duration: 0.4 + Math.random() * 0.4,
+          ease: "power2.out",
+          onComplete: () => spark.remove()
+        });
+      }
+    };
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, [activeMode]);
+
+  const triggerElasticBounce = (e) => {
+    if (activeMode !== 'arcade' || !e || !e.currentTarget) return;
+    const el = e.currentTarget;
+    gsap.killTweensOf(el);
+    gsap.fromTo(el, 
+      { scale: 0.85 }, 
+      { scale: 1, duration: 0.8, ease: "elastic.out(1, 0.3)" }
+    );
+  };
+
+  const triggerGameStartWarp = (gameId) => {
+    if (activeMode !== 'arcade') {
+      onStartGame(gameId);
+      return;
+    }
+    const wrapper = document.querySelector('.arcade-menu-wrapper');
+    gsap.to(wrapper, {
+      scale: 1.5,
+      opacity: 0,
+      filter: 'blur(20px)',
+      duration: 0.4,
+      ease: "power2.in",
+      onComplete: () => {
+        onStartGame(gameId);
+        // Reset for when we come back
+        gsap.set(wrapper, { scale: 1, opacity: 1, filter: 'blur(0px)' });
+      }
+    });
+  };
+
+  const handleNext = (e) => {
+    if (e && e.currentTarget) triggerElasticBounce(e);
     setActiveIndex((prev) => (prev + 1) % activeGameList.length);
   };
 
-  const handlePrev = () => {
+  const handlePrev = (e) => {
+    if (e && e.currentTarget) triggerElasticBounce(e);
     setActiveIndex((prev) => (prev - 1 + activeGameList.length) % activeGameList.length);
   };
 
@@ -101,6 +170,16 @@ export default function ArcadeMenu({ onStartGame }) {
       overflow: 'hidden',
       fontFamily: "'Clash Display', sans-serif"
     }}>
+      <style>{`
+        @keyframes floatActive {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-12px); }
+          100% { transform: translateY(0px); }
+        }
+        .gamified-float {
+          animation: floatActive 2.5s ease-in-out infinite;
+        }
+      `}</style>
       {/* Dynamic Ambient Background */}
       <div className="arcade-bg-glow" style={{
         position: 'absolute',
@@ -143,7 +222,7 @@ export default function ArcadeMenu({ onStartGame }) {
           </div>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
             <h1 
-              onClick={() => setActiveMode('arcade')}
+              onClick={(e) => { triggerElasticBounce(e); setActiveMode('arcade'); }}
               style={{
                 fontFamily: "'Panchang', sans-serif",
                 fontSize: 'clamp(2rem, 4vw, 3.5rem)',
@@ -160,7 +239,7 @@ export default function ArcadeMenu({ onStartGame }) {
               ARCADE
             </h1>
             <h1 
-              onClick={() => setActiveMode('creative')}
+              onClick={(e) => { triggerElasticBounce(e); setActiveMode('creative'); }}
               style={{
                 fontFamily: "'Panchang', sans-serif",
                 fontSize: 'clamp(2rem, 4vw, 3.5rem)',
@@ -284,12 +363,13 @@ export default function ArcadeMenu({ onStartGame }) {
                   if (Math.abs(dragOffset) > 10) { e.preventDefault(); e.stopPropagation(); return; }
                   
                   if (isActive) {
+                    triggerElasticBounce(e);
                     const isOriginalGame = game.id === 'dripp' || game.id === 'breaker' || game.id === 'scope';
                     if (!isOriginalGame && !isDeveloper) {
                       setPendingGameId(game.id);
                       setShowPasswordModal(true);
                     } else {
-                      onStartGame(game.id);
+                      triggerGameStartWarp(game.id);
                     }
                   } else {
                     setActiveIndex(index);
@@ -313,10 +393,18 @@ export default function ArcadeMenu({ onStartGame }) {
                   opacity: opacity,
                   display: 'flex',
                   flexDirection: 'column',
-                  padding: '30px',
+                  padding: '0',
                   pointerEvents: opacity === 0 ? 'none' : 'auto'
                 }}
               >
+                <div className={(isActive && activeMode === 'arcade') ? 'gamified-float' : ''} style={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '30px',
+                  boxSizing: 'border-box'
+                }}>
                 {/* Top of Card */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'auto' }}>
                   <span style={{ 
@@ -389,7 +477,16 @@ export default function ArcadeMenu({ onStartGame }) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (isActive) onStartGame(game.id);
+                      if (isActive) {
+                        triggerElasticBounce(e);
+                        const isOriginalGame = game.id === 'dripp' || game.id === 'breaker' || game.id === 'scope';
+                        if (!isOriginalGame && !isDeveloper) {
+                          setPendingGameId(game.id);
+                          setShowPasswordModal(true);
+                        } else {
+                          triggerGameStartWarp(game.id);
+                        }
+                      }
                     }}
                     style={{
                       width: '100%',
@@ -422,6 +519,7 @@ export default function ArcadeMenu({ onStartGame }) {
                   >
                     Play Now
                   </button>
+                </div>
                 </div>
               </div>
             );
