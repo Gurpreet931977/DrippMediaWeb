@@ -1109,6 +1109,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   // Sandbox UI state
   const [sandboxBrush, setSandboxBrush] = useState(1);
   const [sandboxAuto, setSandboxAuto] = useState(true);
+  const [showGameOverHelp, setShowGameOverHelp] = useState(false);
 
   const mouseRef = useRef({ x: -100, y: -100 });
   const cursorActiveRef = useRef(false);
@@ -1408,6 +1409,32 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
             <button onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
               MENU
             </button>
+            <div 
+               onMouseEnter={() => setShowGameOverHelp(true)}
+               onMouseLeave={() => setShowGameOverHelp(false)}
+               style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '42px', height: '42px', borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.3)',
+                  cursor: 'help', color: 'rgba(255,255,255,0.7)', transition: 'all 0.3s',
+                  position: 'relative'
+               }}
+               onMouseEnterCapture={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#fff"; }}
+               onMouseLeaveCapture={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+            >
+               <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', fontWeight: 'bold' }}>?</span>
+               {showGameOverHelp && (
+                 <div style={{
+                    position: 'absolute', bottom: '120%', left: '50%', transform: 'translateX(-50%)',
+                    width: '320px', background: 'rgba(15,15,15,0.95)', border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '15px', padding: '20px', boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+                    backdropFilter: 'blur(10px)', zIndex: 200, textAlign: 'left',
+                    color: 'rgba(255,255,255,0.9)', cursor: 'default'
+                 }}>
+                   {getHelpText(activeGame)}
+                 </div>
+               )}
+            </div>
           </div>
         </div>
       )}
