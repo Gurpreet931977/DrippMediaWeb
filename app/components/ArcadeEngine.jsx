@@ -557,6 +557,7 @@ function createGameEngine(canvas, callbacks) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Dynamic Module Routing
+    let justSwitched = false;
     if (ag !== lastActive) {
       if (activeModule) {
         activeModule.destroy();
@@ -573,6 +574,7 @@ function createGameEngine(canvas, callbacks) {
       else if (ag === 'looper') activeModule = new HarmonicLooper(canvas, callbacks);
       
       lastActive = ag;
+      justSwitched = true;
     }
 
     if (activeModule) {
@@ -580,14 +582,14 @@ function createGameEngine(canvas, callbacks) {
       activeModule.draw();
     } else {
         // ---- ORIGINAL HARDCODED GAMES ----
-      if (ag === "breaker" && lastActive !== "breaker") initBreaker(getBreakLevelRef());
-      else if (ag === "scope" && lastActive !== "scope") initScope();
-      else if (ag === "dripp" && lastActive !== "dripp") { drops = []; splashes = []; }
-      else if (ag === "snake" && lastActive !== "snake") { if(window.initSnakeGame) window.initSnakeGame(); }
-      else if (ag === "pong" && lastActive !== "pong") { if(window.initPongGame) window.initPongGame(); }
-      else if (ag === "runner" && lastActive !== "runner") { if(window.initRunnerGame) window.initRunnerGame(); }
-      else if (ag === "invaders" && lastActive !== "invaders") initInvaders();
-      else if (ag === "simon" && lastActive !== "simon") initSimon();
+      if (ag === "breaker" && justSwitched) initBreaker(getBreakLevelRef());
+      else if (ag === "scope" && justSwitched) initScope();
+      else if (ag === "dripp" && justSwitched) { drops = []; splashes = []; }
+      else if (ag === "snake" && justSwitched) { if(window.initSnakeGame) window.initSnakeGame(); }
+      else if (ag === "pong" && justSwitched) { if(window.initPongGame) window.initPongGame(); }
+      else if (ag === "runner" && justSwitched) { if(window.initRunnerGame) window.initRunnerGame(); }
+      else if (ag === "invaders" && justSwitched) initInvaders();
+      else if (ag === "simon" && justSwitched) initSimon();
 
       // Dripp logic
       if (ag === "dripp") {
