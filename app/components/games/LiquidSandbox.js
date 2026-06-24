@@ -4,20 +4,22 @@ export default class LiquidSandbox {
     this.callbacks = callbacks;
     this.ctx = canvas.getContext('2d');
     
-    // Scale down resolution for cellular automata performance
-    this.scale = 10;
+    // Scale down resolution for cellular automata performance (High Res mode)
+    this.scale = 4;
     this.cols = Math.floor(canvas.width / this.scale);
     this.rows = Math.floor(canvas.height / this.scale);
     
     this.grid = new Array(this.cols * this.rows).fill(0);
     this.nextGrid = new Array(this.cols * this.rows).fill(0);
     
-    // Elements: 0 = Empty, 1 = Sand (Neon Yellow), 2 = Water (Cyan), 3 = Wall (Purple)
+    // Elements: 0=Empty, 1=Sand, 2=Water, 3=Wall, 4=Cloud, 5=Grass
     this.colors = [
       "transparent",
       "#ebd73f", // Sand
       "#00d2ff", // Water
-      "#b366ff"  // Wall
+      "#b366ff", // Wall
+      "#e0f7fa", // Cloud
+      "#39ff14"  // Grass
     ];
     
     this.currentElement = 1; // Start with Sand
@@ -25,6 +27,10 @@ export default class LiquidSandbox {
     this.pointerX = -1;
     this.pointerY = -1;
     this.frame = 0;
+    this.autoSwitch = true;
+    
+    // Expose for React UI
+    window.sandboxModule = this;
     
     this.callbacks.setScoreRef(0);
     this.callbacks.setScore(0);
@@ -64,10 +70,11 @@ export default class LiquidSandbox {
 
     // Draw brush
     if (this.isDrawing && this.pointerX >= 0 && this.pointerX < this.cols && this.pointerY >= 0 && this.pointerY < this.rows) {
-      const brushSize = 3;
+      const brushSize = 5;
       for (let i = -brushSize; i <= brushSize; i++) {
         for (let j = -brushSize; j <= brushSize; j++) {
-          if (Math.random() > 0.5) continue; // Spray effect
+          if (i*i + j*j > brushSize*brushSize) continue; // Circular brush
+          if (this.currentElement !== 3 && Math.random() > 0.4) continue; // Spray effect for non-walls
           const col = this.pointerX + i;
           const row = this.pointerY + j;
           if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
@@ -153,6 +160,58 @@ export default class LiquidSandbox {
              }
           }
         }
+        
+        // CLOUD PHYSICS
+        else if (state === 4) {
+          if (Math.random() < 0.002) {
+             // Condense into water rain
+             this.nextGrid[i] = 2;
+             continue;
+          }
+          const above = y > 0 ? this.getIndex(x, y - 1) : -1;
+          if (above !== -1) {
+            const aboveState = this.grid[above];
+            if (aboveState === 0 && this.nextGrid[above] === 0) {
+               this.nextGrid[above] = 4;
+               this.nextGrid[i] = 0;
+            } else {
+               // Spread horizontally
+               const left = x > 0 ? this.getIndex(x - 1, y) : -1;
+               const right = x < this.cols - 1 ? this.getIndex(x + 1, y) : -1;
+               if (dir === 1) {
+                 if (left !== -1 && this.grid[left] === 0 && this.nextGrid[left] === 0) {
+                   this.nextGrid[left] = 4; this.nextGrid[i] = 0;
+                 } else if (right !== -1 && this.grid[right] === 0 && this.nextGrid[right] === 0) {
+                   this.nextGrid[right] = 4; this.nextGrid[i] = 0;
+                 }
+               } else {
+                 if (right !== -1 && this.grid[right] === 0 && this.nextGrid[right] === 0) {
+                   this.nextGrid[right] = 4; this.nextGrid[i] = 0;
+                 } else if (left !== -1 && this.grid[left] === 0 && this.nextGrid[left] === 0) {
+                   this.nextGrid[left] = 4; this.nextGrid[i] = 0;
+                 }
+               }
+            }
+          }
+        }
+        
+        // GRASS PHYSICS
+        else if (state === 5) {
+           if (Math.random() < 0.02) {
+             const above = y > 0 ? this.getIndex(x, y - 1) : -1;
+             if (above !== -1 && this.grid[above] === 0 && this.nextGrid[above] === 0) {
+                let depth = 0;
+                for(let dy=y; dy<this.rows; dy++) {
+                  if (this.grid[this.getIndex(x, dy)] === 5) depth++;
+                  else break;
+                }
+                // Grow grass up to 5 blocks high
+                if (depth < 5) { 
+                  this.nextGrid[above] = 5;
+                }
+             }
+           }
+        }
       }
     }
 
@@ -161,10 +220,12 @@ export default class LiquidSandbox {
     this.grid = this.nextGrid;
     this.nextGrid = temp;
     
-    // Periodically switch elements every 5 seconds just for visual variety if no UI
-    if (this.frame % 300 === 0) {
-      this.currentElement++;
-      if (this.currentElement > 3) this.currentElement = 1;
+    // Auto-switch mode
+    if (this.autoSwitch) {
+      if (this.frame % 300 === 0) {
+        this.currentElement++;
+        if (this.currentElement > 5) this.currentElement = 1;
+      }
     }
   }
 
@@ -178,16 +239,11 @@ export default class LiquidSandbox {
         const state = this.grid[this.getIndex(x, y)];
         if (state > 0) {
           ctx.fillStyle = this.colors[state];
-          ctx.fillRect(x * this.scale, y * this.scale, this.scale, this.scale);
+          // Use slightly larger fillRect for overlap smoothing without extreme performance hit
+          ctx.fillRect(x * this.scale, y * this.scale, this.scale + 0.5, this.scale + 0.5);
         }
       }
     }
-    
-    // Draw current brush indicator
-    ctx.fillStyle = this.colors[this.currentElement];
-    ctx.font = "bold 20px monospace";
-    ctx.fillText("BRUSH: " + (this.currentElement === 1 ? "SAND" : this.currentElement === 2 ? "WATER" : "WALL"), 20, 40);
-    ctx.fillText("Wait 5s to auto-switch elements", 20, 70);
   }
 
   destroy() {}

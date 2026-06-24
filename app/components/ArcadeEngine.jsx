@@ -1104,8 +1104,11 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
-  const [hideHero, setHideHero] = useState(false);
   const [showRetryTooltip, setShowRetryTooltip] = useState(false);
+
+  // Sandbox UI state
+  const [sandboxBrush, setSandboxBrush] = useState(1);
+  const [sandboxAuto, setSandboxAuto] = useState(true);
 
   const mouseRef = useRef({ x: -100, y: -100 });
   const cursorActiveRef = useRef(false);
@@ -1221,6 +1224,23 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     };
   }, []);
 
+  const handleSandboxBrush = (brushId) => {
+     setSandboxBrush(brushId);
+     setSandboxAuto(false);
+     if (window.sandboxModule) {
+         window.sandboxModule.currentElement = brushId;
+         window.sandboxModule.autoSwitch = false;
+     }
+  };
+
+  const handleSandboxAuto = () => {
+     const next = !sandboxAuto;
+     setSandboxAuto(next);
+     if (window.sandboxModule) {
+         window.sandboxModule.autoSwitch = next;
+     }
+  };
+
   const PrimaryButton = ({ onClick, children, style }) => (
     <button onClick={onClick} style={{
       padding: "12px 28px", border: "1px solid rgba(235,215,63,0.3)", borderRadius: "30px",
@@ -1277,6 +1297,57 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
           </svg>
         </button>
       </div>
+
+      {/* Sandbox Toolbar */}
+      {activeGame === "sandbox" && (
+        <div style={{
+          position: "absolute", bottom: "30px", left: "50%", transform: "translateX(-50%)",
+          display: "flex", gap: "15px", alignItems: "center", zIndex: 100,
+          background: "rgba(10, 10, 10, 0.4)", backdropFilter: "blur(10px)",
+          padding: "10px 25px", borderRadius: "40px", border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+        }}>
+          <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", marginRight: "5px", letterSpacing: "2px" }}>TOOLS</div>
+          
+          {[
+            { id: 1, name: "SAND", color: "#ebd73f" },
+            { id: 2, name: "WATER", color: "#00d2ff" },
+            { id: 3, name: "WALL", color: "#b366ff" },
+            { id: 4, name: "CLOUD", color: "#e0f7fa" },
+            { id: 5, name: "GRASS", color: "#39ff14" }
+          ].map(brush => (
+            <button key={brush.id} onClick={() => handleSandboxBrush(brush.id)}
+              style={{
+                width: "30px", height: "30px", borderRadius: "50%",
+                background: brush.color, 
+                border: (!sandboxAuto && sandboxBrush === brush.id) ? "3px solid #fff" : "2px solid transparent",
+                cursor: "pointer", transition: "all 0.2s ease",
+                boxShadow: (!sandboxAuto && sandboxBrush === brush.id) ? `0 0 15px ${brush.color}` : "none",
+                opacity: (!sandboxAuto && sandboxBrush !== brush.id) ? 0.4 : 1
+              }}
+              title={brush.name}
+              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.2)"}
+              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+            />
+          ))}
+
+          <div style={{ width: "1px", height: "24px", background: "rgba(255,255,255,0.2)", margin: "0 10px" }} />
+          
+          <button onClick={handleSandboxAuto} style={{
+             padding: "8px 16px", borderRadius: "20px",
+             background: sandboxAuto ? "rgba(235, 215, 63, 0.15)" : "transparent",
+             border: `1px solid ${sandboxAuto ? "rgba(235,215,63,0.5)" : "rgba(255,255,255,0.2)"}`,
+             color: sandboxAuto ? "#ebd73f" : "rgba(255,255,255,0.5)",
+             cursor: "pointer", fontSize: "0.75rem", letterSpacing: "1px", transition: "all 0.3s",
+             fontFamily: "'Clash Display', sans-serif"
+          }}
+          onMouseEnter={e => { if(!sandboxAuto) e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}
+          onMouseLeave={e => { if(!sandboxAuto) e.currentTarget.style.background = "transparent" }}
+          >
+             AUTO: {sandboxAuto ? "ON" : "OFF"}
+          </button>
+        </div>
+      )}
 
       {/* Paused Overlay */}
       {isPaused && gameState === "playing" && (
