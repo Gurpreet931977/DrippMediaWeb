@@ -77,29 +77,31 @@ function CDCase({ game, index, total, isSelected, onSelect }) {
         </mesh>
         
         {/* Title Text */}
-        <Text
-          position={[0, 0, 0.11]}
-          fontSize={0.4}
-          color="#000"
-          anchorX="center"
-          anchorY="middle"
-          font="https://fonts.gstatic.com/s/outfit/v11/QGYyz_MVcBeNP4NjuGObqx1XmO1I4TC1O4a0Ew.woff"
-          maxWidth={2.8}
-          textAlign="center"
-        >
-          {game.title}
-        </Text>
-        <Text
-          position={[0, -0.6, 0.11]}
-          fontSize={0.15}
-          color="#222"
-          anchorX="center"
-          anchorY="middle"
-          maxWidth={2.5}
-          textAlign="center"
-        >
-          {game.desc}
-        </Text>
+        <React.Suspense fallback={null}>
+          <Text
+            position={[0, 0, 0.11]}
+            fontSize={0.4}
+            color="#000"
+            anchorX="center"
+            anchorY="middle"
+            font="https://fonts.gstatic.com/s/outfit/v11/QGYyz_MVcBeNP4NjuGObqx1XmO1I4TC1O4a0Ew.woff"
+            maxWidth={2.8}
+            textAlign="center"
+          >
+            {game.title}
+          </Text>
+          <Text
+            position={[0, -0.6, 0.11]}
+            fontSize={0.15}
+            color="#222"
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={2.5}
+            textAlign="center"
+          >
+            {game.desc}
+          </Text>
+        </React.Suspense>
       </Float>
     </group>
   );
@@ -158,7 +160,7 @@ export default function ArcadeMenu3D({ onStartGame }) {
       </div>
 
       <Canvas camera={{ position: [0, 2, 10], fov: 50 }}>
-        <React.Suspense fallback={<mesh position={[0,0,0]}><boxGeometry args={[2,2,2]}/><meshBasicMaterial color="red"/></mesh>}>
+        <React.Suspense fallback={null}>
           <color attach="background" args={['#050505']} />
           <ambientLight intensity={0.5} />
           <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
