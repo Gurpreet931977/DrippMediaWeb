@@ -201,43 +201,90 @@ export default function ArcadeMenu({ onStartGame }) {
             <Gamepad2 size={24} color={activeColor} style={{ filter: `drop-shadow(0 0 10px ${activeColor})`, transition: 'all 0.5s ease' }} />
             <span style={{ fontSize: '13px', letterSpacing: '4px', color: activeColor, fontWeight: 600, transition: 'all 0.5s ease' }}>SYSTEM.ONLINE</span>
           </div>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-              <h1 
-                onClick={() => {
-                  setActiveMode('arcade');
-                  gsap.fromTo('.arcade-bg-glow', { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 1, ease: "elastic.out(1, 0.5)" });
-                }}
-                onMouseEnter={(e) => { if (activeMode === 'arcade') gsap.to(e.currentTarget, { scale: 1.1, y: -5, rotate: -2, duration: 0.4, ease: "back.out(2)" }); }}
-                onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
-                style={{
-                  fontFamily: "'Panchang', sans-serif",
-                  fontSize: 'clamp(2rem, 4vw, 3.5rem)',
-                  fontWeight: 800,
-                  margin: 0,
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  lineHeight: 1,
-                  cursor: activeMode === 'arcade' ? 'none' : 'pointer',
-                  color: activeMode === 'arcade' ? '#fff' : 'rgba(255,255,255,0.3)',
-                  textShadow: activeMode === 'arcade' ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
-                  transition: 'color 0.3s, text-shadow 0.3s'
-                }}>
-                ARCADE
-              </h1>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'stretch',
+            background: 'rgba(255,255,255,0.03)',
+            borderRadius: '100px',
+            padding: '8px',
+            position: 'relative',
+            border: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.5)',
+            width: 'fit-content'
+          }}>
+            {/* Sliding Pill Background */}
+            <div 
+              className="mode-slider"
+              style={{
+                position: 'absolute',
+                top: '8px', 
+                bottom: '8px',
+                width: 'calc(50% - 8px)',
+                left: activeMode === 'arcade' ? '8px' : '50%',
+                background: activeColor,
+                borderRadius: '100px',
+                transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)', // Extreme bounce / lottie feel
+                boxShadow: `0 8px 30px ${activeColor}60`
+              }} 
+            />
+
             <h1 
-              onClick={() => setActiveMode('creative')}
+              onClick={() => {
+                if (activeMode !== 'arcade') {
+                   setActiveMode('arcade');
+                   gsap.fromTo('.arcade-bg-glow', { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 1, ease: "elastic.out(1, 0.5)" });
+                   gsap.fromTo('.mode-slider', { scaleX: 1.5 }, { scaleX: 1, duration: 0.8, ease: "elastic.out(1, 0.4)" });
+                }
+              }}
+              onMouseEnter={(e) => { if (activeMode === 'arcade') gsap.to(e.currentTarget, { scale: 1.05, y: -2, rotate: -2, duration: 0.4, ease: "back.out(2)" }); }}
+              onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
               style={{
                 fontFamily: "'Panchang', sans-serif",
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                fontSize: 'clamp(1.2rem, 2.5vw, 2rem)',
                 fontWeight: 800,
                 margin: 0,
+                padding: '12px 30px',
                 textTransform: 'uppercase',
-                letterSpacing: '1px',
+                letterSpacing: '2px',
                 lineHeight: 1,
                 cursor: activeMode === 'arcade' ? 'none' : 'pointer',
-                color: activeMode === 'creative' ? '#fff' : 'rgba(255,255,255,0.3)',
-                textShadow: activeMode === 'creative' ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
-                transition: 'color 0.3s, text-shadow 0.3s'
+                color: activeMode === 'arcade' ? '#000' : 'rgba(255,255,255,0.4)',
+                textShadow: 'none',
+                position: 'relative',
+                zIndex: 2,
+                transition: 'color 0.4s ease',
+                flex: 1,
+                textAlign: 'center'
+              }}>
+              ARCADE
+            </h1>
+            
+            <h1 
+              onClick={() => {
+                if (activeMode !== 'creative') {
+                   setActiveMode('creative');
+                   gsap.fromTo('.mode-slider', { scaleX: 1.5 }, { scaleX: 1, duration: 0.8, ease: "elastic.out(1, 0.4)" });
+                }
+              }}
+              onMouseEnter={(e) => { if (activeMode === 'creative') gsap.to(e.currentTarget, { scale: 1.05, y: -2, rotate: 2, duration: 0.4, ease: "back.out(2)" }); }}
+              onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
+              style={{
+                fontFamily: "'Panchang', sans-serif",
+                fontSize: 'clamp(1.2rem, 2.5vw, 2rem)',
+                fontWeight: 800,
+                margin: 0,
+                padding: '12px 30px',
+                textTransform: 'uppercase',
+                letterSpacing: '2px',
+                lineHeight: 1,
+                cursor: activeMode === 'creative' ? 'none' : 'pointer',
+                color: activeMode === 'creative' ? '#000' : 'rgba(255,255,255,0.4)',
+                textShadow: 'none',
+                position: 'relative',
+                zIndex: 2,
+                transition: 'color 0.4s ease',
+                flex: 1,
+                textAlign: 'center'
               }}>
               CREATIVE
             </h1>
