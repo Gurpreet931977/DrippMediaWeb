@@ -5,9 +5,14 @@ export default class LiquidSandbox {
     this.ctx = canvas.getContext('2d', { alpha: false });
     
     // High Res mode
-    this.scale = 4; 
+    this.scale = 2; // RESTORED TO HIGH RES
     this.cols = Math.floor(canvas.width / this.scale);
     this.rows = Math.floor(canvas.height / this.scale);
+    
+    this.glowCanvas = document.createElement('canvas');
+    this.glowCanvas.width = canvas.width;
+    this.glowCanvas.height = canvas.height;
+    this.glowCtx = this.glowCanvas.getContext('2d', { alpha: true });
     
     this.grid = new Uint8Array(this.cols * this.rows);
     this.nextGrid = new Uint8Array(this.cols * this.rows);
@@ -256,10 +261,14 @@ export default class LiquidSandbox {
 
   draw() {
     const ctx = this.ctx;
+    const gCtx = this.glowCtx;
     
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = "rgba(5,5,10,1)";
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // Clear offscreen glow cache
+    gCtx.clearRect(0, 0, this.glowCanvas.width, this.glowCanvas.height);
 
     for (let i = 0; i < this.grid.length; i++) {
       const state = this.grid[i];
@@ -268,21 +277,25 @@ export default class LiquidSandbox {
         const y = Math.floor(i / this.cols);
         
         if (state === 7 || state === 8) { 
-           ctx.globalCompositeOperation = "lighter";
-           ctx.shadowBlur = 10;
-           ctx.shadowColor = this.colors[state];
+           // Draw fire/lava flat onto the glow cache
+           gCtx.fillStyle = this.colors[state];
+           gCtx.fillRect(x * this.scale, y * this.scale, this.scale + 0.5, this.scale + 0.5);
         } else {
-           ctx.globalCompositeOperation = "source-over";
-           ctx.shadowBlur = 0;
+           // Draw regular elements
+           ctx.fillStyle = this.colors[state];
+           ctx.fillRect(x * this.scale, y * this.scale, this.scale + 0.5, this.scale + 0.5);
         }
-
-        ctx.fillStyle = this.colors[state];
-        ctx.fillRect(x * this.scale, y * this.scale, this.scale + 0.5, this.scale + 0.5);
       }
     }
     
+    // Apply hardware-accelerated global bloom (1 calculation instead of 10,000)
+    ctx.globalCompositeOperation = "lighter";
+    ctx.filter = "blur(8px) brightness(1.2)";
+    ctx.drawImage(this.glowCanvas, 0, 0); // The glowing aura
+    ctx.filter = "none";
+    ctx.drawImage(this.glowCanvas, 0, 0); // The crisp hot core
+    
     ctx.globalCompositeOperation = "source-over";
-    ctx.shadowBlur = 0;
   }
 
   destroy() {}
