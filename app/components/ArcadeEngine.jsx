@@ -97,14 +97,39 @@ function createGameEngine(canvas, callbacks) {
   };
   Drop.prototype.draw = function (ctx) {
     if (this.isBomb) {
-      ctx.font = Math.max(16, this.radius * 3) + "px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("💣", this.x, this.y);
-    } else {
+      // Bomb: Red circle
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#eb3f3f"; // Exact Dripp red
+      ctx.fill();
+      
+      // Bomb fuse/stem
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y - this.radius);
+      ctx.quadraticCurveTo(this.x + 2, this.y - this.radius - 4, this.x + 4, this.y - this.radius - 6);
+      ctx.strokeStyle = "#888";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      
+      // Little spark
+      ctx.beginPath();
+      ctx.arc(this.x + 4, this.y - this.radius - 6, 1, 0, Math.PI*2);
+      ctx.fillStyle = "#ebd73f";
+      ctx.fill();
+    } else {
+      // Teardrop shape
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y - this.radius * 1.5);
+      ctx.quadraticCurveTo(this.x + this.radius, this.y - this.radius * 0.2, this.x + this.radius, this.y);
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
+      ctx.quadraticCurveTo(this.x - this.radius, this.y - this.radius * 0.2, this.x, this.y - this.radius * 1.5);
       ctx.fillStyle = this.color;
+      ctx.fill();
+      
+      // Optional inner glow/highlight
+      ctx.beginPath();
+      ctx.arc(this.x - this.radius * 0.3, this.y + this.radius * 0.2, this.radius * 0.2, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
       ctx.fill();
     }
   };
@@ -956,139 +981,100 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   const gameName = activeGame === "breaker" ? "NEON BREAKER" : activeGame === "scope" ? "SCOPE CREEP" : "DRIPP DROP";
 
   return (
-    <div ref={containerRef} style={{ width: "100vw", height: "100vh", position: "relative", overflow: "hidden", background: "#050505" }}>
+    <div ref={containerRef} style={{ width: "100vw", height: "100vh", position: "relative", overflow: "hidden", background: "#050505", fontFamily: "'Clash Display', sans-serif" }}>
       <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
 
-      {/* Top Left Close Button */}
-      <a onClick={() => { setActiveGame("none"); if (onClose) onClose(); }}
-         style={{ position: "absolute", top: "30px", left: "30px", padding: "10px 24px", borderRadius: "30px", border: "1px solid rgba(255,255,255,0.3)", color: "white", textDecoration: "none", fontSize: "0.9rem", transition: "all 0.3s", zIndex: 100, cursor: "pointer", background: "rgba(0,0,0,0.5)" }}
-         onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.borderColor = "white"; }}
-         onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.5)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)"; }}
-      >← Close Arcade</a>
-
-      {/* Score HUD */}
-      {activeGame !== "none" && gameState === "playing" && !hideHero && (
-        <div style={{ position: "absolute", top: "30px", right: "30px", textAlign: "right", pointerEvents: "none", zIndex: 100 }}>
-          {(activeGame === "dripp" || activeGame === "snake" || activeGame === "pong" || activeGame === "runner" || activeGame === "invaders" || activeGame === "simon") && (
-            <div>
-              <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Score</div>
-              <div className="score-counter-element" style={{ fontSize: "3rem", fontWeight: "bold", color: "var(--brand-yellow)", lineHeight: 1, textShadow: "0 0 20px rgba(235,215,63,.4)" }}>{score}</div>
-            </div>
-          )}
-          {activeGame === "scope" && (
-            <div>
-              <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Score</div>
-              <div className="score-counter-element" style={{ fontSize: "3rem", fontWeight: "bold", color: "var(--brand-yellow)", lineHeight: 1, textShadow: "0 0 20px rgba(235,215,63,.4)" }}>{scopeScore}</div>
-            </div>
-          )}
-          {activeGame === "breaker" && (
-            <div>
-              <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Score — Level {breakerLevel}</div>
-              <div className="score-counter-element" style={{ fontSize: "3rem", fontWeight: "bold", color: "var(--brand-yellow)", lineHeight: 1, textShadow: "0 0 20px rgba(235,215,63,.4)" }}>{breakerScore}</div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Game Over */}
-      {gameState === "failed" && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(5,5,5,0.7)", zIndex: 20, gap: "20px" }}>
-          <div style={{ fontSize: "clamp(2rem,6vw,4rem)", fontFamily: "'Panchang',sans-serif", color: "#eb3f3f", textShadow: "0 0 40px rgba(235,63,63,.5)" }}>GAME OVER</div>
-          <div style={{ color: "rgba(255,255,255,.6)", fontFamily: "'Clash Display',sans-serif", fontSize: "1rem" }}>
-            Final Score: <strong style={{ color: "var(--brand-yellow)" }}>{activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : score}</strong>
-          </div>
-          <div style={{ display: "flex", gap: "15px" }}>
-            <PrimaryButton onClick={() => { setGameState("playing"); if (activeGame === "dripp") { scoreRef.current = 0; setScore(0); } else if (activeGame === "snake") { scoreRef.current = 0; setScore(0); if (window.initSnakeGame) window.initSnakeGame(); } else if (activeGame === "pong") { scoreRef.current = 0; setScore(0); if (window.initPongGame) window.initPongGame(); } else if (activeGame === "runner") { scoreRef.current = 0; setScore(0); if (window.initRunnerGame) window.initRunnerGame(); } else if (activeGame === "invaders") { scoreRef.current = 0; setScore(0); if (window.initInvadersGame) window.initInvadersGame(); } else if (activeGame === "simon") { scoreRef.current = 0; setScore(0); if (window.initSimonGame) window.initSimonGame(); } else if (activeGame === "scope") { scopeScoreRef.current = 0; setScopeScore(0); if (window.initScopeGame) window.initScopeGame(); } else if (activeGame === "breaker") { breakerScoreRef.current = 0; setBreakerScore(0); breakerLevelRef.current = 1; setBreakerLevel(1); if (window.initBreakerGame) window.initBreakerGame(1); } }}>Try Again</PrimaryButton>
-            <PrimaryButton onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ color: "rgba(255,255,255,.5)", borderColor: "rgba(255,255,255,.2)", background: "rgba(255,255,255,.05)" }}>Back to Menu</PrimaryButton>
-          </div>
-        </div>
-      )}
-
-      {/* Level Complete */}
-      {gameState === "level-complete" && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(5,5,5,0.7)", zIndex: 20, gap: "20px" }}>
-          <div style={{ fontSize: "clamp(2rem,6vw,4rem)", fontFamily: "'Panchang',sans-serif", color: "var(--brand-yellow)", textShadow: "0 0 40px rgba(235,215,63,.5)" }}>LEVEL {breakerLevel - 1} CLEAR!</div>
-          <div style={{ color: "rgba(255,255,255,.6)" }}>Loading Level {breakerLevel}…</div>
-        </div>
-      )}
-
-      {/* Bottom Controls */}
-      <div style={{ position: "absolute", bottom: "20px", left: "20px", display: "flex", gap: "10px", alignItems: "center", zIndex: 30 }}>
-        {/* Game Selector */}
-        <div onClick={() => setActiveGame(prev => prev === "dripp" ? "scope" : prev === "scope" ? "breaker" : "dripp")}
-          style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(235,215,63,.1)", border: "1px solid rgba(235,215,63,.3)", display: "flex", justifyContent: "center", alignItems: "center", cursor: "pointer", transition: "all 0.3s" }}
-          title="Switch Game"
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,.2)"; e.currentTarget.style.transform = "scale(1.1)"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(235,215,63,.1)"; e.currentTarget.style.transform = "scale(1)"; }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="12" r="1" fill="var(--brand-yellow)"/><circle cx="18" cy="12" r="1" fill="var(--brand-yellow)"/>
-          </svg>
-        </div>
-
-        {/* Play/Stop */}
-        <div onClick={() => { if (activeGame !== "none") { setIsFadingOut(true); setTimeout(() => { setActiveGame("none"); setIsFadingOut(false); }, 300); } else setActiveGame("dripp"); }}
-          style={{ height: "40px", padding: "0 15px", borderRadius: "20px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", cursor: "pointer", color: activeGame === "none" ? "var(--brand-yellow)" : "rgba(255,255,255,.5)", fontFamily: "'Clash Display',sans-serif", fontSize: "0.8rem", textTransform: "uppercase", transition: "all 0.3s", gap: "6px" }}
-          onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,.1)"; }}
-          onMouseLeave={e => { e.currentTarget.style.color = activeGame === "none" ? "var(--brand-yellow)" : "rgba(255,255,255,.5)"; e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}
-        >
-          {activeGame === "none" ? "▶ Start Game" : "■ Back to Menu"}
-        </div>
-
-        {/* Pause (only when playing) */}
-        {activeGame !== "none" && (
-          <div onClick={() => setIsPaused(p => !p)}
-            style={{ height: "40px", padding: "0 15px", borderRadius: "20px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", cursor: "pointer", color: "rgba(255,255,255,.5)", fontFamily: "'Clash Display',sans-serif", fontSize: "0.8rem", textTransform: "uppercase", transition: "all 0.3s" }}
-            onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,.1)"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,.5)"; e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}
-          >
-            {isPaused ? "▶ Resume" : "⏸ Pause"}
-          </div>
-        )}
-
-        {/* Help */}
-        <div onClick={() => setIsHelpOpen(h => !h)}
-          style={{ height: "40px", padding: "0 15px", borderRadius: "20px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", cursor: "pointer", color: "rgba(255,255,255,.5)", fontFamily: "'Clash Display',sans-serif", fontSize: "0.8rem", textTransform: "uppercase", transition: "all 0.3s" }}
-          onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,.1)"; }}
-          onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,.5)"; e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}
-        >? Help</div>
-
-
+      {/* Top Left: Pause & Help Buttons */}
+      <div style={{ position: "absolute", top: "30px", left: "30px", display: "flex", gap: "10px", zIndex: 100 }}>
+        <button onClick={() => setIsPaused(p => !p)} style={{ width: "40px", height: "40px", borderRadius: "50%", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "14px", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
+          {isPaused ? "▶" : "||"}
+        </button>
+        <button onClick={() => setIsHelpOpen(h => !h)} style={{ width: "40px", height: "40px", borderRadius: "50%", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
+          ?
+        </button>
       </div>
 
-      {/* Game Name Label */}
-      {activeGame !== "none" && (
-        <div style={{ position: "absolute", top: "20px", left: "50%", transform: "translateX(-50%)", fontFamily: "'Panchang',sans-serif", fontSize: "1rem", color: "rgba(255,255,255,.3)", letterSpacing: "3px", pointerEvents: "none" }}>
-          {gameName}
+      {/* Top Right: Exact Score HUD */}
+      <div style={{ position: "absolute", top: "30px", right: "30px", textAlign: "right", pointerEvents: "none", zIndex: 100, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+        <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Score</div>
+        <div className="score-counter-element" style={{ fontSize: "3rem", fontWeight: "bold", color: "var(--brand-yellow)", lineHeight: 1, textShadow: "0 0 20px rgba(235,215,63,.4)" }}>{activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : score}</div>
+        <div style={{ fontSize: "0.6rem", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginTop: "15px", whiteSpace: "pre-line" }}>
+          KEEP SCORING TO LEVEL UP{"\n"}
+          <span style={{ color: "#eb3f3f" }}>CAUTION: AVOID BOMBS</span>
+        </div>
+      </div>
+
+      {/* Bottom Left: Controls */}
+      <div style={{ position: "absolute", bottom: "30px", left: "30px", display: "flex", gap: "15px", alignItems: "center", zIndex: 100 }}>
+        {/* Gamepad Icon (Return to Menu) */}
+        <button onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ width: "45px", height: "45px", borderRadius: "50%", background: "transparent", border: "1px solid rgba(235,215,63,0.5)", color: "#ebd73f", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; e.currentTarget.style.transform = "scale(1.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.transform = "scale(1)"; }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/>
+          </svg>
+        </button>
+        {/* Disable Game */}
+        <button onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ padding: "8px 20px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.5)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "1px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "white"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}>
+          Disable Game
+        </button>
+        {/* Show Intro */}
+        <button onClick={() => setIsHelpOpen(true)} style={{ padding: "8px 20px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.5)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "1px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "white"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}>
+          Show Intro
+        </button>
+      </div>
+
+      {/* Paused Overlay */}
+      {isPaused && gameState === "playing" && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "radial-gradient(circle, rgba(5,5,5,0.4) 0%, rgba(5,5,5,0.9) 100%)", zIndex: 90, gap: "30px", backdropFilter: "blur(2px)" }}>
+          <div style={{ fontSize: "clamp(3rem,8vw,5rem)", fontFamily: "'Panchang',sans-serif", color: "#fff", letterSpacing: "4px" }}>PAUSED</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "15px", alignItems: "center" }}>
+            <button onClick={() => setIsPaused(false)} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid #ebd73f", color: "#ebd73f", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; e.currentTarget.style.boxShadow = "0 0 20px rgba(235,215,63,0.3)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}>
+              RESUME GAME
+            </button>
+            <button style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
+              BRAG YOUR SCORE
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Game Over Screen */}
+      {gameState === "failed" && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(5,5,5,0.85)", zIndex: 110, gap: "20px" }}>
+          <div style={{ fontSize: "clamp(3rem,8vw,5rem)", fontFamily: "'Panchang',sans-serif", color: "#eb3f3f", textShadow: "0 0 40px rgba(235,63,63,.5)" }}>GAME OVER</div>
+          <div style={{ color: "rgba(255,255,255,.6)", fontFamily: "'Clash Display',sans-serif", fontSize: "1.2rem", letterSpacing: "2px" }}>
+            FINAL SCORE: <strong style={{ color: "var(--brand-yellow)", fontSize: "1.5rem" }}>{activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : score}</strong>
+          </div>
+          <div style={{ display: "flex", gap: "15px", marginTop: "20px" }}>
+            <button onClick={() => { 
+              setGameState("playing"); 
+              if (activeGame === "dripp") { scoreRef.current = 0; setScore(0); } 
+              else if (activeGame === "snake") { scoreRef.current = 0; setScore(0); if (window.initSnakeGame) window.initSnakeGame(); } 
+              else if (activeGame === "pong") { scoreRef.current = 0; setScore(0); if (window.initPongGame) window.initPongGame(); } 
+              else if (activeGame === "runner") { scoreRef.current = 0; setScore(0); if (window.initRunnerGame) window.initRunnerGame(); } 
+              else if (activeGame === "invaders") { scoreRef.current = 0; setScore(0); if (window.initInvadersGame) window.initInvadersGame(); } 
+              else if (activeGame === "simon") { scoreRef.current = 0; setScore(0); if (window.initSimonGame) window.initSimonGame(); } 
+              else if (activeGame === "scope") { scopeScoreRef.current = 0; setScopeScore(0); if (window.initScopeGame) window.initScopeGame(); } 
+              else if (activeGame === "breaker") { breakerScoreRef.current = 0; setBreakerScore(0); breakerLevelRef.current = 1; setBreakerLevel(1); if (window.initBreakerGame) window.initBreakerGame(1); } 
+            }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid #ebd73f", color: "#ebd73f", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; e.currentTarget.style.boxShadow = "0 0 20px rgba(235,215,63,0.3)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}>
+              PLAY AGAIN
+            </button>
+            <button onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
+              MENU
+            </button>
+          </div>
         </div>
       )}
 
       {/* Help Modal */}
       {isHelpOpen && (
-        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 50 }}>
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 120 }}>
           <div style={{ background: "#111", border: "1px solid #333", borderRadius: "16px", padding: "40px", maxWidth: "500px", width: "90%", fontFamily: "'Clash Display',sans-serif", textAlign: "center" }}>
-            <h2 style={{ color: "var(--brand-yellow)", marginBottom: "20px", fontFamily: "'Panchang',sans-serif" }}>{gameName}</h2>
-            {activeGame === "dripp" && <><p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px" }}>Move your cursor to catch falling <span style={{ color: "#ebd73f" }}>Yellow</span> & <span style={{ color: "#fff" }}>White</span> drops.</p><p style={{ color: "rgba(255,255,255,.7)" }}>Avoid <span style={{ color: "#333" }}>Bombs</span>. Red drops are worth 5 pts!</p></>}
-            {activeGame === "scope" && <><p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px" }}>Catch <span style={{ color: "#ebd73f" }}>Ideas</span> and <span style={{ color: "#3f3" }}>Coffee</span>!</p><p style={{ color: "rgba(255,255,255,.7)" }}>Avoid <span style={{ color: "#f33" }}>Scope Creep</span>, <span style={{ color: "#f80" }}>Burnout</span>, and <span style={{ color: "#f0f" }}>Feedback Loops</span>!</p></>}
-            {activeGame === "breaker" && <><p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px" }}>Break all rings with the ball. Don't let the ball fall!</p><p style={{ color: "rgba(255,255,255,.7)" }}>Collect <span style={{ color: "#3f3" }}>Green</span> powerups. Avoid <span style={{ color: "#f33" }}>Red</span> (shrinks) and <span style={{ color: "#3cf" }}>Blue</span> (shields targets).</p></>}
+            <h2 style={{ color: "var(--brand-yellow)", marginBottom: "20px", fontFamily: "'Panchang',sans-serif", fontSize: "2rem" }}>{gameName}</h2>
+            {activeGame === "dripp" && <><p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your cursor to catch falling <span style={{ color: "#ebd73f" }}>Yellow</span> drops.</p><p style={{ color: "rgba(255,255,255,.7)", lineHeight: "1.5" }}>Avoid the <span style={{ color: "#eb3f3f" }}>Red Bombs</span> to stay alive.</p></>}
+            {activeGame !== "dripp" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Follow the on-screen rules to survive and get the highest score!</p>}
             <div style={{ marginTop: "30px" }}>
-              <PrimaryButton onClick={() => setIsHelpOpen(false)}>Close</PrimaryButton>
+              <button onClick={() => setIsHelpOpen(false)} style={{ padding: "10px 24px", borderRadius: "30px", background: "transparent", border: "1px solid #ebd73f", color: "#ebd73f", fontFamily: "'Clash Display', sans-serif", cursor: "pointer", transition: "all 0.3s", textTransform: "uppercase", letterSpacing: "1px" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>Close</button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Idle Screen */}
-      {activeGame === "none" && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "20px", zIndex: 10 }}>
-          <div style={{ fontFamily: "'Panchang',sans-serif", fontSize: "clamp(2rem,6vw,4rem)", color: "var(--brand-yellow)", textShadow: "0 0 40px rgba(235,215,63,.3)", textAlign: "center" }}>DRIPP ARCADE</div>
-          <div style={{ color: "rgba(255,255,255,.5)", fontFamily: "'Clash Display',sans-serif", fontSize: "1rem", textAlign: "center", maxWidth: "400px" }}>3 games. Powerups & powerdowns. Agency chaos.</div>
-          <div style={{ display: "flex", gap: "15px", flexWrap: "wrap", justifyContent: "center", marginTop: "20px" }}>
-            {["dripp", "scope", "breaker"].map(g => (
-              <PrimaryButton key={g} onClick={() => setActiveGame(g)} style={{ fontSize: "1rem" }}>
-                {g === "dripp" ? "▶ Dripp Drop" : g === "scope" ? "▶ Scope Creep" : "▶ Neon Breaker"}
-              </PrimaryButton>
-            ))}
           </div>
         </div>
       )}

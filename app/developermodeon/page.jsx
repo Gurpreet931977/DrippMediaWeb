@@ -2876,8 +2876,8 @@ export default function Page() {
 
 
             
-            <div 
-                onClick={() => window.location.href = '/arcade'}
+            <a 
+                href="/arcade"
                 style={{
                     position: 'fixed',
                     bottom: '30px',
@@ -2890,6 +2890,7 @@ export default function Page() {
                     borderRadius: '30px',
                     cursor: 'pointer',
                     fontFamily: "'Clash Display', sans-serif",
+                    textDecoration: 'none',
                     textTransform: 'uppercase',
                     fontSize: '0.8rem',
                     boxShadow: '0 0 15px rgba(235, 215, 63, 0.2)',
@@ -2909,7 +2910,7 @@ export default function Page() {
                     <line x1="18" y1="11" x2="18.01" y2="11"></line>
                 </svg>
                 Arcade Mode
-            </div>
+            </a>
 
             <a
                 href="/admin-panel"
