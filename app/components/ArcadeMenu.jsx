@@ -26,6 +26,26 @@ export default function ArcadeMenu({ onStartGame }) {
   
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredGameId, setHoveredGameId] = useState(null);
+  
+  // Custom cursor state
+  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
+  const [isClicking, setIsClicking] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });
+    const handleMouseDown = () => setIsClicking(true);
+    const handleMouseUp = () => setIsClicking(false);
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   // Dragging state
   const [isDragging, setIsDragging] = useState(false);
@@ -55,80 +75,23 @@ export default function ArcadeMenu({ onStartGame }) {
     });
   }, [activeIndex, activeColor]);
 
-  // Playful Gamified Sparks on Click
-  useEffect(() => {
-    if (activeMode !== 'arcade') return;
-    const handleGlobalClick = (e) => {
-      // Create 4-6 sparks
-      const sparkCount = Math.floor(Math.random() * 3) + 4;
-      const colors = ['#ff3366', '#33ccff', '#ebd73f', '#33ff33', '#ff00ff'];
-      for (let i = 0; i < sparkCount; i++) {
-        const spark = document.createElement('div');
-        spark.style.position = 'fixed';
-        spark.style.left = e.clientX + 'px';
-        spark.style.top = e.clientY + 'px';
-        spark.style.width = Math.random() > 0.5 ? '6px' : '10px';
-        spark.style.height = spark.style.width;
-        spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        spark.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-        spark.style.pointerEvents = 'none';
-        spark.style.zIndex = 9999;
-        spark.style.boxShadow = `0 0 10px ${spark.style.backgroundColor}`;
-        document.body.appendChild(spark);
-        
-        gsap.to(spark, {
-          x: (Math.random() - 0.5) * 140,
-          y: (Math.random() - 0.5) * 140,
-          rotation: Math.random() * 360,
-          scale: 0,
-          opacity: 0,
-          duration: 0.4 + Math.random() * 0.4,
-          ease: "power2.out",
-          onComplete: () => spark.remove()
-        });
-      }
-    };
-    window.addEventListener('click', handleGlobalClick);
-    return () => window.removeEventListener('click', handleGlobalClick);
-  }, [activeMode]);
-
-  const triggerElasticBounce = (e) => {
-    if (activeMode !== 'arcade' || !e || !e.currentTarget) return;
-    const el = e.currentTarget;
-    gsap.killTweensOf(el);
-    gsap.fromTo(el, 
-      { scale: 0.85 }, 
-      { scale: 1, duration: 0.8, ease: "elastic.out(1, 0.3)" }
-    );
-  };
-
-  const triggerGameStartWarp = (gameId) => {
-    if (activeMode !== 'arcade') {
-      onStartGame(gameId);
-      return;
+  const handleNext = () => {
+    if (activeMode === 'arcade') {
+      gsap.fromTo('.carousel-container', 
+        { x: 50, rotationY: -10, scale: 0.95 }, 
+        { x: 0, rotationY: 0, scale: 1, duration: 0.8, ease: "elastic.out(1, 0.4)" }
+      );
     }
-    const wrapper = document.querySelector('.arcade-menu-wrapper');
-    gsap.to(wrapper, {
-      scale: 1.5,
-      opacity: 0,
-      filter: 'blur(20px)',
-      duration: 0.4,
-      ease: "power2.in",
-      onComplete: () => {
-        onStartGame(gameId);
-        // Reset for when we come back
-        gsap.set(wrapper, { scale: 1, opacity: 1, filter: 'blur(0px)' });
-      }
-    });
-  };
-
-  const handleNext = (e) => {
-    if (e && e.currentTarget) triggerElasticBounce(e);
     setActiveIndex((prev) => (prev + 1) % activeGameList.length);
   };
 
-  const handlePrev = (e) => {
-    if (e && e.currentTarget) triggerElasticBounce(e);
+  const handlePrev = () => {
+    if (activeMode === 'arcade') {
+      gsap.fromTo('.carousel-container', 
+        { x: -50, rotationY: 10, scale: 0.95 }, 
+        { x: 0, rotationY: 0, scale: 1, duration: 0.8, ease: "elastic.out(1, 0.4)" }
+      );
+    }
     setActiveIndex((prev) => (prev - 1 + activeGameList.length) % activeGameList.length);
   };
 
@@ -168,18 +131,36 @@ export default function ArcadeMenu({ onStartGame }) {
       flexDirection: 'column',
       position: 'relative',
       overflow: 'hidden',
+      cursor: activeMode === 'arcade' ? 'none' : 'default',
       fontFamily: "'Clash Display', sans-serif"
     }}>
-      <style>{`
-        @keyframes floatActive {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-12px); }
-          100% { transform: translateY(0px); }
-        }
-        .gamified-float {
-          animation: floatActive 2.5s ease-in-out infinite;
-        }
-      `}</style>
+      {/* Gamified Custom Cursor */}
+      {activeMode === 'arcade' && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0,
+          width: '24px', height: '24px',
+          borderRadius: '50%',
+          border: `2px solid ${activeColor}`,
+          pointerEvents: 'none',
+          zIndex: 99999,
+          transform: `translate(${mousePos.x - 12}px, ${mousePos.y - 12}px) scale(${isClicking ? 0.7 : 1})`,
+          transition: 'transform 0.1s ease-out, border-color 0.3s',
+          boxShadow: `0 0 10px ${activeColor}, inset 0 0 5px ${activeColor}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            width: '4px', height: '4px',
+            backgroundColor: '#fff',
+            borderRadius: '50%',
+            boxShadow: '0 0 5px #fff',
+            opacity: isClicking ? 1 : 0.5
+          }} />
+        </div>
+      )}
+
       {/* Dynamic Ambient Background */}
       <div className="arcade-bg-glow" style={{
         position: 'absolute',
@@ -221,8 +202,30 @@ export default function ArcadeMenu({ onStartGame }) {
             <span style={{ fontSize: '13px', letterSpacing: '4px', color: activeColor, fontWeight: 600, transition: 'all 0.5s ease' }}>SYSTEM.ONLINE</span>
           </div>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+              <h1 
+                onClick={() => {
+                  setActiveMode('arcade');
+                  gsap.fromTo('.arcade-bg-glow', { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 1, ease: "elastic.out(1, 0.5)" });
+                }}
+                onMouseEnter={(e) => { if (activeMode === 'arcade') gsap.to(e.currentTarget, { scale: 1.1, y: -5, rotate: -2, duration: 0.4, ease: "back.out(2)" }); }}
+                onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
+                style={{
+                  fontFamily: "'Panchang', sans-serif",
+                  fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                  fontWeight: 800,
+                  margin: 0,
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  lineHeight: 1,
+                  cursor: activeMode === 'arcade' ? 'none' : 'pointer',
+                  color: activeMode === 'arcade' ? '#fff' : 'rgba(255,255,255,0.3)',
+                  textShadow: activeMode === 'arcade' ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
+                  transition: 'color 0.3s, text-shadow 0.3s'
+                }}>
+                ARCADE
+              </h1>
             <h1 
-              onClick={(e) => { triggerElasticBounce(e); setActiveMode('arcade'); }}
+              onClick={() => setActiveMode('creative')}
               style={{
                 fontFamily: "'Panchang', sans-serif",
                 fontSize: 'clamp(2rem, 4vw, 3.5rem)',
@@ -231,27 +234,10 @@ export default function ArcadeMenu({ onStartGame }) {
                 textTransform: 'uppercase',
                 letterSpacing: '1px',
                 lineHeight: 1,
-                cursor: 'pointer',
-                color: activeMode === 'arcade' ? '#fff' : 'rgba(255,255,255,0.3)',
-                textShadow: activeMode === 'arcade' ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
-                transition: 'color 0.3s'
-              }}>
-              ARCADE
-            </h1>
-            <h1 
-              onClick={(e) => { triggerElasticBounce(e); setActiveMode('creative'); }}
-              style={{
-                fontFamily: "'Panchang', sans-serif",
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
-                fontWeight: 800,
-                margin: 0,
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-                lineHeight: 1,
-                cursor: 'pointer',
+                cursor: activeMode === 'arcade' ? 'none' : 'pointer',
                 color: activeMode === 'creative' ? '#fff' : 'rgba(255,255,255,0.3)',
                 textShadow: activeMode === 'creative' ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
-                transition: 'color 0.3s'
+                transition: 'color 0.3s, text-shadow 0.3s'
               }}>
               CREATIVE
             </h1>
@@ -313,10 +299,10 @@ export default function ArcadeMenu({ onStartGame }) {
           alignItems: 'center',
           justifyContent: 'center',
           perspective: '1500px',
-          cursor: isDragging ? 'grabbing' : 'grab',
+          cursor: activeMode === 'arcade' ? 'none' : (isDragging ? 'grabbing' : 'grab'),
           touchAction: 'none' // Prevent pull-to-refresh and swiping on mobile
       }}>
-        <div style={{
+        <div className="carousel-container" style={{
           position: 'relative',
           width: '100%',
           height: '420px',
@@ -363,20 +349,41 @@ export default function ArcadeMenu({ onStartGame }) {
                   if (Math.abs(dragOffset) > 10) { e.preventDefault(); e.stopPropagation(); return; }
                   
                   if (isActive) {
-                    triggerElasticBounce(e);
                     const isOriginalGame = game.id === 'dripp' || game.id === 'breaker' || game.id === 'scope';
                     if (!isOriginalGame && !isDeveloper) {
                       setPendingGameId(game.id);
                       setShowPasswordModal(true);
                     } else {
-                      triggerGameStartWarp(game.id);
+                      onStartGame(game.id);
                     }
                   } else {
                     setActiveIndex(index);
                   }
                 }}
-                onMouseEnter={() => setHoveredGameId(game.id)}
-                onMouseLeave={() => setHoveredGameId(null)}
+                onMouseEnter={(e) => {
+                  setHoveredGameId(game.id);
+                  if (activeMode === 'arcade') {
+                    gsap.to(e.currentTarget, { 
+                      scale: isActive ? 1.05 : 0.9, 
+                      y: isActive ? -15 : -5,
+                      rotationZ: (Math.random() - 0.5) * 4,
+                      duration: 0.5, 
+                      ease: "elastic.out(1, 0.4)" 
+                    });
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  setHoveredGameId(null);
+                  if (activeMode === 'arcade') {
+                    gsap.to(e.currentTarget, { 
+                      scale: isActive ? 1 : 0.85, 
+                      y: 0,
+                      rotationZ: 0,
+                      duration: 0.5, 
+                      ease: "elastic.out(1, 0.4)" 
+                    });
+                  }
+                }}
                 style={{
                   position: 'absolute',
                   width: '320px',
@@ -393,18 +400,10 @@ export default function ArcadeMenu({ onStartGame }) {
                   opacity: opacity,
                   display: 'flex',
                   flexDirection: 'column',
-                  padding: '0',
+                  padding: '30px',
                   pointerEvents: opacity === 0 ? 'none' : 'auto'
                 }}
               >
-                <div className={(isActive && activeMode === 'arcade') ? 'gamified-float' : ''} style={{
-                  width: '100%',
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  padding: '30px',
-                  boxSizing: 'border-box'
-                }}>
                 {/* Top of Card */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'auto' }}>
                   <span style={{ 
@@ -477,16 +476,13 @@ export default function ArcadeMenu({ onStartGame }) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (isActive) {
-                        triggerElasticBounce(e);
-                        const isOriginalGame = game.id === 'dripp' || game.id === 'breaker' || game.id === 'scope';
-                        if (!isOriginalGame && !isDeveloper) {
-                          setPendingGameId(game.id);
-                          setShowPasswordModal(true);
-                        } else {
-                          triggerGameStartWarp(game.id);
-                        }
-                      }
+                      if (isActive) onStartGame(game.id);
+                    }}
+                    onPointerDown={(e) => {
+                      if (activeMode === 'arcade') gsap.to(e.currentTarget, { scale: 0.9, duration: 0.1 });
+                    }}
+                    onPointerUp={(e) => {
+                      if (activeMode === 'arcade') gsap.to(e.currentTarget, { scale: 1.1, duration: 0.4, ease: "elastic.out(1, 0.3)" });
                     }}
                     style={{
                       width: '100%',
@@ -498,7 +494,7 @@ export default function ArcadeMenu({ onStartGame }) {
                       fontFamily: "'Panchang', sans-serif",
                       fontWeight: 600,
                       fontSize: '0.9rem',
-                      cursor: 'pointer',
+                      cursor: activeMode === 'arcade' ? 'none' : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -506,20 +502,27 @@ export default function ArcadeMenu({ onStartGame }) {
                       textTransform: 'uppercase',
                       letterSpacing: '2px',
                       boxShadow: `0 10px 20px ${game.color}30`,
-                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                      transition: 'box-shadow 0.3s ease, background-color 0.3s ease'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'scale(1.02)';
-                      e.currentTarget.style.boxShadow = `0 15px 25px ${game.color}50`;
+                      if (activeMode === 'arcade') {
+                        gsap.to(e.currentTarget, { scale: 1.08, rotation: (Math.random() - 0.5) * 4, duration: 0.5, ease: "elastic.out(1.2, 0.3)" });
+                      } else {
+                        e.currentTarget.style.transform = 'scale(1.02)';
+                        e.currentTarget.style.boxShadow = `0 15px 25px ${game.color}50`;
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.boxShadow = `0 10px 20px ${game.color}30`;
+                      if (activeMode === 'arcade') {
+                        gsap.to(e.currentTarget, { scale: 1, rotation: 0, duration: 0.4, ease: "back.out(1.5)" });
+                      } else {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = `0 10px 20px ${game.color}30`;
+                      }
                     }}
                   >
                     Play Now
                   </button>
-                </div>
                 </div>
               </div>
             );
@@ -548,22 +551,36 @@ export default function ArcadeMenu({ onStartGame }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: 'pointer',
+            cursor: activeMode === 'arcade' ? 'none' : 'pointer',
             backdropFilter: 'blur(10px)',
-            transition: 'all 0.3s ease'
+            transition: 'background-color 0.3s, border-color 0.3s, color 0.3s'
           }}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-            e.currentTarget.style.borderColor = activeColor;
-            e.currentTarget.style.color = activeColor;
+          onPointerDown={(e) => {
+            if (activeMode === 'arcade') gsap.to(e.currentTarget, { scale: 0.8, duration: 0.1 });
           }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-            e.currentTarget.style.color = '#fff';
+          onPointerUp={(e) => {
+            if (activeMode === 'arcade') gsap.to(e.currentTarget, { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.4)" });
+          }}
+          onMouseEnter={(e) => {
+            if (activeMode === 'arcade') {
+              gsap.to(e.currentTarget, { scale: 1.15, rotation: -15, backgroundColor: 'rgba(255,255,255,0.1)', duration: 0.4, ease: "elastic.out(1, 0.3)" });
+            } else {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+              e.currentTarget.style.borderColor = activeColor;
+              e.currentTarget.style.color = activeColor;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (activeMode === 'arcade') {
+              gsap.to(e.currentTarget, { scale: 1, rotation: 0, backgroundColor: 'rgba(255,255,255,0.03)', duration: 0.4, ease: "elastic.out(1, 0.3)" });
+            } else {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+              e.currentTarget.style.color = '#fff';
+            }
           }}
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={28} />
         </button>
 
         <div style={{ 
@@ -592,19 +609,33 @@ export default function ArcadeMenu({ onStartGame }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: 'pointer',
+            cursor: activeMode === 'arcade' ? 'none' : 'pointer',
             backdropFilter: 'blur(10px)',
-            transition: 'all 0.3s ease'
+            transition: 'background-color 0.3s, border-color 0.3s, color 0.3s'
           }}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-            e.currentTarget.style.borderColor = activeColor;
-            e.currentTarget.style.color = activeColor;
+          onPointerDown={(e) => {
+            if (activeMode === 'arcade') gsap.to(e.currentTarget, { scale: 0.8, duration: 0.1 });
           }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-            e.currentTarget.style.color = '#fff';
+          onPointerUp={(e) => {
+            if (activeMode === 'arcade') gsap.to(e.currentTarget, { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.4)" });
+          }}
+          onMouseEnter={(e) => {
+            if (activeMode === 'arcade') {
+              gsap.to(e.currentTarget, { scale: 1.15, rotation: 15, backgroundColor: 'rgba(255,255,255,0.1)', duration: 0.4, ease: "elastic.out(1, 0.3)" });
+            } else {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+              e.currentTarget.style.borderColor = activeColor;
+              e.currentTarget.style.color = activeColor;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (activeMode === 'arcade') {
+              gsap.to(e.currentTarget, { scale: 1, rotation: 0, backgroundColor: 'rgba(255,255,255,0.03)', duration: 0.4, ease: "elastic.out(1, 0.3)" });
+            } else {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+              e.currentTarget.style.color = '#fff';
+            }
           }}
         >
           <ChevronRight size={24} />
