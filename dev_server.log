@@ -2,11 +2,11 @@
 > final-dripp@1.0.0 dev
 > next dev
 
-⚠ Port 3000 is in use by process 59729, using available port 3001 instead.
+⚠ Port 3000 is in use by process 59729, using available port 3002 instead.
 ▲ Next.js 16.2.9 (Turbopack)
-- Local:         http://localhost:3001
-- Network:       http://192.168.1.83:3001
-✓ Ready in 504ms
+- Local:         http://localhost:3002
+- Network:       http://192.168.1.83:3002
+✓ Ready in 462ms
 ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
  We detected multiple lockfiles and selected the directory of /Users/gurpreetsingh/Desktop/Dripp Media Website/package-lock.json as the root directory.
  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
@@ -14,4 +14,52 @@
  Detected additional lockfiles: 
    * /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/package-lock.json
 
-
+�○ Compiling /arcade ...
+✓ Finished writing to filesystem cache in 15.3s
+ GET /arcade 200 in 80ms (next.js: 8ms, application-code: 73ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. (file:///Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/static/chunks/16rt_next_dist_0zg_lth._.js:2477:13)
+ GET /arcade 200 in 42ms (next.js: 5ms, application-code: 36ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. (file:///Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/static/chunks/16rt_next_dist_0zg_lth._.js:2477:13)
+ GET /arcade 200 in 389ms (next.js: 31ms, application-code: 358ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. (file:///Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/static/chunks/16rt_next_dist_0zg_lth._.js:2477:13)
+[browser] THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Canvas has an existing context of a different type 
+    at error (file:///Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/static/chunks/16rt_three_build_three_core_0hjzda9.js:2434:21)
+    at HTMLCanvasElement.onContextCreationError (file:///Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/static/chunks/16rt_three_build_three_module_01nw7n3.js:11436:189)
+    at eval (../../../../..:290:30)
+    at eval (../../../../..:290:30)
+    at eval (<anonymous>)
+    at UtilityScript.evaluate (<anonymous>:290:30)
+    at UtilityScript.<anonymous> (<anonymous>:1:44) (file:///Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/static/chunks/16rt_three_build_three_core_0hjzda9.js:2434:21)
+ GET /arcade 200 in 1332ms (next.js: 31ms, application-code: 1301ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. (file:///Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/static/chunks/16rt_next_dist_0zg_lth._.js:2477:13)
+ GET /arcade 200 in 490ms (next.js: 14ms, application-code: 477ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. (file:///Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/static/chunks/16rt_next_dist_0zg_lth._.js:2477:13)
+○ Compiling / ...
+⨯ Error: Cannot find module '@vercel/analytics/next'
+    at <unknown> (.next/dev/server/chunks/ssr/[root-of-the-server]__14s6eri._.js:13:15)
+    at module evaluation (.next/dev/server/chunks/ssr/[root-of-the-server]__14s6eri._.js:16:3)
+    at module evaluation (.next/dev/server/chunks/ssr/[root-of-the-server]__14s6eri._.js:89:47) {
+  code: 'MODULE_NOT_FOUND'
+}
+⨯ Error: Cannot find module '@vercel/analytics/next'
+    at <unknown> (.next/dev/server/chunks/ssr/[root-of-the-server]__14s6eri._.js:13:15)
+    at module evaluation (.next/dev/server/chunks/ssr/[root-of-the-server]__14s6eri._.js:16:3)
+    at module evaluation (.next/dev/server/chunks/ssr/[root-of-the-server]__14s6eri._.js:89:47) {
+  code: 'MODULE_NOT_FOUND',
+  page: '/'
+}
+○ Compiling /_error ...
+⨯ Error: Failed to load external module @swc/helpers-a0de6bd0cb8eca46/_/_interop_require_default: Error: Cannot find module '@swc/helpers-a0de6bd0cb8eca46/_/_interop_require_default'
+Require stack:
+- /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/server/chunks/ssr/[root-of-the-server]__14v9971._.js
+- /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/server/chunks/ssr/[turbopack]_runtime.js
+- /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/.next/dev/server/app/arcade/page.js
+- /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/node_modules/next/dist/server/require.js
+- /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/node_modules/next/dist/server/load-components.js
+- /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/node_modules/next/dist/build/utils.js
+- /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/node_modules/next/dist/server/lib/router-server.js
+- /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/ssr/[root-of-the-server]__14v9971._.js:16:35)
+    at Object.<anonymous> (.next/dev/server/pages/_app.js:3:3)
+ GET / 500 in 11.5min (next.js: 7.9min, application-code: 3.6min)

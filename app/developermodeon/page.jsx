@@ -2874,11 +2874,7 @@ export default function Page() {
 
 
 
-            {isArcadeOpen && (
-                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 99999, backgroundColor: '#050505' }}>
-                   <ArcadeEngine onClose={() => setIsArcadeOpen(false)} />
-                </div>
-            )}
+
             
             <div 
                 onClick={() => window.location.href = '/arcade'}

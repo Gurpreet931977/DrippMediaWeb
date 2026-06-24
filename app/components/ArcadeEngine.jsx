@@ -37,6 +37,25 @@ function createGameEngine(canvas, callbacks) {
   let drops = [], splashes = [], miniParticles = [], fireworks = [];
   let scopeDrops = [], scopePaddle = null;
   let bricks = [], balls = [], powerUps = [], paddle = null;
+  let snake = [], snakeDir = {x: 1, y: 0}, snakeFood = null, snakeFrame = 0, snakeReverseTimer = 0;
+  let pongBall = {x:0, y:0, vx:0, vy:0, r:8}, pongAI = 0, pongTrails = [];
+  let runnerState = {y:0, vy:0, frame:0}, runnerObs = [];
+  let invPlayer = {x: 0, w: 40, h: 20}, invLasers = [], invaders = [], invFrame = 0, invKeys = {};
+  
+  // ── Invaders Init ────────────────────────────────────────────────────────────
+  function initInvaders() {
+    setScoreRef(0); setScore(0);
+    invPlayer = {x: canvas.width/2 - 20, w: 40, h: 20};
+    invLasers = []; invaders = []; invFrame = 0; invKeys = {};
+  }
+  window.initInvadersGame = initInvaders;
+
+  // ── Simon Init ───────────────────────────────────────────────────────────────
+  function initSimon() {
+    setScoreRef(0); setScore(0);
+  }
+  window.initSimonGame = initSimon;
+  
   let piercingTimer = 0;
   let animId;
   let lastActive = "none";
@@ -416,6 +435,11 @@ function createGameEngine(canvas, callbacks) {
       if (ag === "breaker" && lastActive !== "breaker") initBreaker(getBreakLevelRef());
       else if (ag === "scope" && lastActive !== "scope") initScope();
       else if (ag === "dripp" && lastActive !== "dripp") { drops = []; splashes = []; }
+      else if (ag === "snake" && lastActive !== "snake") initSnake();
+      else if (ag === "pong" && lastActive !== "pong") initPong();
+      else if (ag === "runner" && lastActive !== "runner") initRunner();
+      else if (ag === "invaders" && lastActive !== "invaders") initInvaders();
+      else if (ag === "simon" && lastActive !== "simon") initSimon();
       lastActive = ag;
     }
 
@@ -452,6 +476,261 @@ function createGameEngine(canvas, callbacks) {
       scopeDrops = scopeDrops.filter(d => !d.markedForDeletion);
     }
 
+    // Snake logic
+    if (ag === "snake") {
+      ctx.fillStyle = "rgba(5,5,5,0.4)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      if (snakeReverseTimer > 0) {
+        snakeReverseTimer -= 16;
+        ctx.fillStyle = "rgba(255,0,0,0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      if (++snakeFrame > Math.max(2, 6 - Math.floor(getScoreRef() / 50))) {
+        snakeFrame = 0;
+        let head = { x: snake[0].x + snakeDir.x, y: snake[0].y + snakeDir.y };
+        
+        const gridX = Math.floor(canvas.width / 25);
+        const gridY = Math.floor(canvas.height / 25);
+        
+        // Screen wrap
+        if(head.x < 0) head.x = gridX - 1;
+        if(head.x >= gridX) head.x = 0;
+        if(head.y < 0) head.y = gridY - 1;
+        if(head.y >= gridY) head.y = 0;
+        
+        // Self collision check
+        for(let i=0; i<snake.length; i++) {
+          if (head.x === snake[i].x && head.y === snake[i].y) {
+             setGameState("failed");
+          }
+        }
+        
+        snake.unshift(head);
+        
+        if (snakeFood && head.x === snakeFood.x && head.y === snakeFood.y) {
+            if (snakeFood.isPowerdown) {
+                snakeReverseTimer = 5000;
+                setScoreRef(Math.max(0, getScoreRef() - 5));
+                triggerGsapMilestone(head.x*25, head.y*25); // re-use milestone anim as hit effect
+            } else {
+                setScoreRef(getScoreRef() + 10);
+            }
+            setScore(getScoreRef());
+            spawnSnakeFood();
+        } else {
+            snake.pop();
+        }
+      }
+
+      if (snakeFood) {
+        ctx.fillStyle = snakeFood.isPowerdown ? '#ff3333' : '#ebd73f';
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = 10;
+        ctx.fillRect(snakeFood.x * 25, snakeFood.y * 25, 23, 23);
+        ctx.shadowBlur = 0;
+      }
+      
+      ctx.fillStyle = '#33ff33';
+      ctx.shadowColor = '#33ff33';
+      for(let i=0; i<snake.length; i++) {
+          ctx.globalAlpha = 1 - (i/snake.length)*0.5;
+          ctx.shadowBlur = i === 0 ? 15 : 5;
+          ctx.fillRect(snake[i].x * 25, snake[i].y * 25, 23, 23);
+      }
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+    }
+
+    // Pong logic
+    if (ag === "pong") {
+      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      const my = getMouseRef().y;
+      const py = clamp(my - 40, 0, canvas.height - 80);
+      
+      // AI
+      const aiSpeed = 3 + getScoreRef() * 0.5;
+      if (pongAI + 40 < pongBall.y) pongAI += aiSpeed;
+      if (pongAI + 40 > pongBall.y) pongAI -= aiSpeed;
+      pongAI = clamp(pongAI, 0, canvas.height - 80);
+
+      pongBall.x += pongBall.vx;
+      pongBall.y += pongBall.vy;
+      
+      pongTrails.push({x: pongBall.x, y: pongBall.y, alpha: 1});
+      
+      // Bounce top/bottom
+      if (pongBall.y < 0 || pongBall.y > canvas.height) pongBall.vy *= -1;
+      
+      // Hit Player (Left)
+      if (pongBall.x < 40 && pongBall.x > 20 && pongBall.y > py && pongBall.y < py + 80) {
+        pongBall.vx *= -1.1; // Speed up
+        pongBall.vy += (pongBall.y - (py + 40)) * 0.1;
+        pongBall.x = 40;
+        setScoreRef(getScoreRef() + 1); setScore(getScoreRef());
+        triggerGsapMilestone(pongBall.x, pongBall.y);
+      }
+      
+      // Hit AI (Right)
+      if (pongBall.x > canvas.width - 40 && pongBall.x < canvas.width - 20 && pongBall.y > pongAI && pongBall.y < pongAI + 80) {
+        pongBall.vx *= -1;
+        pongBall.x = canvas.width - 40;
+      }
+      
+      // Missed
+      if (pongBall.x < 0) {
+         setGameState("failed");
+      } else if (pongBall.x > canvas.width) {
+         // AI missed? Unlikely but possible.
+         pongBall.x = canvas.width/2; pongBall.vx = -6;
+      }
+      
+      // Draw Trails
+      ctx.fillStyle = '#ff00ff';
+      pongTrails.forEach((t, i) => {
+         t.alpha -= 0.05;
+         ctx.globalAlpha = Math.max(0, t.alpha);
+         ctx.beginPath(); ctx.arc(t.x, t.y, pongBall.r * t.alpha, 0, Math.PI*2); ctx.fill();
+      });
+      pongTrails = pongTrails.filter(t => t.alpha > 0);
+      ctx.globalAlpha = 1;
+      
+      // Draw Paddles & Ball
+      ctx.shadowBlur = 15; ctx.shadowColor = '#ff00ff';
+      ctx.fillRect(20, py, 10, 80); // Player
+      ctx.fillRect(canvas.width - 30, pongAI, 10, 80); // AI
+      
+      ctx.beginPath(); ctx.arc(pongBall.x, pongBall.y, pongBall.r, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Runner logic
+    if (ag === "runner") {
+      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const ground = canvas.height - 100;
+
+      // Update runner
+      runnerState.vy += 0.8; // Gravity
+      runnerState.y += runnerState.vy;
+      if (runnerState.y >= ground) {
+        runnerState.y = ground;
+        runnerState.vy = 0;
+      }
+
+      // Jump Input
+      if (runnerState.y === ground && getCursorActiveRef()) {
+        runnerState.vy = -16;
+        getCursorActiveRef().current = false; // consume jump
+      }
+
+      // Spawning
+      runnerState.frame++;
+      if (runnerState.frame % 60 === 0 && Math.random() < (0.5 + getScoreRef() * 0.01)) {
+        runnerObs.push({x: canvas.width, y: ground, w: 20, h: rnd(30, 80), speed: 6 + getScoreRef()*0.1});
+      }
+
+      // Draw Ground
+      ctx.strokeStyle = '#ff9900'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, ground + 20); ctx.lineTo(canvas.width, ground + 20); ctx.stroke();
+
+      // Draw Player
+      ctx.fillStyle = '#ebd73f'; ctx.shadowBlur = 15; ctx.shadowColor = '#ebd73f';
+      ctx.beginPath(); ctx.arc(100, runnerState.y, 20, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+
+      // Update & Draw Obstacles
+      ctx.fillStyle = '#ff3333';
+      for (let i = runnerObs.length - 1; i >= 0; i--) {
+        let o = runnerObs[i];
+        o.x -= o.speed;
+        ctx.fillRect(o.x, o.y - o.h + 20, o.w, o.h);
+
+        // Collision Check
+        if (Math.abs(100 - o.x) < 20 && Math.abs(runnerState.y - (o.y - o.h/2 + 10)) < (20 + o.h/2)) {
+          setGameState("failed");
+        }
+
+        if (o.x < -50) {
+          runnerObs.splice(i, 1);
+          setScoreRef(getScoreRef() + 1); setScore(getScoreRef());
+          if (getScoreRef() % 10 === 0) triggerGsapMilestone(100, runnerState.y);
+        }
+      }
+    }
+
+    // Invaders logic
+    if (ag === "invaders") {
+      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Move Player
+      if (invKeys['ArrowLeft']) invPlayer.x -= 8;
+      if (invKeys['ArrowRight']) invPlayer.x += 8;
+      invPlayer.x = clamp(invPlayer.x, 0, canvas.width - invPlayer.w);
+
+      // Auto Fire
+      invFrame++;
+      if (invKeys[' '] && invFrame % 10 === 0) {
+        invLasers.push({x: invPlayer.x + invPlayer.w/2, y: canvas.height - 80, vy: -15});
+      }
+
+      // Spawning Invaders
+      if (invFrame % Math.max(20, 60 - Math.floor(getScoreRef()/10)) === 0) {
+        invaders.push({x: rnd(20, canvas.width - 40), y: -30, w: 30, h: 30, vy: 2 + getScoreRef()*0.05, hp: 1});
+      }
+
+      // Draw Player
+      ctx.fillStyle = '#ebd73f'; ctx.shadowBlur = 10; ctx.shadowColor = '#ebd73f';
+      ctx.fillRect(invPlayer.x, canvas.height - 70, invPlayer.w, invPlayer.h);
+      ctx.shadowBlur = 0;
+
+      // Update Lasers
+      ctx.fillStyle = '#fff';
+      for (let i = invLasers.length - 1; i >= 0; i--) {
+        let l = invLasers[i];
+        l.y += l.vy;
+        ctx.fillRect(l.x - 2, l.y, 4, 15);
+        if (l.y < -20) invLasers.splice(i, 1);
+      }
+
+      // Update Invaders
+      ctx.fillStyle = '#eb3f3f'; ctx.shadowBlur = 10; ctx.shadowColor = '#eb3f3f';
+      for (let i = invaders.length - 1; i >= 0; i--) {
+        let inv = invaders[i];
+        inv.y += inv.vy;
+        ctx.fillRect(inv.x, inv.y, inv.w, inv.h);
+        
+        if (inv.y > canvas.height) {
+           setGameState("failed");
+        }
+
+        // Collision with Lasers
+        for (let j = invLasers.length - 1; j >= 0; j--) {
+           let l = invLasers[j];
+           if (l.x > inv.x && l.x < inv.x + inv.w && l.y < inv.y + inv.h && l.y > inv.y) {
+               invLasers.splice(j, 1);
+               invaders.splice(i, 1);
+               setScoreRef(getScoreRef() + 1); setScore(getScoreRef());
+               triggerGsapMilestone(inv.x, inv.y);
+               break;
+           }
+        }
+      }
+      ctx.shadowBlur = 0;
+    }
+
+    // Simon logic
+    if (ag === "simon") {
+      ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "30px 'Panchang', sans-serif";
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.fillText("NEON SIMON", canvas.width/2, canvas.height/2 - 20);
+      ctx.font = "16px 'Clash Display', sans-serif";
+      ctx.fillStyle = "#ebd73f";
+      ctx.fillText("COMING SOON...", canvas.width/2, canvas.height/2 + 20);
+    }
+
     // Breaker logic
     if (ag === "breaker") {
       ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -478,10 +757,43 @@ function createGameEngine(canvas, callbacks) {
 
   animate();
 
+  function handleKeyDown(e) {
+    const ag = getActiveGameRef();
+    if (ag === "snake") {
+      const isReversed = snakeReverseTimer > 0;
+      const up = isReversed ? 'ArrowDown' : 'ArrowUp';
+      const down = isReversed ? 'ArrowUp' : 'ArrowDown';
+      const left = isReversed ? 'ArrowRight' : 'ArrowLeft';
+      const right = isReversed ? 'ArrowLeft' : 'ArrowRight';
+
+      if (e.key === up && snakeDir.y === 0) snakeDir = {x: 0, y: -1};
+      if (e.key === down && snakeDir.y === 0) snakeDir = {x: 0, y: 1};
+      if (e.key === left && snakeDir.x === 0) snakeDir = {x: -1, y: 0};
+      if (e.key === right && snakeDir.x === 0) snakeDir = {x: 1, y: 0};
+    } else if (ag === "runner") {
+      if (e.key === ' ' || e.key === 'ArrowUp') {
+        if (runnerState.y >= canvas.height - 100) runnerState.vy = -16;
+      }
+    } else if (ag === "invaders") {
+      invKeys[e.key] = true;
+    }
+  }
+
+  function handleKeyUp(e) {
+    const ag = getActiveGameRef();
+    if (ag === "invaders") {
+      invKeys[e.key] = false;
+    }
+  }
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keyup', handleKeyUp);
+
   return {
     destroy() {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     },
     milestone,
   };
@@ -542,6 +854,26 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     } else if (activeGame === "dripp") {
       scoreRef.current = 0; setScore(0);
       setGameState("playing"); setIsPaused(false);
+    } else if (activeGame === "snake") {
+      scoreRef.current = 0; setScore(0);
+      setGameState("playing"); setIsPaused(false);
+      if (window.initSnakeGame) window.initSnakeGame();
+    } else if (activeGame === "pong") {
+      scoreRef.current = 0; setScore(0);
+      setGameState("playing"); setIsPaused(false);
+      if (window.initPongGame) window.initPongGame();
+    } else if (activeGame === "runner") {
+      scoreRef.current = 0; setScore(0);
+      setGameState("playing"); setIsPaused(false);
+      if (window.initRunnerGame) window.initRunnerGame();
+    } else if (activeGame === "invaders") {
+      scoreRef.current = 0; setScore(0);
+      setGameState("playing"); setIsPaused(false);
+      if (window.initInvadersGame) window.initInvadersGame();
+    } else if (activeGame === "simon") {
+      scoreRef.current = 0; setScore(0);
+      setGameState("playing"); setIsPaused(false);
+      if (window.initSimonGame) window.initSimonGame();
     }
     // Note: 'none' state is handled by the close buttons directly calling onClose
   }, [activeGame]);
@@ -637,7 +969,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
       {/* Score HUD */}
       {activeGame !== "none" && gameState === "playing" && !hideHero && (
         <div style={{ position: "absolute", top: "30px", right: "30px", textAlign: "right", pointerEvents: "none", zIndex: 100 }}>
-          {activeGame === "dripp" && (
+          {(activeGame === "dripp" || activeGame === "snake" || activeGame === "pong" || activeGame === "runner" || activeGame === "invaders" || activeGame === "simon") && (
             <div>
               <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Score</div>
               <div className="score-counter-element" style={{ fontSize: "3rem", fontWeight: "bold", color: "var(--brand-yellow)", lineHeight: 1, textShadow: "0 0 20px rgba(235,215,63,.4)" }}>{score}</div>
@@ -666,8 +998,8 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
             Final Score: <strong style={{ color: "var(--brand-yellow)" }}>{activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : score}</strong>
           </div>
           <div style={{ display: "flex", gap: "15px" }}>
-            <PrimaryButton onClick={() => { setGameState("playing"); if (activeGame === "dripp") { scoreRef.current = 0; setScore(0); } else if (activeGame === "scope") { scopeScoreRef.current = 0; setScopeScore(0); if (window.initScopeGame) window.initScopeGame(); } else if (activeGame === "breaker") { breakerScoreRef.current = 0; setBreakerScore(0); breakerLevelRef.current = 1; setBreakerLevel(1); if (window.initBreakerGame) window.initBreakerGame(1); } }}>Try Again</PrimaryButton>
-            <PrimaryButton onClick={() => setActiveGame("none")} style={{ color: "rgba(255,255,255,.5)", borderColor: "rgba(255,255,255,.2)", background: "rgba(255,255,255,.05)" }}>Back to Menu</PrimaryButton>
+            <PrimaryButton onClick={() => { setGameState("playing"); if (activeGame === "dripp") { scoreRef.current = 0; setScore(0); } else if (activeGame === "snake") { scoreRef.current = 0; setScore(0); if (window.initSnakeGame) window.initSnakeGame(); } else if (activeGame === "pong") { scoreRef.current = 0; setScore(0); if (window.initPongGame) window.initPongGame(); } else if (activeGame === "runner") { scoreRef.current = 0; setScore(0); if (window.initRunnerGame) window.initRunnerGame(); } else if (activeGame === "invaders") { scoreRef.current = 0; setScore(0); if (window.initInvadersGame) window.initInvadersGame(); } else if (activeGame === "simon") { scoreRef.current = 0; setScore(0); if (window.initSimonGame) window.initSimonGame(); } else if (activeGame === "scope") { scopeScoreRef.current = 0; setScopeScore(0); if (window.initScopeGame) window.initScopeGame(); } else if (activeGame === "breaker") { breakerScoreRef.current = 0; setBreakerScore(0); breakerLevelRef.current = 1; setBreakerLevel(1); if (window.initBreakerGame) window.initBreakerGame(1); } }}>Try Again</PrimaryButton>
+            <PrimaryButton onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ color: "rgba(255,255,255,.5)", borderColor: "rgba(255,255,255,.2)", background: "rgba(255,255,255,.05)" }}>Back to Menu</PrimaryButton>
           </div>
         </div>
       )}
