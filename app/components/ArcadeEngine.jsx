@@ -50,80 +50,38 @@ function createGameEngine(canvas, callbacks) {
   window.addEventListener("resize", resize);
   resize();
 
-  // ── Drop ────────────────────────────────────────────────────────────────────
-  function Drop(isRed) {
+  // ── Dripp Drop Element ───────────────────────────────────────────────────────
+  function Drop() {
     this.x = Math.random() * canvas.width;
-    this.y = -50 - Math.random() * 100;
-    this.isWhite = !isRed && Math.random() < 0.05;
-    this.isBomb = Math.random() < 0.15;
-    this.isRed = !this.isBomb && !!isRed;
-    const sc = getScoreRef();
-    const sp = isMobile
-      ? 1 + Math.log10(1 + sc / 300) * 0.4
-      : 1.5 + Math.log10(1 + sc / 150) * 0.6;
-    const mm = isMobile ? 0.9 : 1.0;
-    this.vy = rnd(1.0, 4.5) * sp * mm;
-    this.gravity = rnd(0.005, 0.025) * sp * mm;
-    this.radius = rnd(2, 4);
-    this.length = this.vy * 3;
+    this.y = -20;
+    this.vy = 3 + Math.random() * 4;
+    this.radius = 5 + Math.random() * 5;
+    this.isBomb = Math.random() < 0.1;
     this.markedForDeletion = false;
-    this.color = this.isBomb ? "#333" : this.isWhite ? "#fff" : (this.isRed ? "rgba(235,63,63,.9)" : "rgba(235,215,63,.9)");
-    this.wobble = Math.random() * Math.PI * 2;
-    this.wobbleSpeed = rnd(0.02, 0.06) * (1 + sc * 0.005);
+    this.color = this.isBomb ? "#ff0000" : "#ebd73f";
   }
   Drop.prototype.update = function () {
-    this.vy += this.gravity;
     this.y += this.vy;
-    this.x += Math.sin(this.wobble) * 1.2;
-    this.wobble += this.wobbleSpeed;
-    this.length = this.vy * 2;
-    if (this.y > canvas.height + this.length) { this.markedForDeletion = true; return; }
+    if (this.y > canvas.height) { this.markedForDeletion = true; return; }
+    
     const mx = getMouseRef().x, my = getMouseRef().y;
-    const dx = mx - this.x, dy = my - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const hr = 50;
-    if (dist < hr) {
+    const dist = Math.hypot(mx - this.x, my - this.y);
+    if (dist < 50) {
       this.markedForDeletion = true;
-      const cursor = document.querySelector(".cursor");
-      if (cursor) { cursor.classList.add("eating"); setTimeout(() => cursor.classList.remove("eating"), 150); }
       if (this.isBomb) {
-        setScoreRef(0); setScore(0);
-        for (let i = 0; i < 30; i++) fireworks.push(new FWParticle(this.x, this.y, null, true));
-        const el = document.querySelector("canvas");
-        if (el) { let s = 15; const iv = setInterval(() => { el.style.transform = `translate(${rnd(-20,20)}px,${rnd(-20,20)}px)`; if(--s<=0){ clearInterval(iv); el.style.transform=""; } }, 40); }
-        return;
+        setScoreRef(0);
+        setScore(0);
+      } else {
+        setScoreRef(getScoreRef() + 1);
+        setScore(getScoreRef());
       }
-      const prev = getScoreRef();
-      if (this.isWhite) { setScoreRef(getScoreRef() + 69); for (let i = 0; i < 40; i++) fireworks.push(new FWParticle(this.x, this.y, "#fff")); }
-      else if (this.isRed) { setScoreRef(getScoreRef() + 5); }
-      else { setScoreRef(getScoreRef() + 1); }
-      setScore(getScoreRef());
-      if (Math.floor(getScoreRef() / 100) > Math.floor(prev / 100)) {
-        const el = document.querySelector(".score-counter-element");
-        if (el) gsap.fromTo(el, { scale: 1.5, color: "#fff", textShadow: "0 0 30px #fff" }, { scale: 1, color: "var(--brand-yellow)", textShadow: "0 0 20px rgba(235,215,63,.4)", duration: 0.8, ease: "elastic.out(1,.4)" });
-      }
-      const lm = getLastMilestoneRef();
-      if (getScoreRef() > 50 && getScoreRef() % 50 === 0 && getScoreRef() !== lm.current) {
-        lm.current = getScoreRef();
-        triggerGsapMilestone(this.x, this.y);
-      }
-      splashes.push(new Splash(this.x, this.y, this.isRed, this.isWhite));
-      for (let i = 0; i < 6; i++) miniParticles.push(new MiniP(this.x, this.y, this.isRed, this.isWhite ? "#fff" : null));
     }
   };
   Drop.prototype.draw = function (ctx) {
     ctx.beginPath();
-    if (this.isBomb) {
-      ctx.arc(this.x, this.y, this.radius * 1.5, 0, Math.PI * 2); ctx.fillStyle = "#111"; ctx.fill();
-      ctx.strokeStyle = "#f00"; ctx.lineWidth = 1.5; ctx.stroke();
-    } else {
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI); ctx.lineTo(this.x, this.y - Math.min(this.vy * 1.2, this.radius * 5));
-      ctx.fillStyle = this.color; ctx.fill();
-    }
-    ctx.closePath();
-    ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = this.isWhite ? "rgba(255,255,255,.15)" : this.isBomb ? "rgba(255,0,0,.15)" : (this.isRed ? "rgba(235,63,63,.15)" : "rgba(235,215,63,.15)");
-    ctx.fill(); ctx.closePath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
   };
 
   // ── Shockwave ────────────────────────────────────────────────────────────────
@@ -457,21 +415,26 @@ function createGameEngine(canvas, callbacks) {
 
     // Dripp logic
     if (ag === "dripp") {
-      let bi = isMobile ? 0.025 : 0.04;
-      const sc = getScoreRef();
-      let sc2 = isMobile ? Math.log10(1 + sc / 300) * 0.1 : Math.log10(1 + sc / 150) * 0.15;
-      const ri = Math.min(0.25, bi + sc2);
-      if (Math.random() < ri) drops.push(new Drop(Math.random() < 0.15));
-      if (Math.random() < ri * 0.15) drops.push(new Drop(Math.random() < 0.15));
-      // Trail and Catcher Ring
-      ctx.fillStyle = "rgba(5,5,5,0.4)";
+      // Dripp logic exactly as in arcade.html
+      if (Math.random() < 0.1) {
+        drops.push(new Drop());
+      }
+      
+      // Draw plain background instead of trails
+      ctx.fillStyle = "#050505";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Update and Draw Drops
+      drops.forEach(o => o.update());
+      drops.forEach(o => o.draw(ctx));
+      drops = drops.filter(o => !o.markedForDeletion);
+      
+      // Draw catcher zone at mouse
       const mx = getMouseRef().x, my = getMouseRef().y;
       ctx.beginPath(); ctx.arc(mx, my, 50, 0, Math.PI*2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1; ctx.stroke();
-      drops.forEach(d => { d.update(); d.draw(ctx); });
-      drops = drops.filter(d => !d.markedForDeletion);
-      splashes.forEach(s => { s.update(); s.draw(ctx); }); splashes = splashes.filter(s => !s.markedForDeletion);
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
 
     // Scope logic
