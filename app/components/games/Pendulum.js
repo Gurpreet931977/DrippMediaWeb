@@ -37,23 +37,22 @@ export default class PendulumGame {
   handlePointerDown(e) {
     if (this.state !== "playing") return;
     const rect = this.canvas.getBoundingClientRect();
-    const cx = (e.clientX || e.touches[0].clientX) - rect.left;
-    const cy = (e.clientY || e.touches[0].clientY) - rect.top;
+    const cx = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
     
+    // Grapple exactly where the user clicked horizontally, always on the ceiling
     this.grapple = {
-      x: this.player.x + 200,
+      x: cx,
       y: 0,
-      length: Math.sqrt(200*200 + this.player.y * this.player.y)
+      length: Math.hypot(cx - this.player.x, this.player.y) * 0.9 // 0.9 so it pulls them up slightly
     };
     
-    // JUICE: Hitstop & Screenshake & Particles on grapple
-    this.hitstop = 4;
-    this.screenShake = 12;
-    for(let i=0; i<15; i++) {
+    // JUICE: Screenshake & Particles on grapple (removed hitstop for smooth momentum)
+    this.screenShake = 6;
+    for(let i=0; i<10; i++) {
       this.particles.push({
         x: this.player.x, y: this.player.y,
-        vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12,
-        life: 25
+        vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
+        life: 20
       });
     }
   }
@@ -65,14 +64,8 @@ export default class PendulumGame {
   update() {
     if (this.state === "failed") return;
     
-    // JUICE: Hitstop freeze
-    if (this.hitstop > 0) {
-      this.hitstop--;
-      return; 
-    }
-    
     this.frame++;
-    this.speedMultiplier += 0.0002; // Gradually increase speed
+    this.speedMultiplier += 0.0001; // Gradually increase speed (slower curve)
 
     // Spawn obstacles more frequently as speed increases
     const spawnRate = Math.max(40, Math.floor(100 / this.speedMultiplier));
@@ -103,11 +96,15 @@ export default class PendulumGame {
     }
     
     this.player.vy += this.gravity * this.speedMultiplier;
-    this.player.vx *= 0.99;
-    this.player.vy *= 0.99;
     
-    if (this.player.vx < 4 * this.speedMultiplier) this.player.vx += 0.2 * this.speedMultiplier;
-    const maxSpeed = 15 * this.speedMultiplier;
+    // Only apply friction if not grappling, so momentum is conserved during swings
+    if (!this.grapple) {
+      this.player.vx *= 0.99;
+      this.player.vy *= 0.99;
+    }
+    
+    if (this.player.vx < 4 * this.speedMultiplier) this.player.vx += 0.1 * this.speedMultiplier; // less artificial push
+    const maxSpeed = 18 * this.speedMultiplier; // Higher max speed for big swings
     if (this.player.vx > maxSpeed) this.player.vx = maxSpeed;
 
     this.player.x += this.player.vx;
