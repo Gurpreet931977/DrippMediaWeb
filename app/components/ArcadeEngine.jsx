@@ -5,7 +5,6 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 export default function ArcadeEngine({ onClose }) {
-  useEffect(() => { if (activeGame === 'none' && onClose) { onClose(); } }, [activeGame, onClose]);
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   
@@ -66,8 +65,11 @@ export default function ArcadeEngine({ onClose }) {
       setScore(0);
       setGameState('playing');
       setIsPaused(false);
+    } else if (activeGame === 'none') {
+      // When game is disabled, call the onClose callback
+      if (onClose) onClose();
     }
-  }, [activeGame]);
+  }, [activeGame, onClose]);
 
   useEffect(() => {
     isPausedRef.current = isPaused;

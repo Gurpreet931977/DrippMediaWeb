@@ -21,7 +21,7 @@ export default function AdminDashboard() {
             <p className={styles.subtitle} style={{ marginBottom: '1.5rem' }}>
               Generate a professional, branded invoice in seconds and export to PDF.
             </p>
-            <Link href="/developermodeon/admin-panel/invoice" className={styles.btnPrimary} style={{ textDecoration: 'none', display: 'inline-block', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', color: '#000', fontWeight: '500' }}>
+            <Link href="/admin-panel/invoice" className={styles.btnPrimary} style={{ textDecoration: 'none', display: 'inline-block', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', color: '#000', fontWeight: '500' }}>
               Create Invoice
             </Link>
           </div>
@@ -35,7 +35,7 @@ export default function AdminDashboard() {
             <p className={styles.subtitle} style={{ marginBottom: '1.5rem' }}>
               Build project proposals, quotations, and customized package offerings.
             </p>
-            <Link href="/developermodeon/admin-panel/quote" className={styles.btnPrimary} style={{ textDecoration: 'none', display: 'inline-block', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', color: '#000', fontWeight: '500' }}>
+            <Link href="/admin-panel/quote" className={styles.btnPrimary} style={{ textDecoration: 'none', display: 'inline-block', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', color: '#000', fontWeight: '500' }}>
               Create Quote
             </Link>
           </div>

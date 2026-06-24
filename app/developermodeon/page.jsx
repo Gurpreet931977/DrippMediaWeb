@@ -2916,6 +2916,37 @@ export default function Page() {
                 </svg>
                 Arcade Mode
             </div>
+
+            <a
+                href="/admin-panel"
+                style={{
+                    position: 'fixed',
+                    bottom: '85px',
+                    right: '30px',
+                    zIndex: 9999,
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: 'rgba(255,255,255,0.7)',
+                    padding: '10px 20px',
+                    borderRadius: '30px',
+                    cursor: 'pointer',
+                    fontFamily: "'Clash Display', sans-serif",
+                    textTransform: 'uppercase',
+                    fontSize: '0.8rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.3s ease',
+                    textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                </svg>
+                Admin Panel
+            </a>
     </>
 
   );
