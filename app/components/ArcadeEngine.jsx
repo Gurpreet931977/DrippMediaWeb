@@ -729,6 +729,7 @@ function createGameEngine(canvas, callbacks) {
       }
       
       // Draw Trails
+      ctx.fillStyle = '#ff00ff';
       pongTrails.forEach((t, i) => {
          t.alpha -= 0.05;
          ctx.globalAlpha = Math.max(0, t.alpha);
@@ -1036,6 +1037,7 @@ function createGameEngine(canvas, callbacks) {
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('mousedown', handlePointerDown);
     },
+    handlePointerDown,
     milestone,
   };
 }
@@ -1284,6 +1286,19 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 120 }}>
           <div style={{ background: "#111", border: "1px solid #333", borderRadius: "16px", padding: "40px", maxWidth: "500px", width: "90%", fontFamily: "'Clash Display',sans-serif", textAlign: "center" }}>
             <h2 style={{ color: "var(--brand-yellow)", marginBottom: "20px", fontFamily: "'Panchang',sans-serif", fontSize: "2rem" }}>{gameName}</h2>
+            
+            <div style={{ background: "rgba(255,255,255,0.05)", padding: "15px", borderRadius: "12px", marginBottom: "25px" }}>
+              {activeGame === "dripp" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>SCORE: {score}</div>}
+              {activeGame === "breaker" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>LEVEL: {breakerLevel} | SCORE: {breakerScore}</div>}
+              {activeGame === "scope" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>SCORE: {scopeScore}</div>}
+              {activeGame === "snake" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>LENGTH: {score}</div>}
+              {activeGame === "pong" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>SCORE: {score}</div>}
+              {activeGame === "runner" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>DISTANCE: {score}</div>}
+              {activeGame === "invaders" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>SCORE: {score}</div>}
+              {activeGame === "simon" && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>ROUND: {score}</div>}
+              {['cyber_racer', 'neon_blocks'].includes(activeGame) && <div style={{ fontSize: "1.2rem", color: "#ebd73f", fontFamily: "'Panchang',sans-serif" }}>PREVIEW</div>}
+            </div>
+
             {activeGame === "dripp" && <><p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your cursor to catch falling <span style={{ color: "#ebd73f" }}>Yellow</span> drops.</p><p style={{ color: "rgba(255,255,255,.7)", lineHeight: "1.5" }}>Avoid the <span style={{ color: "#eb3f3f" }}>Red Bombs</span> to stay alive.</p></>}
             {activeGame === "breaker" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Move your mouse to control the paddle. Bounce the balls to break all the bricks. Catch falling power-ups!</p>}
             {activeGame === "scope" && <p style={{ color: "rgba(255,255,255,.7)", marginBottom: "10px", lineHeight: "1.5" }}>Drag the scope paddle to block the incoming red projectiles from hitting the center.</p>}
