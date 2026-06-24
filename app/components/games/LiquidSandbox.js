@@ -5,7 +5,7 @@ export default class LiquidSandbox {
     this.ctx = canvas.getContext('2d', { alpha: false });
     
     // High Res mode
-    this.scale = 2; 
+    this.scale = 4; 
     this.cols = Math.floor(canvas.width / this.scale);
     this.rows = Math.floor(canvas.height / this.scale);
     
