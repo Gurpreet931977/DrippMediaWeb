@@ -41,20 +41,67 @@ function createGameEngine(canvas, callbacks) {
   let pongBall = {x:0, y:0, vx:0, vy:0, r:8}, pongAI = 0, pongTrails = [];
   let runnerState = {y:0, vy:0, frame:0}, runnerObs = [];
   let invPlayer = {x: 0, w: 40, h: 20}, invLasers = [], invaders = [], invFrame = 0, invKeys = {};
+  let simonSeq = [], simonPlayerSeq = [], simonState = "showing", simonTimer = 0, simonActiveBtn = -1;
   
   // ── Invaders Init ────────────────────────────────────────────────────────────
   function initInvaders() {
     setScoreRef(0); setScore(0);
-    invPlayer = {x: canvas.width/2 - 20, w: 40, h: 20};
+    invPlayer = { x: canvas.width / 2, y: canvas.height - 50, w: 40, h: 20, vx: 0 };
     invLasers = []; invaders = []; invFrame = 0; invKeys = {};
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 8; c++) {
+        invaders.push({ x: 50 + c * 60, y: 50 + r * 40, w: 30, h: 20, vx: 2, type: r % 2 });
+      }
+    }
   }
   window.initInvadersGame = initInvaders;
 
   // ── Simon Init ───────────────────────────────────────────────────────────────
   function initSimon() {
     setScoreRef(0); setScore(0);
+    simonSeq = []; simonPlayerSeq = [];
+    simonState = "showing"; simonTimer = 60; simonActiveBtn = -1;
+    simonSeq.push(Math.floor(Math.random() * 4));
   }
   window.initSimonGame = initSimon;
+
+  // ── Snake Init ───────────────────────────────────────────────────────────────
+  function spawnSnakeFood() {
+    const gridX = Math.floor(canvas.width / 25);
+    const gridY = Math.floor(canvas.height / 25);
+    snakeFood = {
+      x: Math.floor(Math.random() * gridX),
+      y: Math.floor(Math.random() * gridY),
+      isPowerdown: Math.random() < 0.2
+    };
+  }
+
+  function initSnake() {
+    setScoreRef(0); setScore(0);
+    snake = [{x: 10, y: 10}, {x: 9, y: 10}, {x: 8, y: 10}];
+    snakeDir = {x: 1, y: 0};
+    snakeFrame = 0;
+    snakeReverseTimer = 0;
+    spawnSnakeFood();
+  }
+  window.initSnakeGame = initSnake;
+
+  // ── Pong Init ────────────────────────────────────────────────────────────────
+  function initPong() {
+    setScoreRef(0); setScore(0);
+    pongBall = {x: canvas.width/2, y: canvas.height/2, vx: -6, vy: (Math.random() * 8) - 4, r: 8};
+    pongAI = canvas.height/2 - 40;
+    pongTrails = [];
+  }
+  window.initPongGame = initPong;
+
+  // ── Runner Init ──────────────────────────────────────────────────────────────
+  function initRunner() {
+    setScoreRef(0); setScore(0);
+    runnerState = {y: canvas.height - 100, vy: 0, frame: 0};
+    runnerObs = [];
+  }
+  window.initRunnerGame = initRunner;
   
   let piercingTimer = 0;
   let animId;
@@ -70,68 +117,111 @@ function createGameEngine(canvas, callbacks) {
   resize();
 
   // ── Dripp Drop Element ───────────────────────────────────────────────────────
-  function Drop() {
+  function Drop(isRed = false) {
     this.x = Math.random() * canvas.width;
-    this.y = -20;
-    this.vy = 3 + Math.random() * 4;
-    this.radius = 5 + Math.random() * 5;
-    this.isBomb = Math.random() < 0.1;
+    this.y = -50 - Math.random() * 100;
+    this.isWhite = !isRed && Math.random() < 0.05;
+    this.isBomb = Math.random() < 0.15;
+    this.isRed = !this.isBomb && isRed;
+    
+    let speedMult = isMobile ? (1 + Math.log10(1 + getScoreRef() / 300) * 0.4) : (1.5 + Math.log10(1 + getScoreRef() / 150) * 0.6);
+    const mobileSpeedMult = isMobile ? 0.9 : 1.0;
+    
+    this.vy = (1.0 + Math.random() * 3.5) * speedMult * mobileSpeedMult; 
+    this.gravity = (0.005 + Math.random() * 0.02) * speedMult * mobileSpeedMult; 
+    
+    this.radius = 2 + Math.random() * 2; 
+    this.length = this.vy * 3;
     this.markedForDeletion = false;
-    this.color = this.isBomb ? "#ff0000" : "#ebd73f";
+    
+    if (this.isBomb) {
+       this.color = '#333333';
+       this.radius = 4;
+    } else if (this.isWhite) {
+       this.color = '#ffffff';
+    } else {
+       this.color = this.isRed ? 'rgba(235, 63, 63, 0.9)' : 'rgba(235, 215, 63, 0.9)'; 
+    }
+    
+    this.wobble = Math.random() * Math.PI * 2;
+    this.wobbleSpeed = (0.02 + Math.random() * 0.04) * (1 + getScoreRef() * 0.005);
   }
   Drop.prototype.update = function () {
+    this.vy += this.gravity;
     this.y += this.vy;
-    if (this.y > canvas.height) { this.markedForDeletion = true; return; }
+    this.x += Math.sin(this.wobble) * 1.2; 
+    this.wobble += this.wobbleSpeed;
+    this.length = this.vy * 2;
+
+    if (this.y > canvas.height + this.length) {
+      this.markedForDeletion = true;
+    }
     
     const mx = getMouseRef().x, my = getMouseRef().y;
-    const dist = Math.hypot(mx - this.x, my - this.y);
-    if (dist < 50) {
+    const distance = Math.sqrt((mx - this.x) ** 2 + (my - this.y) ** 2);
+    
+    const hitRadius = getCursorActiveRef().current ? 40 : (isMobile ? 60 : 35);
+
+    if (distance < hitRadius) {
       this.markedForDeletion = true;
+      
       if (this.isBomb) {
-        setGameState("failed");
+         setGameState("failed");
+         for(let i=0; i<30; i++) fireworks.push(new FWParticle(this.x, this.y, null, true));
+         return;
+      } else if (this.isWhite) {
+         setScoreRef(getScoreRef() + 69);
+         for(let i=0; i<40; i++) fireworks.push(new FWParticle(this.x, this.y, '#ffffff'));
+      } else if (this.isRed) {
+         setScoreRef(getScoreRef() + 5); 
       } else {
-        setScoreRef(getScoreRef() + 1);
-        setScore(getScoreRef());
+         setScoreRef(getScoreRef() + 1);
+      }
+      
+      setScore(getScoreRef());
+      
+      if (getScoreRef() > 50 && getScoreRef() % 50 === 0 && getScoreRef() !== getLastMilestoneRef().current) {
+        getLastMilestoneRef().current = getScoreRef();
+        triggerGsapMilestone(this.x, this.y);
+      }
+
+      splashes.push(new Splash(this.x, this.y, this.isRed, this.isWhite));
+      for (let i = 0; i < 6; i++) {
+        miniParticles.push(new MiniP(this.x, this.y, this.isRed, this.isWhite ? '#ffffff' : null));
       }
     }
   };
   Drop.prototype.draw = function (ctx) {
+    ctx.beginPath();
     if (this.isBomb) {
-      // Bomb: Red circle
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fillStyle = "#eb3f3f"; // Exact Dripp red
-      ctx.fill();
-      
-      // Bomb fuse/stem
-      ctx.beginPath();
-      ctx.moveTo(this.x, this.y - this.radius);
-      ctx.quadraticCurveTo(this.x + 2, this.y - this.radius - 4, this.x + 4, this.y - this.radius - 6);
-      ctx.strokeStyle = "#888";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      
-      // Little spark
-      ctx.beginPath();
-      ctx.arc(this.x + 4, this.y - this.radius - 6, 1, 0, Math.PI*2);
-      ctx.fillStyle = "#ebd73f";
-      ctx.fill();
+       ctx.arc(this.x, this.y, this.radius * 1.5, 0, Math.PI * 2);
+       ctx.fillStyle = '#111';
+       ctx.fill();
+       ctx.strokeStyle = '#ff0000';
+       ctx.lineWidth = 1.5;
+       ctx.stroke();
+       ctx.beginPath();
+       ctx.moveTo(this.x, this.y - this.radius * 1.5);
+       ctx.lineTo(this.x + 3, this.y - this.radius * 2.5);
+       ctx.strokeStyle = '#fff';
+       ctx.stroke();
     } else {
-      // Teardrop shape
-      ctx.beginPath();
-      ctx.moveTo(this.x, this.y - this.radius * 1.5);
-      ctx.quadraticCurveTo(this.x + this.radius, this.y - this.radius * 0.2, this.x + this.radius, this.y);
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
-      ctx.quadraticCurveTo(this.x - this.radius, this.y - this.radius * 0.2, this.x, this.y - this.radius * 1.5);
-      ctx.fillStyle = this.color;
-      ctx.fill();
-      
-      // Optional inner glow/highlight
-      ctx.beginPath();
-      ctx.arc(this.x - this.radius * 0.3, this.y + this.radius * 0.2, this.radius * 0.2, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-      ctx.fill();
+       const stretch = Math.min(this.vy * 1.2, this.radius * 5);
+       ctx.arc(this.x, this.y, this.radius, 0, Math.PI);
+       ctx.lineTo(this.x, this.y - stretch);
+       ctx.fillStyle = this.color;
+       ctx.fill();
     }
+    ctx.closePath();
+    
+    // Fake Glow
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius * 2.5, 0, Math.PI * 2);
+    if (this.isWhite) ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    else if (this.isBomb) ctx.fillStyle = 'rgba(255, 0, 0, 0.15)';
+    else ctx.fillStyle = this.isRed ? 'rgba(235, 63, 63, 0.15)' : 'rgba(235, 215, 63, 0.15)';
+    ctx.fill();
+    ctx.closePath();
   };
 
   // ── Shockwave ────────────────────────────────────────────────────────────────
@@ -460,9 +550,9 @@ function createGameEngine(canvas, callbacks) {
       if (ag === "breaker" && lastActive !== "breaker") initBreaker(getBreakLevelRef());
       else if (ag === "scope" && lastActive !== "scope") initScope();
       else if (ag === "dripp" && lastActive !== "dripp") { drops = []; splashes = []; }
-      else if (ag === "snake" && lastActive !== "snake") initSnake();
-      else if (ag === "pong" && lastActive !== "pong") initPong();
-      else if (ag === "runner" && lastActive !== "runner") initRunner();
+      else if (ag === "snake" && lastActive !== "snake") { if(window.initSnakeGame) window.initSnakeGame(); }
+      else if (ag === "pong" && lastActive !== "pong") { if(window.initPongGame) window.initPongGame(); }
+      else if (ag === "runner" && lastActive !== "runner") { if(window.initRunnerGame) window.initRunnerGame(); }
       else if (ag === "invaders" && lastActive !== "invaders") initInvaders();
       else if (ag === "simon" && lastActive !== "simon") initSimon();
       lastActive = ag;
@@ -470,13 +560,30 @@ function createGameEngine(canvas, callbacks) {
 
     // Dripp logic
     if (ag === "dripp") {
-      // Dripp logic exactly as in arcade.html
-      if (Math.random() < 0.1) {
-        drops.push(new Drop());
+      let baseIntensity = 0.025; 
+      let scaling = Math.log10(1 + getScoreRef() / 300) * 0.1;
+      
+      if (!isMobile) {
+         baseIntensity = 0.04;
+         scaling = Math.log10(1 + getScoreRef() / 150) * 0.15;
       }
       
-      // Draw plain background instead of trails
+      const rainIntensity = Math.min(0.25, baseIntensity + scaling);
+      const spawnAttempts = 1; 
+      
+      for (let i = 0; i < spawnAttempts; i++) {
+         if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
+         if (Math.random() < rainIntensity * 0.15) drops.push(new Drop(Math.random() < 0.15));
+      }
+      
+      // Draw subtle gradient background
+      const glowGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height)/1.5);
+      glowGrad.addColorStop(0, 'rgba(235, 215, 63, 0.05)');
+      glowGrad.addColorStop(1, 'transparent');
+      
       ctx.fillStyle = "#050505";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = glowGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // Update and Draw Drops
@@ -484,12 +591,21 @@ function createGameEngine(canvas, callbacks) {
       drops.forEach(o => o.draw(ctx));
       drops = drops.filter(o => !o.markedForDeletion);
       
+      splashes.forEach(s => s.update());
+      splashes.forEach(s => s.draw(ctx));
+      splashes = splashes.filter(s => !s.markedForDeletion);
+      
       // Draw catcher zone at mouse
       const mx = getMouseRef().x, my = getMouseRef().y;
-      ctx.beginPath(); ctx.arc(mx, my, 50, 0, Math.PI*2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      const hitRadius = getCursorActiveRef().current ? 40 : (isMobile ? 60 : 35);
+      
+      ctx.beginPath(); ctx.arc(mx, my, hitRadius * 0.6, 0, Math.PI*2);
+      ctx.fillStyle = '#ebd73f';
+      ctx.fill();
+      
+      ctx.beginPath(); ctx.arc(mx, my, hitRadius, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(235, 215, 63, 0.15)';
+      ctx.fill();
     }
 
     // Scope logic
@@ -747,13 +863,58 @@ function createGameEngine(canvas, callbacks) {
     // Simon logic
     if (ag === "simon") {
       ctx.fillStyle = "rgba(5,5,5,0.4)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.font = "30px 'Panchang', sans-serif";
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      
+      const colors = ['#ff3366', '#33ccff', '#ebd73f', '#33ff33'];
+      const pads = [
+         {x: 0, y: 0, w: cx, h: cy},
+         {x: cx, y: 0, w: cx, h: cy},
+         {x: 0, y: cy, w: cx, h: cy},
+         {x: cx, y: cy, w: cx, h: cy}
+      ];
+      
+      if (simonState === "showing") {
+         simonTimer--;
+         if (simonTimer <= 0) {
+            simonActiveBtn = simonSeq[simonPlayerSeq.length];
+            simonTimer = 40;
+            simonPlayerSeq.push(-1); 
+         } else if (simonTimer === 10) {
+            simonActiveBtn = -1;
+         }
+         
+         if (simonPlayerSeq.length > simonSeq.length) {
+            simonState = "waiting";
+            simonPlayerSeq = [];
+            simonActiveBtn = -1;
+         }
+      } else if (simonState === "success") {
+         simonTimer--;
+         if (simonTimer <= 0) {
+            simonSeq.push(Math.floor(Math.random() * 4));
+            simonState = "showing";
+            simonPlayerSeq = [];
+            simonTimer = 60;
+         }
+      }
+      
+      pads.forEach((p, i) => {
+         const isActive = simonActiveBtn === i || (simonState === "success" && simonTimer % 20 > 10);
+         ctx.fillStyle = isActive ? colors[i] : 'transparent';
+         ctx.fillRect(p.x, p.y, p.w, p.h);
+         
+         ctx.strokeStyle = isActive ? '#fff' : colors[i];
+         ctx.lineWidth = isActive ? 5 : 2;
+         ctx.globalAlpha = isActive ? 1 : 0.3;
+         ctx.strokeRect(p.x + 10, p.y + 10, p.w - 20, p.h - 20);
+         ctx.globalAlpha = 1;
+      });
+      
       ctx.fillStyle = "#fff";
+      ctx.font = "bold 24px 'Panchang', sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("NEON SIMON", canvas.width/2, canvas.height/2 - 20);
-      ctx.font = "16px 'Clash Display', sans-serif";
-      ctx.fillStyle = "#ebd73f";
-      ctx.fillText("COMING SOON...", canvas.width/2, canvas.height/2 + 20);
+      ctx.fillText(simonState === "showing" ? "WATCH" : simonState === "waiting" ? "REPEAT" : "NICE!", cx, cy);
     }
 
     // Breaker logic
@@ -813,12 +974,55 @@ function createGameEngine(canvas, callbacks) {
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('keyup', handleKeyUp);
 
+  function handlePointerDown(e) {
+    getCursorActiveRef().current = true;
+    const ag = getActiveGameRef();
+    
+    if (ag === "simon" && simonState === "waiting") {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+      if (clientX == null || clientY == null) return;
+      
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const cx = canvas.width/2;
+      const cy = canvas.height/2;
+      
+      let btn = -1;
+      if (x < cx && y < cy) btn = 0; // Top-Left
+      if (x >= cx && y < cy) btn = 1; // Top-Right
+      if (x < cx && y >= cy) btn = 2; // Bottom-Left
+      if (x >= cx && y >= cy) btn = 3; // Bottom-Right
+      
+      if (btn !== -1) {
+        simonActiveBtn = btn;
+        simonPlayerSeq.push(btn);
+        
+        if (simonPlayerSeq[simonPlayerSeq.length - 1] !== simonSeq[simonPlayerSeq.length - 1]) {
+           simonState = "failed";
+           setGameState("failed");
+        } else if (simonPlayerSeq.length === simonSeq.length) {
+           simonState = "success";
+           simonTimer = 60;
+           setScoreRef(simonSeq.length); setScore(simonSeq.length);
+        }
+        
+        setTimeout(() => { if (simonState === "waiting") simonActiveBtn = -1; }, 200);
+      }
+    }
+  }
+  window.addEventListener('pointerdown', handlePointerDown);
+  window.addEventListener('mousedown', handlePointerDown);
+
   return {
     destroy() {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('mousedown', handlePointerDown);
     },
     milestone,
   };
@@ -993,14 +1197,22 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
       </div>
 
       {/* Top Right: Exact Score HUD */}
-      <div style={{ position: "absolute", top: "30px", right: "30px", textAlign: "right", pointerEvents: "none", zIndex: 100, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-        <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Score</div>
-        <div className="score-counter-element" style={{ fontSize: "3rem", fontWeight: "bold", color: "var(--brand-yellow)", lineHeight: 1, textShadow: "0 0 20px rgba(235,215,63,.4)" }}>{activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : score}</div>
-        <div style={{ fontSize: "0.6rem", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginTop: "15px", whiteSpace: "pre-line" }}>
-          KEEP SCORING TO LEVEL UP{"\n"}
-          <span style={{ color: "#eb3f3f" }}>CAUTION: AVOID BOMBS</span>
+      {activeGame !== "none" && activeGame !== "cyber_racer" && activeGame !== "neon_blocks" && (
+        <div style={{ position: "absolute", top: "30px", right: "30px", textAlign: "right", pointerEvents: "none", zIndex: 100, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+          <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>
+             {activeGame === "simon" ? "ROUND" : activeGame === "snake" ? "LENGTH" : activeGame === "runner" ? "DISTANCE" : "SCORE"}
+          </div>
+          <div className="score-counter-element" style={{ fontSize: "3rem", fontWeight: "bold", color: "var(--brand-yellow)", lineHeight: 1, textShadow: "0 0 20px rgba(235,215,63,.4)" }}>
+             {activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : score}
+          </div>
+          {activeGame === "dripp" && (
+            <div style={{ fontSize: "0.6rem", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginTop: "15px", whiteSpace: "pre-line" }}>
+              KEEP SCORING TO LEVEL UP{"\n"}
+              <span style={{ color: "#eb3f3f" }}>CAUTION: AVOID BOMBS</span>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Bottom Left: Controls */}
       <div style={{ position: "absolute", bottom: "30px", left: "30px", display: "flex", gap: "15px", alignItems: "center", zIndex: 100 }}>
@@ -1009,14 +1221,6 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/>
           </svg>
-        </button>
-        {/* Disable Game */}
-        <button onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ padding: "8px 20px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.5)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "1px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "white"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}>
-          Disable Game
-        </button>
-        {/* Show Intro */}
-        <button onClick={() => setIsHelpOpen(true)} style={{ padding: "8px 20px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.5)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "1px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "white"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}>
-          Show Intro
         </button>
       </div>
 

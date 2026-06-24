@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, ChevronLeft, ChevronRight, Gamepad2 } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -13,11 +13,25 @@ const GAMES = [
   { id: 'runner', title: 'VOID RUNNER', color: '#ff9900', desc: 'Endless neon run through the cyberspace tunnel.', category: 'ENDLESS' },
   { id: 'invaders', title: 'INVADERS', color: '#cc33ff', desc: 'Shoot the digital bugs descending from the grid.', category: 'SHOOTER' },
   { id: 'simon', title: 'NEON SIMON', color: '#ffffff', desc: 'Match the complex light pattern to survive.', category: 'PUZZLE' },
+  { id: 'cyber_racer', title: 'CYBER RACER', color: '#00ffcc', desc: 'Outrun the grid collapse in this high-speed racer.', category: 'RACING' },
+  { id: 'neon_blocks', title: 'NEON BLOCKS', color: '#ff00aa', desc: 'Stack the glowing blocks to clear lines.', category: 'PUZZLE' },
 ];
 
 export default function ArcadeMenu({ onStartGame }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredGameId, setHoveredGameId] = useState(null);
+
+  // Dragging state
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+
+  // Developer Access State
+  const [isDeveloper, setIsDeveloper] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+  const [pendingGameId, setPendingGameId] = useState(null);
   
   const activeColor = GAMES[activeIndex].color;
 
@@ -36,6 +50,32 @@ export default function ArcadeMenu({ onStartGame }) {
 
   const handlePrev = () => {
     setActiveIndex((prev) => (prev - 1 + GAMES.length) % GAMES.length);
+  };
+
+  // Pointer event handlers for dragging
+  const handlePointerDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.clientX || e.touches?.[0]?.clientX || 0);
+    setDragOffset(0);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDragging) return;
+    const currentX = e.clientX || e.touches?.[0]?.clientX || 0;
+    setDragOffset(currentX - startX);
+  };
+
+  const handlePointerUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    // Swipe threshold
+    if (dragOffset > 100) {
+      handlePrev();
+    } else if (dragOffset < -100) {
+      handleNext();
+    }
+    setDragOffset(0);
   };
 
   return (
@@ -80,7 +120,7 @@ export default function ArcadeMenu({ onStartGame }) {
       <div style={{
         position: 'relative',
         zIndex: 10,
-        padding: '40px 60px',
+        padding: '30px 60px 10px 60px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start'
@@ -110,23 +150,57 @@ export default function ArcadeMenu({ onStartGame }) {
           fontSize: '13px',
           color: 'rgba(255,255,255,0.3)',
           letterSpacing: '1px',
-          lineHeight: '1.8'
+          lineHeight: '1.8',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: '8px'
         }}>
-          <div>DATABANK: {GAMES.length} CARTRIDGES</div>
-          <div>STATUS: AWAITING INPUT</div>
-          <div>ROOT: /SYSTEM/GAMES/</div>
+          <div>
+            <div>DATABANK: {GAMES.length} CARTRIDGES</div>
+            <div>STATUS: {isDeveloper ? 'DEV_MODE_ACTIVE' : 'AWAITING INPUT'}</div>
+            <div>ROOT: /SYSTEM/GAMES/</div>
+          </div>
+          {!isDeveloper && (
+            <button 
+              onClick={() => setShowPasswordModal(true)}
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'rgba(255,255,255,0.8)',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontFamily: 'monospace',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                marginTop: '4px'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+            >
+              [ GET DEVELOPER ACCESS ]
+            </button>
+          )}
         </div>
       </div>
 
       {/* Main Carousel Area */}
-      <div style={{
-        flex: 1,
-        position: 'relative',
-        zIndex: 10,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        perspective: '1500px'
+      <div 
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        style={{
+          flex: 1,
+          position: 'relative',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          perspective: '1500px',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none' // Prevent pull-to-refresh and swiping on mobile
       }}>
         <div style={{
           position: 'relative',
@@ -135,31 +209,58 @@ export default function ArcadeMenu({ onStartGame }) {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          transformStyle: 'preserve-3d'
+          transformStyle: 'preserve-3d',
+          pointerEvents: 'none' // Let the container handle the drag events mostly
         }}>
           {GAMES.map((game, index) => {
             const offset = index - activeIndex;
             const isActive = index === activeIndex;
             
-            // Adjust calculation to support an endless feel or just smooth scrolling
-            let translateX = offset * 280;
-            let translateZ = Math.abs(offset) * -150;
-            let rotateY = offset * -25;
-            let scale = isActive ? 1.1 : 0.9;
-            let opacity = isActive ? 1 : Math.max(1 - Math.abs(offset) * 0.4, 0);
-            let zIndex = 100 - Math.abs(offset);
-
-            if (Math.abs(offset) > 3) {
-              opacity = 0;
-              pointerEvents: 'none'
+            // Apply drag offset to the base offset for fluid dragging
+            const activeOffsetRaw = offset - (isDragging ? dragOffset / 300 : 0);
+            
+            let translateX = activeOffsetRaw * 280;
+            let translateZ = Math.abs(activeOffsetRaw) * -150;
+            let rotateY = activeOffsetRaw * -25;
+            
+            // Scaling logic
+            let scale = 0.9;
+            if (Math.abs(activeOffsetRaw) < 1) {
+              scale = 0.9 + (0.2 * (1 - Math.abs(activeOffsetRaw))); // peaks at 1.1 when activeOffsetRaw is 0
             }
+
+            let opacity = Math.max(1 - Math.abs(activeOffsetRaw) * 0.4, 0);
+            let zIndex = 100 - Math.round(Math.abs(activeOffsetRaw) * 10);
+
+            if (Math.abs(activeOffsetRaw) > 3) {
+              opacity = 0;
+            }
+
+            // ultra smooth bouncy transition when not dragging
+            const baseTransition = isDragging 
+              ? 'none' 
+              : 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
 
             return (
               <div
                 key={game.id}
-                onClick={() => {
+                onClick={(e) => {
+                  // Prevent click if we were dragging
+                  if (Math.abs(dragOffset) > 10) { e.preventDefault(); e.stopPropagation(); return; }
+                  
                   if (isActive) {
-                    onStartGame(game.id);
+                    if (game.id === 'cyber_racer' || game.id === 'neon_blocks') {
+                      // These two are currently visually only
+                      return;
+                    }
+                    
+                    const isOriginalGame = game.id === 'dripp' || game.id === 'breaker' || game.id === 'scope';
+                    if (!isOriginalGame && !isDeveloper) {
+                      setPendingGameId(game.id);
+                      setShowPasswordModal(true);
+                    } else {
+                      onStartGame(game.id);
+                    }
                   } else {
                     setActiveIndex(index);
                   }
@@ -177,10 +278,9 @@ export default function ArcadeMenu({ onStartGame }) {
                   backdropFilter: 'blur(25px)',
                   WebkitBackdropFilter: 'blur(25px)',
                   transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-                  transition: 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)',
+                  transition: `${baseTransition}, background 0.5s ease, border 0.5s ease, box-shadow 0.5s ease`,
                   zIndex: zIndex,
                   opacity: opacity,
-                  cursor: isActive ? 'default' : 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
                   padding: '35px',
@@ -279,7 +379,7 @@ export default function ArcadeMenu({ onStartGame }) {
                       textTransform: 'uppercase',
                       letterSpacing: '2px',
                       boxShadow: `0 10px 20px ${game.color}30`,
-                      transition: 'all 0.3s ease'
+                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'scale(1.02)';
@@ -299,15 +399,13 @@ export default function ArcadeMenu({ onStartGame }) {
         </div>
       </div>
 
-      {/* Carousel Controls */}
+      {/* Carousel Controls (Moved below carousel with standard flow layout) */}
       <div style={{
-        position: 'absolute',
-        bottom: '8%',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        padding: '20px 0 40px 0',
         display: 'flex',
         gap: '24px',
         alignItems: 'center',
+        justifyContent: 'center',
         zIndex: 20
       }}>
         <button 
@@ -388,7 +486,7 @@ export default function ArcadeMenu({ onStartGame }) {
       {/* Footer / Instructions */}
       <div style={{
         position: 'absolute',
-        bottom: '3%',
+        bottom: '20px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 20,
@@ -401,9 +499,103 @@ export default function ArcadeMenu({ onStartGame }) {
           fontSize: '0.75rem',
           textTransform: 'uppercase'
         }}>
-          Use arrows to navigate • Select to initialize
+          Use arrows or drag to navigate • Select to initialize
         </p>
       </div>
+      {/* Password Modal */}
+      {showPasswordModal && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 100,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexDirection: 'column'
+        }}>
+          <div style={{
+            background: '#111',
+            border: `1px solid ${passwordError ? '#ff3333' : '#333'}`,
+            padding: '40px',
+            borderRadius: '16px',
+            textAlign: 'center',
+            minWidth: '300px',
+            boxShadow: passwordError ? '0 0 30px rgba(255,51,51,0.2)' : '0 20px 50px rgba(0,0,0,0.5)'
+          }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', letterSpacing: '2px', color: '#fff' }}>DEVELOPER ACCESS</h2>
+            <input
+              autoFocus
+              type="password"
+              value={passwordInput}
+              onChange={(e) => {
+                setPasswordInput(e.target.value);
+                if (passwordError) setPasswordError(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  if (passwordInput === 'Drippies') {
+                    setIsDeveloper(true);
+                    setShowPasswordModal(false);
+                    setPasswordInput('');
+                    if (pendingGameId) {
+                      onStartGame(pendingGameId);
+                      setPendingGameId(null);
+                    }
+                  } else {
+                    setPasswordError(true);
+                  }
+                } else if (e.key === 'Escape') {
+                  setShowPasswordModal(false);
+                  setPasswordInput('');
+                  setPasswordError(false);
+                  setPendingGameId(null);
+                }
+              }}
+              placeholder={passwordError ? "ACCESS DENIED" : "ENTER PASSWORD"}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: 'rgba(255,255,255,0.05)',
+                border: `1px solid ${passwordError ? '#ff3333' : 'rgba(255,255,255,0.1)'}`,
+                color: passwordError ? '#ff3333' : '#fff',
+                fontFamily: 'monospace',
+                fontSize: '1rem',
+                textAlign: 'center',
+                outline: 'none',
+                borderRadius: '8px',
+                letterSpacing: '2px'
+              }}
+            />
+            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+               <button onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordInput('');
+                  setPasswordError(false);
+                  setPendingGameId(null);
+               }} style={{
+                 padding: '8px 16px', background: 'transparent', color: '#888', border: '1px solid #333', borderRadius: '4px', cursor: 'pointer'
+               }}>CANCEL</button>
+               <button onClick={() => {
+                  if (passwordInput === 'Drippies') {
+                    setIsDeveloper(true);
+                    setShowPasswordModal(false);
+                    setPasswordInput('');
+                    if (pendingGameId) {
+                      onStartGame(pendingGameId);
+                      setPendingGameId(null);
+                    }
+                  } else {
+                    setPasswordError(true);
+                  }
+               }} style={{
+                 padding: '8px 16px', background: '#ebd73f', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
+               }}>SUBMIT</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
