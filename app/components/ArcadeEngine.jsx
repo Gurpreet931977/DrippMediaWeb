@@ -545,14 +545,19 @@ export default function ArcadeEngine({ onClose }) {
   const mouseRef = useRef({ x: -100, y: -100 });
   const cursorActiveRef = useRef(false);
   const lastMilestoneRef = useRef(0);
+  const isMountedRef = useRef(false); // Skip first-render effect execution
 
   // Sync refs
   useEffect(() => { activeGameRef.current = activeGame; }, [activeGame]);
   useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
 
-  // Handle game switch logic (reset scores etc.)
+  // Handle game switch logic (reset scores etc.) — skip on first mount
   useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return; // Don't fire on initial render (activeGame = 'none' would instantly close)
+    }
     if (activeGame === "breaker") {
       breakerScoreRef.current = 0; setBreakerScore(0);
       breakerLevelRef.current = 1; setBreakerLevel(1);
@@ -565,10 +570,9 @@ export default function ArcadeEngine({ onClose }) {
     } else if (activeGame === "dripp") {
       scoreRef.current = 0; setScore(0);
       setGameState("playing"); setIsPaused(false);
-    } else if (activeGame === "none") {
-      if (onClose) onClose();
     }
-  }, [activeGame, onClose]);
+    // Note: 'none' state is handled by the close buttons directly calling onClose
+  }, [activeGame]);
 
   // Mount cursor + engine
   useEffect(() => {
@@ -684,7 +688,7 @@ export default function ArcadeEngine({ onClose }) {
           </div>
           <div style={{ display: "flex", gap: "15px" }}>
             <PrimaryButton onClick={() => { setGameState("playing"); if (activeGame === "dripp") { scoreRef.current = 0; setScore(0); } else if (activeGame === "scope") { scopeScoreRef.current = 0; setScopeScore(0); if (window.initScopeGame) window.initScopeGame(); } else if (activeGame === "breaker") { breakerScoreRef.current = 0; setBreakerScore(0); breakerLevelRef.current = 1; setBreakerLevel(1); if (window.initBreakerGame) window.initBreakerGame(1); } }}>Try Again</PrimaryButton>
-            <PrimaryButton onClick={() => setActiveGame("none")} style={{ color: "rgba(255,255,255,.5)", borderColor: "rgba(255,255,255,.2)", background: "rgba(255,255,255,.05)" }}>Exit</PrimaryButton>
+            <PrimaryButton onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ color: "rgba(255,255,255,.5)", borderColor: "rgba(255,255,255,.2)", background: "rgba(255,255,255,.05)" }}>Exit</PrimaryButton>
           </div>
         </div>
       )}
@@ -712,7 +716,7 @@ export default function ArcadeEngine({ onClose }) {
         </div>
 
         {/* Play/Stop */}
-        <div onClick={() => { if (activeGame !== "none") { setIsFadingOut(true); setTimeout(() => { setActiveGame("none"); setIsFadingOut(false); }, 300); } else setActiveGame("dripp"); }}
+        <div onClick={() => { if (activeGame !== "none") { setIsFadingOut(true); setTimeout(() => { setActiveGame("none"); setIsFadingOut(false); if (onClose) onClose(); }, 300); } else setActiveGame("dripp"); }}
           style={{ height: "40px", padding: "0 15px", borderRadius: "20px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", cursor: "pointer", color: activeGame === "none" ? "var(--brand-yellow)" : "rgba(255,255,255,.5)", fontFamily: "'Clash Display',sans-serif", fontSize: "0.8rem", textTransform: "uppercase", transition: "all 0.3s", gap: "6px" }}
           onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,.1)"; }}
           onMouseLeave={e => { e.currentTarget.style.color = activeGame === "none" ? "var(--brand-yellow)" : "rgba(255,255,255,.5)"; e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}
@@ -739,7 +743,7 @@ export default function ArcadeEngine({ onClose }) {
         >? Help</div>
 
         {/* Close Arcade */}
-        <div onClick={() => setActiveGame("none")}
+        <div onClick={() => { setActiveGame("none"); if (onClose) onClose(); }}
           style={{ height: "40px", padding: "0 15px", borderRadius: "20px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", cursor: "pointer", color: "rgba(255,100,100,.7)", fontFamily: "'Clash Display',sans-serif", fontSize: "0.8rem", textTransform: "uppercase", transition: "all 0.3s" }}
           onMouseEnter={e => { e.currentTarget.style.color = "#f66"; e.currentTarget.style.background = "rgba(255,100,100,.1)"; }}
           onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,100,100,.7)"; e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}
