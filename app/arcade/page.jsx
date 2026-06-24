@@ -10,12 +10,16 @@ export default function ArcadePage() {
   return (
     <div style={{ width: '100vw', height: '100vh', backgroundColor: '#050505', overflow: 'hidden' }}>
       {activeGame === "none" ? (
-        <ArcadeMenu3D onStartGame={(gameId) => setActiveGame(gameId)} />
+        <div key="menu3d" style={{ width: '100%', height: '100%' }}>
+          <ArcadeMenu3D onStartGame={(gameId) => setActiveGame(gameId)} />
+        </div>
       ) : (
-        <ArcadeEngine 
-          forcedGame={activeGame} 
-          onClose={() => setActiveGame("none")} 
-        />
+        <div key="engine2d" style={{ width: '100%', height: '100%' }}>
+          <ArcadeEngine 
+            forcedGame={activeGame} 
+            onClose={() => setActiveGame("none")} 
+          />
+        </div>
       )}
     </div>
   );
