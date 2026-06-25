@@ -181,9 +181,7 @@ export default class PocketTanks {
 
   handleUIClick(cx, cy) {
      const w = this.canvas.width;
-     
-     // Move controls (Shifted to x=100+)
-     const cY = this.uiY + 45; // Move manual controls below
+     const cY = this.uiY + 50;
      
      if (cx > 120 && cx < 160 && cy > cY && cy < cY + 35) {
         this.moveTank(this.player, -10);
@@ -212,7 +210,7 @@ export default class PocketTanks {
         this.clickAnims.pwrU = 1;
      }
      // Jump Button
-     else if (cx > 120 && cx < 405 && cy > this.uiY + 8 && cy < this.uiY + 28) {
+     else if (cx > 120 && cx < 405 && cy > this.uiY + 10 && cy < this.uiY + 35) {
         this.jumpTank(this.player);
         this.clickAnims.jump = 1;
      }
@@ -834,14 +832,14 @@ export default class PocketTanks {
     ctx.font = "bold 20px 'Panchang', sans-serif";
     ctx.textAlign = "center";
     if (this.state === "player_turn") {
-       ctx.fillText("YOUR TURN", this.canvas.width/2, 90);
+       ctx.fillText("YOUR TURN", this.canvas.width/2, 60);
        ctx.font = "12px sans-serif";
-       ctx.fillText("Move, Aim, then Fire (Spacebar)", this.canvas.width/2, 110);
+       ctx.fillText("Move, Aim, then Fire (Spacebar)", this.canvas.width/2, 85);
     } else if (this.state === "ai_turn") {
-       ctx.fillText("AI IS AIMING...", this.canvas.width/2, 90);
+       ctx.fillText("AI IS AIMING...", this.canvas.width/2, 60);
     } else if (this.state === "game_over") {
        ctx.fillStyle = this.player.hp > 0 ? "#00ffcc" : "#ff0055";
-       ctx.fillText(this.player.hp > 0 ? "VICTORY!" : "DEFEAT!", this.canvas.width/2, 90);
+       ctx.fillText(this.player.hp > 0 ? "VICTORY!" : "DEFEAT!", this.canvas.width/2, 60);
     }
 
     if (this.state === "player_turn" || this.state === "player_shoot") {
@@ -870,29 +868,30 @@ export default class PocketTanks {
           ctx.textBaseline = "alphabetic"; // reset
        };
        
-       const cY = this.uiY + 45; // Moved down
+       const cY = this.uiY + 50; // Moved down
+       const btnColor = "#00ffcc";
        
        // Jump Button
-       drawAnimBtn(120, this.uiY + 8, 285, 20, `JUMP (${this.player.jumps})`, "jump", "#ff00ff", this.player.jumps <= 0);
+       drawAnimBtn(120, this.uiY + 10, 285, 25, `JUMP (${this.player.jumps})`, "jump", btnColor, this.player.jumps <= 0);
        
        // Group 1: MOVE
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`MOVE (MP: ${Math.floor(this.player.mp)})`, 162, cY - 8);
-       drawAnimBtn(120, cY, 40, 35, "<", "moveL", "#00ffcc", this.player.mp <= 0);
-       drawAnimBtn(165, cY, 40, 35, ">", "moveR", "#00ffcc", this.player.mp <= 0);
+       ctx.fillText(`MOVE (MP: ${Math.floor(this.player.mp)})`, 162, cY - 10);
+       drawAnimBtn(120, cY, 40, 35, "<", "moveL", btnColor, this.player.mp <= 0);
+       drawAnimBtn(165, cY, 40, 35, ">", "moveR", btnColor, this.player.mp <= 0);
 
        // Group 2: ANGLE
        let angDeg = Math.floor(Math.abs(this.player.angle * 180 / Math.PI));
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`ANG: ${angDeg}°`, 262, cY - 8);
-       drawAnimBtn(220, cY, 40, 35, "-", "angD", "#ebd73f", false);
-       drawAnimBtn(265, cY, 40, 35, "+", "angU", "#ebd73f", false);
+       ctx.fillText(`ANG: ${angDeg}°`, 262, cY - 10);
+       drawAnimBtn(220, cY, 40, 35, "-", "angD", btnColor, false);
+       drawAnimBtn(265, cY, 40, 35, "+", "angU", btnColor, false);
        
        // Group 3: POWER
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`PWR: ${Math.floor((this.player.power/40)*100)}%`, 362, cY - 8);
-       drawAnimBtn(320, cY, 40, 35, "-", "pwrD", "#ff3366", false);
-       drawAnimBtn(365, cY, 40, 35, "+", "pwrU", "#ff3366", false);
+       ctx.fillText(`PWR: ${Math.floor((this.player.power/40)*100)}%`, 362, cY - 10);
+       drawAnimBtn(320, cY, 40, 35, "-", "pwrD", btnColor, false);
+       drawAnimBtn(365, cY, 40, 35, "+", "pwrU", btnColor, false);
        
        // Cover Flow Weapon Selector (Center)
        ctx.save();
