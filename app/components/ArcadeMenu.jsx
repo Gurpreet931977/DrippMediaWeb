@@ -19,6 +19,7 @@ const CREATIVE_GAMES = [
   { id: 'mandala', title: 'MANDALA MAKER', color: '#b366ff', desc: 'Draw breathtaking geometric light patterns instantly.', category: 'CREATIVE' },
   { id: 'nodeweaver', title: 'ZEN NODE WEAVER', color: '#33ffcc', desc: 'Connect floating orbs to weave relaxing string art.', category: 'CHILL' },
   { id: 'looper', title: 'HARMONIC LOOPER', color: '#ff9933', desc: 'Generate expanding ripples and visual beats.', category: 'AUDIO' },
+  { id: 'beats', title: 'NEON BEATS', color: '#33ff66', desc: '16-step visual drum machine and synth maker.', category: 'MUSIC' },
 ];
 
 export default function ArcadeMenu({ onStartGame }) {

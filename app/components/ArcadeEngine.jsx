@@ -12,6 +12,7 @@ import LiquidSandbox from "./games/LiquidSandbox";
 import BulletHell from "./games/BulletHell";
 import NodeWeaver from "./games/NodeWeaver";
 import HarmonicLooper from "./games/HarmonicLooper";
+import BeatMaker from "./games/BeatMaker";
 import PocketTanks from "./games/PocketTanks";
 
 // ─── MODULE-LEVEL HELPERS (immune to minification TDZ) ────────────────────────
@@ -589,6 +590,7 @@ function createGameEngine(canvas, callbacks) {
       else if (ag === 'tanks') activeModule = new PocketTanks(logicalCanvas, callbacks);
       else if (ag === 'nodeweaver') activeModule = new NodeWeaver(logicalCanvas, callbacks);
       else if (ag === 'looper') activeModule = new HarmonicLooper(logicalCanvas, callbacks);
+      else if (ag === 'beats') activeModule = new BeatMaker(logicalCanvas, callbacks);
       
       lastActive = ag;
       justSwitched = true;
@@ -1190,6 +1192,20 @@ const getHelpText = (game) => {
         scoreSystem="Distance tracked in meters (and kilometers) based on survival time." 
         powerups="No powerups. Fast-paced visual progression with shifting neon colors as you go further."
       />;
+    case 'looper':
+      return <HelpBrief 
+        controls="Click or drag anywhere on the canvas." 
+        howToPlay="Spawn ripples and bouncing dots that interact with the borders to create harmonic ambient visuals." 
+        scoreSystem="No score. Just relax and watch the loops." 
+        powerups="None. A pure meditative audio-visual experience."
+      />;
+    case 'beats':
+      return <HelpBrief 
+        controls="Click any cell on the grid to toggle a note. Use the UI buttons to Play, Pause, or Clear." 
+        howToPlay="Create your own drum beats and synth melodies using the 16-step sequencer. The playhead moves left to right, triggering active cells." 
+        scoreSystem="No score. Express your musical creativity." 
+        powerups="None. You are the DJ."
+      />;
     case 'slingshot':
       return <HelpBrief 
         controls="Click, drag backwards, and release to slingshot your cyber-ninja across the screen." 
@@ -1411,8 +1427,8 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     >{children}</button>
   );
 
-  const gameName = activeGame === "breaker" ? "NEON BREAKER" : activeGame === "scope" ? "SCOPE CREEP" : activeGame === "pendulum" ? "NEON PENDULUM" : activeGame === "gravity" ? "GRAVITY FLIP" : activeGame === "slingshot" ? "SLINGSHOT NINJA" : activeGame === "bullethell" ? "BULLET HELL" : activeGame === "tanks" ? "NEON TANKS" : activeGame === "sandbox" ? "LIQUID LIGHT" : activeGame === "mandala" ? "MANDALA MAKER" : activeGame === "nodeweaver" ? "ZEN NODE WEAVER" : activeGame === "looper" ? "HARMONIC LOOPER" : "DRIPP DROP";
-  const isCreativeGame = ['sandbox', 'mandala', 'nodeweaver', 'looper'].includes(activeGame);
+  const gameName = activeGame === "breaker" ? "NEON BREAKER" : activeGame === "scope" ? "SCOPE CREEP" : activeGame === "pendulum" ? "NEON PENDULUM" : activeGame === "gravity" ? "GRAVITY FLIP" : activeGame === "slingshot" ? "SLINGSHOT NINJA" : activeGame === "bullethell" ? "BULLET HELL" : activeGame === "tanks" ? "NEON TANKS" : activeGame === "sandbox" ? "LIQUID LIGHT" : activeGame === "mandala" ? "MANDALA MAKER" : activeGame === "nodeweaver" ? "ZEN NODE WEAVER" : activeGame === "looper" ? "HARMONIC LOOPER" : activeGame === "beats" ? "NEON BEATS" : "DRIPP DROP";
+  const isCreativeGame = ['sandbox', 'mandala', 'nodeweaver', 'looper', 'beats'].includes(activeGame);
 
   return (
     <div ref={containerRef} style={{ width: "100vw", height: "100vh", position: "relative", overflow: "hidden", background: "#050505", fontFamily: "'Clash Display', sans-serif" }}>
