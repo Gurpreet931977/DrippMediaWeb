@@ -139,9 +139,10 @@ export default class PocketTanks {
      if (tank.mp < 0) tank.mp = 0;
   }
   
-  jumpTank(tank) {
+  jumpTank(tank, dir) {
      if (tank.jumps > 0 && tank.vy === undefined) {
          tank.vy = -4.5;
+         tank.targetX = tank.x + (dir * 80);
          tank.jumps--;
      }
   }
@@ -209,10 +210,14 @@ export default class PocketTanks {
         this.player.power = Math.min(40, this.player.power + 1);
         this.clickAnims.pwrU = 1;
      }
-     // Jump Button
-     else if (cx > 120 && cx < 405 && cy > this.uiY + 10 && cy < this.uiY + 35) {
-        this.jumpTank(this.player);
-        this.clickAnims.jump = 1;
+     // Jump Buttons
+     else if (cx > 420 && cx < 443 && cy > cY && cy < cY + 35) {
+        this.jumpTank(this.player, -1);
+        this.clickAnims.jumpL = 1;
+     }
+     else if (cx > 447 && cx < 470 && cy > cY && cy < cY + 35) {
+        this.jumpTank(this.player, 1);
+        this.clickAnims.jumpR = 1;
      }
      
      // Cover Flow Weapon Selector
@@ -443,7 +448,7 @@ export default class PocketTanks {
        } else {
           const ty = this.terrain[Math.floor(tank.x)];
           if (tank.y + tank.r < ty) tank.y += 3;
-          else tank.y = ty - tank.r;
+          else tank.y += (ty - tank.r - tank.y) * 0.3;
        }
     };
     updateTankPhysics(this.player);
@@ -868,7 +873,7 @@ export default class PocketTanks {
           ctx.textBaseline = "alphabetic"; // reset
        };
        
-       const cY = this.uiY + 50; // Moved down
+       const cY = this.uiY + 40; // Moved down
        const btnColor = "#00ffcc";
        
        // Jump Button
@@ -892,6 +897,12 @@ export default class PocketTanks {
        ctx.fillText(`PWR: ${Math.floor((this.player.power/40)*100)}%`, 362, cY - 10);
        drawAnimBtn(320, cY, 40, 35, "-", "pwrD", btnColor, false);
        drawAnimBtn(365, cY, 40, 35, "+", "pwrU", btnColor, false);
+       
+       // Jump Button
+       ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
+       ctx.fillText(`JUMP: ${this.player.jumps}`, 445, cY - 10);
+       drawAnimBtn(420, cY, 23, 35, "↖", "jumpL", "#ff3366", this.player.jumps <= 0);
+       drawAnimBtn(447, cY, 23, 35, "↗", "jumpR", "#ff3366", this.player.jumps <= 0);
        
        // Cover Flow Weapon Selector (Center)
        ctx.save();
