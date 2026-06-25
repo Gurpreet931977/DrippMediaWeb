@@ -55,11 +55,15 @@ export default class PocketTanks {
     
     this.uiH = 90;
     this.uiY = this.canvas.height - this.uiH;
+    
+    this.clickAnims = { moveL: 0, moveR: 0, angU: 0, angD: 0, pwrU: 0, pwrD: 0, wpnL: 0, wpnR: 0, fire: 0 };
+    this.currentWeaponScroll = 0;
 
     this.handleKeyDown = (e) => {
        if (e.code === 'Space' && this.state === 'player_turn') {
           e.preventDefault();
           this.executeFire(this.player);
+          this.clickAnims.fire = 1;
        }
     };
     window.addEventListener('keydown', this.handleKeyDown);
@@ -101,11 +105,11 @@ export default class PocketTanks {
      
      let ny = this.terrain[Math.floor(nx)];
      let slope = ny - this.terrain[Math.floor(tank.x)];
-     if (slope < -15) return; // Too steep to climb
+     if (slope < -15) return; 
      
      tank.x = nx;
      tank.y = ny - tank.r;
-     tank.mp -= 1; // 1 MP per movement click
+     tank.mp -= 1; 
      if (tank.mp < 0) tank.mp = 0;
   }
 
@@ -130,7 +134,6 @@ export default class PocketTanks {
           this.handleUIClick(cx, cy);
           return;
        }
-       
        this.isAiming = true;
        this.dragStart = { x: cx, y: cy };
        this.dragCurrent = { x: cx, y: cy };
@@ -146,39 +149,76 @@ export default class PocketTanks {
   handleUIClick(cx, cy) {
      const w = this.canvas.width;
      
-     if (cx > 20 && cx < 70 && cy > this.uiY + 10 && cy < this.uiY + 50) {
+     // Move controls
+     if (cx > 20 && cx < 60 && cy > this.uiY + 10 && cy < this.uiY + 45) {
         this.moveTank(this.player, -10);
+        this.clickAnims.moveL = 1;
      }
-     else if (cx > 80 && cx < 130 && cy > this.uiY + 10 && cy < this.uiY + 50) {
+     else if (cx > 65 && cx < 105 && cy > this.uiY + 10 && cy < this.uiY + 45) {
         this.moveTank(this.player, 10);
+        this.clickAnims.moveR = 1;
      }
-     else if (cx > w/2 - 140 && cx < w/2 - 100 && cy > this.uiY + 25 && cy < this.uiY + 55) {
+     // Angle controls
+     else if (cx > 120 && cx < 160 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+        this.player.angle -= 0.05;
+        this.clickAnims.angD = 1;
+     }
+     else if (cx > 165 && cx < 205 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+        this.player.angle += 0.05;
+        this.clickAnims.angU = 1;
+     }
+     // Power controls
+     else if (cx > 220 && cx < 260 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+        this.player.power = Math.max(5, this.player.power - 1);
+        this.clickAnims.pwrD = 1;
+     }
+     else if (cx > 265 && cx < 305 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+        this.player.power = Math.min(40, this.player.power + 1);
+        this.clickAnims.pwrU = 1;
+     }
+     
+     // Weapon Slider controls
+     else if (cx > w/2 - 160 && cx < w/2 - 120 && cy > this.uiY + 15 && cy < this.uiY + 65) {
         this.player.selectedWeaponIdx--;
         if (this.player.selectedWeaponIdx < 0) this.player.selectedWeaponIdx = this.player.inventory.length - 1;
+        this.clickAnims.wpnL = 1;
      }
-     else if (cx > w/2 + 100 && cx < w/2 + 140 && cy > this.uiY + 25 && cy < this.uiY + 55) {
+     else if (cx > w/2 + 120 && cx < w/2 + 160 && cy > this.uiY + 15 && cy < this.uiY + 65) {
         this.player.selectedWeaponIdx++;
         if (this.player.selectedWeaponIdx >= this.player.inventory.length) this.player.selectedWeaponIdx = 0;
+        this.clickAnims.wpnR = 1;
      }
+     
+     // Fire button
      else if (cx > w - 120 && cx < w - 20 && cy > this.uiY + 15 && cy < this.uiY + 65) {
         this.executeFire(this.player);
+        this.clickAnims.fire = 1;
      }
   }
 
   handlePointerMove(e) {
-    if (!this.isAiming) return;
     const rect = this.canvas.getBoundingClientRect();
-    this.dragCurrent = {
-      x: (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left,
-      y: (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top
-    };
+    const cx = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const cy = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+    
+    // Hide custom cursor over UI
+    if (cy >= this.uiY) {
+       this.callbacks.setCursorActiveRef(false);
+       this.canvas.style.cursor = 'pointer';
+    } else {
+       this.callbacks.setCursorActiveRef(true);
+       this.canvas.style.cursor = 'none'; // custom crosshair
+    }
+
+    if (!this.isAiming) return;
+    this.dragCurrent = { x: cx, y: cy };
     
     const dx = this.dragStart.x - this.dragCurrent.x;
     const dy = this.dragStart.y - this.dragCurrent.y;
     
     if (Math.hypot(dx, dy) > 5) {
        this.player.angle = Math.atan2(dy, dx);
-       this.player.power = Math.min(25, Math.hypot(dx, dy) * 0.15);
+       this.player.power = Math.min(40, Math.hypot(dx, dy) * 0.15);
        if (Math.cos(this.player.angle) >= 0) this.player.dir = 1; else this.player.dir = -1;
     }
   }
@@ -201,12 +241,12 @@ export default class PocketTanks {
      let firePower = tank.power;
      let fireAngle = tank.angle;
      if (invItem.id === 'laser') {
-         firePower = 40; // High speed
+         firePower = 40; 
      }
 
      this.projectiles.push({
         x: tank.x,
-        y: tank.y - tank.r,
+        y: tank.y - 6,
         vx: Math.cos(fireAngle) * firePower,
         vy: Math.sin(fireAngle) * firePower,
         type: invItem.id,
@@ -235,10 +275,10 @@ export default class PocketTanks {
      let bestPower = 15;
      let minError = Infinity;
      
-     for (let p = 8; p <= 25; p += 1) {
+     for (let p = 8; p <= 40; p += 1) {
         for (let a = -Math.PI; a <= 0; a += 0.05) {
            let simX = this.ai.x;
-           let simY = this.ai.y - this.ai.r;
+           let simY = this.ai.y - 6;
            let vx = Math.cos(a) * p;
            let vy = Math.sin(a) * p;
            let error = Infinity;
@@ -279,7 +319,7 @@ export default class PocketTanks {
      }
      
      this.ai.angle = bestAngle + varianceAngle;
-     this.ai.power = Math.max(5, Math.min(25, bestPower + variancePower));
+     this.ai.power = Math.max(5, Math.min(40, bestPower + variancePower));
      if (Math.cos(this.ai.angle) >= 0) this.ai.dir = 1; else this.ai.dir = -1;
      
      this.executeFire(this.ai);
@@ -326,6 +366,16 @@ export default class PocketTanks {
   update() {
     this.frame++;
     
+    // Decay click anims
+    Object.keys(this.clickAnims).forEach(k => {
+       if (this.clickAnims[k] > 0) this.clickAnims[k] -= 0.1;
+       if (this.clickAnims[k] < 0) this.clickAnims[k] = 0;
+    });
+    
+    // Weapon Scroll Easing
+    const targetScroll = -this.player.selectedWeaponIdx * 100;
+    this.currentWeaponScroll += (targetScroll - this.currentWeaponScroll) * 0.15;
+    
     const py = this.terrain[Math.floor(this.player.x)];
     if (this.player.y + this.player.r < py) this.player.y += 3;
     const ay = this.terrain[Math.floor(this.ai.x)];
@@ -344,7 +394,7 @@ export default class PocketTanks {
           p.life++;
           
           if (p.type === 'laser') {
-             p.vy = 0; // Ignore gravity
+             p.vy = 0; 
              p.vx *= 1.05;
           } else {
              p.vy += this.gravity;
@@ -510,50 +560,52 @@ export default class PocketTanks {
        ctx.save();
        ctx.translate(tank.x, tank.y);
        
-       // Turret Barrel
+       // Turret Barrel (thick, with muzzle)
        ctx.save();
        ctx.rotate(tank.angle);
        ctx.strokeStyle = tank.color;
-       ctx.lineWidth = 4;
+       ctx.lineWidth = 6;
        ctx.lineCap = "round";
        ctx.beginPath();
-       ctx.moveTo(0, -8);
-       ctx.lineTo(25, -8);
+       ctx.moveTo(0, -6);
+       ctx.lineTo(25, -6);
        ctx.stroke();
+       ctx.lineWidth = 10;
+       ctx.beginPath(); ctx.moveTo(20, -6); ctx.lineTo(25, -6); ctx.stroke();
        ctx.restore();
        
-       // Main Tank Body
-       ctx.fillStyle = "#222";
+       // Dome
+       ctx.fillStyle = "#111";
        ctx.strokeStyle = tank.color;
        ctx.lineWidth = 2;
        ctx.shadowBlur = 10;
        ctx.shadowColor = tank.color;
-       
-       // Dome
        ctx.beginPath();
-       ctx.arc(0, -8, 8, Math.PI, 0);
+       ctx.arc(0, -6, 10, Math.PI, 0);
+       ctx.closePath();
        ctx.fill(); ctx.stroke();
        
        // Chassis
+       ctx.fillStyle = "#222";
        ctx.beginPath();
-       ctx.moveTo(-18, -2);
-       ctx.lineTo(18, -2);
-       ctx.lineTo(22, 6);
-       ctx.lineTo(-22, 6);
+       ctx.moveTo(-16, -6);
+       ctx.lineTo(16, -6);
+       ctx.lineTo(24, 6);
+       ctx.lineTo(-24, 6);
        ctx.closePath();
        ctx.fill(); ctx.stroke();
        
        // Treads
-       ctx.fillStyle = "#111";
+       ctx.fillStyle = "#050505";
        ctx.beginPath();
-       ctx.roundRect(-24, 6, 48, 8, 4);
+       ctx.roundRect(-26, 6, 52, 10, 4);
        ctx.fill(); ctx.stroke();
        
        // Wheels
        ctx.fillStyle = tank.color;
        ctx.shadowBlur = 0;
-       for(let wx = -18; wx <= 18; wx+= 9) {
-          ctx.beginPath(); ctx.arc(wx, 10, 3, 0, Math.PI*2); ctx.fill();
+       for(let wx = -20; wx <= 20; wx+= 10) {
+          ctx.beginPath(); ctx.arc(wx, 11, 3, 0, Math.PI*2); ctx.fill();
        }
        
        ctx.restore();
@@ -603,10 +655,6 @@ export default class PocketTanks {
        }
        ctx.stroke();
        ctx.setLineDash([]);
-       ctx.fillStyle = "#fff";
-       ctx.font = "10px 'Panchang', sans-serif";
-       let pwrLabel = invItem.id === 'laser' ? 'MAX' : `${Math.floor((this.player.power/25)*100)}%`;
-       ctx.fillText(`PWR: ${pwrLabel}`, this.player.x, this.player.y - 55);
     }
 
     this.projectiles.forEach(p => {
@@ -656,8 +704,8 @@ export default class PocketTanks {
 
     if (this.state === "player_turn" || this.state === "player_shoot") {
        const w = this.canvas.width;
-       const pulse = Math.sin(this.frame * 0.1) * 3;
        
+       // Glassy UI background
        ctx.fillStyle = "rgba(0, 5, 10, 0.85)";
        ctx.strokeStyle = "#00ffcc";
        ctx.lineWidth = 2;
@@ -666,51 +714,76 @@ export default class PocketTanks {
        ctx.fill();
        ctx.stroke();
        
-       ctx.fillStyle = "rgba(0, 255, 204, 0.2)";
-       ctx.strokeStyle = "#00ffcc";
-       ctx.lineWidth = 1;
-       ctx.beginPath(); ctx.roundRect(20 - pulse/2, this.uiY + 15 - pulse/2, 45 + pulse, 40 + pulse, 5); ctx.fill(); ctx.stroke();
-       ctx.beginPath(); ctx.roundRect(75 - pulse/2, this.uiY + 15 - pulse/2, 45 + pulse, 40 + pulse, 5); ctx.fill(); ctx.stroke();
+       const drawAnimBtn = (x, y, bw, bh, text, animKey, col, isDim) => {
+          const s = this.clickAnims[animKey] * 2; // scale effect
+          ctx.fillStyle = isDim ? "rgba(100,100,100,0.2)" : `rgba(0, 255, 204, ${0.1 + s*0.2})`;
+          ctx.strokeStyle = isDim ? "#666" : col;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.roundRect(x + s, y + s, bw - s*2, bh - s*2, 5); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = isDim ? "#666" : col;
+          ctx.font = "bold 14px 'Panchang', sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(text, x + bw/2, y + bh/2);
+          ctx.textBaseline = "alphabetic"; // reset
+       };
        
-       ctx.fillStyle = "#00ffcc";
-       ctx.font = "bold 16px 'Panchang', sans-serif";
-       ctx.textAlign = "center";
-       ctx.fillText("<", 42, this.uiY + 40);
-       ctx.fillText(">", 97, this.uiY + 40);
+       // Group 1: MOVE
+       ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
+       ctx.fillText(`MOVE (MP: ${Math.floor(this.player.mp)})`, 62, this.uiY + 12);
+       drawAnimBtn(20, this.uiY + 20, 40, 35, "<", "moveL", "#00ffcc", this.player.mp <= 0);
+       drawAnimBtn(65, this.uiY + 20, 40, 35, ">", "moveR", "#00ffcc", this.player.mp <= 0);
+
+       // Group 2: ANGLE
+       let angDeg = Math.floor(Math.abs(this.player.angle * 180 / Math.PI));
+       ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
+       ctx.fillText(`ANG: ${angDeg}°`, 162, this.uiY + 12);
+       drawAnimBtn(120, this.uiY + 20, 40, 35, "-", "angD", "#ebd73f", false);
+       drawAnimBtn(165, this.uiY + 20, 40, 35, "+", "angU", "#ebd73f", false);
        
-       ctx.font = "10px 'Panchang', sans-serif";
-       ctx.fillText(`MP: ${Math.floor(this.player.mp)}`, 70, this.uiY + 75);
+       // Group 3: POWER
+       ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
+       ctx.fillText(`PWR: ${Math.floor((this.player.power/40)*100)}%`, 262, this.uiY + 12);
+       drawAnimBtn(220, this.uiY + 20, 40, 35, "-", "pwrD", "#ff3366", false);
+       drawAnimBtn(265, this.uiY + 20, 40, 35, "+", "pwrU", "#ff3366", false);
        
-       const invItem = this.player.inventory[this.player.selectedWeaponIdx];
-       const wpnData = this.weaponTypes[invItem.id];
+       // Group 4: WEAPON SLIDER (Center)
+       drawAnimBtn(w/2 - 160, this.uiY + 25, 30, 40, "<", "wpnL", "#fff", false);
+       drawAnimBtn(w/2 + 130, this.uiY + 25, 30, 40, ">", "wpnR", "#fff", false);
        
-       ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-       ctx.strokeStyle = "#fff";
-       ctx.beginPath(); ctx.roundRect(w/2 - 140 - pulse/2, this.uiY + 25 - pulse/2, 40 + pulse, 30 + pulse, 5); ctx.fill(); ctx.stroke();
-       ctx.beginPath(); ctx.roundRect(w/2 + 100 - pulse/2, this.uiY + 25 - pulse/2, 40 + pulse, 30 + pulse, 5); ctx.fill(); ctx.stroke();
+       // Sliding List Clipping Region
+       ctx.save();
+       ctx.beginPath();
+       ctx.rect(w/2 - 120, this.uiY + 15, 240, 60);
+       ctx.clip();
        
-       ctx.fillStyle = "#fff";
-       ctx.fillText("<", w/2 - 120, this.uiY + 45);
-       ctx.fillText(">", w/2 + 120, this.uiY + 45);
+       for (let i=0; i<this.player.inventory.length; i++) {
+          let item = this.player.inventory[i];
+          let typeData = this.weaponTypes[item.id];
+          let ix = w/2 + (i * 100) + this.currentWeaponScroll;
+          
+          ctx.fillStyle = i === this.player.selectedWeaponIdx ? "rgba(255,255,255,0.1)" : "transparent";
+          ctx.beginPath(); ctx.roundRect(ix - 45, this.uiY + 20, 90, 50, 8); ctx.fill();
+          
+          if (i === this.player.selectedWeaponIdx) {
+             ctx.strokeStyle = typeData.color;
+             ctx.stroke();
+          }
+          
+          ctx.fillStyle = typeData.color;
+          ctx.font = "bold 11px 'Panchang', sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(typeData.name, ix, this.uiY + 40);
+          
+          ctx.fillStyle = "#aaa";
+          ctx.font = "10px sans-serif";
+          ctx.fillText(`x${item.count > 50 ? '∞' : item.count}`, ix, this.uiY + 58);
+       }
+       ctx.restore();
        
-       ctx.fillStyle = wpnData.color;
-       ctx.font = "bold 14px 'Panchang', sans-serif";
-       ctx.fillText(wpnData.name, w/2, this.uiY + 35);
-       ctx.fillStyle = "#fff";
-       ctx.font = "10px sans-serif";
-       ctx.fillText(`Ammo: ${invItem.count > 50 ? '∞' : invItem.count}`, w/2, this.uiY + 55);
-       
-       const canFire = this.state === "player_turn" && invItem.count > 0;
-       ctx.fillStyle = canFire ? "rgba(255, 0, 85, 0.4)" : "rgba(100, 100, 100, 0.4)";
-       ctx.strokeStyle = canFire ? "#ff0055" : "#666";
-       ctx.shadowBlur = canFire ? 15 : 0;
-       ctx.shadowColor = "#ff0055";
-       ctx.beginPath(); ctx.roundRect(w - 120 - (canFire?pulse:0)/2, this.uiY + 15 - (canFire?pulse:0)/2, 100 + (canFire?pulse:0), 50 + (canFire?pulse:0), 8); ctx.fill(); ctx.stroke();
-       ctx.shadowBlur = 0;
-       
-       ctx.fillStyle = canFire ? "#fff" : "#888";
-       ctx.font = "bold 16px 'Panchang', sans-serif";
-       ctx.fillText("FIRE", w - 70, this.uiY + 45);
+       // Group 5: FIRE
+       const canFire = this.state === "player_turn" && this.player.inventory[this.player.selectedWeaponIdx].count > 0;
+       drawAnimBtn(w - 120, this.uiY + 15, 100, 50, "FIRE", "fire", "#ff0055", !canFire);
     }
 
     ctx.restore();
@@ -718,5 +791,8 @@ export default class PocketTanks {
 
   destroy() {
      window.removeEventListener('keydown', this.handleKeyDown);
+     // Re-enable custom cursor when exiting game
+     this.callbacks.setCursorActiveRef(true);
+     this.canvas.style.cursor = 'none';
   }
 }
