@@ -89,7 +89,7 @@ export default class BulletHell {
 
   bossPattern() {
     // Boss moves wildly side to side, speed increases with level
-    const speedMult = 1 + (this.level - 1) * 0.12;
+    const speedMult = 0.7 + (this.level - 1) * 0.15;
     this.boss.x = this.canvas.width / 2 + Math.sin(this.frame * 0.03 * speedMult) * (this.canvas.width/2 - 80);
     this.boss.y = 150 + Math.sin(this.frame * 0.02 * speedMult) * 60;
     
@@ -97,8 +97,8 @@ export default class BulletHell {
     const phase = Math.floor(this.frame / 350) % 4;
     
     // Level 1 has simplified patterns and slower bullets
-    const bulletSpeedFactor = Math.min(2.5, 0.7 + (this.level - 1) * 0.3);
-    const fireIntervalFactor = Math.max(0.3, 1.2 - (this.level - 1) * 0.2);
+    const bulletSpeedFactor = Math.min(2.5, 0.5 + (this.level - 1) * 0.35);
+    const fireIntervalFactor = Math.max(0.3, 1.6 - (this.level - 1) * 0.3);
 
     if (phase === 0) {
       // Dense double spiral
@@ -230,7 +230,7 @@ export default class BulletHell {
     }
 
     // Powerup Spawning
-    if (this.frame % 350 === 0 && Math.random() > 0.2) {
+    if (this.frame % 150 === 0) {
        this.spawnPowerup();
     }
 
