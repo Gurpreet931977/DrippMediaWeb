@@ -1397,7 +1397,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
              {activeGame === "simon" ? "ROUND" : (activeGame === "snake" || activeGame === "slingshot") ? "SCORE" : activeGame === "gravity" ? "DISTANCE" : "SCORE"}
           </div>
           <div className="score-counter-element" style={{ fontSize: "3rem", fontWeight: "bold", color: "var(--brand-yellow)", lineHeight: 1, textShadow: "0 0 20px rgba(235,215,63,.4)" }}>
-             {activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : score}
+             {activeGame === "scope" ? scopeScore : activeGame === "breaker" ? breakerScore : (activeGame === "gravity" ? (score > 999 ? (score / 1000).toFixed(1) + "km" : score + "m") : score)}
           </div>
           {activeGame === "dripp" && (
             <div style={{ fontSize: "0.6rem", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginTop: "15px", whiteSpace: "pre-line" }}>

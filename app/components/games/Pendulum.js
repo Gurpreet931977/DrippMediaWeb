@@ -4,12 +4,13 @@ export default class PendulumGame {
     this.callbacks = callbacks;
     this.ctx = canvas.getContext('2d');
     
-    this.player = { x: canvas.width * 0.2, y: canvas.height / 2, vx: 5, vy: 0, r: 12 };
+    // Slower initial speed
+    this.player = { x: canvas.width * 0.2, y: canvas.height / 2, vx: 3, vy: 0, r: 12 };
     this.grapple = null;
     this.obstacles = [];
     this.collectibles = [];
     this.particles = [];
-    this.gravity = 0.4;
+    this.gravity = 0.35; // Slightly lower gravity for more control
     this.score = 0;
     this.frame = 0;
     this.state = "playing";
@@ -17,6 +18,7 @@ export default class PendulumGame {
     this.screenShake = 0;
     this.flashAlpha = 0;
     this.speedMultiplier = 1;
+    this.bgOffset = 0;
     
     this.callbacks.setScoreRef(0);
     this.callbacks.setScore(0);
@@ -65,7 +67,7 @@ export default class PendulumGame {
     };
     
     // JUICE: Screenshake & Particles on grapple
-    this.screenShake = 6;
+    this.screenShake = 4;
     for(let i=0; i<10; i++) {
       this.particles.push({
         x: this.player.x, y: this.player.y,
@@ -88,10 +90,10 @@ export default class PendulumGame {
     }
     
     this.frame++;
-    this.speedMultiplier += 0.00015; // Gradually increase speed
+    // Slower speed scaling
+    this.speedMultiplier += 0.0001; 
 
-    // Spawn obstacles more frequently as speed increases
-    const spawnRate = Math.max(30, Math.floor(90 / this.speedMultiplier));
+    const spawnRate = Math.max(40, Math.floor(100 / this.speedMultiplier));
     if (this.frame % spawnRate === 0) {
       this.spawnObstacle(this.canvas.width + 100);
     }
@@ -126,8 +128,9 @@ export default class PendulumGame {
       this.player.vy *= 0.99;
     }
     
-    if (this.player.vx < 4 * this.speedMultiplier) this.player.vx += 0.15 * this.speedMultiplier; 
-    const maxSpeed = 22 * this.speedMultiplier; 
+    if (this.player.vx < 3 * this.speedMultiplier) this.player.vx += 0.1 * this.speedMultiplier; 
+    // Reduced max speed
+    const maxSpeed = 16 * this.speedMultiplier; 
     if (this.player.vx > maxSpeed) this.player.vx = maxSpeed;
 
     this.player.x += this.player.vx;
@@ -137,6 +140,9 @@ export default class PendulumGame {
     const diffX = this.player.x - targetX;
     this.player.x -= diffX;
     if (this.grapple) this.grapple.x -= diffX;
+    
+    // Background parallax scrolling
+    this.bgOffset = (this.bgOffset + diffX * 0.5) % 100;
     
     this.score += diffX / 100;
     this.callbacks.setScoreRef(Math.floor(this.score));
@@ -227,8 +233,21 @@ export default class PendulumGame {
       if (this.screenShake < 0.5) this.screenShake = 0;
     }
 
-    ctx.fillStyle = "rgba(5,5,5,0.4)";
+    // Fully clear screen to prevent "stretching" effect caused by motion blur on obstacles
+    ctx.fillStyle = "#050505";
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    // Parallax Grid Background
+    ctx.strokeStyle = "rgba(0, 255, 255, 0.04)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for(let x = -this.bgOffset; x < this.canvas.width; x += 100) {
+      ctx.moveTo(x, 0); ctx.lineTo(x, this.canvas.height);
+    }
+    for(let y = 0; y < this.canvas.height; y += 100) {
+      ctx.moveTo(0, y); ctx.lineTo(this.canvas.width, y);
+    }
+    ctx.stroke();
 
     if (this.state === "playing") {
       this.particles.push({ x: this.player.x, y: this.player.y, vx: 0, vy: 0, life: 15, isTrail: true, color: obsColor });
@@ -246,17 +265,21 @@ export default class PendulumGame {
     ctx.globalCompositeOperation = "source-over";
 
     if (this.grapple && this.state === "playing") {
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-      ctx.lineWidth = 2;
+      // Flickering electric grapple line
+      ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + Math.random()*0.5})`;
+      ctx.lineWidth = 2 + Math.random();
       ctx.beginPath();
       ctx.moveTo(this.player.x, this.player.y);
       ctx.lineTo(this.grapple.x, this.grapple.y);
       ctx.stroke();
       
       ctx.fillStyle = "#ffffff";
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "#00ffff";
       ctx.beginPath();
       ctx.arc(this.grapple.x, this.grapple.y, 5, 0, Math.PI*2);
       ctx.fill();
+      ctx.shadowBlur = 0;
     }
 
     // Draw Collectibles
@@ -267,26 +290,43 @@ export default class PendulumGame {
        ctx.beginPath();
        ctx.arc(col.x, col.y + Math.sin(col.wobble)*10, col.r * (0.8 + Math.sin(this.frame*0.2)*0.2), 0, Math.PI*2);
        ctx.fill();
-    });
-
-    ctx.fillStyle = "#111";
-    ctx.strokeStyle = obsColor;
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = obsColor;
-    this.obstacles.forEach(obs => {
-      ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-      ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+       // Inner white core
+       ctx.fillStyle = "#ffffff";
+       ctx.beginPath();
+       ctx.arc(col.x, col.y + Math.sin(col.wobble)*10, col.r * 0.4, 0, Math.PI*2);
+       ctx.fill();
+       ctx.fillStyle = "#00ffff";
     });
     ctx.shadowBlur = 0;
+
+    // Creative Glowing Pillars for Obstacles
+    this.obstacles.forEach(obs => {
+      // Outer dim glow box
+      ctx.fillStyle = "rgba(10, 10, 10, 0.8)";
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = obsColor;
+      ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+      
+      // Electric edges
+      ctx.strokeStyle = obsColor;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+      
+      // Glowing core line inside
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowBlur = 10;
+      ctx.fillRect(obs.x + obs.w/2 - 2, obs.y + 5, 4, obs.h - 10);
+      ctx.shadowBlur = 0;
+    });
 
     if (this.state === "playing") {
       ctx.fillStyle = "#ffffff";
       ctx.shadowBlur = 20;
       ctx.shadowColor = obsColor;
       ctx.beginPath();
-      // Elastic stretch based on velocity
-      ctx.ellipse(this.player.x, this.player.y, this.player.r + (this.player.vx * 0.2), this.player.r, 0, 0, Math.PI*2);
+      // Cap the elastic stretch so it doesn't look completely warped
+      const stretch = Math.min(this.player.r * 1.5, this.player.vx * 0.15);
+      ctx.ellipse(this.player.x, this.player.y, this.player.r + stretch, this.player.r, 0, 0, Math.PI*2);
       ctx.fill();
       ctx.shadowBlur = 0;
     }
