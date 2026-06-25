@@ -1136,10 +1136,10 @@ const getHelpText = (game) => {
   switch (game) {
     case 'dripp':
       return <HelpBrief 
-        controls="Move your mouse or drag your finger across the screen to guide the catcher." 
-        howToPlay="Intercept falling drops before they pass the bottom of the screen. Game speed increases as you survive longer." 
-        scoreSystem="Red drops = +5 points. White drops = +69 points." 
-        powerups="Black Bombs (Hazard): Touching a bomb results in instant death. Avoid at all costs!"
+        controls="Move your mouse or drag your finger across the screen to guide the golden catcher ring." 
+        howToPlay="Intercept the falling liquid drops before they pass the bottom of the screen. The rain gets heavier and faster the longer you survive. Missing drops doesn't hurt, but you want that high score!" 
+        scoreSystem="Red Drops = +5 Points. Rare White Drops = +69 Points. Normal Drops = +1 Point." 
+        powerups="Black Bombs (Hazard): Hitting a black spiked bomb causes instant death. Dodge them!"
       />;
     case 'breaker':
       return <HelpBrief 
@@ -1227,17 +1227,17 @@ const getHelpText = (game) => {
       />;
     case 'bullethell':
       return <HelpBrief 
-        controls="Move your mouse to instantly pilot your core with zero latency." 
-        howToPlay="Dodge overwhelming waves of intricate laser patterns. Direct hit the Boss with your core to deal damage and deplete its top health bar." 
-        scoreSystem="None. Pure Boss Rush survival. Defeat bosses to advance to harder levels with epic names." 
-        powerups="Blue 'S': Shield that deflects bullets back at the boss. Orange 'F': Frenzy mode for 3x damage at blazing speeds. Red 'N': Screen-clearing Nuke."
+        controls="Move your mouse or finger to pilot your neon core. Your movement is 1:1 with zero latency." 
+        howToPlay="Dodge massive, overwhelming waves of intricate laser patterns. You must directly smash your core into the Boss to deal damage and deplete its jelly health bar." 
+        scoreSystem="None. Pure Boss Rush survival. Defeat bosses to advance to harder phases." 
+        powerups="Blue 'S' (Shield): Deflects lasers back at the boss for massive damage. Orange 'F' (Frenzy): 3x damage at blazing speeds. Red 'N' (Nuke): Clears all lasers instantly."
       />;
     case 'tanks':
       return <HelpBrief 
-        controls="Drag your mouse or touch backwards from your tank to aim and set power. Release to fire!" 
-        howToPlay="Turn-based artillery combat against an AI! Destroy the AI tank before it destroys you. The terrain is fully destructible." 
-        scoreSystem="No points. Pure 1v1 survival." 
-        powerups="No powerups. Master the gravity and wind to land perfect shots."
+        controls="Use the bottom left controls to fine-tune your angle and power, or just click and drag the tank directly. Click the huge FIRE orb or press SPACEBAR to shoot. Use the carousel to swap weapons!" 
+        howToPlay="Turn-based artillery combat! Destroy the opponent before they destroy you. The terrain is completely destructible." 
+        scoreSystem="Each match is a 1v1 fight to the death. No points, just glory." 
+        powerups="You spawn with a random arsenal of crazy weapons (Sniper, Boomerang, Black Hole, Volcanic, and more!). Choose wisely."
       />;
     case 'mandala':
       return <HelpBrief 
@@ -1304,6 +1304,13 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   useEffect(() => { activeGameRef.current = activeGame; }, [activeGame]);
   useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
+
+  useEffect(() => {
+    if (activeGame !== "none") {
+      setIsHelpOpen(true);
+      setIsPaused(true);
+    }
+  }, [activeGame]);
 
   // Handle game switch logic (reset scores etc.)
   useEffect(() => {
@@ -1451,8 +1458,8 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
         <button onClick={() => setIsPaused(p => !p)} style={{ width: "40px", height: "40px", borderRadius: "50%", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "14px", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
           {isPaused ? "▶" : "||"}
         </button>
-        <button onClick={() => setIsHelpOpen(h => !h)} style={{ width: "40px", height: "40px", borderRadius: "50%", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-          ?
+        <button onClick={() => { setIsHelpOpen(true); setIsPaused(true); }} style={{ height: "40px", borderRadius: "20px", padding: "0 15px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "white", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "12px", fontFamily: "'Clash Display', sans-serif", letterSpacing: "1px", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
+          <span style={{ fontWeight: 'bold', fontSize: '16px' }}>?</span> HOW TO PLAY
         </button>
       </div>
 
@@ -1676,7 +1683,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
 
             {getHelpText(activeGame)}
             <div style={{ marginTop: "30px" }}>
-              <button onClick={() => setIsHelpOpen(false)} style={{ padding: "10px 24px", borderRadius: "30px", background: "transparent", border: "1px solid #ebd73f", color: "#ebd73f", fontFamily: "'Clash Display', sans-serif", cursor: "pointer", transition: "all 0.3s", textTransform: "uppercase", letterSpacing: "1px" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>Close</button>
+              <button onClick={() => { setIsHelpOpen(false); setIsPaused(false); }} style={{ padding: "12px 32px", borderRadius: "30px", background: "#ebd73f", border: "none", color: "#111", fontFamily: "'Panchang', sans-serif", cursor: "pointer", transition: "all 0.3s", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "bold" }} onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.05)"; e.currentTarget.style.boxShadow = "0 0 20px rgba(235, 215, 63, 0.4)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }}>READY TO PLAY</button>
             </div>
           </div>
         </div>
