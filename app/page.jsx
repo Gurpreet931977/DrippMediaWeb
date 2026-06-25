@@ -84,23 +84,29 @@ export default function ComingSoon() {
     setIsTouch(typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
     document.body.classList.add('loaded');
     
+    let lastTouchTime = 0;
+
     const moveCursor = (e) => {
       // Allow cursor to update coordinates always, so UI is clickable while paused
-      // Desktop
-      if (e.clientX) {
-        mouseRef.current = { x: e.clientX, y: e.clientY };
-      }
-      // Mobile Touch
-      if (e.touches && e.touches.length > 0) {
-        if (activeGameRef.current !== 'none' && gameStateRef.current === 'playing' && !isPausedRef.current) {
-          const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-          if (tag === 'canvas' || tag === 'body' || (e.target.classList && e.target.classList.contains('hero'))) {
-             e.preventDefault(); // Stop mobile scrolling/refreshing while playing on canvas
+      if (e.type.startsWith('touch')) {
+        lastTouchTime = Date.now();
+        if (e.touches && e.touches.length > 0) {
+          if (activeGameRef.current !== 'none' && gameStateRef.current === 'playing' && !isPausedRef.current) {
+            const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+            if (tag === 'canvas' || tag === 'body' || (e.target.classList && e.target.classList.contains('hero'))) {
+               e.preventDefault(); // Stop mobile scrolling/refreshing while playing on canvas
+            }
           }
+          mouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          const cursorElem = document.querySelector('.cursor');
+          if (cursorElem) cursorElem.style.display = 'none'; // Hide cursor on touch
         }
-        mouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        const cursorElem = document.querySelector('.cursor');
-        if (cursorElem) cursorElem.style.display = 'none'; // Hide cursor on touch
+      } else {
+        // Ignore synthetic mouse events fired right after touch end
+        if (Date.now() - lastTouchTime < 500) return;
+        if (e.clientX !== undefined) {
+          mouseRef.current = { x: e.clientX, y: e.clientY };
+        }
       }
       
       const cursorElem = document.querySelector('.cursor');
@@ -115,13 +121,19 @@ export default function ComingSoon() {
         });
       }
     };
+
+    const handleTouchEnd = (e) => {
+       lastTouchTime = Date.now();
+       if (e.touches.length === 0) {
+         mouseRef.current = { x: -100, y: -100 };
+       }
+    };
     
     window.addEventListener("mousemove", moveCursor);
     window.addEventListener("touchmove", moveCursor, { passive: false });
     window.addEventListener("touchstart", moveCursor, { passive: false });
-    window.addEventListener("touchend", () => {
-       mouseRef.current = { x: -100, y: -100 };
-    });
+    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
 
     // --- GAME LOGIC ---
     const canvas = canvasRef.current;
@@ -163,8 +175,8 @@ export default function ComingSoon() {
         // Logarithmic difficulty scaling prevents sudden spikes when catching 69-point White drops
         let speedMult;
         if (!isMobileCanvas) {
-           // PC version: faster leveling, more difficult from start
-           speedMult = 1.5 + Math.log10(1 + scoreRef.current / 150) * 0.6; 
+           // PC version: slower speed to make game more manageable
+           speedMult = 1.1 + Math.log10(1 + scoreRef.current / 200) * 0.45; 
         } else {
            speedMult = 1 + Math.log10(1 + scoreRef.current / 300) * 0.4; 
         }
