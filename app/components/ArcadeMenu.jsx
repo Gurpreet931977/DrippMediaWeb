@@ -573,6 +573,7 @@ export default function ArcadeMenu({ onStartGame }) {
                       gap: '10px',
                       textTransform: 'uppercase',
                       letterSpacing: '2px',
+                      whiteSpace: 'nowrap',
                       boxShadow: `0 10px 20px ${game.color}30`,
                       transition: 'box-shadow 0.3s ease, background-color 0.3s ease'
                     }}
@@ -593,7 +594,7 @@ export default function ArcadeMenu({ onStartGame }) {
                       }
                     }}
                   >
-                    {(!isDeveloper && game.id !== 'dripp' && game.id !== 'breaker') ? 'LOCKED (DEV ONLY)' : 'PLAY NOW'}
+                    {(!isDeveloper && game.id !== 'dripp' && game.id !== 'breaker') ? 'LOCKED (DEV)' : 'PLAY NOW'}
                   </button>
                 </div>
                 </div>
