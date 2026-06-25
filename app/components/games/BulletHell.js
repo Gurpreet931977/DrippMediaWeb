@@ -22,7 +22,7 @@ export default class BulletHell {
       hp: 150, 
       maxHp: 150, 
       phase: 0,
-      color: "#ff0055"
+      color: "#ff3366"
     };
     
     this.bullets = [];
@@ -177,7 +177,7 @@ export default class BulletHell {
        this.levelUpTimer = 90; // Show LEVEL UP screen text
 
        // Next Greater Boss stats
-       const bossColors = ["#ff0055", "#00ffcc", "#e100ff", "#ffcc00", "#ff3300", "#ffffff"];
+       const bossColors = ["#ff3366", "#33ccff", "#b366ff", "#ffcc33", "#ff6633", "#00ffaa"];
        const chosenColor = bossColors[(this.level - 1) % bossColors.length];
        
        const nextMaxHp = 150 + (this.level - 1) * 150;
@@ -347,7 +347,10 @@ export default class BulletHell {
       if (this.screenShake < 0.5) this.screenShake = 0;
     }
 
-    ctx.fillStyle = "rgba(5,5,5,0.4)";
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+    bgGrad.addColorStop(0, "rgba(10, 8, 20, 0.4)");
+    bgGrad.addColorStop(1, "rgba(5, 5, 10, 0.4)");
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
     // Screen Flash
@@ -504,29 +507,35 @@ export default class BulletHell {
     });
     ctx.globalAlpha = 1;
     
-    // UI: Gamified Boss Health Bar
-    const barX = 140; 
-    const barY = 40;
-    const barWidth = this.canvas.width - barX - 30; // 30px padding on right
-    const barHeight = 16;
+    if (this.boss.displayHp === undefined) this.boss.displayHp = this.boss.hp;
+    this.boss.displayHp += (this.boss.hp - this.boss.displayHp) * 0.15; // Smooth spring
+    
+    // UI: Jelly Boss Health Bar (Centered, smaller width)
+    const barWidth = Math.min(400, this.canvas.width - 200);
+    const barX = this.canvas.width / 2 - barWidth / 2;
+    const barY = 45;
+    
+    // Jelly wobble when hit
+    const wobble = this.bossHitTimer > 0 ? Math.sin(this.frame * 0.8) * 4 : 0;
+    const barHeight = 12 + Math.abs(wobble);
     
     // Background Bar
-    ctx.fillStyle = "rgba(20, 5, 25, 0.8)";
+    ctx.fillStyle = "rgba(10, 15, 30, 0.6)";
     ctx.beginPath();
-    ctx.roundRect(barX, barY, barWidth, barHeight, 8);
+    ctx.roundRect(barX, barY - Math.abs(wobble)/2, barWidth, barHeight, barHeight/2);
     ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.2)";
+    ctx.strokeStyle = "rgba(255,255,255,0.1)";
     ctx.lineWidth = 1;
     ctx.stroke();
     
     // Boss HP filling
-    const hpRatio = Math.max(0, this.boss.hp / this.boss.maxHp);
+    const hpRatio = Math.max(0, this.boss.displayHp / this.boss.maxHp);
     const fillWidth = barWidth * hpRatio;
     
     if (fillWidth > 0) {
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(barX, barY, fillWidth, barHeight, 8);
+      ctx.roundRect(barX, barY - Math.abs(wobble)/2, fillWidth, barHeight, barHeight/2);
       ctx.clip(); // Clip everything to the rounded rect
       
       // Main color fill
@@ -543,14 +552,14 @@ export default class BulletHell {
          ctx.beginPath();
          ctx.moveTo(barX + x + offset, barY);
          ctx.lineTo(barX + x + 10 + offset, barY);
-         ctx.lineTo(barX + x - 5 + offset, barY + barHeight);
-         ctx.lineTo(barX + x - 15 + offset, barY + barHeight);
+         ctx.lineTo(barX + x - 5 + offset, barY + barHeight + wobble);
+         ctx.lineTo(barX + x - 15 + offset, barY + barHeight + wobble);
          ctx.fill();
       }
       
       // Glossy highlight
       ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-      ctx.fillRect(barX, barY, fillWidth, barHeight / 3);
+      ctx.fillRect(barX, barY - Math.abs(wobble)/2, fillWidth, barHeight / 3);
       
       ctx.restore();
     }
@@ -559,7 +568,7 @@ export default class BulletHell {
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(barX, barY, barWidth, barHeight, 8);
+    ctx.roundRect(barX, barY - Math.abs(wobble)/2, barWidth, barHeight, barHeight/2);
     ctx.stroke();
 
     // Level System at Top Right (below health bar)
@@ -572,13 +581,13 @@ export default class BulletHell {
     // Boss Name Badge (attached to the left of the bar)
     ctx.fillStyle = this.boss.color;
     ctx.beginPath();
-    ctx.roundRect(barX - 65, barY - 4, 70, barHeight + 8, 12);
+    ctx.roundRect(barX - 60, barY - 6 - Math.abs(wobble)/2, 65, barHeight + 12, barHeight/2 + 6);
     ctx.fill();
     ctx.fillStyle = "#111";
-    ctx.font = "bold 12px 'Panchang', sans-serif";
+    ctx.font = "bold 11px 'Panchang', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("BOSS", barX - 30, barY + barHeight/2 + 1);
+    ctx.fillText("BOSS", barX - 27, barY + barHeight/2);
     ctx.textBaseline = "alphabetic"; // reset
     
     // Active Powerup text
