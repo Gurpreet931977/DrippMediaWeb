@@ -414,7 +414,7 @@ export default function ArcadeMenu({ onStartGame }) {
                     if (Math.abs(dragOffset) > 10) { e.preventDefault(); e.stopPropagation(); return; }
                     
                     if (isActive) {
-                      const isOriginalGame = game.id === 'dripp' || game.id === 'breaker' || game.id === 'scope';
+                      const isOriginalGame = game.id === 'dripp' || game.id === 'breaker';
                       if (!isOriginalGame && !isDeveloper) {
                         setPendingGameId(game.id);
                         setShowPasswordModal(true);
@@ -540,7 +540,15 @@ export default function ArcadeMenu({ onStartGame }) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (isActive) onStartGame(game.id);
+                      if (isActive) {
+                        const isOriginalGame = game.id === 'dripp' || game.id === 'breaker';
+                        if (!isOriginalGame && !isDeveloper) {
+                           setPendingGameId(game.id);
+                           setShowPasswordModal(true);
+                        } else {
+                           onStartGame(game.id);
+                        }
+                      }
                     }}
                     onPointerDown={(e) => {
                       if (activeMode === 'arcade') gsap.to(e.currentTarget, { scale: 0.9, duration: 0.1 });
@@ -585,7 +593,7 @@ export default function ArcadeMenu({ onStartGame }) {
                       }
                     }}
                   >
-                    Play Now
+                    {(!isDeveloper && game.id !== 'dripp' && game.id !== 'breaker') ? 'LOCKED (DEV ONLY)' : 'PLAY NOW'}
                   </button>
                 </div>
                 </div>

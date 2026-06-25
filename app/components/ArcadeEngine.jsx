@@ -1082,40 +1082,123 @@ function createGameEngine(canvas, callbacks) {
 
 // ─── HELP TEXT PROVIDER ────────────────────────────────────────────────────────
 
+const HelpBrief = ({ controls, howToPlay, scoreSystem }) => (
+  <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div>
+      <h4 style={{ color: '#ebd73f', margin: '0 0 4px 0', fontSize: '0.85rem', fontFamily: "'Panchang', sans-serif", letterSpacing: '1px' }}>CONTROLS</h4>
+      <p style={{ fontSize: '0.85rem', lineHeight: '1.4', color: 'rgba(255,255,255,0.8)', margin: 0 }}>{controls}</p>
+    </div>
+    <div>
+      <h4 style={{ color: '#ebd73f', margin: '0 0 4px 0', fontSize: '0.85rem', fontFamily: "'Panchang', sans-serif", letterSpacing: '1px' }}>HOW TO PLAY</h4>
+      <p style={{ fontSize: '0.85rem', lineHeight: '1.4', color: 'rgba(255,255,255,0.8)', margin: 0 }}>{howToPlay}</p>
+    </div>
+    {scoreSystem && (
+    <div>
+      <h4 style={{ color: '#ebd73f', margin: '0 0 4px 0', fontSize: '0.85rem', fontFamily: "'Panchang', sans-serif", letterSpacing: '1px' }}>SCORE SYSTEM</h4>
+      <p style={{ fontSize: '0.85rem', lineHeight: '1.4', color: 'rgba(255,255,255,0.8)', margin: 0 }}>{scoreSystem}</p>
+    </div>
+    )}
+  </div>
+);
+
 const getHelpText = (game) => {
   switch (game) {
     case 'dripp':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Catch the drops with your cursor. Red drops are worth 5 points, white drops are 69 points. Avoid the black bombs!</p>;
+      return <HelpBrief 
+        controls="Move your mouse or drag your finger across the screen to guide the cursor." 
+        howToPlay="Intercept falling drops before they pass the bottom of the screen. Avoid the black bombs—touching one instantly ends the game!" 
+        scoreSystem="Red drops = 5 points. White drops = 69 points. Speed increases as your score gets higher." 
+      />;
     case 'breaker':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Use your cursor to move the paddle. Bounce the ball to break all the target rings. Catch power-ups for an edge!</p>;
+      return <HelpBrief 
+        controls="Move your mouse horizontally to control the paddle." 
+        howToPlay="Keep the bouncing ball in play and smash all the neon target rings to advance levels. Catch falling power-ups (wider paddle, multi-ball) to gain an edge, but avoid red downers!" 
+        scoreSystem="Breaking bricks awards points based on current level speed. Power-ups grant bonus points." 
+      />;
     case 'scope':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Move your paddle to intercept the fast-moving scope drops. Don't let them hit the bottom edge!</p>;
+      return <HelpBrief 
+        controls="Move your mouse to slide your paddle." 
+        howToPlay="Fast-moving targets will fall from the sky. You must intercept every single one. Missing even a single target results in game over." 
+        scoreSystem="Each intercepted drop awards points. Game speed scales infinitely." 
+      />;
     case 'snake':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Guide the snake using your cursor. Eat food to grow longer, but watch out for reverse-controls or walls!</p>;
+      return <HelpBrief 
+        controls="Move your mouse to guide the snake's head." 
+        howToPlay="Eat glowing food orbs to grow longer. Do not hit the walls or your own tail. Watch out for red reverse-controls power-ups—they will invert your mouse movement!" 
+        scoreSystem="Eating food increases your length and score. Surviving longer yields more points." 
+      />;
     case 'pong':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Classic pong! Use your cursor to move your paddle up and down. Defeat the AI opponent.</p>;
+      return <HelpBrief 
+        controls="Move your mouse vertically to move your paddle." 
+        howToPlay="Defend your side of the screen against the AI opponent. The ball speed increases with every volley. Sneak the ball past the AI to score." 
+        scoreSystem="First to miss loses the rally. High scores are based on consecutive wins." 
+      />;
     case 'runner':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Click or tap to jump. Double jump to avoid tall obstacles. Run as far as you can!</p>;
+      return <HelpBrief 
+        controls="Click or tap anywhere to Jump. Click again while in the air to Double Jump." 
+        howToPlay="Automatically run forward while dodging incoming geometric obstacles. Time your jumps carefully to clear tall walls and gaps." 
+        scoreSystem="Score increases automatically based on distance traveled and current speed." 
+      />;
     case 'invaders':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Move your cursor to pilot the ship. Click to shoot down the incoming invaders before they reach the bottom.</p>;
+      return <HelpBrief 
+        controls="Move mouse to pilot your ship. Click or tap to shoot lasers." 
+        howToPlay="Defend the bottom of the screen from descending alien grids. Shoot them down before they breach your defenses." 
+        scoreSystem="Destroying aliens grants points. Clearing waves increases the difficulty and score multiplier." 
+      />;
     case 'simon':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Watch the sequence of glowing buttons, then click them in the exact same order. The sequence grows longer each round!</p>;
+      return <HelpBrief 
+        controls="Click or tap the colored quadrants." 
+        howToPlay="Memorize the sequence of flashing colors and sounds, then repeat it back perfectly. The sequence gets one step longer every round." 
+        scoreSystem="Your score equals the number of rounds successfully completed." 
+      />;
     case 'pendulum':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Tap or click to release the pendulum and hit the glowing targets. Timing is everything.</p>;
+      return <HelpBrief 
+        controls="Click and hold anywhere to shoot a grapple line to the ceiling. Release to let go." 
+        howToPlay="Use momentum to swing through moving vertical obstacles. Collect cyan neon orbs for massive boosts, and avoid hitting the neon walls!" 
+        scoreSystem="Distance traveled grants points. Neon orbs grant +50 points each." 
+      />;
     case 'gravity':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Click to reverse gravity. Navigate the character through the maze of spikes on the floor and ceiling.</p>;
+      return <HelpBrief 
+        controls="Click or tap anywhere to instantly reverse gravity." 
+        howToPlay="Navigate the high-speed tunnel by flipping between the ceiling and the floor. Avoid the neon blocks in your path." 
+        scoreSystem="Score increases continuously based on your survival time and speed." 
+      />;
     case 'slingshot':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Click and drag to aim the ninja. Release to jump between walls and slice the targets. Avoid falling!</p>;
+      return <HelpBrief 
+        controls="Click, drag backwards, and release to slingshot your ninja across the screen." 
+        howToPlay="Slice through cyan targets to survive. Bouncing off walls resets your combo. Avoid the dark red bombs at all costs!" 
+        scoreSystem="Slicing targets grants points. Chaining kills without hitting walls builds a massive score multiplier." 
+      />;
     case 'bullethell':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Move your cursor to dodge the massive waves of incoming projectiles. Survive as long as you can!</p>;
+      return <HelpBrief 
+        controls="Move your mouse to pilot the core. Click to unleash your Super Move." 
+        howToPlay="Dodge the overwhelming waves of lasers from the Boss. Graze bullets (get extremely close without touching) to build HYPE. At 100 HYPE, click to wipe the screen and damage the Boss!" 
+        scoreSystem="Survival grants passive points. Grazing bullets grants bonus points. Defeating the Boss awards 5000 points." 
+      />;
     case 'mandala':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Creative Zen Mode: Click and drag to draw beautiful, symmetrical mandala patterns. Relax and create.</p>;
+      return <HelpBrief 
+        controls="Click and drag to draw." 
+        howToPlay="A relaxing Zen mode. Your cursor acts as a mirrored brush that creates beautiful, symmetrical neon mandalas. Release to reset the brush hue." 
+        scoreSystem="No score. Just relax and create." 
+      />;
     case 'liquid':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Creative Zen Mode: Interact with the liquid particles. Stir them around and watch the fluid dynamics.</p>;
+      return <HelpBrief 
+        controls="Click and drag through the particles." 
+        howToPlay="A relaxing Zen mode. Interact with thousands of fluid particles. Stir them around, create vortexes, and watch the fluid dynamics." 
+        scoreSystem="No score. Just relax and observe." 
+      />;
     case 'nodeweaver':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Creative Zen Mode: Connect the wandering nodes. Form intricate webs and watch them pulse with energy.</p>;
+      return <HelpBrief 
+        controls="Move your cursor near the nodes." 
+        howToPlay="A relaxing Zen mode. Guide floating orbs to connect them into intricate webs of light. Watch them pulse with energy." 
+        scoreSystem="No score. Just relax and weave." 
+      />;
     case 'looper':
-      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Creative Zen Mode: Tap the rings to trigger musical loops and create your own harmonic soundscape.</p>;
+      return <HelpBrief 
+        controls="Click the concentric rings." 
+        howToPlay="A relaxing Zen mode. Tap different rings to trigger expanding visual ripples and create your own ambient harmonic soundscape." 
+        scoreSystem="No score. Just relax and listen." 
+      />;
     default:
       return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Move your cursor or tap to interact. Try to score as many points as possible without losing!</p>;
   }
@@ -1496,7 +1579,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
                {showGameOverHelp && (
                  <div style={{
                     position: 'absolute', bottom: '120%', left: '50%', transform: 'translateX(-50%)',
-                    width: '320px', background: 'rgba(15,15,15,0.95)', border: '1px solid rgba(255,255,255,0.15)',
+                    width: '320px', maxHeight: '60vh', overflowY: 'auto', background: 'rgba(15,15,15,0.95)', border: '1px solid rgba(255,255,255,0.15)',
                     borderRadius: '15px', padding: '20px', boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
                     backdropFilter: 'blur(10px)', zIndex: 200, textAlign: 'left',
                     color: 'rgba(255,255,255,0.9)', cursor: 'default'
