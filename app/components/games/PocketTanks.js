@@ -37,7 +37,7 @@ export default class PocketTanks {
        inventory: this.generateInventory(),
        selectedWeaponIdx: 0,
        dir: 1,
-       jumps: 1,
+       jumps: 4,
        secondJumpUnlocked: false,
        targetX: undefined,
        vy: undefined
@@ -49,7 +49,7 @@ export default class PocketTanks {
        inventory: this.generateInventory(),
        selectedWeaponIdx: 0,
        dir: -1,
-       jumps: 1,
+       jumps: 4,
        secondJumpUnlocked: false,
        targetX: undefined,
        vy: undefined
@@ -152,6 +152,23 @@ export default class PocketTanks {
     const cx = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
     const cy = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
 
+    if (this.state === "game_over") {
+       const w = this.canvas.width;
+       const rW = 160, rH = 45;
+       const rX = w/2 - rW/2;
+       const rY = 100;
+       const mY = 160;
+       
+       if (cx > rX && cx < rX + rW && cy > rY && cy < rY + rH) {
+          this.restart();
+          return;
+       }
+       if (cx > rX && cx < rX + rW && cy > mY && cy < mY + rH) {
+          this.state = "menu";
+          return;
+       }
+    }
+
     if (this.state === "menu") {
        const w = this.canvas.width;
        const h = this.canvas.height;
@@ -178,6 +195,27 @@ export default class PocketTanks {
      this.state = "player_turn";
      this.player.mp = this.player.maxMp;
      this.ai.mp = this.ai.maxMp;
+  }
+
+  restart() {
+     this.projectiles = [];
+     this.particles = [];
+     this.terrain = [];
+     this.generateTerrain();
+     this.player.hp = this.player.maxHp;
+     this.player.inventory = this.generateInventory();
+     this.player.jumps = 4;
+     this.player.mp = this.player.maxMp;
+     this.player.power = 15;
+     this.player.angle = -Math.PI/4;
+     this.ai.hp = this.ai.maxHp;
+     this.ai.inventory = this.generateInventory();
+     this.ai.jumps = 4;
+     this.ai.mp = this.ai.maxMp;
+     this.ai.power = 15;
+     this.ai.angle = -Math.PI*0.75;
+     this.placeTanks();
+     this.startMatch();
   }
 
   handleUIClick(cx, cy) {
@@ -211,11 +249,11 @@ export default class PocketTanks {
         this.clickAnims.pwrU = 1;
      }
      // Jump Buttons
-     else if (cx > 420 && cx < 443 && cy > cY && cy < cY + 35) {
+     else if (cx > 420 && cx < 460 && cy > cY && cy < cY + 35) {
         this.jumpTank(this.player, -1);
         this.clickAnims.jumpL = 1;
      }
-     else if (cx > 447 && cx < 470 && cy > cY && cy < cY + 35) {
+     else if (cx > 465 && cx < 505 && cy > cY && cy < cY + 35) {
         this.jumpTank(this.player, 1);
         this.clickAnims.jumpR = 1;
      }
@@ -604,10 +642,11 @@ export default class PocketTanks {
        
        if (this.projectiles.length === 0) {
           if (this.player.hp <= 0 || this.ai.hp <= 0) {
-             this.state = "game_over";
-             setTimeout(() => {
-                this.callbacks.setGameState(this.player.hp > 0 ? "victory" : "failed");
-             }, 2000);
+             if (this.state !== "game_over") {
+                this.state = "game_over";
+                const deadTank = this.player.hp <= 0 ? this.player : this.ai;
+                this.createExplosion(deadTank.x, deadTank.y, 60, '#ff5500', 0);
+             }
           } else {
              if (this.state === "player_shoot") {
                 this.state = "ai_turn";
@@ -696,6 +735,7 @@ export default class PocketTanks {
     ctx.shadowBlur = 0;
 
     const drawTank = (tank, label) => {
+       if (tank.hp <= 0 && this.state === "game_over") return;
        ctx.save();
        ctx.translate(tank.x, tank.y);
        
@@ -845,6 +885,30 @@ export default class PocketTanks {
     } else if (this.state === "game_over") {
        ctx.fillStyle = this.player.hp > 0 ? "#00ffcc" : "#ff0055";
        ctx.fillText(this.player.hp > 0 ? "VICTORY!" : "DEFEAT!", this.canvas.width/2, 60);
+       
+       const w = this.canvas.width;
+       const rW = 160, rH = 45;
+       const rX = w/2 - rW/2;
+       const rY = 100;
+       
+       const hoverR = this.mouseX > rX && this.mouseX < rX + rW && this.mouseY > rY && this.mouseY < rY + rH;
+       ctx.fillStyle = hoverR ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)";
+       ctx.strokeStyle = hoverR ? "#fff" : "rgba(255,255,255,0.5)";
+       ctx.beginPath(); ctx.roundRect(rX, rY, rW, rH, 25); ctx.fill(); ctx.stroke();
+       ctx.fillStyle = "#fff";
+       ctx.font = "bold 14px 'Panchang', sans-serif";
+       ctx.textBaseline = "middle";
+       ctx.fillText("REPLAY", w/2, rY + rH/2 + 2);
+       
+       const mY = 160;
+       const hoverM = this.mouseX > rX && this.mouseX < rX + rW && this.mouseY > mY && this.mouseY < mY + rH;
+       ctx.fillStyle = hoverM ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)";
+       ctx.strokeStyle = hoverM ? "#fff" : "rgba(255,255,255,0.5)";
+       ctx.beginPath(); ctx.roundRect(rX, mY, rW, rH, 25); ctx.fill(); ctx.stroke();
+       ctx.fillStyle = "#fff";
+       ctx.fillText("MAIN MENU", w/2, mY + rH/2 + 2);
+       
+       ctx.textBaseline = "alphabetic";
     }
 
     if (this.state === "player_turn" || this.state === "player_shoot") {
@@ -876,9 +940,6 @@ export default class PocketTanks {
        const cY = this.uiY + 40; // Moved down
        const btnColor = "#00ffcc";
        
-       // Jump Button
-       drawAnimBtn(120, this.uiY + 10, 285, 25, `JUMP (${this.player.jumps})`, "jump", btnColor, this.player.jumps <= 0);
-       
        // Group 1: MOVE
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
        ctx.fillText(`MOVE (MP: ${Math.floor(this.player.mp)})`, 162, cY - 10);
@@ -898,11 +959,11 @@ export default class PocketTanks {
        drawAnimBtn(320, cY, 40, 35, "-", "pwrD", btnColor, false);
        drawAnimBtn(365, cY, 40, 35, "+", "pwrU", btnColor, false);
        
-       // Jump Button
+       // Jump Buttons
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`JUMP: ${this.player.jumps}`, 445, cY - 10);
-       drawAnimBtn(420, cY, 23, 35, "↖", "jumpL", "#ff3366", this.player.jumps <= 0);
-       drawAnimBtn(447, cY, 23, 35, "↗", "jumpR", "#ff3366", this.player.jumps <= 0);
+       ctx.fillText(`JUMP: ${this.player.jumps}`, 462, cY - 10);
+       drawAnimBtn(420, cY, 40, 35, "↖", "jumpL", "#ff3366", this.player.jumps <= 0);
+       drawAnimBtn(465, cY, 40, 35, "↗", "jumpR", "#ff3366", this.player.jumps <= 0);
        
        // Cover Flow Weapon Selector (Center)
        ctx.save();
