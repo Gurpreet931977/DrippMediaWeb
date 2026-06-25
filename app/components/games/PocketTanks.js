@@ -231,7 +231,7 @@ export default class PocketTanks {
      
      // Fire button (Glowing Orb at right)
      const dx = cx - (w - 70);
-     const dy = cy - (this.uiY + 45);
+     const dy = cy - (this.uiY + 60);
      if (Math.hypot(dx, dy) < 40) {
         this.executeFire(this.player);
         this.clickAnims.fire = 1;
@@ -673,15 +673,6 @@ export default class PocketTanks {
     const windText = windVal < 0 ? `<< ${Math.abs(windVal).toFixed(1)}` : `${windVal.toFixed(1)} >>`;
     ctx.fillText(`WIND: ${windText}`, this.canvas.width/2, 30);
     
-    // Match Timer
-    if (this.state !== "menu") {
-       const m = Math.floor(Math.matchTimer ? this.matchTimer : Math.max(0, this.matchTimer) / 3600);
-       const s = Math.floor((Math.max(0, this.matchTimer) % 3600) / 60);
-       ctx.fillStyle = this.matchTimer <= 60 * 60 ? "#ff0055" : "#00ffcc";
-       ctx.font = "bold 24px 'Panchang', sans-serif";
-       ctx.fillText(`${m}:${s.toString().padStart(2, '0')}`, this.canvas.width/2, 60);
-    }
-    
     ctx.beginPath();
     ctx.moveTo(0, this.canvas.height);
     for (let x = 0; x < this.canvas.width; x++) {
@@ -882,9 +873,7 @@ export default class PocketTanks {
        const cY = this.uiY + 45; // Moved down
        
        // Jump Button
-       ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`JUMPS: ${this.player.jumps}`, 262, this.uiY + 18);
-       drawAnimBtn(120, this.uiY + 8, 285, 20, "JUMP", "jump", "#ff00ff", this.player.jumps <= 0);
+       drawAnimBtn(120, this.uiY + 8, 285, 20, `JUMP (${this.player.jumps})`, "jump", "#ff00ff", this.player.jumps <= 0);
        
        // Group 1: MOVE
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
@@ -957,7 +946,7 @@ export default class PocketTanks {
        const canFire = this.state === "player_turn" && this.player.inventory[this.player.selectedWeaponIdx].count > 0;
        const sF = this.clickAnims.fire * 5;
        const orbX = w - 70;
-       const orbY = this.uiY + 45;
+       const orbY = this.uiY + 60;
        
        ctx.shadowBlur = canFire ? 20 + Math.sin(this.frame * 0.1) * 10 : 0;
        ctx.shadowColor = "#ff0055";
@@ -971,11 +960,6 @@ export default class PocketTanks {
        ctx.textBaseline = "middle";
        ctx.fillText("FIRE", orbX, orbY + 2);
        ctx.textBaseline = "alphabetic";
-       
-       // Instruction
-       ctx.fillStyle = "rgba(255,255,255,0.4)";
-       ctx.font = "10px sans-serif";
-       ctx.fillText("CLICK TO FIRE", orbX, orbY - 45);
     }
 
     ctx.restore();
