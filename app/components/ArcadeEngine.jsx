@@ -171,7 +171,7 @@ function createGameEngine(canvas, callbacks) {
     }
     
     this.wobble = Math.random() * Math.PI * 2;
-    this.wobbleSpeed = (0.02 + Math.random() * 0.04) * (1 + getScoreRef() * 0.005);
+    this.wobbleSpeed = (0.02 + Math.random() * 0.04) * (1 + Math.min(getScoreRef(), 1000) * 0.005);
   }
   Drop.prototype.update = function () {
     this.vy += this.gravity;
@@ -205,7 +205,7 @@ function createGameEngine(canvas, callbacks) {
          setScoreRef(getScoreRef() + 1);
       }
       
-      setScore(getScoreRef());
+      // setScore throttled in animate loop
       
       if (getScoreRef() > 50 && getScoreRef() % 50 === 0 && getScoreRef() !== getLastMilestoneRef().current) {
         getLastMilestoneRef().current = getScoreRef();
@@ -494,21 +494,21 @@ function createGameEngine(canvas, callbacks) {
     if (this.y > canvas.height + 20) {
       this.markedForDeletion = true;
       if (this.type === "idea" || this.type === "coffee") {
-        const ns = Math.max(0, getScopeScoreRef() - 10); setScopeScoreRef(ns); setScopeScore(ns);
+        const ns = Math.max(0, getScopeScoreRef() - 10); setScopeScoreRef(ns);
       }
       return;
     }
     if (this.y + this.radius >= pad.y - pad.h / 2 && this.y - this.radius <= pad.y + pad.h / 2 && this.x >= pad.x - pad.w / 2 && this.x <= pad.x + pad.w / 2) {
       this.markedForDeletion = true;
-      if (this.type === "creep") { setGameState("failed"); for (let i = 0; i < 30; i++) fireworks.push(new FWParticle(this.x, this.y, "#f33")); }
+      if (this.type === "creep") { setGameState("failed"); setScopeScore(getScopeScoreRef()); for (let i = 0; i < 30; i++) fireworks.push(new FWParticle(this.x, this.y, "#f33")); }
       else if (this.type === "burnout") { pad.w = Math.max(40, pad.w - 30); fireworks.push(new Shockwave(this.x, this.y, "#f80")); }
       else if (this.type === "feedback") { pad.reversed = true; pad.reverseTimer = 5000; fireworks.push(new Shockwave(this.x, this.y, "#f0f")); }
       else if (this.type === "coffee") {
         pad.speedMult = 2; pad.speedTimer = 5000;
-        const ns = getScopeScoreRef() + 20; setScopeScoreRef(ns); setScopeScore(ns);
+        const ns = getScopeScoreRef() + 20; setScopeScoreRef(ns);
         fireworks.push(new Shockwave(this.x, this.y, "#3f3"));
       } else {
-        const ns = getScopeScoreRef() + 10; setScopeScoreRef(ns); setScopeScore(ns);
+        const ns = getScopeScoreRef() + 10; setScopeScoreRef(ns);
         for (let i = 0; i < 5; i++) miniParticles.push(new MiniP(this.x, this.y, false));
       }
     }
@@ -555,8 +555,20 @@ function createGameEngine(canvas, callbacks) {
   }
 
   // ── Main animate loop ────────────────────────────────────────────────────────
+  let lastScoreRenderTime = 0;
+  let lastRenderedScore = -1;
+  let lastRenderedScopeScore = -1;
+
   function animate() {
     const ag = getActiveGameRef();
+    const now = Date.now();
+    if (now - lastScoreRenderTime > 200) {
+       const cs = getScoreRef();
+       const css = getScopeScoreRef();
+       if (cs !== lastRenderedScore) { setScore(cs); lastRenderedScore = cs; }
+       if (css !== lastRenderedScopeScore) { setScopeScore(css); lastRenderedScopeScore = css; }
+       lastScoreRenderTime = now;
+    }
     if (ag === "none") { ctx.clearRect(0, 0, canvas.width, canvas.height); animId = requestAnimationFrame(animate); return; }
     if (getIsPausedRef()) { animId = requestAnimationFrame(animate); return; }
 
