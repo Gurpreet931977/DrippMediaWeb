@@ -6,9 +6,8 @@ export default class BeatMaker {
     
     this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     this.masterGain = this.audioCtx.createGain();
-    // Use a compressor to avoid clipping with many overlapping instruments
     this.compressor = this.audioCtx.createDynamicsCompressor();
-    this.compressor.threshold.setValueAtTime(-20, this.audioCtx.currentTime);
+    this.compressor.threshold.setValueAtTime(-15, this.audioCtx.currentTime);
     this.compressor.knee.setValueAtTime(10, this.audioCtx.currentTime);
     this.compressor.ratio.setValueAtTime(12, this.audioCtx.currentTime);
     this.compressor.attack.setValueAtTime(0, this.audioCtx.currentTime);
@@ -22,10 +21,10 @@ export default class BeatMaker {
     
     this.cols = 16;
     this.channels = [
-       { ...this.catalog[0] }, // Kick
-       { ...this.catalog[2] }, // Snare
-       { ...this.catalog[4] }, // Hi-hat
-       { ...this.catalog[6] }  // Pluck
+       { ...this.catalog[0], pitchOffset: 0 }, // Kick
+       { ...this.catalog[2], pitchOffset: 0 }, // Snare
+       { ...this.catalog[4], pitchOffset: 0 }, // Hi-hat
+       { ...this.catalog[6], pitchOffset: 0 }  // Pluck
     ];
     this.rows = this.channels.length;
     
@@ -46,20 +45,30 @@ export default class BeatMaker {
     this.columnFlashes = new Array(this.cols).fill(0);
     this.isModalOpen = false;
     
+    this.clickAnims = {}; 
+    
     this.updateLayout();
+  }
+
+  getPitchMod(offset) {
+     return Math.pow(2, offset / 12);
   }
 
   buildCatalog() {
      this.catalog = [
-        { name: "KICK", color: "#ff0055", synth: () => this.playKick() },
-        { name: "808 BASS", color: "#cc0044", synth: () => this.play808() },
-        { name: "SNARE", color: "#33ccff", synth: () => this.playSnare() },
-        { name: "CLAP", color: "#00ffff", synth: () => this.playClap() },
-        { name: "HI-HAT", color: "#ebd73f", synth: () => this.playHat(0.05) },
-        { name: "OPEN HAT", color: "#ffcc00", synth: () => this.playHat(0.3) },
-        { name: "PLUCK", color: "#33ff33", synth: () => this.playPluck() },
-        { name: "FM LEAD", color: "#ff00ff", synth: () => this.playFM() },
-        { name: "LOFI KEYS", color: "#b366ff", synth: () => this.playLoFi() }
+        { name: "KICK", color: "#ff0055", synth: (p) => this.playKick(p) },
+        { name: "808 SUB", color: "#cc0044", synth: (p) => this.play808(p) },
+        { name: "DRILL 808", color: "#ff3300", synth: (p) => this.playDrill808(p) },
+        { name: "SNARE", color: "#33ccff", synth: (p) => this.playSnare(p) },
+        { name: "CLAP", color: "#00ffff", synth: (p) => this.playClap(p) },
+        { name: "HI-HAT", color: "#ebd73f", synth: (p) => this.playHat(0.05, p) },
+        { name: "OPEN HAT", color: "#ffcc00", synth: (p) => this.playHat(0.3, p) },
+        { name: "PLUCK", color: "#33ff33", synth: (p) => this.playPluck(p) },
+        { name: "GUITAR", color: "#00ffcc", synth: (p) => this.playGuitar(p) },
+        { name: "FM LEAD", color: "#ff00ff", synth: (p) => this.playFM(p) },
+        { name: "FUTURE BASS", color: "#ff66ff", synth: (p) => this.playFutureBass(p) },
+        { name: "LOFI KEYS", color: "#b366ff", synth: (p) => this.playLoFi(p) },
+        { name: "LOFI PAD", color: "#9933ff", synth: (p) => this.playPad(p) }
      ];
   }
 
@@ -67,66 +76,78 @@ export default class BeatMaker {
     const w = this.canvas.width;
     const h = this.canvas.height;
     
-    // Dynamic sizing based on number of rows
-    const availableHeight = h - 250; // Leave room for UI and Title
+    const availableHeight = h - 250; 
     this.cellH = Math.min(50, availableHeight / Math.max(1, this.rows));
-    this.cellW = Math.min(60, (w - 150) / this.cols); // leave space for labels
+    this.cellW = Math.min(60, (w - 200) / this.cols); 
     
-    this.gridX = (w - (this.cellW * this.cols)) / 2 + 30; // shift right for labels
-    this.gridY = 80;
+    this.gridX = (w - (this.cellW * this.cols)) / 2 + 50; 
+    this.gridY = 100;
     
     this.uiY = h - 80;
   }
 
   // --- AUDIO SYNTHESIZERS ---
 
-  playKick() {
+  playKick(pitch) {
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     osc.connect(gain);
     gain.connect(this.masterGain);
     
     const now = this.audioCtx.currentTime;
-    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.setValueAtTime(150 * this.getPitchMod(pitch), now);
     osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.5);
     
     gain.gain.setValueAtTime(1, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
     
-    osc.start(now);
-    osc.stop(now + 0.5);
+    osc.start(now); osc.stop(now + 0.5);
   }
 
-  play808() {
+  play808(pitch) {
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
-    const dist = this.audioCtx.createWaveShaper();
-    
-    // Simple distortion curve
-    const curve = new Float32Array(400);
-    for(let i=0; i<400; ++i) {
-       const x = i * 2 / 400 - 1;
-       curve[i] = (3 + 20) * x * 20 * (Math.PI / 180) / (Math.PI + 20 * Math.abs(x));
-    }
-    dist.curve = curve;
-    dist.oversample = '4x';
-    
-    osc.connect(dist);
-    dist.connect(gain);
-    gain.connect(this.masterGain);
+    osc.connect(gain); gain.connect(this.masterGain);
     
     const now = this.audioCtx.currentTime;
-    osc.frequency.setValueAtTime(55, now); // A1
-    osc.frequency.exponentialRampToValueAtTime(40, now + 0.8);
+    osc.frequency.setValueAtTime(55 * this.getPitchMod(pitch), now); 
+    osc.frequency.exponentialRampToValueAtTime(40 * this.getPitchMod(pitch), now + 0.8);
     
     gain.gain.setValueAtTime(1.5, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
     
-    osc.start(now);
-    osc.stop(now + 1.2);
+    osc.start(now); osc.stop(now + 1.2);
   }
 
-  playSnare() {
+  playDrill808(pitch) {
+    const osc = this.audioCtx.createOscillator();
+    const gain = this.audioCtx.createGain();
+    const dist = this.audioCtx.createWaveShaper();
+    
+    const curve = new Float32Array(400);
+    for(let i=0; i<400; ++i) {
+       const x = i * 2 / 400 - 1;
+       curve[i] = Math.max(-0.8, Math.min(0.8, x * 5)); // Hard clipping
+    }
+    dist.curve = curve;
+    dist.oversample = '4x';
+    
+    osc.connect(dist); dist.connect(gain); gain.connect(this.masterGain);
+    
+    const now = this.audioCtx.currentTime;
+    const baseFreq = 55 * this.getPitchMod(pitch);
+    // Glide up then down
+    osc.frequency.setValueAtTime(baseFreq * 0.5, now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 2, now + 0.1);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq, now + 0.3);
+    
+    gain.gain.setValueAtTime(1.0, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+    
+    osc.start(now); osc.stop(now + 1.5);
+  }
+
+  playSnare(pitch) {
     const noise = this.audioCtx.createBufferSource();
     const bufferSize = this.audioCtx.sampleRate * 0.2; 
     const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
@@ -136,31 +157,27 @@ export default class BeatMaker {
 
     const noiseFilter = this.audioCtx.createBiquadFilter();
     noiseFilter.type = 'highpass';
-    noiseFilter.frequency.value = 1000;
+    noiseFilter.frequency.value = 1000 * this.getPitchMod(pitch);
     noise.connect(noiseFilter);
 
     const noiseGain = this.audioCtx.createGain();
     const now = this.audioCtx.currentTime;
     noiseGain.gain.setValueAtTime(1, now);
     noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-    noiseFilter.connect(noiseGain);
-    noiseGain.connect(this.masterGain);
+    noiseFilter.connect(noiseGain); noiseGain.connect(this.masterGain);
     
     const osc = this.audioCtx.createOscillator();
     const oscGain = this.audioCtx.createGain();
     osc.type = "triangle";
-    osc.connect(oscGain);
-    oscGain.connect(this.masterGain);
-    osc.frequency.setValueAtTime(250, now);
+    osc.connect(oscGain); oscGain.connect(this.masterGain);
+    osc.frequency.setValueAtTime(250 * this.getPitchMod(pitch), now);
     oscGain.gain.setValueAtTime(0.5, now);
     oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
     
-    noise.start(now);
-    osc.start(now);
-    osc.stop(now + 0.2);
+    noise.start(now); osc.start(now); osc.stop(now + 0.2);
   }
 
-  playClap() {
+  playClap(pitch) {
     const now = this.audioCtx.currentTime;
     for (let i = 0; i < 3; i++) {
         setTimeout(() => {
@@ -174,69 +191,96 @@ export default class BeatMaker {
 
            const filter = this.audioCtx.createBiquadFilter();
            filter.type = 'bandpass';
-           filter.frequency.value = 1500;
+           filter.frequency.value = 1500 * this.getPitchMod(pitch);
            
            const gain = this.audioCtx.createGain();
            gain.gain.setValueAtTime(1, this.audioCtx.currentTime);
            gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.1);
 
-           noise.connect(filter);
-           filter.connect(gain);
-           gain.connect(this.masterGain);
-           
+           noise.connect(filter); filter.connect(gain); gain.connect(this.masterGain);
            noise.start(this.audioCtx.currentTime);
         }, i * 15);
     }
   }
 
-  playHat(decay) {
+  playHat(decay, pitch) {
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     const filter = this.audioCtx.createBiquadFilter();
     
     osc.type = "square";
-    osc.frequency.value = 400; 
+    osc.frequency.value = 400 * this.getPitchMod(pitch); 
     filter.type = "bandpass";
-    filter.frequency.value = 10000;
+    filter.frequency.value = 10000 * this.getPitchMod(pitch);
     
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.masterGain);
+    osc.connect(filter); filter.connect(gain); gain.connect(this.masterGain);
     
     const now = this.audioCtx.currentTime;
     gain.gain.setValueAtTime(0.4, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + decay);
     
-    osc.start(now);
-    osc.stop(now + decay);
+    osc.start(now); osc.stop(now + decay);
   }
 
-  playPluck() {
+  playPluck(pitch) {
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     const filter = this.audioCtx.createBiquadFilter();
     
     osc.type = "square";
-    osc.frequency.value = 440; // A4
+    osc.frequency.value = 440 * this.getPitchMod(pitch);
     
     filter.type = "lowpass";
     filter.frequency.setValueAtTime(5000, this.audioCtx.currentTime);
     filter.frequency.exponentialRampToValueAtTime(200, this.audioCtx.currentTime + 0.1);
     
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.masterGain);
+    osc.connect(filter); filter.connect(gain); gain.connect(this.masterGain);
     
     const now = this.audioCtx.currentTime;
     gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(0.3, now + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
     
-    osc.start(now);
-    osc.stop(now + 0.3);
+    osc.start(now); osc.stop(now + 0.3);
   }
   
-  playFM() {
+  playGuitar(pitch) {
+    const osc1 = this.audioCtx.createOscillator();
+    const osc2 = this.audioCtx.createOscillator();
+    const gain = this.audioCtx.createGain();
+    const filter = this.audioCtx.createBiquadFilter();
+    const dist = this.audioCtx.createWaveShaper();
+    
+    const curve = new Float32Array(400);
+    for(let i=0; i<400; ++i) {
+       const x = i * 2 / 400 - 1;
+       curve[i] = (3 + 20) * x * 20 * (Math.PI / 180) / (Math.PI + 20 * Math.abs(x));
+    }
+    dist.curve = curve;
+    dist.oversample = '4x';
+    
+    osc1.type = "sawtooth";
+    osc2.type = "triangle";
+    osc1.frequency.value = 220 * this.getPitchMod(pitch);
+    osc2.frequency.value = 220 * this.getPitchMod(pitch) * 1.01; // slight detune
+    
+    filter.type = "bandpass";
+    filter.frequency.value = 1200;
+    filter.Q.value = 2;
+    
+    osc1.connect(filter); osc2.connect(filter);
+    filter.connect(dist); dist.connect(gain); gain.connect(this.masterGain);
+    
+    const now = this.audioCtx.currentTime;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+    
+    osc1.start(now); osc2.start(now);
+    osc1.stop(now + 0.8); osc2.stop(now + 0.8);
+  }
+
+  playFM(pitch) {
     const carrier = this.audioCtx.createOscillator();
     const modulator = this.audioCtx.createOscillator();
     const modGain = this.audioCtx.createGain();
@@ -245,15 +289,15 @@ export default class BeatMaker {
     const now = this.audioCtx.currentTime;
     
     modulator.type = "sine";
-    modulator.frequency.value = 220; // 1/2 of carrier
-    modGain.gain.setValueAtTime(600, now); // FM depth
+    modulator.frequency.value = 220 * this.getPitchMod(pitch); 
+    modGain.gain.setValueAtTime(600, now); 
     modGain.gain.exponentialRampToValueAtTime(10, now + 0.3);
     
     carrier.type = "sine";
-    carrier.frequency.value = 440; // A4
+    carrier.frequency.value = 440 * this.getPitchMod(pitch); 
     
     modulator.connect(modGain);
-    modGain.connect(carrier.frequency); // Modulate carrier frequency
+    modGain.connect(carrier.frequency); 
     carrier.connect(outGain);
     outGain.connect(this.masterGain);
     
@@ -261,13 +305,37 @@ export default class BeatMaker {
     outGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
     outGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
     
-    modulator.start(now);
-    carrier.start(now);
-    modulator.stop(now + 0.4);
-    carrier.stop(now + 0.4);
+    modulator.start(now); carrier.start(now);
+    modulator.stop(now + 0.4); carrier.stop(now + 0.4);
   }
 
-  playLoFi() {
+  playFutureBass(pitch) {
+    const now = this.audioCtx.currentTime;
+    const gain = this.audioCtx.createGain();
+    const filter = this.audioCtx.createBiquadFilter();
+    
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(400, now);
+    filter.frequency.exponentialRampToValueAtTime(4000, now + 0.1);
+    filter.frequency.exponentialRampToValueAtTime(800, now + 0.5);
+    
+    for(let i=0; i<3; i++) {
+       const osc = this.audioCtx.createOscillator();
+       osc.type = "sawtooth";
+       // Detune -1%, 0%, +1%
+       osc.frequency.value = (440 * this.getPitchMod(pitch)) * (1 + (i-1)*0.01);
+       osc.connect(filter);
+       osc.start(now); osc.stop(now + 0.5);
+    }
+    
+    filter.connect(gain); gain.connect(this.masterGain);
+    
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+  }
+
+  playLoFi(pitch) {
     const osc = this.audioCtx.createOscillator();
     const lfo = this.audioCtx.createOscillator();
     const lfoGain = this.audioCtx.createGain();
@@ -276,37 +344,55 @@ export default class BeatMaker {
     
     const now = this.audioCtx.currentTime;
     
-    lfo.type = "sine";
-    lfo.frequency.value = 4; // 4Hz vibrato
-    lfoGain.gain.value = 10; // Pitch variation
+    lfo.type = "sine"; lfo.frequency.value = 4; lfoGain.gain.value = 10; 
+    osc.type = "sine"; osc.frequency.value = 329.63 * this.getPitchMod(pitch); 
     
-    osc.type = "sine";
-    osc.frequency.value = 329.63; // E4
+    lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
     
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc.frequency);
+    filter.type = "lowpass"; filter.frequency.value = 800; 
     
-    filter.type = "lowpass";
-    filter.frequency.value = 800; // Muffled tone
-    
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.masterGain);
+    osc.connect(filter); filter.connect(gain); gain.connect(this.masterGain);
     
     gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(0.4, now + 0.1);
     gain.gain.linearRampToValueAtTime(0, now + 1.0);
     
-    lfo.start(now);
-    osc.start(now);
-    lfo.stop(now + 1.0);
-    osc.stop(now + 1.0);
+    lfo.start(now); osc.start(now);
+    lfo.stop(now + 1.0); osc.stop(now + 1.0);
+  }
+  
+  playPad(pitch) {
+    const osc1 = this.audioCtx.createOscillator();
+    const osc2 = this.audioCtx.createOscillator();
+    const filter = this.audioCtx.createBiquadFilter();
+    const gain = this.audioCtx.createGain();
+    
+    const now = this.audioCtx.currentTime;
+    
+    osc1.type = "sine"; osc1.frequency.value = 220 * this.getPitchMod(pitch);
+    osc2.type = "triangle"; osc2.frequency.value = 220 * this.getPitchMod(pitch) * 1.005;
+    
+    filter.type = "lowpass"; filter.frequency.value = 1200;
+    
+    osc1.connect(filter); osc2.connect(filter);
+    filter.connect(gain); gain.connect(this.masterGain);
+    
+    // Slow attack, slow release
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.3, now + 0.4);
+    gain.gain.linearRampToValueAtTime(0, now + 1.5);
+    
+    osc1.start(now); osc2.start(now);
+    osc1.stop(now + 1.5); osc2.stop(now + 1.5);
   }
 
   // --- LOGIC & UI ---
+  triggerAnim(id) {
+     this.clickAnims[id] = 1.0;
+  }
 
   addChannel(instrumentIndex) {
-     this.channels.push({ ...this.catalog[instrumentIndex] });
+     this.channels.push({ ...this.catalog[instrumentIndex], pitchOffset: 0 });
      this.rows = this.channels.length;
      for (let c = 0; c < this.cols; c++) {
         this.grid[c].push(false);
@@ -335,11 +421,9 @@ export default class BeatMaker {
     const w = this.canvas.width;
     const h = this.canvas.height;
     
-    // Modal clicks
     if (this.isModalOpen) {
-       // Close modal if click outside center box
        const mw = Math.min(600, w - 40);
-       const mh = Math.min(400, h - 40);
+       const mh = Math.min(500, h - 40);
        const mx = (w - mw)/2;
        const my = (h - mh)/2;
        
@@ -348,16 +432,16 @@ export default class BeatMaker {
           return;
        }
        
-       // Clicked an instrument
        const itemsPerRow = 3;
        const itemW = (mw - 40) / itemsPerRow;
        const itemH = 50;
        
        for (let i = 0; i < this.catalog.length; i++) {
           let ix = mx + 20 + (i % itemsPerRow) * itemW;
-          let iy = my + 60 + Math.floor(i / itemsPerRow) * itemH;
+          let iy = my + 60 + Math.floor(i / itemsPerRow) * (itemH + 10);
           if (cx > ix + 5 && cx < ix + itemW - 5 && cy > iy + 5 && cy < iy + itemH - 5) {
-             this.addChannel(i);
+             this.triggerAnim(`modal_${i}`);
+             setTimeout(() => this.addChannel(i), 150);
              return;
           }
        }
@@ -372,41 +456,50 @@ export default class BeatMaker {
        const row = Math.floor((cy - this.gridY) / this.cellH);
        this.grid[col][row] = !this.grid[col][row];
        
-       if (this.grid[col][row]) this.channels[row].synth();
+       this.triggerAnim(`grid_${col}_${row}`);
+       if (this.grid[col][row]) this.channels[row].synth(this.channels[row].pitchOffset);
        return;
     }
     
-    // Row Delete Buttons
-    if (cx > this.gridX - 35 && cx < this.gridX - 15) {
-       for (let r = 0; r < this.rows; r++) {
-          const y = this.gridY + r * this.cellH + this.cellH/2;
-          if (cy > y - 10 && cy < y + 10) {
-             this.deleteChannel(r);
-             return;
-          }
+    // Track Left Controls
+    for (let r = 0; r < this.rows; r++) {
+       const ry = this.gridY + r * this.cellH + this.cellH/2;
+       
+       // Pitch Up
+       if (cx > this.gridX - 40 && cx < this.gridX - 25 && cy > ry - 18 && cy < ry - 2) {
+          this.channels[r].pitchOffset++;
+          this.triggerAnim(`pitchU_${r}`);
+          return;
+       }
+       // Pitch Down
+       if (cx > this.gridX - 40 && cx < this.gridX - 25 && cy > ry + 2 && cy < ry + 18) {
+          this.channels[r].pitchOffset--;
+          this.triggerAnim(`pitchD_${r}`);
+          return;
+       }
+       // Delete
+       if (cx > this.gridX - 20 && cx < this.gridX - 5 && cy > ry - 10 && cy < ry + 10) {
+          this.triggerAnim(`del_${r}`);
+          setTimeout(() => this.deleteChannel(r), 100);
+          return;
        }
     }
     
     // Bottom UI
-    // BPM [-]
     if (cx > w/2 - 200 && cx < w/2 - 160 && cy > this.uiY - 15 && cy < this.uiY + 25) {
-       this.bpm = Math.max(60, this.bpm - 5);
-       return;
+       this.bpm = Math.max(60, this.bpm - 5); this.triggerAnim('bpmD'); return;
     }
-    // BPM [+]
     if (cx > w/2 - 100 && cx < w/2 - 60 && cy > this.uiY - 15 && cy < this.uiY + 25) {
-       this.bpm = Math.min(240, this.bpm + 5);
-       return;
+       this.bpm = Math.min(240, this.bpm + 5); this.triggerAnim('bpmU'); return;
     }
-    // Play/Pause
     if (cx > w/2 - 40 && cx < w/2 + 60 && cy > this.uiY - 20 && cy < this.uiY + 30) {
        this.isPlaying = !this.isPlaying;
        if (this.isPlaying) this.lastStepTime = performance.now();
-       return;
+       this.triggerAnim('play'); return;
     }
-    // Add Track
     if (cx > w/2 + 80 && cx < w/2 + 200 && cy > this.uiY - 20 && cy < this.uiY + 30) {
-       this.isModalOpen = true;
+       this.triggerAnim('addTrk');
+       setTimeout(() => { this.isModalOpen = true; }, 100);
        return;
     }
   }
@@ -416,6 +509,11 @@ export default class BeatMaker {
 
   update() {
     this.updateLayout();
+    
+    Object.keys(this.clickAnims).forEach(k => {
+       if (this.clickAnims[k] > 0) this.clickAnims[k] -= 0.15;
+       if (this.clickAnims[k] < 0) this.clickAnims[k] = 0;
+    });
     
     if (this.isPlaying) {
        const now = performance.now();
@@ -428,7 +526,7 @@ export default class BeatMaker {
           
           for (let r = 0; r < this.rows; r++) {
              if (this.grid[this.currentStep][r]) {
-                this.channels[r].synth();
+                this.channels[r].synth(this.channels[r].pitchOffset);
                 this.ripples.push({
                    x: this.gridX + this.currentStep * this.cellW + this.cellW/2,
                    y: this.gridY + r * this.cellH + this.cellH/2,
@@ -442,7 +540,7 @@ export default class BeatMaker {
     }
     
     for (let i = 0; i < this.cols; i++) {
-       if (this.columnFlashes[i] > 0) this.columnFlashes[i] -= 0.05;
+       if (this.columnFlashes[i] > 0) this.columnFlashes[i] -= 0.08;
     }
     
     this.ripples.forEach(r => { r.r += 2; r.alpha -= 0.05; });
@@ -454,15 +552,22 @@ export default class BeatMaker {
     const w = this.canvas.width;
     const h = this.canvas.height;
     
-    ctx.fillStyle = "#050505";
+    // Background gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+    bgGrad.addColorStop(0, "#080512");
+    bgGrad.addColorStop(1, "#020105");
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, w, h);
     
+    // Title
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 24px 'Panchang', sans-serif";
+    ctx.font = "bold 28px 'Panchang', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("NEON BEATS", w/2, 40);
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "#ffffff";
+    ctx.fillText("NEON BEATS", w/2, 50);
+    ctx.shadowBlur = 0;
     
-    // Draw Grid
     ctx.font = "bold 11px sans-serif";
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
@@ -472,53 +577,89 @@ export default class BeatMaker {
        
        // Label
        ctx.fillStyle = this.channels[r].color;
-       ctx.fillText(this.channels[r].name, this.gridX - 45, ry);
+       ctx.fillText(this.channels[r].name, this.gridX - 50, ry);
        
-       // Delete Button [X]
-       ctx.fillStyle = "rgba(255,50,50,0.4)";
-       ctx.beginPath(); ctx.roundRect(this.gridX - 35, ry - 10, 20, 20, 4); ctx.fill();
+       // Pitch Offset Display
+       ctx.fillStyle = "rgba(255,255,255,0.5)";
+       ctx.font = "10px sans-serif";
+       const po = this.channels[r].pitchOffset;
+       ctx.fillText(po > 0 ? `+${po}` : po, this.gridX - 50, ry + 12);
+       ctx.font = "bold 11px sans-serif";
+       
+       // Pitch Controls
+       const sU = (this.clickAnims[`pitchU_${r}`] || 0) * 2;
+       ctx.fillStyle = "rgba(255,255,255,0.2)";
+       ctx.beginPath(); ctx.moveTo(this.gridX - 32, ry - 14 + sU); ctx.lineTo(this.gridX - 28, ry - 6 + sU); ctx.lineTo(this.gridX - 36, ry - 6 + sU); ctx.fill();
+       
+       const sD = (this.clickAnims[`pitchD_${r}`] || 0) * 2;
+       ctx.beginPath(); ctx.moveTo(this.gridX - 32, ry + 14 - sD); ctx.lineTo(this.gridX - 28, ry + 6 - sD); ctx.lineTo(this.gridX - 36, ry + 6 - sD); ctx.fill();
+       
+       // Delete
+       const sX = (this.clickAnims[`del_${r}`] || 0) * 2;
+       ctx.fillStyle = "rgba(255,50,50,0.3)";
+       ctx.beginPath(); ctx.roundRect(this.gridX - 20 + sX, ry - 8 + sX, 16 - sX*2, 16 - sX*2, 4); ctx.fill();
        ctx.fillStyle = "#fff";
        ctx.textAlign = "center";
-       ctx.fillText("✕", this.gridX - 25, ry + 1);
+       ctx.fillText("✕", this.gridX - 12, ry + 1);
        ctx.textAlign = "right";
     }
     
+    // Column Backgrounds
     for (let c = 0; c < this.cols; c++) {
-       if (this.columnFlashes[c] > 0) {
-          ctx.fillStyle = `rgba(255, 255, 255, ${this.columnFlashes[c] * 0.15})`;
-          ctx.fillRect(this.gridX + c * this.cellW, this.gridY, this.cellW, this.rows * this.cellH);
-       }
        if (c % 4 === 0) {
-          ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-          ctx.fillRect(this.gridX + c * this.cellW, this.gridY, this.cellW, this.rows * this.cellH);
+          ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+          ctx.beginPath(); ctx.roundRect(this.gridX + c * this.cellW, this.gridY, this.cellW, this.rows * this.cellH, 10); ctx.fill();
        }
     }
 
-    const padding = 2;
+    // Grid Cells (Pill/Capsule shape)
+    const padding = 4;
     for (let c = 0; c < this.cols; c++) {
        for (let r = 0; r < this.rows; r++) {
           const x = this.gridX + c * this.cellW;
           const y = this.gridY + r * this.cellH;
+          const s = (this.clickAnims[`grid_${c}_${r}`] || 0) * 3;
+          
+          const cw = this.cellW - padding*2;
+          const ch = this.cellH - padding*2;
+          const rad = ch / 2; // Full pill rounding
           
           if (this.grid[c][r]) {
              ctx.fillStyle = this.channels[r].color;
-             ctx.shadowBlur = 10;
+             ctx.shadowBlur = 15;
              ctx.shadowColor = this.channels[r].color;
-             ctx.beginPath(); ctx.roundRect(x + padding, y + padding, this.cellW - padding*2, this.cellH - padding*2, 4); ctx.fill();
+             ctx.beginPath(); ctx.roundRect(x + padding + s, y + padding + s, cw - s*2, ch - s*2, rad); ctx.fill();
              ctx.shadowBlur = 0;
+             // Glassy highlight
+             ctx.fillStyle = "rgba(255,255,255,0.4)";
+             ctx.beginPath(); ctx.roundRect(x + padding + s + 2, y + padding + s + 2, cw - s*2 - 4, ch/3, rad); ctx.fill();
           } else {
+             ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+             ctx.beginPath(); ctx.roundRect(x + padding + s, y + padding + s, cw - s*2, ch - s*2, rad); ctx.fill();
              ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
              ctx.lineWidth = 1;
-             ctx.beginPath(); ctx.roundRect(x + padding, y + padding, this.cellW - padding*2, this.cellH - padding*2, 4); ctx.stroke();
+             ctx.stroke();
           }
        }
     }
     
+    // Glowing Vertical Playhead Beam
     if (this.isPlaying || this.currentStep > 0) {
        const phX = this.gridX + this.currentStep * this.cellW;
-       ctx.fillStyle = `rgba(255, 255, 255, 0.8)`;
-       ctx.fillRect(phX, this.gridY - 10, this.cellW, 4);
-       ctx.fillRect(phX, this.gridY + this.rows * this.cellH + 6, this.cellW, 4);
+       const beamGrad = ctx.createLinearGradient(0, this.gridY, 0, this.gridY + this.rows * this.cellH);
+       beamGrad.addColorStop(0, "rgba(255,255,255,0)");
+       beamGrad.addColorStop(0.5, "rgba(255,255,255,0.4)");
+       beamGrad.addColorStop(1, "rgba(255,255,255,0)");
+       
+       ctx.fillStyle = beamGrad;
+       ctx.fillRect(phX, this.gridY - 20, this.cellW, this.rows * this.cellH + 40);
+       
+       ctx.fillStyle = `rgba(255, 255, 255, 0.9)`;
+       ctx.shadowBlur = 20;
+       ctx.shadowColor = "#fff";
+       ctx.beginPath(); ctx.roundRect(phX, this.gridY - 10, this.cellW, 6, 3); ctx.fill();
+       ctx.beginPath(); ctx.roundRect(phX, this.gridY + this.rows * this.cellH + 4, this.cellW, 6, 3); ctx.fill();
+       ctx.shadowBlur = 0;
     }
     
     this.ripples.forEach(r => {
@@ -529,52 +670,56 @@ export default class BeatMaker {
     });
     ctx.globalAlpha = 1;
     
-    // Draw UI
+    // Bottom UI
     ctx.textAlign = "center";
     
+    const drawAnimBtn = (x, y, bw, bh, text, animKey, col, filled) => {
+          const s = (this.clickAnims[animKey] || 0) * 3; 
+          ctx.fillStyle = filled ? col : `rgba(${col}, 0.1)`;
+          ctx.strokeStyle = filled ? col : `rgba(255,255,255,0.3)`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.roundRect(x + s, y + s, bw - s*2, bh - s*2, bh/2); 
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = filled ? "#000" : "#fff";
+          ctx.font = "bold 14px 'Panchang', sans-serif";
+          ctx.textBaseline = "middle";
+          ctx.fillText(text, x + bw/2, y + bh/2 + 1);
+          ctx.textBaseline = "alphabetic";
+    };
+
     // BPM
-    ctx.fillStyle = "rgba(255,255,255,0.1)";
-    ctx.beginPath(); ctx.roundRect(w/2 - 200, this.uiY - 15, 40, 40, 4); ctx.fill();
-    ctx.beginPath(); ctx.roundRect(w/2 - 100, this.uiY - 15, 40, 40, 4); ctx.fill();
+    drawAnimBtn(w/2 - 200, this.uiY - 15, 40, 40, "-", "bpmD", "255,255,255", false);
+    drawAnimBtn(w/2 - 100, this.uiY - 15, 40, 40, "+", "bpmU", "255,255,255", false);
     ctx.fillStyle = "#fff";
-    ctx.font = "18px sans-serif";
-    ctx.fillText("-", w/2 - 180, this.uiY + 10);
-    ctx.fillText("+", w/2 - 80, this.uiY + 10);
     ctx.font = "bold 14px 'Panchang', sans-serif";
     ctx.fillText(`BPM: ${this.bpm}`, w/2 - 130, this.uiY + 10);
 
     // Play
-    ctx.fillStyle = this.isPlaying ? "rgba(255, 50, 50, 0.2)" : "rgba(50, 255, 100, 0.2)";
-    ctx.strokeStyle = this.isPlaying ? "#ff3333" : "#33ff66";
-    ctx.beginPath(); ctx.roundRect(w/2 - 40, this.uiY - 20, 100, 50, 8); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = this.isPlaying ? "#ff3333" : "#33ff66";
-    ctx.fillText(this.isPlaying ? "PAUSE" : "PLAY", w/2 + 10, this.uiY + 10);
+    const playCol = this.isPlaying ? "#ff3366" : "#00ffcc";
+    drawAnimBtn(w/2 - 40, this.uiY - 20, 100, 50, this.isPlaying ? "PAUSE" : "PLAY", "play", playCol, true);
     
     // Add Track
-    ctx.fillStyle = "rgba(0, 255, 255, 0.2)";
-    ctx.strokeStyle = "#00ffff";
-    ctx.beginPath(); ctx.roundRect(w/2 + 80, this.uiY - 20, 120, 50, 8); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#00ffff";
-    ctx.fillText("+ TRACK", w/2 + 140, this.uiY + 10);
+    drawAnimBtn(w/2 + 80, this.uiY - 20, 120, 50, "+ TRACK", "addTrk", "#b366ff", true);
     
     // Modal
     if (this.isModalOpen) {
-       ctx.fillStyle = "rgba(0,0,0,0.8)";
+       ctx.fillStyle = "rgba(0,0,0,0.6)";
        ctx.fillRect(0,0,w,h);
        
-       const mw = Math.min(600, w - 40);
-       const mh = Math.min(400, h - 40);
+       const mw = Math.min(700, w - 40);
+       const mh = Math.min(500, h - 40);
        const mx = (w - mw)/2;
        const my = (h - mh)/2;
        
-       ctx.fillStyle = "#111";
-       ctx.strokeStyle = "#fff";
-       ctx.lineWidth = 2;
-       ctx.beginPath(); ctx.roundRect(mx, my, mw, mh, 10); ctx.fill(); ctx.stroke();
+       // Glassy Modal
+       ctx.fillStyle = "rgba(20, 15, 30, 0.85)";
+       ctx.strokeStyle = "rgba(255,255,255,0.2)";
+       ctx.lineWidth = 1;
+       ctx.beginPath(); ctx.roundRect(mx, my, mw, mh, 20); ctx.fill(); ctx.stroke();
        
        ctx.fillStyle = "#fff";
-       ctx.font = "bold 20px 'Panchang', sans-serif";
-       ctx.fillText("ADD INSTRUMENT", w/2, my + 35);
+       ctx.font = "bold 24px 'Panchang', sans-serif";
+       ctx.fillText("INSTRUMENT LIBRARY", w/2, my + 45);
        
        const itemsPerRow = 3;
        const itemW = (mw - 40) / itemsPerRow;
@@ -582,19 +727,21 @@ export default class BeatMaker {
        
        for (let i = 0; i < this.catalog.length; i++) {
           let ix = mx + 20 + (i % itemsPerRow) * itemW;
-          let iy = my + 60 + Math.floor(i / itemsPerRow) * itemH;
+          let iy = my + 80 + Math.floor(i / itemsPerRow) * (itemH + 10);
+          
+          const s = (this.clickAnims[`modal_${i}`] || 0) * 3;
           
           ctx.fillStyle = "rgba(255,255,255,0.05)";
           ctx.strokeStyle = this.catalog[i].color;
-          ctx.beginPath(); ctx.roundRect(ix + 5, iy + 5, itemW - 10, itemH - 10, 5);
+          ctx.beginPath(); ctx.roundRect(ix + 5 + s, iy + 5 + s, itemW - 10 - s*2, itemH - s*2, itemH/2);
           ctx.fill(); ctx.stroke();
           
           ctx.fillStyle = this.catalog[i].color;
           ctx.font = "bold 12px sans-serif";
-          ctx.fillText(this.catalog[i].name, ix + itemW/2, iy + itemH/2 + 4);
+          ctx.fillText(this.catalog[i].name, ix + itemW/2, iy + itemH/2 + 5);
        }
        
-       ctx.fillStyle = "#888";
+       ctx.fillStyle = "rgba(255,255,255,0.5)";
        ctx.font = "12px sans-serif";
        ctx.fillText("Click outside to close", w/2, my + mh - 20);
     }
