@@ -30,6 +30,13 @@ export default class PocketTanks {
        'meteor': { name: 'METEOR', damage: 60, radius: 65, color: '#ff3300' },
        'drill': { name: 'EARTH DRILL', damage: 40, radius: 40, color: '#aaaaaa' }
     };
+    this.maps = [
+       { id: 'neon', name: 'NEON CITY', stroke: '#00ffcc', gradStart: 'rgba(0, 255, 200, 0.15)', gradEnd: 'rgba(0, 50, 100, 0.4)', bg: 'rgba(5, 10, 15, 0.8)', frequency1: 0.004, amp1: 100, frequency2: 0.015, amp2: 40 },
+       { id: 'desert', name: 'CYBER DESERT', stroke: '#ffaa00', gradStart: 'rgba(255, 170, 0, 0.15)', gradEnd: 'rgba(100, 30, 0, 0.4)', bg: 'rgba(20, 10, 5, 0.8)', frequency1: 0.002, amp1: 60, frequency2: 0.03, amp2: 20 },
+       { id: 'ice', name: 'ICE MOON', stroke: '#00ffff', gradStart: 'rgba(0, 255, 255, 0.15)', gradEnd: 'rgba(0, 50, 150, 0.4)', bg: 'rgba(5, 15, 25, 0.8)', frequency1: 0.008, amp1: 120, frequency2: 0.01, amp2: 50 },
+       { id: 'toxic', name: 'TOXIC WASTELAND', stroke: '#33ff33', gradStart: 'rgba(50, 255, 50, 0.15)', gradEnd: 'rgba(0, 80, 0, 0.4)', bg: 'rgba(10, 15, 10, 0.8)', frequency1: 0.006, amp1: 80, frequency2: 0.02, amp2: 60 }
+    ];
+    this.selectedMapIdx = 0;
     
     this.player = {
        x: 100, y: 0, r: 12, hp: 100, maxHp: 100, color: "#00ffff", 
@@ -74,7 +81,7 @@ export default class PocketTanks {
     this.uiH = 110;
     this.uiY = this.canvas.height - this.uiH;
     
-    this.clickAnims = { moveL: 0, moveR: 0, angU: 0, angD: 0, pwrU: 0, pwrD: 0, fire: 0, jump: 0 };
+    this.clickAnims = { moveL: 0, moveR: 0, angU: 0, angD: 0, pwrU: 0, pwrD: 0, fire: 0, jumpL: 0, jumpR: 0 };
     this.currentWeaponScroll = 0;
 
     this.handleKeyDown = (e) => {
@@ -112,9 +119,10 @@ export default class PocketTanks {
     const baseHeight = this.canvas.height * 0.55;
     const noise1 = Math.random() * 100;
     const noise2 = Math.random() * 100;
+    const map = this.maps[this.selectedMapIdx] || this.maps[0];
     
     for (let x = 0; x < this.canvas.width; x++) {
-       let h = Math.sin(x * 0.004 + noise1) * 100 + Math.sin(x * 0.015 + noise2) * 40;
+       let h = Math.sin(x * map.frequency1 + noise1) * map.amp1 + Math.sin(x * map.frequency2 + noise2) * map.amp2;
        this.terrain[x] = baseHeight + h;
     }
   }
@@ -172,10 +180,36 @@ export default class PocketTanks {
     if (this.state === "menu") {
        const w = this.canvas.width;
        const h = this.canvas.height;
-       if (cy > h/2 && cy < h/2 + 40) {
-          if (cx > w/2 - 200 && cx < w/2 - 80) { this.difficulty = "beginner"; this.startMatch(); }
-          else if (cx > w/2 - 60 && cx < w/2 + 60) { this.difficulty = "intermediate"; this.startMatch(); }
-          else if (cx > w/2 + 80 && cx < w/2 + 200) { this.difficulty = "hard"; this.startMatch(); }
+       const btnW = 160; const btnH = 50; const gap = 30;
+       const totalW = btnW * 3 + gap * 2;
+       const startX = w/2 - totalW/2;
+       const y = h/2 + 20;
+       
+       if (cy > y && cy < y + btnH) {
+          if (cx > startX && cx < startX + btnW) { this.difficulty = "beginner"; this.state = "map_select"; }
+          else if (cx > startX + btnW + gap && cx < startX + btnW * 2 + gap) { this.difficulty = "intermediate"; this.state = "map_select"; }
+          else if (cx > startX + (btnW + gap)*2 && cx < startX + btnW * 3 + gap * 2) { this.difficulty = "hard"; this.state = "map_select"; }
+       }
+       return;
+    }
+
+    if (this.state === "map_select") {
+       const w = this.canvas.width;
+       const h = this.canvas.height;
+       
+       const cW = 180, cH = 220;
+       const gapX = 30;
+       const totalW = (cW * 4) + (gapX * 3);
+       const startX = w/2 - totalW/2;
+       const cY = h/2 - 60;
+       
+       for (let i = 0; i < this.maps.length; i++) {
+          const cX = startX + i * (cW + gapX);
+          if (cx > cX && cx < cX + cW && cy > cY && cy < cY + cH) {
+             this.selectedMapIdx = i;
+             this.startMatch();
+             return;
+          }
        }
        return;
     }
@@ -283,6 +317,8 @@ export default class PocketTanks {
     const rect = this.canvas.getBoundingClientRect();
     const cx = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
     const cy = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+    this.mouseX = cx;
+    this.mouseY = cy;
     
     // Hide custom cursor over UI
     const customCursor = document.querySelector(".cursor");
@@ -679,31 +715,98 @@ export default class PocketTanks {
       if (this.screenShake < 0.5) this.screenShake = 0;
     }
     
-    ctx.fillStyle = "rgba(5, 10, 15, 0.8)";
+    const map = this.maps[this.selectedMapIdx] || this.maps[0];
+    ctx.fillStyle = map.bg;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
-    if (this.state === "menu") {
-       ctx.fillStyle = "#ffffff";
-       ctx.font = "bold 32px 'Panchang', sans-serif";
-       ctx.textAlign = "center";
-       ctx.fillText("NEON TANKS", this.canvas.width/2, this.canvas.height/2 - 80);
-       ctx.font = "bold 16px 'Panchang', sans-serif";
-       ctx.fillStyle = "#00ffcc";
-       ctx.fillText("SELECT DIFFICULTY", this.canvas.width/2, this.canvas.height/2 - 40);
+    if (this.state === "menu" || this.state === "map_select") {
+       const w = this.canvas.width;
+       const h = this.canvas.height;
        
-       const drawBtn = (x, w, text, color) => {
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 2;
-          ctx.fillStyle = `rgba(0,0,0,0.5)`;
-          ctx.beginPath(); ctx.roundRect(x, this.canvas.height/2, w, 40, 8);
-          ctx.fill(); ctx.stroke();
-          ctx.fillStyle = color;
-          ctx.font = "bold 14px 'Panchang', sans-serif";
-          ctx.fillText(text, x + w/2, this.canvas.height/2 + 25);
-       };
-       drawBtn(this.canvas.width/2 - 200, 120, "BEGINNER", "#00ffcc");
-       drawBtn(this.canvas.width/2 - 60, 120, "NORMAL", "#ffcc00");
-       drawBtn(this.canvas.width/2 + 80, 120, "HARD", "#ff0055");
+       ctx.fillStyle = "#ffffff";
+       ctx.font = "bold 48px 'Panchang', sans-serif";
+       ctx.textAlign = "center";
+       ctx.shadowBlur = 20; ctx.shadowColor = "#00ffcc";
+       ctx.fillText("NEON TANKS", w/2, h/2 - 120);
+       ctx.shadowBlur = 0;
+       
+       if (this.state === "menu") {
+           ctx.font = "bold 16px 'Panchang', sans-serif";
+           ctx.fillStyle = "#00ffcc";
+           ctx.fillText("SELECT DIFFICULTY", w/2, h/2 - 50);
+           
+           const btnW = 160; const btnH = 50; const gap = 30;
+           const totalW = btnW * 3 + gap * 2;
+           const startX = w/2 - totalW/2;
+           const y = h/2 + 20;
+           
+           const drawBtn = (idx, text, color) => {
+              const x = startX + idx * (btnW + gap);
+              const hover = this.mouseX > x && this.mouseX < x + btnW && this.mouseY > y && this.mouseY < y + btnH;
+              
+              ctx.strokeStyle = color;
+              ctx.lineWidth = hover ? 3 : 2;
+              ctx.fillStyle = hover ? `rgba(255,255,255,0.15)` : `rgba(0,0,0,0.6)`;
+              if (hover) { ctx.shadowBlur = 15; ctx.shadowColor = color; }
+              ctx.beginPath(); ctx.roundRect(x, y, btnW, btnH, 12);
+              ctx.fill(); ctx.stroke();
+              ctx.shadowBlur = 0;
+              
+              ctx.fillStyle = hover ? "#fff" : color;
+              ctx.font = "bold 16px 'Panchang', sans-serif";
+              ctx.textBaseline = "middle";
+              ctx.fillText(text, x + btnW/2, y + btnH/2);
+              ctx.textBaseline = "alphabetic";
+           };
+           
+           drawBtn(0, "BEGINNER", "#00ffcc");
+           drawBtn(1, "NORMAL", "#ffcc00");
+           drawBtn(2, "HARD", "#ff0055");
+       } else if (this.state === "map_select") {
+           ctx.font = "bold 16px 'Panchang', sans-serif";
+           ctx.fillStyle = "#ffaa00";
+           ctx.fillText("SELECT DEPLOYMENT ZONE", w/2, h/2 - 60);
+           
+           const cW = 180, cH = 220;
+           const gapX = 30;
+           const totalW = (cW * this.maps.length) + (gapX * (this.maps.length - 1));
+           const startX = w/2 - totalW/2;
+           const cY = h/2 - 20;
+           
+           for (let i = 0; i < this.maps.length; i++) {
+              const map = this.maps[i];
+              const cX = startX + i * (cW + gapX);
+              const hover = this.mouseX > cX && this.mouseX < cX + cW && this.mouseY > cY && this.mouseY < cY + cH;
+              
+              if (hover && this.selectedMapIdx !== i) {
+                  this.selectedMapIdx = i;
+                  this.generateTerrain(); // Preview background!
+              }
+              
+              ctx.strokeStyle = map.stroke;
+              ctx.lineWidth = hover ? 4 : 2;
+              ctx.fillStyle = hover ? `rgba(255,255,255,0.1)` : `rgba(0,0,0,0.7)`;
+              if (hover) { ctx.shadowBlur = 25; ctx.shadowColor = map.stroke; }
+              ctx.beginPath(); ctx.roundRect(cX, cY, cW, cH, 16);
+              ctx.fill(); ctx.stroke();
+              ctx.shadowBlur = 0;
+              
+              // Preview Box
+              ctx.fillStyle = map.bg;
+              ctx.beginPath(); ctx.roundRect(cX + 10, cY + 10, cW - 20, cH - 80, 8); ctx.fill();
+              const grad = ctx.createLinearGradient(0, cY+10, 0, cY+cH-70);
+              grad.addColorStop(0, map.gradStart); grad.addColorStop(1, map.gradEnd);
+              ctx.fillStyle = grad;
+              ctx.beginPath(); ctx.roundRect(cX + 10, cY + 10, cW - 20, cH - 80, 8); ctx.fill();
+              
+              ctx.fillStyle = "#fff";
+              ctx.font = "bold 14px 'Panchang', sans-serif";
+              ctx.textBaseline = "middle";
+              ctx.fillText(map.name, cX + cW/2, cY + cH - 30);
+              ctx.textBaseline = "alphabetic";
+           }
+       }
+       
        ctx.restore();
        return;
     }
@@ -723,11 +826,11 @@ export default class PocketTanks {
     ctx.lineTo(this.canvas.width, this.canvas.height);
     ctx.closePath();
     const grad = ctx.createLinearGradient(0, this.canvas.height/2, 0, this.canvas.height);
-    grad.addColorStop(0, "rgba(0, 255, 200, 0.15)");
-    grad.addColorStop(1, "rgba(0, 50, 100, 0.4)");
+    grad.addColorStop(0, map.gradStart);
+    grad.addColorStop(1, map.gradEnd);
     ctx.fillStyle = grad;
     ctx.fill();
-    ctx.strokeStyle = "#00ffcc";
+    ctx.strokeStyle = map.stroke;
     ctx.lineWidth = 3;
     ctx.shadowBlur = 10;
     ctx.shadowColor = "#00ffcc";
@@ -804,7 +907,7 @@ export default class PocketTanks {
        ctx.fillText(label, tank.x, tank.y - 40);
     };
     
-    drawTank(this.player, "YOU");
+    drawTank(this.player, "HUMAN");
     drawTank(this.ai, "AI");
 
     if (this.state === "player_turn") {
@@ -877,7 +980,7 @@ export default class PocketTanks {
     ctx.font = "bold 20px 'Panchang', sans-serif";
     ctx.textAlign = "center";
     if (this.state === "player_turn") {
-       ctx.fillText("YOUR TURN", this.canvas.width/2, 60);
+       ctx.fillText("HUMAN TURN", this.canvas.width/2, 60);
        ctx.font = "12px sans-serif";
        ctx.fillText("Move, Aim, then Fire (Spacebar)", this.canvas.width/2, 85);
     } else if (this.state === "ai_turn") {
@@ -925,7 +1028,11 @@ export default class PocketTanks {
        
        const drawAnimBtn = (x, y, bw, bh, text, animKey, col, isDim) => {
           const s = this.clickAnims[animKey] * 2; // scale effect
-          ctx.fillStyle = isDim ? "rgba(100,100,100,0.2)" : `rgba(0, 255, 204, ${0.1 + s*0.2})`;
+          
+          let fillCol = `rgba(0, 255, 204, ${0.1 + s*0.2})`;
+          if (col === "#ff3366") fillCol = `rgba(255, 51, 102, ${0.1 + s*0.2})`;
+          
+          ctx.fillStyle = isDim ? "rgba(100,100,100,0.2)" : fillCol;
           ctx.strokeStyle = isDim ? "#666" : col;
           ctx.lineWidth = 1;
           ctx.beginPath(); ctx.roundRect(x + s, y + s, bw - s*2, bh - s*2, 5); ctx.fill(); ctx.stroke();
