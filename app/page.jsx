@@ -73,9 +73,6 @@ export default function ComingSoon() {
     setIsTouch(typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
     document.body.classList.add('loaded');
     
-    // Custom cursor functionality
-    const cursor = document.querySelector('.cursor');
-    
     const moveCursor = (e) => {
       // Allow cursor to update coordinates always, so UI is clickable while paused
       // Desktop
@@ -91,11 +88,13 @@ export default function ComingSoon() {
           }
         }
         mouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        if (cursor) cursor.style.display = 'none'; // Hide cursor on touch
+        const cursorElem = document.querySelector('.cursor');
+        if (cursorElem) cursorElem.style.display = 'none'; // Hide cursor on touch
       }
       
-      if (cursor && cursor.style.display !== 'none') {
-        gsap.to(cursor, {
+      const cursorElem = document.querySelector('.cursor');
+      if (cursorElem && cursorElem.style.display !== 'none') {
+        gsap.to(cursorElem, {
           x: mouseRef.current.x,
           y: mouseRef.current.y,
           xPercent: -50,

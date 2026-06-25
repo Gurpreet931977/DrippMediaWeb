@@ -1166,15 +1166,16 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     setIsTouch("ontouchstart" in window || navigator.maxTouchPoints > 0);
     document.body.classList.add("loaded");
 
-    const cursor = document.querySelector(".cursor");
     const moveCursor = (e) => {
       if (e.clientX !== undefined) mouseRef.current = { x: e.clientX, y: e.clientY };
       if (e.touches && e.touches.length > 0) {
         mouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        if (cursor) cursor.style.display = "none";
+        const cursorElem = document.querySelector(".cursor");
+        if (cursorElem) cursorElem.style.display = "none";
       }
-      if (cursor && cursor.style.display !== "none") {
-        gsap.to(cursor, { x: mouseRef.current.x, y: mouseRef.current.y, xPercent: -50, yPercent: -50, duration: 0.05, ease: "power3.out" });
+      const cursorElem = document.querySelector(".cursor");
+      if (cursorElem && cursorElem.style.display !== "none") {
+        gsap.to(cursorElem, { x: mouseRef.current.x, y: mouseRef.current.y, xPercent: -50, yPercent: -50, duration: 0.05, ease: "power3.out" });
       }
     };
     window.addEventListener("mousemove", moveCursor);
