@@ -29,6 +29,17 @@ function rnd(min, max) { return min + Math.random() * (max - min); }
 
 function createGameEngine(canvas, callbacks) {
   const ctx = canvas.getContext("2d");
+  
+  // High DPI Support Proxy
+  const logicalCanvas = new Proxy(canvas, {
+    get(target, prop) {
+      if (prop === 'width') return window.innerWidth;
+      if (prop === 'height') return window.innerHeight;
+      const val = target[prop];
+      return typeof val === 'function' ? val.bind(target) : val;
+    }
+  });
+
   const {
     getMouseRef, getCursorActiveRef, getActiveGameRef, getGameStateRef,
     getIsPausedRef,
@@ -120,8 +131,12 @@ function createGameEngine(canvas, callbacks) {
 
   // ── Resize ──────────────────────────────────────────────────────────────────
   function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     isMobile = window.innerWidth <= 768;
   }
   window.addEventListener("resize", resize);
@@ -565,15 +580,15 @@ function createGameEngine(canvas, callbacks) {
         activeModule = null;
       }
       
-      if (ag === 'pendulum') activeModule = new PendulumGame(canvas, callbacks);
-      else if (ag === 'gravity') activeModule = new GravityFlip(canvas, callbacks);
-      else if (ag === 'mandala') activeModule = new MandalaMaker(canvas, callbacks);
-      else if (ag === 'slingshot') activeModule = new SlingshotNinja(canvas, callbacks);
-      else if (ag === 'sandbox') activeModule = new LiquidSandbox(canvas, callbacks);
-      else if (ag === 'bullethell') activeModule = new BulletHell(canvas, callbacks);
-      else if (ag === 'tanks') activeModule = new PocketTanks(canvas, callbacks);
-      else if (ag === 'nodeweaver') activeModule = new NodeWeaver(canvas, callbacks);
-      else if (ag === 'looper') activeModule = new HarmonicLooper(canvas, callbacks);
+      if (ag === 'pendulum') activeModule = new PendulumGame(logicalCanvas, callbacks);
+      else if (ag === 'gravity') activeModule = new GravityFlip(logicalCanvas, callbacks);
+      else if (ag === 'mandala') activeModule = new MandalaMaker(logicalCanvas, callbacks);
+      else if (ag === 'slingshot') activeModule = new SlingshotNinja(logicalCanvas, callbacks);
+      else if (ag === 'sandbox') activeModule = new LiquidSandbox(logicalCanvas, callbacks);
+      else if (ag === 'bullethell') activeModule = new BulletHell(logicalCanvas, callbacks);
+      else if (ag === 'tanks') activeModule = new PocketTanks(logicalCanvas, callbacks);
+      else if (ag === 'nodeweaver') activeModule = new NodeWeaver(logicalCanvas, callbacks);
+      else if (ag === 'looper') activeModule = new HarmonicLooper(logicalCanvas, callbacks);
       
       lastActive = ag;
       justSwitched = true;
