@@ -1080,6 +1080,47 @@ function createGameEngine(canvas, callbacks) {
   };
 }
 
+// ─── HELP TEXT PROVIDER ────────────────────────────────────────────────────────
+
+const getHelpText = (game) => {
+  switch (game) {
+    case 'dripp':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Catch the drops with your cursor. Red drops are worth 5 points, white drops are 69 points. Avoid the black bombs!</p>;
+    case 'breaker':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Use your cursor to move the paddle. Bounce the ball to break all the target rings. Catch power-ups for an edge!</p>;
+    case 'scope':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Move your paddle to intercept the fast-moving scope drops. Don't let them hit the bottom edge!</p>;
+    case 'snake':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Guide the snake using your cursor. Eat food to grow longer, but watch out for reverse-controls or walls!</p>;
+    case 'pong':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Classic pong! Use your cursor to move your paddle up and down. Defeat the AI opponent.</p>;
+    case 'runner':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Click or tap to jump. Double jump to avoid tall obstacles. Run as far as you can!</p>;
+    case 'invaders':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Move your cursor to pilot the ship. Click to shoot down the incoming invaders before they reach the bottom.</p>;
+    case 'simon':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Watch the sequence of glowing buttons, then click them in the exact same order. The sequence grows longer each round!</p>;
+    case 'pendulum':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Tap or click to release the pendulum and hit the glowing targets. Timing is everything.</p>;
+    case 'gravity':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Click to reverse gravity. Navigate the character through the maze of spikes on the floor and ceiling.</p>;
+    case 'slingshot':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Click and drag to aim the ninja. Release to jump between walls and slice the targets. Avoid falling!</p>;
+    case 'bullethell':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Move your cursor to dodge the massive waves of incoming projectiles. Survive as long as you can!</p>;
+    case 'mandala':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Creative Zen Mode: Click and drag to draw beautiful, symmetrical mandala patterns. Relax and create.</p>;
+    case 'liquid':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Creative Zen Mode: Interact with the liquid particles. Stir them around and watch the fluid dynamics.</p>;
+    case 'nodeweaver':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Creative Zen Mode: Connect the wandering nodes. Form intricate webs and watch them pulse with energy.</p>;
+    case 'looper':
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Creative Zen Mode: Tap the rings to trigger musical loops and create your own harmonic soundscape.</p>;
+    default:
+      return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Move your cursor or tap to interact. Try to score as many points as possible without losing!</p>;
+  }
+};
+
 // ─── REACT COMPONENT ──────────────────────────────────────────────────────────
 
 export default function ArcadeEngine({ onClose, forcedGame }) {
