@@ -1171,9 +1171,9 @@ const getHelpText = (game) => {
       />;
     case 'bullethell':
       return <HelpBrief 
-        controls="Move your mouse to pilot the core. Click to unleash your Super Move." 
-        howToPlay="Dodge the overwhelming waves of lasers from the Boss. Graze bullets (get extremely close without touching) to build HYPE. At 100 HYPE, click to wipe the screen and damage the Boss!" 
-        scoreSystem="Survival grants passive points. Grazing bullets grants bonus points. Defeating the Boss awards 5000 points." 
+        controls="Move your mouse or drag your touch to pilot the core." 
+        howToPlay="Dodge the overwhelming waves of lasers. Direct hit the Boss with your core to deal 5 HP damage." 
+        scoreSystem="Survival grants passive points. Hitting the Boss grants bonus points. Defeat the Boss to advance levels and face greater bosses!" 
       />;
     case 'mandala':
       return <HelpBrief 
