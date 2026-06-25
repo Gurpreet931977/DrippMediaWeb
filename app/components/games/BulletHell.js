@@ -4,22 +4,31 @@ export default class BulletHell {
     this.callbacks = callbacks;
     this.ctx = canvas.getContext('2d');
     
-    this.player = { x: canvas.width / 2, y: canvas.height - 100, r: 8, speed: 7 };
+    this.player = { x: canvas.width / 2, y: canvas.height - 100, r: 8 };
     this.level = 1;
+    this.levelNames = [
+      "THE AWAKENING", 
+      "NEON FURY", 
+      "CYBER JUDGEMENT", 
+      "ABYSSAL RECKONING", 
+      "FINAL DESTINATION",
+      "GOD MODE"
+    ];
+
     this.boss = { 
       x: canvas.width / 2, 
-      y: 150, 
+      y: 180, 
       r: 35, 
-      hp: 100, 
-      maxHp: 100, 
+      hp: 150, 
+      maxHp: 150, 
       phase: 0,
       color: "#ff0055"
     };
     
     this.bullets = [];
     this.particles = [];
+    this.powerups = [];
     this.frame = 0;
-    this.score = 0;
     this.state = "playing";
     this.targetPos = { x: this.player.x, y: this.player.y };
     
@@ -30,8 +39,9 @@ export default class BulletHell {
     this.bossDamageCooldown = 0;
     this.levelUpTimer = 0;
     
-    this.callbacks.setScoreRef(0);
-    this.callbacks.setScore(0);
+    // Powerup state
+    this.activePowerup = null;
+    this.powerupTimer = 0;
   }
 
   handlePointerDown(e) {
@@ -64,18 +74,31 @@ export default class BulletHell {
     });
   }
 
+  spawnPowerup() {
+    const types = ["shield", "nuke", "frenzy"];
+    const type = types[Math.floor(Math.random() * types.length)];
+    this.powerups.push({
+      x: 50 + Math.random() * (this.canvas.width - 100),
+      y: -20,
+      vy: 1.5 + Math.random() * 1.5,
+      r: 14,
+      type: type,
+      wobble: Math.random() * Math.PI * 2
+    });
+  }
+
   bossPattern() {
     // Boss moves wildly side to side, speed increases with level
     const speedMult = 1 + (this.level - 1) * 0.12;
-    this.boss.x = this.canvas.width / 2 + Math.sin(this.frame * 0.03 * speedMult) * (this.canvas.width/2 - 100);
-    this.boss.y = 150 + Math.sin(this.frame * 0.02 * speedMult) * 80;
+    this.boss.x = this.canvas.width / 2 + Math.sin(this.frame * 0.03 * speedMult) * (this.canvas.width/2 - 80);
+    this.boss.y = 150 + Math.sin(this.frame * 0.02 * speedMult) * 60;
     
     // Scale patterns based on level
     const phase = Math.floor(this.frame / 350) % 4;
     
     // Level 1 has simplified patterns and slower bullets
-    const bulletSpeedFactor = Math.min(2.0, 0.7 + (this.level - 1) * 0.25);
-    const fireIntervalFactor = Math.max(0.4, 1.2 - (this.level - 1) * 0.15);
+    const bulletSpeedFactor = Math.min(2.5, 0.7 + (this.level - 1) * 0.3);
+    const fireIntervalFactor = Math.max(0.3, 1.2 - (this.level - 1) * 0.2);
 
     if (phase === 0) {
       // Dense double spiral
@@ -92,7 +115,7 @@ export default class BulletHell {
       // Rapid rings
       const interval = Math.round(50 * fireIntervalFactor);
       if (this.frame % Math.max(10, interval) === 0) {
-        const ringCount = Math.min(32, 12 + this.level * 4);
+        const ringCount = Math.min(36, 12 + this.level * 4);
         for (let i = 0; i < ringCount; i++) {
           const angle = (i / ringCount) * Math.PI * 2 + (this.frame * 0.01);
           this.fireBullet(this.boss.x, this.boss.y, angle, 2 * bulletSpeedFactor, 'large');
@@ -117,7 +140,7 @@ export default class BulletHell {
         const dx = this.player.x - this.boss.x;
         const dy = this.player.y - this.boss.y;
         const baseAngle = Math.atan2(dy, dx);
-        const burstSpread = Math.min(6, 2 + this.level);
+        const burstSpread = Math.min(8, 2 + this.level * 2);
         for(let i = -burstSpread; i <= burstSpread; i++) {
            this.fireBullet(this.boss.x, this.boss.y, baseAngle + i * 0.12, (4 + Math.abs(i) * 0.5) * bulletSpeedFactor, 'large');
         }
@@ -129,40 +152,36 @@ export default class BulletHell {
     if (this.state === "failed" || this.state === "victory") return;
     this.frame++;
     
-    this.score += 1;
-    this.callbacks.setScoreRef(Math.floor(this.score / 10));
-    if (this.frame % 10 === 0) this.callbacks.setScore(Math.floor(this.score / 10));
-
-    if (this.levelUpTimer > 0) {
-      this.levelUpTimer--;
+    if (this.levelUpTimer > 0) this.levelUpTimer--;
+    if (this.powerupTimer > 0) {
+       this.powerupTimer--;
+       if (this.powerupTimer <= 0) this.activePowerup = null;
     }
 
     // Boss death & level up
     if (this.boss.hp <= 0) {
        this.screenShake = 30;
        this.flashAlpha = 0.8;
-       for(let p=0; p<40; p++) {
+       for(let p=0; p<60; p++) {
           this.particles.push({
              x: this.boss.x, y: this.boss.y,
-             vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20,
+             vx: (Math.random() - 0.5) * 25, vy: (Math.random() - 0.5) * 25,
              life: 80, color: this.boss.color
           });
        }
        this.bullets = [];
+       this.powerups = [];
        
        // Advance Level
        this.level++;
        this.levelUpTimer = 90; // Show LEVEL UP screen text
-       this.score += 1000 * this.level;
-       this.callbacks.setScoreRef(Math.floor(this.score / 10));
-       this.callbacks.setScore(Math.floor(this.score / 10));
 
        // Next Greater Boss stats
        const bossColors = ["#ff0055", "#00ffcc", "#e100ff", "#ffcc00", "#ff3300", "#ffffff"];
        const chosenColor = bossColors[(this.level - 1) % bossColors.length];
        
-       const nextMaxHp = 100 + (this.level - 1) * 120;
-       const nextRadius = Math.min(65, 35 + (this.level - 1) * 5);
+       const nextMaxHp = 150 + (this.level - 1) * 150;
+       const nextRadius = Math.min(75, 35 + (this.level - 1) * 6);
        
        this.boss = {
          x: this.canvas.width / 2,
@@ -175,48 +194,74 @@ export default class BulletHell {
        };
     }
 
-    // Move player towards target
-    this.playerDx = this.targetPos.x - this.player.x;
-    this.playerDy = this.targetPos.y - this.player.y;
-    const dist = Math.hypot(this.playerDx, this.playerDy);
+    // Instant Player Movement (Zero Latency)
+    this.player.x = this.targetPos.x;
+    this.player.y = this.targetPos.y;
     
-    if (this.bossHitTimer > 0) this.bossHitTimer--;
-    if (this.bossDamageCooldown > 0) this.bossDamageCooldown--;
-
-    if (dist > this.player.speed) {
-      this.player.x += (this.playerDx / dist) * this.player.speed;
-      this.player.y += (this.playerDy / dist) * this.player.speed;
-    } else {
-      this.player.x = this.targetPos.x;
-      this.player.y = this.targetPos.y;
-    }
-
     // Keep player in bounds
     this.player.x = Math.max(this.player.r, Math.min(this.canvas.width - this.player.r, this.player.x));
     this.player.y = Math.max(this.player.r, Math.min(this.canvas.height - this.player.r, this.player.y));
+
+    if (this.bossHitTimer > 0) this.bossHitTimer--;
+    if (this.bossDamageCooldown > 0) this.bossDamageCooldown--;
 
     // Collision Check: Cursor/Player hits the Boss
     const distToBoss = Math.hypot(this.player.x - this.boss.x, this.player.y - this.boss.y);
     if (distToBoss < this.player.r + this.boss.r) {
       if (this.bossDamageCooldown <= 0) {
-        this.boss.hp -= 5;
-        this.bossDamageCooldown = 8; // 8 frames between hits
+        const damage = this.activePowerup === 'frenzy' ? 15 : 4;
+        this.boss.hp -= damage;
+        this.bossDamageCooldown = this.activePowerup === 'frenzy' ? 4 : 8; // Faster hitting if frenzied
         this.bossHitTimer = 5;
-        this.score += 20;
-        this.screenShake = 6;
+        this.screenShake = this.activePowerup === 'frenzy' ? 10 : 5;
         
         // Spawn damage sparks
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < (this.activePowerup === 'frenzy' ? 12 : 6); i++) {
           this.particles.push({
             x: this.player.x,
             y: this.player.y,
-            vx: (Math.random() - 0.5) * 12,
-            vy: (Math.random() - 0.5) * 12,
+            vx: (Math.random() - 0.5) * 15,
+            vy: (Math.random() - 0.5) * 15,
             life: 25,
             color: this.boss.color
           });
         }
       }
+    }
+
+    // Powerup Spawning
+    if (this.frame % 350 === 0 && Math.random() > 0.2) {
+       this.spawnPowerup();
+    }
+
+    // Powerup Logic
+    for (let i = this.powerups.length - 1; i >= 0; i--) {
+       let p = this.powerups[i];
+       p.y += p.vy;
+       p.wobble += 0.1;
+       p.x += Math.sin(p.wobble) * 2;
+
+       // Player collects powerup
+       if (Math.hypot(p.x - this.player.x, p.y - this.player.y) < p.r + this.player.r) {
+          this.activePowerup = p.type;
+          this.powerupTimer = p.type === 'nuke' ? 0 : 300; // 5 seconds duration
+          this.flashAlpha = 0.5;
+          this.screenShake = 10;
+          
+          if (p.type === 'nuke') {
+             this.bullets = []; // Clear all bullets
+             for(let k=0; k<40; k++) {
+                this.particles.push({
+                   x: this.canvas.width/2, y: this.canvas.height/2,
+                   vx: (Math.random()-0.5)*35, vy: (Math.random()-0.5)*35,
+                   life: 60, color: "#ffffff"
+                });
+             }
+          }
+          this.powerups.splice(i, 1);
+       } else if (p.y > this.canvas.height + 20) {
+          this.powerups.splice(i, 1);
+       }
     }
 
     this.bossPattern();
@@ -233,21 +278,53 @@ export default class BulletHell {
          b.vy *= 1.008;
          b.x += b.vx;
          b.y += b.vy;
+      } else if (b.type === 'deflected') {
+         b.x += b.vx;
+         b.y += b.vy;
       }
       
       // Collision with player
-      const bulletDist = Math.hypot(b.x - this.player.x, b.y - this.player.y);
-      if (bulletDist < b.r + this.player.r - 2) {
-         this.state = "failed";
-         this.callbacks.setGameState("failed");
-         this.screenShake = 20;
-         for(let p=0; p<40; p++) {
+      if (b.type !== 'deflected') {
+         const bulletDist = Math.hypot(b.x - this.player.x, b.y - this.player.y);
+         if (bulletDist < b.r + this.player.r - 2) {
+            if (this.activePowerup === 'shield') {
+               // Deflect bullet!
+               b.vx *= -2;
+               b.vy *= -2;
+               b.type = 'deflected';
+               this.screenShake = 2;
+               for(let p=0; p<3; p++) {
+                  this.particles.push({
+                     x: b.x, y: b.y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 15, color: "#00aaff"
+                  });
+               }
+            } else {
+               // Game Over
+               this.state = "failed";
+               this.callbacks.setGameState("failed");
+               this.screenShake = 30;
+               for(let p=0; p<50; p++) {
+                  this.particles.push({
+                     x: this.player.x, y: this.player.y,
+                     vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15,
+                     life: 80, color: "#ffffff"
+                  });
+               }
+            }
+         }
+      }
+      
+      // Hit Boss with deflected bullet
+      if (b.type === 'deflected' && Math.hypot(b.x - this.boss.x, b.y - this.boss.y) < b.r + this.boss.r) {
+         this.boss.hp -= 20; // Big damage!
+         this.bullets.splice(i, 1);
+         this.screenShake = 8;
+         for(let p=0; p<10; p++) {
             this.particles.push({
-               x: this.player.x, y: this.player.y,
-               vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
-               life: 60, color: "#ffffff"
+               x: b.x, y: b.y, vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, life: 25, color: this.boss.color
             });
          }
+         continue;
       }
       
       if (b.x < -50 || b.x > this.canvas.width + 50 || b.y < -50 || b.y > this.canvas.height + 50) {
@@ -285,7 +362,8 @@ export default class BulletHell {
        ctx.fillStyle = `rgba(0, 255, 200, ${Math.min(1.0, this.levelUpTimer / 30)})`;
        ctx.font = "bold 32px 'Panchang', sans-serif";
        ctx.textAlign = "center";
-       ctx.fillText(`LEVEL ${this.level} - NEW BOSS!`, this.canvas.width/2, this.canvas.height / 2 - 50);
+       const lvlName = this.levelNames[Math.min(this.level - 1, this.levelNames.length - 1)];
+       ctx.fillText(`LEVEL ${this.level}: ${lvlName}`, this.canvas.width/2, this.canvas.height / 2 - 50);
     }
 
     // Draw Boss
@@ -300,7 +378,6 @@ export default class BulletHell {
       ctx.translate(this.boss.x, this.boss.y);
       ctx.rotate(this.frame * 0.04);
       ctx.beginPath();
-      // Boss shape changes slightly with level
       const sides = 5 + (this.level % 4); 
       for (let i=0; i<sides; i++) {
          const a = (i/sides) * Math.PI*2;
@@ -320,21 +397,41 @@ export default class BulletHell {
       ctx.restore();
       
       ctx.shadowBlur = 0;
-      
-      // Boss HP Bar
-      ctx.fillStyle = "rgba(40, 0, 10, 0.6)";
-      ctx.fillRect(this.boss.x - 60, this.boss.y - this.boss.r - 25, 120, 8);
-      ctx.fillStyle = this.boss.color;
-      ctx.fillRect(this.boss.x - 60, this.boss.y - this.boss.r - 25, 120 * Math.max(0, this.boss.hp / this.boss.maxHp), 8);
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(this.boss.x - 60, this.boss.y - this.boss.r - 25, 120, 8);
     }
+
+    // Draw Powerups
+    this.powerups.forEach(p => {
+       ctx.shadowBlur = 15;
+       if (p.type === 'shield') {
+          ctx.fillStyle = "#00aaff";
+          ctx.shadowColor = "#00aaff";
+       } else if (p.type === 'nuke') {
+          ctx.fillStyle = "#ff0000";
+          ctx.shadowColor = "#ff0000";
+       } else if (p.type === 'frenzy') {
+          ctx.fillStyle = "#ffaa00";
+          ctx.shadowColor = "#ffaa00";
+       }
+       
+       ctx.beginPath();
+       ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+       ctx.fill();
+       
+       ctx.fillStyle = "#ffffff";
+       ctx.beginPath();
+       ctx.arc(p.x, p.y, p.r * 0.5, 0, Math.PI*2);
+       ctx.fill();
+       ctx.shadowBlur = 0;
+    });
 
     // Draw Bullets
     ctx.globalCompositeOperation = "lighter";
     this.bullets.forEach(b => {
-      ctx.fillStyle = b.type === 'large' ? "rgba(255,0,180,0.75)" : "rgba(0,255,230,0.75)";
+      if (b.type === 'deflected') {
+         ctx.fillStyle = "rgba(0, 170, 255, 0.9)";
+      } else {
+         ctx.fillStyle = b.type === 'large' ? "rgba(255,0,180,0.75)" : "rgba(0,255,230,0.75)";
+      }
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r + 2, 0, Math.PI*2);
       ctx.fill();
@@ -344,30 +441,56 @@ export default class BulletHell {
       ctx.arc(b.x, b.y, b.r * 0.6, 0, Math.PI*2);
       ctx.fill();
     });
+    ctx.globalCompositeOperation = "source-over";
 
     // Draw Player
     if (this.state === "playing") {
       ctx.save();
       ctx.translate(this.player.x, this.player.y);
-      ctx.rotate((this.playerDx || 0) * 0.02);
 
-      // Player Glow
-      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      // Powerup Aura
+      if (this.activePowerup === 'shield') {
+         ctx.strokeStyle = "#00aaff";
+         ctx.lineWidth = 3;
+         ctx.beginPath();
+         ctx.arc(0, 0, this.player.r + 12 + Math.sin(this.frame*0.2)*4, 0, Math.PI*2);
+         ctx.stroke();
+      } else if (this.activePowerup === 'frenzy') {
+         ctx.fillStyle = "rgba(255, 170, 0, 0.4)";
+         ctx.beginPath();
+         ctx.arc(0, 0, this.player.r + 12 + Math.sin(this.frame*0.4)*6, 0, Math.PI*2);
+         ctx.fill();
+      }
+
+      // Player Outer Targeting Ring
+      ctx.strokeStyle = "rgba(0, 255, 255, 0.6)";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(0, 0, this.player.r + 6, 0, Math.PI*2);
-      ctx.fill();
+      // Orbiting arc
+      ctx.arc(0, 0, this.player.r + 8, this.frame * 0.05, this.frame * 0.05 + Math.PI*1.5);
+      ctx.stroke();
 
-      // Player Core
+      // Cyber Diamond base
+      ctx.fillStyle = "rgba(10, 20, 30, 0.8)";
+      ctx.strokeStyle = "#00ffff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -this.player.r - 2);
+      ctx.lineTo(this.player.r + 2, 0);
+      ctx.lineTo(0, this.player.r + 2);
+      ctx.lineTo(-this.player.r - 2, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Core Hitbox (Critical for bullet hell!)
       ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(0, 0, this.player.r, 0, Math.PI*2);
-      ctx.fill();
-      
-      // Hitbox center
-      ctx.fillStyle = "#00ffcc";
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "#ffffff";
       ctx.beginPath();
       ctx.arc(0, 0, 3.5, 0, Math.PI*2);
       ctx.fill();
+      ctx.shadowBlur = 0;
       ctx.restore();
     }
 
@@ -379,26 +502,51 @@ export default class BulletHell {
       ctx.arc(p.x, p.y, 2.5, 0, Math.PI*2);
       ctx.fill();
     });
-    
-    // UI: Level Indicator (Replaced Hype Meter)
-    ctx.globalCompositeOperation = "source-over";
     ctx.globalAlpha = 1;
     
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    ctx.fillRect(20, this.canvas.height - 45, 180, 25);
-    ctx.strokeStyle = "rgba(255,255,255,0.4)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(20, this.canvas.height - 45, 180, 25);
+    // UI: Tekken Style Health Bar
+    const barWidth = this.canvas.width - 60;
+    const barX = 30;
+    const barY = 20;
+    const barHeight = 20;
+
+    // Background Bar
+    ctx.fillStyle = "rgba(40, 0, 10, 0.6)";
+    ctx.fillRect(barX, barY, barWidth, barHeight);
     
-    ctx.font = "bold 11px 'Panchang', sans-serif";
+    // Boss HP filling
+    const hpRatio = Math.max(0, this.boss.hp / this.boss.maxHp);
+    ctx.fillStyle = this.boss.color;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = this.boss.color;
+    ctx.fillRect(barX, barY, barWidth * hpRatio, barHeight);
+    ctx.shadowBlur = 0;
+
+    // Border
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+    // Level System at Top Right (below health bar)
     ctx.fillStyle = "#00ffcc";
-    ctx.textAlign = "left";
-    ctx.fillText(`LEVEL ${this.level}`, 30, this.canvas.height - 28);
-    
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "9px 'Panchang', sans-serif";
+    ctx.font = "bold 14px 'Panchang', sans-serif";
     ctx.textAlign = "right";
-    ctx.fillText(`HP: ${Math.max(0, this.boss.hp)}/${this.boss.maxHp}`, 190, this.canvas.height - 29);
+    const currentLvlName = this.levelNames[Math.min(this.level - 1, this.levelNames.length - 1)];
+    ctx.fillText(`LEVEL ${this.level}: ${currentLvlName}`, this.canvas.width - 30, barY + barHeight + 25);
+    
+    // Boss Name Top Left
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 14px 'Panchang', sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(`BOSS`, 30, barY + barHeight + 25);
+    
+    // Active Powerup text
+    if (this.activePowerup && this.powerupTimer > 0) {
+       ctx.fillStyle = this.activePowerup === 'shield' ? "#00aaff" : "#ffaa00";
+       ctx.textAlign = "center";
+       ctx.font = "bold 16px 'Panchang', sans-serif";
+       ctx.fillText(`${this.activePowerup.toUpperCase()} ACTIVE`, this.canvas.width/2, this.canvas.height - 30);
+    }
 
     ctx.restore();
   }
