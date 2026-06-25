@@ -504,41 +504,82 @@ export default class BulletHell {
     });
     ctx.globalAlpha = 1;
     
-    // UI: Tekken Style Health Bar
-    const barWidth = this.canvas.width - 60;
-    const barX = 30;
-    const barY = 85;
-    const barHeight = 18;
-
+    // UI: Gamified Boss Health Bar
+    const barX = 140; 
+    const barY = 40;
+    const barWidth = this.canvas.width - barX - 30; // 30px padding on right
+    const barHeight = 16;
+    
     // Background Bar
-    ctx.fillStyle = "rgba(40, 0, 10, 0.6)";
-    ctx.fillRect(barX, barY, barWidth, barHeight);
+    ctx.fillStyle = "rgba(20, 5, 25, 0.8)";
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth, barHeight, 8);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.2)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
     
     // Boss HP filling
     const hpRatio = Math.max(0, this.boss.hp / this.boss.maxHp);
-    ctx.fillStyle = this.boss.color;
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = this.boss.color;
-    ctx.fillRect(barX, barY, barWidth * hpRatio, barHeight);
-    ctx.shadowBlur = 0;
-
+    const fillWidth = barWidth * hpRatio;
+    
+    if (fillWidth > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, fillWidth, barHeight, 8);
+      ctx.clip(); // Clip everything to the rounded rect
+      
+      // Main color fill
+      ctx.fillStyle = this.boss.color;
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = this.boss.color;
+      ctx.fill();
+      
+      // Playful diagonal stripes overlay
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+      const offset = (this.frame * 0.5) % 20;
+      for (let x = -20; x < barWidth; x += 20) {
+         ctx.beginPath();
+         ctx.moveTo(barX + x + offset, barY);
+         ctx.lineTo(barX + x + 10 + offset, barY);
+         ctx.lineTo(barX + x - 5 + offset, barY + barHeight);
+         ctx.lineTo(barX + x - 15 + offset, barY + barHeight);
+         ctx.fill();
+      }
+      
+      // Glossy highlight
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.fillRect(barX, barY, fillWidth, barHeight / 3);
+      
+      ctx.restore();
+    }
+    
     // Border
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 2;
-    ctx.strokeRect(barX, barY, barWidth, barHeight);
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth, barHeight, 8);
+    ctx.stroke();
 
-    // Level System at Top Right (above health bar)
+    // Level System at Top Right (below health bar)
     ctx.fillStyle = "#00ffcc";
-    ctx.font = "bold 14px 'Panchang', sans-serif";
+    ctx.font = "bold 12px 'Panchang', sans-serif";
     ctx.textAlign = "right";
     const currentLvlName = this.levelNames[Math.min(this.level - 1, this.levelNames.length - 1)];
-    ctx.fillText(`LEVEL ${this.level}: ${currentLvlName}`, barX + barWidth, barY - 10);
+    ctx.fillText(`LEVEL ${this.level}: ${currentLvlName}`, barX + barWidth, barY + barHeight + 16);
     
-    // Boss Name Top Left (above health bar)
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 14px 'Panchang', sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText(`BOSS`, barX, barY - 10);
+    // Boss Name Badge (attached to the left of the bar)
+    ctx.fillStyle = this.boss.color;
+    ctx.beginPath();
+    ctx.roundRect(barX - 65, barY - 4, 70, barHeight + 8, 12);
+    ctx.fill();
+    ctx.fillStyle = "#111";
+    ctx.font = "bold 12px 'Panchang', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("BOSS", barX - 30, barY + barHeight/2 + 1);
+    ctx.textBaseline = "alphabetic"; // reset
     
     // Active Powerup text
     if (this.activePowerup && this.powerupTimer > 0) {
