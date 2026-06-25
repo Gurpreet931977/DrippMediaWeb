@@ -25,7 +25,10 @@ export default class PocketTanks {
        'volcanic': { name: 'VOLCANIC', damage: 10, radius: 20, color: '#ff5500' },
        'sniper': { name: 'SNIPER', damage: 50, radius: 15, color: '#ffff00' },
        'blackhole': { name: 'BLACK HOLE', damage: 80, radius: 60, color: '#9900ff' },
-       'boomerang': { name: 'BOOMERANG', damage: 35, radius: 30, color: '#33ccff' }
+       'boomerang': { name: 'BOOMERANG', damage: 35, radius: 30, color: '#33ccff' },
+       'teleporter': { name: 'TELEPORTER', damage: 0, radius: 10, color: '#00ffff' },
+       'meteor': { name: 'METEOR', damage: 60, radius: 65, color: '#ff3300' },
+       'drill': { name: 'EARTH DRILL', damage: 40, radius: 40, color: '#aaaaaa' }
     };
     
     this.player = {
@@ -33,7 +36,11 @@ export default class PocketTanks {
        angle: -Math.PI/4, power: 15, mp: 50, maxMp: 50,
        inventory: this.generateInventory(),
        selectedWeaponIdx: 0,
-       dir: 1
+       dir: 1,
+       jumps: 1,
+       secondJumpUnlocked: false,
+       targetX: undefined,
+       vy: undefined
     };
     
     this.ai = {
@@ -41,7 +48,11 @@ export default class PocketTanks {
        angle: -Math.PI*0.75, power: 15, mp: 50, maxMp: 50,
        inventory: this.generateInventory(),
        selectedWeaponIdx: 0,
-       dir: -1
+       dir: -1,
+       jumps: 1,
+       secondJumpUnlocked: false,
+       targetX: undefined,
+       vy: undefined
     };
     
     this.placeTanks();
@@ -58,10 +69,12 @@ export default class PocketTanks {
     this.frame = 0;
     this.aiWaitTimer = 0;
     
-    this.uiH = 90;
+    this.matchTimer = 8 * 60 * 60; // 8 minutes at 60fps
+    
+    this.uiH = 110;
     this.uiY = this.canvas.height - this.uiH;
     
-    this.clickAnims = { moveL: 0, moveR: 0, angU: 0, angD: 0, pwrU: 0, pwrD: 0, fire: 0 };
+    this.clickAnims = { moveL: 0, moveR: 0, angU: 0, angD: 0, pwrU: 0, pwrD: 0, fire: 0, jump: 0 };
     this.currentWeaponScroll = 0;
 
     this.handleKeyDown = (e) => {
@@ -87,7 +100,10 @@ export default class PocketTanks {
         { id: 'volcanic', count: Math.floor(Math.random() * 3) + 1 },
         { id: 'sniper', count: Math.floor(Math.random() * 3) + 1 },
         { id: 'blackhole', count: Math.floor(Math.random() * 3) + 1 },
-        { id: 'boomerang', count: Math.floor(Math.random() * 3) + 1 }
+        { id: 'boomerang', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'teleporter', count: Math.floor(Math.random() * 2) + 1 },
+        { id: 'meteor', count: Math.floor(Math.random() * 2) + 1 },
+        { id: 'drill', count: Math.floor(Math.random() * 2) + 1 }
      ];
   }
 
@@ -110,17 +126,24 @@ export default class PocketTanks {
 
   moveTank(tank, dx) {
      if (tank.mp <= 0) return;
-     let nx = tank.x + dx;
+     let tx = tank.targetX !== undefined ? tank.targetX : tank.x;
+     let nx = tx + dx;
      if (nx < 10 || nx > this.canvas.width - 10) return;
      
      let ny = this.terrain[Math.floor(nx)];
-     let slope = ny - this.terrain[Math.floor(tank.x)];
+     let slope = ny - this.terrain[Math.floor(tx)];
      if (slope < -15) return; 
      
-     tank.x = nx;
-     tank.y = ny - tank.r;
+     tank.targetX = nx;
      tank.mp -= 1; 
      if (tank.mp < 0) tank.mp = 0;
+  }
+  
+  jumpTank(tank) {
+     if (tank.jumps > 0 && tank.vy === undefined) {
+         tank.vy = -4.5;
+         tank.jumps--;
+     }
   }
 
   handlePointerDown(e) {
@@ -160,31 +183,38 @@ export default class PocketTanks {
      const w = this.canvas.width;
      
      // Move controls (Shifted to x=100+)
-     if (cx > 120 && cx < 160 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     const cY = this.uiY + 45; // Move manual controls below
+     
+     if (cx > 120 && cx < 160 && cy > cY && cy < cY + 35) {
         this.moveTank(this.player, -10);
         this.clickAnims.moveL = 1;
      }
-     else if (cx > 165 && cx < 205 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     else if (cx > 165 && cx < 205 && cy > cY && cy < cY + 35) {
         this.moveTank(this.player, 10);
         this.clickAnims.moveR = 1;
      }
      // Angle controls
-     else if (cx > 220 && cx < 260 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     else if (cx > 220 && cx < 260 && cy > cY && cy < cY + 35) {
         this.player.angle -= 0.05;
         this.clickAnims.angD = 1;
      }
-     else if (cx > 265 && cx < 305 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     else if (cx > 265 && cx < 305 && cy > cY && cy < cY + 35) {
         this.player.angle += 0.05;
         this.clickAnims.angU = 1;
      }
      // Power controls
-     else if (cx > 320 && cx < 360 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     else if (cx > 320 && cx < 360 && cy > cY && cy < cY + 35) {
         this.player.power = Math.max(5, this.player.power - 1);
         this.clickAnims.pwrD = 1;
      }
-     else if (cx > 365 && cx < 405 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     else if (cx > 365 && cx < 405 && cy > cY && cy < cY + 35) {
         this.player.power = Math.min(40, this.player.power + 1);
         this.clickAnims.pwrU = 1;
+     }
+     // Jump Button
+     else if (cx > 120 && cx < 405 && cy > this.uiY + 8 && cy < this.uiY + 28) {
+        this.jumpTank(this.player);
+        this.clickAnims.jump = 1;
      }
      
      // Cover Flow Weapon Selector
@@ -255,6 +285,8 @@ export default class PocketTanks {
      let fireAngle = tank.angle;
      if (invItem.id === 'laser' || invItem.id === 'sniper') {
          firePower = 50; 
+     } else if (invItem.id === 'meteor') {
+         firePower = Math.min(tank.power, 10);
      }
 
      const ownerTag = tank === this.player ? 'player' : 'ai';
@@ -396,9 +428,39 @@ export default class PocketTanks {
     this.currentWeaponScroll += (targetScroll - this.currentWeaponScroll) * 0.15;
     
     const py = this.terrain[Math.floor(this.player.x)];
-    if (this.player.y + this.player.r < py) this.player.y += 3;
-    const ay = this.terrain[Math.floor(this.ai.x)];
-    if (this.ai.y + this.ai.r < ay) this.ai.y += 3;
+    
+    const updateTankPhysics = (tank) => {
+       if (tank.targetX !== undefined) {
+          if (Math.abs(tank.targetX - tank.x) > 0.5) tank.x += (tank.targetX - tank.x) * 0.15;
+          else { tank.x = tank.targetX; tank.targetX = undefined; }
+       }
+       if (tank.vy !== undefined) {
+          tank.vy += this.gravity;
+          tank.y += tank.vy;
+          const ty = this.terrain[Math.floor(tank.x)];
+          if (tank.y + tank.r >= ty) {
+             tank.y = ty - tank.r;
+             tank.vy = undefined;
+          }
+       } else {
+          const ty = this.terrain[Math.floor(tank.x)];
+          if (tank.y + tank.r < ty) tank.y += 3;
+          else tank.y = ty - tank.r;
+       }
+    };
+    updateTankPhysics(this.player);
+    updateTankPhysics(this.ai);
+    
+    if (this.state !== "menu" && this.state !== "game_over") {
+       if (this.matchTimer > 0) {
+          this.matchTimer--;
+          if (this.matchTimer <= 4 * 60 * 60 && !this.player.secondJumpUnlocked) {
+             this.player.secondJumpUnlocked = true;
+             this.player.jumps++;
+             this.ai.jumps++;
+          }
+       }
+    }
     
     if (this.state === "ai_turn") {
        this.aiWaitTimer--;
@@ -436,6 +498,9 @@ export default class PocketTanks {
              // Suck terrain slowly
              this.destroyTerrain(p.x, p.y + 20, 5);
              if (p.life > 100) hit = true;
+          } else if (p.type === 'meteor') {
+             p.vy += this.gravity * 1.5;
+             p.vx *= 0.99;
           } else {
              p.vy += this.gravity;
              p.vx += this.wind;
@@ -514,8 +579,20 @@ export default class PocketTanks {
              }
           }
           
+          if (p.type === 'drill' && hit) {
+             p.vy = 2; p.vx = 0;
+             p.life += 10;
+             this.destroyTerrain(p.x, p.y, 8);
+             if (p.life > 150) detonate = true; else { hit = false; detonate = false; }
+          }
+          
           if (detonate) {
-             if (hit || p.type === 'dirtmover' || p.type === 'roller' || p.type === 'blackhole') {
+             if (p.type === 'teleporter') {
+                this.createExplosion(p.x, p.y, 20, '#00ffff', 0);
+                let targetX = Math.max(10, Math.min(this.canvas.width - 10, p.x));
+                if (p.owner === 'player') { this.player.x = targetX; this.player.y = p.y - 20; this.player.targetX = undefined; }
+                else { this.ai.x = targetX; this.ai.y = p.y - 20; this.ai.targetX = undefined; }
+             } else if (hit || p.type === 'dirtmover' || p.type === 'roller' || p.type === 'blackhole') {
                 this.createExplosion(p.x, p.y, p.radius, p.color, p.damage);
              }
              this.projectiles.splice(i, 1);
@@ -595,6 +672,15 @@ export default class PocketTanks {
     const windVal = this.wind * 100;
     const windText = windVal < 0 ? `<< ${Math.abs(windVal).toFixed(1)}` : `${windVal.toFixed(1)} >>`;
     ctx.fillText(`WIND: ${windText}`, this.canvas.width/2, 30);
+    
+    // Match Timer
+    if (this.state !== "menu") {
+       const m = Math.floor(Math.matchTimer ? this.matchTimer : Math.max(0, this.matchTimer) / 3600);
+       const s = Math.floor((Math.max(0, this.matchTimer) % 3600) / 60);
+       ctx.fillStyle = this.matchTimer <= 60 * 60 ? "#ff0055" : "#00ffcc";
+       ctx.font = "bold 24px 'Panchang', sans-serif";
+       ctx.fillText(`${m}:${s.toString().padStart(2, '0')}`, this.canvas.width/2, 60);
+    }
     
     ctx.beginPath();
     ctx.moveTo(0, this.canvas.height);
@@ -757,14 +843,14 @@ export default class PocketTanks {
     ctx.font = "bold 20px 'Panchang', sans-serif";
     ctx.textAlign = "center";
     if (this.state === "player_turn") {
-       ctx.fillText("YOUR TURN", this.canvas.width/2, 60);
+       ctx.fillText("YOUR TURN", this.canvas.width/2, 90);
        ctx.font = "12px sans-serif";
-       ctx.fillText("Move, Aim, then Fire (Spacebar)", this.canvas.width/2, 80);
+       ctx.fillText("Move, Aim, then Fire (Spacebar)", this.canvas.width/2, 110);
     } else if (this.state === "ai_turn") {
-       ctx.fillText("AI IS AIMING...", this.canvas.width/2, 60);
+       ctx.fillText("AI IS AIMING...", this.canvas.width/2, 90);
     } else if (this.state === "game_over") {
        ctx.fillStyle = this.player.hp > 0 ? "#00ffcc" : "#ff0055";
-       ctx.fillText(this.player.hp > 0 ? "VICTORY!" : "DEFEAT!", this.canvas.width/2, 60);
+       ctx.fillText(this.player.hp > 0 ? "VICTORY!" : "DEFEAT!", this.canvas.width/2, 90);
     }
 
     if (this.state === "player_turn" || this.state === "player_shoot") {
@@ -793,25 +879,31 @@ export default class PocketTanks {
           ctx.textBaseline = "alphabetic"; // reset
        };
        
-       // Shifted Left Panel Controls (starts at x=120 to avoid back button)
+       const cY = this.uiY + 45; // Moved down
+       
+       // Jump Button
+       ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
+       ctx.fillText(`JUMPS: ${this.player.jumps}`, 262, this.uiY + 18);
+       drawAnimBtn(120, this.uiY + 8, 285, 20, "JUMP", "jump", "#ff00ff", this.player.jumps <= 0);
+       
        // Group 1: MOVE
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`MOVE (MP: ${Math.floor(this.player.mp)})`, 162, this.uiY + 12);
-       drawAnimBtn(120, this.uiY + 20, 40, 35, "<", "moveL", "#00ffcc", this.player.mp <= 0);
-       drawAnimBtn(165, this.uiY + 20, 40, 35, ">", "moveR", "#00ffcc", this.player.mp <= 0);
+       ctx.fillText(`MOVE (MP: ${Math.floor(this.player.mp)})`, 162, cY - 8);
+       drawAnimBtn(120, cY, 40, 35, "<", "moveL", "#00ffcc", this.player.mp <= 0);
+       drawAnimBtn(165, cY, 40, 35, ">", "moveR", "#00ffcc", this.player.mp <= 0);
 
        // Group 2: ANGLE
        let angDeg = Math.floor(Math.abs(this.player.angle * 180 / Math.PI));
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`ANG: ${angDeg}°`, 262, this.uiY + 12);
-       drawAnimBtn(220, this.uiY + 20, 40, 35, "-", "angD", "#ebd73f", false);
-       drawAnimBtn(265, this.uiY + 20, 40, 35, "+", "angU", "#ebd73f", false);
+       ctx.fillText(`ANG: ${angDeg}°`, 262, cY - 8);
+       drawAnimBtn(220, cY, 40, 35, "-", "angD", "#ebd73f", false);
+       drawAnimBtn(265, cY, 40, 35, "+", "angU", "#ebd73f", false);
        
        // Group 3: POWER
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`PWR: ${Math.floor((this.player.power/40)*100)}%`, 362, this.uiY + 12);
-       drawAnimBtn(320, this.uiY + 20, 40, 35, "-", "pwrD", "#ff3366", false);
-       drawAnimBtn(365, this.uiY + 20, 40, 35, "+", "pwrU", "#ff3366", false);
+       ctx.fillText(`PWR: ${Math.floor((this.player.power/40)*100)}%`, 362, cY - 8);
+       drawAnimBtn(320, cY, 40, 35, "-", "pwrD", "#ff3366", false);
+       drawAnimBtn(365, cY, 40, 35, "+", "pwrU", "#ff3366", false);
        
        // Cover Flow Weapon Selector (Center)
        ctx.save();
