@@ -7,6 +7,7 @@ export default class PendulumGame {
     this.player = { x: canvas.width * 0.2, y: canvas.height / 2, vx: 5, vy: 0, r: 12 };
     this.grapple = null;
     this.obstacles = [];
+    this.collectibles = [];
     this.particles = [];
     this.gravity = 0.4;
     this.score = 0;
@@ -14,6 +15,7 @@ export default class PendulumGame {
     this.state = "playing";
     this.hitstop = 0;
     this.screenShake = 0;
+    this.flashAlpha = 0;
     this.speedMultiplier = 1;
     
     this.callbacks.setScoreRef(0);
@@ -25,19 +27,35 @@ export default class PendulumGame {
   spawnObstacle(x) {
     const isTop = Math.random() > 0.5;
     const height = 150 + Math.random() * 200;
+    const isMoving = Math.random() > 0.6;
+    
     this.obstacles.push({
       x: x,
       y: isTop ? 0 : this.canvas.height - height,
       w: 40,
       h: height,
-      passed: false
+      passed: false,
+      isTop: isTop,
+      isMoving: isMoving,
+      vy: isMoving ? (Math.random() > 0.5 ? 1.5 : -1.5) : 0
     });
+    
+    // 30% chance to spawn a collectible orb near this obstacle
+    if (Math.random() > 0.7) {
+      this.collectibles.push({
+         x: x + 80 + Math.random() * 100,
+         y: Math.random() * (this.canvas.height - 100) + 50,
+         r: 15,
+         wobble: Math.random() * Math.PI * 2
+      });
+    }
   }
 
   handlePointerDown(e) {
     if (this.state !== "playing") return;
     const rect = this.canvas.getBoundingClientRect();
     const cx = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const cy = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
     
     // Grapple exactly where the user clicked horizontally, always on the ceiling
     this.grapple = {
@@ -46,13 +64,13 @@ export default class PendulumGame {
       length: Math.hypot(cx - this.player.x, this.player.y) * 0.9 // 0.9 so it pulls them up slightly
     };
     
-    // JUICE: Screenshake & Particles on grapple (removed hitstop for smooth momentum)
+    // JUICE: Screenshake & Particles on grapple
     this.screenShake = 6;
     for(let i=0; i<10; i++) {
       this.particles.push({
         x: this.player.x, y: this.player.y,
         vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
-        life: 20
+        life: 20, color: "#ffffff"
       });
     }
   }
@@ -64,11 +82,16 @@ export default class PendulumGame {
   update() {
     if (this.state === "failed") return;
     
+    if (this.hitstop > 0) {
+      this.hitstop--;
+      return;
+    }
+    
     this.frame++;
-    this.speedMultiplier += 0.0001; // Gradually increase speed (slower curve)
+    this.speedMultiplier += 0.00015; // Gradually increase speed
 
     // Spawn obstacles more frequently as speed increases
-    const spawnRate = Math.max(40, Math.floor(100 / this.speedMultiplier));
+    const spawnRate = Math.max(30, Math.floor(90 / this.speedMultiplier));
     if (this.frame % spawnRate === 0) {
       this.spawnObstacle(this.canvas.width + 100);
     }
@@ -79,7 +102,7 @@ export default class PendulumGame {
       const distance = Math.sqrt(dx*dx + dy*dy);
       
       if (distance > this.grapple.length) {
-        const force = (distance - this.grapple.length) * 0.1;
+        const force = (distance - this.grapple.length) * 0.12;
         this.player.vx -= (dx / distance) * force;
         this.player.vy -= (dy / distance) * force;
       }
@@ -90,7 +113,7 @@ export default class PendulumGame {
           y: this.player.y + Math.random() * dy,
           vx: Math.random() * 2 - 1,
           vy: Math.random() * 2 - 1,
-          life: 20
+          life: 20, color: "#ff3366"
         });
       }
     }
@@ -103,8 +126,8 @@ export default class PendulumGame {
       this.player.vy *= 0.99;
     }
     
-    if (this.player.vx < 4 * this.speedMultiplier) this.player.vx += 0.1 * this.speedMultiplier; // less artificial push
-    const maxSpeed = 18 * this.speedMultiplier; // Higher max speed for big swings
+    if (this.player.vx < 4 * this.speedMultiplier) this.player.vx += 0.15 * this.speedMultiplier; 
+    const maxSpeed = 22 * this.speedMultiplier; 
     if (this.player.vx > maxSpeed) this.player.vx = maxSpeed;
 
     this.player.x += this.player.vx;
@@ -119,25 +142,61 @@ export default class PendulumGame {
     this.callbacks.setScoreRef(Math.floor(this.score));
     if (this.frame % 10 === 0) this.callbacks.setScore(Math.floor(this.score));
 
+    // Update Obstacles
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       let obs = this.obstacles[i];
       obs.x -= diffX;
+      
+      if (obs.isMoving) {
+         obs.y += obs.vy;
+         if (obs.isTop && obs.y > 0) obs.vy *= -1;
+         if (obs.isTop && obs.y < -obs.h + 50) obs.vy *= -1;
+         if (!obs.isTop && obs.y < this.canvas.height - obs.h - 100) obs.vy *= -1;
+         if (!obs.isTop && obs.y > this.canvas.height - 50) obs.vy *= -1;
+      }
       
       if (this.player.x + this.player.r > obs.x && this.player.x - this.player.r < obs.x + obs.w &&
           this.player.y + this.player.r > obs.y && this.player.y - this.player.r < obs.y + obs.h) {
         this.state = "failed";
         this.callbacks.setGameState("failed");
         
-        for(let p=0; p<30; p++) {
+        for(let p=0; p<40; p++) {
           this.particles.push({
             x: this.player.x, y: this.player.y,
-            vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15,
-            life: 60
+            vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20,
+            life: 60, color: "#ffffff"
           });
         }
       }
       
       if (obs.x < -obs.w) this.obstacles.splice(i, 1);
+    }
+    
+    // Update Collectibles
+    for (let i = this.collectibles.length - 1; i >= 0; i--) {
+      let col = this.collectibles[i];
+      col.x -= diffX;
+      col.wobble += 0.1;
+      
+      const dist = Math.hypot(this.player.x - col.x, this.player.y - (col.y + Math.sin(col.wobble)*10));
+      if (dist < this.player.r + col.r) {
+         // Collect
+         this.score += 50;
+         this.hitstop = 3;
+         this.screenShake = 10;
+         this.flashAlpha = 0.5;
+         
+         for(let p=0; p<25; p++) {
+            this.particles.push({
+               x: col.x, y: col.y,
+               vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15,
+               life: 40, color: "#00ffff"
+            });
+         }
+         this.collectibles.splice(i, 1);
+      } else if (col.x < -50) {
+         this.collectibles.splice(i, 1);
+      }
     }
 
     if (this.player.y > this.canvas.height + 50 || this.player.y < -50) {
@@ -149,11 +208,17 @@ export default class PendulumGame {
       p.x += p.vx; p.y += p.vy; p.life--;
     });
     this.particles = this.particles.filter(p => p.life > 0);
+    
+    if (this.flashAlpha > 0) this.flashAlpha -= 0.05;
   }
 
   draw() {
     const ctx = this.ctx;
     ctx.save();
+    
+    // Dynamic Hue based on speed
+    const baseHue = (this.speedMultiplier - 1) * 300;
+    const obsColor = `hsl(${baseHue}, 100%, 60%)`;
     
     // JUICE: Screenshake
     if (this.screenShake > 0) {
@@ -166,17 +231,19 @@ export default class PendulumGame {
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     if (this.state === "playing") {
-      this.particles.push({ x: this.player.x, y: this.player.y, vx: 0, vy: 0, life: 15, isTrail: true });
+      this.particles.push({ x: this.player.x, y: this.player.y, vx: 0, vy: 0, life: 15, isTrail: true, color: obsColor });
     }
 
+    ctx.globalCompositeOperation = "lighter";
     this.particles.forEach(p => {
       ctx.globalAlpha = p.life / (p.isTrail ? 15 : 60);
-      ctx.fillStyle = p.isTrail ? "#ff3366" : "#ffffff";
+      ctx.fillStyle = p.color || "#ffffff";
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.isTrail ? this.player.r * 0.8 : 3, 0, Math.PI*2);
       ctx.fill();
     });
     ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
 
     if (this.grapple && this.state === "playing") {
       ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
@@ -192,11 +259,21 @@ export default class PendulumGame {
       ctx.fill();
     }
 
+    // Draw Collectibles
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#00ffff";
+    ctx.fillStyle = "#00ffff";
+    this.collectibles.forEach(col => {
+       ctx.beginPath();
+       ctx.arc(col.x, col.y + Math.sin(col.wobble)*10, col.r * (0.8 + Math.sin(this.frame*0.2)*0.2), 0, Math.PI*2);
+       ctx.fill();
+    });
+
     ctx.fillStyle = "#111";
-    ctx.strokeStyle = "#ff3366";
+    ctx.strokeStyle = obsColor;
     ctx.lineWidth = 3;
     ctx.shadowBlur = 15;
-    ctx.shadowColor = "#ff3366";
+    ctx.shadowColor = obsColor;
     this.obstacles.forEach(obs => {
       ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
       ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
@@ -206,12 +283,18 @@ export default class PendulumGame {
     if (this.state === "playing") {
       ctx.fillStyle = "#ffffff";
       ctx.shadowBlur = 20;
-      ctx.shadowColor = "#ff3366";
+      ctx.shadowColor = obsColor;
       ctx.beginPath();
       // Elastic stretch based on velocity
       ctx.ellipse(this.player.x, this.player.y, this.player.r + (this.player.vx * 0.2), this.player.r, 0, 0, Math.PI*2);
       ctx.fill();
       ctx.shadowBlur = 0;
+    }
+    
+    // Flash
+    if (this.flashAlpha > 0) {
+      ctx.fillStyle = `rgba(255, 255, 255, ${this.flashAlpha})`;
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
     
     ctx.restore();

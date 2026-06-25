@@ -28,29 +28,34 @@ export default class GravityFlip {
 
   spawnObstacle(x) {
     const isTop = Math.random() > 0.5;
-    const isMoving = Math.random() > 0.8;
+    // Lower chance of moving to keep it fair, but faster
+    const isMoving = Math.random() > 0.7;
+    
+    const h = 40 + Math.random() * 80;
     
     this.obstacles.push({
       x: x,
-      y: isTop ? this.ceilY : this.floorY - 60,
+      y: isTop ? this.ceilY : this.floorY - h,
       w: 40,
-      h: 60,
+      h: h,
       isTop: isTop,
       isMoving: isMoving,
-      vy: isMoving ? (Math.random() > 0.5 ? 2 : -2) : 0
+      vy: isMoving ? (Math.random() > 0.5 ? 3 : -3) : 0
     });
   }
 
   handlePointerDown() {
     if (this.state !== "playing") return;
     
-    // Reverse gravity
+    // Reverse gravity smoothly
     this.player.gravity *= -1;
-    this.player.vy = 0; // Cancel current vertical momentum for instant snap feel
+    
+    // Dampen velocity instead of snapping to 0, to make it feel smooth but responsive
+    this.player.vy *= 0.3; 
     
     // JUICE: Screenshake and Flash
-    this.screenShake = 10;
-    this.flashAlpha = 0.5;
+    this.screenShake = 6;
+    this.flashAlpha = 0.3;
 
     // Spawn burst
     for(let i=0; i<15; i++) {
@@ -72,12 +77,18 @@ export default class GravityFlip {
     if (this.flashAlpha > 0) this.flashAlpha -= 0.05;
     this.speed += 0.003; // Gradually increase speed faster
 
-    if (this.frame % Math.max(15, Math.floor(80 - this.speed*2)) === 0) {
+    // Spacing so it's always passable
+    const spawnRate = Math.max(30, Math.floor(100 - this.speed * 2));
+    if (this.frame % spawnRate === 0) {
       this.spawnObstacle(this.canvas.width + 100);
     }
 
     // Player physics
     this.player.vy += this.player.gravity;
+    // Terminal velocity to prevent clipping
+    if (this.player.vy > 20) this.player.vy = 20;
+    if (this.player.vy < -20) this.player.vy = -20;
+    
     this.player.y += this.player.vy;
     
     // Floor/Ceil collision
@@ -101,12 +112,21 @@ export default class GravityFlip {
       
       if (obs.isMoving) {
          obs.y += obs.vy;
-         if (obs.y < this.ceilY || obs.y + obs.h > this.floorY) obs.vy *= -1;
+         if (obs.y < this.ceilY) {
+            obs.y = this.ceilY;
+            obs.vy *= -1;
+         }
+         if (obs.y + obs.h > this.floorY) {
+            obs.y = this.floorY - obs.h;
+            obs.vy *= -1;
+         }
       }
       
       // Collision
-      if (this.player.x + this.player.size/2 > obs.x && this.player.x - this.player.size/2 < obs.x + obs.w &&
-          this.player.y + this.player.size/2 > obs.y && this.player.y - this.player.size/2 < obs.y + obs.h) {
+      // Slightly more forgiving hitbox
+      const hitTolerance = 4;
+      if (this.player.x + this.player.size/2 - hitTolerance > obs.x && this.player.x - this.player.size/2 + hitTolerance < obs.x + obs.w &&
+          this.player.y + this.player.size/2 - hitTolerance > obs.y && this.player.y - this.player.size/2 + hitTolerance < obs.y + obs.h) {
         this.state = "failed";
         this.callbacks.setGameState("failed");
         
@@ -157,6 +177,7 @@ export default class GravityFlip {
     ctx.shadowBlur = 0;
 
     // Draw Particles
+    ctx.globalCompositeOperation = "lighter";
     this.particles.forEach(p => {
       ctx.globalAlpha = p.life / 60;
       ctx.fillStyle = "#33ff33";
@@ -165,6 +186,7 @@ export default class GravityFlip {
       ctx.fill();
     });
     ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
 
     // Draw Obstacles
     ctx.fillStyle = "#111";
@@ -187,7 +209,7 @@ export default class GravityFlip {
       ctx.save();
       ctx.translate(this.player.x, this.player.y);
       // squish effect based on vertical velocity
-      const squishY = 1 + Math.abs(this.player.vy) * 0.05;
+      const squishY = 1 + Math.abs(this.player.vy) * 0.04;
       const squishX = 1 / squishY;
       ctx.scale(squishX, squishY);
       
