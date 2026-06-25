@@ -202,11 +202,12 @@ export default class PocketTanks {
     const cy = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
     
     // Hide custom cursor over UI
+    const customCursor = document.querySelector(".cursor");
     if (cy >= this.uiY) {
-       this.callbacks.setCursorActiveRef(false);
+       if (customCursor) customCursor.style.opacity = '0';
        this.canvas.style.cursor = 'pointer';
     } else {
-       this.callbacks.setCursorActiveRef(true);
+       if (customCursor) customCursor.style.opacity = '1';
        this.canvas.style.cursor = 'none'; // custom crosshair
     }
 
@@ -373,7 +374,7 @@ export default class PocketTanks {
     });
     
     // Weapon Scroll Easing
-    const targetScroll = -this.player.selectedWeaponIdx * 100;
+    const targetScroll = -this.player.selectedWeaponIdx * 120;
     this.currentWeaponScroll += (targetScroll - this.currentWeaponScroll) * 0.15;
     
     const py = this.terrain[Math.floor(this.player.x)];
@@ -393,6 +394,9 @@ export default class PocketTanks {
           let p = this.projectiles[i];
           p.life++;
           
+          let hit = false;
+          let detonate = false;
+
           if (p.type === 'laser') {
              p.vy = 0; 
              p.vx *= 1.05;
@@ -401,13 +405,30 @@ export default class PocketTanks {
              p.vx += this.wind;
           }
           
-          p.x += p.vx;
-          p.y += p.vy;
+          // Sub-step movement to prevent clipping
+          const steps = Math.ceil(Math.hypot(p.vx, p.vy) / 2);
+          const stx = p.vx / steps;
+          const sty = p.vy / steps;
+          
+          for (let s = 0; s < steps; s++) {
+             p.x += stx;
+             p.y += sty;
+             
+             if (p.x < -100 || p.x > this.canvas.width + 100 || p.y > this.canvas.height + 100) {
+                detonate = true; hit = false; break;
+             }
+             
+             const tx = Math.floor(p.x);
+             if (tx >= 0 && tx < this.canvas.width && p.y >= this.terrain[tx]) {
+                hit = true; break;
+             }
+             if (Math.hypot(p.x - this.player.x, p.y - this.player.y) < this.player.r + 5 || 
+                 Math.hypot(p.x - this.ai.x, p.y - this.ai.y) < this.ai.r + 5) {
+                hit = true; break;
+             }
+          }
           
           if (this.frame % 2 === 0) p.trail.push({x: p.x, y: p.y, life: 30});
-          
-          let hit = false;
-          let detonate = false;
           
           if (p.type === 'scattery' && p.vy > 0 && p.life > 20) {
              detonate = true;
@@ -420,20 +441,8 @@ export default class PocketTanks {
              }
           }
           
-          if (p.x < -100 || p.x > this.canvas.width + 100 || p.y > this.canvas.height + 100) {
-             detonate = true; hit = false;
-          }
-          
-          const tx = Math.floor(p.x);
-          if (tx >= 0 && tx < this.canvas.width && p.y >= this.terrain[tx]) {
-             hit = true;
-          }
-          if (Math.hypot(p.x - this.player.x, p.y - this.player.y) < this.player.r + 5 || 
-              Math.hypot(p.x - this.ai.x, p.y - this.ai.y) < this.ai.r + 5) {
-             hit = true;
-          }
-          
           if (hit) {
+             const tx = Math.floor(p.x);
              if (p.type === 'dirtmover') {
                 p.vx *= 0.8; p.vy *= 0.8;
                 this.destroyTerrain(p.x, p.y, 10);
@@ -447,7 +456,7 @@ export default class PocketTanks {
              } else if (p.type === 'roller') {
                 p.vx *= 0.95;
                 p.vy = 0;
-                p.y = this.terrain[tx] - 5;
+                if (tx >= 0 && tx < this.canvas.width) p.y = this.terrain[tx] - 5;
                 p.bounces++;
                 if (Math.abs(p.vx) < 0.5) detonate = true;
              } else {
@@ -628,7 +637,7 @@ export default class PocketTanks {
     drawTank(this.player, "YOU");
     drawTank(this.ai, "AI");
 
-    if (this.isAiming && this.state === "player_turn") {
+    if (this.state === "player_turn") {
        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
        ctx.setLineDash([5, 5]);
        ctx.lineWidth = 2;
@@ -760,10 +769,10 @@ export default class PocketTanks {
        for (let i=0; i<this.player.inventory.length; i++) {
           let item = this.player.inventory[i];
           let typeData = this.weaponTypes[item.id];
-          let ix = w/2 + (i * 100) + this.currentWeaponScroll;
+          let ix = w/2 + (i * 120) + this.currentWeaponScroll;
           
           ctx.fillStyle = i === this.player.selectedWeaponIdx ? "rgba(255,255,255,0.1)" : "transparent";
-          ctx.beginPath(); ctx.roundRect(ix - 45, this.uiY + 20, 90, 50, 8); ctx.fill();
+          ctx.beginPath(); ctx.roundRect(ix - 55, this.uiY + 20, 110, 50, 8); ctx.fill();
           
           if (i === this.player.selectedWeaponIdx) {
              ctx.strokeStyle = typeData.color;
@@ -771,9 +780,9 @@ export default class PocketTanks {
           }
           
           ctx.fillStyle = typeData.color;
-          ctx.font = "bold 11px 'Panchang', sans-serif";
+          ctx.font = "bold 10px 'Panchang', sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText(typeData.name, ix, this.uiY + 40);
+          ctx.fillText(typeData.name, ix, this.uiY + 40, 100);
           
           ctx.fillStyle = "#aaa";
           ctx.font = "10px sans-serif";
@@ -794,5 +803,7 @@ export default class PocketTanks {
      // Re-enable custom cursor when exiting game
      this.callbacks.setCursorActiveRef(true);
      this.canvas.style.cursor = 'none';
+     const customCursor = document.querySelector(".cursor");
+     if (customCursor) customCursor.style.opacity = '1';
   }
 }
