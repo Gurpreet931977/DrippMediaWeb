@@ -20,7 +20,12 @@ export default class PocketTanks {
        'dirtmover': { name: 'DIRT MOVER', damage: 20, radius: 45, color: '#ffcc00' },
        'cluster': { name: 'CLUSTER', damage: 15, radius: 30, color: '#ff00ff' },
        'laser': { name: 'LASER BEAM', damage: 40, radius: 20, color: '#33ff33' },
-       'roller': { name: 'GROUND ROLLER', damage: 25, radius: 40, color: '#ff9900' }
+       'roller': { name: 'GROUND ROLLER', damage: 25, radius: 40, color: '#ff9900' },
+       'bouncer': { name: 'BOUNCER', damage: 30, radius: 40, color: '#00aaff' },
+       'volcanic': { name: 'VOLCANIC', damage: 10, radius: 20, color: '#ff5500' },
+       'sniper': { name: 'SNIPER', damage: 50, radius: 15, color: '#ffff00' },
+       'blackhole': { name: 'BLACK HOLE', damage: 80, radius: 60, color: '#9900ff' },
+       'boomerang': { name: 'BOOMERANG', damage: 35, radius: 30, color: '#33ccff' }
     };
     
     this.player = {
@@ -56,7 +61,7 @@ export default class PocketTanks {
     this.uiH = 90;
     this.uiY = this.canvas.height - this.uiH;
     
-    this.clickAnims = { moveL: 0, moveR: 0, angU: 0, angD: 0, pwrU: 0, pwrD: 0, wpnL: 0, wpnR: 0, fire: 0 };
+    this.clickAnims = { moveL: 0, moveR: 0, angU: 0, angD: 0, pwrU: 0, pwrD: 0, fire: 0 };
     this.currentWeaponScroll = 0;
 
     this.handleKeyDown = (e) => {
@@ -78,6 +83,11 @@ export default class PocketTanks {
         { id: 'cluster', count: Math.floor(Math.random() * 3) + 1 },
         { id: 'laser', count: Math.floor(Math.random() * 3) + 1 },
         { id: 'roller', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'bouncer', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'volcanic', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'sniper', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'blackhole', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'boomerang', count: Math.floor(Math.random() * 3) + 1 }
      ];
   }
 
@@ -149,48 +159,50 @@ export default class PocketTanks {
   handleUIClick(cx, cy) {
      const w = this.canvas.width;
      
-     // Move controls
-     if (cx > 20 && cx < 60 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     // Move controls (Shifted to x=100+)
+     if (cx > 120 && cx < 160 && cy > this.uiY + 10 && cy < this.uiY + 45) {
         this.moveTank(this.player, -10);
         this.clickAnims.moveL = 1;
      }
-     else if (cx > 65 && cx < 105 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     else if (cx > 165 && cx < 205 && cy > this.uiY + 10 && cy < this.uiY + 45) {
         this.moveTank(this.player, 10);
         this.clickAnims.moveR = 1;
      }
      // Angle controls
-     else if (cx > 120 && cx < 160 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     else if (cx > 220 && cx < 260 && cy > this.uiY + 10 && cy < this.uiY + 45) {
         this.player.angle -= 0.05;
         this.clickAnims.angD = 1;
      }
-     else if (cx > 165 && cx < 205 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     else if (cx > 265 && cx < 305 && cy > this.uiY + 10 && cy < this.uiY + 45) {
         this.player.angle += 0.05;
         this.clickAnims.angU = 1;
      }
      // Power controls
-     else if (cx > 220 && cx < 260 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     else if (cx > 320 && cx < 360 && cy > this.uiY + 10 && cy < this.uiY + 45) {
         this.player.power = Math.max(5, this.player.power - 1);
         this.clickAnims.pwrD = 1;
      }
-     else if (cx > 265 && cx < 305 && cy > this.uiY + 10 && cy < this.uiY + 45) {
+     else if (cx > 365 && cx < 405 && cy > this.uiY + 10 && cy < this.uiY + 45) {
         this.player.power = Math.min(40, this.player.power + 1);
         this.clickAnims.pwrU = 1;
      }
      
-     // Weapon Slider controls
-     else if (cx > w/2 - 160 && cx < w/2 - 120 && cy > this.uiY + 15 && cy < this.uiY + 65) {
+     // Cover Flow Weapon Selector
+     // Left zone click
+     if (cx > w/2 - 150 && cx < w/2 - 60 && cy > this.uiY + 15 && cy < this.uiY + 75) {
         this.player.selectedWeaponIdx--;
         if (this.player.selectedWeaponIdx < 0) this.player.selectedWeaponIdx = this.player.inventory.length - 1;
-        this.clickAnims.wpnL = 1;
      }
-     else if (cx > w/2 + 120 && cx < w/2 + 160 && cy > this.uiY + 15 && cy < this.uiY + 65) {
+     // Right zone click
+     else if (cx > w/2 + 60 && cx < w/2 + 150 && cy > this.uiY + 15 && cy < this.uiY + 75) {
         this.player.selectedWeaponIdx++;
         if (this.player.selectedWeaponIdx >= this.player.inventory.length) this.player.selectedWeaponIdx = 0;
-        this.clickAnims.wpnR = 1;
      }
      
-     // Fire button
-     else if (cx > w - 120 && cx < w - 20 && cy > this.uiY + 15 && cy < this.uiY + 65) {
+     // Fire button (Glowing Orb at right)
+     const dx = cx - (w - 70);
+     const dy = cy - (this.uiY + 45);
+     if (Math.hypot(dx, dy) < 40) {
         this.executeFire(this.player);
         this.clickAnims.fire = 1;
      }
@@ -241,13 +253,18 @@ export default class PocketTanks {
      
      let firePower = tank.power;
      let fireAngle = tank.angle;
-     if (invItem.id === 'laser') {
-         firePower = 40; 
+     if (invItem.id === 'laser' || invItem.id === 'sniper') {
+         firePower = 50; 
      }
 
+     const ownerTag = tank === this.player ? 'player' : 'ai';
+     
+     const startX = tank.x + Math.cos(fireAngle) * 45;
+     const startY = tank.y - 6 + Math.sin(fireAngle) * 45;
+
      this.projectiles.push({
-        x: tank.x,
-        y: tank.y - 6,
+        x: startX,
+        y: startY,
         vx: Math.cos(fireAngle) * firePower,
         vy: Math.sin(fireAngle) * firePower,
         type: invItem.id,
@@ -256,7 +273,8 @@ export default class PocketTanks {
         color: typeData.color,
         trail: [],
         life: 0,
-        bounces: 0
+        bounces: 0,
+        owner: ownerTag
      });
      
      this.screenShake = 5;
@@ -373,7 +391,7 @@ export default class PocketTanks {
        if (this.clickAnims[k] < 0) this.clickAnims[k] = 0;
     });
     
-    // Weapon Scroll Easing
+    // Smooth Cover Flow Weapon Scroll Easing
     const targetScroll = -this.player.selectedWeaponIdx * 120;
     this.currentWeaponScroll += (targetScroll - this.currentWeaponScroll) * 0.15;
     
@@ -397,9 +415,27 @@ export default class PocketTanks {
           let hit = false;
           let detonate = false;
 
-          if (p.type === 'laser') {
+          if (p.type === 'laser' || p.type === 'sniper') {
              p.vy = 0; 
              p.vx *= 1.05;
+          } else if (p.type === 'boomerang') {
+             p.vx -= Math.sign(p.vx) * 0.25; // Accelerate backwards
+             p.vy += this.gravity * 0.5; // lower gravity for cooler arc
+          } else if (p.type === 'blackhole') {
+             p.vy = 0;
+             p.vx *= 0.98;
+             // Suck particles
+             this.particles.forEach(part => {
+                const dx = p.x - part.x;
+                const dy = p.y - part.y;
+                if(Math.hypot(dx,dy) < 150) {
+                   part.vx += dx * 0.05;
+                   part.vy += dy * 0.05;
+                }
+             });
+             // Suck terrain slowly
+             this.destroyTerrain(p.x, p.y + 20, 5);
+             if (p.life > 100) hit = true;
           } else {
              p.vy += this.gravity;
              p.vx += this.wind;
@@ -418,14 +454,15 @@ export default class PocketTanks {
                 detonate = true; hit = false; break;
              }
              
-             const tx = Math.floor(p.x);
-             if (tx >= 0 && tx < this.canvas.width && p.y >= this.terrain[tx]) {
-                hit = true; break;
+             if (p.type !== 'blackhole') {
+                 const tx = Math.floor(p.x);
+                 if (tx >= 0 && tx < this.canvas.width && p.y >= this.terrain[tx]) {
+                    hit = true; break;
+                 }
              }
-             if (Math.hypot(p.x - this.player.x, p.y - this.player.y) < this.player.r + 5 || 
-                 Math.hypot(p.x - this.ai.x, p.y - this.ai.y) < this.ai.r + 5) {
-                hit = true; break;
-             }
+             
+             if (p.owner !== 'player' && Math.hypot(p.x - this.player.x, p.y - this.player.y) < this.player.r + 5) { hit = true; break; }
+             if (p.owner !== 'ai' && Math.hypot(p.x - this.ai.x, p.y - this.ai.y) < this.ai.r + 5) { hit = true; break; }
           }
           
           if (this.frame % 2 === 0) p.trail.push({x: p.x, y: p.y, life: 30});
@@ -436,7 +473,7 @@ export default class PocketTanks {
                 this.projectiles.push({
                    x: p.x, y: p.y,
                    vx: p.vx + (Math.random()-0.5)*4, vy: p.vy + (Math.random()-0.5)*4,
-                   type: 'standard', damage: 15, radius: 20, color: '#00ffcc', trail: [], life: 0, bounces: 0
+                   type: 'standard', damage: 15, radius: 20, color: '#00ffcc', trail: [], life: 0, bounces: 0, owner: p.owner
                 });
              }
           }
@@ -451,7 +488,7 @@ export default class PocketTanks {
                 p.vy *= -0.5; p.y -= 5; p.bounces++;
                 this.projectiles.push({
                    x: p.x, y: p.y, vx: (Math.random()-0.5)*2, vy: -3,
-                   type: 'standard', damage: 15, radius: 25, color: '#ff00ff', trail: [], life: 0, bounces: 0
+                   type: 'standard', damage: 15, radius: 25, color: '#ff00ff', trail: [], life: 0, bounces: 0, owner: p.owner
                 });
              } else if (p.type === 'roller') {
                 p.vx *= 0.95;
@@ -459,13 +496,26 @@ export default class PocketTanks {
                 if (tx >= 0 && tx < this.canvas.width) p.y = this.terrain[tx] - 5;
                 p.bounces++;
                 if (Math.abs(p.vx) < 0.5) detonate = true;
+             } else if (p.type === 'bouncer') {
+                p.vy *= -0.8; p.y -= 2;
+                p.bounces++;
+                if (p.bounces > 5) detonate = true;
+             } else if (p.type === 'volcanic') {
+                detonate = true;
+                for (let j=0; j<8; j++) {
+                   this.projectiles.push({
+                      x: p.x, y: p.y - 10,
+                      vx: (Math.random()-0.5)*8, vy: -Math.random()*8 - 2,
+                      type: 'standard', damage: 5, radius: 15, color: '#ff5500', trail: [], life: 0, bounces: 0, owner: p.owner
+                   });
+                }
              } else {
                 detonate = true;
              }
           }
           
           if (detonate) {
-             if (hit || p.type === 'dirtmover' || p.type === 'roller') {
+             if (hit || p.type === 'dirtmover' || p.type === 'roller' || p.type === 'blackhole') {
                 this.createExplosion(p.x, p.y, p.radius, p.color, p.damage);
              }
              this.projectiles.splice(i, 1);
@@ -577,10 +627,10 @@ export default class PocketTanks {
        ctx.lineCap = "round";
        ctx.beginPath();
        ctx.moveTo(0, -6);
-       ctx.lineTo(25, -6);
+       ctx.lineTo(45, -6); // Longer Barrel
        ctx.stroke();
        ctx.lineWidth = 10;
-       ctx.beginPath(); ctx.moveTo(20, -6); ctx.lineTo(25, -6); ctx.stroke();
+       ctx.beginPath(); ctx.moveTo(35, -6); ctx.lineTo(45, -6); ctx.stroke();
        ctx.restore();
        
        // Dome
@@ -642,21 +692,27 @@ export default class PocketTanks {
        ctx.setLineDash([5, 5]);
        ctx.lineWidth = 2;
        ctx.beginPath();
-       let ax = this.player.x;
-       let ay = this.player.y - 13;
+       let ax = this.player.x + Math.cos(this.player.angle) * 45;
+       let ay = this.player.y - 6 + Math.sin(this.player.angle) * 45;
        let vx = Math.cos(this.player.angle) * this.player.power;
        let vy = Math.sin(this.player.angle) * this.player.power;
        
        const invItem = this.player.inventory[this.player.selectedWeaponIdx];
-       if (invItem.id === 'laser') {
-          vx = Math.cos(this.player.angle) * 40;
-          vy = Math.sin(this.player.angle) * 40;
+       if (invItem.id === 'laser' || invItem.id === 'sniper') {
+          vx = Math.cos(this.player.angle) * 50;
+          vy = Math.sin(this.player.angle) * 50;
+       } else if (invItem.id === 'boomerang') {
+          // Can't easily predict boomerang, draw initial straight arc
        }
 
        ctx.moveTo(ax, ay);
        for(let i=0; i<15; i++) {
-          if (invItem.id === 'laser') {
+          if (invItem.id === 'laser' || invItem.id === 'sniper') {
              ax += vx; ay += vy;
+          } else if (invItem.id === 'blackhole') {
+             ax += vx; ay += vy; vx *= 0.98;
+          } else if (invItem.id === 'boomerang') {
+             vx -= Math.sign(vx) * 0.25; vy += this.gravity * 0.5; ax += vx; ay += vy;
           } else {
              ax += vx; vy += this.gravity; vx += this.wind; ay += vy;
           }
@@ -670,7 +726,7 @@ export default class PocketTanks {
        ctx.shadowBlur = 15;
        ctx.shadowColor = p.color;
        ctx.fillStyle = p.color;
-       ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+       ctx.beginPath(); ctx.arc(p.x, p.y, p.type==='blackhole'?10:4, 0, Math.PI*2); ctx.fill();
        ctx.shadowBlur = 0;
        
        if (p.trail.length > 0) {
@@ -679,7 +735,7 @@ export default class PocketTanks {
              if (i===0) ctx.moveTo(t.x, t.y); else ctx.lineTo(t.x, t.y);
           });
           ctx.strokeStyle = `rgba(255,255,255,0.4)`;
-          ctx.lineWidth = 2;
+          ctx.lineWidth = p.type==='blackhole'?4:2;
           ctx.stroke();
        }
     });
@@ -715,7 +771,7 @@ export default class PocketTanks {
        const w = this.canvas.width;
        
        // Glassy UI background
-       ctx.fillStyle = "rgba(0, 5, 10, 0.85)";
+       ctx.fillStyle = "rgba(5, 10, 20, 0.85)";
        ctx.strokeStyle = "#00ffcc";
        ctx.lineWidth = 2;
        ctx.beginPath();
@@ -737,62 +793,97 @@ export default class PocketTanks {
           ctx.textBaseline = "alphabetic"; // reset
        };
        
+       // Shifted Left Panel Controls (starts at x=120 to avoid back button)
        // Group 1: MOVE
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`MOVE (MP: ${Math.floor(this.player.mp)})`, 62, this.uiY + 12);
-       drawAnimBtn(20, this.uiY + 20, 40, 35, "<", "moveL", "#00ffcc", this.player.mp <= 0);
-       drawAnimBtn(65, this.uiY + 20, 40, 35, ">", "moveR", "#00ffcc", this.player.mp <= 0);
+       ctx.fillText(`MOVE (MP: ${Math.floor(this.player.mp)})`, 162, this.uiY + 12);
+       drawAnimBtn(120, this.uiY + 20, 40, 35, "<", "moveL", "#00ffcc", this.player.mp <= 0);
+       drawAnimBtn(165, this.uiY + 20, 40, 35, ">", "moveR", "#00ffcc", this.player.mp <= 0);
 
        // Group 2: ANGLE
        let angDeg = Math.floor(Math.abs(this.player.angle * 180 / Math.PI));
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`ANG: ${angDeg}°`, 162, this.uiY + 12);
-       drawAnimBtn(120, this.uiY + 20, 40, 35, "-", "angD", "#ebd73f", false);
-       drawAnimBtn(165, this.uiY + 20, 40, 35, "+", "angU", "#ebd73f", false);
+       ctx.fillText(`ANG: ${angDeg}°`, 262, this.uiY + 12);
+       drawAnimBtn(220, this.uiY + 20, 40, 35, "-", "angD", "#ebd73f", false);
+       drawAnimBtn(265, this.uiY + 20, 40, 35, "+", "angU", "#ebd73f", false);
        
        // Group 3: POWER
        ctx.fillStyle = "#fff"; ctx.font = "10px 'Panchang', sans-serif"; ctx.textAlign = "center";
-       ctx.fillText(`PWR: ${Math.floor((this.player.power/40)*100)}%`, 262, this.uiY + 12);
-       drawAnimBtn(220, this.uiY + 20, 40, 35, "-", "pwrD", "#ff3366", false);
-       drawAnimBtn(265, this.uiY + 20, 40, 35, "+", "pwrU", "#ff3366", false);
+       ctx.fillText(`PWR: ${Math.floor((this.player.power/40)*100)}%`, 362, this.uiY + 12);
+       drawAnimBtn(320, this.uiY + 20, 40, 35, "-", "pwrD", "#ff3366", false);
+       drawAnimBtn(365, this.uiY + 20, 40, 35, "+", "pwrU", "#ff3366", false);
        
-       // Group 4: WEAPON SLIDER (Center)
-       drawAnimBtn(w/2 - 160, this.uiY + 25, 30, 40, "<", "wpnL", "#fff", false);
-       drawAnimBtn(w/2 + 130, this.uiY + 25, 30, 40, ">", "wpnR", "#fff", false);
-       
-       // Sliding List Clipping Region
+       // Cover Flow Weapon Selector (Center)
        ctx.save();
        ctx.beginPath();
-       ctx.rect(w/2 - 120, this.uiY + 15, 240, 60);
+       ctx.rect(w/2 - 180, this.uiY + 5, 360, 80);
        ctx.clip();
-       
+
        for (let i=0; i<this.player.inventory.length; i++) {
           let item = this.player.inventory[i];
           let typeData = this.weaponTypes[item.id];
-          let ix = w/2 + (i * 120) + this.currentWeaponScroll;
           
-          ctx.fillStyle = i === this.player.selectedWeaponIdx ? "rgba(255,255,255,0.1)" : "transparent";
-          ctx.beginPath(); ctx.roundRect(ix - 55, this.uiY + 20, 110, 50, 8); ctx.fill();
+          let ix = w/2 + (i * 120) + this.currentWeaponScroll;
+          let dist = Math.abs(ix - w/2);
+          
+          let scale = Math.max(0.6, 1 - (dist / 300));
+          let alpha = Math.max(0.2, 1 - (dist / 150));
+          
+          if (dist > 250) continue; // optimize render
+          
+          ctx.save();
+          ctx.translate(ix, this.uiY + 45);
+          ctx.scale(scale, scale);
+          
+          ctx.fillStyle = `rgba(0,0,0,${0.8 * alpha})`;
+          ctx.beginPath(); ctx.roundRect(-55, -25, 110, 50, 12); ctx.fill();
           
           if (i === this.player.selectedWeaponIdx) {
              ctx.strokeStyle = typeData.color;
+             ctx.lineWidth = 2;
+             ctx.shadowBlur = 15;
+             ctx.shadowColor = typeData.color;
              ctx.stroke();
+             ctx.shadowBlur = 0;
           }
           
           ctx.fillStyle = typeData.color;
-          ctx.font = "bold 10px 'Panchang', sans-serif";
+          ctx.globalAlpha = alpha;
+          ctx.font = "bold 11px 'Panchang', sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText(typeData.name, ix, this.uiY + 40, 100);
+          ctx.fillText(typeData.name, 0, -2, 100);
           
           ctx.fillStyle = "#aaa";
           ctx.font = "10px sans-serif";
-          ctx.fillText(`x${item.count > 50 ? '∞' : item.count}`, ix, this.uiY + 58);
+          ctx.fillText(`x${item.count > 50 ? '∞' : item.count}`, 0, 15);
+          
+          ctx.restore();
        }
        ctx.restore();
        
-       // Group 5: FIRE
+       // Fire button (Glowing Orb Right Side)
        const canFire = this.state === "player_turn" && this.player.inventory[this.player.selectedWeaponIdx].count > 0;
-       drawAnimBtn(w - 120, this.uiY + 15, 100, 50, "FIRE", "fire", "#ff0055", !canFire);
+       const sF = this.clickAnims.fire * 5;
+       const orbX = w - 70;
+       const orbY = this.uiY + 45;
+       
+       ctx.shadowBlur = canFire ? 20 + Math.sin(this.frame * 0.1) * 10 : 0;
+       ctx.shadowColor = "#ff0055";
+       ctx.fillStyle = canFire ? "#ff0055" : "#333";
+       ctx.beginPath(); ctx.arc(orbX, orbY, 35 - sF, 0, Math.PI*2); ctx.fill();
+       ctx.shadowBlur = 0;
+       
+       ctx.fillStyle = "#fff";
+       ctx.font = "bold 16px 'Panchang', sans-serif";
+       ctx.textAlign = "center";
+       ctx.textBaseline = "middle";
+       ctx.fillText("FIRE", orbX, orbY + 2);
+       ctx.textBaseline = "alphabetic";
+       
+       // Instruction
+       ctx.fillStyle = "rgba(255,255,255,0.4)";
+       ctx.font = "10px sans-serif";
+       ctx.fillText("CLICK TO FIRE", orbX, orbY - 45);
     }
 
     ctx.restore();
