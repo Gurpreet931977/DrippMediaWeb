@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+
+const CustomCursor = memo(() => {
+  return <div className="cursor"></div>;
+});
 
 export default function ComingSoon() {
   const containerRef = useRef(null);
@@ -1266,7 +1270,7 @@ export default function ComingSoon() {
            box-shadow: 0 0 15px rgba(235, 215, 63, 0.3) !important;
         }
       `}</style>
-      {!isTouch && <div className="cursor" style={{ transform: `translate(${mouseRef.current.x}px, ${mouseRef.current.y}px) translate(-50%, -50%)` }}></div>}
+      {!isTouch && <CustomCursor />}
 
       {/* Control Buttons (Top Left) */}
       <div style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 4, display: 'flex', gap: '15px' }}>
