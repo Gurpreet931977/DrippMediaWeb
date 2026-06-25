@@ -206,7 +206,10 @@ export default function ComingSoon() {
           const cursor = document.querySelector('.cursor');
           if (cursor) {
              cursor.classList.add('eating');
-             setTimeout(() => cursor.classList.remove('eating'), 150);
+             if (window.cursorEatingTimeout) clearTimeout(window.cursorEatingTimeout);
+             window.cursorEatingTimeout = setTimeout(() => {
+                if (cursor) cursor.classList.remove('eating');
+             }, 150);
           }
           
           if (this.isBomb) {
