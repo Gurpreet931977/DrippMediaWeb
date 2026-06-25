@@ -73,8 +73,56 @@ export default class BeatMaker {
         { name: "SLAP BASS", color: "#00ff99", synth: (p) => this.playSlapBass(p) },
         { name: "HYPERPOP GLITCH", color: "#ff00ff", synth: (p) => this.playHyperGlitch(p) },
         { name: "VAPORWAVE PAD", color: "#00ccff", synth: (p) => this.playVaporwave(p) },
-        { name: "CHIPTUNE ARP", color: "#ffcc00", synth: (p) => this.playChiptune(p) }
+        { name: "CHIPTUNE ARP", color: "#ffcc00", synth: (p) => this.playChiptune(p) },
+        { name: "CYBER WUB", color: "#66ff33", synth: (p) => this.playCyberWub(p) },
+        { name: "NEON BELL", color: "#ffffff", synth: (p) => this.playNeonBell(p) },
+        { name: "ACID LEAD", color: "#ffff00", synth: (p) => this.playAcidLead(p) }
      ];
+  }
+
+  playCyberWub(pitch) {
+    const osc = this.audioCtx.createOscillator();
+    const gain = this.audioCtx.createGain();
+    const filter = this.audioCtx.createBiquadFilter();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(65 * this.getPitchMod(pitch), this.audioCtx.currentTime);
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(100, this.audioCtx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(3000, this.audioCtx.currentTime + 0.2);
+    filter.frequency.exponentialRampToValueAtTime(100, this.audioCtx.currentTime + 0.4);
+    osc.connect(filter); filter.connect(gain); gain.connect(this.masterGain);
+    gain.gain.setValueAtTime(0, this.audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.8, this.audioCtx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.6);
+    osc.start(this.audioCtx.currentTime); osc.stop(this.audioCtx.currentTime + 0.6);
+  }
+  
+  playNeonBell(pitch) {
+    const osc = this.audioCtx.createOscillator();
+    const gain = this.audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880 * this.getPitchMod(pitch), this.audioCtx.currentTime);
+    osc.connect(gain); gain.connect(this.masterGain);
+    gain.gain.setValueAtTime(1, this.audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 1.0);
+    osc.start(this.audioCtx.currentTime); osc.stop(this.audioCtx.currentTime + 1.0);
+  }
+  
+  playAcidLead(pitch) {
+    const osc = this.audioCtx.createOscillator();
+    const gain = this.audioCtx.createGain();
+    const filter = this.audioCtx.createBiquadFilter();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(220 * this.getPitchMod(pitch), this.audioCtx.currentTime);
+    filter.type = "bandpass";
+    filter.Q.value = 10;
+    filter.frequency.setValueAtTime(400, this.audioCtx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(4000, this.audioCtx.currentTime + 0.1);
+    filter.frequency.exponentialRampToValueAtTime(400, this.audioCtx.currentTime + 0.3);
+    osc.connect(filter); filter.connect(gain); gain.connect(this.masterGain);
+    gain.gain.setValueAtTime(0.6, this.audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+    osc.start(this.audioCtx.currentTime); osc.stop(this.audioCtx.currentTime + 0.3);
   }
 
   updateLayout() {
@@ -85,7 +133,7 @@ export default class BeatMaker {
     this.cellH = Math.min(50, availableHeight / Math.max(1, this.rows));
     this.cellW = Math.min(60, (w - 200) / this.cols); 
     
-    this.gridX = (w - (this.cellW * this.cols)) / 2 + 50; 
+    this.gridX = Math.max(180, (w - (this.cellW * this.cols)) / 2 + 50); 
     this.gridY = 100;
     
     this.uiY = h - 80;
@@ -524,6 +572,21 @@ export default class BeatMaker {
      this.updateLayout();
   }
 
+  moveChannel(rowIndex, dir) {
+     const target = rowIndex + dir;
+     if (target < 0 || target >= this.rows) return;
+     
+     const tempCh = this.channels[rowIndex];
+     this.channels[rowIndex] = this.channels[target];
+     this.channels[target] = tempCh;
+     
+     for (let c = 0; c < this.cols; c++) {
+        const tempG = this.grid[c][rowIndex];
+        this.grid[c][rowIndex] = this.grid[c][target];
+        this.grid[c][target] = tempG;
+     }
+  }
+
   handlePointerDown(e) {
     if (this.audioCtx.state === 'suspended') {
        this.audioCtx.resume();
@@ -579,20 +642,34 @@ export default class BeatMaker {
     for (let r = 0; r < this.rows; r++) {
        const ry = this.gridY + r * this.cellH + this.cellH/2;
        
-       // Pitch Up
-       if (cx > this.gridX - 40 && cx < this.gridX - 25 && cy > ry - 18 && cy < ry - 2) {
-          this.channels[r].pitchOffset++;
-          this.triggerAnim(`pitchU_${r}`);
+       const panelX = this.gridX - 170;
+       
+       // Move Up
+       if (cx > panelX && cx < panelX + 20 && cy > ry - 18 && cy < ry) {
+          this.triggerAnim(`moveU_${r}`);
+          setTimeout(() => this.moveChannel(r, -1), 100);
           return;
        }
-       // Pitch Down
-       if (cx > this.gridX - 40 && cx < this.gridX - 25 && cy > ry + 2 && cy < ry + 18) {
+       // Move Down
+       if (cx > panelX && cx < panelX + 20 && cy > ry && cy < ry + 18) {
+          this.triggerAnim(`moveD_${r}`);
+          setTimeout(() => this.moveChannel(r, 1), 100);
+          return;
+       }
+       // Pitch Down (-)
+       if (cx > panelX + 95 && cx < panelX + 115 && cy > ry - 10 && cy < ry + 15) {
           this.channels[r].pitchOffset--;
           this.triggerAnim(`pitchD_${r}`);
           return;
        }
+       // Pitch Up (+)
+       if (cx > panelX + 115 && cx < panelX + 135 && cy > ry - 10 && cy < ry + 15) {
+          this.channels[r].pitchOffset++;
+          this.triggerAnim(`pitchU_${r}`);
+          return;
+       }
        // Delete
-       if (cx > this.gridX - 20 && cx < this.gridX - 5 && cy > ry - 10 && cy < ry + 10) {
+       if (cx > panelX + 135 && cx < panelX + 160 && cy > ry - 15 && cy < ry + 15) {
           this.triggerAnim(`del_${r}`);
           setTimeout(() => this.deleteChannel(r), 100);
           return;
@@ -693,33 +770,60 @@ export default class BeatMaker {
     for (let r = 0; r < this.rows; r++) {
        const ry = this.gridY + r * this.cellH + this.cellH/2;
        
-       // Label
-       ctx.fillStyle = this.channels[r].color;
-       ctx.fillText(this.channels[r].name, this.gridX - 50, ry);
+       // Modern Track Panel
+       const panelW = 160;
+       const panelX = this.gridX - panelW - 10;
+       const panelH = this.cellH - 4;
+       const panelY = ry - panelH/2;
        
-       // Pitch Offset Display
+       let isPanelHovered = false;
+       if (!this.isModalOpen && this.mouseX > panelX && this.mouseX < panelX + panelW && this.mouseY > panelY && this.mouseY < panelY + panelH) {
+          isPanelHovered = true;
+       }
+       
+       ctx.fillStyle = isPanelHovered ? "rgba(30, 20, 40, 0.9)" : "rgba(15, 10, 20, 0.7)";
+       ctx.strokeStyle = isPanelHovered ? this.channels[r].color : "rgba(255, 255, 255, 0.1)";
+       ctx.lineWidth = 1;
+       ctx.beginPath(); ctx.roundRect(panelX, panelY, panelW, panelH, 8); ctx.fill(); ctx.stroke();
+       
+       // Reorder Up/Down
+       ctx.fillStyle = "rgba(255,255,255,0.3)";
+       ctx.font = "10px sans-serif";
+       ctx.textAlign = "center";
+       const sUp = (this.clickAnims[`moveU_${r}`] || 0) * 2;
+       ctx.fillText("▲", panelX + 12, ry - 6 + sUp);
+       const sDn = (this.clickAnims[`moveD_${r}`] || 0) * 2;
+       ctx.fillText("▼", panelX + 12, ry + 10 + sDn);
+       
+       // Label
+       ctx.textAlign = "left";
+       ctx.fillStyle = this.channels[r].color;
+       ctx.font = "bold 11px 'Panchang', sans-serif";
+       ctx.fillText(this.channels[r].name.substring(0, 10), panelX + 25, ry - 3);
+       
+       // Pitch Display
        ctx.fillStyle = "rgba(255,255,255,0.5)";
        ctx.font = "10px sans-serif";
        const po = this.channels[r].pitchOffset;
-       ctx.fillText(po > 0 ? `+${po}` : po, this.gridX - 50, ry + 12);
-       ctx.font = "bold 11px sans-serif";
+       ctx.fillText(`PITCH: ${po > 0 ? '+'+po : po}`, panelX + 25, ry + 12);
        
-       // Pitch Controls
-       const sU = (this.clickAnims[`pitchU_${r}`] || 0) * 2;
-       ctx.fillStyle = "rgba(255,255,255,0.2)";
-       ctx.beginPath(); ctx.moveTo(this.gridX - 32, ry - 14 + sU); ctx.lineTo(this.gridX - 28, ry - 6 + sU); ctx.lineTo(this.gridX - 36, ry - 6 + sU); ctx.fill();
+       // Pitch Controls (+ / -)
+       ctx.textAlign = "center";
+       ctx.font = "bold 14px sans-serif";
+       const pM = (this.clickAnims[`pitchD_${r}`] || 0) * 2;
+       ctx.fillStyle = "rgba(255,255,255,0.4)";
+       ctx.fillText("-", panelX + 105, ry + 5 + pM);
        
-       const sD = (this.clickAnims[`pitchD_${r}`] || 0) * 2;
-       ctx.beginPath(); ctx.moveTo(this.gridX - 32, ry + 14 - sD); ctx.lineTo(this.gridX - 28, ry + 6 - sD); ctx.lineTo(this.gridX - 36, ry + 6 - sD); ctx.fill();
+       const pP = (this.clickAnims[`pitchU_${r}`] || 0) * 2;
+       ctx.fillText("+", panelX + 125, ry + 5 + pP);
        
        // Delete
        const sX = (this.clickAnims[`del_${r}`] || 0) * 2;
-       ctx.fillStyle = "rgba(255,50,50,0.3)";
-       ctx.beginPath(); ctx.roundRect(this.gridX - 20 + sX, ry - 8 + sX, 16 - sX*2, 16 - sX*2, 4); ctx.fill();
+       ctx.fillStyle = "rgba(255, 50, 50, 0.5)";
+       ctx.beginPath(); ctx.roundRect(panelX + 138 + sX, ry - 10 + sX, 16 - sX*2, 20 - sX*2, 4); ctx.fill();
        ctx.fillStyle = "#fff";
-       ctx.textAlign = "center";
-       ctx.fillText("✕", this.gridX - 12, ry + 1);
-       ctx.textAlign = "right";
+       ctx.font = "10px sans-serif";
+       ctx.fillText("✕", panelX + 146, ry + 4);
     }
     
     // Column Backgrounds
