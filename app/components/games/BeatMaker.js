@@ -742,19 +742,26 @@ export default class BeatMaker {
           const ch = this.cellH - padding*2;
           const rad = ch / 2; // Full pill rounding
           
+          let isHovered = false;
+          if (!this.isModalOpen && this.mouseX > x + padding && this.mouseX < x + cw && this.mouseY > y + padding && this.mouseY < y + ch) {
+             isHovered = true;
+          }
+          
           if (this.grid[c][r]) {
-             ctx.fillStyle = this.channels[r].color;
-             ctx.shadowBlur = 15;
+             const grad = ctx.createLinearGradient(x, y, x, y + ch);
+             grad.addColorStop(0, "rgba(255,255,255,0.6)");
+             grad.addColorStop(0.4, this.channels[r].color);
+             grad.addColorStop(1, this.channels[r].color);
+             
+             ctx.fillStyle = grad;
+             ctx.shadowBlur = isHovered ? 25 : 12;
              ctx.shadowColor = this.channels[r].color;
              ctx.beginPath(); ctx.roundRect(x + padding + s, y + padding + s, cw - s*2, ch - s*2, rad); ctx.fill();
              ctx.shadowBlur = 0;
-             // Glassy highlight
-             ctx.fillStyle = "rgba(255,255,255,0.4)";
-             ctx.beginPath(); ctx.roundRect(x + padding + s + 2, y + padding + s + 2, cw - s*2 - 4, ch/3, rad); ctx.fill();
           } else {
-             ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+             ctx.fillStyle = isHovered ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.05)";
              ctx.beginPath(); ctx.roundRect(x + padding + s, y + padding + s, cw - s*2, ch - s*2, rad); ctx.fill();
-             ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+             ctx.strokeStyle = isHovered ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.1)";
              ctx.lineWidth = 1;
              ctx.stroke();
           }
