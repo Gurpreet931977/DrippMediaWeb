@@ -120,7 +120,7 @@
         }
 
         .cursor.eating {
-            transform: translate(-50%, -50%) scale(1.5) !important;
+            scale: 1.5 !important;
             background-color: var(--brand-yellow) !important;
             border-color: var(--brand-yellow) !important;
             mix-blend-mode: normal !important;
