@@ -4,7 +4,7 @@ export default class PocketTanks {
     this.callbacks = callbacks;
     this.ctx = canvas.getContext('2d');
     
-    this.state = "menu"; // menu, player_turn, player_shoot, ai_turn, ai_shoot, game_over
+    this.state = "menu";
     this.difficulty = "beginner";
     
     this.gravity = 0.15;
@@ -18,7 +18,9 @@ export default class PocketTanks {
        'nuke': { name: 'NUKE', damage: 70, radius: 80, color: '#ff0000' },
        'scattery': { name: 'SCATTERY', damage: 15, radius: 25, color: '#00ffcc' },
        'dirtmover': { name: 'DIRT MOVER', damage: 20, radius: 45, color: '#ffcc00' },
-       'cluster': { name: 'CLUSTER', damage: 15, radius: 30, color: '#ff00ff' }
+       'cluster': { name: 'CLUSTER', damage: 15, radius: 30, color: '#ff00ff' },
+       'laser': { name: 'LASER BEAM', damage: 40, radius: 20, color: '#33ff33' },
+       'roller': { name: 'GROUND ROLLER', damage: 25, radius: 40, color: '#ff9900' }
     };
     
     this.player = {
@@ -26,7 +28,7 @@ export default class PocketTanks {
        angle: -Math.PI/4, power: 15, mp: 50, maxMp: 50,
        inventory: this.generateInventory(),
        selectedWeaponIdx: 0,
-       dir: 1 // facing right
+       dir: 1
     };
     
     this.ai = {
@@ -34,7 +36,7 @@ export default class PocketTanks {
        angle: -Math.PI*0.75, power: 15, mp: 50, maxMp: 50,
        inventory: this.generateInventory(),
        selectedWeaponIdx: 0,
-       dir: -1 // facing left
+       dir: -1
     };
     
     this.placeTanks();
@@ -51,18 +53,27 @@ export default class PocketTanks {
     this.frame = 0;
     this.aiWaitTimer = 0;
     
-    // UI Layout config
     this.uiH = 90;
     this.uiY = this.canvas.height - this.uiH;
+
+    this.handleKeyDown = (e) => {
+       if (e.code === 'Space' && this.state === 'player_turn') {
+          e.preventDefault();
+          this.executeFire(this.player);
+       }
+    };
+    window.addEventListener('keydown', this.handleKeyDown);
   }
 
   generateInventory() {
      return [
         { id: 'standard', count: 99 },
-        { id: 'nuke', count: Math.floor(Math.random() * 2) + 1 }, // 1-2
-        { id: 'scattery', count: Math.floor(Math.random() * 3) + 2 }, // 2-4
-        { id: 'dirtmover', count: Math.floor(Math.random() * 3) + 2 }, // 2-4
-        { id: 'cluster', count: Math.floor(Math.random() * 3) + 2 }, // 2-4
+        { id: 'nuke', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'scattery', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'dirtmover', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'cluster', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'laser', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'roller', count: Math.floor(Math.random() * 3) + 1 },
      ];
   }
 
@@ -88,14 +99,13 @@ export default class PocketTanks {
      let nx = tank.x + dx;
      if (nx < 10 || nx > this.canvas.width - 10) return;
      
-     // Prevent climbing absolute vertical walls easily
      let ny = this.terrain[Math.floor(nx)];
      let slope = ny - this.terrain[Math.floor(tank.x)];
-     if (slope < -5) return; // Too steep to climb
+     if (slope < -15) return; // Too steep to climb
      
      tank.x = nx;
      tank.y = ny - tank.r;
-     tank.mp -= Math.abs(dx);
+     tank.mp -= 1; // 1 MP per movement click
      if (tank.mp < 0) tank.mp = 0;
   }
 
@@ -116,13 +126,11 @@ export default class PocketTanks {
     }
 
     if (this.state === "player_turn") {
-       // Check UI clicks
        if (cy >= this.uiY) {
           this.handleUIClick(cx, cy);
           return;
        }
        
-       // Start Aiming
        this.isAiming = true;
        this.dragStart = { x: cx, y: cy };
        this.dragCurrent = { x: cx, y: cy };
@@ -138,25 +146,20 @@ export default class PocketTanks {
   handleUIClick(cx, cy) {
      const w = this.canvas.width;
      
-     // Left btn (move left)
      if (cx > 20 && cx < 70 && cy > this.uiY + 10 && cy < this.uiY + 50) {
-        this.moveTank(this.player, -3);
+        this.moveTank(this.player, -10);
      }
-     // Right btn (move right)
      else if (cx > 80 && cx < 130 && cy > this.uiY + 10 && cy < this.uiY + 50) {
-        this.moveTank(this.player, 3);
+        this.moveTank(this.player, 10);
      }
-     // Prev Weapon
-     else if (cx > w/2 - 120 && cx < w/2 - 80 && cy > this.uiY + 20 && cy < this.uiY + 60) {
+     else if (cx > w/2 - 140 && cx < w/2 - 100 && cy > this.uiY + 25 && cy < this.uiY + 55) {
         this.player.selectedWeaponIdx--;
         if (this.player.selectedWeaponIdx < 0) this.player.selectedWeaponIdx = this.player.inventory.length - 1;
      }
-     // Next Weapon
-     else if (cx > w/2 + 80 && cx < w/2 + 120 && cy > this.uiY + 20 && cy < this.uiY + 60) {
+     else if (cx > w/2 + 100 && cx < w/2 + 140 && cy > this.uiY + 25 && cy < this.uiY + 55) {
         this.player.selectedWeaponIdx++;
         if (this.player.selectedWeaponIdx >= this.player.inventory.length) this.player.selectedWeaponIdx = 0;
      }
-     // Fire Button
      else if (cx > w - 120 && cx < w - 20 && cy > this.uiY + 15 && cy < this.uiY + 65) {
         this.executeFire(this.player);
      }
@@ -189,17 +192,23 @@ export default class PocketTanks {
 
   executeFire(tank) {
      const invItem = tank.inventory[tank.selectedWeaponIdx];
-     if (invItem.count <= 0) return; // Out of ammo
+     if (invItem.count <= 0) return;
      
      if (invItem.id !== 'standard') invItem.count--;
      
      const typeData = this.weaponTypes[invItem.id];
      
+     let firePower = tank.power;
+     let fireAngle = tank.angle;
+     if (invItem.id === 'laser') {
+         firePower = 40; // High speed
+     }
+
      this.projectiles.push({
         x: tank.x,
         y: tank.y - tank.r,
-        vx: Math.cos(tank.angle) * tank.power,
-        vy: Math.sin(tank.angle) * tank.power,
+        vx: Math.cos(fireAngle) * firePower,
+        vy: Math.sin(fireAngle) * firePower,
         type: invItem.id,
         damage: typeData.damage,
         radius: typeData.radius,
@@ -219,11 +228,9 @@ export default class PocketTanks {
   }
 
   calculateAITurn() {
-     // AI chooses weapon
      let available = this.ai.inventory.filter(i => i.count > 0);
      this.ai.selectedWeaponIdx = this.ai.inventory.indexOf(available[Math.floor(Math.random() * available.length)]);
      
-     // AI calculates angle and power
      let bestAngle = -Math.PI/2;
      let bestPower = 15;
      let minError = Infinity;
@@ -303,16 +310,15 @@ export default class PocketTanks {
         });
      }
      
-     // Damage tanks
      const dToP = Math.hypot(x - this.player.x, y - this.player.y);
-     if (dToP < radius + 15) {
-        let mult = 1 - (dToP / (radius + 15));
+     if (dToP < radius + 20) {
+        let mult = 1 - (dToP / (radius + 20));
         this.player.hp -= damage * mult;
      }
      
      const dToA = Math.hypot(x - this.ai.x, y - this.ai.y);
-     if (dToA < radius + 15) {
-        let mult = 1 - (dToA / (radius + 15));
+     if (dToA < radius + 20) {
+        let mult = 1 - (dToA / (radius + 20));
         this.ai.hp -= damage * mult;
      }
   }
@@ -320,7 +326,6 @@ export default class PocketTanks {
   update() {
     this.frame++;
     
-    // Gravity for tanks
     const py = this.terrain[Math.floor(this.player.x)];
     if (this.player.y + this.player.r < py) this.player.y += 3;
     const ay = this.terrain[Math.floor(this.ai.x)];
@@ -337,8 +342,15 @@ export default class PocketTanks {
        for (let i = this.projectiles.length - 1; i >= 0; i--) {
           let p = this.projectiles[i];
           p.life++;
-          p.vy += this.gravity;
-          p.vx += this.wind;
+          
+          if (p.type === 'laser') {
+             p.vy = 0; // Ignore gravity
+             p.vx *= 1.05;
+          } else {
+             p.vy += this.gravity;
+             p.vx += this.wind;
+          }
+          
           p.x += p.vx;
           p.y += p.vy;
           
@@ -347,10 +359,8 @@ export default class PocketTanks {
           let hit = false;
           let detonate = false;
           
-          // Scattery logic: split mid-air
           if (p.type === 'scattery' && p.vy > 0 && p.life > 20) {
              detonate = true;
-             // Spawn 4 smaller shells
              for (let j=0; j<4; j++) {
                 this.projectiles.push({
                    x: p.x, y: p.y,
@@ -360,12 +370,10 @@ export default class PocketTanks {
              }
           }
           
-          // Out of bounds
           if (p.x < -100 || p.x > this.canvas.width + 100 || p.y > this.canvas.height + 100) {
              detonate = true; hit = false;
           }
           
-          // Collision
           const tx = Math.floor(p.x);
           if (tx >= 0 && tx < this.canvas.width && p.y >= this.terrain[tx]) {
              hit = true;
@@ -377,24 +385,28 @@ export default class PocketTanks {
           
           if (hit) {
              if (p.type === 'dirtmover') {
-                // Burrowing logic: reduce velocity, carve tiny hole, but don't detonate yet
                 p.vx *= 0.8; p.vy *= 0.8;
                 this.destroyTerrain(p.x, p.y, 10);
                 if (Math.hypot(p.vx, p.vy) < 2) detonate = true;
              } else if (p.type === 'cluster' && p.bounces === 0) {
                 p.vy *= -0.5; p.y -= 5; p.bounces++;
-                // Drop mini bomb
                 this.projectiles.push({
                    x: p.x, y: p.y, vx: (Math.random()-0.5)*2, vy: -3,
                    type: 'standard', damage: 15, radius: 25, color: '#ff00ff', trail: [], life: 0, bounces: 0
                 });
+             } else if (p.type === 'roller') {
+                p.vx *= 0.95;
+                p.vy = 0;
+                p.y = this.terrain[tx] - 5;
+                p.bounces++;
+                if (Math.abs(p.vx) < 0.5) detonate = true;
              } else {
                 detonate = true;
              }
           }
           
           if (detonate) {
-             if (hit || p.type === 'dirtmover') {
+             if (hit || p.type === 'dirtmover' || p.type === 'roller') {
                 this.createExplosion(p.x, p.y, p.radius, p.color, p.damage);
              }
              this.projectiles.splice(i, 1);
@@ -402,14 +414,12 @@ export default class PocketTanks {
        }
        
        if (this.projectiles.length === 0) {
-          // Check win/loss
           if (this.player.hp <= 0 || this.ai.hp <= 0) {
              this.state = "game_over";
              setTimeout(() => {
                 this.callbacks.setGameState(this.player.hp > 0 ? "victory" : "failed");
              }, 2000);
           } else {
-             // Change turn
              if (this.state === "player_shoot") {
                 this.state = "ai_turn";
                 this.aiWaitTimer = 60;
@@ -418,13 +428,11 @@ export default class PocketTanks {
                 this.state = "player_turn";
                 this.player.mp = this.player.maxMp;
              }
-             // Change wind
              this.wind = (Math.random() - 0.5) * 0.08;
           }
        }
     }
     
-    // Update trails and particles
     this.projectiles.forEach(p => {
        p.trail.forEach(t => t.life--);
        p.trail = p.trail.filter(t => t.life > 0);
@@ -443,7 +451,6 @@ export default class PocketTanks {
       if (this.screenShake < 0.5) this.screenShake = 0;
     }
     
-    // Background
     ctx.fillStyle = "rgba(5, 10, 15, 0.8)";
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
@@ -473,7 +480,6 @@ export default class PocketTanks {
        return;
     }
 
-    // Wind indicator
     ctx.fillStyle = "rgba(255,255,255,0.4)";
     ctx.font = "bold 14px 'Panchang', sans-serif";
     ctx.textAlign = "center";
@@ -481,7 +487,6 @@ export default class PocketTanks {
     const windText = windVal < 0 ? `<< ${Math.abs(windVal).toFixed(1)}` : `${windVal.toFixed(1)} >>`;
     ctx.fillText(`WIND: ${windText}`, this.canvas.width/2, 30);
     
-    // Draw Terrain
     ctx.beginPath();
     ctx.moveTo(0, this.canvas.height);
     for (let x = 0; x < this.canvas.width; x++) {
@@ -501,7 +506,6 @@ export default class PocketTanks {
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Draw Tanks (Modern Cyberpunk Style)
     const drawTank = (tank, label) => {
        ctx.save();
        ctx.translate(tank.x, tank.y);
@@ -510,81 +514,101 @@ export default class PocketTanks {
        ctx.save();
        ctx.rotate(tank.angle);
        ctx.strokeStyle = tank.color;
-       ctx.lineWidth = 6;
+       ctx.lineWidth = 4;
        ctx.lineCap = "round";
        ctx.beginPath();
-       ctx.moveTo(0, 0);
-       ctx.lineTo(25, 0);
+       ctx.moveTo(0, -8);
+       ctx.lineTo(25, -8);
        ctx.stroke();
        ctx.restore();
        
-       // Angular Chassis
-       ctx.fillStyle = "#111";
+       // Main Tank Body
+       ctx.fillStyle = "#222";
        ctx.strokeStyle = tank.color;
        ctx.lineWidth = 2;
-       ctx.shadowBlur = 15;
+       ctx.shadowBlur = 10;
        ctx.shadowColor = tank.color;
+       
+       // Dome
        ctx.beginPath();
-       ctx.moveTo(-15, 5);
-       ctx.lineTo(-10, -5);
-       ctx.lineTo(10, -5);
-       ctx.lineTo(15, 5);
-       ctx.lineTo(10, 12);
-       ctx.lineTo(-10, 12);
+       ctx.arc(0, -8, 8, Math.PI, 0);
+       ctx.fill(); ctx.stroke();
+       
+       // Chassis
+       ctx.beginPath();
+       ctx.moveTo(-18, -2);
+       ctx.lineTo(18, -2);
+       ctx.lineTo(22, 6);
+       ctx.lineTo(-22, 6);
        ctx.closePath();
-       ctx.fill();
-       ctx.stroke();
+       ctx.fill(); ctx.stroke();
        
        // Treads
+       ctx.fillStyle = "#111";
+       ctx.beginPath();
+       ctx.roundRect(-24, 6, 48, 8, 4);
+       ctx.fill(); ctx.stroke();
+       
+       // Wheels
        ctx.fillStyle = tank.color;
-       ctx.globalAlpha = 0.8;
-       ctx.fillRect(-12, 12, 24, 4);
-       ctx.globalAlpha = 1;
        ctx.shadowBlur = 0;
+       for(let wx = -18; wx <= 18; wx+= 9) {
+          ctx.beginPath(); ctx.arc(wx, 10, 3, 0, Math.PI*2); ctx.fill();
+       }
        
        ctx.restore();
        
        // HP Bar
        ctx.fillStyle = "rgba(0,0,0,0.5)";
-       ctx.fillRect(tank.x - 20, tank.y - 25, 40, 6);
+       ctx.fillRect(tank.x - 20, tank.y - 35, 40, 6);
        ctx.fillStyle = tank.color;
-       ctx.fillRect(tank.x - 20, tank.y - 25, 40 * Math.max(0, tank.hp / tank.maxHp), 6);
+       ctx.fillRect(tank.x - 20, tank.y - 35, 40 * Math.max(0, tank.hp / tank.maxHp), 6);
        ctx.strokeStyle = "#fff";
        ctx.lineWidth = 1;
-       ctx.strokeRect(tank.x - 20, tank.y - 25, 40, 6);
+       ctx.strokeRect(tank.x - 20, tank.y - 35, 40, 6);
        
        ctx.fillStyle = "#fff";
        ctx.font = "9px 'Panchang', sans-serif";
        ctx.textAlign = "center";
-       ctx.fillText(label, tank.x, tank.y - 30);
+       ctx.fillText(label, tank.x, tank.y - 40);
     };
     
     drawTank(this.player, "YOU");
     drawTank(this.ai, "AI");
 
-    // Aiming Guide
     if (this.isAiming && this.state === "player_turn") {
        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
        ctx.setLineDash([5, 5]);
        ctx.lineWidth = 2;
        ctx.beginPath();
        let ax = this.player.x;
-       let ay = this.player.y - 5;
+       let ay = this.player.y - 13;
        let vx = Math.cos(this.player.angle) * this.player.power;
        let vy = Math.sin(this.player.angle) * this.player.power;
+       
+       const invItem = this.player.inventory[this.player.selectedWeaponIdx];
+       if (invItem.id === 'laser') {
+          vx = Math.cos(this.player.angle) * 40;
+          vy = Math.sin(this.player.angle) * 40;
+       }
+
        ctx.moveTo(ax, ay);
        for(let i=0; i<15; i++) {
-          ax += vx; vy += this.gravity; vx += this.wind; ay += vy;
+          if (invItem.id === 'laser') {
+             ax += vx; ay += vy;
+          } else {
+             ax += vx; vy += this.gravity; vx += this.wind; ay += vy;
+          }
           ctx.lineTo(ax, ay);
        }
        ctx.stroke();
        ctx.setLineDash([]);
        ctx.fillStyle = "#fff";
        ctx.font = "10px 'Panchang', sans-serif";
-       ctx.fillText(`PWR: ${Math.floor((this.player.power/25)*100)}%`, this.player.x, this.player.y - 45);
+       let pwrLabel = invItem.id === 'laser' ? 'MAX' : `${Math.floor((this.player.power/25)*100)}%`;
+       ctx.fillText(`PWR: ${pwrLabel}`, this.player.x, this.player.y - 55);
     }
 
-    // Draw Projectiles
     this.projectiles.forEach(p => {
        ctx.shadowBlur = 15;
        ctx.shadowColor = p.color;
@@ -603,7 +627,6 @@ export default class PocketTanks {
        }
     });
 
-    // Particles
     this.particles.forEach(p => {
        ctx.globalAlpha = Math.max(0, p.life / 50);
        ctx.fillStyle = p.color;
@@ -611,21 +634,19 @@ export default class PocketTanks {
     });
     ctx.globalAlpha = 1;
 
-    // Flash
     if (this.flashAlpha > 0) {
       ctx.fillStyle = `rgba(255, 255, 255, ${this.flashAlpha})`;
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
       this.flashAlpha -= 0.05;
     }
     
-    // Status Text
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 20px 'Panchang', sans-serif";
     ctx.textAlign = "center";
     if (this.state === "player_turn") {
        ctx.fillText("YOUR TURN", this.canvas.width/2, 60);
        ctx.font = "12px sans-serif";
-       ctx.fillText("Move, Aim, then Fire", this.canvas.width/2, 80);
+       ctx.fillText("Move, Aim, then Fire (Spacebar)", this.canvas.width/2, 80);
     } else if (this.state === "ai_turn") {
        ctx.fillText("AI IS AIMING...", this.canvas.width/2, 60);
     } else if (this.state === "game_over") {
@@ -633,11 +654,10 @@ export default class PocketTanks {
        ctx.fillText(this.player.hp > 0 ? "VICTORY!" : "DEFEAT!", this.canvas.width/2, 60);
     }
 
-    // Bottom UI Panel (Only during player turn)
     if (this.state === "player_turn" || this.state === "player_shoot") {
        const w = this.canvas.width;
+       const pulse = Math.sin(this.frame * 0.1) * 3;
        
-       // Glassy UI background
        ctx.fillStyle = "rgba(0, 5, 10, 0.85)";
        ctx.strokeStyle = "#00ffcc";
        ctx.lineWidth = 2;
@@ -646,34 +666,32 @@ export default class PocketTanks {
        ctx.fill();
        ctx.stroke();
        
-       // Movement Controls (Left side)
        ctx.fillStyle = "rgba(0, 255, 204, 0.2)";
        ctx.strokeStyle = "#00ffcc";
        ctx.lineWidth = 1;
-       ctx.beginPath(); ctx.roundRect(20, this.uiY + 15, 50, 40, 5); ctx.fill(); ctx.stroke();
-       ctx.beginPath(); ctx.roundRect(80, this.uiY + 15, 50, 40, 5); ctx.fill(); ctx.stroke();
+       ctx.beginPath(); ctx.roundRect(20 - pulse/2, this.uiY + 15 - pulse/2, 45 + pulse, 40 + pulse, 5); ctx.fill(); ctx.stroke();
+       ctx.beginPath(); ctx.roundRect(75 - pulse/2, this.uiY + 15 - pulse/2, 45 + pulse, 40 + pulse, 5); ctx.fill(); ctx.stroke();
        
        ctx.fillStyle = "#00ffcc";
        ctx.font = "bold 16px 'Panchang', sans-serif";
        ctx.textAlign = "center";
-       ctx.fillText("<", 45, this.uiY + 40);
-       ctx.fillText(">", 105, this.uiY + 40);
+       ctx.fillText("<", 42, this.uiY + 40);
+       ctx.fillText(">", 97, this.uiY + 40);
        
        ctx.font = "10px 'Panchang', sans-serif";
-       ctx.fillText(`MP: ${Math.floor(this.player.mp)}`, 75, this.uiY + 75);
+       ctx.fillText(`MP: ${Math.floor(this.player.mp)}`, 70, this.uiY + 75);
        
-       // Weapon Selector (Center)
        const invItem = this.player.inventory[this.player.selectedWeaponIdx];
        const wpnData = this.weaponTypes[invItem.id];
        
        ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
        ctx.strokeStyle = "#fff";
-       ctx.beginPath(); ctx.roundRect(w/2 - 120, this.uiY + 25, 40, 30, 5); ctx.fill(); ctx.stroke();
-       ctx.beginPath(); ctx.roundRect(w/2 + 80, this.uiY + 25, 40, 30, 5); ctx.fill(); ctx.stroke();
+       ctx.beginPath(); ctx.roundRect(w/2 - 140 - pulse/2, this.uiY + 25 - pulse/2, 40 + pulse, 30 + pulse, 5); ctx.fill(); ctx.stroke();
+       ctx.beginPath(); ctx.roundRect(w/2 + 100 - pulse/2, this.uiY + 25 - pulse/2, 40 + pulse, 30 + pulse, 5); ctx.fill(); ctx.stroke();
        
        ctx.fillStyle = "#fff";
-       ctx.fillText("<", w/2 - 100, this.uiY + 45);
-       ctx.fillText(">", w/2 + 100, this.uiY + 45);
+       ctx.fillText("<", w/2 - 120, this.uiY + 45);
+       ctx.fillText(">", w/2 + 120, this.uiY + 45);
        
        ctx.fillStyle = wpnData.color;
        ctx.font = "bold 14px 'Panchang', sans-serif";
@@ -682,13 +700,12 @@ export default class PocketTanks {
        ctx.font = "10px sans-serif";
        ctx.fillText(`Ammo: ${invItem.count > 50 ? '∞' : invItem.count}`, w/2, this.uiY + 55);
        
-       // Fire Button (Right side)
        const canFire = this.state === "player_turn" && invItem.count > 0;
        ctx.fillStyle = canFire ? "rgba(255, 0, 85, 0.4)" : "rgba(100, 100, 100, 0.4)";
        ctx.strokeStyle = canFire ? "#ff0055" : "#666";
        ctx.shadowBlur = canFire ? 15 : 0;
        ctx.shadowColor = "#ff0055";
-       ctx.beginPath(); ctx.roundRect(w - 120, this.uiY + 15, 100, 50, 8); ctx.fill(); ctx.stroke();
+       ctx.beginPath(); ctx.roundRect(w - 120 - (canFire?pulse:0)/2, this.uiY + 15 - (canFire?pulse:0)/2, 100 + (canFire?pulse:0), 50 + (canFire?pulse:0), 8); ctx.fill(); ctx.stroke();
        ctx.shadowBlur = 0;
        
        ctx.fillStyle = canFire ? "#fff" : "#888";
@@ -699,5 +716,7 @@ export default class PocketTanks {
     ctx.restore();
   }
 
-  destroy() {}
+  destroy() {
+     window.removeEventListener('keydown', this.handleKeyDown);
+  }
 }
