@@ -600,18 +600,18 @@ export default class BeatMaker {
     }
     
     // Bottom UI
-    if (cx > w/2 - 220 && cx < w/2 - 180 && cy > this.uiY - 15 && cy < this.uiY + 25) {
+    if (cx > w/2 - 240 && cx < w/2 - 200 && cy > this.uiY - 15 && cy < this.uiY + 25) {
        this.bpm = Math.max(60, this.bpm - 5); this.triggerAnim('bpmD'); return;
     }
-    if (cx > w/2 - 80 && cx < w/2 - 40 && cy > this.uiY - 15 && cy < this.uiY + 25) {
+    if (cx > w/2 - 100 && cx < w/2 - 60 && cy > this.uiY - 15 && cy < this.uiY + 25) {
        this.bpm = Math.min(240, this.bpm + 5); this.triggerAnim('bpmU'); return;
     }
-    if (cx > w/2 - 40 && cx < w/2 + 60 && cy > this.uiY - 20 && cy < this.uiY + 30) {
+    if (cx > w/2 - 30 && cx < w/2 + 70 && cy > this.uiY - 20 && cy < this.uiY + 30) {
        this.isPlaying = !this.isPlaying;
        if (this.isPlaying) this.lastStepTime = performance.now();
        this.triggerAnim('play'); return;
     }
-    if (cx > w/2 + 80 && cx < w/2 + 200 && cy > this.uiY - 20 && cy < this.uiY + 30) {
+    if (cx > w/2 + 100 && cx < w/2 + 220 && cy > this.uiY - 20 && cy < this.uiY + 30) {
        this.triggerAnim('addTrk');
        setTimeout(() => { this.isModalOpen = true; }, 100);
        return;
@@ -813,19 +813,19 @@ export default class BeatMaker {
     };
 
     // BPM
-    drawAnimBtn(w/2 - 220, this.uiY - 15, 40, 40, "-", "bpmD", "255,255,255", false);
-    drawAnimBtn(w/2 - 80, this.uiY - 15, 40, 40, "+", "bpmU", "255,255,255", false);
+    drawAnimBtn(w/2 - 240, this.uiY - 15, 40, 40, "-", "bpmD", "255,255,255", false);
+    drawAnimBtn(w/2 - 100, this.uiY - 15, 40, 40, "+", "bpmU", "255,255,255", false);
     ctx.fillStyle = "#fff";
     ctx.font = "bold 14px 'Panchang', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(`BPM: ${this.bpm}`, w/2 - 130, this.uiY + 10);
+    ctx.fillText(`BPM: ${this.bpm}`, w/2 - 150, this.uiY + 10);
 
     // Play
     const playCol = this.isPlaying ? "#ff3366" : "#00ffcc";
-    drawAnimBtn(w/2 - 40, this.uiY - 20, 100, 50, this.isPlaying ? "PAUSE" : "PLAY", "play", playCol, true);
+    drawAnimBtn(w/2 - 30, this.uiY - 20, 100, 50, this.isPlaying ? "PAUSE" : "PLAY", "play", playCol, true);
     
     // Add Track
-    drawAnimBtn(w/2 + 80, this.uiY - 20, 120, 50, "+ TRACK", "addTrk", "#b366ff", true);
+    drawAnimBtn(w/2 + 100, this.uiY - 20, 120, 50, "+ TRACK", "addTrk", "#b366ff", true);
     
     // Modal
     if (this.isModalOpen) {
