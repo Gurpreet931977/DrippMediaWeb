@@ -4,8 +4,20 @@ export default class GravityFlip {
     this.callbacks = callbacks;
     this.ctx = canvas.getContext('2d');
     
-    this.player = { x: canvas.width * 0.2, y: canvas.height / 2, size: 24, vy: 0, gravity: 0.8 };
-    this.speed = 10;
+    // Play corridor variables (360px height corridor centered vertically)
+    const playHeight = 360;
+    this.ceilY = Math.max(50, (this.canvas.height - playHeight) / 2);
+    this.floorY = this.ceilY + playHeight;
+
+    this.player = { 
+      x: canvas.width * 0.2, 
+      y: this.ceilY + playHeight / 2, 
+      size: 24, 
+      vy: 0, 
+      gravity: 0.85 
+    };
+    
+    this.speed = 9;
     this.obstacles = [];
     this.particles = [];
     this.score = 0;
@@ -17,9 +29,6 @@ export default class GravityFlip {
     this.callbacks.setScoreRef(0);
     this.callbacks.setScore(0);
     
-    this.floorY = this.canvas.height - 100;
-    this.ceilY = 100;
-    
     // Initial safe zone
     for (let i=0; i<3; i++) {
       this.spawnObstacle(this.canvas.width + i * 400);
@@ -28,8 +37,8 @@ export default class GravityFlip {
 
   spawnObstacle(x) {
     const isTop = Math.random() > 0.5;
-    // Lower chance of moving to keep it fair, but faster
-    const isMoving = Math.random() > 0.7;
+    // Lower chance of moving to keep it fair
+    const isMoving = Math.random() > 0.75;
     
     const h = 40 + Math.random() * 80;
     
@@ -40,28 +49,28 @@ export default class GravityFlip {
       h: h,
       isTop: isTop,
       isMoving: isMoving,
-      vy: isMoving ? (Math.random() > 0.5 ? 3 : -3) : 0
+      vy: isMoving ? (Math.random() > 0.5 ? 2.5 : -2.5) : 0
     });
   }
 
   handlePointerDown() {
     if (this.state !== "playing") return;
     
-    // Reverse gravity smoothly
+    // Reverse gravity
     this.player.gravity *= -1;
     
-    // Dampen velocity instead of snapping to 0, to make it feel smooth but responsive
-    this.player.vy *= 0.3; 
+    // Snappy flip: instantly set velocity towards the new direction of gravity
+    this.player.vy = this.player.gravity * 7.5; 
     
     // JUICE: Screenshake and Flash
-    this.screenShake = 6;
-    this.flashAlpha = 0.3;
+    this.screenShake = 7;
+    this.flashAlpha = 0.25;
 
-    // Spawn burst
-    for(let i=0; i<15; i++) {
+    // Spawn burst particles
+    for(let i=0; i<12; i++) {
        this.particles.push({
          x: this.player.x, y: this.player.y,
-         vx: (Math.random() - 0.5) * 8 - this.speed * 0.5,
+         vx: (Math.random() - 0.5) * 8 - this.speed * 0.4,
          vy: (Math.random() - 0.5) * 8,
          life: 25
        });
@@ -75,10 +84,10 @@ export default class GravityFlip {
     this.frame++;
     
     if (this.flashAlpha > 0) this.flashAlpha -= 0.05;
-    this.speed += 0.003; // Gradually increase speed faster
+    this.speed += 0.0025; // Gradually increase speed
 
     // Spacing so it's always passable
-    const spawnRate = Math.max(30, Math.floor(100 - this.speed * 2));
+    const spawnRate = Math.max(35, Math.floor(100 - this.speed * 2));
     if (this.frame % spawnRate === 0) {
       this.spawnObstacle(this.canvas.width + 100);
     }
@@ -86,8 +95,8 @@ export default class GravityFlip {
     // Player physics
     this.player.vy += this.player.gravity;
     // Terminal velocity to prevent clipping
-    if (this.player.vy > 20) this.player.vy = 20;
-    if (this.player.vy < -20) this.player.vy = -20;
+    if (this.player.vy > 18) this.player.vy = 18;
+    if (this.player.vy < -18) this.player.vy = -18;
     
     this.player.y += this.player.vy;
     
@@ -122,8 +131,7 @@ export default class GravityFlip {
          }
       }
       
-      // Collision
-      // Slightly more forgiving hitbox
+      // Collision check with hit tolerance
       const hitTolerance = 4;
       if (this.player.x + this.player.size/2 - hitTolerance > obs.x && this.player.x - this.player.size/2 + hitTolerance < obs.x + obs.w &&
           this.player.y + this.player.size/2 - hitTolerance > obs.y && this.player.y - this.player.size/2 + hitTolerance < obs.y + obs.h) {

@@ -1053,11 +1053,8 @@ function createGameEngine(canvas, callbacks) {
   }
 
   window.addEventListener('pointerdown', handlePointerDown);
-  window.addEventListener('mousedown', handlePointerDown);
   window.addEventListener('pointerup', handlePointerUp);
-  window.addEventListener('mouseup', handlePointerUp);
   window.addEventListener('pointermove', handlePointerMove);
-  window.addEventListener('mousemove', handlePointerMove);
 
   return {
     destroy() {
@@ -1066,11 +1063,8 @@ function createGameEngine(canvas, callbacks) {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('mousedown', handlePointerDown);
       window.removeEventListener('pointerup', handlePointerUp);
-      window.removeEventListener('mouseup', handlePointerUp);
       window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('mousemove', handlePointerMove);
     },
     restart() {
       lastActive = null;
