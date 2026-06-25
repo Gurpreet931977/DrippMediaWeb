@@ -507,8 +507,8 @@ export default class BulletHell {
     // UI: Tekken Style Health Bar
     const barWidth = this.canvas.width - 60;
     const barX = 30;
-    const barY = 20;
-    const barHeight = 20;
+    const barY = 85;
+    const barHeight = 18;
 
     // Background Bar
     ctx.fillStyle = "rgba(40, 0, 10, 0.6)";
@@ -527,18 +527,18 @@ export default class BulletHell {
     ctx.lineWidth = 2;
     ctx.strokeRect(barX, barY, barWidth, barHeight);
 
-    // Level System at Top Right (below health bar)
+    // Level System at Top Right (above health bar)
     ctx.fillStyle = "#00ffcc";
     ctx.font = "bold 14px 'Panchang', sans-serif";
     ctx.textAlign = "right";
     const currentLvlName = this.levelNames[Math.min(this.level - 1, this.levelNames.length - 1)];
-    ctx.fillText(`LEVEL ${this.level}: ${currentLvlName}`, this.canvas.width - 30, barY + barHeight + 25);
+    ctx.fillText(`LEVEL ${this.level}: ${currentLvlName}`, barX + barWidth, barY - 10);
     
-    // Boss Name Top Left
+    // Boss Name Top Left (above health bar)
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 14px 'Panchang', sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText(`BOSS`, 30, barY + barHeight + 25);
+    ctx.fillText(`BOSS`, barX, barY - 10);
     
     // Active Powerup text
     if (this.activePowerup && this.powerupTimer > 0) {

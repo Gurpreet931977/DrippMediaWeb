@@ -11,6 +11,7 @@ const ARCADE_GAMES = [
   { id: 'gravity', title: 'GRAVITY FLIP', color: '#33ff33', desc: 'Invert gravity to survive the high-speed neon maze.', category: 'RUNNER' },
   { id: 'slingshot', title: 'SLINGSHOT NINJA', color: '#ff00ff', desc: 'Bullet-time dash attacks. Slice through the grid.', category: 'ACTION' },
   { id: 'bullethell', title: 'BULLET HELL', color: '#ff0000', desc: 'Dodge an overwhelming barrage of neon lasers.', category: 'BOSS' },
+  { id: 'tanks', title: 'NEON TANKS', color: '#ff6600', desc: 'Turn-based artillery combat against an AI.', category: 'STRATEGY' },
 ];
 
 const CREATIVE_GAMES = [

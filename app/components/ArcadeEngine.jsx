@@ -12,6 +12,7 @@ import LiquidSandbox from "./games/LiquidSandbox";
 import BulletHell from "./games/BulletHell";
 import NodeWeaver from "./games/NodeWeaver";
 import HarmonicLooper from "./games/HarmonicLooper";
+import PocketTanks from "./games/PocketTanks";
 
 // ─── MODULE-LEVEL HELPERS (immune to minification TDZ) ────────────────────────
 // These live at module scope so the minifier handles them safely.
@@ -570,6 +571,7 @@ function createGameEngine(canvas, callbacks) {
       else if (ag === 'slingshot') activeModule = new SlingshotNinja(canvas, callbacks);
       else if (ag === 'sandbox') activeModule = new LiquidSandbox(canvas, callbacks);
       else if (ag === 'bullethell') activeModule = new BulletHell(canvas, callbacks);
+      else if (ag === 'tanks') activeModule = new PocketTanks(canvas, callbacks);
       else if (ag === 'nodeweaver') activeModule = new NodeWeaver(canvas, callbacks);
       else if (ag === 'looper') activeModule = new HarmonicLooper(canvas, callbacks);
       
@@ -1076,8 +1078,8 @@ function createGameEngine(canvas, callbacks) {
 
 // ─── HELP TEXT PROVIDER ────────────────────────────────────────────────────────
 
-const HelpBrief = ({ controls, howToPlay, scoreSystem }) => (
-  <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+const HelpBrief = ({ controls, howToPlay, scoreSystem, powerups }) => (
+  <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '55vh', overflowY: 'auto', paddingRight: '5px' }}>
     <div>
       <h4 style={{ color: '#ebd73f', margin: '0 0 4px 0', fontSize: '0.85rem', fontFamily: "'Panchang', sans-serif", letterSpacing: '1px' }}>CONTROLS</h4>
       <p style={{ fontSize: '0.85rem', lineHeight: '1.4', color: 'rgba(255,255,255,0.8)', margin: 0 }}>{controls}</p>
@@ -1092,6 +1094,12 @@ const HelpBrief = ({ controls, howToPlay, scoreSystem }) => (
       <p style={{ fontSize: '0.85rem', lineHeight: '1.4', color: 'rgba(255,255,255,0.8)', margin: 0 }}>{scoreSystem}</p>
     </div>
     )}
+    {powerups && (
+    <div>
+      <h4 style={{ color: '#ebd73f', margin: '0 0 4px 0', fontSize: '0.85rem', fontFamily: "'Panchang', sans-serif", letterSpacing: '1px' }}>POWERUPS & HAZARDS</h4>
+      <p style={{ fontSize: '0.85rem', lineHeight: '1.4', color: 'rgba(255,255,255,0.8)', margin: 0 }}>{powerups}</p>
+    </div>
+    )}
   </div>
 );
 
@@ -1099,99 +1107,114 @@ const getHelpText = (game) => {
   switch (game) {
     case 'dripp':
       return <HelpBrief 
-        controls="Move your mouse or drag your finger across the screen to guide the cursor." 
-        howToPlay="Intercept falling drops before they pass the bottom of the screen. Avoid the black bombs—touching one instantly ends the game!" 
-        scoreSystem="Red drops = 5 points. White drops = 69 points. Speed increases as your score gets higher." 
+        controls="Move your mouse or drag your finger across the screen to guide the catcher." 
+        howToPlay="Intercept falling drops before they pass the bottom of the screen. Game speed increases as you survive longer." 
+        scoreSystem="Red drops = +5 points. White drops = +69 points." 
+        powerups="Black Bombs (Hazard): Touching a bomb results in instant death. Avoid at all costs!"
       />;
     case 'breaker':
       return <HelpBrief 
         controls="Move your mouse horizontally to control the paddle." 
-        howToPlay="Keep the bouncing ball in play and smash all the neon target rings to advance levels. Catch falling power-ups (wider paddle, multi-ball) to gain an edge, but avoid red downers!" 
-        scoreSystem="Breaking bricks awards points based on current level speed. Power-ups grant bonus points." 
+        howToPlay="Keep the bouncing ball in play and smash all the neon target rings to advance levels. The game speeds up as you progress." 
+        scoreSystem="Breaking bricks awards points based on the current level speed multiplier." 
+        powerups="Blue Pills: Expands your paddle width. Yellow Pills: Spawns an extra ball (Multiball). Red Pills (Hazard): Shrinks your paddle or speeds up the ball dangerously."
       />;
     case 'scope':
       return <HelpBrief 
-        controls="Move your mouse to slide your paddle." 
-        howToPlay="Fast-moving targets will fall from the sky. You must intercept every single one. Missing even a single target results in game over." 
-        scoreSystem="Each intercepted drop awards points. Game speed scales infinitely." 
+        controls="Move your mouse to slide your horizontal paddle." 
+        howToPlay="Fast-moving targets will rain from the sky. You must intercept every single one. Missing even one target results in game over." 
+        scoreSystem="Each intercepted drop awards points. Game speed scales infinitely over time." 
+        powerups="No powerups available. Pure reaction and speed required."
       />;
     case 'snake':
       return <HelpBrief 
-        controls="Move your mouse to guide the snake's head." 
-        howToPlay="Eat glowing food orbs to grow longer. Do not hit the walls or your own tail. Watch out for red reverse-controls power-ups—they will invert your mouse movement!" 
-        scoreSystem="Eating food increases your length and score. Surviving longer yields more points." 
+        controls="Move your mouse in any direction to guide the snake's head." 
+        howToPlay="Navigate the grid to eat glowing food orbs and grow longer. Do not hit the edges of the screen or collide with your own tail." 
+        scoreSystem="Eating food increases your length and score. Surviving longer yields multiplier points." 
+        powerups="Glowing Orbs: Growth and points. Red Orbs (Hazard): Temporarily inverts your mouse controls—causing massive confusion!"
       />;
     case 'pong':
       return <HelpBrief 
-        controls="Move your mouse vertically to move your paddle." 
-        howToPlay="Defend your side of the screen against the AI opponent. The ball speed increases with every volley. Sneak the ball past the AI to score." 
-        scoreSystem="First to miss loses the rally. High scores are based on consecutive wins." 
+        controls="Move your mouse vertically to maneuver your paddle." 
+        howToPlay="Defend your side of the screen against the relentless AI opponent. The ball speed increases dramatically with every volley. Sneak the ball past the AI to score." 
+        scoreSystem="The first to miss a volley loses. High scores are based on your consecutive wins." 
+        powerups="No powerups. A true test of precision and endurance."
       />;
     case 'runner':
       return <HelpBrief 
-        controls="Click or tap anywhere to Jump. Click again while in the air to Double Jump." 
-        howToPlay="Automatically run forward while dodging incoming geometric obstacles. Time your jumps carefully to clear tall walls and gaps." 
-        scoreSystem="Score increases automatically based on distance traveled and current speed." 
+        controls="Click or tap anywhere to Jump. Click again while in mid-air to Double Jump." 
+        howToPlay="Your character automatically runs forward. Time your jumps perfectly to dodge incoming geometric obstacles, clear tall walls, and avoid falling into gaps." 
+        scoreSystem="Score increases automatically based on your total distance traveled." 
+        powerups="No powerups. Focus on perfectly timing your double jumps."
       />;
     case 'invaders':
       return <HelpBrief 
-        controls="Move mouse to pilot your ship. Click or tap to shoot lasers." 
-        howToPlay="Defend the bottom of the screen from descending alien grids. Shoot them down before they breach your defenses." 
-        scoreSystem="Destroying aliens grants points. Clearing waves increases the difficulty and score multiplier." 
+        controls="Move mouse to pilot your ship. Click or tap to shoot upward lasers." 
+        howToPlay="Defend the bottom of the screen from descending alien grids. Shoot them down before they breach your defenses. They move faster as their numbers thin." 
+        scoreSystem="Destroying aliens grants points. Clearing waves increases the difficulty and your score multiplier." 
+        powerups="No powerups. Classic arcade survival rules."
       />;
     case 'simon':
       return <HelpBrief 
         controls="Click or tap the colored quadrants." 
-        howToPlay="Memorize the sequence of flashing colors and sounds, then repeat it back perfectly. The sequence gets one step longer every round." 
-        scoreSystem="Your score equals the number of rounds successfully completed." 
+        howToPlay="Observe and memorize the sequence of flashing colors and sounds, then repeat it back perfectly. The sequence gets one step longer every round." 
+        scoreSystem="Your score equals the number of total rounds successfully completed." 
+        powerups="No powerups. Relies entirely on your memory."
       />;
     case 'pendulum':
       return <HelpBrief 
         controls="Click and hold anywhere to shoot a grapple line to the ceiling. Release to let go." 
-        howToPlay="Use momentum to swing through moving vertical obstacles. Collect cyan neon orbs for massive boosts, and avoid hitting the neon walls!" 
-        scoreSystem="Distance traveled grants points. Neon orbs grant +50 points each." 
+        howToPlay="Swing using momentum to navigate through moving vertical neon pillars. Avoid hitting the solid structures." 
+        scoreSystem="Distance traveled continuously grants points." 
+        powerups="Cyan Neon Orbs: Grants a massive +50 point boost when collected."
       />;
     case 'gravity':
       return <HelpBrief 
-        controls="Click or tap anywhere to instantly reverse gravity." 
-        howToPlay="Navigate the high-speed tunnel by flipping between the ceiling and the floor. Avoid the neon blocks in your path." 
-        scoreSystem="Score increases continuously based on your survival time and speed." 
+        controls="Click or tap anywhere to instantly reverse gravity (flip between ceiling and floor)." 
+        howToPlay="Navigate the high-speed tunnel by flipping gravity to dodge the dynamic rotating and oscillating neon blocks in your path." 
+        scoreSystem="Distance tracked in meters (and kilometers) based on survival time." 
+        powerups="No powerups. Fast-paced visual progression with shifting neon colors as you go further."
       />;
     case 'slingshot':
       return <HelpBrief 
-        controls="Click, drag backwards, and release to slingshot your ninja across the screen." 
-        howToPlay="Slice through cyan targets to survive. Bouncing off walls resets your combo. Avoid the dark red bombs at all costs!" 
-        scoreSystem="Slicing targets grants points. Chaining kills without hitting walls builds a massive score multiplier." 
+        controls="Click, drag backwards, and release to slingshot your cyber-ninja across the screen." 
+        howToPlay="Slice through cyan targets to survive. You must defend the bottom glowing red line! If any target crosses it, game over. Bouncing off walls breaks your combo." 
+        scoreSystem="Slicing targets grants points. Chaining multiple kills without hitting walls builds a massive score multiplier." 
+        powerups="Cyan 'S' Sphere: Triggers extreme Bullet-Time Slowmo. Red 'N' Sphere: Detonates a screen-clearing nuke. Dark Red Spiked Bombs (Hazard): Instant Death upon touch!"
       />;
     case 'bullethell':
       return <HelpBrief 
-        controls="Move your mouse or drag your touch to pilot the core." 
-        howToPlay="Dodge the overwhelming waves of lasers. Direct hit the Boss with your core to deal 5 HP damage." 
-        scoreSystem="Survival grants passive points. Hitting the Boss grants bonus points. Defeat the Boss to advance levels and face greater bosses!" 
+        controls="Move your mouse to instantly pilot your core with zero latency." 
+        howToPlay="Dodge overwhelming waves of intricate laser patterns. Direct hit the Boss with your core to deal damage and deplete its top health bar." 
+        scoreSystem="None. Pure Boss Rush survival. Defeat bosses to advance to harder levels with epic names." 
+        powerups="Blue 'S': Shield that deflects bullets back at the boss. Orange 'F': Frenzy mode for 3x damage at blazing speeds. Red 'N': Screen-clearing Nuke."
+      />;
+    case 'tanks':
+      return <HelpBrief 
+        controls="Drag your mouse or touch backwards from your tank to aim and set power. Release to fire!" 
+        howToPlay="Turn-based artillery combat against an AI! Destroy the AI tank before it destroys you. The terrain is fully destructible." 
+        scoreSystem="No points. Pure 1v1 survival." 
+        powerups="No powerups. Master the gravity and wind to land perfect shots."
       />;
     case 'mandala':
       return <HelpBrief 
         controls="Click and drag to draw." 
         howToPlay="A relaxing Zen mode. Your cursor acts as a mirrored brush that creates beautiful, symmetrical neon mandalas. Release to reset the brush hue." 
-        scoreSystem="No score. Just relax and create." 
       />;
     case 'liquid':
       return <HelpBrief 
         controls="Click and drag through the particles." 
         howToPlay="A relaxing Zen mode. Interact with thousands of fluid particles. Stir them around, create vortexes, and watch the fluid dynamics." 
-        scoreSystem="No score. Just relax and observe." 
       />;
     case 'nodeweaver':
       return <HelpBrief 
         controls="Move your cursor near the nodes." 
         howToPlay="A relaxing Zen mode. Guide floating orbs to connect them into intricate webs of light. Watch them pulse with energy." 
-        scoreSystem="No score. Just relax and weave." 
       />;
     case 'looper':
       return <HelpBrief 
         controls="Click the concentric rings." 
         howToPlay="A relaxing Zen mode. Tap different rings to trigger expanding visual ripples and create your own ambient harmonic soundscape." 
-        scoreSystem="No score. Just relax and listen." 
       />;
     default:
       return <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Move your cursor or tap to interact. Try to score as many points as possible without losing!</p>;
@@ -1373,7 +1396,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     >{children}</button>
   );
 
-  const gameName = activeGame === "breaker" ? "NEON BREAKER" : activeGame === "scope" ? "SCOPE CREEP" : activeGame === "pendulum" ? "NEON PENDULUM" : activeGame === "gravity" ? "GRAVITY FLIP" : activeGame === "slingshot" ? "SLINGSHOT NINJA" : activeGame === "bullethell" ? "BULLET HELL" : activeGame === "sandbox" ? "LIQUID LIGHT" : activeGame === "mandala" ? "MANDALA MAKER" : activeGame === "nodeweaver" ? "ZEN NODE WEAVER" : activeGame === "looper" ? "HARMONIC LOOPER" : "DRIPP DROP";
+  const gameName = activeGame === "breaker" ? "NEON BREAKER" : activeGame === "scope" ? "SCOPE CREEP" : activeGame === "pendulum" ? "NEON PENDULUM" : activeGame === "gravity" ? "GRAVITY FLIP" : activeGame === "slingshot" ? "SLINGSHOT NINJA" : activeGame === "bullethell" ? "BULLET HELL" : activeGame === "tanks" ? "NEON TANKS" : activeGame === "sandbox" ? "LIQUID LIGHT" : activeGame === "mandala" ? "MANDALA MAKER" : activeGame === "nodeweaver" ? "ZEN NODE WEAVER" : activeGame === "looper" ? "HARMONIC LOOPER" : "DRIPP DROP";
   const isCreativeGame = ['sandbox', 'mandala', 'nodeweaver', 'looper'].includes(activeGame);
 
   return (
@@ -1391,7 +1414,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
       </div>
 
       {/* Top Right: Exact Score HUD */}
-      {activeGame !== "none" && activeGame !== "cyber_racer" && activeGame !== "neon_blocks" && activeGame !== "bullethell" && !isCreativeGame && (
+      {activeGame !== "none" && activeGame !== "cyber_racer" && activeGame !== "neon_blocks" && activeGame !== "bullethell" && activeGame !== "tanks" && !isCreativeGame && (
         <div style={{ position: "absolute", top: "30px", right: "30px", textAlign: "right", pointerEvents: "none", zIndex: 100, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
           <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>
              {activeGame === "simon" ? "ROUND" : (activeGame === "snake" || activeGame === "slingshot") ? "SCORE" : activeGame === "gravity" ? "DISTANCE" : "SCORE"}
