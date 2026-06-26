@@ -10,6 +10,14 @@ export default class PocketTanks {
     this.gravity = 0.15;
     this.wind = (Math.random() - 0.5) * 0.05;
     
+    this.maps = [
+       { id: 'neon', name: 'NEON CITY', stroke: '#00ffcc', gradStart: 'rgba(0, 255, 200, 0.15)', gradEnd: 'rgba(0, 50, 100, 0.4)', bg: 'rgba(5, 10, 15, 0.8)', frequency1: 0.004, amp1: 100, frequency2: 0.015, amp2: 40 },
+       { id: 'desert', name: 'CYBER DESERT', stroke: '#ffaa00', gradStart: 'rgba(255, 170, 0, 0.15)', gradEnd: 'rgba(100, 30, 0, 0.4)', bg: 'rgba(20, 10, 5, 0.8)', frequency1: 0.002, amp1: 60, frequency2: 0.03, amp2: 20 },
+       { id: 'ice', name: 'ICE MOON', stroke: '#00ffff', gradStart: 'rgba(0, 255, 255, 0.15)', gradEnd: 'rgba(0, 50, 150, 0.4)', bg: 'rgba(5, 15, 25, 0.8)', frequency1: 0.008, amp1: 120, frequency2: 0.01, amp2: 50 },
+       { id: 'toxic', name: 'TOXIC WASTELAND', stroke: '#33ff33', gradStart: 'rgba(50, 255, 50, 0.15)', gradEnd: 'rgba(0, 80, 0, 0.4)', bg: 'rgba(10, 15, 10, 0.8)', frequency1: 0.006, amp1: 80, frequency2: 0.02, amp2: 60 }
+    ];
+    this.selectedMapIdx = 0;
+    
     this.terrain = [];
     this.generateTerrain();
     
@@ -30,13 +38,6 @@ export default class PocketTanks {
        'meteor': { name: 'METEOR', damage: 60, radius: 65, color: '#ff3300' },
        'drill': { name: 'EARTH DRILL', damage: 40, radius: 40, color: '#aaaaaa' }
     };
-    this.maps = [
-       { id: 'neon', name: 'NEON CITY', stroke: '#00ffcc', gradStart: 'rgba(0, 255, 200, 0.15)', gradEnd: 'rgba(0, 50, 100, 0.4)', bg: 'rgba(5, 10, 15, 0.8)', frequency1: 0.004, amp1: 100, frequency2: 0.015, amp2: 40 },
-       { id: 'desert', name: 'CYBER DESERT', stroke: '#ffaa00', gradStart: 'rgba(255, 170, 0, 0.15)', gradEnd: 'rgba(100, 30, 0, 0.4)', bg: 'rgba(20, 10, 5, 0.8)', frequency1: 0.002, amp1: 60, frequency2: 0.03, amp2: 20 },
-       { id: 'ice', name: 'ICE MOON', stroke: '#00ffff', gradStart: 'rgba(0, 255, 255, 0.15)', gradEnd: 'rgba(0, 50, 150, 0.4)', bg: 'rgba(5, 15, 25, 0.8)', frequency1: 0.008, amp1: 120, frequency2: 0.01, amp2: 50 },
-       { id: 'toxic', name: 'TOXIC WASTELAND', stroke: '#33ff33', gradStart: 'rgba(50, 255, 50, 0.15)', gradEnd: 'rgba(0, 80, 0, 0.4)', bg: 'rgba(10, 15, 10, 0.8)', frequency1: 0.006, amp1: 80, frequency2: 0.02, amp2: 60 }
-    ];
-    this.selectedMapIdx = 0;
     
     this.player = {
        x: 100, y: 0, r: 12, hp: 100, maxHp: 100, color: "#00ffff", 
