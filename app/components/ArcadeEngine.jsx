@@ -17,6 +17,7 @@ import PocketTanks from "./games/PocketTanks";
 import NeonPac from "./games/NeonPac";
 import BomberCrazy from "./games/BomberCrazy";
 import NeonDevil from "./games/NeonDevil";
+import RetroAudio from "./games/RetroAudio";
 
 // ─── MODULE-LEVEL HELPERS (immune to minification TDZ) ────────────────────────
 // These live at module scope so the minifier handles them safely.
@@ -1028,6 +1029,10 @@ function createGameEngine(canvas, callbacks) {
   }
 
   function handleKeyUp(e) {
+    if (activeModule && activeModule.handleKeyUp) {
+      activeModule.handleKeyUp(e);
+      return;
+    }
     const ag = getActiveGameRef();
     if (ag === "invaders") {
       invKeys[e.key] = false;
@@ -1245,6 +1250,27 @@ const getHelpText = (game) => {
         scoreSystem="Each match is a 1v1 fight to the death. No points, just glory." 
         powerups="You spawn with a random arsenal of crazy weapons (Sniper, Boomerang, Black Hole, Volcanic, and more!). Choose wisely."
       />;
+    case 'neonpac':
+      return <HelpBrief 
+        controls="Move your mouse or drag your finger anywhere. The cyber-entity will follow your cursor smoothly." 
+        howToPlay="Navigate the neon grid to collect all the data dots. Avoid the swarming virus ghosts. The game infinitely scales in difficulty with new waves of dots and smarter ghosts." 
+        scoreSystem="Small dots grant points. Eating large power nodes grants massive points and allows you to eat ghosts for huge bonuses." 
+        powerups="Glowing White Nodes (Power Pellet): Grants temporary invincibility and speed, allowing you to consume ghosts for 200 points each."
+      />;
+    case 'bombercrazy':
+      return <HelpBrief 
+        controls="Click or tap anywhere on the grid to drop a cyber-bomb." 
+        howToPlay="Trap the chasing enemy programs by strategically placing bombs in their path. Bombs explode in a cross pattern after a short fuse." 
+        scoreSystem="Destroying enemies grants points. Higher levels increase enemy speed and spawn rates." 
+        powerups="Bombs can trigger chain reactions if their blast radii overlap. Use this to clear massive areas of the board at once!"
+      />;
+    case 'neondevil':
+      return <HelpBrief 
+        controls="Use W,A,S,D or Arrow Keys to move and jump. On mobile, use the on-screen glowing touch zones." 
+        howToPlay="A brutal 20-level troll platformer. Reach the green glowing portal to win. Nothing is as it seems. Floors will drop, ceilings will crush you, and spikes will move." 
+        scoreSystem="No score. Your only goal is survival and maintaining your sanity." 
+        powerups="None. Trust nothing. Memorize the traps to survive."
+      />;
     case 'mandala':
       return <HelpBrief 
         controls="Click and drag to draw." 
@@ -1305,6 +1331,16 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   const cursorActiveRef = useRef(false);
   const lastMilestoneRef = useRef(0);
   const isMountedRef = useRef(false); // Skip first-render effect execution
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+     audioRef.current = new RetroAudio();
+     return () => audioRef.current.stopBGM();
+  }, []);
+
+  const initAudio = () => {
+     if (audioRef.current) audioRef.current.init();
+  };
 
   // Sync refs
   useEffect(() => { activeGameRef.current = activeGame; }, [activeGame]);
@@ -1315,6 +1351,17 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     if (activeGame !== "none") {
       setIsHelpOpen(true);
       setIsPaused(true);
+      
+      initAudio();
+      if (['looper', 'beats', 'liquid', 'mandala', 'nodeweaver'].includes(activeGame)) {
+         audioRef.current.playBGM('zen');
+      } else if (['bullethell', 'neondevil'].includes(activeGame)) {
+         audioRef.current.playBGM('boss');
+      } else {
+         audioRef.current.playBGM('arcade');
+      }
+    } else {
+      if (audioRef.current) audioRef.current.stopBGM();
     }
   }, [activeGame]);
 
@@ -1404,6 +1451,9 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
       setBreakLevel: (v) => { breakerLevelRef.current = v; setBreakerLevel(v); },
       setScopeScore: (v) => { scopeScoreRef.current = v; setScopeScore(v); },
       setGameState: (v) => { gameStateRef.current = v; setGameState(v); },
+      playSound: (type) => { if (audioRef.current) audioRef.current.playSFX(type); },
+      playBGM: (type) => { if (audioRef.current) audioRef.current.playBGM(type); },
+      stopBGM: () => { if (audioRef.current) audioRef.current.stopBGM(); },
       triggerGsapMilestone: (x, y) => {
         gsap.to(".char", {
           scale: 1.35, color: "#fff", textShadow: "0 0 50px rgba(255,255,255,0.9)", duration: 0.1, yoyo: true, repeat: 3, stagger: 0.02, ease: "power2.out",

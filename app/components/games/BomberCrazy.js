@@ -8,84 +8,185 @@ export default class BomberCrazy {
     this.callbacks.setScore(0);
     this.callbacks.setGameState("playing");
 
-    this.player = {
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      radius: 12,
-      vx: 0,
-      vy: 0,
-      speed: 5,
-      targetX: canvas.width / 2,
-      targetY: canvas.height / 2,
-      color: '#00ffff'
-    };
-    
+    this.cols = 15;
+    this.rows = 11;
+    this.cellSize = Math.floor(Math.min(canvas.width / this.cols, (canvas.height - 40) / this.rows));
+    this.offsetX = (canvas.width - this.cols * this.cellSize) / 2;
+    this.offsetY = (canvas.height - this.rows * this.cellSize) / 2;
+
+    this.map = [];
+    this.powerups = [];
     this.bombs = [];
     this.explosions = [];
     this.enemies = [];
     this.particles = [];
     
+    this.keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false };
+
+    this.player = {
+      c: 0, r: 0,
+      targetC: 0, targetR: 0,
+      x: 0, y: 0,
+      speed: 0.1,
+      power: 2,
+      maxBombs: 1,
+      color: '#00ffff'
+    };
+
     this.shake = 0;
-    this.spawnTimer = 0;
+    this.initLevel();
   }
 
-  handlePointerDown(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const cx = (e.clientX || e.touches[0].clientX) - rect.left;
-    const cy = (e.clientY || e.touches[0].clientY) - rect.top;
-    
-    // Plant a bomb
-    if (this.bombs.length < 5) {
-      this.bombs.push({
-        x: this.player.x,
-        y: this.player.y,
-        radius: 10,
-        timer: 120, // 2 seconds at 60fps
-        color: '#ff0055'
-      });
-      
-      // Pulse effect on place
-      this.createShockwave(this.player.x, this.player.y, '#ff0055');
+  initLevel() {
+    // Generate map: 0 = empty, 1 = solid, 2 = soft block
+    this.map = Array(this.rows).fill(0).map(() => Array(this.cols).fill(0));
+    for (let r = 0; r < this.rows; r++) {
+      for (let c = 0; c < this.cols; c++) {
+        if (r % 2 !== 0 && c % 2 !== 0) {
+          this.map[r][c] = 1; // Indestructible
+        } else if (Math.random() < 0.6) {
+          // Keep top-left corner clear
+          if (!(r === 0 && c === 0) && !(r === 0 && c === 1) && !(r === 1 && c === 0)) {
+            this.map[r][c] = 2; // Destructible
+          }
+        }
+      }
     }
-  }
 
-  handlePointerMove(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    this.player.targetX = (e.clientX || e.touches[0].clientX) - rect.left;
-    this.player.targetY = (e.clientY || e.touches[0].clientY) - rect.top;
-  }
+    this.player.c = 0;
+    this.player.r = 0;
+    this.player.targetC = 0;
+    this.player.targetR = 0;
+    this.player.x = this.offsetX + this.cellSize / 2;
+    this.player.y = this.offsetY + this.cellSize / 2;
 
-  handlePointerUp() {}
-
-  createShockwave(x, y, color) {
-    for (let i = 0; i < 15; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 1 + Math.random() * 3;
-      this.particles.push({
-        x, y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 1,
-        color
-      });
+    this.enemies = [];
+    // Spawn 3 enemies
+    for (let i = 0; i < 3; i++) {
+      this.spawnEnemy();
     }
   }
 
   spawnEnemy() {
-    const side = Math.floor(Math.random() * 4);
-    let x, y;
-    if (side === 0) { x = Math.random() * this.canvas.width; y = -20; }
-    else if (side === 1) { x = this.canvas.width + 20; y = Math.random() * this.canvas.height; }
-    else if (side === 2) { x = Math.random() * this.canvas.width; y = this.canvas.height + 20; }
-    else { x = -20; y = Math.random() * this.canvas.height; }
+    let c = Math.floor(Math.random() * this.cols);
+    let r = Math.floor(Math.random() * this.rows);
+    // Ensure it spawns in empty space and far from player
+    while (this.map[r][c] !== 0 || (c < 3 && r < 3)) {
+      c = Math.floor(Math.random() * this.cols);
+      r = Math.floor(Math.random() * this.rows);
+    }
     
     this.enemies.push({
-      x, y,
-      radius: 12,
-      vx: 0,
-      vy: 0,
-      speed: 1.5 + Math.random() + (this.callbacks.getScoreRef() / 1000),
-      color: '#ffaa00'
+      c, r,
+      targetC: c, targetR: r,
+      x: this.offsetX + c * this.cellSize + this.cellSize / 2,
+      y: this.offsetY + r * this.cellSize + this.cellSize / 2,
+      speed: 0.04 + Math.random() * 0.02,
+      color: '#ff3366',
+      dir: Math.floor(Math.random() * 4) // 0: up, 1: right, 2: down, 3: left
+    });
+  }
+
+  handleKeyDown(e) {
+    if (this.keys.hasOwnProperty(e.key)) this.keys[e.key] = true;
+    if (e.key === ' ' || e.key === 'Enter') this.placeBomb();
+  }
+
+  handleKeyUp(e) {
+    if (this.keys.hasOwnProperty(e.key)) this.keys[e.key] = false;
+  }
+  
+  handlePointerDown(e) {
+    const rect = this.canvas.getBoundingClientRect();
+    const px = (e.clientX || e.touches[0].clientX) - rect.left;
+    const py = (e.clientY || e.touches[0].clientY) - rect.top;
+    
+    // Virtual D-pad logic (simple: click to move relative to player, or just touch controls)
+    if (py < this.player.y - 20) this.keys.w = true;
+    else if (py > this.player.y + 20) this.keys.s = true;
+    else if (px < this.player.x - 20) this.keys.a = true;
+    else if (px > this.player.x + 20) this.keys.d = true;
+    else this.placeBomb(); // click on self places bomb
+  }
+
+  handlePointerUp(e) {
+    this.keys.w = false; this.keys.a = false; this.keys.s = false; this.keys.d = false;
+  }
+
+  handlePointerMove(e) {}
+
+  placeBomb() {
+    if (this.bombs.filter(b => b.owner === 'player').length < this.player.maxBombs) {
+      // Check if bomb already on cell
+      if (this.bombs.some(b => b.c === this.player.c && b.r === this.player.r)) return;
+      
+      this.bombs.push({
+        c: this.player.c,
+        r: this.player.r,
+        timer: 120, // 2 seconds
+        owner: 'player',
+        power: this.player.power
+      });
+      this.callbacks.playSound('blip');
+    }
+  }
+
+  isWalkable(c, r) {
+    if (c < 0 || c >= this.cols || r < 0 || r >= this.rows) return false;
+    if (this.map[r][c] !== 0) return false;
+    if (this.bombs.some(b => b.c === c && b.r === r)) return false;
+    return true;
+  }
+
+  createExplosion(c, r, power) {
+    this.shake = 10;
+    this.callbacks.playSound('explosion');
+    
+    const addExplosion = (ec, er) => {
+      this.explosions.push({ c: ec, r: er, life: 1 });
+      for (let i = 0; i < 5; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const s = Math.random() * 5;
+        this.particles.push({
+          x: this.offsetX + ec * this.cellSize + this.cellSize/2,
+          y: this.offsetY + er * this.cellSize + this.cellSize/2,
+          vx: Math.cos(a)*s, vy: Math.sin(a)*s,
+          life: 1, color: '#ffcc00'
+        });
+      }
+    };
+
+    addExplosion(c, r);
+    
+    // 4 directions
+    const dirs = [[0,-1], [1,0], [0,1], [-1,0]];
+    dirs.forEach(d => {
+      for (let i = 1; i <= power; i++) {
+        let nc = c + d[0] * i;
+        let nr = r + d[1] * i;
+        if (nc < 0 || nc >= this.cols || nr < 0 || nr >= this.rows) break;
+        if (this.map[nr][nc] === 1) break; // Solid wall blocks blast
+        
+        if (this.map[nr][nc] === 2) {
+          // Soft block destroyed, stops blast
+          this.map[nr][nc] = 0;
+          addExplosion(nc, nr);
+          
+          // Random powerup chance
+          if (Math.random() < 0.3) {
+            this.powerups.push({ c: nc, r: nr, type: ['power', 'bomb', 'speed'][Math.floor(Math.random()*3)] });
+          }
+          this.callbacks.setScoreRef(this.callbacks.getScoreRef() + 10);
+          break;
+        }
+        
+        addExplosion(nc, nr);
+        
+        // Trigger other bombs in path
+        this.bombs.forEach(b => {
+           if (b.c === nc && b.r === nr && b.timer > 5) b.timer = 5;
+        });
+      }
     });
   }
 
@@ -93,124 +194,121 @@ export default class BomberCrazy {
     if (this.shake > 0) this.shake--;
 
     // Player movement
-    const dx = this.player.targetX - this.player.x;
-    const dy = this.player.targetY - this.player.y;
-    const dist = Math.hypot(dx, dy);
-    
-    if (dist > this.player.speed) {
-      this.player.vx = (dx / dist) * this.player.speed;
-      this.player.vy = (dy / dist) * this.player.speed;
-      this.player.x += this.player.vx;
-      this.player.y += this.player.vy;
+    if (this.player.c === this.player.targetC && this.player.r === this.player.targetR) {
+       // At target, check keys
+       if ((this.keys.w || this.keys.ArrowUp) && this.isWalkable(this.player.c, this.player.r - 1)) this.player.targetR--;
+       else if ((this.keys.s || this.keys.ArrowDown) && this.isWalkable(this.player.c, this.player.r + 1)) this.player.targetR++;
+       else if ((this.keys.a || this.keys.ArrowLeft) && this.isWalkable(this.player.c - 1, this.player.r)) this.player.targetC--;
+       else if ((this.keys.d || this.keys.ArrowRight) && this.isWalkable(this.player.c + 1, this.player.r)) this.player.targetC++;
     } else {
-      this.player.x = this.player.targetX;
-      this.player.y = this.player.targetY;
+       // Move towards target
+       if (this.player.targetC > this.player.c) { this.player.c += this.player.speed; if (this.player.c >= this.player.targetC) this.player.c = this.player.targetC; }
+       if (this.player.targetC < this.player.c) { this.player.c -= this.player.speed; if (this.player.c <= this.player.targetC) this.player.c = this.player.targetC; }
+       if (this.player.targetR > this.player.r) { this.player.r += this.player.speed; if (this.player.r >= this.player.targetR) this.player.r = this.player.targetR; }
+       if (this.player.targetR < this.player.r) { this.player.r -= this.player.speed; if (this.player.r <= this.player.targetR) this.player.r = this.player.targetR; }
     }
+    this.player.x = this.offsetX + this.player.c * this.cellSize + this.cellSize / 2;
+    this.player.y = this.offsetY + this.player.r * this.cellSize + this.cellSize / 2;
 
-    // Spawn enemies
-    this.spawnTimer--;
-    if (this.spawnTimer <= 0) {
-      this.spawnEnemy();
-      this.spawnTimer = Math.max(20, 100 - this.callbacks.getScoreRef() / 10);
+    // Powerup collision
+    for (let i = this.powerups.length - 1; i >= 0; i--) {
+      const p = this.powerups[i];
+      // Close enough to center of cell
+      if (Math.abs(this.player.c - p.c) < 0.5 && Math.abs(this.player.r - p.r) < 0.5) {
+        if (p.type === 'power') this.player.power++;
+        if (p.type === 'bomb') this.player.maxBombs++;
+        if (p.type === 'speed') this.player.speed = Math.min(0.2, this.player.speed + 0.02);
+        this.callbacks.playSound('coin');
+        this.powerups.splice(i, 1);
+        this.callbacks.setScoreRef(this.callbacks.getScoreRef() + 50);
+      }
     }
-
-    // Enemies movement & collision with player
-    this.enemies.forEach(e => {
-      const edx = this.player.x - e.x;
-      const edy = this.player.y - e.y;
-      const edist = Math.hypot(edx, edy);
-      if (edist > 0) {
-        e.vx = (edx / edist) * e.speed;
-        e.vy = (edy / edist) * e.speed;
-      }
-      e.x += e.vx;
-      e.y += e.vy;
-
-      if (edist < this.player.radius + e.radius) {
-        this.shake = 20;
-        this.createShockwave(this.player.x, this.player.y, '#ff0000');
-        this.callbacks.setGameState("failed");
-      }
-    });
 
     // Bombs update
     for (let i = this.bombs.length - 1; i >= 0; i--) {
       const b = this.bombs[i];
       b.timer--;
-      
-      // Wobble effect
-      b.radius = 10 + Math.sin(b.timer * 0.5) * 2;
-
       if (b.timer <= 0) {
-        this.shake = 15;
-        this.explosions.push({
-          x: b.x,
-          y: b.y,
-          life: 1, // Full life
-          color: b.color,
-          radius: 200 // length of cross beam
-        });
-        
-        // Massive explosion particles
-        for(let j=0; j<40; j++) {
-           const a = Math.random() * Math.PI * 2;
-           const s = 5 + Math.random() * 10;
-           this.particles.push({
-              x: b.x, y: b.y,
-              vx: Math.cos(a)*s, vy: Math.sin(a)*s,
-              life: 1, color: b.color
-           });
-        }
-        
+        this.createExplosion(b.c, b.r, b.power);
         this.bombs.splice(i, 1);
-        this.callbacks.triggerGsapMilestone(b.x, b.y);
       }
     }
 
-    // Explosions update & collision
+    // Enemies movement
+    this.enemies.forEach((e, i) => {
+      if (e.c === e.targetC && e.r === e.targetR) {
+        const dirs = [[0,-1], [1,0], [0,1], [-1,0]]; // UP, RIGHT, DOWN, LEFT
+        
+        // Try to keep moving in same dir, or turn randomly
+        let validDirs = [];
+        dirs.forEach((d, idx) => {
+           if (this.isWalkable(e.c + d[0], e.r + d[1])) validDirs.push(idx);
+        });
+
+        if (validDirs.length > 0) {
+           if (validDirs.includes(e.dir) && Math.random() < 0.7) {
+              // keep going
+           } else {
+              e.dir = validDirs[Math.floor(Math.random() * validDirs.length)];
+           }
+           e.targetC += dirs[e.dir][0];
+           e.targetR += dirs[e.dir][1];
+        }
+      } else {
+         if (e.targetC > e.c) { e.c += e.speed; if (e.c >= e.targetC) e.c = e.targetC; }
+         if (e.targetC < e.c) { e.c -= e.speed; if (e.c <= e.targetC) e.c = e.targetC; }
+         if (e.targetR > e.r) { e.r += e.speed; if (e.r >= e.targetR) e.r = e.targetR; }
+         if (e.targetR < e.r) { e.r -= e.speed; if (e.r <= e.targetR) e.r = e.targetR; }
+      }
+      e.x = this.offsetX + e.c * this.cellSize + this.cellSize / 2;
+      e.y = this.offsetY + e.r * this.cellSize + this.cellSize / 2;
+      
+      // Player collision
+      const dist = Math.hypot(this.player.x - e.x, this.player.y - e.y);
+      if (dist < this.cellSize * 0.7) {
+        this.shake = 20;
+        this.callbacks.playSound('hurt');
+        this.callbacks.setGameState("failed");
+      }
+    });
+
+    // Explosions logic
     for (let i = this.explosions.length - 1; i >= 0; i--) {
       const ex = this.explosions[i];
-      ex.life -= 0.03;
+      ex.life -= 0.05;
       
-      const beamWidth = 20 * ex.life;
-      const beamLength = ex.radius;
-
-      // Check enemy collisions
-      for (let j = this.enemies.length - 1; j >= 0; j--) {
-        const e = this.enemies[j];
-        // Cross collision detection
-        const inHoriz = Math.abs(e.y - ex.y) < beamWidth && Math.abs(e.x - ex.x) < beamLength;
-        const inVert = Math.abs(e.x - ex.x) < beamWidth && Math.abs(e.y - ex.y) < beamLength;
-        
-        if (inHoriz || inVert) {
-          this.callbacks.setScoreRef(this.callbacks.getScoreRef() + 50);
-          this.createShockwave(e.x, e.y, e.color);
-          this.enemies.splice(j, 1);
-        }
+      const exX = this.offsetX + ex.c * this.cellSize + this.cellSize/2;
+      const exY = this.offsetY + ex.r * this.cellSize + this.cellSize/2;
+      
+      // Hit Player
+      if (ex.life > 0.5) {
+         if (Math.abs(this.player.x - exX) < this.cellSize/2 && Math.abs(this.player.y - exY) < this.cellSize/2) {
+            this.shake = 20;
+            this.callbacks.playSound('hurt');
+            this.callbacks.setGameState("failed");
+         }
+         
+         // Hit Enemy
+         for (let j = this.enemies.length - 1; j >= 0; j--) {
+            const e = this.enemies[j];
+            if (Math.abs(e.x - exX) < this.cellSize/2 && Math.abs(e.y - exY) < this.cellSize/2) {
+               this.enemies.splice(j, 1);
+               this.callbacks.playSound('blip');
+               this.callbacks.setScoreRef(this.callbacks.getScoreRef() + 100);
+               
+               // Spawn new enemy to keep up pressure
+               setTimeout(() => { if (this.enemies.length < 5) this.spawnEnemy(); }, 2000);
+            }
+         }
       }
 
-      // Check player collision
-      if (ex.life > 0.5) { // Only dangerous initially
-        const pInHoriz = Math.abs(this.player.y - ex.y) < beamWidth && Math.abs(this.player.x - ex.x) < beamLength;
-        const pInVert = Math.abs(this.player.x - ex.x) < beamWidth && Math.abs(this.player.y - ex.y) < beamLength;
-        if (pInHoriz || pInVert) {
-          this.shake = 20;
-          this.callbacks.setGameState("failed");
-        }
-      }
-
-      if (ex.life <= 0) {
-        this.explosions.splice(i, 1);
-      }
+      if (ex.life <= 0) this.explosions.splice(i, 1);
     }
 
-    // Particles update
+    // Particles
     this.particles.forEach((p, i) => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life -= 0.02;
-      p.vx *= 0.9;
-      p.vy *= 0.9;
+      p.x += p.vx; p.y += p.vy;
+      p.life -= 0.05;
       if (p.life <= 0) this.particles.splice(i, 1);
     });
   }
@@ -219,104 +317,112 @@ export default class BomberCrazy {
     const ctx = this.ctx;
     
     ctx.save();
-    if (this.shake > 0) {
-      ctx.translate((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake);
-    }
+    if (this.shake > 0) ctx.translate((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake);
     
-    // Trail effect background
-    ctx.fillStyle = "rgba(10, 5, 5, 0.4)";
+    // Background
+    ctx.fillStyle = "rgba(5, 10, 15, 0.4)";
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Draw explosions
-    this.explosions.forEach(ex => {
-      ctx.fillStyle = ex.color;
-      ctx.shadowBlur = 30;
-      ctx.shadowColor = ex.color;
-      ctx.globalAlpha = ex.life;
-      
-      const width = 20 * ex.life;
-      // Horiz
-      ctx.fillRect(ex.x - ex.radius, ex.y - width/2, ex.radius * 2, width);
-      // Vert
-      ctx.fillRect(ex.x - width/2, ex.y - ex.radius, width, ex.radius * 2);
-      
-      // Core
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(ex.x, ex.y, width, 0, Math.PI*2);
-      ctx.fill();
-      
-      ctx.globalAlpha = 1;
+    // Draw Map
+    for (let r = 0; r < this.rows; r++) {
+      for (let c = 0; c < this.cols; c++) {
+        const x = this.offsetX + c * this.cellSize;
+        const y = this.offsetY + r * this.cellSize;
+        const s = this.cellSize;
+        
+        ctx.strokeStyle = "rgba(0, 255, 255, 0.05)";
+        ctx.strokeRect(x, y, s, s);
+
+        if (this.map[r][c] === 1) {
+           // Solid
+           ctx.fillStyle = "#112233";
+           ctx.fillRect(x + 2, y + 2, s - 4, s - 4);
+           ctx.strokeStyle = "#00ffff";
+           ctx.strokeRect(x + 2, y + 2, s - 4, s - 4);
+        } else if (this.map[r][c] === 2) {
+           // Soft
+           ctx.fillStyle = "#331122";
+           ctx.fillRect(x + 2, y + 2, s - 4, s - 4);
+           ctx.strokeStyle = "#ff0055";
+           ctx.strokeRect(x + 2, y + 2, s - 4, s - 4);
+        }
+      }
+    }
+
+    // Powerups
+    this.powerups.forEach(p => {
+       const x = this.offsetX + p.c * this.cellSize + this.cellSize/2;
+       const y = this.offsetY + p.r * this.cellSize + this.cellSize/2;
+       ctx.fillStyle = p.type === 'power' ? '#ff3300' : p.type === 'bomb' ? '#00ffff' : '#ffcc00';
+       ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle;
+       ctx.beginPath(); ctx.arc(x, y, this.cellSize/3, 0, Math.PI*2); ctx.fill();
+       ctx.shadowBlur = 0;
+       
+       ctx.fillStyle = '#fff';
+       ctx.font = '10px sans-serif';
+       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+       ctx.fillText(p.type === 'power' ? 'P' : p.type === 'bomb' ? 'B' : 'S', x, y);
     });
 
-    // Draw grid overlay after explosions
-    ctx.strokeStyle = "rgba(255, 0, 85, 0.05)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let x = 0; x < this.canvas.width; x += 50) { ctx.moveTo(x, 0); ctx.lineTo(x, this.canvas.height); }
-    for (let y = 0; y < this.canvas.height; y += 50) { ctx.moveTo(0, y); ctx.lineTo(this.canvas.width, y); }
-    ctx.stroke();
-
-    // Draw Bombs
+    // Bombs
     this.bombs.forEach(b => {
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-      ctx.fillStyle = '#111111';
-      ctx.fill();
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = b.color;
-      ctx.shadowBlur = 15 + Math.sin(b.timer * 0.5) * 5;
-      ctx.shadowColor = b.color;
-      ctx.stroke();
-      
-      // Spark
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(b.x, b.y - b.radius, 3, 0, Math.PI*2);
-      ctx.fill();
+       const x = this.offsetX + b.c * this.cellSize + this.cellSize/2;
+       const y = this.offsetY + b.r * this.cellSize + this.cellSize/2;
+       const scale = 1 + Math.sin(b.timer * 0.2) * 0.1;
+       ctx.fillStyle = '#222';
+       ctx.beginPath(); ctx.arc(x, y, (this.cellSize/2.5) * scale, 0, Math.PI*2); ctx.fill();
+       ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2; ctx.stroke();
+       
+       // Pulse
+       ctx.fillStyle = `rgba(0, 255, 255, ${Math.abs(Math.sin(b.timer * 0.1))})`;
+       ctx.beginPath(); ctx.arc(x, y, (this.cellSize/3) * scale, 0, Math.PI*2); ctx.fill();
     });
 
-    // Draw player
-    ctx.beginPath();
-    ctx.arc(this.player.x, this.player.y, this.player.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.player.color;
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = this.player.color;
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    // Explosions
+    this.explosions.forEach(ex => {
+       const x = this.offsetX + ex.c * this.cellSize;
+       const y = this.offsetY + ex.r * this.cellSize;
+       ctx.fillStyle = `rgba(255, 200, 0, ${ex.life})`;
+       ctx.fillRect(x, y, this.cellSize, this.cellSize);
+       ctx.fillStyle = `rgba(255, 50, 0, ${ex.life})`;
+       ctx.fillRect(x + 5, y + 5, this.cellSize - 10, this.cellSize - 10);
+    });
 
-    // Draw enemies
+    // Enemies
     this.enemies.forEach(e => {
-      ctx.beginPath();
-      ctx.moveTo(e.x, e.y - e.radius);
-      ctx.lineTo(e.x + e.radius, e.y + e.radius);
-      ctx.lineTo(e.x - e.radius, e.y + e.radius);
-      ctx.closePath();
-      
-      ctx.fillStyle = '#111';
-      ctx.fill();
-      ctx.strokeStyle = e.color;
-      ctx.lineWidth = 3;
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = e.color;
-      ctx.stroke();
+       ctx.fillStyle = e.color;
+       ctx.shadowBlur = 15; ctx.shadowColor = e.color;
+       ctx.beginPath(); ctx.arc(e.x, e.y, this.cellSize/2.5, 0, Math.PI*2); ctx.fill();
+       ctx.fillStyle = '#fff'; ctx.shadowBlur = 0;
+       ctx.beginPath(); ctx.arc(e.x - 4, e.y - 4, 3, 0, Math.PI*2); ctx.fill();
+       ctx.beginPath(); ctx.arc(e.x + 4, e.y - 4, 3, 0, Math.PI*2); ctx.fill();
     });
 
-    // Draw particles
-    this.particles.forEach(p => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 4 * p.life, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.globalAlpha = p.life;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = p.color;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    });
-
+    // Player
+    ctx.fillStyle = this.player.color;
+    ctx.shadowBlur = 20; ctx.shadowColor = this.player.color;
+    ctx.beginPath(); ctx.arc(this.player.x, this.player.y, this.cellSize/2.5, 0, Math.PI*2); ctx.fill();
     ctx.shadowBlur = 0;
+    // Visor
+    ctx.fillStyle = '#111';
+    ctx.fillRect(this.player.x - 6, this.player.y - 8, 12, 6);
+    ctx.fillStyle = '#00ffcc';
+    // Looking dir based on key
+    let lx = 0, ly = 0;
+    if (this.keys.w || this.keys.ArrowUp) ly = -2;
+    else if (this.keys.s || this.keys.ArrowDown) ly = 2;
+    if (this.keys.a || this.keys.ArrowLeft) lx = -2;
+    else if (this.keys.d || this.keys.ArrowRight) lx = 2;
+    ctx.fillRect(this.player.x - 4 + lx, this.player.y - 7 + ly, 8, 4);
+
+    // Particles
+    this.particles.forEach(p => {
+       ctx.fillStyle = p.color;
+       ctx.globalAlpha = p.life;
+       ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+       ctx.globalAlpha = 1;
+    });
+
     ctx.restore();
   }
 

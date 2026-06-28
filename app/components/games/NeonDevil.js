@@ -478,6 +478,7 @@ export default class NeonDevil {
     }
     else if (action.type === 'fakeDeath') {
       this.fakeDeath = true;
+      this.callbacks.playSound('hurt');
     }
     else if (action.type === 'teleport') {
       this.player.x = action.tx * this.tileSize;
@@ -549,6 +550,7 @@ export default class NeonDevil {
     if (this.keys.up && this.player.grounded && !this.jumpDisabled) {
       this.player.vy = this.player.jumpPower;
       this.player.grounded = false;
+      this.callbacks.playSound('jump');
     }
 
     // Moving tiles update
@@ -673,19 +675,34 @@ export default class NeonDevil {
         if (t.type === 'block') {
           ctx.fillStyle = '#111';
           ctx.fillRect(t.x, t.y, this.tileSize, this.tileSize);
+          // 3D Bevel effect
+          ctx.fillStyle = '#222'; ctx.fillRect(t.x, t.y, this.tileSize, 4);
+          ctx.fillStyle = '#0a0a0a'; ctx.fillRect(t.x, t.y + this.tileSize - 4, this.tileSize, 4);
           ctx.strokeStyle = '#bd00ff';
-          ctx.lineWidth = 2;
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = '#bd00ff';
-          ctx.strokeRect(t.x + 2, t.y + 2, this.tileSize - 4, this.tileSize - 4);
-          ctx.shadowBlur = 0;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(t.x, t.y, this.tileSize, this.tileSize);
+          // Inner grid
+          ctx.strokeStyle = 'rgba(189, 0, 255, 0.3)';
+          ctx.strokeRect(t.x + 4, t.y + 4, this.tileSize - 8, this.tileSize - 8);
         }
         else if (t.type === 'goal') {
-          ctx.fillStyle = '#00ffcc';
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = '#00ffcc';
-          ctx.fillRect(t.x + 4, t.y + 4, this.tileSize - 8, this.tileSize - 8);
-          ctx.shadowBlur = 0;
+          const time = Date.now() / 200;
+          ctx.save();
+          ctx.translate(t.x + this.tileSize/2, t.y + this.tileSize/2);
+          ctx.rotate(time);
+          ctx.beginPath();
+          for(let i=0; i<5; i++) {
+            ctx.arc(0, 0, (this.tileSize/3) * (i/5), i, i + Math.PI);
+          }
+          ctx.strokeStyle = '#00ffcc';
+          ctx.lineWidth = 3;
+          ctx.shadowBlur = 20; ctx.shadowColor = '#00ffcc';
+          ctx.stroke();
+          
+          // Core
+          ctx.beginPath(); ctx.arc(0,0, 4, 0, Math.PI*2);
+          ctx.fillStyle = '#fff'; ctx.fill();
+          ctx.restore();
         }
         else if (t.type === 'spike') {
           ctx.fillStyle = '#ff0055';
@@ -694,26 +711,47 @@ export default class NeonDevil {
           ctx.beginPath();
           if (t.dir === '^') {
             ctx.moveTo(t.x, t.y + this.tileSize);
-            ctx.lineTo(t.x + this.tileSize/2, t.y);
+            ctx.lineTo(t.x + this.tileSize/4, t.y + this.tileSize/2);
+            ctx.lineTo(t.x + this.tileSize/2, t.y + 4);
+            ctx.lineTo(t.x + this.tileSize*0.75, t.y + this.tileSize/2);
             ctx.lineTo(t.x + this.tileSize, t.y + this.tileSize);
           } else if (t.dir === 'v') {
             ctx.moveTo(t.x, t.y);
-            ctx.lineTo(t.x + this.tileSize/2, t.y + this.tileSize);
+            ctx.lineTo(t.x + this.tileSize/4, t.y + this.tileSize/2);
+            ctx.lineTo(t.x + this.tileSize/2, t.y + this.tileSize - 4);
+            ctx.lineTo(t.x + this.tileSize*0.75, t.y + this.tileSize/2);
             ctx.lineTo(t.x + this.tileSize, t.y);
           }
           ctx.closePath();
           ctx.fill();
+          
+          // Electrical arcs
+          if (Math.random() < 0.1) {
+             ctx.strokeStyle = '#fff';
+             ctx.beginPath();
+             ctx.moveTo(t.x + Math.random()*this.tileSize, t.y + (t.dir==='^'?this.tileSize:0));
+             ctx.lineTo(t.x + this.tileSize/2, t.y + (t.dir==='^'?0:this.tileSize));
+             ctx.stroke();
+          }
           ctx.shadowBlur = 0;
         }
       }
     }
 
-    // Draw player
+    // Draw player (Cyber cube)
     ctx.fillStyle = this.player.color;
     ctx.shadowBlur = 20;
     ctx.shadowColor = this.player.color;
     ctx.fillRect(this.player.x, this.player.y, this.player.width, this.player.height);
+    // Inner bevel
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+    ctx.strokeRect(this.player.x + 2, this.player.y + 2, this.player.width - 4, this.player.height - 4);
+    // Cyber Eyes
     ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff'; 
+    const eyeOffsetX = this.player.vx > 0 ? 4 : this.player.vx < 0 ? -4 : 0;
+    ctx.fillRect(this.player.x + 4 + eyeOffsetX, this.player.y + 4, 4, 4);
+    ctx.fillRect(this.player.x + this.player.width - 8 + eyeOffsetX, this.player.y + 4, 4, 4);
 
     // Draw particles
     this.particles.forEach(p => {
