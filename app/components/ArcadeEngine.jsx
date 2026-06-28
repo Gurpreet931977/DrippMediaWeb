@@ -14,6 +14,9 @@ import NodeWeaver from "./games/NodeWeaver";
 import HarmonicLooper from "./games/HarmonicLooper";
 import BeatMaker from "./games/BeatMaker";
 import PocketTanks from "./games/PocketTanks";
+import NeonPac from "./games/NeonPac";
+import BomberCrazy from "./games/BomberCrazy";
+import NeonDevil from "./games/NeonDevil";
 
 // ─── MODULE-LEVEL HELPERS (immune to minification TDZ) ────────────────────────
 // These live at module scope so the minifier handles them safely.
@@ -603,6 +606,9 @@ function createGameEngine(canvas, callbacks) {
       else if (ag === 'nodeweaver') activeModule = new NodeWeaver(logicalCanvas, callbacks);
       else if (ag === 'looper') activeModule = new HarmonicLooper(logicalCanvas, callbacks);
       else if (ag === 'beats') activeModule = new BeatMaker(logicalCanvas, callbacks);
+      else if (ag === 'neonpac') activeModule = new NeonPac(logicalCanvas, callbacks);
+      else if (ag === 'bombercrazy') activeModule = new BomberCrazy(logicalCanvas, callbacks);
+      else if (ag === 'neondevil') activeModule = new NeonDevil(logicalCanvas, callbacks);
       
       lastActive = ag;
       justSwitched = true;

@@ -12,6 +12,9 @@ const ARCADE_GAMES = [
   { id: 'slingshot', title: 'SLINGSHOT NINJA', color: '#ff00ff', desc: 'Bullet-time dash attacks. Slice through the grid.', category: 'ACTION' },
   { id: 'bullethell', title: 'BULLET HELL', color: '#ff0000', desc: 'Dodge an overwhelming barrage of neon lasers.', category: 'BOSS' },
   { id: 'tanks', title: 'NEON TANKS', color: '#ff6600', desc: 'Turn-based artillery combat against an AI.', category: 'STRATEGY' },
+  { id: 'neonpac', title: 'NEON PAC', color: '#ffcc00', desc: 'Navigate a glitchy maze and outrun glowing phantoms.', category: 'CHASE' },
+  { id: 'bombercrazy', title: 'BOMBER CRAZY', color: '#ff0055', desc: 'Drop glowing explosives and trigger massive neon shockwaves.', category: 'ACTION' },
+  { id: 'neondevil', title: 'NEON DEVIL', color: '#bd00ff', desc: 'A brutally unfair troll platformer. Expect the unexpected.', category: 'TROLL' },
 ];
 
 const CREATIVE_GAMES = [
@@ -71,11 +74,11 @@ export default function ArcadeMenu({ onStartGame }) {
   useEffect(() => {
     // Animate background color change
     gsap.to('.arcade-bg-glow', {
-      background: `radial-gradient(circle at 50% 50%, ${activeColor}25 0%, transparent 60%)`,
-      duration: 1,
+      background: `radial-gradient(circle at 50% 50%, ${activeColor}${activeMode === 'arcade' ? '25' : '40'} 0%, transparent ${activeMode === 'arcade' ? '60%' : '80%'})`,
+      duration: activeMode === 'arcade' ? 1 : 3,
       ease: 'power2.out'
     });
-  }, [activeIndex, activeColor]);
+  }, [activeIndex, activeColor, activeMode]);
 
   const handleNext = () => {
     if (activeMode === 'arcade') {
@@ -133,26 +136,29 @@ export default function ArcadeMenu({ onStartGame }) {
       flexDirection: 'column',
       position: 'relative',
       overflow: 'hidden',
-      cursor: activeMode === 'arcade' ? 'none' : 'default',
+      cursor: 'none',
       fontFamily: "'Clash Display', sans-serif"
     }}>
       {/* Gamified Custom Cursor */}
-      {activeMode === 'arcade' && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0,
-          width: '24px', height: '24px',
-          borderRadius: '50%',
-          border: `2px solid ${activeColor}`,
-          pointerEvents: 'none',
-          zIndex: 99999,
-          transform: `translate(${mousePos.x - 12}px, ${mousePos.y - 12}px) scale(${isClicking ? 0.7 : 1})`,
-          transition: 'transform 0.1s ease-out, border-color 0.3s',
-          boxShadow: `0 0 10px ${activeColor}, inset 0 0 5px ${activeColor}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
+      <div style={{
+        position: 'fixed',
+        top: 0, left: 0,
+        width: activeMode === 'arcade' ? '24px' : '40px',
+        height: activeMode === 'arcade' ? '24px' : '40px',
+        borderRadius: '50%',
+        border: activeMode === 'arcade' ? `2px solid ${activeColor}` : 'none',
+        backgroundColor: activeMode === 'arcade' ? 'transparent' : `${activeColor}40`,
+        pointerEvents: 'none',
+        zIndex: 99999,
+        transform: `translate(${mousePos.x - (activeMode === 'arcade' ? 12 : 20)}px, ${mousePos.y - (activeMode === 'arcade' ? 12 : 20)}px) scale(${isClicking ? 0.7 : 1})`,
+        transition: 'transform 0.1s ease-out, border-color 0.3s, background-color 0.3s, width 0.3s, height 0.3s',
+        boxShadow: activeMode === 'arcade' ? `0 0 10px ${activeColor}, inset 0 0 5px ${activeColor}` : `0 0 40px 15px ${activeColor}60`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        mixBlendMode: activeMode === 'arcade' ? 'normal' : 'screen'
+      }}>
+        {activeMode === 'arcade' && (
           <div style={{
             width: '4px', height: '4px',
             backgroundColor: '#fff',
@@ -160,8 +166,8 @@ export default function ArcadeMenu({ onStartGame }) {
             boxShadow: '0 0 5px #fff',
             opacity: isClicking ? 1 : 0.5
           }} />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Dynamic Ambient Background */}
       <div className="arcade-bg-glow" style={{
@@ -173,7 +179,7 @@ export default function ArcadeMenu({ onStartGame }) {
         height: '150vh',
         zIndex: 0,
         pointerEvents: 'none',
-        background: `radial-gradient(circle at 50% 50%, ${activeColor}25 0%, transparent 60%)`
+        background: `radial-gradient(circle at 50% 50%, ${activeColor}${activeMode === 'arcade' ? '25' : '40'} 0%, transparent ${activeMode === 'arcade' ? '60%' : '80%'})`
       }} />
 
       {/* Grid Overlay */}
@@ -249,7 +255,7 @@ export default function ArcadeMenu({ onStartGame }) {
                 textTransform: 'uppercase',
                 letterSpacing: '2px',
                 lineHeight: 1,
-                cursor: activeMode === 'arcade' ? 'none' : 'pointer',
+                cursor: 'none',
                 color: activeMode === 'arcade' ? '#000' : 'rgba(255,255,255,0.4)',
                 textShadow: 'none',
                 position: 'relative',
@@ -282,7 +288,7 @@ export default function ArcadeMenu({ onStartGame }) {
                 textTransform: 'uppercase',
                 letterSpacing: '2px',
                 lineHeight: 1,
-                cursor: activeMode === 'creative' ? 'none' : 'pointer',
+                cursor: 'none',
                 color: activeMode === 'creative' ? '#000' : 'rgba(255,255,255,0.4)',
                 textShadow: 'none',
                 position: 'relative',
@@ -407,7 +413,7 @@ export default function ArcadeMenu({ onStartGame }) {
                   transition: baseTransition,
                   zIndex: zIndex,
                   opacity: opacity,
-                  cursor: activeMode === 'arcade' ? 'none' : 'pointer'
+                  cursor: 'none'
                 }}
               >
                 <div
@@ -568,7 +574,7 @@ export default function ArcadeMenu({ onStartGame }) {
                       fontFamily: "'Panchang', sans-serif",
                       fontWeight: 600,
                       fontSize: '0.9rem',
-                      cursor: activeMode === 'arcade' ? 'none' : 'pointer',
+                      cursor: 'none',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -627,7 +633,7 @@ export default function ArcadeMenu({ onStartGame }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: activeMode === 'arcade' ? 'none' : 'pointer',
+            cursor: 'none',
             backdropFilter: 'blur(10px)',
             transition: 'background-color 0.3s, border-color 0.3s, color 0.3s'
           }}

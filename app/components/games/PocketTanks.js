@@ -14,7 +14,9 @@ export default class PocketTanks {
        { id: 'neon', name: 'NEON CITY', stroke: '#00ffcc', gradStart: 'rgba(0, 255, 200, 0.15)', gradEnd: 'rgba(0, 50, 100, 0.4)', bg: 'rgba(5, 10, 15, 0.8)', frequency1: 0.004, amp1: 100, frequency2: 0.015, amp2: 40 },
        { id: 'desert', name: 'CYBER DESERT', stroke: '#ffaa00', gradStart: 'rgba(255, 170, 0, 0.15)', gradEnd: 'rgba(100, 30, 0, 0.4)', bg: 'rgba(20, 10, 5, 0.8)', frequency1: 0.002, amp1: 60, frequency2: 0.03, amp2: 20 },
        { id: 'ice', name: 'ICE MOON', stroke: '#00ffff', gradStart: 'rgba(0, 255, 255, 0.15)', gradEnd: 'rgba(0, 50, 150, 0.4)', bg: 'rgba(5, 15, 25, 0.8)', frequency1: 0.008, amp1: 120, frequency2: 0.01, amp2: 50 },
-       { id: 'toxic', name: 'TOXIC WASTELAND', stroke: '#33ff33', gradStart: 'rgba(50, 255, 50, 0.15)', gradEnd: 'rgba(0, 80, 0, 0.4)', bg: 'rgba(10, 15, 10, 0.8)', frequency1: 0.006, amp1: 80, frequency2: 0.02, amp2: 60 }
+       { id: 'toxic', name: 'TOXIC WASTELAND', stroke: '#33ff33', gradStart: 'rgba(50, 255, 50, 0.15)', gradEnd: 'rgba(0, 80, 0, 0.4)', bg: 'rgba(10, 15, 10, 0.8)', frequency1: 0.006, amp1: 80, frequency2: 0.02, amp2: 60 },
+       { id: 'volcano', name: 'NEON VOLCANO', stroke: '#ff3300', gradStart: 'rgba(255, 50, 0, 0.2)', gradEnd: 'rgba(100, 0, 0, 0.6)', bg: 'rgba(15, 5, 5, 0.9)', frequency1: 0.003, amp1: 150, frequency2: 0.02, amp2: 70 },
+       { id: 'core', name: 'CYBER CORE', stroke: '#ff00ff', gradStart: 'rgba(255, 0, 255, 0.15)', gradEnd: 'rgba(50, 0, 50, 0.5)', bg: 'rgba(10, 5, 15, 0.85)', frequency1: 0.01, amp1: 100, frequency2: 0.05, amp2: 30 }
     ];
     this.selectedMapIdx = 0;
     
@@ -31,12 +33,17 @@ export default class PocketTanks {
        'roller': { name: 'GROUND ROLLER', damage: 25, radius: 40, color: '#ff9900' },
        'bouncer': { name: 'BOUNCER', damage: 30, radius: 40, color: '#00aaff' },
        'volcanic': { name: 'VOLCANIC', damage: 10, radius: 20, color: '#ff5500' },
-       'sniper': { name: 'SNIPER', damage: 50, radius: 15, color: '#ffff00' },
+       'sniper': { name: 'SNIPER', damage: 50, radius: 15, color: '#ffff00', gravityScale: 0 },
        'blackhole': { name: 'BLACK HOLE', damage: 80, radius: 60, color: '#9900ff' },
        'boomerang': { name: 'BOOMERANG', damage: 35, radius: 30, color: '#33ccff' },
        'teleporter': { name: 'TELEPORTER', damage: 0, radius: 10, color: '#00ffff' },
        'meteor': { name: 'METEOR', damage: 60, radius: 65, color: '#ff3300' },
-       'drill': { name: 'EARTH DRILL', damage: 40, radius: 40, color: '#aaaaaa' }
+       'drill': { name: 'EARTH DRILL', damage: 40, radius: 40, color: '#aaaaaa' },
+       'homing': { name: 'HOMING', damage: 30, radius: 35, color: '#ff00aa' },
+       'napalm': { name: 'NAPALM', damage: 10, radius: 60, color: '#ff5500' },
+       'cruiser': { name: 'CRUISER', damage: 25, radius: 30, color: '#00ff55' },
+       'jackhammer': { name: 'JACKHAMMER', damage: 30, radius: 25, color: '#cccccc' },
+       'romancandle': { name: 'ROMAN CANDLE', damage: 15, radius: 20, color: '#ff00ff' }
     };
     
     this.player = {
@@ -111,7 +118,12 @@ export default class PocketTanks {
         { id: 'boomerang', count: Math.floor(Math.random() * 3) + 1 },
         { id: 'teleporter', count: Math.floor(Math.random() * 2) + 1 },
         { id: 'meteor', count: Math.floor(Math.random() * 2) + 1 },
-        { id: 'drill', count: Math.floor(Math.random() * 2) + 1 }
+        { id: 'drill', count: Math.floor(Math.random() * 2) + 1 },
+        { id: 'homing', count: Math.floor(Math.random() * 3) + 1 },
+        { id: 'napalm', count: Math.floor(Math.random() * 2) + 1 },
+        { id: 'cruiser', count: Math.floor(Math.random() * 2) + 1 },
+        { id: 'jackhammer', count: Math.floor(Math.random() * 2) + 1 },
+        { id: 'romancandle', count: Math.floor(Math.random() * 3) + 1 }
      ];
   }
 
@@ -198,14 +210,18 @@ export default class PocketTanks {
        const w = this.canvas.width;
        const h = this.canvas.height;
        
-       const cW = 180, cH = 220;
-       const gapX = 30;
-       const totalW = (cW * 4) + (gapX * 3);
+       const cW = 160, cH = 180;
+       const gapX = 20, gapY = 20;
+       const cols = 3;
+       const totalW = (cW * cols) + (gapX * (cols - 1));
        const startX = w/2 - totalW/2;
-       const cY = h/2 - 60;
+       const startY = h/2 - (cH * 2 + gapY) / 2 + 10;
        
        for (let i = 0; i < this.maps.length; i++) {
-          const cX = startX + i * (cW + gapX);
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          const cX = startX + col * (cW + gapX);
+          const cY = startY + row * (cH + gapY);
           if (cx > cX && cx < cX + cW && cy > cY && cy < cY + cH) {
              this.selectedMapIdx = i;
              this.startMatch();
@@ -556,8 +572,19 @@ export default class PocketTanks {
           let detonate = false;
 
           if (p.type === 'laser' || p.type === 'sniper') {
-             p.vy = 0; 
+             p.vy *= 1.05; 
              p.vx *= 1.05;
+          } else if (p.type === 'homing') {
+             const target = p.owner === 'player' ? this.ai : this.player;
+             const tx = target.x - p.x;
+             const ty = target.y - p.y;
+             const dist = Math.hypot(tx, ty);
+             if (dist > 0) {
+                 p.vx += (tx / dist) * 0.4;
+                 p.vy += (ty / dist) * 0.4;
+             }
+             p.vx *= 0.98;
+             p.vy *= 0.98;
           } else if (p.type === 'boomerang') {
              p.vx -= Math.sign(p.vx) * 0.25; // Accelerate backwards
              p.vy += this.gravity * 0.5; // lower gravity for cooler arc
@@ -664,6 +691,48 @@ export default class PocketTanks {
              if (p.life > 150) detonate = true; else { hit = false; detonate = false; }
           }
           
+          if (p.type === 'jackhammer' && hit) {
+             p.vy = 5; p.vx = 0;
+             p.life += 15;
+             this.destroyTerrain(p.x, p.y, 10);
+             if (p.life > 200) detonate = true; else { hit = false; detonate = false; }
+          }
+          
+          if (p.type === 'romancandle' && p.vy > 0 && p.life % 10 === 0) {
+             this.projectiles.push({
+                x: p.x, y: p.y,
+                vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
+                type: 'standard', damage: 5, radius: 15, color: '#ff00ff', trail: [], life: 0, bounces: 0, owner: p.owner
+             });
+          }
+          
+          if (p.type === 'cruiser' && hit) {
+             p.vy *= -0.7; p.y -= 2;
+             p.bounces++;
+             if (p.bounces === 1) {
+                // Split into 3
+                for (let j=0; j<3; j++) {
+                   this.projectiles.push({
+                      x: p.x, y: p.y,
+                      vx: p.vx + (Math.random()-0.5)*6, vy: p.vy - Math.random()*5,
+                      type: 'bouncer', damage: 15, radius: 20, color: '#00ff55', trail: [], life: 0, bounces: 1, owner: p.owner
+                   });
+                }
+             }
+             if (p.bounces > 3) detonate = true; else { hit = false; detonate = false; }
+          }
+          
+          if (p.type === 'napalm' && hit) {
+             detonate = true;
+             for (let j=0; j<20; j++) {
+                this.projectiles.push({
+                   x: p.x, y: p.y,
+                   vx: (Math.random()-0.5)*15, vy: -Math.random()*5 - 2,
+                   type: 'standard', damage: 2, radius: 10, color: '#ff5500', trail: [], life: 0, bounces: 0, owner: p.owner
+                });
+             }
+          }
+
           if (detonate) {
              if (p.type === 'teleporter') {
                 this.createExplosion(p.x, p.y, 20, '#00ffff', 0);
@@ -720,6 +789,25 @@ export default class PocketTanks {
     ctx.fillStyle = map.bg;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
+    ctx.beginPath();
+    ctx.moveTo(0, this.canvas.height);
+    for (let x = 0; x < this.canvas.width; x++) {
+       ctx.lineTo(x, this.terrain[x]);
+    }
+    ctx.lineTo(this.canvas.width, this.canvas.height);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, this.canvas.height/2, 0, this.canvas.height);
+    grad.addColorStop(0, map.gradStart);
+    grad.addColorStop(1, map.gradEnd);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.strokeStyle = map.stroke;
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = map.stroke;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    
     if (this.state === "menu" || this.state === "map_select") {
        const w = this.canvas.width;
        const h = this.canvas.height;
@@ -766,17 +854,21 @@ export default class PocketTanks {
        } else if (this.state === "map_select") {
            ctx.font = "bold 16px 'Panchang', sans-serif";
            ctx.fillStyle = "#ffaa00";
-           ctx.fillText("SELECT DEPLOYMENT ZONE", w/2, h/2 - 60);
+           ctx.fillText("SELECT DEPLOYMENT ZONE", w/2, h/2 - 200);
            
-           const cW = 180, cH = 220;
-           const gapX = 30;
-           const totalW = (cW * this.maps.length) + (gapX * (this.maps.length - 1));
+           const cW = 160, cH = 180;
+           const gapX = 20, gapY = 20;
+           const cols = 3;
+           const totalW = (cW * cols) + (gapX * (cols - 1));
            const startX = w/2 - totalW/2;
-           const cY = h/2 - 20;
+           const startY = h/2 - (cH * 2 + gapY) / 2 + 10;
            
            for (let i = 0; i < this.maps.length; i++) {
               const map = this.maps[i];
-              const cX = startX + i * (cW + gapX);
+              const col = i % cols;
+              const row = Math.floor(i / cols);
+              const cX = startX + col * (cW + gapX);
+              const cY = startY + row * (cH + gapY);
               const hover = this.mouseX > cX && this.mouseX < cX + cW && this.mouseY > cY && this.mouseY < cY + cH;
               
               if (hover && this.selectedMapIdx !== i) {
@@ -786,7 +878,7 @@ export default class PocketTanks {
               
               ctx.strokeStyle = map.stroke;
               ctx.lineWidth = hover ? 4 : 2;
-              ctx.fillStyle = hover ? `rgba(255,255,255,0.1)` : `rgba(0,0,0,0.7)`;
+              ctx.fillStyle = hover ? `rgba(255,255,255,0.2)` : `rgba(0,0,0,0.85)`;
               if (hover) { ctx.shadowBlur = 25; ctx.shadowColor = map.stroke; }
               ctx.beginPath(); ctx.roundRect(cX, cY, cW, cH, 16);
               ctx.fill(); ctx.stroke();
@@ -794,16 +886,16 @@ export default class PocketTanks {
               
               // Preview Box
               ctx.fillStyle = map.bg;
-              ctx.beginPath(); ctx.roundRect(cX + 10, cY + 10, cW - 20, cH - 80, 8); ctx.fill();
-              const grad = ctx.createLinearGradient(0, cY+10, 0, cY+cH-70);
-              grad.addColorStop(0, map.gradStart); grad.addColorStop(1, map.gradEnd);
-              ctx.fillStyle = grad;
-              ctx.beginPath(); ctx.roundRect(cX + 10, cY + 10, cW - 20, cH - 80, 8); ctx.fill();
+              ctx.beginPath(); ctx.roundRect(cX + 10, cY + 10, cW - 20, cH - 60, 8); ctx.fill();
+              const mapGrad = ctx.createLinearGradient(0, cY+10, 0, cY+cH-50);
+              mapGrad.addColorStop(0, map.gradStart); mapGrad.addColorStop(1, map.gradEnd);
+              ctx.fillStyle = mapGrad;
+              ctx.beginPath(); ctx.roundRect(cX + 10, cY + 10, cW - 20, cH - 60, 8); ctx.fill();
               
               ctx.fillStyle = "#fff";
-              ctx.font = "bold 14px 'Panchang', sans-serif";
+              ctx.font = "bold 12px 'Panchang', sans-serif";
               ctx.textBaseline = "middle";
-              ctx.fillText(map.name, cX + cW/2, cY + cH - 30);
+              ctx.fillText(map.name, cX + cW/2, cY + cH - 25);
               ctx.textBaseline = "alphabetic";
            }
        }
@@ -818,25 +910,6 @@ export default class PocketTanks {
     const windVal = this.wind * 100;
     const windText = windVal < 0 ? `<< ${Math.abs(windVal).toFixed(1)}` : `${windVal.toFixed(1)} >>`;
     ctx.fillText(`WIND: ${windText}`, this.canvas.width/2, 30);
-    
-    ctx.beginPath();
-    ctx.moveTo(0, this.canvas.height);
-    for (let x = 0; x < this.canvas.width; x++) {
-       ctx.lineTo(x, this.terrain[x]);
-    }
-    ctx.lineTo(this.canvas.width, this.canvas.height);
-    ctx.closePath();
-    const grad = ctx.createLinearGradient(0, this.canvas.height/2, 0, this.canvas.height);
-    grad.addColorStop(0, map.gradStart);
-    grad.addColorStop(1, map.gradEnd);
-    ctx.fillStyle = grad;
-    ctx.fill();
-    ctx.strokeStyle = map.stroke;
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = "#00ffcc";
-    ctx.stroke();
-    ctx.shadowBlur = 0;
 
     const drawTank = (tank, label) => {
        if (tank.hp <= 0 && this.state === "game_over") return;
