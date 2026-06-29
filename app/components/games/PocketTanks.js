@@ -794,93 +794,93 @@ export default class PocketTanks {
     const time = Date.now();
     ctx.save();
     if (map.id === 'neon') {
-       // City grid
-       ctx.strokeStyle = 'rgba(0, 255, 204, 0.05)';
+       // Sleek vertical city lines
        ctx.lineWidth = 1;
+       const grad = ctx.createLinearGradient(0, this.canvas.height, 0, 0);
+       grad.addColorStop(0, 'rgba(0, 255, 204, 0.1)');
+       grad.addColorStop(1, 'rgba(0, 255, 204, 0)');
+       ctx.strokeStyle = grad;
        ctx.beginPath();
-       for(let i=0; i<this.canvas.width; i+=40) { ctx.moveTo(i, 0); ctx.lineTo(i, this.canvas.height); }
-       for(let i=0; i<this.canvas.height; i+=40) { ctx.moveTo(0, i); ctx.lineTo(this.canvas.width, i); }
-       ctx.stroke();
-       // Distant buildings
-       ctx.fillStyle = 'rgba(0, 100, 100, 0.2)';
-       for(let i=0; i<this.canvas.width; i+=60) {
-          const h = 100 + Math.sin(i)*50;
-          ctx.fillRect(i, this.canvas.height - h - 100, 40, h + 100);
+       for(let i=10; i<this.canvas.width; i+=80) {
+          ctx.moveTo(i, this.canvas.height);
+          ctx.lineTo(i, 100 + Math.sin(i)*50);
        }
+       ctx.stroke();
     } else if (map.id === 'desert') {
-       // Distant suns
-       ctx.fillStyle = 'rgba(255, 100, 0, 0.4)';
-       ctx.shadowBlur = 40; ctx.shadowColor = '#ff6600';
-       ctx.beginPath(); ctx.arc(200, 150, 60, 0, Math.PI*2); ctx.fill();
-       ctx.fillStyle = 'rgba(255, 200, 0, 0.6)';
-       ctx.beginPath(); ctx.arc(280, 120, 30, 0, Math.PI*2); ctx.fill();
-       ctx.shadowBlur = 0;
-       // Distant dunes
-       ctx.fillStyle = 'rgba(100, 30, 0, 0.2)';
+       // Minimalist smooth dune strokes
+       ctx.strokeStyle = 'rgba(255, 100, 0, 0.08)';
+       ctx.lineWidth = 2;
+       ctx.beginPath();
+       for (let p=1; p<=3; p++) {
+          ctx.moveTo(0, this.canvas.height * (0.4 + p*0.1));
+          for (let x=0; x<=this.canvas.width; x+=50) {
+             ctx.lineTo(x, this.canvas.height * (0.4 + p*0.1) + Math.sin(x*0.003 + p)*60);
+          }
+       }
+       ctx.stroke();
+       // Subtle sun
+       ctx.fillStyle = 'rgba(255, 150, 0, 0.05)';
+       ctx.beginPath(); ctx.arc(200, 200, 100, 0, Math.PI*2); ctx.fill();
+    } else if (map.id === 'ice') {
+       // Tiny faint stars
+       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+       for (let i=0; i<30; i++) {
+          const sx = (Math.sin(i*123) * this.canvas.width + time * 0.02 * (i%3+1)) % this.canvas.width;
+          const sy = (Math.cos(i*321) * this.canvas.height) % (this.canvas.height * 0.7);
+          ctx.beginPath(); ctx.arc(sx, sy, 0.8, 0, Math.PI*2); ctx.fill();
+       }
+       // Sharp, low-poly mountain strokes
+       ctx.strokeStyle = 'rgba(0, 200, 255, 0.08)';
+       ctx.lineWidth = 1.5;
+       ctx.beginPath();
+       for(let i=0; i<this.canvas.width; i+=150) {
+          ctx.moveTo(i, this.canvas.height);
+          ctx.lineTo(i + 75, this.canvas.height * 0.4 + Math.sin(i)*100);
+          ctx.lineTo(i + 150, this.canvas.height);
+       }
+       ctx.stroke();
+    } else if (map.id === 'toxic') {
+       // Soft ambient bottom glow
+       const grad = ctx.createLinearGradient(0, this.canvas.height, 0, this.canvas.height - 200);
+       grad.addColorStop(0, 'rgba(50, 255, 50, 0.1)');
+       grad.addColorStop(1, 'rgba(50, 255, 50, 0)');
+       ctx.fillStyle = grad;
+       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+       // Faint expanding rings
+       ctx.strokeStyle = 'rgba(50, 255, 50, 0.1)';
+       ctx.lineWidth = 1;
+       for (let i=0; i<8; i++) {
+          const bx = (Math.sin(i*77) * this.canvas.width + this.canvas.width) % this.canvas.width;
+          const progress = (time * 0.0005 + i*0.2) % 1;
+          ctx.globalAlpha = 1 - progress;
+          ctx.beginPath(); ctx.arc(bx, this.canvas.height - progress*300, progress*30, 0, Math.PI*2); ctx.stroke();
+       }
+       ctx.globalAlpha = 1;
+    } else if (map.id === 'volcano') {
+       // Minimal sharp volcano outlines
+       ctx.strokeStyle = 'rgba(255, 50, 0, 0.1)';
+       ctx.lineWidth = 2;
        ctx.beginPath();
        ctx.moveTo(0, this.canvas.height);
-       for (let x = 0; x < this.canvas.width; x+=20) {
-          ctx.lineTo(x, this.canvas.height*0.5 + Math.sin(x*0.005)*80);
+       for(let x=0; x<=this.canvas.width; x+=100) {
+          ctx.lineTo(x, this.canvas.height * 0.5 + Math.sin(x*0.02)*120 + Math.cos(x*0.05)*40);
        }
-       ctx.lineTo(this.canvas.width, this.canvas.height);
-       ctx.fill();
-    } else if (map.id === 'ice') {
-       // Snow/Stars
-       ctx.fillStyle = '#fff';
-       for (let i=0; i<50; i++) {
-          const sx = (Math.sin(i*123) * this.canvas.width + time * 0.05 * (i%3+1)) % this.canvas.width;
-          const sy = (Math.cos(i*321) * this.canvas.height + time * 0.05 * (i%3+1)) % this.canvas.height;
-          ctx.fillRect(sx, sy, 2, 2);
+       ctx.stroke();
+       // Micro embers
+       ctx.fillStyle = 'rgba(255, 100, 0, 0.4)';
+       for (let i=0; i<25; i++) {
+          const ex = (Math.sin(i*99) * this.canvas.width + Math.sin(time*0.0005 + i)*50 + this.canvas.width) % this.canvas.width;
+          const ey = this.canvas.height - ((time * 0.05 * (i%2+1) + i*70) % this.canvas.height);
+          ctx.beginPath(); ctx.arc(ex, ey, 0.8, 0, Math.PI*2); ctx.fill();
        }
-       // Frozen peaks
-       ctx.fillStyle = 'rgba(0, 150, 255, 0.15)';
-       ctx.beginPath(); ctx.moveTo(0, this.canvas.height);
-       for (let x = 0; x < this.canvas.width; x+=40) {
-          ctx.lineTo(x, this.canvas.height*0.6 + Math.sin(x*0.01)*120 + Math.cos(x*0.05)*40);
-       }
-       ctx.lineTo(this.canvas.width, this.canvas.height);
-       ctx.fill();
-    } else if (map.id === 'toxic') {
-       // Toxic fog
-       ctx.fillStyle = 'rgba(50, 255, 50, 0.05)';
-       for(let i=0; i<5; i++) {
-          ctx.fillRect(0, this.canvas.height - i*50 - Math.sin(time*0.001 + i)*20, this.canvas.width, 50);
-       }
-       // Floating bubbles
-       ctx.fillStyle = 'rgba(50, 255, 50, 0.3)';
-       for (let i=0; i<15; i++) {
-          const bx = (Math.sin(i*77) * this.canvas.width + Math.sin(time*0.002 + i)*30 + this.canvas.width) % this.canvas.width;
-          const by = this.canvas.height - ((time * 0.05 * (i%2+1) + i*100) % (this.canvas.height/2));
-          ctx.beginPath(); ctx.arc(bx, by, 5 + (i%5), 0, Math.PI*2); ctx.fill();
-       }
-    } else if (map.id === 'volcano') {
-       // Floating Embers
-       ctx.fillStyle = '#ffaa00';
-       ctx.shadowBlur = 10; ctx.shadowColor = '#ff3300';
-       for (let i=0; i<40; i++) {
-          const ex = (Math.sin(i*99) * this.canvas.width + Math.sin(time*0.001 + i)*50 + this.canvas.width) % this.canvas.width;
-          const ey = this.canvas.height - ((time * 0.1 * (i%3+1) + i*50) % this.canvas.height);
-          ctx.fillRect(ex, ey, 3, 3);
-       }
-       ctx.shadowBlur = 0;
-       // Distant volcano peaks
-       ctx.fillStyle = 'rgba(150, 0, 0, 0.2)';
-       ctx.beginPath(); ctx.moveTo(0, this.canvas.height);
-       for (let x = 0; x < this.canvas.width; x+=60) {
-          ctx.lineTo(x, this.canvas.height*0.5 + Math.sin(x*0.02)*100 + Math.cos(x*0.07)*30);
-       }
-       ctx.lineTo(this.canvas.width, this.canvas.height);
-       ctx.fill();
     } else if (map.id === 'core') {
-       // Binary matrix rain
-       ctx.fillStyle = 'rgba(255, 0, 255, 0.15)';
-       ctx.font = '16px monospace';
-       for (let i=0; i<30; i++) {
-          const mx = (i * 60) % this.canvas.width;
-          const my = ((time * 0.1 + i*123) % this.canvas.height);
-          ctx.fillText(Math.random()>0.5?'1':'0', mx, my);
-          ctx.fillText(Math.random()>0.5?'0':'1', mx, my - 20);
-          ctx.fillText(Math.random()>0.5?'1':'1', mx, my - 40);
+       // Sleek dot-matrix grid
+       ctx.fillStyle = 'rgba(255, 0, 255, 0.08)';
+       const offset = (time * 0.01) % 40;
+       for (let x=0; x<this.canvas.width; x+=40) {
+          for (let y=0; y<this.canvas.height; y+=40) {
+             ctx.beginPath(); ctx.arc(x, y + offset, 1.5, 0, Math.PI*2); ctx.fill();
+          }
        }
     }
     ctx.restore();
