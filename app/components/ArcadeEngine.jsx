@@ -1317,6 +1317,8 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const isPausedRef = useRef(false);
+  const [bgmVolume, setBgmVolume] = useState(1.0);
+  const [sfxVolume, setSfxVolume] = useState(1.0);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
@@ -1332,6 +1334,19 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   const lastMilestoneRef = useRef(0);
   const isMountedRef = useRef(false); // Skip first-render effect execution
   const audioRef = useRef(null);
+
+  const handleBrag = () => {
+    let bragScore = score;
+    if (activeGame === "breaker") bragScore = breakerScore;
+    if (activeGame === "scope") bragScore = scopeScore;
+    
+    let text = `I just scored ${bragScore} in ${activeGame.toUpperCase()} on Dripp Media! Can you beat me?`;
+    if (activeGame === "neondevil") text = `I'm suffering in NEON DEVIL on Dripp Media! This game is impossible...`;
+    if (activeGame === "tanks") text = `I just annihilated my opponent in POCKET TANKS on Dripp Media!`;
+    
+    navigator.clipboard.writeText(text);
+    alert("Score copied to clipboard! Paste it anywhere to brag.");
+  };
 
   useEffect(() => {
      audioRef.current = new RetroAudio();
@@ -1665,10 +1680,33 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
               {isMuted ? "UNMUTE AUDIO" : "MUTE AUDIO"}
             </button>
             {!isCreativeGame && (
-              <button style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
+              <button onClick={handleBrag} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
                 BRAG YOUR SCORE
               </button>
             )}
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", maxWidth: "300px", marginTop: "15px" }}>
+              <label style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", fontSize: "0.85rem", display: "flex", justifyContent: "space-between" }}>
+                MUSIC VOL
+                <span style={{color: "var(--brand-yellow)"}}>{Math.round(bgmVolume * 100)}%</span>
+              </label>
+              <input type="range" min="0" max="1" step="0.05" value={bgmVolume} onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                setBgmVolume(v);
+                if (audioRef.current) audioRef.current.setBGMVolume(v);
+              }} style={{ accentColor: "#ebd73f", cursor: "pointer" }} />
+
+              <label style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", fontSize: "0.85rem", display: "flex", justifyContent: "space-between", marginTop: "5px" }}>
+                SFX VOL
+                <span style={{color: "var(--brand-yellow)"}}>{Math.round(sfxVolume * 100)}%</span>
+              </label>
+              <input type="range" min="0" max="1" step="0.05" value={sfxVolume} onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                setSfxVolume(v);
+                if (audioRef.current) audioRef.current.setSFXVolume(v);
+              }} style={{ accentColor: "#ebd73f", cursor: "pointer" }} />
+            </div>
+            
           </div>
         </div>
       )}
@@ -1697,6 +1735,11 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
             }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid #ebd73f", color: "#ebd73f", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,215,63,0.1)"; e.currentTarget.style.boxShadow = "0 0 20px rgba(235,215,63,0.3)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}>
               PLAY AGAIN
             </button>
+            {!isCreativeGame && (
+              <button onClick={handleBrag} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
+                BRAG YOUR SCORE
+              </button>
+            )}
             <button onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
               MENU
             </button>

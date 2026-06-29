@@ -1,20 +1,36 @@
 export default class RetroAudio {
   constructor() {
     this.ctx = null;
-    this.bgmTimer = null;
-    this.isPlayingBGM = false;
     this.masterGain = null;
+    this.bgmGain = null;
+    this.sfxGain = null;
     this.isMuted = false;
+    this.bgmVolume = 1.0;
+    this.sfxVolume = 1.0;
+    this.isPlayingBGM = false;
+    this.bgmTimer = null;
     this.bgmNodes = [];
+    this.activeOscillators = [];
+    this.bgmLoopId = 0;
   }
 
   init() {
     if (!this.ctx) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
-      this.ctx = new AudioContext();
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    
       this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = 0.5;
       this.masterGain.connect(this.ctx.destination);
+      
+      this.bgmGain = this.ctx.createGain();
+      this.bgmGain.gain.value = this.bgmVolume;
+      this.bgmGain.connect(this.masterGain);
+      
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.value = this.sfxVolume;
+      this.sfxGain.connect(this.masterGain);
       this.masterGain.gain.value = 0.3; // Default volume
     }
     // Resume context if suspended (browser autoplay policies)
@@ -35,8 +51,9 @@ export default class RetroAudio {
     try {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
+    
         osc.connect(gain);
-        gain.connect(this.masterGain);
+        gain.connect(this.sfxGain);
 
         const now = this.ctx.currentTime;
         
@@ -98,6 +115,8 @@ export default class RetroAudio {
      if (!this.ctx || this.isMuted) return;
      this.stopBGM();
      this.isPlayingBGM = true;
+     this.bgmLoopId = Math.random();
+     const currentLoopId = this.bgmLoopId;
      
      const seqArcade = [
        {f: 440, d: 0.15}, {f: null, d: 0.15}, {f: 523.25, d: 0.15}, {f: 587.33, d: 0.15},
@@ -149,11 +168,11 @@ export default class RetroAudio {
      const feedback = this.ctx.createGain();
      feedback.gain.value = 0.35; 
      
-     filter.connect(this.masterGain);
+     filter.connect(this.bgmGain);
      filter.connect(delay);
      delay.connect(feedback);
      feedback.connect(delay);
-     delay.connect(this.masterGain);
+     delay.connect(this.bgmGain);
      
      if (!this.bgmNodes) this.bgmNodes = [];
      this.bgmNodes.push(filter, delay, feedback);
@@ -164,7 +183,7 @@ export default class RetroAudio {
      const lookahead = 0.1; // 100ms
      
      const scheduleNotes = () => {
-        if (!this.isPlayingBGM) return;
+        if (!this.isPlayingBGM || this.bgmLoopId !== currentLoopId) return;
         
         while (nextNoteTime < this.ctx.currentTime + lookahead) {
             const note = seq[step % seq.length];
@@ -229,6 +248,7 @@ export default class RetroAudio {
 
   stopBGM() {
     this.isPlayingBGM = false;
+    this.bgmLoopId = 0;
     if (this.bgmTimer) clearTimeout(this.bgmTimer);
     
     if (this.activeOscillators && this.activeOscillators.length > 0) {
@@ -239,6 +259,20 @@ export default class RetroAudio {
     if (this.bgmNodes && this.bgmNodes.length > 0) {
        this.bgmNodes.forEach(n => { try { n.disconnect(); } catch(e){} });
        this.bgmNodes = [];
+    }
+  }
+
+  setBGMVolume(vol) {
+    this.bgmVolume = vol;
+    if (this.bgmGain) {
+      this.bgmGain.gain.setValueAtTime(vol, this.ctx ? this.ctx.currentTime : 0);
+    }
+  }
+
+  setSFXVolume(vol) {
+    this.sfxVolume = vol;
+    if (this.sfxGain) {
+      this.sfxGain.gain.setValueAtTime(vol, this.ctx ? this.ctx.currentTime : 0);
     }
   }
 }
