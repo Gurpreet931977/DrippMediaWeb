@@ -18,7 +18,7 @@ export default class PocketTanks {
        { id: 'volcano', name: 'NEON VOLCANO', stroke: '#ff3300', gradStart: 'rgba(255, 50, 0, 0.2)', gradEnd: 'rgba(100, 0, 0, 0.6)', bg: 'rgba(15, 5, 5, 0.9)', frequency1: 0.003, amp1: 150, frequency2: 0.02, amp2: 70 },
        { id: 'core', name: 'CYBER CORE', stroke: '#ff00ff', gradStart: 'rgba(255, 0, 255, 0.15)', gradEnd: 'rgba(50, 0, 50, 0.5)', bg: 'rgba(10, 5, 15, 0.85)', frequency1: 0.01, amp1: 100, frequency2: 0.05, amp2: 30 }
     ];
-    this.selectedMapIdx = 0;
+    this.selectedMapIdx = 2; // Default to Ice Moon
     
     this.terrain = [];
     this.generateTerrain();
