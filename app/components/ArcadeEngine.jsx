@@ -1356,8 +1356,14 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
       initAudio();
       if (['looper', 'beats', 'liquid', 'mandala', 'nodeweaver'].includes(activeGame)) {
          audioRef.current.playBGM('zen');
-      } else if (['bullethell', 'neondevil'].includes(activeGame)) {
+      } else if (['bullethell'].includes(activeGame)) {
          audioRef.current.playBGM('boss');
+      } else if (activeGame === 'neondevil') {
+         audioRef.current.playBGM('devil');
+      } else if (activeGame === 'bombercrazy') {
+         audioRef.current.playBGM('bomber');
+      } else if (activeGame === 'pockettanks') {
+         audioRef.current.playBGM('tanks');
       } else {
          audioRef.current.playBGM('arcade');
       }
