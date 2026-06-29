@@ -5,6 +5,7 @@ export default class RetroAudio {
     this.isPlayingBGM = false;
     this.masterGain = null;
     this.isMuted = false;
+    this.bgmNodes = [];
   }
 
   init() {
@@ -138,6 +139,25 @@ export default class RetroAudio {
      if (type === 'zen') { seq = seqZen; wType = 'sine'; vol = 0.1; }
      if (type === 'boss') { seq = seqDevil; wType = 'sawtooth'; vol = 0.15; }
      
+     // Cinematic Effect Chain
+     const filter = this.ctx.createBiquadFilter();
+     filter.type = 'lowpass';
+     filter.Q.value = 2; // slight resonance
+     
+     const delay = this.ctx.createDelay();
+     delay.delayTime.value = 0.375; // Dotted 8th note feel
+     const feedback = this.ctx.createGain();
+     feedback.gain.value = 0.3; 
+     
+     filter.connect(this.masterGain);
+     filter.connect(delay);
+     delay.connect(feedback);
+     feedback.connect(delay);
+     delay.connect(this.masterGain);
+     
+     if(!this.bgmNodes) this.bgmNodes = [];
+     this.bgmNodes.push(filter, delay, feedback);
+     
      let step = 0;
      
      const playNote = () => {
@@ -145,26 +165,44 @@ export default class RetroAudio {
         try {
             const note = seq[step % seq.length];
             if (note.f !== null) {
-               const osc = this.ctx.createOscillator();
-               const gain = this.ctx.createGain();
-               osc.connect(gain);
-               gain.connect(this.masterGain);
-               
                const now = this.ctx.currentTime;
-               osc.type = wType;
-               osc.frequency.value = note.f;
+               
+               // Cinematic filter sweep every note
+               filter.frequency.setValueAtTime(400, now);
+               filter.frequency.exponentialRampToValueAtTime(3000, now + note.d * 0.5);
+               filter.frequency.exponentialRampToValueAtTime(400, now + note.d);
+               
+               // Create 3 oscillators for thick, cinematic sound (Main, Detuned, Sub)
+               const osc1 = this.ctx.createOscillator();
+               const osc2 = this.ctx.createOscillator();
+               const oscSub = this.ctx.createOscillator();
+               const gain = this.ctx.createGain();
+               
+               osc1.connect(gain);
+               osc2.connect(gain);
+               oscSub.connect(gain);
+               gain.connect(filter);
+               
+               osc1.type = wType;
+               osc2.type = wType;
+               oscSub.type = (wType === 'sine') ? 'sine' : 'square'; // punchy sub
+               
+               osc1.frequency.value = note.f;
+               osc2.frequency.value = note.f;
+               osc2.detune.value = 15; // thick chorus
+               oscSub.frequency.value = note.f / 2; // sub bass
                
                if (wType === 'sine') {
                   gain.gain.setValueAtTime(0, now);
-                  gain.gain.linearRampToValueAtTime(vol, now + note.d * 0.3);
+                  gain.gain.linearRampToValueAtTime(vol * 0.8, now + note.d * 0.3);
                   gain.gain.linearRampToValueAtTime(0, now + note.d);
                } else {
-                  gain.gain.setValueAtTime(vol, now);
+                  gain.gain.setValueAtTime(vol * 0.8, now);
                   gain.gain.exponentialRampToValueAtTime(0.01, now + note.d * 0.8);
                }
                
-               osc.start(now);
-               osc.stop(now + note.d);
+               osc1.start(now); osc2.start(now); oscSub.start(now);
+               osc1.stop(now + note.d); osc2.stop(now + note.d); oscSub.stop(now + note.d);
             }
             step++;
             this.bgmTimer = setTimeout(playNote, note.d * 1000);
@@ -177,5 +215,9 @@ export default class RetroAudio {
   stopBGM() {
     this.isPlayingBGM = false;
     if (this.bgmTimer) clearTimeout(this.bgmTimer);
+    if (this.bgmNodes && this.bgmNodes.length > 0) {
+       this.bgmNodes.forEach(n => { try { n.disconnect(); } catch(e){} });
+       this.bgmNodes = [];
+    }
   }
 }
