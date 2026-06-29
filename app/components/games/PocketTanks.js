@@ -1256,7 +1256,7 @@ export default class PocketTanks {
        // Cover Flow Weapon Selector (Center)
        ctx.save();
        ctx.beginPath();
-       ctx.rect(w/2 - 180, this.uiY + 5, 360, 80);
+       ctx.rect(w/2 - 180, this.uiY + 2, 360, 95);
        ctx.clip();
 
        for (let i=0; i<this.player.inventory.length; i++) {
@@ -1272,11 +1272,11 @@ export default class PocketTanks {
           if (dist > 250) continue; // optimize render
           
           ctx.save();
-          ctx.translate(ix, this.uiY + 45);
+          ctx.translate(ix, this.uiY + 48);
           ctx.scale(scale, scale);
           
           ctx.fillStyle = `rgba(0,0,0,${0.8 * alpha})`;
-          ctx.beginPath(); ctx.roundRect(-55, -25, 110, 50, 12); ctx.fill();
+          ctx.beginPath(); ctx.roundRect(-60, -35, 120, 70, 12); ctx.fill();
           
           if (i === this.player.selectedWeaponIdx) {
              ctx.strokeStyle = typeData.color;
@@ -1291,11 +1291,19 @@ export default class PocketTanks {
           ctx.globalAlpha = alpha;
           ctx.font = "bold 11px 'Panchang', sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText(typeData.name, 0, -2, 100);
+          ctx.fillText(typeData.name, 0, -15, 110);
+          
+          ctx.fillStyle = "#fff";
+          ctx.font = "9px 'Panchang', sans-serif";
+          ctx.globalAlpha = alpha * 0.9;
+          const gravityScale = typeData.gravityScale !== undefined ? typeData.gravityScale : 1;
+          const weight = gravityScale === 0 ? "LIGHT" : gravityScale > 1 ? "HEAVY" : "MED";
+          ctx.fillText(`DMG:${typeData.damage} RAD:${typeData.radius} WT:${weight}`, 0, 3, 110);
           
           ctx.fillStyle = "#aaa";
+          ctx.globalAlpha = alpha;
           ctx.font = "10px sans-serif";
-          ctx.fillText(`x${item.count > 50 ? '∞' : item.count}`, 0, 15);
+          ctx.fillText(`x${item.count > 50 ? '∞' : item.count}`, 0, 22);
           
           ctx.restore();
        }
