@@ -1204,13 +1204,42 @@ export default class NeonDevil {
 
     ctx.restore();
 
-    // UI Overlay
-    ctx.fillStyle = '#ff3366';
-    ctx.font = 'bold 16px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(`DEATHS: ${this.deaths}`, 20, 40);
+    // UI Overlay - Top Right HUD Badges
+    ctx.save();
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 15px sans-serif';
+    
+    // Level Badge
+    const lvlText = `LEVEL ${this.currentLevelIdx + 1} / 50`;
+    const lvlW = ctx.measureText(lvlText).width + 30;
+    const startX = this.canvas.width - 20;
+    
+    ctx.fillStyle = 'rgba(10, 15, 20, 0.7)';
+    ctx.strokeStyle = 'rgba(0, 255, 204, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(startX - lvlW, 20, lvlW, 36, 18); ctx.fill(); ctx.stroke();
+    
     ctx.fillStyle = '#00ffcc';
-    ctx.fillText(`LEVEL: ${this.currentLevelIdx + 1}/50`, 20, 65);
+    ctx.shadowBlur = 10; ctx.shadowColor = '#00ffcc';
+    ctx.fillText(lvlText, startX - 15, 38);
+    ctx.shadowBlur = 0;
+
+    // Deaths Badge
+    const deathText = `DEATHS: ${this.deaths}`;
+    const deathW = ctx.measureText(deathText).width + 30;
+    
+    ctx.fillStyle = 'rgba(10, 15, 20, 0.7)';
+    ctx.strokeStyle = 'rgba(255, 51, 102, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(startX - deathW, 66, deathW, 36, 18); ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#ff3366';
+    ctx.shadowBlur = 10; ctx.shadowColor = '#ff3366';
+    ctx.fillText(deathText, startX - 15, 84);
+    ctx.shadowBlur = 0;
+    
+    ctx.restore();
     
     if (this.levelDeaths >= 10) {
        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
