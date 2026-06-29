@@ -1211,7 +1211,7 @@ export default class NeonDevil {
     ctx.font = 'bold 15px sans-serif';
     
     // Level Badge
-    const lvlText = `LEVEL ${this.currentLevelIdx + 1} / 50`;
+    const lvlText = `LEVEL ${this.currentLevelIdx + 1} / ???`;
     const lvlW = ctx.measureText(lvlText).width + 30;
     const startX = this.canvas.width - 20;
     

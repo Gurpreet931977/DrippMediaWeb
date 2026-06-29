@@ -1267,8 +1267,7 @@ const getHelpText = (game) => {
     case 'neondevil':
       return <HelpBrief 
         controls="Use W,A,S,D or Arrow Keys to move and jump. On mobile, use the on-screen glowing touch zones." 
-        howToPlay="A brutal 50-level troll platformer. Reach the green glowing portal to win. Nothing is as it seems. Floors will drop, ceilings will crush you, and spikes will move." 
-        scoreSystem="No score. Your only goal is survival and maintaining your sanity." 
+        howToPlay="A brutal 'endless' troll platformer. Reach the green glowing portal to win. Nothing is as it seems. Floors will drop, ceilings will crush you, and spikes will move. Good luck finding the 'final' level." 
         powerups="None. Trust nothing. Memorize the traps to survive."
       />;
     case 'mandala':
