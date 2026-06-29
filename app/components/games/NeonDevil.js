@@ -44,47 +44,71 @@ export default class NeonDevil {
     const empty = "........................";
     
     this.LEVELS = [
-      // 1 (Original)
+      // 1: The crushing ceiling & fake jump
       {
         grid: [
-          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          empty, empty, empty, empty, empty, empty, empty, "..........######........", "..........######........", "..........######........",
           "S......................G",
           "#######.#######..#######",
           empty, empty
         ],
-        triggers: [ { zone: {x: 10, w: 2}, actions: [{type: 'hide', x: 15, y: 11}, {type: 'hide', x: 16, y: 11}] } ]
+        triggers: [ 
+          { zone: {x: 4, w: 4}, actions: [
+            {type: 'move', x: 10, y: 7, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 11, y: 7, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 12, y: 7, dx: 0, dy: 3, speed: 0.2},
+            {type: 'move', x: 13, y: 7, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 14, y: 7, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 15, y: 7, dx: 0, dy: 3, speed: 0.2},
+            {type: 'move', x: 10, y: 8, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 11, y: 8, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 12, y: 8, dx: 0, dy: 3, speed: 0.2},
+            {type: 'move', x: 13, y: 8, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 14, y: 8, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 15, y: 8, dx: 0, dy: 3, speed: 0.2},
+            {type: 'move', x: 10, y: 9, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 11, y: 9, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 12, y: 9, dx: 0, dy: 3, speed: 0.2},
+            {type: 'move', x: 13, y: 9, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 14, y: 9, dx: 0, dy: 3, speed: 0.2}, {type: 'move', x: 15, y: 9, dx: 0, dy: 3, speed: 0.2}
+          ] },
+          { zone: {x: 14, w: 2}, actions: [{type: 'hide', x: 17, y: 11}, {type: 'hide', x: 18, y: 11}] }
+        ]
       },
-      // 2
+      // 2: Gravity flip + Spike drop
       {
         grid: [
-          empty, empty, empty, empty, empty, "..........v.............", empty, empty, empty, empty,
-          "S......................G", floor, empty, empty
+          empty, empty, "...............G........", "###############.########", empty, "...............v........", empty, empty, empty, empty,
+          "S.......................", floor, empty, empty
         ],
-        triggers: [ { zone: {x: 8, w: 4}, actions: [{type: 'move', x: 10, y: 5, dx: 0, dy: 5, speed: 0.5}] } ]
+        triggers: [ 
+          { zone: {x: 6, w: 2}, actions: [{type: 'flipGravity'}], once: true },
+          { zone: {x: 12, w: 3}, actions: [{type: 'move', x: 15, y: 5, dx: 0, dy: -3, speed: 0.4}] }
+        ]
       },
-      // 3
+      // 3: The running goal + crumbling floor
       {
         grid: [
           empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
           "S.....................G.", floor, empty, empty
         ],
-        triggers: [ { zone: {x: 18, w: 3}, actions: [{type: 'move', x: 22, y: 10, dx: -18, dy: -6, speed: 0.2}] } ]
+        triggers: [ 
+          { zone: {x: 5, w: 2}, actions: [{type: 'move', x: 22, y: 10, dx: -18, dy: -6, speed: 0.2}] },
+          { zone: {x: 3, w: 10}, actions: [{type: 'hideAllFloor', from: 1, to: 8}] },
+          { zone: {x: 10, w: 6}, actions: [{type: 'hideAllFloor', from: 9, to: 16}] }
+        ]
       },
-      // 4
+      // 4: The fake wall death trap
       {
         grid: [
           empty, empty, empty, empty, empty, empty, empty, empty,
           "............#...........", "............#...........", "S...........#..........G", floor, empty, empty
         ],
-        triggers: [ { zone: {x: 8, w: 2}, actions: [{type: 'hide', x: 12, y: 8}, {type: 'hide', x: 12, y: 9}, {type: 'hide', x: 12, y: 10}] } ]
+        triggers: [ 
+          { zone: {x: 6, w: 2}, actions: [{type: 'hide', x: 12, y: 8}, {type: 'hide', x: 12, y: 9}, {type: 'hide', x: 12, y: 10}] },
+          { zone: {x: 10, w: 3}, actions: [{type: 'hide', x: 12, y: 11}, {type: 'showSpike', x: 12, y: 11, dir: '^'}] } 
+        ]
       },
-      // 5
+      // 5: Invert + Bouncing floor
       {
         grid: [
           empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
           "S......................G", floor, empty, empty
         ],
-        triggers: [ { zone: {x: 10, w: 2}, actions: [{type: 'showSpike', x: 14, y: 10, dir: '^'}] } ]
+        triggers: [ 
+          { zone: {x: 4, w: 8}, actions: [{type: 'invertControls'}], continuous: true },
+          { zone: {x: 8, w: 5}, actions: [{type: 'bounce', strength: -12}] },
+          { zone: {x: 12, w: 2}, actions: [{type: 'showSpike', x: 15, y: 10, dir: '^'}, {type: 'showSpike', x: 16, y: 10, dir: '^'}] }
+        ]
       },
       // 6
       {
