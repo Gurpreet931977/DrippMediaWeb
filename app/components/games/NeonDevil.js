@@ -83,19 +83,21 @@ export default class NeonDevil {
         ],
         triggers: [ 
           { zone: {x: 5, w: 2}, actions: [{type: 'move', x: 22, y: 10, dx: -18, dy: -6, speed: 0.2}] },
-          { zone: {x: 3, w: 10}, actions: [{type: 'hideAllFloor', from: 1, to: 8}] },
-          { zone: {x: 10, w: 6}, actions: [{type: 'hideAllFloor', from: 9, to: 16}] }
+          { zone: {x: 4, w: 2}, actions: [{type: 'hideAllFloor', from: 0, to: 3}] },
+          { zone: {x: 8, w: 2}, actions: [{type: 'hideAllFloor', from: 4, to: 7}] },
+          { zone: {x: 12, w: 2}, actions: [{type: 'hideAllFloor', from: 8, to: 11}] },
+          { zone: {x: 16, w: 2}, actions: [{type: 'hideAllFloor', from: 12, to: 15}] }
         ]
       },
       // 4: The fake wall death trap
       {
         grid: [
           empty, empty, empty, empty, empty, empty, empty, empty,
-          "............#...........", "............#...........", "S...........#..........G", floor, empty, empty
+          "..........#.............", "..........#.............", "S.........#............G", floor, empty, empty
         ],
         triggers: [ 
-          { zone: {x: 6, w: 2}, actions: [{type: 'hide', x: 12, y: 8}, {type: 'hide', x: 12, y: 9}, {type: 'hide', x: 12, y: 10}] },
-          { zone: {x: 10, w: 3}, actions: [{type: 'hide', x: 12, y: 11}, {type: 'showSpike', x: 12, y: 11, dir: '^'}] } 
+          { zone: {x: 5, w: 2}, actions: [{type: 'hide', x: 10, y: 8}, {type: 'hide', x: 10, y: 9}, {type: 'hide', x: 10, y: 10}] },
+          { zone: {x: 8, w: 2}, actions: [{type: 'hide', x: 10, y: 11}, {type: 'showSpike', x: 10, y: 11, dir: '^'}] } 
         ]
       },
       // 5: Invert + Bouncing floor
