@@ -33,6 +33,9 @@ export default class BomberCrazy {
       color: '#00ffff'
     };
 
+    this.isDead = false;
+    this.deathTimer = 0;
+
     this.shake = 0;
     this.initLevel();
   }
@@ -116,6 +119,7 @@ export default class BomberCrazy {
   handlePointerMove(e) {}
 
   placeBomb() {
+    if (this.isDead) return;
     if (this.bombs.filter(b => b.owner === 'player').length < this.player.maxBombs) {
       // Check if bomb already on cell
       if (this.bombs.some(b => b.c === this.player.c && b.r === this.player.r)) return;
@@ -128,6 +132,24 @@ export default class BomberCrazy {
         power: this.player.power
       });
       this.callbacks.playSound('blip');
+    }
+  }
+
+  die() {
+    if (this.isDead) return;
+    this.isDead = true;
+    this.deathTimer = 60; // 1 second at 60fps
+    this.shake = 20;
+    this.callbacks.playSound('hurt');
+    
+    for (let i = 0; i < 40; i++) {
+       const a = Math.random() * Math.PI * 2;
+       const s = Math.random() * 6;
+       this.particles.push({
+         x: this.player.x, y: this.player.y,
+         vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+         life: 1.5, color: '#00ffff'
+       });
     }
   }
 
@@ -192,6 +214,19 @@ export default class BomberCrazy {
 
   update() {
     if (this.shake > 0) this.shake--;
+
+    if (this.isDead) {
+       this.deathTimer--;
+       if (this.deathTimer <= 0) {
+          this.callbacks.setGameState("failed");
+       }
+       // Particles
+       this.particles.forEach((p, i) => {
+         p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+         if (p.life <= 0) this.particles.splice(i, 1);
+       });
+       return;
+    }
 
     // Player movement
     if (this.player.c === this.player.targetC && this.player.r === this.player.targetR) {
@@ -277,9 +312,7 @@ export default class BomberCrazy {
       // Player collision
       const dist = Math.hypot(this.player.x - e.x, this.player.y - e.y);
       if (dist < this.cellSize * 0.7) {
-        this.shake = 20;
-        this.callbacks.playSound('hurt');
-        this.callbacks.setGameState("failed");
+        this.die();
       }
     });
 
@@ -294,9 +327,7 @@ export default class BomberCrazy {
       // Hit Player
       if (ex.life > 0.5) {
          if (Math.abs(this.player.x - exX) < this.cellSize/2 && Math.abs(this.player.y - exY) < this.cellSize/2) {
-            this.shake = 20;
-            this.callbacks.playSound('hurt');
-            this.callbacks.setGameState("failed");
+            this.die();
          }
          
          // Hit Enemy
@@ -447,21 +478,57 @@ export default class BomberCrazy {
     });
 
     // Player
-    ctx.fillStyle = this.player.color;
-    ctx.shadowBlur = 20; ctx.shadowColor = this.player.color;
-    ctx.beginPath(); ctx.arc(this.player.x, this.player.y, this.cellSize/2.5, 0, Math.PI*2); ctx.fill();
-    ctx.shadowBlur = 0;
-    // Visor
-    ctx.fillStyle = '#111';
-    ctx.fillRect(this.player.x - 6, this.player.y - 8, 12, 6);
-    ctx.fillStyle = '#00ffcc';
-    // Looking dir based on key
-    let lx = 0, ly = 0;
-    if (this.keys.w || this.keys.ArrowUp) ly = -2;
-    else if (this.keys.s || this.keys.ArrowDown) ly = 2;
-    if (this.keys.a || this.keys.ArrowLeft) lx = -2;
-    else if (this.keys.d || this.keys.ArrowRight) lx = 2;
-    ctx.fillRect(this.player.x - 4 + lx, this.player.y - 7 + ly, 8, 4);
+    if (!this.isDead) {
+       ctx.save();
+       ctx.translate(this.player.x, this.player.y);
+       
+       // Hover effect
+       const pTime = Date.now() / 150;
+       ctx.translate(0, Math.sin(pTime) * 2);
+
+       // Jetpack exhaust
+       if (this.keys.w || this.keys.ArrowUp || this.keys.s || this.keys.ArrowDown || this.keys.a || this.keys.ArrowLeft || this.keys.d || this.keys.ArrowRight) {
+          ctx.fillStyle = '#ffcc00';
+          ctx.beginPath();
+          ctx.arc(0, this.cellSize/2.5, 4 + Math.random()*2, 0, Math.PI*2);
+          ctx.fill();
+       }
+
+       // Helmet
+       ctx.fillStyle = '#222';
+       ctx.beginPath(); 
+       ctx.arc(0, 0, this.cellSize/2.5, 0, Math.PI*2); 
+       ctx.fill();
+       
+       // Helmet glowing trim
+       ctx.strokeStyle = this.player.color;
+       ctx.lineWidth = 2;
+       ctx.shadowBlur = 10; ctx.shadowColor = this.player.color;
+       ctx.stroke();
+       ctx.shadowBlur = 0;
+
+       // Visor screen
+       ctx.fillStyle = '#111';
+       ctx.beginPath();
+       ctx.roundRect(-8, -6, 16, 10, 3);
+       ctx.fill();
+       
+       // Looking dir based on key
+       let lx = 0, ly = 0;
+       if (this.keys.w || this.keys.ArrowUp) ly = -2;
+       else if (this.keys.s || this.keys.ArrowDown) ly = 2;
+       if (this.keys.a || this.keys.ArrowLeft) lx = -2;
+       else if (this.keys.d || this.keys.ArrowRight) lx = 2;
+       
+       // Cyber eyes
+       ctx.fillStyle = '#00ffcc';
+       ctx.shadowBlur = 5; ctx.shadowColor = '#00ffcc';
+       ctx.fillRect(-5 + lx, -3 + ly, 4, 4);
+       ctx.fillRect(1 + lx, -3 + ly, 4, 4);
+       ctx.shadowBlur = 0;
+
+       ctx.restore();
+    }
 
     // Particles
     this.particles.forEach(p => {
