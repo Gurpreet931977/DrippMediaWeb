@@ -786,8 +786,104 @@ export default class PocketTanks {
     }
     
     const map = this.maps[this.selectedMapIdx] || this.maps[0];
+    
+    // Background
     ctx.fillStyle = map.bg;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    const time = Date.now();
+    ctx.save();
+    if (map.id === 'neon') {
+       // City grid
+       ctx.strokeStyle = 'rgba(0, 255, 204, 0.05)';
+       ctx.lineWidth = 1;
+       ctx.beginPath();
+       for(let i=0; i<this.canvas.width; i+=40) { ctx.moveTo(i, 0); ctx.lineTo(i, this.canvas.height); }
+       for(let i=0; i<this.canvas.height; i+=40) { ctx.moveTo(0, i); ctx.lineTo(this.canvas.width, i); }
+       ctx.stroke();
+       // Distant buildings
+       ctx.fillStyle = 'rgba(0, 100, 100, 0.2)';
+       for(let i=0; i<this.canvas.width; i+=60) {
+          const h = 100 + Math.sin(i)*50;
+          ctx.fillRect(i, this.canvas.height - h - 100, 40, h + 100);
+       }
+    } else if (map.id === 'desert') {
+       // Distant suns
+       ctx.fillStyle = 'rgba(255, 100, 0, 0.4)';
+       ctx.shadowBlur = 40; ctx.shadowColor = '#ff6600';
+       ctx.beginPath(); ctx.arc(200, 150, 60, 0, Math.PI*2); ctx.fill();
+       ctx.fillStyle = 'rgba(255, 200, 0, 0.6)';
+       ctx.beginPath(); ctx.arc(280, 120, 30, 0, Math.PI*2); ctx.fill();
+       ctx.shadowBlur = 0;
+       // Distant dunes
+       ctx.fillStyle = 'rgba(100, 30, 0, 0.2)';
+       ctx.beginPath();
+       ctx.moveTo(0, this.canvas.height);
+       for (let x = 0; x < this.canvas.width; x+=20) {
+          ctx.lineTo(x, this.canvas.height*0.5 + Math.sin(x*0.005)*80);
+       }
+       ctx.lineTo(this.canvas.width, this.canvas.height);
+       ctx.fill();
+    } else if (map.id === 'ice') {
+       // Snow/Stars
+       ctx.fillStyle = '#fff';
+       for (let i=0; i<50; i++) {
+          const sx = (Math.sin(i*123) * this.canvas.width + time * 0.05 * (i%3+1)) % this.canvas.width;
+          const sy = (Math.cos(i*321) * this.canvas.height + time * 0.05 * (i%3+1)) % this.canvas.height;
+          ctx.fillRect(sx, sy, 2, 2);
+       }
+       // Frozen peaks
+       ctx.fillStyle = 'rgba(0, 150, 255, 0.15)';
+       ctx.beginPath(); ctx.moveTo(0, this.canvas.height);
+       for (let x = 0; x < this.canvas.width; x+=40) {
+          ctx.lineTo(x, this.canvas.height*0.6 + Math.sin(x*0.01)*120 + Math.cos(x*0.05)*40);
+       }
+       ctx.lineTo(this.canvas.width, this.canvas.height);
+       ctx.fill();
+    } else if (map.id === 'toxic') {
+       // Toxic fog
+       ctx.fillStyle = 'rgba(50, 255, 50, 0.05)';
+       for(let i=0; i<5; i++) {
+          ctx.fillRect(0, this.canvas.height - i*50 - Math.sin(time*0.001 + i)*20, this.canvas.width, 50);
+       }
+       // Floating bubbles
+       ctx.fillStyle = 'rgba(50, 255, 50, 0.3)';
+       for (let i=0; i<15; i++) {
+          const bx = (Math.sin(i*77) * this.canvas.width + Math.sin(time*0.002 + i)*30 + this.canvas.width) % this.canvas.width;
+          const by = this.canvas.height - ((time * 0.05 * (i%2+1) + i*100) % (this.canvas.height/2));
+          ctx.beginPath(); ctx.arc(bx, by, 5 + (i%5), 0, Math.PI*2); ctx.fill();
+       }
+    } else if (map.id === 'volcano') {
+       // Floating Embers
+       ctx.fillStyle = '#ffaa00';
+       ctx.shadowBlur = 10; ctx.shadowColor = '#ff3300';
+       for (let i=0; i<40; i++) {
+          const ex = (Math.sin(i*99) * this.canvas.width + Math.sin(time*0.001 + i)*50 + this.canvas.width) % this.canvas.width;
+          const ey = this.canvas.height - ((time * 0.1 * (i%3+1) + i*50) % this.canvas.height);
+          ctx.fillRect(ex, ey, 3, 3);
+       }
+       ctx.shadowBlur = 0;
+       // Distant volcano peaks
+       ctx.fillStyle = 'rgba(150, 0, 0, 0.2)';
+       ctx.beginPath(); ctx.moveTo(0, this.canvas.height);
+       for (let x = 0; x < this.canvas.width; x+=60) {
+          ctx.lineTo(x, this.canvas.height*0.5 + Math.sin(x*0.02)*100 + Math.cos(x*0.07)*30);
+       }
+       ctx.lineTo(this.canvas.width, this.canvas.height);
+       ctx.fill();
+    } else if (map.id === 'core') {
+       // Binary matrix rain
+       ctx.fillStyle = 'rgba(255, 0, 255, 0.15)';
+       ctx.font = '16px monospace';
+       for (let i=0; i<30; i++) {
+          const mx = (i * 60) % this.canvas.width;
+          const my = ((time * 0.1 + i*123) % this.canvas.height);
+          ctx.fillText(Math.random()>0.5?'1':'0', mx, my);
+          ctx.fillText(Math.random()>0.5?'0':'1', mx, my - 20);
+          ctx.fillText(Math.random()>0.5?'1':'1', mx, my - 40);
+       }
+    }
+    ctx.restore();
     
     ctx.beginPath();
     ctx.moveTo(0, this.canvas.height);
@@ -812,12 +908,20 @@ export default class PocketTanks {
        const w = this.canvas.width;
        const h = this.canvas.height;
        
-       ctx.fillStyle = "#ffffff";
-       ctx.font = "bold 48px 'Panchang', sans-serif";
-       ctx.textAlign = "center";
-       ctx.shadowBlur = 20; ctx.shadowColor = "#00ffcc";
-       ctx.fillText("NEON TANKS", w/2, h/2 - 120);
-       ctx.shadowBlur = 0;
+       if (this.state === "map_select") {
+          // Dim the background terrain for better map card visibility
+          ctx.fillStyle = "rgba(10, 10, 15, 0.75)";
+          ctx.fillRect(0, 0, w, h);
+       }
+       
+       if (this.state === "menu") {
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 48px 'Panchang', sans-serif";
+          ctx.textAlign = "center";
+          ctx.shadowBlur = 20; ctx.shadowColor = "#00ffcc";
+          ctx.fillText("NEON TANKS", w/2, h/2 - 120);
+          ctx.shadowBlur = 0;
+       }
        
        if (this.state === "menu") {
            ctx.font = "bold 16px 'Panchang', sans-serif";
@@ -852,16 +956,19 @@ export default class PocketTanks {
            drawBtn(1, "NORMAL", "#ffcc00");
            drawBtn(2, "HARD", "#ff0055");
        } else if (this.state === "map_select") {
-           ctx.font = "bold 16px 'Panchang', sans-serif";
+           ctx.font = "bold 20px 'Panchang', sans-serif";
            ctx.fillStyle = "#ffaa00";
-           ctx.fillText("SELECT DEPLOYMENT ZONE", w/2, h/2 - 200);
+           ctx.textAlign = "center";
+           ctx.shadowBlur = 10; ctx.shadowColor = "#ffaa00";
+           ctx.fillText("SELECT DEPLOYMENT ZONE", w/2, 80);
+           ctx.shadowBlur = 0;
            
-           const cW = 160, cH = 180;
-           const gapX = 20, gapY = 20;
+           const cW = 200, cH = 220;
+           const gapX = 30, gapY = 30;
            const cols = 3;
            const totalW = (cW * cols) + (gapX * (cols - 1));
            const startX = w/2 - totalW/2;
-           const startY = h/2 - (cH * 2 + gapY) / 2 + 10;
+           const startY = 140;
            
            for (let i = 0; i < this.maps.length; i++) {
               const map = this.maps[i];
@@ -893,9 +1000,9 @@ export default class PocketTanks {
               ctx.beginPath(); ctx.roundRect(cX + 10, cY + 10, cW - 20, cH - 60, 8); ctx.fill();
               
               ctx.fillStyle = "#fff";
-              ctx.font = "bold 12px 'Panchang', sans-serif";
+              ctx.font = "bold 14px 'Panchang', sans-serif";
               ctx.textBaseline = "middle";
-              ctx.fillText(map.name, cX + cW/2, cY + cH - 25);
+              ctx.fillText(map.name, cX + cW/2, cY + cH - 30);
               ctx.textBaseline = "alphabetic";
            }
        }
