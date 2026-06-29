@@ -231,6 +231,21 @@ export default class NeonPac {
       if (g.y < 0) { g.y = 0; g.vy *= -1; }
       if (g.y > this.canvas.height) { g.y = this.canvas.height; g.vy *= -1; }
 
+      // Separation force to prevent overlapping
+      for (let j = 0; j < this.ghosts.length; j++) {
+         if (i === j) continue;
+         const other = this.ghosts[j];
+         const ddx = g.x - other.x;
+         const ddy = g.y - other.y;
+         const ddist = Math.hypot(ddx, ddy);
+         const minDist = g.radius + other.radius + 2;
+         if (ddist > 0 && ddist < minDist) {
+            const force = (minDist - ddist) / minDist;
+            g.x += (ddx / ddist) * force * 1.5;
+            g.y += (ddy / ddist) * force * 1.5;
+         }
+      }
+
       // Player collision
       const pDist = Math.hypot(this.player.x - g.x, this.player.y - g.y);
       if (pDist < this.player.radius + g.radius - 4) { // slight leniency
@@ -340,41 +355,39 @@ export default class NeonPac {
       ctx.beginPath(); ctx.arc(g.x + 4 + (g.vx > 0 ? 1 : -1), g.y - 2 + (g.vy > 0 ? 1 : -1), 1.5, 0, Math.PI*2); ctx.fill();
     });
 
-    // Draw Modern Redesigned Player
+    // Draw Modern Redesigned Player (Solid Pacman Shape)
     ctx.save();
     ctx.translate(this.player.x, this.player.y);
     ctx.rotate(this.player.angle);
 
-    // Glowing core
+    const mouthOpen = Math.abs(Math.sin(Date.now() / 80)) * 0.6 + 0.1; // dynamic mouth open
+
     ctx.beginPath();
-    ctx.arc(0, 0, this.player.radius * 0.4, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowBlur = 20;
+    ctx.arc(0, 0, this.player.radius, mouthOpen, Math.PI * 2 - mouthOpen);
+    ctx.lineTo(0, 0); // connect back to center for wedge
+    ctx.closePath();
+    ctx.fillStyle = this.player.color;
+    ctx.shadowBlur = 15;
     ctx.shadowColor = this.player.color;
     ctx.fill();
 
-    // Cyber Hollow Ring Design (Pacman mouth)
-    const mouthOpen = Math.abs(Math.sin(Date.now() / 80)) * 0.6 + 0.2; // dynamic mouth open
+    // Eye
     ctx.beginPath();
-    ctx.arc(0, 0, this.player.radius, mouthOpen, Math.PI * 2 - mouthOpen);
-    ctx.strokeStyle = this.player.color;
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = this.player.color;
-    ctx.stroke();
-    
-    // Inner cyber layer
-    ctx.beginPath();
-    ctx.arc(0, 0, this.player.radius - 5, mouthOpen + 0.2, Math.PI * 2 - mouthOpen - 0.2);
-    ctx.strokeStyle = "rgba(255,255,255,0.8)";
-    ctx.lineWidth = 1.5;
+    ctx.arc(0, -this.player.radius * 0.5, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#0a0a0a';
     ctx.shadowBlur = 0;
-    ctx.stroke();
+    ctx.fill();
 
     ctx.restore();
 
     ctx.shadowBlur = 0;
+    
+    // UI Overlay for Level
+    ctx.fillStyle = '#00ffcc';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`WAVE: ${this.level}`, 20, 30);
+    
     ctx.restore();
   }
 

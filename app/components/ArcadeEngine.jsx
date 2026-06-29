@@ -1316,6 +1316,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   const [gameState, setGameState] = useState("playing");
   const gameStateRef = useRef("playing");
   const [isPaused, setIsPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const isPausedRef = useRef(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -1648,6 +1649,18 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
               else if (activeGame === "breaker") { breakerScoreRef.current = 0; setBreakerScore(0); breakerLevelRef.current = 1; setBreakerLevel(1); } 
             }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
               RESTART GAME
+            </button>
+            <button onClick={() => {
+              if (audioRef.current) {
+                audioRef.current.isMuted = !isMuted;
+                if (!isMuted && audioRef.current.bgmTimer) {
+                   // If turning mute ON, maybe stop bgm immediately?
+                   // Just rely on RetroAudio check in playSFX and BGM loops
+                }
+              }
+              setIsMuted(!isMuted);
+            }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
+              {isMuted ? "UNMUTE AUDIO" : "MUTE AUDIO"}
             </button>
             {!isCreativeGame && (
               <button style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
