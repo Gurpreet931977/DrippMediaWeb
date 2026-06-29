@@ -44,7 +44,7 @@ export default class NeonDevil {
     const empty = "........................";
     
     this.LEVELS = [
-      // 1
+      // 1 (Original)
       {
         grid: [
           empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
@@ -214,6 +214,362 @@ export default class NeonDevil {
           { zone: {x: 10, w: 2}, actions: [{type: 'move', x: 18, y: 9, dx: -6, dy: 0, speed: 0.3}] },
           { zone: {x: 14, w: 2}, actions: [{type: 'flipGravity'}], once: true }
         ]
+      },
+      // 21 - The Crusher
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G",
+          "###..................###",
+          empty, empty
+        ],
+        triggers: [ 
+          { zone: {x: 3, w: 15}, actions: [
+            {type: 'move', x: 0, y: 11, dx: 8, dy: 0, speed: 0.15}, 
+            {type: 'move', x: 1, y: 11, dx: 8, dy: 0, speed: 0.15},
+            {type: 'move', x: 2, y: 11, dx: 8, dy: 0, speed: 0.15},
+            {type: 'move', x: 21, y: 11, dx: -8, dy: 0, speed: 0.15},
+            {type: 'move', x: 22, y: 11, dx: -8, dy: 0, speed: 0.15},
+            {type: 'move', x: 23, y: 11, dx: -8, dy: 0, speed: 0.15}
+          ], once: true }
+        ]
+      },
+      // 22 - The Floor is Lava (sequential)
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 2, w: 20}, actions: [
+            {type: 'hide', x: 3, y: 11}, {type: 'showSpike', x: 3, y: 11, dir: '^'},
+            {type: 'hide', x: 6, y: 11}, {type: 'showSpike', x: 6, y: 11, dir: '^'},
+            {type: 'hide', x: 9, y: 11}, {type: 'showSpike', x: 9, y: 11, dir: '^'},
+            {type: 'hide', x: 12, y: 11}, {type: 'showSpike', x: 12, y: 11, dir: '^'},
+            {type: 'hide', x: 15, y: 11}, {type: 'showSpike', x: 15, y: 11, dir: '^'},
+            {type: 'hide', x: 18, y: 11}, {type: 'showSpike', x: 18, y: 11, dir: '^'}
+          ], once: true }
+        ]
+      },
+      // 23 - Gauntlet of Lies
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S.......G...G...G......G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 6, w: 2}, actions: [{type: 'hide', x: 8, y: 10}, {type: 'showSpike', x: 8, y: 10, dir: '^'}] },
+          { zone: {x: 10, w: 2}, actions: [{type: 'teleport', tx: 1, ty: 10}] },
+          { zone: {x: 14, w: 2}, actions: [{type: 'bounce', strength: -20}] }
+        ]
+      },
+      // 24 - Pinball
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 5, w: 2}, actions: [{type: 'bounce', strength: -12}], continuous: true },
+          { zone: {x: 10, w: 2}, actions: [{type: 'bounce', strength: -18}], continuous: true },
+          { zone: {x: 15, w: 2}, actions: [{type: 'bounce', strength: -8}], continuous: true }
+        ]
+      },
+      // 25 - Gravity Madness
+      {
+        grid: [
+          ".......................G", floor, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S.......................", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 5, w: 2}, actions: [{type: 'flipGravity'}], once: true },
+          { zone: {x: 12, w: 2}, actions: [{type: 'flipGravity'}], once: true },
+          { zone: {x: 18, w: 2}, actions: [{type: 'flipGravity'}], once: true }
+        ]
+      },
+      // 26 - Reverse Troll
+      {
+        grid: [
+          "G.......................", floor, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......G................", "######..################", empty, empty
+        ],
+        triggers: [
+          { zone: {x: -1, w: 2}, actions: [{type: 'teleport', tx: 0, ty: 0}] },
+          { zone: {x: 5, w: 3}, actions: [{type: 'hide', x: 7, y: 10}, {type: 'showSpike', x: 7, y: 10, dir: '^'}] }
+        ]
+      },
+      // 27 - Stairway to Hell
+      {
+        grid: [
+          empty, empty, empty, empty, empty, ".......................G", ".....................###", "..................###...", "...............###......", "............###.........",
+          "S........###............", "#########...............", empty, empty
+        ],
+        triggers: [
+          { zone: {x: 8, w: 2}, actions: [{type: 'hide', x: 9, y: 10}, {type: 'hide', x: 10, y: 10}, {type: 'hide', x: 11, y: 10}] },
+          { zone: {x: 11, w: 2}, actions: [{type: 'hide', x: 12, y: 9}, {type: 'hide', x: 13, y: 9}, {type: 'hide', x: 14, y: 9}] },
+          { zone: {x: 14, w: 2}, actions: [{type: 'hide', x: 15, y: 8}, {type: 'hide', x: 16, y: 8}, {type: 'hide', x: 17, y: 8}] },
+          { zone: {x: 17, w: 2}, actions: [{type: 'hide', x: 18, y: 7}, {type: 'hide', x: 19, y: 7}, {type: 'hide', x: 20, y: 7}] }
+        ]
+      },
+      // 28 - Total Eclipse
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S.......^.......^......G", floor, empty, empty
+        ],
+        triggers: [],
+        darkness: true
+      },
+      // 29 - Schrödinger's Jump
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S.......#.......#......G", "#########.......########", empty, empty
+        ],
+        triggers: [
+          { zone: {x: 4, w: 3}, actions: [{type: 'disableJump'}], continuous: true }
+        ]
+      },
+      // 30 - Falling Ceiling
+      {
+        grid: [
+          "########################", empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 3, w: 15}, actions: [
+            {type: 'move', x: 5, y: 0, dx: 0, dy: 10, speed: 0.3},
+            {type: 'move', x: 6, y: 0, dx: 0, dy: 10, speed: 0.3},
+            {type: 'move', x: 7, y: 0, dx: 0, dy: 10, speed: 0.3},
+            {type: 'move', x: 8, y: 0, dx: 0, dy: 10, speed: 0.3},
+            {type: 'move', x: 9, y: 0, dx: 0, dy: 10, speed: 0.3},
+            {type: 'move', x: 10, y: 0, dx: 0, dy: 10, speed: 0.3}
+          ], once: true }
+        ]
+      },
+      // 31 - The Troll Pit
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 8, w: 4}, actions: [{type: 'hideAllFloor', from: 10, to: 15}, {type: 'bounce', strength: -10}] }
+        ]
+      },
+      // 32 - Teleport Maze
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 5, w: 2}, actions: [{type: 'teleport', tx: 15, ty: 10}] },
+          { zone: {x: 18, w: 2}, actions: [{type: 'teleport', tx: 2, ty: 10}] },
+          { zone: {x: 10, w: 2}, actions: [{type: 'teleport', tx: 22, ty: 10}] }
+        ]
+      },
+      // 33 - Rain of Spikes
+      {
+        grid: [
+          ".........v.v.v.v........", empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 5, w: 10}, actions: [
+            {type: 'move', x: 9, y: 0, dx: 0, dy: 10, speed: 0.4},
+            {type: 'move', x: 11, y: 0, dx: 0, dy: 10, speed: 0.4},
+            {type: 'move', x: 13, y: 0, dx: 0, dy: 10, speed: 0.4},
+            {type: 'move', x: 15, y: 0, dx: 0, dy: 10, speed: 0.4}
+          ], once: true }
+        ]
+      },
+      // 34 - Running Goal
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S..................G....", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 12, w: 5}, actions: [{type: 'move', x: 19, y: 10, dx: 4, dy: 0, speed: 0.2}], continuous: true }
+        ]
+      },
+      // 35 - Pop-up Spikes
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 5, w: 2}, actions: [{type: 'showSpike', x: 8, y: 10, dir: '^'}] },
+          { zone: {x: 10, w: 2}, actions: [{type: 'showSpike', x: 13, y: 10, dir: '^'}] },
+          { zone: {x: 15, w: 2}, actions: [{type: 'showSpike', x: 18, y: 10, dir: '^'}] }
+        ]
+      },
+      // 36 - Squeezed!
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S...#..............#...G", "#####..............#####", empty, empty
+        ],
+        triggers: [
+          { zone: {x: 5, w: 10}, actions: [
+            {type: 'move', x: 4, y: 10, dx: 5, dy: 0, speed: 0.1},
+            {type: 'move', x: 4, y: 11, dx: 5, dy: 0, speed: 0.1},
+            {type: 'move', x: 19, y: 10, dx: -5, dy: 0, speed: 0.1},
+            {type: 'move', x: 19, y: 11, dx: -5, dy: 0, speed: 0.1}
+          ], once: true }
+        ]
+      },
+      // 37 - Floor Bounce
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 4, w: 15}, actions: [{type: 'bounce', strength: -15}], continuous: true }
+        ]
+      },
+      // 38 - Inverted Darkness
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 3, w: 18}, actions: [{type: 'invertControls'}], continuous: true }
+        ],
+        darkness: true
+      },
+      // 39 - The Double Fake
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 8, w: 2}, actions: [{type: 'fakeDeath'}], once: true },
+          { zone: {x: 15, w: 2}, actions: [{type: 'fakeDeath'}], once: true }
+        ]
+      },
+      // 40 - Moving Pit
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S.....#..........#.....G", "#######..........#######", empty, empty
+        ],
+        triggers: [
+          { zone: {x: 4, w: 2}, actions: [{type: 'move', x: 6, y: 10, dx: 4, dy: 0, speed: 0.2}, {type: 'move', x: 6, y: 11, dx: 4, dy: 0, speed: 0.2}] }
+        ]
+      },
+      // 41 - Gravity Spikes
+      {
+        grid: [
+          ".......^^^^^^^^.........", empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 7, w: 8}, actions: [{type: 'flipGravity'}], once: true }
+        ]
+      },
+      // 42 - Drop & Bounce
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 10, w: 5}, actions: [{type: 'hideAllFloor', from: 8, to: 16}, {type: 'bounce', strength: -15}] }
+        ]
+      },
+      // 43 - Surrounded Goal
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "..................###...",
+          "S.................#G#...", "########################", empty, empty
+        ],
+        triggers: [
+          { zone: {x: 15, w: 2}, actions: [{type: 'hide', x: 18, y: 9}, {type: 'hide', x: 19, y: 9}, {type: 'hide', x: 20, y: 9}, {type: 'hide', x: 18, y: 10}] }
+        ]
+      },
+      // 44 - Leap of Faith 2
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S.......^^^^^^^^.......G", "#########......#########", empty, empty
+        ],
+        triggers: [],
+        darkness: true
+      },
+      // 45 - Invisible Walls
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 5, w: 2}, actions: [{type: 'bounce', strength: -5}], continuous: true },
+          { zone: {x: 10, w: 2}, actions: [{type: 'bounce', strength: -5}], continuous: true },
+          { zone: {x: 15, w: 2}, actions: [{type: 'bounce', strength: -5}], continuous: true }
+        ]
+      },
+      // 46 - Giant Pit
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", "#####..............#####", empty, empty
+        ],
+        triggers: [
+          { zone: {x: 4, w: 2}, actions: [{type: 'showSpike', x: 6, y: 11, dir: '^'}, {type: 'showSpike', x: 17, y: 11, dir: '^'}] }
+        ]
+      },
+      // 47 - Slide Spikes
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S..........^...........G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 4, w: 10}, actions: [{type: 'move', x: 11, y: 10, dx: 6, dy: 0, speed: 0.15}], continuous: true }
+        ]
+      },
+      // 48 - Chaos Combo
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 5, w: 2}, actions: [{type: 'invertControls'}], continuous: true },
+          { zone: {x: 10, w: 2}, actions: [{type: 'fakeDeath'}], once: true },
+          { zone: {x: 15, w: 2}, actions: [{type: 'teleport', tx: 18, ty: 10}] }
+        ]
+      },
+      // 49 - Long Jump
+      {
+        grid: [
+          empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S......................G", "#####..............#####", empty, empty
+        ],
+        triggers: [
+          { zone: {x: 4, w: 2}, actions: [{type: 'bounce', strength: -12}] }
+        ]
+      },
+      // 50 - The Final Gauntlet
+      {
+        grid: [
+          ".......................G", floor, empty, empty, empty, empty, empty, empty, empty, empty,
+          "S.......................", floor, empty, empty
+        ],
+        triggers: [
+          { zone: {x: 5, w: 4}, actions: [{type: 'flipGravity'}], once: true },
+          { zone: {x: 10, w: 4}, actions: [{type: 'invertControls'}], continuous: true },
+          { zone: {x: 15, w: 4}, actions: [{type: 'hideAllFloor', from: 0, to: 23}] },
+          { zone: {x: 20, w: 2}, actions: [{type: 'teleport', tx: 22, ty: 0}] }
+        ],
+        darkness: true
       }
     ];
   }
@@ -764,7 +1120,7 @@ export default class NeonDevil {
     ctx.textAlign = 'left';
     ctx.fillText(`DEATHS: ${this.deaths}`, 20, 40);
     ctx.fillStyle = '#00ffcc';
-    ctx.fillText(`LEVEL: ${this.currentLevelIdx + 1}/20`, 20, 65);
+    ctx.fillText(`LEVEL: ${this.currentLevelIdx + 1}/50`, 20, 65);
     
     if (window.innerWidth <= 768) {
        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
