@@ -29,7 +29,7 @@ export default class BomberCrazy {
       x: 0, y: 0,
       speed: 0.1,
       power: 2,
-      maxBombs: 1,
+      maxBombs: 3,
       color: '#00ffff'
     };
 
@@ -173,7 +173,7 @@ export default class BomberCrazy {
           addExplosion(nc, nr);
           
           // Random powerup chance
-          if (Math.random() < 0.3) {
+          if (Math.random() < 0.5) {
             this.powerups.push({ c: nc, r: nr, type: ['power', 'bomb', 'speed'][Math.floor(Math.random()*3)] });
           }
           this.callbacks.setScoreRef(this.callbacks.getScoreRef() + 10);
@@ -184,7 +184,7 @@ export default class BomberCrazy {
         
         // Trigger other bombs in path
         this.bombs.forEach(b => {
-           if (b.c === nc && b.r === nr && b.timer > 5) b.timer = 5;
+           if (b.c === nc && b.r === nr && b.timer > 2) b.timer = 2;
         });
       }
     });
@@ -228,6 +228,17 @@ export default class BomberCrazy {
     for (let i = this.bombs.length - 1; i >= 0; i--) {
       const b = this.bombs[i];
       b.timer--;
+      
+      // Fuse particles
+      if (Math.random() < 0.3) {
+        this.particles.push({
+          x: this.offsetX + b.c * this.cellSize + this.cellSize/2 + (Math.random()-0.5)*10,
+          y: this.offsetY + b.r * this.cellSize + this.cellSize/2 - 10,
+          vx: (Math.random()-0.5)*1, vy: -1 - Math.random(),
+          life: 1, color: '#ff9900'
+        });
+      }
+
       if (b.timer <= 0) {
         this.createExplosion(b.c, b.r, b.power);
         this.bombs.splice(i, 1);
@@ -292,12 +303,29 @@ export default class BomberCrazy {
          for (let j = this.enemies.length - 1; j >= 0; j--) {
             const e = this.enemies[j];
             if (Math.abs(e.x - exX) < this.cellSize/2 && Math.abs(e.y - exY) < this.cellSize/2) {
+               
+               // Enemy death explosion
+               for(let k=0; k<15; k++){
+                  const a = Math.random() * Math.PI * 2;
+                  const s = Math.random() * 4;
+                  this.particles.push({
+                    x: e.x, y: e.y,
+                    vx: Math.cos(a)*s, vy: Math.sin(a)*s,
+                    life: 1, color: e.color
+                  });
+               }
+               
                this.enemies.splice(j, 1);
-               this.callbacks.playSound('blip');
+               this.callbacks.playSound('hit');
                this.callbacks.setScoreRef(this.callbacks.getScoreRef() + 100);
                
                // Spawn new enemy to keep up pressure
-               setTimeout(() => { if (this.enemies.length < 5) this.spawnEnemy(); }, 2000);
+               setTimeout(() => { 
+                 if (this.enemies.length < 8) {
+                   this.spawnEnemy(); 
+                   if(Math.random() < 0.5) this.spawnEnemy(); // Sometimes spawn two!
+                 }
+               }, 1000);
             }
          }
       }
@@ -350,18 +378,38 @@ export default class BomberCrazy {
     }
 
     // Powerups
+    const time = Date.now() / 150;
     this.powerups.forEach(p => {
        const x = this.offsetX + p.c * this.cellSize + this.cellSize/2;
-       const y = this.offsetY + p.r * this.cellSize + this.cellSize/2;
-       ctx.fillStyle = p.type === 'power' ? '#ff3300' : p.type === 'bomb' ? '#00ffff' : '#ffcc00';
-       ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle;
-       ctx.beginPath(); ctx.arc(x, y, this.cellSize/3, 0, Math.PI*2); ctx.fill();
+       // Floating animation
+       const y = this.offsetY + p.r * this.cellSize + this.cellSize/2 + Math.sin(time + p.c + p.r) * 3;
+       
+       ctx.save();
+       ctx.translate(x, y);
+       
+       ctx.fillStyle = p.type === 'power' ? '#ff3366' : p.type === 'bomb' ? '#00ffff' : '#ffcc00';
+       ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
+       
+       // Draw hexagonal container
+       ctx.beginPath();
+       for(let i=0; i<6; i++) {
+         ctx.lineTo(Math.cos(i * Math.PI/3) * (this.cellSize/3), Math.sin(i * Math.PI/3) * (this.cellSize/3));
+       }
+       ctx.closePath();
+       ctx.fill();
+       ctx.strokeStyle = '#fff';
+       ctx.lineWidth = 1.5;
+       ctx.stroke();
        ctx.shadowBlur = 0;
        
-       ctx.fillStyle = '#fff';
-       ctx.font = '10px sans-serif';
+       // Draw inner icon
+       ctx.fillStyle = '#111';
+       ctx.font = 'bold 12px sans-serif';
        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-       ctx.fillText(p.type === 'power' ? 'P' : p.type === 'bomb' ? 'B' : 'S', x, y);
+       const icon = p.type === 'power' ? '🔥' : p.type === 'bomb' ? '💣' : '⚡';
+       ctx.fillText(icon, 0, 1);
+       
+       ctx.restore();
     });
 
     // Bombs

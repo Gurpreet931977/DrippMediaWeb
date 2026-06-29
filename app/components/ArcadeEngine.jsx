@@ -1259,7 +1259,7 @@ const getHelpText = (game) => {
       />;
     case 'bombercrazy':
       return <HelpBrief 
-        controls="Click or tap anywhere on the grid to drop a cyber-bomb." 
+        controls="Use Arrow Keys or W,A,S,D to move and Spacebar to drop bombs. On mobile, tap the screen edges to move and center to drop bombs." 
         howToPlay="Trap the chasing enemy programs by strategically placing bombs in their path. Bombs explode in a cross pattern after a short fuse." 
         scoreSystem="Destroying enemies grants points. Higher levels increase enemy speed and spawn rates." 
         powerups="Bombs can trigger chain reactions if their blast radii overlap. Use this to clear massive areas of the board at once!"
