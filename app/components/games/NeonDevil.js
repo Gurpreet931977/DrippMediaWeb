@@ -770,6 +770,8 @@ export default class NeonDevil {
 
   die() {
     this.deaths++;
+    if (this.levelDeaths === undefined) this.levelDeaths = 0;
+    this.levelDeaths++;
     this.callbacks.playSound('hurt');
     
     // Death particles
@@ -804,6 +806,7 @@ export default class NeonDevil {
         color: '#00ffcc'
       });
     }
+    this.levelDeaths = 0;
     this.currentLevelIdx++;
     this.loadLevel(this.currentLevelIdx);
   }
@@ -1206,6 +1209,20 @@ export default class NeonDevil {
     ctx.fillText(`DEATHS: ${this.deaths}`, 20, 40);
     ctx.fillStyle = '#00ffcc';
     ctx.fillText(`LEVEL: ${this.currentLevelIdx + 1}/50`, 20, 65);
+    
+    if (this.levelDeaths >= 10) {
+       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+       ctx.font = 'italic 14px sans-serif';
+       ctx.textAlign = 'center';
+       const hints = [
+         "HINT: NOT EVERYTHING IS AS IT SEEMS...",
+         "HINT: SOMETIMES THE OBVIOUS PATH IS A TRAP...",
+         "HINT: LOOK FOR INVISIBLE CLUES...",
+         "HINT: TRUST YOUR INSTINCTS, NOT YOUR EYES..."
+       ];
+       const hintIdx = this.currentLevelIdx % hints.length;
+       ctx.fillText(hints[hintIdx], this.canvas.width / 2, 40);
+    }
     
     if (window.innerWidth <= 768) {
        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
