@@ -1335,17 +1335,34 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   const isMountedRef = useRef(false); // Skip first-render effect execution
   const audioRef = useRef(null);
 
-  const handleBrag = () => {
+  const handleBrag = async () => {
     let bragScore = score;
     if (activeGame === "breaker") bragScore = breakerScore;
     if (activeGame === "scope") bragScore = scopeScore;
     
-    let text = `I just scored ${bragScore} in ${activeGame.toUpperCase()} on Dripp Media! Can you beat me?`;
-    if (activeGame === "neondevil") text = `I'm suffering in NEON DEVIL on Dripp Media! This game is impossible...`;
-    if (activeGame === "tanks") text = `I just annihilated my opponent in POCKET TANKS on Dripp Media!`;
+    const gameNamesMap = {
+      breaker: "NEON BREAKER", scope: "SCOPE CREEP", pendulum: "NEON PENDULUM", gravity: "GRAVITY FLIP", slingshot: "SLINGSHOT NINJA", bullethell: "BULLET HELL", tanks: "POCKET TANKS", sandbox: "LIQUID LIGHT", liquid: "LIQUID LIGHT", mandala: "MANDALA MAKER", nodeweaver: "ZEN NODE WEAVER", looper: "HARMONIC LOOPER", beats: "NEON BEATS", neondevil: "NEON DEVIL", snake: "NEON SNAKE", pong: "NEON PONG", runner: "CYBER RUNNER", invaders: "SPACE INVADERS", simon: "NEON SIMON", bombercrazy: "BOMBER CRAZY", dripp: "DRIPP DROP"
+    };
+    const prettyName = gameNamesMap[activeGame] || activeGame.toUpperCase();
+
+    let text = `I just scored ${bragScore} in ${prettyName} on Dripp Media! 🕹️💧 Think you can beat my high score?`;
+    if (activeGame === "neondevil") text = `I'm losing my mind in NEON DEVIL on Dripp Media! 💀 This game is an absolute trap. Can you survive?`;
+    if (activeGame === "tanks") text = `I just annihilated my opponent in POCKET TANKS on Dripp Media! 🚀🔥 Who's next?`;
     
-    navigator.clipboard.writeText(text);
-    alert("Score copied to clipboard! Paste it anywhere to brag.");
+    const url = "https://drippmedia.com";
+    const shareData = { title: 'Dripp Media Arcade', text: text, url: url };
+
+    try {
+      if (navigator.share) {
+         await navigator.share(shareData);
+      } else {
+         const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+         window.open(twitterUrl, '_blank');
+      }
+    } catch (err) {
+      navigator.clipboard.writeText(`${text} Play now at ${url}`);
+      alert("Score and link copied to clipboard! Paste it anywhere to challenge your friends.");
+    }
   };
 
   useEffect(() => {
