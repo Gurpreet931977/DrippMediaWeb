@@ -1651,14 +1651,11 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
               RESTART GAME
             </button>
             <button onClick={() => {
+              const newMutedState = !isMuted;
+              setIsMuted(newMutedState);
               if (audioRef.current) {
-                audioRef.current.isMuted = !isMuted;
-                if (!isMuted && audioRef.current.bgmTimer) {
-                   // If turning mute ON, maybe stop bgm immediately?
-                   // Just rely on RetroAudio check in playSFX and BGM loops
-                }
+                audioRef.current.setMute(newMutedState);
               }
-              setIsMuted(!isMuted);
             }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
               {isMuted ? "UNMUTE AUDIO" : "MUTE AUDIO"}
             </button>

@@ -22,6 +22,13 @@ export default class RetroAudio {
     }
   }
 
+  setMute(muted) {
+    this.isMuted = muted;
+    if (this.masterGain) {
+      this.masterGain.gain.value = muted ? 0 : 0.3;
+    }
+  }
+
   playSFX(type) {
     if (!this.ctx || this.isMuted) return;
     try {
