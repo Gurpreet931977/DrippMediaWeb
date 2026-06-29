@@ -596,6 +596,40 @@ export default class NeonDevil {
         darkness: true
       }
     ];
+
+    // Procedurally escalate difficulty: Inject chaotic tricks into all levels based on progression
+    this.LEVELS.forEach((level, idx) => {
+       if (idx < 5) return; // Keep the first 5 handcrafted tutorials exactly as they are
+       
+       let numTricks = Math.floor(idx / 4); // Scales from 1 trick at level 5 to ~12 tricks at level 50
+       
+       for (let i = 0; i < numTricks; i++) {
+          let trickType = Math.floor(Math.random() * 6);
+          let triggerX = Math.floor(Math.random() * 15) + 3; // Random trigger zone x between 3 and 17
+          
+          if (!level.triggers) level.triggers = [];
+          
+          if (trickType === 0) {
+             // Invisible spike drops from sky
+             level.triggers.push({ zone: {x: triggerX, w: 2}, actions: [{type: 'showSpike', x: triggerX + 2, y: 10, dir: '^'}] });
+          } else if (trickType === 1) {
+             // Invert controls zone
+             level.triggers.push({ zone: {x: triggerX, w: 3}, actions: [{type: 'invertControls'}], continuous: true });
+          } else if (trickType === 2) {
+             // Flip gravity trap
+             level.triggers.push({ zone: {x: triggerX, w: 2}, actions: [{type: 'flipGravity'}], once: true });
+          } else if (trickType === 3) {
+             // Crushing block from above
+             level.triggers.push({ zone: {x: triggerX, w: 2}, actions: [{type: 'move', x: triggerX+1, y: 6, dx: 0, dy: 4, speed: 0.4}] });
+          } else if (trickType === 4) {
+             // Bouncy floor trap
+             level.triggers.push({ zone: {x: triggerX, w: 3}, actions: [{type: 'bounce', strength: -14}] });
+          } else if (trickType === 5) {
+             // Fake Death scare
+             level.triggers.push({ zone: {x: triggerX, w: 1}, actions: [{type: 'fakeDeath'}], once: true });
+          }
+       }
+    });
   }
 
   loadLevel(idx) {
@@ -1049,22 +1083,49 @@ export default class NeonDevil {
          ctx.fillRect(2, 2, this.tileSize - 4, 3);
       }
       else if (t.type === 'goal') {
-         // Modern Vortex Goal
-         const time = Date.now() / 200;
+         // Modern Segmented Sci-Fi Portal
+         const time = Date.now() / 150;
          ctx.translate(this.tileSize/2, this.tileSize/2);
-         ctx.rotate(time);
+         
+         // Outer glowing ring
          ctx.beginPath();
-         for(let i=0; i<3; i++) {
-            ctx.arc(0, 0, (this.tileSize/3) * (i/3), i, i + Math.PI);
-         }
+         ctx.arc(0, 0, this.tileSize/2.2, 0, Math.PI*2);
+         ctx.strokeStyle = 'rgba(0, 255, 204, 0.3)';
+         ctx.lineWidth = 2;
+         ctx.stroke();
+
+         // Rotating segmented portal rings
+         ctx.save();
+         ctx.rotate(time * 0.5);
+         ctx.beginPath();
+         ctx.arc(0, 0, this.tileSize/2.5, 0.2, Math.PI - 0.2);
+         ctx.arc(0, 0, this.tileSize/2.5, Math.PI + 0.2, Math.PI*2 - 0.2);
          ctx.strokeStyle = '#00ffcc';
-         ctx.lineWidth = 4;
-         ctx.lineCap = "round";
+         ctx.lineWidth = 3;
+         ctx.lineCap = 'round';
          ctx.shadowBlur = 15; ctx.shadowColor = '#00ffcc';
          ctx.stroke();
+         ctx.restore();
          
-         ctx.beginPath(); ctx.arc(0,0, 6, 0, Math.PI*2);
-         ctx.fillStyle = '#fff'; ctx.fill();
+         ctx.save();
+         ctx.rotate(-time * 0.8);
+         ctx.beginPath();
+         ctx.arc(0, 0, this.tileSize/3.5, 0.4, Math.PI - 0.4);
+         ctx.arc(0, 0, this.tileSize/3.5, Math.PI + 0.4, Math.PI*2 - 0.4);
+         ctx.strokeStyle = '#fff';
+         ctx.lineWidth = 2;
+         ctx.lineCap = 'round';
+         ctx.shadowBlur = 10; ctx.shadowColor = '#fff';
+         ctx.stroke();
+         ctx.restore();
+
+         // Pulsing core
+         const pulse = Math.abs(Math.sin(time * 2));
+         ctx.beginPath(); 
+         ctx.arc(0,0, 4 + pulse * 4, 0, Math.PI*2);
+         ctx.fillStyle = '#fff'; 
+         ctx.shadowBlur = 20; ctx.shadowColor = '#00ffcc';
+         ctx.fill();
       }
       else if (t.type === 'spike') {
          // Minimalist sharp spike
