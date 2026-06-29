@@ -132,22 +132,22 @@ export default class RetroAudio {
 
      let seq = seqArcade;
      let wType = 'square';
-     let vol = 0.1;
-     if (type === 'devil') { seq = seqDevil; wType = 'sawtooth'; vol = 0.15; }
-     if (type === 'bomber') { seq = seqBomber; wType = 'square'; vol = 0.1; }
-     if (type === 'tanks') { seq = seqTanks; wType = 'triangle'; vol = 0.2; }
-     if (type === 'zen') { seq = seqZen; wType = 'sine'; vol = 0.1; }
-     if (type === 'boss') { seq = seqDevil; wType = 'sawtooth'; vol = 0.15; }
+     let vol = 0.08;
+     if (type === 'devil') { seq = seqDevil; wType = 'sawtooth'; vol = 0.12; }
+     if (type === 'bomber') { seq = seqBomber; wType = 'square'; vol = 0.08; }
+     if (type === 'tanks') { seq = seqTanks; wType = 'triangle'; vol = 0.15; }
+     if (type === 'zen') { seq = seqZen; wType = 'sine'; vol = 0.08; }
+     if (type === 'boss') { seq = seqDevil; wType = 'sawtooth'; vol = 0.12; }
      
      // Cinematic Effect Chain
      const filter = this.ctx.createBiquadFilter();
      filter.type = 'lowpass';
-     filter.Q.value = 2; // slight resonance
+     filter.Q.value = 3;
      
      const delay = this.ctx.createDelay();
-     delay.delayTime.value = 0.375; // Dotted 8th note feel
+     delay.delayTime.value = 0.3; 
      const feedback = this.ctx.createGain();
-     feedback.gain.value = 0.3; 
+     feedback.gain.value = 0.35; 
      
      filter.connect(this.masterGain);
      filter.connect(delay);
@@ -155,66 +155,87 @@ export default class RetroAudio {
      feedback.connect(delay);
      delay.connect(this.masterGain);
      
-     if(!this.bgmNodes) this.bgmNodes = [];
+     if (!this.bgmNodes) this.bgmNodes = [];
      this.bgmNodes.push(filter, delay, feedback);
      
+     this.activeOscillators = []; // Track to stop instantly on glitch/stop
      let step = 0;
+     let nextNoteTime = this.ctx.currentTime + 0.1;
+     const lookahead = 0.1; // 100ms
      
-     const playNote = () => {
+     const scheduleNotes = () => {
         if (!this.isPlayingBGM) return;
-        try {
+        
+        while (nextNoteTime < this.ctx.currentTime + lookahead) {
             const note = seq[step % seq.length];
+            
             if (note.f !== null) {
-               const now = this.ctx.currentTime;
-               
-               // Cinematic filter sweep every note
-               filter.frequency.setValueAtTime(400, now);
-               filter.frequency.exponentialRampToValueAtTime(3000, now + note.d * 0.5);
-               filter.frequency.exponentialRampToValueAtTime(400, now + note.d);
-               
-               // Create 3 oscillators for thick, cinematic sound (Main, Detuned, Sub)
-               const osc1 = this.ctx.createOscillator();
-               const osc2 = this.ctx.createOscillator();
-               const oscSub = this.ctx.createOscillator();
-               const gain = this.ctx.createGain();
-               
-               osc1.connect(gain);
-               osc2.connect(gain);
-               oscSub.connect(gain);
-               gain.connect(filter);
-               
-               osc1.type = wType;
-               osc2.type = wType;
-               oscSub.type = (wType === 'sine') ? 'sine' : 'square'; // punchy sub
-               
-               osc1.frequency.value = note.f;
-               osc2.frequency.value = note.f;
-               osc2.detune.value = 15; // thick chorus
-               oscSub.frequency.value = note.f / 2; // sub bass
-               
-               if (wType === 'sine') {
-                  gain.gain.setValueAtTime(0, now);
-                  gain.gain.linearRampToValueAtTime(vol * 0.8, now + note.d * 0.3);
-                  gain.gain.linearRampToValueAtTime(0, now + note.d);
-               } else {
-                  gain.gain.setValueAtTime(vol * 0.8, now);
-                  gain.gain.exponentialRampToValueAtTime(0.01, now + note.d * 0.8);
-               }
-               
-               osc1.start(now); osc2.start(now); oscSub.start(now);
-               osc1.stop(now + note.d); osc2.stop(now + note.d); oscSub.stop(now + note.d);
+               try {
+                   // Clean up finished oscillators to prevent memory leaks
+                   this.activeOscillators = this.activeOscillators.filter(o => o.endTime > this.ctx.currentTime);
+                   
+                   // Dynamic filter sweep
+                   filter.frequency.setValueAtTime(400, nextNoteTime);
+                   filter.frequency.exponentialRampToValueAtTime(3000, nextNoteTime + note.d * 0.2);
+                   filter.frequency.exponentialRampToValueAtTime(400, nextNoteTime + note.d);
+                   
+                   const osc1 = this.ctx.createOscillator();
+                   const osc2 = this.ctx.createOscillator();
+                   const oscSub = this.ctx.createOscillator();
+                   const gain = this.ctx.createGain();
+                   
+                   osc1.connect(gain);
+                   osc2.connect(gain);
+                   oscSub.connect(gain);
+                   gain.connect(filter);
+                   
+                   osc1.type = wType;
+                   osc2.type = wType;
+                   oscSub.type = (wType === 'sine') ? 'sine' : 'square';
+                   
+                   osc1.frequency.value = note.f;
+                   osc2.frequency.value = note.f;
+                   osc2.detune.value = 12; // Rich chorus
+                   oscSub.frequency.value = note.f / 2; // Deep bass layer
+                   
+                   // Smooth ADSR envelope to remove harsh clipping/clicks
+                   gain.gain.setValueAtTime(0, nextNoteTime);
+                   if (wType === 'sine') {
+                      gain.gain.linearRampToValueAtTime(vol, nextNoteTime + note.d * 0.4);
+                      gain.gain.linearRampToValueAtTime(0.01, nextNoteTime + note.d * 0.9);
+                   } else {
+                      gain.gain.linearRampToValueAtTime(vol, nextNoteTime + 0.05); // fast attack
+                      gain.gain.exponentialRampToValueAtTime(0.01, nextNoteTime + note.d * 0.9); // smooth decay
+                   }
+                   
+                   osc1.start(nextNoteTime); osc2.start(nextNoteTime); oscSub.start(nextNoteTime);
+                   osc1.stop(nextNoteTime + note.d); osc2.stop(nextNoteTime + note.d); oscSub.stop(nextNoteTime + note.d);
+                   
+                   // Track for manual stopping
+                   osc1.endTime = nextNoteTime + note.d;
+                   this.activeOscillators.push(osc1, osc2, oscSub);
+               } catch (e) {}
             }
+            
+            nextNoteTime += note.d;
             step++;
-            this.bgmTimer = setTimeout(playNote, note.d * 1000);
-        } catch (e) {}
+        }
+        
+        this.bgmTimer = setTimeout(scheduleNotes, 50); // Polling interval
      };
      
-     playNote();
+     scheduleNotes();
   }
 
   stopBGM() {
     this.isPlayingBGM = false;
     if (this.bgmTimer) clearTimeout(this.bgmTimer);
+    
+    if (this.activeOscillators && this.activeOscillators.length > 0) {
+       this.activeOscillators.forEach(o => { try { o.stop(); } catch(e){} });
+       this.activeOscillators = [];
+    }
+    
     if (this.bgmNodes && this.bgmNodes.length > 0) {
        this.bgmNodes.forEach(n => { try { n.disconnect(); } catch(e){} });
        this.bgmNodes = [];
