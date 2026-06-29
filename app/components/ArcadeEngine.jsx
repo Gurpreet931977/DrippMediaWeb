@@ -1523,7 +1523,30 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     >{children}</button>
   );
 
-  const gameName = activeGame === "breaker" ? "NEON BREAKER" : activeGame === "scope" ? "SCOPE CREEP" : activeGame === "pendulum" ? "NEON PENDULUM" : activeGame === "gravity" ? "GRAVITY FLIP" : activeGame === "slingshot" ? "SLINGSHOT NINJA" : activeGame === "bullethell" ? "BULLET HELL" : activeGame === "tanks" ? "NEON TANKS" : activeGame === "sandbox" ? "LIQUID LIGHT" : activeGame === "mandala" ? "MANDALA MAKER" : activeGame === "nodeweaver" ? "ZEN NODE WEAVER" : activeGame === "looper" ? "HARMONIC LOOPER" : activeGame === "beats" ? "NEON BEATS" : "DRIPP DROP";
+  const gameNamesMap = {
+    breaker: "NEON BREAKER",
+    scope: "SCOPE CREEP",
+    pendulum: "NEON PENDULUM",
+    gravity: "GRAVITY FLIP",
+    slingshot: "SLINGSHOT NINJA",
+    bullethell: "BULLET HELL",
+    tanks: "POCKET TANKS",
+    sandbox: "LIQUID LIGHT",
+    liquid: "LIQUID LIGHT",
+    mandala: "MANDALA MAKER",
+    nodeweaver: "ZEN NODE WEAVER",
+    looper: "HARMONIC LOOPER",
+    beats: "NEON BEATS",
+    neondevil: "NEON DEVIL",
+    snake: "NEON SNAKE",
+    pong: "NEON PONG",
+    runner: "CYBER RUNNER",
+    invaders: "SPACE INVADERS",
+    simon: "NEON SIMON",
+    bombercrazy: "BOMBER CRAZY",
+    dripp: "DRIPP DROP"
+  };
+  const gameName = gameNamesMap[activeGame] || "DRIPP DROP";
   const isCreativeGame = ['sandbox', 'mandala', 'nodeweaver', 'looper', 'beats'].includes(activeGame);
 
   return (
