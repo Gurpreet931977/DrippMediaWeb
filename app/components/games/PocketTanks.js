@@ -956,19 +956,23 @@ export default class PocketTanks {
            drawBtn(1, "NORMAL", "#ffcc00");
            drawBtn(2, "HARD", "#ff0055");
        } else if (this.state === "map_select") {
-           ctx.font = "bold 20px 'Panchang', sans-serif";
-           ctx.fillStyle = "#ffaa00";
+           ctx.font = "bold 24px 'Panchang', sans-serif";
+           ctx.fillStyle = "#fff";
            ctx.textAlign = "center";
-           ctx.shadowBlur = 10; ctx.shadowColor = "#ffaa00";
+           ctx.shadowBlur = 15; ctx.shadowColor = "#fff";
            ctx.fillText("SELECT DEPLOYMENT ZONE", w/2, 80);
            ctx.shadowBlur = 0;
            
-           const cW = 200, cH = 220;
-           const gapX = 30, gapY = 30;
+           ctx.font = "12px sans-serif";
+           ctx.fillStyle = "rgba(255,255,255,0.5)";
+           ctx.fillText("CHOOSE YOUR BATTLEFIELD", w/2, 105);
+           
+           const cW = 240, cH = 150;
+           const gapX = 40, gapY = 40;
            const cols = 3;
            const totalW = (cW * cols) + (gapX * (cols - 1));
            const startX = w/2 - totalW/2;
-           const startY = 140;
+           const startY = 150;
            
            for (let i = 0; i < this.maps.length; i++) {
               const map = this.maps[i];
@@ -983,27 +987,64 @@ export default class PocketTanks {
                   this.generateTerrain(); // Preview background!
               }
               
-              ctx.strokeStyle = map.stroke;
-              ctx.lineWidth = hover ? 4 : 2;
-              ctx.fillStyle = hover ? `rgba(255,255,255,0.2)` : `rgba(0,0,0,0.85)`;
-              if (hover) { ctx.shadowBlur = 25; ctx.shadowColor = map.stroke; }
+              ctx.save();
+              // Card background
+              ctx.fillStyle = `rgba(10, 15, 20, 0.9)`;
               ctx.beginPath(); ctx.roundRect(cX, cY, cW, cH, 16);
-              ctx.fill(); ctx.stroke();
-              ctx.shadowBlur = 0;
+              ctx.fill();
               
-              // Preview Box
+              // Inner preview (simulated)
+              ctx.save();
+              ctx.beginPath(); ctx.roundRect(cX, cY, cW, cH, 16);
+              ctx.clip();
+              
               ctx.fillStyle = map.bg;
-              ctx.beginPath(); ctx.roundRect(cX + 10, cY + 10, cW - 20, cH - 60, 8); ctx.fill();
-              const mapGrad = ctx.createLinearGradient(0, cY+10, 0, cY+cH-50);
+              ctx.fillRect(cX, cY, cW, cH);
+              const mapGrad = ctx.createLinearGradient(0, cY, 0, cY+cH);
               mapGrad.addColorStop(0, map.gradStart); mapGrad.addColorStop(1, map.gradEnd);
               ctx.fillStyle = mapGrad;
-              ctx.beginPath(); ctx.roundRect(cX + 10, cY + 10, cW - 20, cH - 60, 8); ctx.fill();
+              ctx.fillRect(cX, cY, cW, cH);
               
-              ctx.fillStyle = "#fff";
-              ctx.font = "bold 14px 'Panchang', sans-serif";
+              // Terrain wave in preview
+              ctx.fillStyle = map.stroke;
+              ctx.globalAlpha = 0.2;
+              ctx.beginPath();
+              ctx.moveTo(cX, cY+cH);
+              for (let x=0; x<=cW; x+=10) {
+                 ctx.lineTo(cX + x, cY + cH*0.6 + Math.sin(x*0.05 + i)*20);
+              }
+              ctx.lineTo(cX+cW, cY+cH);
+              ctx.fill();
+              ctx.globalAlpha = 1.0;
+              
+              // Dark gradient overlay at bottom for text
+              const textGrad = ctx.createLinearGradient(0, cY+cH-60, 0, cY+cH);
+              textGrad.addColorStop(0, 'rgba(0,0,0,0)');
+              textGrad.addColorStop(1, 'rgba(0,0,0,0.9)');
+              ctx.fillStyle = textGrad;
+              ctx.fillRect(cX, cY+cH-60, cW, 60);
+              ctx.restore();
+              
+              // Card border
+              ctx.strokeStyle = hover ? "#fff" : map.stroke;
+              ctx.lineWidth = hover ? 3 : 1;
+              if (hover) { ctx.shadowBlur = 20; ctx.shadowColor = map.stroke; }
+              ctx.beginPath(); ctx.roundRect(cX, cY, cW, cH, 16);
+              ctx.stroke();
+              ctx.shadowBlur = 0;
+              
+              // Text
+              ctx.fillStyle = hover ? "#fff" : "rgba(255,255,255,0.8)";
+              ctx.font = "bold 13px 'Panchang', sans-serif";
               ctx.textBaseline = "middle";
-              ctx.fillText(map.name, cX + cW/2, cY + cH - 30);
+              ctx.fillText(map.name, cX + cW/2, cY + cH - 25);
+              
+              ctx.fillStyle = map.stroke;
+              ctx.font = "10px sans-serif";
+              ctx.fillText(`ZONE 0${i+1}`, cX + cW/2, cY + cH - 45);
+              
               ctx.textBaseline = "alphabetic";
+              ctx.restore();
            }
        }
        
