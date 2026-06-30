@@ -43,11 +43,18 @@ const COUNTRY_CODES = [
   { code: '+996', label: 'KG' }
 ];
 
-export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
-  const [activeTab, setActiveTab] = useState('signup'); // 'signup' or 'login'
+export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab = 'signup' }) {
+  const [activeTab, setActiveTab] = useState(initialTab); // 'signup' or 'login'
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab);
+      setErrorMsg("");
+    }
+  }, [isOpen, initialTab]);
 
   // Sign Up States
   const [signupName, setSignupName] = useState("");

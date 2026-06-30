@@ -61,20 +61,34 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
 
   if (!user) {
     return (
-      <button 
-        onClick={onLoginClick}
-        style={{
-          background: 'var(--brand-yellow)', color: 'var(--deep-black)',
-          padding: '8px 16px', borderRadius: '20px', border: 'none',
-          fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem',
-          cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(235, 215, 63, 0.2)',
-          zIndex: 9999
-        }}
-        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-      >
-        Log In / Sign Up
-      </button>
+      <div style={{ display: 'flex', gap: '10px', zIndex: 9999 }}>
+        <button 
+          onClick={() => onLoginClick('login')}
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)', color: 'var(--pure-white)',
+            padding: '10px 20px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.1)',
+            fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem',
+            cursor: 'pointer', transition: 'all 0.3s ease', backdropFilter: 'blur(10px)'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+        >
+          Log In
+        </button>
+        <button 
+          onClick={() => onLoginClick('signup')}
+          style={{
+            background: 'var(--brand-yellow)', color: 'var(--deep-black)',
+            padding: '10px 20px', borderRadius: '14px', border: 'none',
+            fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem',
+            cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 4px 15px rgba(235, 215, 63, 0.2)'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(235, 215, 63, 0.4)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(235, 215, 63, 0.2)'; }}
+        >
+          Sign Up
+        </button>
+      </div>
     );
   }
 
@@ -110,11 +124,12 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
 
       {dropdownOpen && (
         <div style={{
-          position: 'absolute', top: '55px', right: '0',
+          position: 'absolute', bottom: '55px', right: '0',
           background: 'rgba(20,20,20,0.95)', backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
           padding: '15px', width: '220px', display: 'flex', flexDirection: 'column', gap: '10px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)', animation: 'dropdownFade 0.2s ease forwards'
+          boxShadow: '0 10px 30px rgba(0,0,0,0.5)', animation: 'dropdownFade 0.2s ease forwards',
+          transformOrigin: 'bottom right'
         }}>
           <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', marginBottom: '5px' }}>
              <h4 style={{ margin: 0, fontFamily: "'Clash Display', sans-serif", color: 'white', fontSize: '1.1rem' }}>{user.name}</h4>
@@ -145,7 +160,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
         </div>
       )}
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes dropdownFade { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes dropdownFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
       `}} />
     </div>
   );

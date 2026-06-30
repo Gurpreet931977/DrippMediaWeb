@@ -1580,9 +1580,9 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
         </button>
       </div>
 
-      {/* Top Right: Exact Score HUD */}
+      {/* Bottom Right: Exact Score HUD */}
       {activeGame !== "none" && activeGame !== "cyber_racer" && activeGame !== "neon_blocks" && activeGame !== "bullethell" && activeGame !== "tanks" && !isCreativeGame && (
-        <div style={{ position: "absolute", top: "30px", right: "30px", textAlign: "right", pointerEvents: "none", zIndex: 100, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+        <div style={{ position: "absolute", bottom: "30px", right: "30px", textAlign: "right", pointerEvents: "none", zIndex: 100, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
           <div style={{ fontSize: "0.8rem", color: "#888", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>
              {activeGame === "simon" ? "ROUND" : (activeGame === "snake" || activeGame === "slingshot") ? "SCORE" : activeGame === "gravity" ? "DISTANCE" : "SCORE"}
           </div>

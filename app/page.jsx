@@ -33,6 +33,8 @@ export default function ComingSoon() {
   const [hideHero, setHideHero] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [authModalInitialTab, setAuthModalInitialTab] = useState('signup');
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [gameState, setGameState] = useState('playing'); // 'playing', 'failed'
   const [isCapturing, setIsCapturing] = useState(false);
@@ -1312,15 +1314,19 @@ export default function ComingSoon() {
       overflow: 'hidden',
       touchAction: 'none' 
     }}>
-      <div style={{ position: 'absolute', top: '20px', right: '30px', zIndex: 9999 }}>
+      <div style={{ position: 'absolute', bottom: '30px', right: '30px', zIndex: 9999 }}>
         <ProfileWidget 
           showScore={true} 
-          onLoginClick={() => setShowSignupModal(true)} 
+          onLoginClick={(tab = 'signup') => {
+             setAuthModalInitialTab(tab);
+             setShowSignupModal(true);
+          }} 
         />
       </div>
 
       <AuthModal 
         isOpen={showSignupModal}
+        initialTab={authModalInitialTab}
         onClose={() => {
            setShowSignupModal(false);
            // Let them keep playing if they skip
@@ -1859,7 +1865,7 @@ export default function ComingSoon() {
       {/* Game UI Score */}
       {activeGame !== 'none' && (
         <div className="game-ui" style={{
-          position: 'absolute', top: '5%', right: '5%', zIndex: 2,
+          position: 'absolute', bottom: '90px', right: '30px', zIndex: 2,
           fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px',
           opacity: isFadingOut ? 0 : 1,
           transition: 'opacity 0.5s ease'
