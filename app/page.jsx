@@ -47,6 +47,9 @@ export default function ComingSoon() {
   const [isSignupSuccess, setIsSignupSuccess] = useState(false);
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
+  const [signupPhone, setSignupPhone] = useState("");
+  const [signupCountryCode, setSignupCountryCode] = useState("+91");
+  const [signupError, setSignupError] = useState("");
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1303,16 +1306,38 @@ export default function ComingSoon() {
 
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    if (!signupName || !signupEmail) return;
+    setSignupError("");
+    if (!signupName || !signupEmail || !signupPhone) return;
+    
+    // Validation Logic
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(signupEmail)) {
+       setSignupError("Please enter a valid email address.");
+       return;
+    }
+    const fakeDomains = ["tempmail.com", "mailinator.com", "10minutemail.com", "guerrillamail.com", "temp-mail.org", "yopmail.com"];
+    const domain = signupEmail.split('@')[1]?.toLowerCase();
+    if (fakeDomains.includes(domain)) {
+       setSignupError("Disposable email addresses are not allowed.");
+       return;
+    }
+    const phoneRegex = /^[0-9]{7,15}$/;
+    const rawPhone = signupPhone.replace(/\D/g, ''); // strip non-digits
+    if (!phoneRegex.test(rawPhone)) {
+       setSignupError("Please enter a valid mobile number.");
+       return;
+    }
+
     setIsSubmitting(true);
     
     try {
+      const fullPhone = `${signupCountryCode}${rawPhone}`;
       const { error } = await supabase.from('users').insert([
-        { name: signupName, email: signupEmail }
+        { name: signupName, email: signupEmail, phone: fullPhone }
       ]);
       if (error) {
-         console.error("Error saving user:", error);
-         alert("Error creating account. Please try again.");
+         console.error("Supabase error:", error);
+         setSignupError(`Supabase Error: ${error.message}. (Make sure 'phone' column exists and RLS is disabled or allows inserts)`);
       } else {
          if (typeof window !== 'undefined') {
             localStorage.setItem('dripp_hasSignedUp', 'true');
@@ -1400,6 +1425,11 @@ export default function ComingSoon() {
                 </p>
                 
                 <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {signupError && (
+                     <div style={{ background: 'rgba(255, 50, 50, 0.1)', border: '1px solid rgba(255, 50, 50, 0.3)', color: '#ff6b6b', padding: '10px', borderRadius: '8px', fontSize: '0.85rem' }}>
+                        {signupError}
+                     </div>
+                  )}
                   <div style={{ position: 'relative' }}>
                     <input 
                       type="text" 
@@ -1408,6 +1438,7 @@ export default function ComingSoon() {
                       value={signupName}
                       onChange={e => setSignupName(e.target.value)}
                       required
+                      autoComplete="off"
                       style={{
                         width: '100%', padding: '16px 20px', borderRadius: '12px',
                         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
@@ -1424,6 +1455,7 @@ export default function ComingSoon() {
                       value={signupEmail}
                       onChange={e => setSignupEmail(e.target.value)}
                       required
+                      autoComplete="off"
                       style={{
                         width: '100%', padding: '16px 20px', borderRadius: '12px',
                         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
@@ -1431,6 +1463,41 @@ export default function ComingSoon() {
                         outline: 'none', boxSizing: 'border-box'
                       }}
                     />
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                     <select 
+                       className="modern-input"
+                       value={signupCountryCode}
+                       onChange={e => setSignupCountryCode(e.target.value)}
+                       style={{
+                         padding: '16px 10px', borderRadius: '12px',
+                         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                         color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
+                         outline: 'none', cursor: 'pointer', appearance: 'none', minWidth: '80px', textAlign: 'center'
+                       }}
+                     >
+                       <option value="+1">+1 (US)</option>
+                       <option value="+44">+44 (UK)</option>
+                       <option value="+91">+91 (IN)</option>
+                       <option value="+61">+61 (AU)</option>
+                       <option value="+971">+971 (UAE)</option>
+                     </select>
+                     <input 
+                       type="tel" 
+                       className="modern-input"
+                       placeholder="Mobile Number" 
+                       value={signupPhone}
+                       onChange={e => setSignupPhone(e.target.value)}
+                       required
+                       autoComplete="off"
+                       style={{
+                         flex: 1, padding: '16px 20px', borderRadius: '12px',
+                         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                         color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
+                         outline: 'none', boxSizing: 'border-box'
+                       }}
+                     />
                   </div>
                   
                   <button type="submit" disabled={isSubmitting} className="modern-btn" style={{
@@ -1465,6 +1532,14 @@ export default function ComingSoon() {
         }
         .modern-input {
           transition: all 0.3s ease;
+        }
+        .modern-input:-webkit-autofill,
+        .modern-input:-webkit-autofill:hover, 
+        .modern-input:-webkit-autofill:focus, 
+        .modern-input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #1e1e1e inset !important;
+            -webkit-text-fill-color: white !important;
+            transition: background-color 5000s ease-in-out 0s;
         }
         .modern-input:focus {
           border-color: var(--brand-yellow) !important;
