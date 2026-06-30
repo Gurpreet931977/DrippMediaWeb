@@ -1419,8 +1419,20 @@ export default function ComingSoon() {
       `}</style>
       {!isTouch && <CustomCursor />}
 
+      <style>{`
+        @media (max-width: 768px) {
+           .control-buttons-wrapper {
+              top: 2% !important;
+              left: 4% !important;
+           }
+           .control-buttons-wrapper > div {
+              margin-top: 5px !important;
+           }
+        }
+      `}</style>
+
       {/* Control Buttons (Top Left) */}
-      <div style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 4, display: 'flex', gap: '15px' }}>
+      <div className="control-buttons-wrapper" style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 4, display: 'flex', gap: '15px' }}>
         {activeGame !== 'none' && gameState === 'playing' && !isPaused && (
           <div 
             onClick={() => setIsPaused(true)}

@@ -62,31 +62,52 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
   if (!user) {
     return (
       <div style={{ display: 'flex', gap: '10px', zIndex: 9999 }}>
+        <style>{`
+          .auth-btn-icon { display: none; }
+          @media (max-width: 768px) {
+            .auth-btn-text { display: none !important; }
+            .auth-btn-icon { display: block !important; }
+            .auth-btn { padding: 10px !important; border-radius: 50% !important; width: 42px; height: 42px; display: flex !important; justify-content: center; align-items: center; }
+          }
+        `}</style>
         <button 
+          className="auth-btn"
           onClick={() => onLoginClick('login')}
           style={{
             background: 'rgba(255, 255, 255, 0.05)', color: 'var(--pure-white)',
             padding: '10px 20px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.1)',
             fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem',
-            cursor: 'pointer', transition: 'all 0.3s ease', backdropFilter: 'blur(10px)'
+            cursor: 'pointer', transition: 'all 0.3s ease', backdropFilter: 'blur(10px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
         >
-          Log In
+          <span className="auth-btn-text">Log In</span>
+          <svg className="auth-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+          </svg>
         </button>
         <button 
+          className="auth-btn"
           onClick={() => onLoginClick('signup')}
           style={{
             background: 'var(--brand-yellow)', color: 'var(--deep-black)',
             padding: '10px 20px', borderRadius: '14px', border: 'none',
             fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem',
-            cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 4px 15px rgba(235, 215, 63, 0.2)'
+            cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 4px 15px rgba(235, 215, 63, 0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(235, 215, 63, 0.4)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(235, 215, 63, 0.2)'; }}
         >
-          Sign Up
+          <span className="auth-btn-text">Sign Up</span>
+          <svg className="auth-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+             <circle cx="12" cy="7" r="4"></circle>
+          </svg>
         </button>
       </div>
     );
