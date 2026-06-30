@@ -3,6 +3,46 @@
 import React, { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
+const COUNTRY_CODES = [
+  { code: '+1', label: 'US/CA' }, { code: '+44', label: 'UK' }, { code: '+91', label: 'IN' },
+  { code: '+61', label: 'AU' }, { code: '+971', label: 'UAE' }, { code: '+49', label: 'DE' },
+  { code: '+33', label: 'FR' }, { code: '+81', label: 'JP' }, { code: '+86', label: 'CN' },
+  { code: '+55', label: 'BR' }, { code: '+7', label: 'RU' }, { code: '+27', label: 'ZA' },
+  { code: '+82', label: 'KR' }, { code: '+39', label: 'IT' }, { code: '+34', label: 'ES' },
+  { code: '+62', label: 'ID' }, { code: '+90', label: 'TR' }, { code: '+31', label: 'NL' },
+  { code: '+41', label: 'CH' }, { code: '+46', label: 'SE' }, { code: '+48', label: 'PL' },
+  { code: '+32', label: 'BE' }, { code: '+43', label: 'AT' }, { code: '+45', label: 'DK' },
+  { code: '+358', label: 'FI' }, { code: '+47', label: 'NO' }, { code: '+351', label: 'PT' },
+  { code: '+30', label: 'GR' }, { code: '+420', label: 'CZ' }, { code: '+36', label: 'HU' },
+  { code: '+60', label: 'MY' }, { code: '+63', label: 'PH' }, { code: '+65', label: 'SG' },
+  { code: '+66', label: 'TH' }, { code: '+84', label: 'VN' }, { code: '+92', label: 'PK' },
+  { code: '+880', label: 'BD' }, { code: '+94', label: 'LK' }, { code: '+977', label: 'NP' },
+  { code: '+93', label: 'AF' }, { code: '+98', label: 'IR' }, { code: '+964', label: 'IQ' },
+  { code: '+966', label: 'SA' }, { code: '+972', label: 'IL' }, { code: '+973', label: 'BH' },
+  { code: '+974', label: 'QA' }, { code: '+965', label: 'KW' }, { code: '+968', label: 'OM' },
+  { code: '+962', label: 'JO' }, { code: '+961', label: 'LB' }, { code: '+963', label: 'SY' },
+  { code: '+20', label: 'EG' }, { code: '+212', label: 'MA' }, { code: '+213', label: 'DZ' },
+  { code: '+216', label: 'TN' }, { code: '+218', label: 'LY' }, { code: '+249', label: 'SD' },
+  { code: '+234', label: 'NG' }, { code: '+254', label: 'KE' }, { code: '+255', label: 'TZ' },
+  { code: '+256', label: 'UG' }, { code: '+233', label: 'GH' }, { code: '+225', label: 'CI' },
+  { code: '+237', label: 'CM' }, { code: '+221', label: 'SN' }, { code: '+244', label: 'AO' },
+  { code: '+258', label: 'MZ' }, { code: '+260', label: 'ZM' }, { code: '+263', label: 'ZW' },
+  { code: '+52', label: 'MX' }, { code: '+54', label: 'AR' }, { code: '+56', label: 'CL' },
+  { code: '+57', label: 'CO' }, { code: '+51', label: 'PE' }, { code: '+58', label: 'VE' },
+  { code: '+593', label: 'EC' }, { code: '+591', label: 'BO' }, { code: '+595', label: 'PY' },
+  { code: '+598', label: 'UY' }, { code: '+502', label: 'GT' }, { code: '+503', label: 'SV' },
+  { code: '+504', label: 'HN' }, { code: '+505', label: 'NI' }, { code: '+506', label: 'CR' },
+  { code: '+507', label: 'PA' }, { code: '+53', label: 'CU' }, { code: '+1809', label: 'DO' },
+  { code: '+1876', label: 'JM' }, { code: '+1868', label: 'TT' }, { code: '+1242', label: 'BS' },
+  { code: '+353', label: 'IE' }, { code: '+354', label: 'IS' }, { code: '+352', label: 'LU' },
+  { code: '+356', label: 'MT' }, { code: '+357', label: 'CY' }, { code: '+370', label: 'LT' },
+  { code: '+371', label: 'LV' }, { code: '+372', label: 'EE' }, { code: '+380', label: 'UA' },
+  { code: '+375', label: 'BY' }, { code: '+373', label: 'MD' }, { code: '+995', label: 'GE' },
+  { code: '+374', label: 'AM' }, { code: '+994', label: 'AZ' }, { code: '+7', label: 'KZ' },
+  { code: '+998', label: 'UZ' }, { code: '+993', label: 'TM' }, { code: '+992', label: 'TJ' },
+  { code: '+996', label: 'KG' }
+];
+
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [activeTab, setActiveTab] = useState('signup'); // 'signup' or 'login'
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,6 +67,12 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     if (!signupName || !signupEmail || !signupPhone || !signupNature) return;
 
     // Validation Logic
+    const usernameRegex = /^[a-zA-Z0-9]+$/;
+    if (!usernameRegex.test(signupName)) {
+       setErrorMsg("Player Name can only contain letters and numbers (no spaces or symbols).");
+       return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(signupEmail)) {
        setErrorMsg("Please enter a valid email address.");
@@ -48,6 +94,18 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     setIsSubmitting(true);
     
     try {
+      // Check for uniqueness of username
+      const { data: existingUser, error: existError } = await supabase
+         .from('users')
+         .select('name')
+         .ilike('name', signupName)
+         .maybeSingle();
+
+      if (existingUser) {
+         setErrorMsg(`Username "${signupName}" is already taken.`);
+         setIsSubmitting(false);
+         return;
+      }
       const fullPhone = `${signupCountryCode}${rawPhone}`;
       const { data, error } = await supabase.from('users').insert([
         { name: signupName, email: signupEmail, phone: fullPhone, nature: signupNature }
@@ -254,23 +312,27 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               {activeTab === 'signup' && (
                   <>
                   <div style={{ display: 'flex', gap: '12px' }}>
-                     <select 
-                       className="modern-input"
-                       value={signupCountryCode}
-                       onChange={e => setSignupCountryCode(e.target.value)}
-                       style={{
-                         padding: '18px 10px', borderRadius: '16px',
-                         background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                         color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1.05rem',
-                         outline: 'none', cursor: 'pointer', appearance: 'none', minWidth: '90px', textAlign: 'center'
-                       }}
-                     >
-                       <option value="+1" style={{color: 'black'}}>+1 (US)</option>
-                       <option value="+44" style={{color: 'black'}}>+44 (UK)</option>
-                       <option value="+91" style={{color: 'black'}}>+91 (IN)</option>
-                       <option value="+61" style={{color: 'black'}}>+61 (AU)</option>
-                       <option value="+971" style={{color: 'black'}}>+971 (UAE)</option>
-                     </select>
+                     <div style={{ position: 'relative' }}>
+                       <select 
+                         className="modern-input"
+                         value={signupCountryCode}
+                         onChange={e => setSignupCountryCode(e.target.value)}
+                         style={{
+                           padding: '18px 30px 18px 10px', borderRadius: '16px',
+                           background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                           color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1.05rem',
+                           outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', 
+                           minWidth: '95px', textAlign: 'center', position: 'relative', zIndex: 2
+                         }}
+                       >
+                         {COUNTRY_CODES.map((c) => (
+                            <option key={c.code+c.label} value={c.code} style={{color: 'black'}}>{c.code} ({c.label})</option>
+                         ))}
+                       </select>
+                       <svg style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1, color: 'rgba(255,255,255,0.5)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                         <polyline points="6 9 12 15 18 9"></polyline>
+                       </svg>
+                     </div>
                      <input 
                        type="tel" 
                        className="modern-input"
@@ -298,7 +360,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
                          color: signupNature ? 'white' : 'rgba(255,255,255,0.4)', 
                          fontFamily: "'Clash Display', sans-serif", fontSize: '1.05rem',
-                         outline: 'none', cursor: 'pointer', appearance: 'none', boxSizing: 'border-box'
+                         outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
+                         position: 'relative', zIndex: 2
                        }}
                      >
                        <option value="" disabled style={{ color: 'black' }}>Select Persona...</option>
@@ -306,6 +369,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                        <option value="Business Person" style={{ color: 'black' }}>Business Person</option>
                        <option value="General User" style={{ color: 'black' }}>General User</option>
                      </select>
+                     <svg style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1, color: 'rgba(255,255,255,0.5)' }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                     </svg>
                   </div>
                   </>
               )}
