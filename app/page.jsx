@@ -1495,9 +1495,18 @@ export default function ComingSoon() {
            }
            .desktop-game-ui { display: none !important; }
            .dripp-game-ui {
-              top: 5% !important;
+              top: 2% !important;
               bottom: auto !important;
-              right: 5% !important;
+              right: 4% !important;
+              gap: 0 !important;
+           }
+           .leaderboard-block {
+              order: 2;
+              margin-bottom: 0 !important;
+              margin-top: 0px !important;
+           }
+           .score-block {
+              order: 1;
            }
            .highest-score-text, .highest-score-value, .dripp-guidelines {
               display: none !important;
@@ -1993,7 +2002,7 @@ export default function ComingSoon() {
           opacity: isFadingOut ? 0 : 1,
           transition: 'opacity 0.5s ease'
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div className="score-block" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
               Level {breakerLevel}
             </div>
@@ -2048,7 +2057,7 @@ export default function ComingSoon() {
           transition: 'opacity 0.5s ease'
         }}>
           {/* High Score / Leaderboard Display */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginBottom: '10px' }}>
+          <div className="leaderboard-block" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginBottom: '10px' }}>
              <span className="highest-score-text" style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Highest Score in Leaderboard</span>
              <span className="highest-score-value" style={{ fontSize: '1.4rem', color: 'var(--brand-yellow)', fontWeight: 'bold' }}>{highScoreRef.current}</span>
              <button 
@@ -2065,7 +2074,7 @@ export default function ComingSoon() {
              </button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div className="score-block" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
               Score
             </div>
