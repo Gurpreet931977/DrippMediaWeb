@@ -103,7 +103,7 @@
             border: 2px solid var(--pure-white);
             border-radius: 50%;
             pointer-events: none;
-            z-index: 100000;
+            z-index: 9999999;
             transform: translate(-50%, -50%);
             mix-blend-mode: difference;
             transition: width 0.3s, height 0.3s, background-color 0.3s;

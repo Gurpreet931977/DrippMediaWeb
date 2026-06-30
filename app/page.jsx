@@ -1465,7 +1465,7 @@ export default function ComingSoon() {
            justify-content: center !important;
            align-items: center !important;
            transition: background 0.1s ease, border 0.1s ease, width 0.15s ease, height 0.15s ease, box-shadow 0.15s ease !important;
-           z-index: 100000 !important;
+           z-index: 9999999 !important;
            pointer-events: none !important;
            box-shadow: 0 0 20px rgba(235, 215, 63, 0.5) !important;
         }
