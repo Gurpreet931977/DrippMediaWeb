@@ -63,6 +63,9 @@ export default function ComingSoon() {
         if (typeof window !== 'undefined') {
           localStorage.setItem('dripp_playCount', newCount.toString());
         }
+        if (newCount >= 2) {
+          setShowSignupModal(true);
+        }
         return newCount;
       });
     }
