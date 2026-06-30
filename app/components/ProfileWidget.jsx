@@ -121,15 +121,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
 
   return (
     <div style={{ position: 'relative', zIndex: 9999, display: 'flex', alignItems: 'center', gap: '15px' }}>
-      {showScore && (
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
-          marginRight: '10px'
-        }} className="profile-score-display">
-          <span style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>High Score</span>
-          <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: 'var(--brand-yellow)', lineHeight: 1 }}>{highScore}</span>
-        </div>
-      )}
+      {/* Score moved to page.jsx */}
       
       <div 
         className="profile-pill"
@@ -163,12 +155,12 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
 
       {dropdownOpen && (
         <div style={{
-          position: 'absolute', bottom: '55px', right: '0',
+          position: 'absolute', top: '55px', right: '0',
           background: 'rgba(20,20,20,0.95)', backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
           padding: '15px', width: '220px', display: 'flex', flexDirection: 'column', gap: '10px',
           boxShadow: '0 10px 30px rgba(0,0,0,0.5)', animation: 'dropdownFade 0.2s ease forwards',
-          transformOrigin: 'bottom right'
+          transformOrigin: 'top right'
         }}>
           <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', marginBottom: '5px' }}>
              <h4 style={{ margin: 0, fontFamily: "'Clash Display', sans-serif", color: 'white', fontSize: '1.1rem' }}>{user.name}</h4>

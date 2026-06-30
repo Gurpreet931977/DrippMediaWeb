@@ -46,15 +46,44 @@ export default function ComingSoon() {
   // Trial Gate States
   const [playCount, setPlayCount] = useState(0);
   const [hasSignedUp, setHasSignedUp] = useState(false);
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedCount = parseInt(localStorage.getItem('dripp_playCount') || '0', 10);
-      const storedUser = localStorage.getItem('dripp_user');
-      setPlayCount(storedCount);
-      setHasSignedUp(!!storedUser);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const highScoreRef = useRef(0);
 
-    }
+  useEffect(() => {
+    try {
+      const storedCount = localStorage.getItem('dripp_playCount');
+      if (storedCount) setPlayCount(parseInt(storedCount, 10));
+      
+      const user = localStorage.getItem('dripp_user');
+      if (user) setHasSignedUp(true);
+
+      const cachedHighScore = localStorage.getItem('dripp_highScore');
+      if (cachedHighScore) highScoreRef.current = parseInt(cachedHighScore, 10);
+      else localStorage.setItem('dripp_highScore', '0');
+    } catch(e) {}
   }, []);
+
+  const fetchLeaderboard = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('name, highscore')
+        .order('highscore', { ascending: false })
+        .limit(3);
+      if (!error && data) {
+        setLeaderboardData(data);
+      }
+    } catch (e) {
+       console.error("Leaderboard fetch error:", e);
+    }
+  };
+
+  useEffect(() => {
+     if (showLeaderboard) {
+        fetchLeaderboard();
+     }
+  }, [showLeaderboard]);
 
   useEffect(() => {
     if (gameState === 'failed' && !hasSignedUp) {
@@ -69,7 +98,31 @@ export default function ComingSoon() {
         return newCount;
       });
     }
-  }, [gameState, hasSignedUp]);
+
+    // High Score tracking and saving to Supabase for Dripp game
+    if (gameState === 'failed' && activeGame === 'dripp') {
+       if (score > highScoreRef.current) {
+          highScoreRef.current = score;
+          localStorage.setItem('dripp_highScore', score.toString());
+          const userStr = localStorage.getItem('dripp_user');
+          if (userStr) {
+             try {
+                const userObj = JSON.parse(userStr);
+                if (userObj.email) {
+                   supabase.from('users')
+                      .update({ highscore: score })
+                      .eq('email', userObj.email)
+                      .then(({error}) => {
+                         if (error) console.error("Error saving highscore to Supabase:", error);
+                      });
+                }
+             } catch (e) {
+                console.error("Error parsing user for highscore:", e);
+             }
+          }
+       }
+    }
+  }, [gameState, hasSignedUp, activeGame, score]);
   
   const isPausedRef = useRef(false);
   
@@ -1370,7 +1423,7 @@ export default function ComingSoon() {
         }
         .modern-input:focus {
           border-color: var(--brand-yellow) !important;
-          box-shadow: 0 0 15px rgba(235, 215, 63, 0.15) !important;
+          box-shadow: 0 0 15px rgba(235, 63, 63, 0.15) !important;
           background: rgba(255, 255, 255, 0.08) !important;
         }
         .modern-btn {
@@ -1442,13 +1495,12 @@ export default function ComingSoon() {
       <div className="control-buttons-wrapper" style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 9999, display: 'flex', gap: '10px' }}>
         <div className="desktop-profile-wrapper" style={{ position: 'fixed', top: '20px', right: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <ProfileWidget 
-            showScore={true} 
             onLoginClick={(tab = 'signup') => {
                setAuthModalInitialTab(tab);
                setShowSignupModal(true);
             }} 
           />
-          {activeGame !== 'none' && (
+          {activeGame === 'breaker' && (
             <div className="desktop-game-ui" style={{
               fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
               opacity: isFadingOut ? 0 : 1, transition: 'opacity 0.5s ease', marginTop: '10px'
@@ -1471,15 +1523,9 @@ export default function ComingSoon() {
                   })()}
                 </div>
               )}
-              <div className="score-counter-element" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)', display: 'inline-block' }}>
-                {activeGame === 'dripp' ? score : breakerScore}
-              </div>
-              {activeGame === 'dripp' && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                  <div style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>Keep scoring to level up</div>
-                  <div style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: '#eb3f3f', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Caution: Avoid bombs</div>
+                <div className="score-counter-element" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)', display: 'inline-block' }}>
+                  {breakerScore}
                 </div>
-              )}
             </div>
           )}
         </div>
@@ -1922,8 +1968,8 @@ export default function ComingSoon() {
         }} 
       />
 
-      {/* Game UI Score */}
-      {activeGame !== 'none' && (
+      {/* Breaker Mobile Game UI Score */}
+      {activeGame === 'breaker' && (
         <div className="game-ui mobile-game-ui" style={{
           position: 'absolute', top: '5%', right: '5%', zIndex: 2,
           fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px',
@@ -1932,7 +1978,7 @@ export default function ComingSoon() {
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-              {activeGame === 'dripp' ? 'Score' : `Level ${breakerLevel}`}
+              Level {breakerLevel}
             </div>
             {activeGame === 'breaker' && (
               <div style={{ fontSize: 'clamp(0.5rem, 1.5vw, 0.65rem)', letterSpacing: '1px', color: 'var(--brand-yellow)', textTransform: 'uppercase', opacity: 0.8, marginBottom: '5px' }}>
@@ -1973,6 +2019,95 @@ export default function ComingSoon() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Dripp Unified Game UI Score (Bottom Right) */}
+      {activeGame === 'dripp' && (
+        <div className="game-ui" style={{
+          position: 'absolute', bottom: '30px', right: '30px', zIndex: 2,
+          fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px',
+          opacity: isFadingOut ? 0 : 1,
+          transition: 'opacity 0.5s ease'
+        }}>
+          {/* High Score / Leaderboard Display */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginBottom: '10px' }}>
+             <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Highest Score in Leaderboard</span>
+             <span style={{ fontSize: '1.4rem', color: 'var(--brand-yellow)', fontWeight: 'bold' }}>{highScoreRef.current}</span>
+             <button 
+                onClick={() => setShowLeaderboard(true)}
+                style={{
+                   marginTop: '5px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                   color: 'var(--brand-yellow)', padding: '4px 10px', borderRadius: '8px',
+                   fontFamily: "'Clash Display', sans-serif", fontSize: '0.7rem', cursor: 'pointer', transition: 'all 0.2s ease', textTransform: 'uppercase'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+             >
+                View Leaderboard
+             </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+              Score
+            </div>
+            <div className="score-counter-element" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)', display: 'inline-block' }}>
+              {score}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: '5px' }}>
+              <div style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>Keep scoring to level up</div>
+              <div style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: '#eb3f3f', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Caution: Avoid bombs</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLeaderboard && (
+        <div style={{
+           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999,
+           display: 'flex', justifyContent: 'center', alignItems: 'center',
+           background: 'rgba(5, 5, 5, 0.6)', backdropFilter: 'blur(12px)',
+           animation: 'modalFadeIn 0.3s forwards', padding: '20px'
+        }}>
+           <div style={{
+              background: 'linear-gradient(145deg, #161616, #0e0e0e)',
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px',
+              padding: '30px', width: '100%', maxWidth: '350px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center'
+           }}>
+              <h2 style={{ color: 'var(--brand-yellow)', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', marginBottom: '20px', textTransform: 'uppercase' }}>
+                 Leaderboard
+              </h2>
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                 {leaderboardData.length > 0 ? leaderboardData.map((player, index) => (
+                    <div key={index} style={{
+                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                       padding: '10px 15px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px'
+                    }}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ color: index === 0 ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.5)', fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem' }}>#{index + 1}</span>
+                          <span style={{ color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem' }}>{player.name}</span>
+                       </div>
+                       <span style={{ color: 'var(--brand-yellow)', fontFamily: "'Panchang', sans-serif", fontSize: '1rem' }}>{player.highscore}</span>
+                    </div>
+                 )) : (
+                    <div style={{ color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", textAlign: 'center' }}>
+                       Loading scores...
+                    </div>
+                 )}
+              </div>
+              <button 
+                 onClick={() => setShowLeaderboard(false)}
+                 style={{
+                    marginTop: '25px', padding: '10px 20px', background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: '12px',
+                    cursor: 'pointer', fontFamily: "'Clash Display', sans-serif", width: '100%'
+                 }}
+              >
+                 Close
+              </button>
+           </div>
         </div>
       )}
 
