@@ -42,6 +42,14 @@ const COUNTRY_CODES = [
   { code: '+998', label: 'UZ' }, { code: '+993', label: 'TM' }, { code: '+992', label: 'TJ' },
   { code: '+996', label: 'KG' }
 ];
+const SECURITY_QUOTES = [
+  "I am the master of my fate",
+  "Stay hungry, stay foolish",
+  "To infinity and beyond",
+  "May the force be with you",
+  "Just do it",
+  "Hakuna Matata"
+];
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab = 'signup' }) {
   const [activeTab, setActiveTab] = useState(initialTab); // 'signup' or 'login'
@@ -287,7 +295,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         background: 'linear-gradient(160deg, rgba(30,30,30,0.7) 0%, rgba(15,15,15,0.85) 100%)',
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '24px', padding: '32px 28px', width: '100%', maxWidth: '380px',
+        borderRadius: '24px', padding: '20px 24px', width: '100%', maxWidth: '340px',
         animation: 'modalScaleUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         boxShadow: '0 30px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
         textAlign: 'center', position: 'relative', overflow: 'hidden'
@@ -475,20 +483,27 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                 )}
                 {activeTab === 'forgot_password' && (
                   <div style={{ marginTop: '12px' }}>
-                    <input 
-                      type="text" 
+                    <select 
                       className="modern-input"
-                      placeholder="Secret Recovery Phrase" 
                       value={resetSecurityPhrase}
                       onChange={e => setResetSecurityPhrase(e.target.value)}
                       required={activeTab === 'forgot_password'}
                       style={{
                         width: '100%', padding: '14px 18px', borderRadius: '12px',
                         background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                        color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
-                        outline: 'none', boxSizing: 'border-box'
+                        color: resetSecurityPhrase ? 'white' : 'rgba(255,255,255,0.4)', 
+                        fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                        outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
                       }}
-                    />
+                    >
+                      <option value="" disabled>Select Security Quote...</option>
+                      {SECURITY_QUOTES.map(quote => (
+                        <option key={quote} value={quote} style={{color: 'black'}}>{quote}</option>
+                      ))}
+                    </select>
+                    <svg style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'rgba(255,255,255,0.5)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
                   </div>
                 )}
               </div>
@@ -557,6 +572,29 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                            <option value="business" style={{color: 'black'}}>Business Persona</option>
                            <option value="creative" style={{color: 'black'}}>Creative Explorer</option>
                            <option value="general" style={{color: 'black'}}>General User</option>
+                         </select>
+                         <svg style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'rgba(255,255,255,0.5)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                           <polyline points="6 9 12 15 18 9"></polyline>
+                         </svg>
+                      </div>
+                      <div style={{ position: 'relative' }}>
+                         <select 
+                           className="modern-input"
+                           value={signupSecurityPhrase}
+                           onChange={e => setSignupSecurityPhrase(e.target.value)}
+                           required={activeTab === 'signup'}
+                           style={{
+                             width: '100%', padding: '14px 18px', borderRadius: '12px',
+                             background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                             color: signupSecurityPhrase ? 'white' : 'rgba(255,255,255,0.4)', 
+                             fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                             outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
+                           }}
+                         >
+                           <option value="" disabled>Select Security Quote...</option>
+                           {SECURITY_QUOTES.map(quote => (
+                             <option key={quote} value={quote} style={{color: 'black'}}>{quote}</option>
+                           ))}
                          </select>
                          <svg style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'rgba(255,255,255,0.5)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                            <polyline points="6 9 12 15 18 9"></polyline>

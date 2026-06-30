@@ -2066,7 +2066,7 @@ export default function ComingSoon() {
         }}>
           {/* High Score / Leaderboard Display */}
           <div className="leaderboard-block" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginBottom: '10px' }}>
-             <span className="highest-score-text" style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Highest Score in Leaderboard</span>
+             <span className="highest-score-text" style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Your Highest Score</span>
              <span className="highest-score-value" style={{ fontSize: '1.4rem', color: 'var(--brand-yellow)', fontWeight: 'bold' }}>{highScoreRef.current}</span>
              <button 
                 onClick={() => setShowLeaderboard(true)}
