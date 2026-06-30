@@ -57,18 +57,59 @@ export default function ComingSoon() {
       const storedCount = localStorage.getItem('dripp_playCount');
       if (storedCount) setPlayCount(parseInt(storedCount, 10));
       
-      const user = localStorage.getItem('dripp_user');
-      if (user) setHasSignedUp(true);
+      const userStr = localStorage.getItem('dripp_user');
+      let userObj = null;
+      if (userStr) {
+          setHasSignedUp(true);
+          try { userObj = JSON.parse(userStr); } catch(e) {}
+      }
 
+      let localHigh = 0;
       const cachedHighScore = localStorage.getItem('dripp_highScore');
-      if (cachedHighScore) highScoreRef.current = parseInt(cachedHighScore, 10);
-      else localStorage.setItem('dripp_highScore', '0');
+      if (cachedHighScore) {
+          localHigh = parseInt(cachedHighScore, 10);
+          highScoreRef.current = localHigh;
+      } else {
+          localStorage.setItem('dripp_highScore', '0');
+      }
+
+      // Sync high score in both directions
+      if (userObj && userObj.email) {
+          supabase.from('users').select('highscore').eq('email', userObj.email).single()
+            .then(({ data }) => {
+                if (data) {
+                    const dbHigh = data.highscore || 0;
+                    if (localHigh > dbHigh) {
+                        supabase.from('users').update({ highscore: localHigh }).eq('email', userObj.email).then();
+                    } else if (dbHigh > localHigh) {
+                        highScoreRef.current = dbHigh;
+                        localStorage.setItem('dripp_highScore', dbHigh.toString());
+                    }
+                }
+            });
+      }
     } catch(e) {}
   }, []);
 
   const fetchLeaderboard = async () => {
     setLeaderboardLoading(true);
     setLeaderboardError(false);
+    
+    // Sync local score to DB before fetching leaderboard to ensure it's up to date
+    try {
+      const userStr = localStorage.getItem('dripp_user');
+      const localHigh = parseInt(localStorage.getItem('dripp_highScore') || '0', 10);
+      if (userStr && localHigh > 0) {
+          const userObj = JSON.parse(userStr);
+          if (userObj.email) {
+             const { data } = await supabase.from('users').select('highscore').eq('email', userObj.email).single();
+             if (data && localHigh > (data.highscore || 0)) {
+                 await supabase.from('users').update({ highscore: localHigh }).eq('email', userObj.email);
+             }
+          }
+      }
+    } catch(e) {}
+
     try {
       const { data, error } = await supabase
         .from('users')
