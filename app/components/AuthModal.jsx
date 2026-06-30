@@ -190,7 +190,16 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         padding: '20px'
       }}
     >
-      <div style={{
+      <style>{`
+        @media (max-width: 768px) {
+          .auth-modal-content {
+             transform: scale(0.9) translateY(0) !important;
+             transform-origin: center center;
+             padding: 24px 20px !important;
+          }
+        }
+      `}</style>
+      <div className="auth-modal-content" style={{
         background: 'linear-gradient(160deg, rgba(30,30,30,0.7) 0%, rgba(15,15,15,0.85) 100%)',
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.08)',

@@ -1312,15 +1312,7 @@ export default function ComingSoon() {
       overflow: 'hidden',
       touchAction: 'none' 
     }}>
-      <div style={{ position: 'absolute', bottom: '30px', right: '30px', zIndex: 9999 }}>
-        <ProfileWidget 
-          showScore={true} 
-          onLoginClick={(tab = 'signup') => {
-             setAuthModalInitialTab(tab);
-             setShowSignupModal(true);
-          }} 
-        />
-      </div>
+      {/* Profile Widget moved to control-buttons-wrapper */}
 
       <AuthModal 
         isOpen={showSignupModal}
@@ -1428,11 +1420,26 @@ export default function ComingSoon() {
            .control-buttons-wrapper > div {
               margin-top: 5px !important;
            }
+           .desktop-profile-wrapper {
+              position: relative !important;
+              top: 0 !important;
+              right: auto !important;
+              margin-top: 5px !important;
+           }
         }
       `}</style>
 
-      {/* Control Buttons (Top Left) */}
-      <div className="control-buttons-wrapper" style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 4, display: 'flex', gap: '15px' }}>
+      {/* Control Buttons (Top Left on desktop, Top Left grouped on mobile) */}
+      <div className="control-buttons-wrapper" style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 9999, display: 'flex', gap: '10px' }}>
+        <div className="desktop-profile-wrapper" style={{ position: 'fixed', top: '20px', right: '30px' }}>
+          <ProfileWidget 
+            showScore={true} 
+            onLoginClick={(tab = 'signup') => {
+               setAuthModalInitialTab(tab);
+               setShowSignupModal(true);
+            }} 
+          />
+        </div>
         {activeGame !== 'none' && gameState === 'playing' && !isPaused && (
           <div 
             onClick={() => setIsPaused(true)}
@@ -1875,7 +1882,7 @@ export default function ComingSoon() {
       {/* Game UI Score */}
       {activeGame !== 'none' && (
         <div className="game-ui" style={{
-          position: 'absolute', bottom: '90px', right: '30px', zIndex: 2,
+          position: 'absolute', top: '5%', right: '5%', zIndex: 2,
           fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px',
           opacity: isFadingOut ? 0 : 1,
           transition: 'opacity 0.5s ease'

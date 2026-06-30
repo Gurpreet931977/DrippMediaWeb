@@ -67,11 +67,15 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
           @media (max-width: 768px) {
             .auth-btn-text { display: none !important; }
             .auth-btn-icon { display: block !important; }
-            .auth-btn { padding: 10px !important; border-radius: 50% !important; width: 42px; height: 42px; display: flex !important; justify-content: center; align-items: center; }
+            .desktop-only-btn { display: none !important; }
+            .mobile-icon-btn { padding: 10px !important; border-radius: 50% !important; width: 42px; height: 42px; display: flex !important; justify-content: center; align-items: center; }
+            .profile-name, .profile-arrow { display: none !important; }
+            .profile-pill { padding: 4px !important; }
+            .profile-score-display { display: none !important; }
           }
         `}</style>
         <button 
-          className="auth-btn"
+          className="desktop-only-btn"
           onClick={() => onLoginClick('login')}
           style={{
             background: 'rgba(255, 255, 255, 0.05)', color: 'var(--pure-white)',
@@ -91,7 +95,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
           </svg>
         </button>
         <button 
-          className="auth-btn"
+          className="mobile-icon-btn desktop-only-btn"
           onClick={() => onLoginClick('signup')}
           style={{
             background: 'var(--brand-yellow)', color: 'var(--deep-black)',
@@ -121,13 +125,14 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
           marginRight: '10px'
-        }}>
+        }} className="profile-score-display">
           <span style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>High Score</span>
           <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: 'var(--brand-yellow)', lineHeight: 1 }}>{highScore}</span>
         </div>
       )}
       
       <div 
+        className="profile-pill"
         onClick={() => setDropdownOpen(!dropdownOpen)}
         style={{
           display: 'flex', alignItems: 'center', gap: '10px',
@@ -148,10 +153,10 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
         }}>
           {initials}
         </div>
-        <span style={{ color: 'var(--pure-white)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem', fontWeight: 500 }}>
+        <span className="profile-name" style={{ color: 'var(--pure-white)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem', fontWeight: 500 }}>
           {user.name}
         </span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'rgba(255,255,255,0.5)', transition: 'transform 0.3s', transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+        <svg className="profile-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'rgba(255,255,255,0.5)', transition: 'transform 0.3s', transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
            <path d="M6 9l6 6 6-6" />
         </svg>
       </div>
