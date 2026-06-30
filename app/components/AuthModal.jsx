@@ -65,6 +65,14 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
   const [signupNature, setSignupNature] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
 
+  const [signupSecurityPhrase, setSignupSecurityPhrase] = useState("");
+  
+  // Reset Password States
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSecurityPhrase, setResetSecurityPhrase] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+
+
   // Log In States
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -109,6 +117,20 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
     setIsSubmitting(true);
     
     try {
+      const fullPhone = `${signupCountryCode}${rawPhone}`;
+
+      // Check for uniqueness of email or phone
+      const { data: existingEmailPhone } = await supabase
+         .from('users')
+         .select('email, phone')
+         .or(`email.eq.${signupEmail},phone.eq.${fullPhone}`);
+
+      if (existingEmailPhone && existingEmailPhone.length > 0) {
+         setErrorMsg("An account with this email or phone number already exists.");
+         setIsSubmitting(false);
+         return;
+      }
+
       // Check for uniqueness of username
       const { data: existingUser, error: existError } = await supabase
          .from('users')
@@ -121,9 +143,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
          setIsSubmitting(false);
          return;
       }
-      const fullPhone = `${signupCountryCode}${rawPhone}`;
+      
       const { data, error } = await supabase.from('users').insert([
-        { name: signupName, email: signupEmail, phone: fullPhone, nature: signupNature, password: signupPassword }
+        { name: signupName, email: signupEmail, phone: fullPhone, nature: signupNature, password: signupPassword, security_phrase: signupSecurityPhrase }
       ]).select('*');
 
       if (error) {
@@ -140,6 +162,51 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
              if (onLoginSuccess) onLoginSuccess();
              onClose();
          }, 1500);
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("An unexpected error occurred.");
+    }
+    setIsSubmitting(false);
+  };
+
+  
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+    if (!resetEmail || !resetSecurityPhrase || !resetNewPassword) return;
+
+    if (resetNewPassword.length > 20 || !/^[a-zA-Z0-9]+$/.test(resetNewPassword)) {
+       setErrorMsg("New password must be up to 20 alphanumeric characters only.");
+       return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', resetEmail)
+        .eq('security_phrase', resetSecurityPhrase);
+
+      if (error || !data || data.length === 0) {
+         setErrorMsg("Invalid email or secret recovery phrase.");
+      } else {
+         const user = data[0];
+         const { error: updateError } = await supabase
+            .from('users')
+            .update({ password: resetNewPassword })
+            .eq('id', user.id);
+
+         if (updateError) {
+             setErrorMsg(`Error updating password: ${updateError.message}`);
+         } else {
+             setIsSuccess(true);
+             setTimeout(() => {
+                 setIsSuccess(false);
+                 setActiveTab('login');
+             }, 1500);
+         }
       }
     } catch (err) {
       console.error(err);
@@ -257,6 +324,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           </div>
         ) : (
           <>
+            
             <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '20px' }}>
                 <button 
                     onClick={() => { setErrorMsg(""); setActiveTab('signup'); }}
@@ -272,15 +340,16 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                 <button 
                     onClick={() => { setErrorMsg(""); setActiveTab('login'); }}
                     style={{
-                        background: 'none', border: 'none', color: activeTab === 'login' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.3)',
+                        background: 'none', border: 'none', color: (activeTab === 'login' || activeTab === 'forgot_password') ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.3)',
                         fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: 'pointer', letterSpacing: '1px',
-                        paddingBottom: '6px', borderBottom: activeTab === 'login' ? '2px solid var(--brand-yellow)' : '2px solid transparent',
+                        paddingBottom: '6px', borderBottom: (activeTab === 'login' || activeTab === 'forgot_password') ? '2px solid var(--brand-yellow)' : '2px solid transparent',
                         transition: 'all 0.3s ease'
                     }}
                 >
                     LOG IN
                 </button>
             </div>
+
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '12px' }}>
               <div style={{ 
@@ -306,7 +375,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
               Establish your digital identity to secure your high scores and personalize your journey.
             </p>
             
-            <form onSubmit={activeTab === 'signup' ? handleSignup : handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
+            <form onSubmit={activeTab === 'signup' ? handleSignup : activeTab === 'forgot_password' ? handleResetPassword : handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
               {errorMsg && (
                  <div style={{ marginBottom: '12px', background: 'rgba(255, 50, 50, 0.1)', border: '1px solid rgba(255, 50, 50, 0.2)', color: '#ff6b6b', padding: '10px', borderRadius: '8px', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>
                     {errorMsg}
@@ -344,8 +413,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                   type="email" 
                   className="modern-input"
                   placeholder="Email Address" 
-                  value={activeTab === 'signup' ? signupEmail : loginEmail}
-                  onChange={e => activeTab === 'signup' ? setSignupEmail(e.target.value) : setLoginEmail(e.target.value)}
+                  value={activeTab === 'signup' ? signupEmail : activeTab === 'forgot_password' ? resetEmail : loginEmail}
+                  onChange={e => activeTab === 'signup' ? setSignupEmail(e.target.value) : activeTab === 'forgot_password' ? setResetEmail(e.target.value) : setLoginEmail(e.target.value)}
                   required
                   autoComplete="off"
                   style={{
@@ -361,9 +430,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                 <input 
                   type={activeTab === 'signup' && showPassword ? 'text' : 'password'} 
                   className="modern-input"
-                  placeholder="Password" 
-                  value={activeTab === 'signup' ? signupPassword : loginPassword}
-                  onChange={e => activeTab === 'signup' ? setSignupPassword(e.target.value) : setLoginPassword(e.target.value)}
+                  placeholder={activeTab === 'forgot_password' ? "New Password" : "Password"} 
+                  value={activeTab === 'signup' ? signupPassword : activeTab === 'forgot_password' ? resetNewPassword : loginPassword}
+                  onChange={e => activeTab === 'signup' ? setSignupPassword(e.target.value) : activeTab === 'forgot_password' ? setResetNewPassword(e.target.value) : setLoginPassword(e.target.value)}
                   required
                   maxLength={20}
                   style={{
@@ -390,9 +459,34 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                     )}
                   </button>
                 )}
+
+                {activeTab === 'login' && (
+                  <div style={{ textAlign: 'right', marginTop: '8px' }}>
+                     <button type="button" onClick={() => { setErrorMsg(""); setActiveTab('forgot_password'); }} style={{ background: 'none', border: 'none', color: 'var(--brand-yellow)', fontSize: '0.8rem', fontFamily: "'Clash Display', sans-serif", cursor: 'pointer', opacity: 0.8 }}>Forgot Password?</button>
+                  </div>
+                )}
+                {activeTab === 'forgot_password' && (
+                  <div style={{ marginTop: '12px' }}>
+                    <input 
+                      type="text" 
+                      className="modern-input"
+                      placeholder="Secret Recovery Phrase" 
+                      value={resetSecurityPhrase}
+                      onChange={e => setResetSecurityPhrase(e.target.value)}
+                      required={activeTab === 'forgot_password'}
+                      style={{
+                        width: '100%', padding: '14px 18px', borderRadius: '12px',
+                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                        color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                        outline: 'none', boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               
               <div style={{
+
                   display: 'grid', gridTemplateRows: activeTab === 'signup' ? '1fr' : '0fr',
                   transition: 'grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease',
                   opacity: activeTab === 'signup' ? 1 : 0
@@ -485,7 +579,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
               onMouseEnter={e => { if(!isSubmitting) e.currentTarget.style.transform = 'translateY(-2px)' }}
               onMouseLeave={e => { if(!isSubmitting) e.currentTarget.style.transform = 'translateY(0)' }}
               >
-                {isSubmitting ? 'INITIALIZING...' : (activeTab === 'signup' ? 'SAVE PROFILE' : 'ACCESS PROFILE')}
+                {isSubmitting ? 'INITIALIZING...' : activeTab === 'forgot_password' ? 'RESET PASSWORD' : (activeTab === 'signup' ? 'SAVE PROFILE' : 'ACCESS PROFILE')}
               </button>
             </form>
           </>
