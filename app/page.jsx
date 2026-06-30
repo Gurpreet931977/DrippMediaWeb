@@ -1494,6 +1494,14 @@ export default function ComingSoon() {
               margin-top: 5px !important;
            }
            .desktop-game-ui { display: none !important; }
+           .dripp-game-ui {
+              top: 5% !important;
+              bottom: auto !important;
+              right: 5% !important;
+           }
+           .highest-score-text, .highest-score-value, .dripp-guidelines {
+              display: none !important;
+           }
         }
         @media (min-width: 769px) {
            .mobile-game-ui { display: none !important; }
@@ -2033,7 +2041,7 @@ export default function ComingSoon() {
 
       {/* Dripp Unified Game UI Score (Bottom Right) */}
       {activeGame === 'dripp' && (
-        <div className="game-ui" style={{
+        <div className="game-ui dripp-game-ui" style={{
           position: 'absolute', bottom: '30px', right: '30px', zIndex: 2,
           fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px',
           opacity: isFadingOut ? 0 : 1,
@@ -2041,8 +2049,8 @@ export default function ComingSoon() {
         }}>
           {/* High Score / Leaderboard Display */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginBottom: '10px' }}>
-             <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Highest Score in Leaderboard</span>
-             <span style={{ fontSize: '1.4rem', color: 'var(--brand-yellow)', fontWeight: 'bold' }}>{highScoreRef.current}</span>
+             <span className="highest-score-text" style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Highest Score in Leaderboard</span>
+             <span className="highest-score-value" style={{ fontSize: '1.4rem', color: 'var(--brand-yellow)', fontWeight: 'bold' }}>{highScoreRef.current}</span>
              <button 
                 onClick={() => setShowLeaderboard(true)}
                 style={{
@@ -2064,7 +2072,7 @@ export default function ComingSoon() {
             <div className="score-counter-element" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)', display: 'inline-block' }}>
               {score}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: '5px' }}>
+            <div className="dripp-guidelines" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: '5px' }}>
               <div style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>Keep scoring to level up</div>
               <div style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: '#eb3f3f', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Caution: Avoid bombs</div>
             </div>
