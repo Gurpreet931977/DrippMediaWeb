@@ -187,16 +187,16 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         background: 'linear-gradient(160deg, rgba(30,30,30,0.7) 0%, rgba(15,15,15,0.85) 100%)',
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '32px', padding: '40px', width: '100%', maxWidth: '440px',
+        borderRadius: '24px', padding: '32px 28px', width: '100%', maxWidth: '380px',
         animation: 'modalScaleUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         boxShadow: '0 30px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
         textAlign: 'center', position: 'relative', overflow: 'hidden'
       }}>
         {/* Top decorative glow */}
         <div style={{
-           position: 'absolute', top: '-80px', left: '50%', transform: 'translateX(-50%)',
-           width: '200px', height: '200px', background: 'var(--brand-yellow)',
-           filter: 'blur(90px)', opacity: 0.15, borderRadius: '50%', pointerEvents: 'none'
+           position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)',
+           width: '150px', height: '150px', background: 'var(--brand-yellow)',
+           filter: 'blur(70px)', opacity: 0.15, borderRadius: '50%', pointerEvents: 'none'
         }} />
 
         {/* Close Button */}
@@ -207,10 +207,10 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
             onClose();
           }}
           style={{
-            position: 'absolute', top: '20px', right: '20px',
+            position: 'absolute', top: '16px', right: '16px',
             background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-            color: 'rgba(255,255,255,0.6)', borderRadius: '50%', width: '36px', height: '36px',
-            display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.2rem',
+            color: 'rgba(255,255,255,0.6)', borderRadius: '50%', width: '32px', height: '32px',
+            display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1rem',
             cursor: 'pointer', zIndex: 10, transition: 'all 0.3s ease'
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'white'; }}
@@ -221,24 +221,24 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         </button>
         
         {isSuccess ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '30px 0', animation: 'modalScaleUp 0.5s ease' }}>
-             <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--brand-yellow)', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 30px rgba(235, 215, 63, 0.4)' }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--deep-black)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '24px 0', animation: 'modalScaleUp 0.5s ease' }}>
+             <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--brand-yellow)', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 30px rgba(235, 215, 63, 0.4)' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--deep-black)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                    <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
              </div>
-             <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.4rem', color: 'var(--brand-yellow)', letterSpacing: '1px' }}>PROFILE SECURED</h2>
-             <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem' }}>Personalizing your experience...</p>
+             <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: 'var(--brand-yellow)', letterSpacing: '1px' }}>PROFILE SECURED</h2>
+             <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.7)', fontSize: '1rem' }}>Personalizing your experience...</p>
           </div>
         ) : (
           <>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '25px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '20px' }}>
                 <button 
                     onClick={() => { setErrorMsg(""); setActiveTab('signup'); }}
                     style={{
                         background: 'none', border: 'none', color: activeTab === 'signup' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.3)',
-                        fontFamily: "'Panchang', sans-serif", fontSize: '1rem', cursor: 'pointer', letterSpacing: '1px',
-                        paddingBottom: '8px', borderBottom: activeTab === 'signup' ? '2px solid var(--brand-yellow)' : '2px solid transparent',
+                        fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: 'pointer', letterSpacing: '1px',
+                        paddingBottom: '6px', borderBottom: activeTab === 'signup' ? '2px solid var(--brand-yellow)' : '2px solid transparent',
                         transition: 'all 0.3s ease'
                     }}
                 >
@@ -248,8 +248,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                     onClick={() => { setErrorMsg(""); setActiveTab('login'); }}
                     style={{
                         background: 'none', border: 'none', color: activeTab === 'login' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.3)',
-                        fontFamily: "'Panchang', sans-serif", fontSize: '1rem', cursor: 'pointer', letterSpacing: '1px',
-                        paddingBottom: '8px', borderBottom: activeTab === 'login' ? '2px solid var(--brand-yellow)' : '2px solid transparent',
+                        fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: 'pointer', letterSpacing: '1px',
+                        paddingBottom: '6px', borderBottom: activeTab === 'login' ? '2px solid var(--brand-yellow)' : '2px solid transparent',
                         transition: 'all 0.3s ease'
                     }}
                 >
@@ -257,16 +257,16 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                 </button>
             </div>
 
-            <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.6rem', color: 'var(--pure-white)', marginBottom: '12px', letterSpacing: '1px' }}>
-              PERSONALIZE
+            <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.4rem', color: 'var(--pure-white)', marginBottom: '8px', letterSpacing: '1px' }}>
+              DRIPP ID
             </h2>
-            <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.5)', fontSize: '1rem', marginBottom: '35px', lineHeight: 1.5, padding: '0 10px' }}>
-              Create your custom gaming profile to save your high scores and unlock a tailored experience.
+            <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.4, padding: '0 4px' }}>
+              Establish your digital identity to secure your high scores and personalize your journey.
             </p>
             
-            <form onSubmit={activeTab === 'signup' ? handleSignup : handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={activeTab === 'signup' ? handleSignup : handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {errorMsg && (
-                 <div style={{ background: 'rgba(255, 50, 50, 0.1)', border: '1px solid rgba(255, 50, 50, 0.2)', color: '#ff6b6b', padding: '12px', borderRadius: '12px', fontSize: '0.9rem', fontFamily: "'Clash Display', sans-serif" }}>
+                 <div style={{ background: 'rgba(255, 50, 50, 0.1)', border: '1px solid rgba(255, 50, 50, 0.2)', color: '#ff6b6b', padding: '10px', borderRadius: '8px', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>
                     {errorMsg}
                  </div>
               )}
@@ -282,9 +282,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                       required
                       autoComplete="off"
                       style={{
-                        width: '100%', padding: '18px 24px', borderRadius: '16px',
+                        width: '100%', padding: '14px 18px', borderRadius: '12px',
                         background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                        color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1.05rem',
+                        color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
                         outline: 'none', boxSizing: 'border-box'
                       }}
                     />
@@ -301,9 +301,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                   required
                   autoComplete="off"
                   style={{
-                    width: '100%', padding: '18px 24px', borderRadius: '16px',
+                    width: '100%', padding: '14px 18px', borderRadius: '12px',
                     background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                    color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1.05rem',
+                    color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
                     outline: 'none', boxSizing: 'border-box'
                   }}
                 />
@@ -311,25 +311,25 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               
               {activeTab === 'signup' && (
                   <>
-                  <div style={{ display: 'flex', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '10px' }}>
                      <div style={{ position: 'relative' }}>
                        <select 
                          className="modern-input"
                          value={signupCountryCode}
                          onChange={e => setSignupCountryCode(e.target.value)}
                          style={{
-                           padding: '18px 30px 18px 10px', borderRadius: '16px',
+                           padding: '14px 28px 14px 10px', borderRadius: '12px',
                            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                           color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1.05rem',
+                           color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
                            outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', 
-                           minWidth: '95px', textAlign: 'center', position: 'relative', zIndex: 2
+                           minWidth: '85px', textAlign: 'center', position: 'relative', zIndex: 2
                          }}
                        >
                          {COUNTRY_CODES.map((c) => (
                             <option key={c.code+c.label} value={c.code} style={{color: 'black'}}>{c.code} ({c.label})</option>
                          ))}
                        </select>
-                       <svg style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1, color: 'rgba(255,255,255,0.5)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                       <svg style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1, color: 'rgba(255,255,255,0.5)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                          <polyline points="6 9 12 15 18 9"></polyline>
                        </svg>
                      </div>
@@ -342,9 +342,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                        required
                        autoComplete="off"
                        style={{
-                         flex: 1, padding: '18px 24px', borderRadius: '16px',
+                         flex: 1, padding: '14px 18px', borderRadius: '12px',
                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                         color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1.05rem',
+                         color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
                          outline: 'none', boxSizing: 'border-box'
                        }}
                      />
@@ -356,10 +356,10 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                        onChange={e => setSignupNature(e.target.value)}
                        required
                        style={{
-                         width: '100%', padding: '18px 24px', borderRadius: '16px',
+                         width: '100%', padding: '14px 18px', borderRadius: '12px',
                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
                          color: signupNature ? 'white' : 'rgba(255,255,255,0.4)', 
-                         fontFamily: "'Clash Display', sans-serif", fontSize: '1.05rem',
+                         fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
                          outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
                          position: 'relative', zIndex: 2
                        }}
@@ -369,7 +369,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                        <option value="Business Person" style={{ color: 'black' }}>Business Person</option>
                        <option value="General User" style={{ color: 'black' }}>General User</option>
                      </select>
-                     <svg style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1, color: 'rgba(255,255,255,0.5)' }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                     <svg style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1, color: 'rgba(255,255,255,0.5)' }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="6 9 12 15 18 9"></polyline>
                      </svg>
                   </div>
@@ -377,11 +377,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               )}
               
               <button type="submit" disabled={isSubmitting} className="modern-btn" style={{
-                marginTop: '15px', width: '100%', padding: '20px', borderRadius: '16px',
+                marginTop: '10px', width: '100%', padding: '16px', borderRadius: '12px',
                 background: isSubmitting ? 'rgba(255,255,255,0.05)' : 'var(--brand-yellow)', 
                 border: 'none',
                 color: isSubmitting ? 'rgba(255,255,255,0.5)' : 'var(--deep-black)', 
-                fontFamily: "'Panchang', sans-serif", fontSize: '0.95rem', cursor: isSubmitting ? 'wait' : 'pointer',
+                fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: isSubmitting ? 'wait' : 'pointer',
                 letterSpacing: '1px', transition: 'all 0.3s ease',
                 boxShadow: isSubmitting ? 'none' : '0 10px 25px rgba(235, 215, 63, 0.25)'
               }}
