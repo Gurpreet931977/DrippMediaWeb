@@ -1317,12 +1317,16 @@ export default function ComingSoon() {
          if (typeof window !== 'undefined') {
             localStorage.setItem('dripp_hasSignedUp', 'true');
          }
-         } else {
-             scoreRef.current = 0; setScore(0);
-             scoreGuardRef.current.reset(); setCheatedSession(false);
+         setHasSignedUp(true);
+         setIsSignupSuccess(true);
+         
+         setTimeout(() => {
+             setShowSignupModal(false);
+             setIsSignupSuccess(false);
+             setPlayCount(0);
              setGameState('playing'); setIsPaused(false); setShowShareOptions(false);
              if (window.initDrippGame) window.initDrippGame();
-         }
+         }, 1500);
       }
     } catch (err) {
       console.error(err);
