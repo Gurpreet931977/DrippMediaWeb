@@ -318,8 +318,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
               
               {activeTab === 'signup' && (
                   <>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                     <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                     <div style={{ position: 'relative', flexShrink: 0 }}>
                        <select 
                          className="modern-input"
                          value={signupCountryCode}
@@ -349,7 +349,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                        required
                        autoComplete="off"
                        style={{
-                         flex: 1, padding: '14px 18px', borderRadius: '12px',
+                         flex: '1 1 auto', minWidth: 0, width: '100%', padding: '14px 18px', borderRadius: '12px',
                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
                          color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
                          outline: 'none', boxSizing: 'border-box'

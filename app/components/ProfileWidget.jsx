@@ -109,17 +109,30 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
       <div 
         onClick={() => setDropdownOpen(!dropdownOpen)}
         style={{
-          width: '45px', height: '45px', borderRadius: '50%',
+          display: 'flex', alignItems: 'center', gap: '10px',
+          background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)',
+          padding: '6px 16px 6px 6px', borderRadius: '30px',
+          border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer',
+          transition: 'all 0.3s ease'
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+      >
+        <div style={{
+          width: '36px', height: '36px', borderRadius: '50%',
           background: 'linear-gradient(135deg, var(--brand-yellow), #d4c23b)',
           display: 'flex', justifyContent: 'center', alignItems: 'center',
-          color: 'var(--deep-black)', fontFamily: "'Panchang', sans-serif", fontSize: '1rem',
-          cursor: 'pointer', boxShadow: '0 4px 15px rgba(235, 215, 63, 0.3)',
-          border: '2px solid rgba(255,255,255,0.1)', transition: 'transform 0.2s'
-        }}
-        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-      >
-        {initials}
+          color: 'var(--deep-black)', fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem',
+          boxShadow: '0 4px 15px rgba(235, 215, 63, 0.3)'
+        }}>
+          {initials}
+        </div>
+        <span style={{ color: 'var(--pure-white)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem', fontWeight: 500 }}>
+          {user.name}
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'rgba(255,255,255,0.5)', transition: 'transform 0.3s', transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+           <path d="M6 9l6 6 6-6" />
+        </svg>
       </div>
 
       {dropdownOpen && (
