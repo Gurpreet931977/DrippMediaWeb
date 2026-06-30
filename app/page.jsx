@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, memo } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { createScoreGuard } from "./lib/scoreGuard";
+import { supabase } from "./utils/supabaseClient";
 
 const CustomCursor = memo(() => {
   return <div className="cursor"></div>;
@@ -13,6 +14,35 @@ export default function ComingSoon() {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   
+  // Trial Gate States
+  const [playCount, setPlayCount] = useState(0);
+  const [hasSignedUp, setHasSignedUp] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [signupName, setSignupName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedCount = parseInt(localStorage.getItem('dripp_playCount') || '0', 10);
+      const storedSignedUp = localStorage.getItem('dripp_hasSignedUp') === 'true';
+      setPlayCount(storedCount);
+      setHasSignedUp(storedSignedUp);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (gameState === 'failed' && !hasSignedUp) {
+      setPlayCount(prev => {
+        const newCount = prev + 1;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dripp_playCount', newCount.toString());
+        }
+        return newCount;
+      });
+    }
+  }, [gameState, hasSignedUp]);
+
   // Game States
   const [activeGame, setActiveGame] = useState('dripp'); // 'dripp', 'breaker', 'none'
   const activeGameRef = useRef('dripp');
@@ -1266,6 +1296,105 @@ export default function ComingSoon() {
     </button>
   );
 
+  const handleSignupSubmit = async (e) => {
+    e.preventDefault();
+    if (!signupName || !signupEmail) return;
+    setIsSubmitting(true);
+    
+    try {
+      const { error } = await supabase.from('users').insert([
+        { name: signupName, email: signupEmail }
+      ]);
+      if (error) {
+         console.error("Error saving user:", error);
+         alert("Error creating account. Please try again.");
+      } else {
+         setHasSignedUp(true);
+         if (typeof window !== 'undefined') {
+            localStorage.setItem('dripp_hasSignedUp', 'true');
+         }
+         setShowSignupModal(false);
+         // Auto-restart game
+         if (activeGame === 'breaker') {
+             breakerScoreRef.current = 0; setBreakerScore(0);
+             breakerLevelRef.current = 1; setBreakerLevel(1);
+             setGameState('playing'); setIsPaused(false); setShowShareOptions(false);
+             if (window.initBreakerGame) window.initBreakerGame(1);
+         } else {
+             scoreRef.current = 0; setScore(0);
+             scoreGuardRef.current.reset(); setCheatedSession(false);
+             setGameState('playing'); setIsPaused(false); setShowShareOptions(false);
+             if (window.initDrippGame) window.initDrippGame();
+         }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setIsSubmitting(false);
+  };
+
+  const SignupModal = showSignupModal ? (
+    <div style={{
+      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
+      display: 'flex', justifyContent: 'center', alignItems: 'center',
+      background: 'rgba(5, 5, 5, 0.95)', backdropFilter: 'blur(10px)',
+      padding: '20px'
+    }}>
+      <div style={{
+        background: 'rgba(20, 20, 20, 0.8)', border: '1px solid rgba(235, 215, 63, 0.3)',
+        borderRadius: '20px', padding: '40px', width: '100%', maxWidth: '450px',
+        boxShadow: '0 0 50px rgba(235, 215, 63, 0.1)', textAlign: 'center'
+      }}>
+        <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.8rem', color: 'var(--brand-yellow)', marginBottom: '10px' }}>
+          OUT OF TRIALS
+        </h2>
+        <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.7)', fontSize: '1rem', marginBottom: '30px' }}>
+          Create a free account to continue playing and save your scores.
+        </p>
+        
+        <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <input 
+            type="text" 
+            placeholder="Your Name" 
+            value={signupName}
+            onChange={e => setSignupName(e.target.value)}
+            required
+            style={{
+              width: '100%', padding: '15px 20px', borderRadius: '10px',
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+              color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
+              outline: 'none'
+            }}
+          />
+          <input 
+            type="email" 
+            placeholder="Your Email" 
+            value={signupEmail}
+            onChange={e => setSignupEmail(e.target.value)}
+            required
+            style={{
+              width: '100%', padding: '15px 20px', borderRadius: '10px',
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+              color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
+              outline: 'none'
+            }}
+          />
+          
+          <button type="submit" disabled={isSubmitting} style={{
+            marginTop: '10px', width: '100%', padding: '15px', borderRadius: '30px',
+            background: isSubmitting ? 'transparent' : 'var(--brand-yellow)', 
+            border: isSubmitting ? '1px solid var(--brand-yellow)' : 'none',
+            color: isSubmitting ? 'var(--brand-yellow)' : 'var(--deep-black)', 
+            fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: isSubmitting ? 'wait' : 'pointer',
+            transition: 'all 0.3s'
+          }}>
+            {isSubmitting ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT & PLAY'}
+          </button>
+        </form>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div ref={containerRef} style={{
       width: '100vw',
@@ -1279,6 +1408,7 @@ export default function ComingSoon() {
       overflow: 'hidden',
       touchAction: 'none' 
     }}>
+      {SignupModal}
       <style>{`
         .cursor {
            position: fixed !important;
@@ -1554,6 +1684,10 @@ export default function ComingSoon() {
                  <>
                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                      <PrimaryButton onClick={() => {
+                        if (playCount >= 2 && !hasSignedUp) {
+                            setShowSignupModal(true);
+                            return;
+                        }
                         gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
                             breakerScoreRef.current = 0;
                             setBreakerScore(0);
@@ -1621,6 +1755,10 @@ export default function ComingSoon() {
                    </div>
                    {breakerLevelRef.current > 1 && (
                      <PrimaryButton onClick={() => {
+                        if (playCount >= 2 && !hasSignedUp) {
+                            setShowSignupModal(true);
+                            return;
+                        }
                         gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
                             breakerScoreRef.current = 0;
                             setBreakerScore(0);
@@ -1637,6 +1775,10 @@ export default function ComingSoon() {
                  </>
                ) : (
                  <PrimaryButton onClick={() => {
+                    if (playCount >= 2 && !hasSignedUp) {
+                        setShowSignupModal(true);
+                        return;
+                    }
                     gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
                         scoreRef.current = 0;
                         setScore(0);
