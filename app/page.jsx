@@ -49,6 +49,7 @@ export default function ComingSoon() {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
   const [signupCountryCode, setSignupCountryCode] = useState("+91");
+  const [signupNature, setSignupNature] = useState("");
   const [signupError, setSignupError] = useState("");
 
   useEffect(() => {
@@ -1307,7 +1308,7 @@ export default function ComingSoon() {
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     setSignupError("");
-    if (!signupName || !signupEmail || !signupPhone) return;
+    if (!signupName || !signupEmail || !signupPhone || !signupNature) return;
     
     // Validation Logic
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1333,11 +1334,11 @@ export default function ComingSoon() {
     try {
       const fullPhone = `${signupCountryCode}${rawPhone}`;
       const { error } = await supabase.from('users').insert([
-        { name: signupName, email: signupEmail, phone: fullPhone }
+        { name: signupName, email: signupEmail, phone: fullPhone, nature: signupNature }
       ]);
       if (error) {
          console.error("Supabase error:", error);
-         setSignupError(`Supabase Error: ${error.message}. (Make sure 'phone' column exists and RLS is disabled or allows inserts)`);
+         setSignupError(`Supabase Error: ${error.message}. (Make sure 'phone' and 'nature' columns exist and RLS allows inserts)`);
       } else {
          if (typeof window !== 'undefined') {
             localStorage.setItem('dripp_hasSignedUp', 'true');
@@ -1498,6 +1499,27 @@ export default function ComingSoon() {
                          outline: 'none', boxSizing: 'border-box'
                        }}
                      />
+                  </div>
+                  
+                  <div style={{ position: 'relative' }}>
+                     <select 
+                       className="modern-input"
+                       value={signupNature}
+                       onChange={e => setSignupNature(e.target.value)}
+                       required
+                       style={{
+                         width: '100%', padding: '16px 20px', borderRadius: '12px',
+                         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                         color: signupNature ? 'white' : 'rgba(255,255,255,0.5)', 
+                         fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
+                         outline: 'none', cursor: 'pointer', appearance: 'none', boxSizing: 'border-box'
+                       }}
+                     >
+                       <option value="" disabled style={{ color: 'black' }}>Select Person Nature...</option>
+                       <option value="Creative Personel" style={{ color: 'black' }}>Creative Personel</option>
+                       <option value="Business Person" style={{ color: 'black' }}>Business Person</option>
+                       <option value="General User" style={{ color: 'black' }}>General User</option>
+                     </select>
                   </div>
                   
                   <button type="submit" disabled={isSubmitting} className="modern-btn" style={{
