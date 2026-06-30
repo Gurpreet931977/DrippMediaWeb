@@ -46,8 +46,6 @@ export default function ComingSoon() {
   // Trial Gate States
   const [playCount, setPlayCount] = useState(0);
   const [hasSignedUp, setHasSignedUp] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedCount = parseInt(localStorage.getItem('dripp_playCount') || '0', 10);
