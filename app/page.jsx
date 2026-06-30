@@ -1518,7 +1518,7 @@ export default function ComingSoon() {
       `}</style>
 
       {/* Control Buttons (Top Left on desktop, Top Left grouped on mobile) */}
-      <div className="control-buttons-wrapper" style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 9999, display: 'flex', gap: '10px' }}>
+      <div className="control-buttons-wrapper" style={{ position: 'absolute', top: '20px', left: '30px', zIndex: 9999, display: 'flex', gap: '10px', alignItems: 'center' }}>
         <div className="desktop-profile-wrapper" style={{ position: 'fixed', top: '20px', right: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <ProfileWidget 
             onLoginClick={(tab = 'signup') => {
@@ -1559,7 +1559,7 @@ export default function ComingSoon() {
           <div 
             onClick={() => setIsPaused(true)}
             style={{
-              width: '40px', height: '40px', marginTop: '15px',
+              width: '40px', height: '40px',
               borderRadius: '50%', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', 
               border: '1px solid rgba(255,255,255,0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center',
               color: 'white', transition: 'all 0.3s ease'
@@ -1577,7 +1577,7 @@ export default function ComingSoon() {
         <div 
           onClick={() => setIsHelpOpen(true)}
           style={{
-            width: '40px', height: '40px', marginTop: activeGame !== 'none' && gameState === 'playing' && !isPaused ? '15px' : '0',
+            width: '40px', height: '40px',
             borderRadius: '50%', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', 
             border: '1px solid rgba(255,255,255,0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center',
             color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1.2rem', transition: 'all 0.3s ease'
