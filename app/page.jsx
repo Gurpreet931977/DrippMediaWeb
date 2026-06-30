@@ -14,6 +14,31 @@ export default function ComingSoon() {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   
+
+  // Game States
+  const [activeGame, setActiveGame] = useState('dripp'); // 'dripp', 'breaker', 'none'
+  const activeGameRef = useRef('dripp');
+  
+  const [score, setScore] = useState(0); // Dripp starts at 0
+  const scoreRef = useRef(0);
+  
+  const [breakerScore, setBreakerScore] = useState(0); 
+  const breakerScoreRef = useRef(0);
+  
+  const [breakerLevel, setBreakerLevel] = useState(1);
+  const breakerLevelRef = useRef(1);
+  
+  const [hideHero, setHideHero] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const [gameState, setGameState] = useState('playing'); // 'playing', 'failed'
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
+  const [pregeneratedShareUrl, setPregeneratedShareUrl] = useState(null);
+  const [showRetryTooltip, setShowRetryTooltip] = useState(false);
+
   // Trial Gate States
   const [playCount, setPlayCount] = useState(0);
   const [hasSignedUp, setHasSignedUp] = useState(false);
@@ -42,30 +67,6 @@ export default function ComingSoon() {
       });
     }
   }, [gameState, hasSignedUp]);
-
-  // Game States
-  const [activeGame, setActiveGame] = useState('dripp'); // 'dripp', 'breaker', 'none'
-  const activeGameRef = useRef('dripp');
-  
-  const [score, setScore] = useState(0); // Dripp starts at 0
-  const scoreRef = useRef(0);
-  
-  const [breakerScore, setBreakerScore] = useState(0); 
-  const breakerScoreRef = useRef(0);
-  
-  const [breakerLevel, setBreakerLevel] = useState(1);
-  const breakerLevelRef = useRef(1);
-  
-  const [hideHero, setHideHero] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isFadingOut, setIsFadingOut] = useState(false);
-  const [showShareOptions, setShowShareOptions] = useState(false);
-  const [gameState, setGameState] = useState('playing'); // 'playing', 'failed'
-  const [isCapturing, setIsCapturing] = useState(false);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isTouch, setIsTouch] = useState(false);
-  const [pregeneratedShareUrl, setPregeneratedShareUrl] = useState(null);
-  const [showRetryTooltip, setShowRetryTooltip] = useState(false);
   
   const isPausedRef = useRef(false);
   
@@ -1333,68 +1334,6 @@ export default function ComingSoon() {
     setIsSubmitting(false);
   };
 
-  const SignupModal = showSignupModal ? (
-    <div style={{
-      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
-      display: 'flex', justifyContent: 'center', alignItems: 'center',
-      background: 'rgba(5, 5, 5, 0.95)', backdropFilter: 'blur(10px)',
-      padding: '20px'
-    }}>
-      <div style={{
-        background: 'rgba(20, 20, 20, 0.8)', border: '1px solid rgba(235, 215, 63, 0.3)',
-        borderRadius: '20px', padding: '40px', width: '100%', maxWidth: '450px',
-        boxShadow: '0 0 50px rgba(235, 215, 63, 0.1)', textAlign: 'center'
-      }}>
-        <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.8rem', color: 'var(--brand-yellow)', marginBottom: '10px' }}>
-          OUT OF TRIALS
-        </h2>
-        <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.7)', fontSize: '1rem', marginBottom: '30px' }}>
-          Create a free account to continue playing and save your scores.
-        </p>
-        
-        <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <input 
-            type="text" 
-            placeholder="Your Name" 
-            value={signupName}
-            onChange={e => setSignupName(e.target.value)}
-            required
-            style={{
-              width: '100%', padding: '15px 20px', borderRadius: '10px',
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
-              outline: 'none'
-            }}
-          />
-          <input 
-            type="email" 
-            placeholder="Your Email" 
-            value={signupEmail}
-            onChange={e => setSignupEmail(e.target.value)}
-            required
-            style={{
-              width: '100%', padding: '15px 20px', borderRadius: '10px',
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
-              outline: 'none'
-            }}
-          />
-          
-          <button type="submit" disabled={isSubmitting} style={{
-            marginTop: '10px', width: '100%', padding: '15px', borderRadius: '30px',
-            background: isSubmitting ? 'transparent' : 'var(--brand-yellow)', 
-            border: isSubmitting ? '1px solid var(--brand-yellow)' : 'none',
-            color: isSubmitting ? 'var(--brand-yellow)' : 'var(--deep-black)', 
-            fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: isSubmitting ? 'wait' : 'pointer',
-            transition: 'all 0.3s'
-          }}>
-            {isSubmitting ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT & PLAY'}
-          </button>
-        </form>
-      </div>
-    </div>
-  ) : null;
-
   return (
     <div ref={containerRef} style={{
       width: '100vw',
@@ -1408,7 +1347,67 @@ export default function ComingSoon() {
       overflow: 'hidden',
       touchAction: 'none' 
     }}>
-      {SignupModal}
+      {showSignupModal && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          background: 'rgba(5, 5, 5, 0.95)', backdropFilter: 'blur(10px)',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'rgba(20, 20, 20, 0.8)', border: '1px solid rgba(235, 215, 63, 0.3)',
+            borderRadius: '20px', padding: '40px', width: '100%', maxWidth: '450px',
+            boxShadow: '0 0 50px rgba(235, 215, 63, 0.1)', textAlign: 'center'
+          }}>
+            <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.8rem', color: 'var(--brand-yellow)', marginBottom: '10px' }}>
+              OUT OF TRIALS
+            </h2>
+            <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.7)', fontSize: '1rem', marginBottom: '30px' }}>
+              Create a free account to continue playing and save your scores.
+            </p>
+            
+            <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <input 
+                type="text" 
+                placeholder="Your Name" 
+                value={signupName}
+                onChange={e => setSignupName(e.target.value)}
+                required
+                style={{
+                  width: '100%', padding: '15px 20px', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
+                  outline: 'none'
+                }}
+              />
+              <input 
+                type="email" 
+                placeholder="Your Email" 
+                value={signupEmail}
+                onChange={e => setSignupEmail(e.target.value)}
+                required
+                style={{
+                  width: '100%', padding: '15px 20px', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
+                  outline: 'none'
+                }}
+              />
+              
+              <button type="submit" disabled={isSubmitting} style={{
+                marginTop: '10px', width: '100%', padding: '15px', borderRadius: '30px',
+                background: isSubmitting ? 'transparent' : 'var(--brand-yellow)', 
+                border: isSubmitting ? '1px solid var(--brand-yellow)' : 'none',
+                color: isSubmitting ? 'var(--brand-yellow)' : 'var(--deep-black)', 
+                fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: isSubmitting ? 'wait' : 'pointer',
+                transition: 'all 0.3s'
+              }}>
+                {isSubmitting ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT & PLAY'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
       <style>{`
         .cursor {
            position: fixed !important;
