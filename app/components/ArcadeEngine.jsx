@@ -137,8 +137,8 @@ function createGameEngine(canvas, callbacks) {
   // ── Resize ──────────────────────────────────────────────────────────────────
   function resize() {
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
+    canvas.width = (window.innerWidth || document.documentElement.clientWidth || 800) * dpr;
+    canvas.height = (window.innerHeight || document.documentElement.clientHeight || 800) * dpr;
     canvas.style.width = `${window.innerWidth}px`;
     canvas.style.height = `${window.innerHeight}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -645,6 +645,10 @@ function createGameEngine(canvas, callbacks) {
         for (let i = 0; i < spawnAttempts; i++) {
            if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
            if (Math.random() < rainIntensity * 0.15) drops.push(new Drop(Math.random() < 0.15));
+        }
+
+        if (drops.length === 0 && getGameStateRef() === 'playing' && !getIsPausedRef()) {
+           drops.push(new Drop(Math.random() < 0.15));
         }
         
         const glowGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height)/1.5);

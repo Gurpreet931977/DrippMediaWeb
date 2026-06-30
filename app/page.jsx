@@ -191,8 +191,8 @@ export default function ComingSoon() {
     let isMobileCanvas = typeof window !== 'undefined' && window.innerWidth <= 768;
 
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth || document.documentElement.clientWidth || 800;
+      canvas.height = window.innerHeight || document.documentElement.clientHeight || 800;
       isMobileCanvas = window.innerWidth <= 768;
     };
     window.addEventListener('resize', resize);
@@ -1106,6 +1106,11 @@ export default function ComingSoon() {
         for (let i = 0; i < spawnAttempts; i++) {
            if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
            if (Math.random() < rainIntensity * 0.15) drops.push(new Drop(Math.random() < 0.15));
+        }
+        
+        // Safety net: ensure there's always at least one drop on screen to prevent "blank screen" perception
+        if (drops.length === 0 && gameStateRef.current === 'playing' && !isPausedRef.current) {
+           drops.push(new Drop(Math.random() < 0.15));
         }
         
         drops.forEach(drop => { drop.update(); drop.draw(ctx); });
