@@ -295,7 +295,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         background: 'linear-gradient(160deg, rgba(30,30,30,0.7) 0%, rgba(15,15,15,0.85) 100%)',
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '24px', padding: '20px 24px', width: '100%', maxWidth: '340px',
+        borderRadius: '24px', padding: '16px 20px', width: '100%', maxWidth: '320px',
         animation: 'modalScaleUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         boxShadow: '0 30px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
         textAlign: 'center', position: 'relative', overflow: 'hidden'
@@ -367,7 +367,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
             </div>
 
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
               <div style={{ 
                 width: '34px', height: '34px', borderRadius: '10px', 
                 background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15), rgba(235, 215, 63, 0.05))', 
@@ -387,8 +387,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                 DRIPP ID
               </h2>
             </div>
-            <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.6)', fontSize: '0.95rem', marginBottom: '24px', lineHeight: 1.5, padding: '0 10px' }}>
-              Establish your digital identity to secure your high scores and personalize your journey.
+            <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', marginBottom: '12px', lineHeight: 1.3, padding: '0 10px', display: activeTab === 'signup' ? 'none' : 'block' }}>
+              Establish your digital identity to secure your high scores.
             </p>
             
             <form onSubmit={activeTab === 'signup' ? handleSignup : activeTab === 'forgot_password' ? handleResetPassword : handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -414,9 +414,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                         required={activeTab === 'signup'}
                         autoComplete="off"
                         style={{
-                          width: '100%', padding: '14px 18px', borderRadius: '12px',
+                          width: '100%', padding: '10px 14px', borderRadius: '12px',
                           background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                          color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                          color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
                           outline: 'none', boxSizing: 'border-box'
                         }}
                       />
@@ -424,7 +424,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                   </div>
               </div>
 
-              <div style={{ position: 'relative', paddingBottom: '12px' }}>
+              <div style={{ position: 'relative', paddingBottom: '8px' }}>
                 <input 
                   type="email" 
                   className="modern-input"
@@ -434,15 +434,15 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                   required
                   autoComplete="off"
                   style={{
-                    width: '100%', padding: '14px 18px', borderRadius: '12px',
+                    width: '100%', padding: '10px 14px', borderRadius: '12px',
                     background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                    color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                    color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
                     outline: 'none', boxSizing: 'border-box'
                   }}
                 />
               </div>
 
-              <div style={{ position: 'relative', paddingBottom: '12px' }}>
+              <div style={{ position: 'relative', paddingBottom: '8px' }}>
                 <input 
                   type={activeTab === 'signup' && showPassword ? 'text' : 'password'} 
                   className="modern-input"
@@ -452,9 +452,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                   required
                   maxLength={20}
                   style={{
-                    width: '100%', padding: '14px 18px', borderRadius: '12px',
+                    width: '100%', padding: '10px 14px', borderRadius: '12px',
                     background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                    color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                    color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
                     outline: 'none', boxSizing: 'border-box'
                   }}
                 />
@@ -489,10 +489,10 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                       onChange={e => setResetSecurityPhrase(e.target.value)}
                       required={activeTab === 'forgot_password'}
                       style={{
-                        width: '100%', padding: '14px 18px', borderRadius: '12px',
+                        width: '100%', padding: '10px 14px', borderRadius: '12px',
                         background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
                         color: resetSecurityPhrase ? 'white' : 'rgba(255,255,255,0.4)', 
-                        fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                        fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
                         outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
                       }}
                     >
@@ -515,7 +515,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                   opacity: activeTab === 'signup' ? 1 : 0
               }}>
                   <div style={{ overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: activeTab === 'signup' ? '12px' : '0', transition: 'padding 0.4s ease' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: activeTab === 'signup' ? '12px' : '0', transition: 'padding 0.4s ease' }}>
                       <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
                          <div style={{ position: 'relative', flexShrink: 0 }}>
                            <select 
@@ -523,9 +523,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                              value={signupCountryCode}
                              onChange={e => setSignupCountryCode(e.target.value)}
                              style={{
-                               padding: '14px 28px 14px 10px', borderRadius: '12px',
+                               padding: '10px 24px 10px 8px', borderRadius: '12px',
                                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                               color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                               color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
                                outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', 
                                minWidth: '85px', textAlign: 'center', position: 'relative', zIndex: 2
                              }}
@@ -547,9 +547,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                            required={activeTab === 'signup'}
                            autoComplete="off"
                            style={{
-                             flex: '1 1 auto', minWidth: 0, width: '100%', padding: '14px 18px', borderRadius: '12px',
+                             flex: '1 1 auto', minWidth: 0, width: '100%', padding: '10px 14px', borderRadius: '12px',
                              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                             color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                             color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
                              outline: 'none', boxSizing: 'border-box'
                            }}
                          />
@@ -561,10 +561,10 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                            onChange={e => setSignupNature(e.target.value)}
                            required={activeTab === 'signup'}
                            style={{
-                             width: '100%', padding: '14px 18px', borderRadius: '12px',
+                             width: '100%', padding: '10px 14px', borderRadius: '12px',
                              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
                              color: signupNature ? 'white' : 'rgba(255,255,255,0.4)', 
-                             fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                             fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
                              outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
                            }}
                          >
@@ -584,10 +584,10 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                            onChange={e => setSignupSecurityPhrase(e.target.value)}
                            required={activeTab === 'signup'}
                            style={{
-                             width: '100%', padding: '14px 18px', borderRadius: '12px',
+                             width: '100%', padding: '10px 14px', borderRadius: '12px',
                              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
                              color: signupSecurityPhrase ? 'white' : 'rgba(255,255,255,0.4)', 
-                             fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                             fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
                              outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
                            }}
                          >
@@ -614,11 +614,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
               </div>
               
               <button type="submit" disabled={isSubmitting} className="modern-btn" style={{
-                marginTop: '10px', width: '100%', padding: '16px', borderRadius: '12px',
+                marginTop: '10px', width: '100%', padding: '12px', borderRadius: '12px',
                 background: isSubmitting ? 'rgba(255,255,255,0.05)' : 'var(--brand-yellow)', 
                 border: 'none',
                 color: isSubmitting ? 'rgba(255,255,255,0.5)' : 'var(--deep-black)', 
-                fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: isSubmitting ? 'wait' : 'pointer',
+                fontFamily: "'Panchang', sans-serif", fontSize: '0.85rem', cursor: isSubmitting ? 'wait' : 'pointer',
                 letterSpacing: '1px', transition: 'all 0.3s ease',
                 boxShadow: isSubmitting ? 'none' : '0 10px 25px rgba(235, 215, 63, 0.25)'
               }}
