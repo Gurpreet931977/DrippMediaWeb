@@ -44,6 +44,7 @@ export default function ComingSoon() {
   const [hasSignedUp, setHasSignedUp] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSignupSuccess, setIsSignupSuccess] = useState(false);
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
 
@@ -1313,17 +1314,9 @@ export default function ComingSoon() {
          console.error("Error saving user:", error);
          alert("Error creating account. Please try again.");
       } else {
-         setHasSignedUp(true);
          if (typeof window !== 'undefined') {
             localStorage.setItem('dripp_hasSignedUp', 'true');
          }
-         setShowSignupModal(false);
-         // Auto-restart game
-         if (activeGame === 'breaker') {
-             breakerScoreRef.current = 0; setBreakerScore(0);
-             breakerLevelRef.current = 1; setBreakerLevel(1);
-             setGameState('playing'); setIsPaused(false); setShowShareOptions(false);
-             if (window.initBreakerGame) window.initBreakerGame(1);
          } else {
              scoreRef.current = 0; setScore(0);
              scoreGuardRef.current.reset(); setCheatedSession(false);
@@ -1352,66 +1345,138 @@ export default function ComingSoon() {
     }}>
       {showSignupModal && (
         <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999,
           display: 'flex', justifyContent: 'center', alignItems: 'center',
-          background: 'rgba(5, 5, 5, 0.95)', backdropFilter: 'blur(10px)',
+          background: 'rgba(5, 5, 5, 0.85)', 
+          animation: 'modalFadeIn 0.5s ease forwards',
           padding: '20px'
         }}>
           <div style={{
-            background: 'rgba(20, 20, 20, 0.8)', border: '1px solid rgba(235, 215, 63, 0.3)',
-            borderRadius: '20px', padding: '40px', width: '100%', maxWidth: '450px',
-            boxShadow: '0 0 50px rgba(235, 215, 63, 0.1)', textAlign: 'center'
+            background: 'linear-gradient(145deg, rgba(30,30,30,0.95) 0%, rgba(15,15,15,0.98) 100%)',
+            border: '1px solid rgba(235, 215, 63, 0.15)',
+            borderRadius: '24px', padding: '40px', width: '100%', maxWidth: '420px',
+            animation: 'modalScaleUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)',
+            textAlign: 'center', position: 'relative', overflow: 'hidden'
           }}>
-            <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.8rem', color: 'var(--brand-yellow)', marginBottom: '10px' }}>
-              OUT OF TRIALS
-            </h2>
-            <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.7)', fontSize: '1rem', marginBottom: '30px' }}>
-              Create a free account to continue playing and save your scores.
-            </p>
+            {/* Top decorative glow */}
+            <div style={{
+               position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)',
+               width: '180px', height: '180px', background: 'var(--brand-yellow)',
+               filter: 'blur(80px)', opacity: 0.12, borderRadius: '50%', pointerEvents: 'none'
+            }} />
             
-            <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <input 
-                type="text" 
-                placeholder="Your Name" 
-                value={signupName}
-                onChange={e => setSignupName(e.target.value)}
-                required
-                style={{
-                  width: '100%', padding: '15px 20px', borderRadius: '10px',
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
-              <input 
-                type="email" 
-                placeholder="Your Email" 
-                value={signupEmail}
-                onChange={e => setSignupEmail(e.target.value)}
-                required
-                style={{
-                  width: '100%', padding: '15px 20px', borderRadius: '10px',
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
-              
-              <button type="submit" disabled={isSubmitting} style={{
-                marginTop: '10px', width: '100%', padding: '15px', borderRadius: '30px',
-                background: isSubmitting ? 'transparent' : 'var(--brand-yellow)', 
-                border: isSubmitting ? '1px solid var(--brand-yellow)' : 'none',
-                color: isSubmitting ? 'var(--brand-yellow)' : 'var(--deep-black)', 
-                fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: isSubmitting ? 'wait' : 'pointer',
-                transition: 'all 0.3s'
-              }}>
-                {isSubmitting ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT & PLAY'}
-              </button>
-            </form>
+            {isSignupSuccess ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '20px 0', animation: 'modalScaleUp 0.5s ease' }}>
+                 <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--brand-yellow)', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 30px rgba(235, 215, 63, 0.4)' }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--deep-black)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                       <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                 </div>
+                 <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.4rem', color: 'var(--brand-yellow)' }}>ACCOUNT SECURED</h2>
+                 <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.7)' }}>Loading your session...</p>
+              </div>
+            ) : (
+              <>
+                <div style={{
+                   width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)',
+                   display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 20px',
+                   border: '1px solid rgba(235, 215, 63, 0.3)', animation: 'glowPulse 3s infinite'
+                }}>
+                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                   </svg>
+                </div>
+
+                <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.6rem', color: 'var(--pure-white)', marginBottom: '10px', letterSpacing: '1px' }}>
+                  LEVEL UP
+                </h2>
+                <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.6)', fontSize: '0.95rem', marginBottom: '30px', lineHeight: 1.5 }}>
+                  You're out of free trials. Create your Dripp account to continue your run and save your scores.
+                </p>
+                
+                <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ position: 'relative' }}>
+                    <input 
+                      type="text" 
+                      className="modern-input"
+                      placeholder="Player Name" 
+                      value={signupName}
+                      onChange={e => setSignupName(e.target.value)}
+                      required
+                      style={{
+                        width: '100%', padding: '16px 20px', borderRadius: '12px',
+                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
+                        outline: 'none', boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input 
+                      type="email" 
+                      className="modern-input"
+                      placeholder="Email Address" 
+                      value={signupEmail}
+                      onChange={e => setSignupEmail(e.target.value)}
+                      required
+                      style={{
+                        width: '100%', padding: '16px 20px', borderRadius: '12px',
+                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
+                        outline: 'none', boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  
+                  <button type="submit" disabled={isSubmitting} className="modern-btn" style={{
+                    marginTop: '10px', width: '100%', padding: '18px', borderRadius: '12px',
+                    background: isSubmitting ? 'rgba(255,255,255,0.1)' : 'var(--brand-yellow)', 
+                    border: 'none',
+                    color: isSubmitting ? 'rgba(255,255,255,0.5)' : 'var(--deep-black)', 
+                    fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: isSubmitting ? 'wait' : 'pointer',
+                    letterSpacing: '1px'
+                  }}>
+                    {isSubmitting ? 'INITIALIZING...' : 'CONTINUE RUN'}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
       <style>{`
+        @keyframes modalFadeIn {
+          0% { opacity: 0; backdrop-filter: blur(0px); }
+          100% { opacity: 1; backdrop-filter: blur(15px); }
+        }
+        @keyframes modalScaleUp {
+          0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes glowPulse {
+          0% { box-shadow: 0 0 20px rgba(235, 215, 63, 0.1); }
+          50% { box-shadow: 0 0 40px rgba(235, 215, 63, 0.4); }
+          100% { box-shadow: 0 0 20px rgba(235, 215, 63, 0.1); }
+        }
+        .modern-input {
+          transition: all 0.3s ease;
+        }
+        .modern-input:focus {
+          border-color: var(--brand-yellow) !important;
+          box-shadow: 0 0 15px rgba(235, 215, 63, 0.15) !important;
+          background: rgba(255, 255, 255, 0.08) !important;
+        }
+        .modern-btn {
+          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modern-btn:hover:not(:disabled) {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 8px 25px rgba(235, 215, 63, 0.3);
+        }
+        .modern-btn:active:not(:disabled) {
+          transform: translateY(1px) scale(0.98);
+        }
         .cursor {
            position: fixed !important;
            top: 0; left: 0;
