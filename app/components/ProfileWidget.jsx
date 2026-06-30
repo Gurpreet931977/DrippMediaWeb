@@ -54,8 +54,11 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('dripp_user');
+      localStorage.removeItem('dripp_highScore');
+      localStorage.removeItem('dripp_playCount');
       setUser(null);
       setDropdownOpen(false);
+      window.location.reload();
     }
   };
 
