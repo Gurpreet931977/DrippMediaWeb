@@ -100,8 +100,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
        return;
     }
 
-    if (signupPassword.length > 8 || !/^[a-zA-Z0-9]+$/.test(signupPassword)) {
-       setErrorMsg("Password must be up to 8 alphanumeric characters only.");
+    if (signupPassword.length > 20 || !/^[a-zA-Z0-9]+$/.test(signupPassword)) {
+       setErrorMsg("Password must be up to 20 alphanumeric characters only.");
        return;
     }
 
@@ -364,7 +364,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                   value={activeTab === 'signup' ? signupPassword : loginPassword}
                   onChange={e => activeTab === 'signup' ? setSignupPassword(e.target.value) : setLoginPassword(e.target.value)}
                   required
-                  maxLength={8}
+                  maxLength={20}
                   style={{
                     width: '100%', padding: '14px 18px', borderRadius: '12px',
                     background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
@@ -436,7 +436,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                            <option value="" disabled>Select Persona...</option>
                            <option value="business" style={{color: 'black'}}>Business Persona</option>
                            <option value="creative" style={{color: 'black'}}>Creative Explorer</option>
-                           <option value="general" style={{color: 'black'}}>Casual Player</option>
+                           <option value="general" style={{color: 'black'}}>General User</option>
                          </select>
                          <svg style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'rgba(255,255,255,0.5)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                            <polyline points="6 9 12 15 18 9"></polyline>

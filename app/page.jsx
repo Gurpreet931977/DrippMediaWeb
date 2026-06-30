@@ -48,6 +48,8 @@ export default function ComingSoon() {
   const [hasSignedUp, setHasSignedUp] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [leaderboardError, setLeaderboardError] = useState(false);
   const highScoreRef = useRef(0);
 
   useEffect(() => {
@@ -65,18 +67,25 @@ export default function ComingSoon() {
   }, []);
 
   const fetchLeaderboard = async () => {
+    setLeaderboardLoading(true);
+    setLeaderboardError(false);
     try {
       const { data, error } = await supabase
         .from('users')
         .select('name, highscore')
         .order('highscore', { ascending: false })
         .limit(3);
-      if (!error && data) {
+      if (error) {
+        console.error("Leaderboard fetch error:", error);
+        setLeaderboardError(true);
+      } else if (data) {
         setLeaderboardData(data);
       }
     } catch (e) {
-       console.error("Leaderboard fetch error:", e);
+       console.error("Leaderboard catch error:", e);
+       setLeaderboardError(true);
     }
+    setLeaderboardLoading(false);
   };
 
   useEffect(() => {
@@ -2079,8 +2088,16 @@ export default function ComingSoon() {
               <h2 style={{ color: 'var(--brand-yellow)', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', marginBottom: '20px', textTransform: 'uppercase' }}>
                  Leaderboard
               </h2>
-              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                 {leaderboardData.length > 0 ? leaderboardData.map((player, index) => (
+               <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                 {leaderboardLoading ? (
+                    <div style={{ color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", textAlign: 'center' }}>
+                       Loading scores...
+                    </div>
+                 ) : leaderboardError ? (
+                    <div style={{ color: '#eb3f3f', fontFamily: "'Clash Display', sans-serif", textAlign: 'center', fontSize: '0.85rem' }}>
+                       Failed to load scores.<br/>(Database column 'highscore' might be missing)
+                    </div>
+                 ) : leaderboardData.length > 0 ? leaderboardData.map((player, index) => (
                     <div key={index} style={{
                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                        padding: '10px 15px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px'
@@ -2093,7 +2110,7 @@ export default function ComingSoon() {
                     </div>
                  )) : (
                     <div style={{ color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", textAlign: 'center' }}>
-                       Loading scores...
+                       No scores found. Be the first!
                     </div>
                  )}
               </div>
