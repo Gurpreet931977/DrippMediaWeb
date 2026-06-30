@@ -1312,7 +1312,7 @@ export default function ComingSoon() {
       overflow: 'hidden',
       touchAction: 'none' 
     }}>
-      <div style={{ position: 'absolute', bottom: '30px', right: '30px', zIndex: 9999 }}>
+      <div style={{ position: 'absolute', top: '20px', right: '30px', zIndex: 9999 }}>
         <ProfileWidget 
           showScore={true} 
           onLoginClick={(tab = 'signup') => {
@@ -1863,7 +1863,7 @@ export default function ComingSoon() {
       {/* Game UI Score */}
       {activeGame !== 'none' && (
         <div className="game-ui" style={{
-          position: 'absolute', bottom: '90px', right: '30px', zIndex: 2,
+          position: 'absolute', top: '5%', right: '5%', zIndex: 2,
           fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px',
           opacity: isFadingOut ? 0 : 1,
           transition: 'opacity 0.5s ease'
