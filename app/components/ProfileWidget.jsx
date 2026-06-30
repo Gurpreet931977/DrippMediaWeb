@@ -1,0 +1,152 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+
+export default function ProfileWidget({ showScore, onLoginClick }) {
+  const [user, setUser] = useState(null);
+  const [highScore, setHighScore] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('dripp_user');
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch(e) {
+          console.error('Error parsing user data', e);
+        }
+      }
+      
+      if (showScore) {
+        const storedScore = parseInt(localStorage.getItem('dripp_highScore') || '0', 10);
+        setHighScore(storedScore);
+        
+        // Listen for high score updates across the app
+        const handleScoreUpdate = () => {
+           const newScore = parseInt(localStorage.getItem('dripp_highScore') || '0', 10);
+           setHighScore(newScore);
+        };
+        window.addEventListener('storage', handleScoreUpdate);
+        window.addEventListener('dripp_score_updated', handleScoreUpdate);
+        return () => {
+           window.removeEventListener('storage', handleScoreUpdate);
+           window.removeEventListener('dripp_score_updated', handleScoreUpdate);
+        };
+      }
+    }
+  }, [showScore]);
+
+  // We also want to listen for login updates locally without refreshing
+  useEffect(() => {
+    const handleLoginUpdate = () => {
+       const storedUser = localStorage.getItem('dripp_user');
+       if (storedUser) {
+         try { setUser(JSON.parse(storedUser)); } catch(e) {}
+       } else {
+         setUser(null);
+       }
+    };
+    window.addEventListener('dripp_login_success', handleLoginUpdate);
+    return () => window.removeEventListener('dripp_login_success', handleLoginUpdate);
+  }, []);
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('dripp_user');
+      setUser(null);
+      setDropdownOpen(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <button 
+        onClick={onLoginClick}
+        style={{
+          background: 'var(--brand-yellow)', color: 'var(--deep-black)',
+          padding: '8px 16px', borderRadius: '20px', border: 'none',
+          fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem',
+          cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(235, 215, 63, 0.2)',
+          zIndex: 9999
+        }}
+        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+      >
+        Log In / Sign Up
+      </button>
+    );
+  }
+
+  const initials = user.name ? user.name.substring(0, 2).toUpperCase() : 'US';
+
+  return (
+    <div style={{ position: 'relative', zIndex: 9999, display: 'flex', alignItems: 'center', gap: '15px' }}>
+      {showScore && (
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
+          marginRight: '10px'
+        }}>
+          <span style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>High Score</span>
+          <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: 'var(--brand-yellow)', lineHeight: 1 }}>{highScore}</span>
+        </div>
+      )}
+      
+      <div 
+        onClick={() => setDropdownOpen(!dropdownOpen)}
+        style={{
+          width: '45px', height: '45px', borderRadius: '50%',
+          background: 'linear-gradient(135deg, var(--brand-yellow), #d4c23b)',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          color: 'var(--deep-black)', fontFamily: "'Panchang', sans-serif", fontSize: '1rem',
+          cursor: 'pointer', boxShadow: '0 4px 15px rgba(235, 215, 63, 0.3)',
+          border: '2px solid rgba(255,255,255,0.1)', transition: 'transform 0.2s'
+        }}
+        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+      >
+        {initials}
+      </div>
+
+      {dropdownOpen && (
+        <div style={{
+          position: 'absolute', top: '55px', right: '0',
+          background: 'rgba(20,20,20,0.95)', backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
+          padding: '15px', width: '220px', display: 'flex', flexDirection: 'column', gap: '10px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.5)', animation: 'dropdownFade 0.2s ease forwards'
+        }}>
+          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', marginBottom: '5px' }}>
+             <h4 style={{ margin: 0, fontFamily: "'Clash Display', sans-serif", color: 'white', fontSize: '1.1rem' }}>{user.name}</h4>
+             <p style={{ margin: '5px 0 0 0', fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>{user.email}</p>
+             {user.nature && (
+                <span style={{ 
+                  display: 'inline-block', marginTop: '8px', padding: '3px 8px', 
+                  background: 'rgba(235, 215, 63, 0.1)', color: 'var(--brand-yellow)', 
+                  borderRadius: '10px', fontSize: '0.7rem', fontFamily: "'Panchang', sans-serif"
+                }}>
+                  {user.nature}
+                </span>
+             )}
+          </div>
+          
+          <button 
+             onClick={handleLogout}
+             style={{
+                background: 'transparent', border: 'none', color: '#ff6b6b', textAlign: 'left',
+                padding: '5px 0', fontFamily: "'Clash Display', sans-serif", fontSize: '0.9rem',
+                cursor: 'pointer', transition: 'color 0.2s'
+             }}
+             onMouseEnter={e => e.currentTarget.style.color = '#ff4f4f'}
+             onMouseLeave={e => e.currentTarget.style.color = '#ff6b6b'}
+          >
+             Log Out
+          </button>
+        </div>
+      )}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes dropdownFade { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+      `}} />
+    </div>
+  );
+}

@@ -5,6 +5,8 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { createScoreGuard } from "./lib/scoreGuard";
 import { supabase } from "./utils/supabaseClient";
+import AuthModal from './components/AuthModal';
+import ProfileWidget from './components/ProfileWidget';
 
 const CustomCursor = memo(() => {
   return <div className="cursor"></div>;
@@ -43,21 +45,14 @@ export default function ComingSoon() {
   const [playCount, setPlayCount] = useState(0);
   const [hasSignedUp, setHasSignedUp] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSignupSuccess, setIsSignupSuccess] = useState(false);
-  const [signupName, setSignupName] = useState("");
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPhone, setSignupPhone] = useState("");
-  const [signupCountryCode, setSignupCountryCode] = useState("+91");
-  const [signupNature, setSignupNature] = useState("");
-  const [signupError, setSignupError] = useState("");
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedCount = parseInt(localStorage.getItem('dripp_playCount') || '0', 10);
-      const storedSignedUp = localStorage.getItem('dripp_hasSignedUp') === 'true';
+      const storedUser = localStorage.getItem('dripp_user');
       setPlayCount(storedCount);
-      setHasSignedUp(storedSignedUp);
+      setHasSignedUp(!!storedUser);
+
     }
   }, []);
 
@@ -1297,68 +1292,12 @@ export default function ComingSoon() {
         const cursor = document.querySelector('.cursor');
         if(cursor) {
           cursor.classList.remove('active');
-          cursorActiveRef.current = false;
         }
       }}
     >
       {children}
     </button>
   );
-
-  const handleSignupSubmit = async (e) => {
-    e.preventDefault();
-    setSignupError("");
-    if (!signupName || !signupEmail || !signupPhone || !signupNature) return;
-    
-    // Validation Logic
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(signupEmail)) {
-       setSignupError("Please enter a valid email address.");
-       return;
-    }
-    const fakeDomains = ["tempmail.com", "mailinator.com", "10minutemail.com", "guerrillamail.com", "temp-mail.org", "yopmail.com"];
-    const domain = signupEmail.split('@')[1]?.toLowerCase();
-    if (fakeDomains.includes(domain)) {
-       setSignupError("Disposable email addresses are not allowed.");
-       return;
-    }
-    const phoneRegex = /^[0-9]{7,15}$/;
-    const rawPhone = signupPhone.replace(/\D/g, ''); // strip non-digits
-    if (!phoneRegex.test(rawPhone)) {
-       setSignupError("Please enter a valid mobile number.");
-       return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      const fullPhone = `${signupCountryCode}${rawPhone}`;
-      const { error } = await supabase.from('users').insert([
-        { name: signupName, email: signupEmail, phone: fullPhone, nature: signupNature }
-      ]);
-      if (error) {
-         console.error("Supabase error:", error);
-         setSignupError(`Supabase Error: ${error.message}. (Make sure 'phone' and 'nature' columns exist and RLS allows inserts)`);
-      } else {
-         if (typeof window !== 'undefined') {
-            localStorage.setItem('dripp_hasSignedUp', 'true');
-         }
-         setHasSignedUp(true);
-         setIsSignupSuccess(true);
-         
-         setTimeout(() => {
-             setShowSignupModal(false);
-             setIsSignupSuccess(false);
-             setPlayCount(0);
-             setGameState('playing'); setIsPaused(false); setShowShareOptions(false);
-             if (window.initDrippGame) window.initDrippGame();
-         }, 1500);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-    setIsSubmitting(false);
-  };
 
   return (
     <div ref={containerRef} style={{
@@ -1373,171 +1312,36 @@ export default function ComingSoon() {
       overflow: 'hidden',
       touchAction: 'none' 
     }}>
-      {showSignupModal && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999,
-          display: 'flex', justifyContent: 'center', alignItems: 'center',
-          background: 'rgba(5, 5, 5, 0.85)', 
-          animation: 'modalFadeIn 0.5s ease forwards',
-          padding: '20px'
-        }}>
-          <div style={{
-            background: 'linear-gradient(145deg, rgba(30,30,30,0.95) 0%, rgba(15,15,15,0.98) 100%)',
-            border: '1px solid rgba(235, 215, 63, 0.15)',
-            borderRadius: '24px', padding: '40px', width: '100%', maxWidth: '420px',
-            animation: 'modalScaleUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)',
-            textAlign: 'center', position: 'relative', overflow: 'hidden'
-          }}>
-            {/* Top decorative glow */}
-            <div style={{
-               position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)',
-               width: '180px', height: '180px', background: 'var(--brand-yellow)',
-               filter: 'blur(80px)', opacity: 0.12, borderRadius: '50%', pointerEvents: 'none'
-            }} />
-            
-            {isSignupSuccess ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '20px 0', animation: 'modalScaleUp 0.5s ease' }}>
-                 <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--brand-yellow)', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 30px rgba(235, 215, 63, 0.4)' }}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--deep-black)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                       <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                 </div>
-                 <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.4rem', color: 'var(--brand-yellow)' }}>ACCOUNT SECURED</h2>
-                 <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.7)' }}>Loading your session...</p>
-              </div>
-            ) : (
-              <>
-                <div style={{
-                   width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)',
-                   display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 20px',
-                   border: '1px solid rgba(235, 215, 63, 0.3)', animation: 'glowPulse 3s infinite'
-                }}>
-                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                   </svg>
-                </div>
+      <div style={{ position: 'absolute', top: '20px', right: '30px', zIndex: 9999 }}>
+        <ProfileWidget 
+          showScore={true} 
+          onLoginClick={() => setShowSignupModal(true)} 
+        />
+      </div>
 
-                <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.6rem', color: 'var(--pure-white)', marginBottom: '10px', letterSpacing: '1px' }}>
-                  LEVEL UP
-                </h2>
-                <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.6)', fontSize: '0.95rem', marginBottom: '30px', lineHeight: 1.5 }}>
-                  You're out of free trials. Create your Dripp account to continue your run and save your scores.
-                </p>
-                
-                <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {signupError && (
-                     <div style={{ background: 'rgba(255, 50, 50, 0.1)', border: '1px solid rgba(255, 50, 50, 0.3)', color: '#ff6b6b', padding: '10px', borderRadius: '8px', fontSize: '0.85rem' }}>
-                        {signupError}
-                     </div>
-                  )}
-                  <div style={{ position: 'relative' }}>
-                    <input 
-                      type="text" 
-                      className="modern-input"
-                      placeholder="Player Name" 
-                      value={signupName}
-                      onChange={e => setSignupName(e.target.value)}
-                      required
-                      autoComplete="off"
-                      style={{
-                        width: '100%', padding: '16px 20px', borderRadius: '12px',
-                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-                        color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
-                        outline: 'none', boxSizing: 'border-box'
-                      }}
-                    />
-                  </div>
-                  <div style={{ position: 'relative' }}>
-                    <input 
-                      type="email" 
-                      className="modern-input"
-                      placeholder="Email Address" 
-                      value={signupEmail}
-                      onChange={e => setSignupEmail(e.target.value)}
-                      required
-                      autoComplete="off"
-                      style={{
-                        width: '100%', padding: '16px 20px', borderRadius: '12px',
-                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-                        color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
-                        outline: 'none', boxSizing: 'border-box'
-                      }}
-                    />
-                  </div>
-                  
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                     <select 
-                       className="modern-input"
-                       value={signupCountryCode}
-                       onChange={e => setSignupCountryCode(e.target.value)}
-                       style={{
-                         padding: '16px 10px', borderRadius: '12px',
-                         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-                         color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
-                         outline: 'none', cursor: 'pointer', appearance: 'none', minWidth: '80px', textAlign: 'center'
-                       }}
-                     >
-                       <option value="+1">+1 (US)</option>
-                       <option value="+44">+44 (UK)</option>
-                       <option value="+91">+91 (IN)</option>
-                       <option value="+61">+61 (AU)</option>
-                       <option value="+971">+971 (UAE)</option>
-                     </select>
-                     <input 
-                       type="tel" 
-                       className="modern-input"
-                       placeholder="Mobile Number" 
-                       value={signupPhone}
-                       onChange={e => setSignupPhone(e.target.value)}
-                       required
-                       autoComplete="off"
-                       style={{
-                         flex: 1, padding: '16px 20px', borderRadius: '12px',
-                         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-                         color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
-                         outline: 'none', boxSizing: 'border-box'
-                       }}
-                     />
-                  </div>
-                  
-                  <div style={{ position: 'relative' }}>
-                     <select 
-                       className="modern-input"
-                       value={signupNature}
-                       onChange={e => setSignupNature(e.target.value)}
-                       required
-                       style={{
-                         width: '100%', padding: '16px 20px', borderRadius: '12px',
-                         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-                         color: signupNature ? 'white' : 'rgba(255,255,255,0.5)', 
-                         fontFamily: "'Clash Display', sans-serif", fontSize: '1rem',
-                         outline: 'none', cursor: 'pointer', appearance: 'none', boxSizing: 'border-box'
-                       }}
-                     >
-                       <option value="" disabled style={{ color: 'black' }}>Select Person Nature...</option>
-                       <option value="Creative Personel" style={{ color: 'black' }}>Creative Personel</option>
-                       <option value="Business Person" style={{ color: 'black' }}>Business Person</option>
-                       <option value="General User" style={{ color: 'black' }}>General User</option>
-                     </select>
-                  </div>
-                  
-                  <button type="submit" disabled={isSubmitting} className="modern-btn" style={{
-                    marginTop: '10px', width: '100%', padding: '18px', borderRadius: '12px',
-                    background: isSubmitting ? 'rgba(255,255,255,0.1)' : 'var(--brand-yellow)', 
-                    border: 'none',
-                    color: isSubmitting ? 'rgba(255,255,255,0.5)' : 'var(--deep-black)', 
-                    fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: isSubmitting ? 'wait' : 'pointer',
-                    letterSpacing: '1px'
-                  }}>
-                    {isSubmitting ? 'INITIALIZING...' : 'CONTINUE RUN'}
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <AuthModal 
+        isOpen={showSignupModal}
+        onClose={() => {
+           setShowSignupModal(false);
+           // Let them keep playing if they skip
+           setPlayCount(0);
+           setGameState('playing'); 
+           setIsPaused(false); 
+           setShowShareOptions(false);
+           if (typeof window !== 'undefined' && window.initDrippGame) window.initDrippGame();
+        }}
+        onLoginSuccess={() => {
+           setHasSignedUp(true);
+           setPlayCount(0);
+           setGameState('playing'); setIsPaused(false); setShowShareOptions(false);
+           if (typeof window !== 'undefined' && window.initDrippGame) window.initDrippGame();
+           
+           // Dispatch event for other components listening
+           if (typeof window !== 'undefined') {
+             window.dispatchEvent(new Event('dripp_login_success'));
+           }
+        }}
+      />
       <style>{`
         @keyframes modalFadeIn {
           0% { opacity: 0; backdrop-filter: blur(0px); }

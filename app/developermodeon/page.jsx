@@ -5,8 +5,11 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import Link from "next/link";
 import Preloader from "../components/Preloader";
+import ProfileWidget from "../components/ProfileWidget";
+import AuthModal from "../components/AuthModal";
 
 export default function Page() {
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   useEffect(() => {
     // Register GSAP
@@ -2164,7 +2167,34 @@ export default function Page() {
           </a>
         </div>
       </li>
+      <li style={{ marginLeft: '15px' }}>
+         <ProfileWidget onLoginClick={() => setShowAuthModal(true)} />
+      </li>
       <li className="theme-switch-wrapper">
+        <label className="theme-switch" htmlFor="checkbox">
+          <input type="checkbox" id="checkbox" />
+          <div className="slider round">
+            <svg className="sun-icon" viewBox="0 0 24 24">
+              <path d="M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3zm0-2c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1s-1 .45-1 1v3c0 .55.45 1 1 1zm0 14c-.55 0-1 .45-1 1v3c0 .55.45 1 1 1s1-.45 1-1v-3c0-.55-.45-1-1-1zm8.5-8.5c0-.55-.45-1-1-1h-3c-.55 0-1 .45-1 1s.45 1 1 1h3c.55 0 1-.45 1-1zM6.5 12c0 .55.45 1 1 1h3c.55 0 1-.45 1-1s-.45-1-1-1h-3c-.55 0-1 .45-1 1zm13.09-5.34c-.39-.39-1.02-.39-1.41 0l-2.12 2.12c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l2.12-2.12c.39-.38.39-1.01 0-1.41zM6.45 17.55c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l2.12 2.12c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-2.12-2.12zM19.59 19.55c.39-.39.39-1.02 0-1.41l-2.12-2.12c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l2.12 2.12c.39.39 1.02.39 1.41 0zM6.45 6.45c.39-.39.39-1.02 0-1.41L4.33 2.92c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l2.12 2.12c.39.39 1.02.39 1.41 0z" fill="currentColor" />
+            </svg>
+            <svg className="moon-icon" viewBox="0 0 24 24">
+              <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7c.18 0 .35.02.53.05C10.74 6.35 9.5 8.52 9.5 11c0 3.03 2.47 5.5 5.5 5.5 2.48 0 4.65-1.24 5.95-3.03.03.18.05.35.05.53 0 3.86-3.14 7-7 7z" fill="currentColor" />
+            </svg>
+          </div>
+        </label>
+      </li>
+    </ul>
+  </nav>
+  
+  <AuthModal 
+      isOpen={showAuthModal} 
+      onClose={() => setShowAuthModal(false)}
+      onLoginSuccess={() => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('dripp_login_success'));
+        }
+      }}
+  />
         <button id="theme-switch" className="theme-switch-btn" aria-label="Toggle Theme">
           <div className="ts-inner">
             <svg className="ts-icon ts-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
