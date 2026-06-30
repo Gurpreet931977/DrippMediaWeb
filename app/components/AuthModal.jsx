@@ -264,41 +264,64 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                 </button>
             </div>
 
-            <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.4rem', color: 'var(--pure-white)', marginBottom: '8px', letterSpacing: '1px' }}>
-              DRIPP ID
-            </h2>
-            <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.4, padding: '0 4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ 
+                width: '34px', height: '34px', borderRadius: '10px', 
+                background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15), rgba(235, 215, 63, 0.05))', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid rgba(235, 215, 63, 0.3)', boxShadow: '0 4px 15px rgba(235, 215, 63, 0.15)'
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <h2 style={{ 
+                fontFamily: "'Panchang', sans-serif", fontSize: '1.6rem', margin: 0,
+                background: 'linear-gradient(135deg, #fff 0%, var(--brand-yellow) 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '1px' 
+              }}>
+                DRIPP ID
+              </h2>
+            </div>
+            <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.6)', fontSize: '0.95rem', marginBottom: '24px', lineHeight: 1.5, padding: '0 10px' }}>
               Establish your digital identity to secure your high scores and personalize your journey.
             </p>
             
-            <form onSubmit={activeTab === 'signup' ? handleSignup : handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <form onSubmit={activeTab === 'signup' ? handleSignup : handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
               {errorMsg && (
-                 <div style={{ background: 'rgba(255, 50, 50, 0.1)', border: '1px solid rgba(255, 50, 50, 0.2)', color: '#ff6b6b', padding: '10px', borderRadius: '8px', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>
+                 <div style={{ marginBottom: '12px', background: 'rgba(255, 50, 50, 0.1)', border: '1px solid rgba(255, 50, 50, 0.2)', color: '#ff6b6b', padding: '10px', borderRadius: '8px', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>
                     {errorMsg}
                  </div>
               )}
               
-              {activeTab === 'signup' && (
-                  <div style={{ position: 'relative' }}>
-                    <input 
-                      type="text" 
-                      className="modern-input"
-                      placeholder="Player Name" 
-                      value={signupName}
-                      onChange={e => setSignupName(e.target.value)}
-                      required
-                      autoComplete="off"
-                      style={{
-                        width: '100%', padding: '14px 18px', borderRadius: '12px',
-                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                        color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
-                        outline: 'none', boxSizing: 'border-box'
-                      }}
-                    />
+              <div style={{
+                  display: 'grid', gridTemplateRows: activeTab === 'signup' ? '1fr' : '0fr',
+                  transition: 'grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease',
+                  opacity: activeTab === 'signup' ? 1 : 0
+              }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ position: 'relative', paddingBottom: activeTab === 'signup' ? '12px' : '0', transition: 'padding 0.4s ease' }}>
+                      <input 
+                        type="text" 
+                        className="modern-input"
+                        placeholder="Player Name" 
+                        value={signupName}
+                        onChange={e => setSignupName(e.target.value)}
+                        required={activeTab === 'signup'}
+                        autoComplete="off"
+                        style={{
+                          width: '100%', padding: '14px 18px', borderRadius: '12px',
+                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                          color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                          outline: 'none', boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
                   </div>
-              )}
+              </div>
 
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', paddingBottom: '12px' }}>
                 <input 
                   type="email" 
                   className="modern-input"
@@ -316,72 +339,77 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                 />
               </div>
               
-              {activeTab === 'signup' && (
-                  <>
-                  <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
-                     <div style={{ position: 'relative', flexShrink: 0 }}>
-                       <select 
-                         className="modern-input"
-                         value={signupCountryCode}
-                         onChange={e => setSignupCountryCode(e.target.value)}
-                         style={{
-                           padding: '14px 28px 14px 10px', borderRadius: '12px',
-                           background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                           color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
-                           outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', 
-                           minWidth: '85px', textAlign: 'center', position: 'relative', zIndex: 2
-                         }}
-                       >
-                         {COUNTRY_CODES.map((c) => (
-                            <option key={c.code+c.label} value={c.code} style={{color: 'black'}}>{c.code} ({c.label})</option>
-                         ))}
-                       </select>
-                       <svg style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1, color: 'rgba(255,255,255,0.5)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                         <polyline points="6 9 12 15 18 9"></polyline>
-                       </svg>
-                     </div>
-                     <input 
-                       type="tel" 
-                       className="modern-input"
-                       placeholder="Mobile Number" 
-                       value={signupPhone}
-                       onChange={e => setSignupPhone(e.target.value)}
-                       required
-                       autoComplete="off"
-                       style={{
-                         flex: '1 1 auto', minWidth: 0, width: '100%', padding: '14px 18px', borderRadius: '12px',
-                         background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                         color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
-                         outline: 'none', boxSizing: 'border-box'
-                       }}
-                     />
+              <div style={{
+                  display: 'grid', gridTemplateRows: activeTab === 'signup' ? '1fr' : '0fr',
+                  transition: 'grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease',
+                  opacity: activeTab === 'signup' ? 1 : 0
+              }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: activeTab === 'signup' ? '12px' : '0', transition: 'padding 0.4s ease' }}>
+                      <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                         <div style={{ position: 'relative', flexShrink: 0 }}>
+                           <select 
+                             className="modern-input"
+                             value={signupCountryCode}
+                             onChange={e => setSignupCountryCode(e.target.value)}
+                             style={{
+                               padding: '14px 28px 14px 10px', borderRadius: '12px',
+                               background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                               color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                               outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', 
+                               minWidth: '85px', textAlign: 'center', position: 'relative', zIndex: 2
+                             }}
+                           >
+                             {COUNTRY_CODES.map((c) => (
+                                <option key={c.code+c.label} value={c.code} style={{color: 'black'}}>{c.code} ({c.label})</option>
+                             ))}
+                           </select>
+                           <svg style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1, color: 'rgba(255,255,255,0.5)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                             <polyline points="6 9 12 15 18 9"></polyline>
+                           </svg>
+                         </div>
+                         <input 
+                           type="tel" 
+                           className="modern-input"
+                           placeholder="Mobile Number" 
+                           value={signupPhone}
+                           onChange={e => setSignupPhone(e.target.value)}
+                           required={activeTab === 'signup'}
+                           autoComplete="off"
+                           style={{
+                             flex: '1 1 auto', minWidth: 0, width: '100%', padding: '14px 18px', borderRadius: '12px',
+                             background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                             color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                             outline: 'none', boxSizing: 'border-box'
+                           }}
+                         />
+                      </div>
+                      <div style={{ position: 'relative' }}>
+                         <select 
+                           className="modern-input"
+                           value={signupNature}
+                           onChange={e => setSignupNature(e.target.value)}
+                           required={activeTab === 'signup'}
+                           style={{
+                             width: '100%', padding: '14px 18px', borderRadius: '12px',
+                             background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                             color: signupNature ? 'white' : 'rgba(255,255,255,0.4)', 
+                             fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                             outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
+                           }}
+                         >
+                           <option value="" disabled>Select Persona...</option>
+                           <option value="business" style={{color: 'black'}}>Business Persona</option>
+                           <option value="creative" style={{color: 'black'}}>Creative Explorer</option>
+                           <option value="general" style={{color: 'black'}}>Casual Player</option>
+                         </select>
+                         <svg style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'rgba(255,255,255,0.5)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                           <polyline points="6 9 12 15 18 9"></polyline>
+                         </svg>
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ position: 'relative' }}>
-                     <select 
-                       className="modern-input"
-                       value={signupNature}
-                       onChange={e => setSignupNature(e.target.value)}
-                       required
-                       style={{
-                         width: '100%', padding: '14px 18px', borderRadius: '12px',
-                         background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                         color: signupNature ? 'white' : 'rgba(255,255,255,0.4)', 
-                         fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
-                         outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
-                         position: 'relative', zIndex: 2
-                       }}
-                     >
-                       <option value="" disabled style={{ color: 'black' }}>Select Persona...</option>
-                       <option value="Creative Personel" style={{ color: 'black' }}>Creative Personel</option>
-                       <option value="Business Person" style={{ color: 'black' }}>Business Person</option>
-                       <option value="General User" style={{ color: 'black' }}>General User</option>
-                     </select>
-                     <svg style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1, color: 'rgba(255,255,255,0.5)' }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                     </svg>
-                  </div>
-                  </>
-              )}
+              </div>
               
               <button type="submit" disabled={isSubmitting} className="modern-btn" style={{
                 marginTop: '10px', width: '100%', padding: '16px', borderRadius: '12px',
