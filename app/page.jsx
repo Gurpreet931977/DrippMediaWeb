@@ -1431,12 +1431,16 @@ export default function ComingSoon() {
               right: auto !important;
               margin-top: 5px !important;
            }
+           .desktop-game-ui { display: none !important; }
+        }
+        @media (min-width: 769px) {
+           .mobile-game-ui { display: none !important; }
         }
       `}</style>
 
       {/* Control Buttons (Top Left on desktop, Top Left grouped on mobile) */}
       <div className="control-buttons-wrapper" style={{ position: 'absolute', top: '5%', left: '5%', zIndex: 9999, display: 'flex', gap: '10px' }}>
-        <div className="desktop-profile-wrapper" style={{ position: 'fixed', top: '20px', right: '30px' }}>
+        <div className="desktop-profile-wrapper" style={{ position: 'fixed', top: '20px', right: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <ProfileWidget 
             showScore={true} 
             onLoginClick={(tab = 'signup') => {
@@ -1444,6 +1448,40 @@ export default function ComingSoon() {
                setShowSignupModal(true);
             }} 
           />
+          {activeGame !== 'none' && (
+            <div className="desktop-game-ui" style={{
+              fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+              opacity: isFadingOut ? 0 : 1, transition: 'opacity 0.5s ease', marginTop: '10px'
+            }}>
+              <div style={{ fontSize: 'clamp(0.6rem, 2vw, 0.8rem)', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                {activeGame === 'dripp' ? 'Score' : `Level ${breakerLevel}`}
+              </div>
+              {activeGame === 'breaker' && (
+                <div style={{ fontSize: 'clamp(0.5rem, 1.5vw, 0.65rem)', letterSpacing: '1px', color: 'var(--brand-yellow)', textTransform: 'uppercase', opacity: 0.8, marginBottom: '5px' }}>
+                  {(() => {
+                     switch(breakerLevel % 20) {
+                        case 1: return "The Cluster"; case 2: return "Triangle"; case 3: return "Hollow Box";
+                        case 4: return "Checkerboard"; case 5: return "The X"; case 6: return "Twin Pillars";
+                        case 7: return "Diamond"; case 8: return "The V"; case 9: return "Smiley";
+                        case 10: return "Mini-Boss Wall"; case 11: return "Arrow Up"; case 12: return "Hourglass";
+                        case 13: return "Invader"; case 14: return "The Cross"; case 15: return "Double Diamonds";
+                        case 16: return "Stairway"; case 17: return "The Spiral"; case 18: return "Fortress";
+                        case 19: return "DNA Twist"; case 0: return "Ultimate Boss"; default: return "";
+                     }
+                  })()}
+                </div>
+              )}
+              <div className="score-counter-element" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 600, color: gameState === 'failed' ? '#eb3f3f' : 'var(--brand-yellow)', lineHeight: 1, textShadow: gameState === 'failed' ? '0 0 20px rgba(235, 63, 63, 0.4)' : '0 0 20px rgba(235, 215, 63, 0.4)', display: 'inline-block' }}>
+                {activeGame === 'dripp' ? score : breakerScore}
+              </div>
+              {activeGame === 'dripp' && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
+                  <div style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>Keep scoring to level up</div>
+                  <div style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: '#eb3f3f', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Caution: Avoid bombs</div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         {activeGame !== 'none' && gameState === 'playing' && !isPaused && (
           <div 
@@ -1886,7 +1924,7 @@ export default function ComingSoon() {
 
       {/* Game UI Score */}
       {activeGame !== 'none' && (
-        <div className="game-ui" style={{
+        <div className="game-ui mobile-game-ui" style={{
           position: 'absolute', top: '5%', right: '5%', zIndex: 2,
           fontFamily: "'Clash Display', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px',
           opacity: isFadingOut ? 0 : 1,
