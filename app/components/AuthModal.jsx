@@ -155,6 +155,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
          if (typeof window !== 'undefined') {
             const userData = data && data.length > 0 ? data[0] : { name: signupName, email: signupEmail, nature: signupNature };
             localStorage.setItem('dripp_user', JSON.stringify(userData));
+            if (userData.highscore !== undefined) {
+                localStorage.setItem('dripp_highScore', userData.highscore.toString());
+            } else {
+                localStorage.setItem('dripp_highScore', '0');
+            }
          }
          setIsSuccess(true);
          setTimeout(() => {
@@ -238,6 +243,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
          const userData = data[0];
          if (typeof window !== 'undefined') {
             localStorage.setItem('dripp_user', JSON.stringify(userData));
+            if (userData.highscore !== undefined) {
+                localStorage.setItem('dripp_highScore', userData.highscore.toString());
+            }
          }
          setIsSuccess(true);
          setTimeout(() => {

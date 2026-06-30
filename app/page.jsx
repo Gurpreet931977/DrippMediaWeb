@@ -110,7 +110,9 @@ export default function ComingSoon() {
 
     // High Score tracking and saving to Supabase for Dripp game
     if (gameState === 'failed' && activeGame === 'dripp') {
+       console.log("GAME FAILED - Checking score. Score:", score, "HighScoreRef:", highScoreRef.current);
        if (score > highScoreRef.current) {
+          console.log("Score is greater! Updating local and DB...");
           highScoreRef.current = score;
           localStorage.setItem('dripp_highScore', score.toString());
           const userStr = localStorage.getItem('dripp_user');
@@ -118,12 +120,16 @@ export default function ComingSoon() {
              try {
                 const userObj = JSON.parse(userStr);
                 if (userObj.email) {
+                   console.log("Found user email:", userObj.email, "Updating supabase...");
                    supabase.from('users')
                       .update({ highscore: score })
                       .eq('email', userObj.email)
                       .then(({error}) => {
                          if (error) console.error("Error saving highscore to Supabase:", error);
+                         else console.log("Supabase update SUCCESS!");
                       });
+                } else {
+                   console.log("No email found in userObj");
                 }
              } catch (e) {
                 console.error("Error parsing user for highscore:", e);
@@ -1396,6 +1402,8 @@ export default function ComingSoon() {
         onLoginSuccess={() => {
            setHasSignedUp(true);
            setPlayCount(0);
+           const cachedHighScore = localStorage.getItem('dripp_highScore');
+           if (cachedHighScore) highScoreRef.current = parseInt(cachedHighScore, 10);
            setGameState('playing'); setIsPaused(false); setShowShareOptions(false);
            if (typeof window !== 'undefined' && window.initDrippGame) window.initDrippGame();
            
