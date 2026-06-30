@@ -62,16 +62,18 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
   const [signupPhone, setSignupPhone] = useState("");
   const [signupCountryCode, setSignupCountryCode] = useState("+91");
   const [signupNature, setSignupNature] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
 
   // Log In States
   const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
   if (!isOpen) return null;
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-    if (!signupName || !signupEmail || !signupPhone || !signupNature) return;
+    if (!signupName || !signupEmail || !signupPhone || !signupNature || !signupPassword) return;
 
     // Validation Logic
     const usernameRegex = /^[a-zA-Z0-9]+$/;
@@ -98,6 +100,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
        return;
     }
 
+    if (signupPassword.length > 8 || !/^[a-zA-Z0-9]+$/.test(signupPassword)) {
+       setErrorMsg("Password must be up to 8 alphanumeric characters only.");
+       return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -115,7 +122,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
       }
       const fullPhone = `${signupCountryCode}${rawPhone}`;
       const { data, error } = await supabase.from('users').insert([
-        { name: signupName, email: signupEmail, phone: fullPhone, nature: signupNature }
+        { name: signupName, email: signupEmail, phone: fullPhone, nature: signupNature, password: signupPassword }
       ]).select('*');
 
       if (error) {
@@ -143,7 +150,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-    if (!loginEmail) return;
+    if (!loginEmail || !loginPassword) return;
 
     setIsSubmitting(true);
     
@@ -151,7 +158,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('email', loginEmail);
+        .eq('email', loginEmail)
+        .eq('password', loginPassword);
 
       if (error) {
          console.error("Supabase error:", error);
@@ -339,6 +347,24 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                   onChange={e => activeTab === 'signup' ? setSignupEmail(e.target.value) : setLoginEmail(e.target.value)}
                   required
                   autoComplete="off"
+                  style={{
+                    width: '100%', padding: '14px 18px', borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                    color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem',
+                    outline: 'none', boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ position: 'relative', paddingBottom: '12px' }}>
+                <input 
+                  type="password" 
+                  className="modern-input"
+                  placeholder="Password" 
+                  value={activeTab === 'signup' ? signupPassword : loginPassword}
+                  onChange={e => activeTab === 'signup' ? setSignupPassword(e.target.value) : setLoginPassword(e.target.value)}
+                  required
+                  maxLength={8}
                   style={{
                     width: '100%', padding: '14px 18px', borderRadius: '12px',
                     background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
