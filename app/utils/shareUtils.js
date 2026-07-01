@@ -124,12 +124,12 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
     // Call to Action Footer
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = '500 40px "Clash Display", sans-serif';
-    ctx.fillText("BET YOU CAN'T BEAT THIS LIL BRO", canvas.width / 2, 1600);
+    ctx.fillText("SET YOUR OWN RECORD AT", canvas.width / 2, 1600);
 
     // Link styling
     ctx.fillStyle = '#ebd73f';
     ctx.font = '600 45px "Panchang", sans-serif';
-    ctx.fillText('DRIPPMEDIA.COM', canvas.width / 2, 1680);
+    ctx.fillText('WWW.DRIPPMEDIA.COM', canvas.width / 2, 1680);
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
