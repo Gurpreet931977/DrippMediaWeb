@@ -72,25 +72,83 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
     }
   };
 
+  const generateScoreImage = async (score) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1920;
+    const ctx = canvas.getContext('2d');
+    
+    // Background
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Grid/Pattern
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < canvas.width; i += 100) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
+    for (let i = 0; i < canvas.height; i += 100) {
+      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+    
+    // Text: DRIPP MEDIA
+    ctx.fillStyle = '#ebd73f'; 
+    ctx.font = 'bold 120px sans-serif'; 
+    ctx.textAlign = 'center';
+    ctx.fillText('DRIPP MEDIA', canvas.width / 2, 500);
+    
+    // Text: HIGH SCORE
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 80px sans-serif';
+    ctx.fillText('HIGH SCORE', canvas.width / 2, 800);
+    
+    // Score
+    ctx.fillStyle = '#ebd73f';
+    ctx.font = 'bold 350px sans-serif';
+    ctx.fillText(score.toString(), canvas.width / 2, 1150);
+    
+    // Text: Footer
+    ctx.fillStyle = '#888888';
+    ctx.font = '50px sans-serif';
+    ctx.fillText('Play now at drippmedia.com', canvas.width / 2, 1600);
+    
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob);
+      }, 'image/jpeg', 0.95);
+    });
+  };
+
   const handleShareScore = async () => {
     const scoreToShare = highScore > 0 ? highScore : parseInt(localStorage.getItem('dripp_highScore') || '0', 10);
     if (scoreToShare === 0) {
       alert("Play a game first to get a high score!");
       return;
     }
-    const text = `I just scored ${scoreToShare} on the Dripp Media Arcade! Can you beat my score? 🕹️🔥 Play now at https://drippmedia.com`;
-    if (navigator.share) {
-      try {
+    
+    try {
+      const blob = await generateScoreImage(scoreToShare);
+      const file = new File([blob], 'dripp-score.jpg', { type: 'image/jpeg' });
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
-          title: 'Dripp Media Arcade',
-          text: text,
-          url: 'https://drippmedia.com'
+          files: [file],
+          title: 'Dripp Media High Score',
+          text: 'I just set a new high score on Dripp Media Arcade! Can you beat it? 🕹️🔥 Play now at https://drippmedia.com'
         });
-      } catch (err) {
-        console.error('Share failed', err);
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'dripp-highscore.jpg';
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('Score image downloaded! You can now share it.');
       }
-    } else {
-      navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error('Share failed', err);
+      navigator.clipboard.writeText(`I just scored ${scoreToShare} on the Dripp Media Arcade! Play now at https://drippmedia.com`);
       alert('Score text copied to clipboard! Paste it to share.');
     }
   };
@@ -131,21 +189,70 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
     }
   }, [cropImageSrc, croppedAreaPixels, user]);
 
+  const globalStyles = (
+    <style>{`
+      .auth-btn-icon { display: none; }
+      @keyframes dropdownFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      
+      .profile-dropdown-menu {
+        position: absolute; top: 55px; right: 0;
+        background: rgba(20,20,20,0.95); backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+        padding: 15px; width: 220px; display: flex; flex-direction: column; gap: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: dropdownFade 0.2s ease forwards;
+        transform-origin: top right;
+      }
+      
+      @media (max-width: 768px) {
+        .auth-btn-text { display: none !important; }
+        .auth-btn-icon { display: block !important; }
+        .desktop-only-btn { display: none !important; }
+        .mobile-icon-btn { padding: 10px !important; border-radius: 50% !important; width: 42px; height: 42px; display: flex !important; justify-content: center; align-items: center; }
+        
+        .profile-name, .profile-arrow { display: none !important; }
+        .profile-pill { 
+          padding: 0 !important; 
+          border-radius: 50% !important; 
+          width: 42px !important; 
+          height: 42px !important; 
+          display: flex !important; 
+          justify-content: center !important; 
+          align-items: center !important; 
+          background: var(--brand-yellow) !important;
+          border: none !important;
+          box-shadow: 0 4px 15px rgba(235, 215, 63, 0.2) !important;
+          gap: 0 !important;
+        }
+        .profile-pill:hover {
+          transform: translateY(-2px) !important;
+          box-shadow: 0 6px 20px rgba(235, 215, 63, 0.4) !important;
+        }
+        .profile-icon-container { 
+          background: transparent !important; 
+          border: none !important; 
+          box-shadow: none !important; 
+          color: var(--deep-black) !important; 
+          width: 100% !important; 
+          height: 100% !important; 
+        }
+        .profile-icon-container svg {
+          color: var(--deep-black) !important;
+        }
+        .profile-score-display { display: none !important; }
+        
+        .profile-dropdown-menu {
+          right: auto !important;
+          left: 0 !important;
+          transform-origin: top left !important;
+        }
+      }
+    `}</style>
+  );
+
   if (!user) {
     return (
       <div style={{ display: 'flex', gap: '10px', zIndex: 9999 }}>
-        <style>{`
-          .auth-btn-icon { display: none; }
-          @media (max-width: 768px) {
-            .auth-btn-text { display: none !important; }
-            .auth-btn-icon { display: block !important; }
-            .desktop-only-btn { display: none !important; }
-            .mobile-icon-btn { padding: 10px !important; border-radius: 50% !important; width: 42px; height: 42px; display: flex !important; justify-content: center; align-items: center; }
-            .profile-name, .profile-arrow { display: none !important; }
-            .profile-pill { padding: 4px !important; }
-            .profile-score-display { display: none !important; }
-          }
-        `}</style>
+        {globalStyles}
         <button 
           className="desktop-only-btn"
           onClick={() => onLoginClick('login')}
@@ -265,7 +372,9 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
         onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
         onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
       >
-        <div style={{
+        <div 
+          className="profile-icon-container"
+          style={{
           width: '36px', height: '36px', borderRadius: '50%',
           background: user?.profileImage ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
           display: 'flex', justifyContent: 'center', alignItems: 'center',
@@ -289,14 +398,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
       </div>
 
       {dropdownOpen && (
-        <div style={{
-          position: 'absolute', top: '55px', right: '0',
-          background: 'rgba(20,20,20,0.95)', backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
-          padding: '15px', width: '220px', display: 'flex', flexDirection: 'column', gap: '10px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)', animation: 'dropdownFade 0.2s ease forwards',
-          transformOrigin: 'top right'
-        }}>
+        <div className="profile-dropdown-menu">
            <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', marginBottom: '5px' }}>
              <h4 style={{ margin: 0, fontFamily: "'Clash Display', sans-serif", color: 'white', fontSize: '1.1rem' }}>{user.name}</h4>
              <p style={{ margin: '5px 0 0 0', fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>{user.email}</p>
@@ -364,9 +466,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
           </button>
         </div>
       )}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes dropdownFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      `}} />
+      {globalStyles}
     </div>
   );
 }
