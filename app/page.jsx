@@ -7,6 +7,7 @@ import { createScoreGuard } from "./lib/scoreGuard";
 import { supabase } from "./utils/supabaseClient";
 import AuthModal from './components/AuthModal';
 import ProfileWidget from './components/ProfileWidget';
+import { generateScoreImage } from './utils/shareUtils';
 
 const CustomCursor = memo(() => {
   return <div className="cursor"></div>;
@@ -1311,22 +1312,19 @@ export default function ComingSoon() {
     try {
       setShowShareOptions(true);
       setIsCapturing(true);
-      const html2canvas = (await import('html2canvas')).default;
-      const cursor = document.querySelector('.cursor');
-      if (cursor) cursor.style.opacity = '0';
 
-      const canvas = await html2canvas(containerRef.current, {
-        backgroundColor: '#050505',
-        scale: 2,
-        ignoreElements: (element) => element.classList.contains('cursor') || element.classList.contains('easter-egg') || element.classList.contains('action-buttons-container') || element.classList.contains('game-free-btn') || element.classList.contains('share-container')
-      });
+      const currentScore = activeGame === 'dripp' ? score : breakerScore;
+      const gameName = activeGame === 'dripp' ? 'Dripp' : 'Breaker';
+      const blob = await generateScoreImage(currentScore, gameName, false);
       
-      if (cursor) cursor.style.opacity = '1';
-
-      setPregeneratedShareUrl(canvas.toDataURL('image/png'));
-      setIsCapturing(false);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPregeneratedShareUrl(reader.result);
+        setIsCapturing(false);
+      };
+      reader.readAsDataURL(blob);
     } catch (error) {
-      console.error("Screenshot pre-generation failed:", error);
+      console.error("Score image generation failed:", error);
       setIsCapturing(false);
     }
   };

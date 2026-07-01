@@ -9,12 +9,25 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
     canvas.height = 1920;
     const ctx = canvas.getContext('2d');
     
-    // Base Background - very dark
-    ctx.fillStyle = '#0a0a0a';
+    // Background gradient (darker, cleaner)
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    bgGradient.addColorStop(0, '#0d0d0d');
+    bgGradient.addColorStop(1, '#050505');
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add dynamic glowing orbs for that "modern crazy" feel
-    const createGlow = (x, y, r, color) => {
+    // Faint grid for tech feel, but very minimal
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < canvas.width; i += 60) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
+    for (let i = 0; i < canvas.height; i += 60) {
+      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    }
+
+    // Add minimal subtle glowing orbs
+    const createSubtleGlow = (x, y, r, color) => {
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
       g.addColorStop(0, color);
       g.addColorStop(1, 'transparent');
@@ -22,70 +35,64 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
       ctx.fillRect(x - r, y - r, r * 2, r * 2);
     };
     
-    createGlow(canvas.width, 0, 800, 'rgba(235, 215, 63, 0.2)'); // top right yellow glow
-    createGlow(0, canvas.height, 1000, 'rgba(235, 63, 63, 0.15)');  // bottom left red glow
-    
-    // Cool overlay grid
-    ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < canvas.width; i += 80) {
-      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
-    }
-    for (let i = 0; i < canvas.height; i += 80) {
-      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    createSubtleGlow(canvas.width, 0, 800, 'rgba(235, 215, 63, 0.08)'); 
+    createSubtleGlow(0, canvas.height, 900, 'rgba(235, 63, 63, 0.05)');  
+    createSubtleGlow(canvas.width / 2, canvas.height / 2 - 50, 600, 'rgba(235, 215, 63, 0.05)'); // center glow
+
+    // Few minimal dashes
+    ctx.fillStyle = 'rgba(235, 215, 63, 0.15)';
+    for(let i=0; i<15; i++) {
+       ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, Math.random()*5, Math.random()*15);
     }
 
-    // Add some random techy dashes for an "arcade" feel
-    ctx.fillStyle = 'rgba(235, 215, 63, 0.4)';
-    for(let i=0; i<40; i++) {
-       ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, Math.random()*8, Math.random()*25);
-    }
-
-    // Brand Header
-    ctx.fillStyle = '#ebd73f'; 
-    ctx.font = '800 95px "Panchang", sans-serif'; 
+    // --- HEADER ---
+    ctx.fillStyle = '#ebd73f'; // Brand Yellow
+    ctx.font = '800 85px "Panchang", sans-serif'; 
     ctx.textAlign = 'center';
-    ctx.fillText('DRIPP MEDIA', canvas.width / 2, 320);
-    
-    // Sub-header (paired font)
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '500 35px "Clash Display", sans-serif';
     if ('letterSpacing' in ctx) ctx.letterSpacing = '8px';
+    ctx.fillText('DRIPP MEDIA', canvas.width / 2, 280);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    
+    // Sub-header 
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.font = '500 32px "Clash Display", sans-serif';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '10px';
     const subText = isTopRecord ? 'GLOBAL #1 RECORD' : (gameName ? `${gameName.toUpperCase()} RECORD` : 'CERTIFIED ARCADE FLEX');
-    ctx.fillText(subText, canvas.width / 2, 380);
+    ctx.fillText(subText, canvas.width / 2, 350);
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
-    // Decorative glassmorphism box around the score
+    // --- MAIN BOX ---
     const boxY = 460;
     const boxH = 750;
     const boxW = 850;
     const boxX = (canvas.width - boxW) / 2;
     
-    ctx.strokeStyle = 'rgba(235, 215, 63, 0.4)';
-    ctx.lineWidth = 4;
+    // Thin yellow rounded border
+    ctx.strokeStyle = 'rgba(235, 215, 63, 0.3)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(boxX, boxY, boxW, boxH, 40);
+    ctx.roundRect(boxX, boxY, boxW, boxH, 30); // 30px border radius
     ctx.stroke();
     
-    // Inner glow for box
-    ctx.fillStyle = 'rgba(235, 215, 63, 0.05)';
+    // Inner box glow / fill (very subtle)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; // Slightly darken inside
     ctx.fill();
 
-    // High Score Label
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = '600 45px "Panchang", sans-serif';
+    // Box top text: "STATS JUST DROPPED"
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 45px "Panchang", sans-serif'; // More bold and wide font inside
     ctx.fillText(isTopRecord ? 'TOP OF THE LEADERBOARD' : 'STATS JUST DROPPED', canvas.width / 2, boxY + 120);
 
-    // Score Value - Massive and stylized
+    // Score Value - Massive, centered, beautiful typography
     ctx.fillStyle = '#ebd73f';
-    ctx.font = '800 240px "Panchang", sans-serif';
+    ctx.font = '800 300px "Panchang", sans-serif';
     
-    // Drop shadow for the score to make it pop
-    ctx.shadowColor = 'rgba(235, 215, 63, 0.5)';
-    ctx.shadowBlur = 50;
+    ctx.shadowColor = 'rgba(235, 215, 63, 0.4)';
+    ctx.shadowBlur = 40;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 10;
-    ctx.fillText(score.toString(), canvas.width / 2, boxY + 400);
+    // Adjusted Y coordinate for better vertical centering in the box
+    ctx.fillText(score.toString(), canvas.width / 2, boxY + 410);
     
     // Reset shadow
     ctx.shadowBlur = 0;
@@ -103,8 +110,8 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '600 45px "Clash Display", sans-serif';
-    if ('letterSpacing' in ctx) ctx.letterSpacing = '5px';
-    ctx.fillText(playerName, canvas.width / 2, boxY + 600);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '8px';
+    ctx.fillText(playerName, canvas.width / 2, boxY + 580);
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
     // Engaging Content / Dynamic Taunt
@@ -118,18 +125,21 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
     };
 
     ctx.fillStyle = '#ebd73f';
-    ctx.font = '700 35px "Panchang", sans-serif';
-    ctx.fillText(getTaunt(score), canvas.width / 2, boxY + 680);
+    ctx.font = '600 35px "Panchang", sans-serif';
+    ctx.fillText(getTaunt(score), canvas.width / 2, boxY + 670);
 
-    // Call to Action Footer
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = '500 40px "Clash Display", sans-serif';
-    ctx.fillText("SET YOUR OWN RECORD AT", canvas.width / 2, 1600);
+    // --- FOOTER ---
+    const footerView = 1600;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = '400 35px "Clash Display", sans-serif';
+    ctx.fillText("SET YOUR OWN RECORD AT", canvas.width / 2, footerView);
 
     // Link styling
     ctx.fillStyle = '#ebd73f';
-    ctx.font = '600 45px "Panchang", sans-serif';
-    ctx.fillText('WWW.DRIPPMEDIA.COM', canvas.width / 2, 1680);
+    ctx.font = '700 45px "Panchang", sans-serif';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '5px';
+    ctx.fillText('WWW.DRIPPMEDIA.COM', canvas.width / 2, footerView + 70);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
