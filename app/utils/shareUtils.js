@@ -129,7 +129,7 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
     // Link styling
     ctx.fillStyle = '#ebd73f';
     ctx.font = '600 45px "Panchang", sans-serif';
-    ctx.fillText('PLAY.DRIPPMEDIA.COM', canvas.width / 2, 1680);
+    ctx.fillText('DRIPPMEDIA.COM', canvas.width / 2, 1680);
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
