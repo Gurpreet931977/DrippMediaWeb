@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { User, Upload, Image as ImageIcon, X, Check } from 'lucide-react';
+import { User, Upload, Image as ImageIcon, X, Check, Share2 } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '../utils/cropImage';
 
@@ -69,6 +69,29 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
       setUser(null);
       setDropdownOpen(false);
       window.location.reload();
+    }
+  };
+
+  const handleShareScore = async () => {
+    const scoreToShare = highScore > 0 ? highScore : parseInt(localStorage.getItem('dripp_highScore') || '0', 10);
+    if (scoreToShare === 0) {
+      alert("Play a game first to get a high score!");
+      return;
+    }
+    const text = `I just scored ${scoreToShare} on the Dripp Media Arcade! Can you beat my score? 🕹️🔥 Play now at https://drippmedia.com`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Dripp Media Arcade',
+          text: text,
+          url: 'https://drippmedia.com'
+        });
+      } catch (err) {
+        console.error('Share failed', err);
+      }
+    } else {
+      navigator.clipboard.writeText(text);
+      alert('Score text copied to clipboard! Paste it to share.');
     }
   };
 
@@ -310,6 +333,20 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
           >
              <Upload size={14} />
              Upload Picture
+          </button>
+          
+          <button 
+             onClick={handleShareScore}
+             style={{
+                background: 'transparent', border: 'none', color: 'var(--pure-white)', textAlign: 'left',
+                padding: '5px 0', fontFamily: "'Clash Display', sans-serif", fontSize: '0.9rem',
+                cursor: 'pointer', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '8px'
+             }}
+             onMouseEnter={e => e.currentTarget.style.color = 'var(--brand-yellow)'}
+             onMouseLeave={e => e.currentTarget.style.color = 'var(--pure-white)'}
+          >
+             <Share2 size={14} />
+             Share High Score
           </button>
           
           <button 
