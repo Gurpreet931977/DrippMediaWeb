@@ -1,11 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { User, Upload, Image as ImageIcon } from 'lucide-react';export default function ProfileWidget({ showScore, onLoginClick }) {
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { User, Upload, Image as ImageIcon, X, Check } from 'lucide-react';
+import Cropper from 'react-easy-crop';
+import { getCroppedImg } from '../utils/cropImage';
+
+export default function ProfileWidget({ showScore, onLoginClick }) {
   const [user, setUser] = useState(null);
   const [highScore, setHighScore] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Cropper states
+  const [cropImageSrc, setCropImageSrc] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -67,16 +77,36 @@ import { User, Upload, Image as ImageIcon } from 'lucide-react';export default f
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const updatedUser = { ...user, profileImage: reader.result };
-        setUser(updatedUser);
-        localStorage.setItem('dripp_user', JSON.stringify(updatedUser));
-        
-        // Dispatch event for other components to know
-        window.dispatchEvent(new Event('dripp_profile_updated'));
+        setCropImageSrc(reader.result);
+        setDropdownOpen(false); // Close dropdown while cropping
       };
       reader.readAsDataURL(file);
     }
+    // reset input so same file can be selected again
+    e.target.value = '';
   };
+
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const showCroppedImage = useCallback(async () => {
+    try {
+      const croppedImage = await getCroppedImg(
+        cropImageSrc,
+        croppedAreaPixels
+      );
+      
+      const updatedUser = { ...user, profileImage: croppedImage };
+      setUser(updatedUser);
+      localStorage.setItem('dripp_user', JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event('dripp_profile_updated'));
+      
+      setCropImageSrc(null); // Close cropper modal
+    } catch (e) {
+      console.error(e);
+    }
+  }, [cropImageSrc, croppedAreaPixels, user]);
 
   if (!user) {
     return (
@@ -139,6 +169,65 @@ import { User, Upload, Image as ImageIcon } from 'lucide-react';export default f
   return (
     <div style={{ position: 'relative', zIndex: 9999, display: 'flex', alignItems: 'center', gap: '15px' }}>
       {/* Score moved to page.jsx */}
+
+      {cropImageSrc && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.95)', zIndex: 99999,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{ position: 'relative', width: '100%', height: '60vh', background: '#111' }}>
+            <Cropper
+              image={cropImageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onCropComplete={onCropComplete}
+              onZoomChange={setZoom}
+            />
+          </div>
+          <div style={{ padding: '30px 20px', display: 'flex', gap: '25px', width: '100%', maxWidth: '400px', flexDirection: 'column' }}>
+            <input
+              type="range"
+              value={zoom}
+              min={1}
+              max={3}
+              step={0.1}
+              aria-labelledby="Zoom"
+              onChange={(e) => setZoom(e.target.value)}
+              style={{ width: '100%', accentColor: 'var(--brand-yellow)' }}
+            />
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => { setCropImageSrc(null); setDropdownOpen(true); }}
+                style={{
+                  padding: '12px 24px', borderRadius: '30px', background: 'rgba(255,255,255,0.1)', color: 'white',
+                  border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', 
+                  fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem'
+                }}
+              >
+                <X size={18} /> Cancel
+              </button>
+              <button 
+                onClick={showCroppedImage}
+                style={{
+                  padding: '12px 24px', borderRadius: '30px', background: 'var(--brand-yellow)', color: 'var(--deep-black)',
+                  border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', 
+                  fontFamily: "'Clash Display', sans-serif", fontWeight: 600, fontSize: '0.95rem',
+                  boxShadow: '0 4px 15px rgba(235, 215, 63, 0.3)'
+                }}
+              >
+                <Check size={18} /> Save Picture
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       
       <div 
         className="profile-pill"
