@@ -43,21 +43,21 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
 
     // Brand Header
     ctx.fillStyle = '#ebd73f'; 
-    ctx.font = '800 130px "Panchang", sans-serif'; 
+    ctx.font = '800 95px "Panchang", sans-serif'; 
     ctx.textAlign = 'center';
-    ctx.fillText('DRIPP MEDIA', canvas.width / 2, 350);
+    ctx.fillText('DRIPP MEDIA', canvas.width / 2, 320);
     
     // Sub-header (paired font)
     ctx.fillStyle = '#ffffff';
-    ctx.font = '500 45px "Clash Display", sans-serif';
-    if ('letterSpacing' in ctx) ctx.letterSpacing = '10px';
+    ctx.font = '500 35px "Clash Display", sans-serif';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '8px';
     const subText = isTopRecord ? 'GLOBAL #1 RECORD' : (gameName ? `${gameName.toUpperCase()} RECORD` : 'CERTIFIED ARCADE FLEX');
-    ctx.fillText(subText, canvas.width / 2, 430);
+    ctx.fillText(subText, canvas.width / 2, 380);
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
     // Decorative glassmorphism box around the score
-    const boxY = 550;
-    const boxH = 650;
+    const boxY = 460;
+    const boxH = 750;
     const boxW = 850;
     const boxX = (canvas.width - boxW) / 2;
     
@@ -73,19 +73,19 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
 
     // High Score Label
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = '600 65px "Panchang", sans-serif';
-    ctx.fillText(isTopRecord ? 'TOP OF THE LEADERBOARD' : 'STATS JUST DROPPED', canvas.width / 2, boxY + 130);
+    ctx.font = '600 45px "Panchang", sans-serif';
+    ctx.fillText(isTopRecord ? 'TOP OF THE LEADERBOARD' : 'STATS JUST DROPPED', canvas.width / 2, boxY + 120);
 
     // Score Value - Massive and stylized
     ctx.fillStyle = '#ebd73f';
-    ctx.font = '800 350px "Panchang", sans-serif';
+    ctx.font = '800 240px "Panchang", sans-serif';
     
     // Drop shadow for the score to make it pop
     ctx.shadowColor = 'rgba(235, 215, 63, 0.5)';
     ctx.shadowBlur = 50;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 10;
-    ctx.fillText(score.toString(), canvas.width / 2, boxY + 460);
+    ctx.fillText(score.toString(), canvas.width / 2, boxY + 400);
     
     // Reset shadow
     ctx.shadowBlur = 0;
@@ -102,9 +102,9 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
     }
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '600 65px "Clash Display", sans-serif';
+    ctx.font = '600 45px "Clash Display", sans-serif';
     if ('letterSpacing' in ctx) ctx.letterSpacing = '5px';
-    ctx.fillText(playerName, canvas.width / 2, boxY + 800);
+    ctx.fillText(playerName, canvas.width / 2, boxY + 600);
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
     // Engaging Content / Dynamic Taunt
@@ -118,18 +118,18 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
     };
 
     ctx.fillStyle = '#ebd73f';
-    ctx.font = '700 50px "Panchang", sans-serif';
-    ctx.fillText(getTaunt(score), canvas.width / 2, boxY + 900);
+    ctx.font = '700 35px "Panchang", sans-serif';
+    ctx.fillText(getTaunt(score), canvas.width / 2, boxY + 680);
 
     // Call to Action Footer
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = '500 55px "Clash Display", sans-serif';
-    ctx.fillText("BET YOU CAN'T BEAT THIS LIL BRO", canvas.width / 2, 1650);
+    ctx.font = '500 40px "Clash Display", sans-serif';
+    ctx.fillText("BET YOU CAN'T BEAT THIS LIL BRO", canvas.width / 2, 1600);
 
     // Link styling
     ctx.fillStyle = '#ebd73f';
-    ctx.font = '600 60px "Panchang", sans-serif';
-    ctx.fillText('PLAY.DRIPPMEDIA.COM', canvas.width / 2, 1750);
+    ctx.font = '600 45px "Panchang", sans-serif';
+    ctx.fillText('PLAY.DRIPPMEDIA.COM', canvas.width / 2, 1680);
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
