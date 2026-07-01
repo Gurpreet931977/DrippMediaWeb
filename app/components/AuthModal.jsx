@@ -93,8 +93,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
     if (!signupName || !signupEmail || !signupPhone || !signupNature || !signupPassword) return;
 
     // Validation Logic
+    const trimmedName = signupName.trim();
     const usernameRegex = /^[a-zA-Z0-9]+$/;
-    if (!usernameRegex.test(signupName)) {
+    if (!usernameRegex.test(trimmedName)) {
        setErrorMsg("Player Name can only contain letters and numbers (no spaces or symbols).");
        return;
     }
