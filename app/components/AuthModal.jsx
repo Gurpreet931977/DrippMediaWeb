@@ -237,11 +237,13 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
     setIsSubmitting(true);
     
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', loginEmail)
-        .eq('password', loginPassword);
+      let query = supabase.from('users').select('*').eq('password', loginPassword);
+      if (loginEmail.includes('@')) {
+        query = query.eq('email', loginEmail);
+      } else {
+        query = query.ilike('name', loginEmail);
+      }
+      const { data, error } = await query;
 
       if (error) {
          console.error("Supabase error:", error);
@@ -427,9 +429,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
 
               <div style={{ position: 'relative', paddingBottom: '8px' }}>
                 <input 
-                  type="email" 
+                  type={activeTab === 'login' ? "text" : "email"} 
                   className="modern-input"
-                  placeholder="Email Address" 
+                  placeholder={activeTab === 'login' ? "Email or Player Tag" : "Email Address"} 
                   value={activeTab === 'signup' ? signupEmail : activeTab === 'forgot_password' ? resetEmail : loginEmail}
                   onChange={e => activeTab === 'signup' ? setSignupEmail(e.target.value) : activeTab === 'forgot_password' ? setResetEmail(e.target.value) : setLoginEmail(e.target.value)}
                   required
