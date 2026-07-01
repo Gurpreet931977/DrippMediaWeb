@@ -237,7 +237,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
     setIsSubmitting(true);
     
     try {
-      let query = supabase.from('users').select('*').eq('password', loginPassword);
+      let query = supabase.from('users').select('*');
       if (loginEmail.includes('@')) {
         query = query.eq('email', loginEmail);
       } else {
@@ -249,21 +249,25 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
          console.error("Supabase error:", error);
          setErrorMsg(`Error fetching user: ${error.message}`);
       } else if (!data || data.length === 0) {
-         setErrorMsg("No account found with this email. Please sign up.");
+         setErrorMsg("Email or Player Tag not found, or not registered.");
       } else {
          const userData = data[0];
-         if (typeof window !== 'undefined') {
-            localStorage.setItem('dripp_user', JSON.stringify(userData));
-            if (userData.highscore !== undefined) {
-                localStorage.setItem('dripp_highScore', userData.highscore.toString());
+         if (userData.password !== loginPassword) {
+            setErrorMsg("Incorrect password. Please try again.");
+         } else {
+            if (typeof window !== 'undefined') {
+               localStorage.setItem('dripp_user', JSON.stringify(userData));
+               if (userData.highscore !== undefined) {
+                   localStorage.setItem('dripp_highScore', userData.highscore.toString());
+               }
             }
+            setIsSuccess(true);
+            setTimeout(() => {
+                setIsSuccess(false);
+                if (onLoginSuccess) onLoginSuccess();
+                onClose();
+            }, 1500);
          }
-         setIsSuccess(true);
-         setTimeout(() => {
-             setIsSuccess(false);
-             if (onLoginSuccess) onLoginSuccess();
-             onClose();
-         }, 1500);
       }
     } catch (err) {
       console.error(err);
