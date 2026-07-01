@@ -125,7 +125,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
     ctx.fillStyle = '#ffffff';
     ctx.font = '500 45px "Clash Display", sans-serif';
     if ('letterSpacing' in ctx) ctx.letterSpacing = '10px';
-    ctx.fillText('OFFICIAL ARCADE RECORD', canvas.width / 2, 430);
+    ctx.fillText('CERTIFIED ARCADE FLEX', canvas.width / 2, 430);
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
     // Decorative glassmorphism box around the score
@@ -147,7 +147,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
     // High Score Label
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = '600 65px "Panchang", sans-serif';
-    ctx.fillText('NEW HIGH SCORE', canvas.width / 2, boxY + 130);
+    ctx.fillText('STATS JUST DROPPED', canvas.width / 2, boxY + 130);
 
     // Score Value - Massive and stylized
     ctx.fillStyle = '#ebd73f';
@@ -167,7 +167,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
     
     // Player tag
     const storedUser = localStorage.getItem('dripp_user');
-    let playerName = 'PLAYER 1';
+    let playerName = 'NPC_01';
     if(storedUser) {
        try { playerName = JSON.parse(storedUser).name.toUpperCase(); } catch(e) {}
     }
@@ -180,11 +180,11 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
 
     // Engaging Content / Dynamic Taunt
     const getTaunt = (s) => {
-       if (s > 10000) return "GOD TIER 👑";
-       if (s > 5000) return "ABSOLUTE LEGEND 🔥";
-       if (s > 2000) return "UNSTOPPABLE 🚀";
-       if (s > 500) return "GETTING THERE 👀";
-       return "JUST WARMING UP 🎮";
+       if (s > 10000) return "LITERALLY HIM 👑";
+       if (s > 5000) return "ABSOLUTE CINEMA 🍿";
+       if (s > 2000) return "ATE & LEFT NO CRUMBS 🍽️";
+       if (s > 500) return "W RIZZ, KEEP GOING 👀";
+       return "SKILL ISSUE DETECTED 💀";
     };
 
     ctx.fillStyle = '#ebd73f';
@@ -194,12 +194,12 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
     // Call to Action Footer
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = '500 55px "Clash Display", sans-serif';
-    ctx.fillText('THINK YOU CAN BEAT THIS?', canvas.width / 2, 1650);
+    ctx.fillText("BET YOU CAN'T BEAT THIS LIL BRO", canvas.width / 2, 1650);
 
     // Link styling
     ctx.fillStyle = '#ebd73f';
     ctx.font = '600 60px "Panchang", sans-serif';
-    ctx.fillText('DRIPPMEDIA.COM', canvas.width / 2, 1750);
+    ctx.fillText('PLAY.DRIPPMEDIA.COM', canvas.width / 2, 1750);
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
