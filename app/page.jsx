@@ -1318,7 +1318,7 @@ export default function ComingSoon() {
       const canvas = await html2canvas(containerRef.current, {
         backgroundColor: '#050505',
         scale: 2,
-        ignoreElements: (element) => element.classList.contains('cursor') || element.classList.contains('easter-egg') || element.classList.contains('ui-overlay') || element.classList.contains('game-free-btn') || element.classList.contains('share-container')
+        ignoreElements: (element) => element.classList.contains('cursor') || element.classList.contains('easter-egg') || element.classList.contains('action-buttons-container') || element.classList.contains('game-free-btn') || element.classList.contains('share-container')
       });
       
       if (cursor) cursor.style.opacity = '1';
@@ -1760,26 +1760,28 @@ export default function ComingSoon() {
         }}>
            <div className="ui-popup-enter" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
              <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--pure-white)', fontSize: '3rem', margin: 0, marginBottom: '20px' }}>PAUSED</h2>
-             <PrimaryButton onClick={() => {
-                 gsap.to('.ui-overlay', { opacity: 0, duration: 0.2, onComplete: () => {
-                     setIsPaused(false);
-                     gsap.set('.ui-overlay', { opacity: 1 });
-                 }});
-             }}>Resume Game</PrimaryButton>
-           {!showShareOptions ? (
-             <PrimaryButton onClick={prepareShare}>
-               Brag your score
-             </PrimaryButton>
-           ) : (
-             <div className="share-container" style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
-               <PrimaryButton onClick={() => handleShare('download')} disabled={isCapturing}>
-                 {isCapturing ? "Preparing..." : "Download"}
-               </PrimaryButton>
-               <PrimaryButton onClick={() => handleShare('instagram')} disabled={isCapturing}>
-                 {isCapturing ? "Preparing..." : "IG Story"}
-               </PrimaryButton>
+             <div className="action-buttons-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+               <PrimaryButton onClick={() => {
+                   gsap.to('.ui-overlay', { opacity: 0, duration: 0.2, onComplete: () => {
+                       setIsPaused(false);
+                       gsap.set('.ui-overlay', { opacity: 1 });
+                   }});
+               }}>Resume Game</PrimaryButton>
+               {!showShareOptions ? (
+                 <PrimaryButton onClick={prepareShare}>
+                   Brag your score
+                 </PrimaryButton>
+               ) : (
+                 <div className="share-container" style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
+                   <PrimaryButton onClick={() => handleShare('download')} disabled={isCapturing}>
+                     {isCapturing ? "Preparing..." : "Download"}
+                   </PrimaryButton>
+                   <PrimaryButton onClick={() => handleShare('instagram')} disabled={isCapturing}>
+                     {isCapturing ? "Preparing..." : "IG Story"}
+                   </PrimaryButton>
+                 </div>
+               )}
              </div>
-           )}
            </div>
         </div>
       )}
@@ -1838,7 +1840,7 @@ export default function ComingSoon() {
                )}
              </div>
 
-             <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
+             <div className="action-buttons-container" style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                {activeGame === 'breaker' ? (
                  <>
                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -2016,7 +2018,7 @@ export default function ComingSoon() {
                </span>
              </div>
 
-             <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
+             <div className="action-buttons-container" style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                <PrimaryButton onClick={() => {
                   gsap.to('.ui-overlay', { opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.inOut', onComplete: () => {
                       breakerLevelRef.current += 1;
