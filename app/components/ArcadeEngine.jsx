@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { shareScoreImage } from '../utils/shareUtils';
 
 import PendulumGame from "./games/Pendulum";
 import GravityFlip from "./games/GravityFlip";
@@ -1349,24 +1350,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     };
     const prettyName = gameNamesMap[activeGame] || activeGame.toUpperCase();
 
-    let text = `I just scored ${bragScore} in ${prettyName} on Dripp Media! 🕹️💧 Think you can beat my high score?`;
-    if (activeGame === "neondevil") text = `I'm losing my mind in NEON DEVIL on Dripp Media! 💀 This game is an absolute trap. Can you survive?`;
-    if (activeGame === "tanks") text = `I just annihilated my opponent in POCKET TANKS on Dripp Media! 🚀🔥 Who's next?`;
-    
-    const url = "https://drippmedia.com";
-    const shareData = { title: 'Dripp Media Arcade', text: text, url: url };
-
-    try {
-      if (navigator.share) {
-         await navigator.share(shareData);
-      } else {
-         const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-         window.open(twitterUrl, '_blank');
-      }
-    } catch (err) {
-      navigator.clipboard.writeText(`${text} Play now at ${url}`);
-      alert("Score and link copied to clipboard! Paste it anywhere to challenge your friends.");
-    }
+    await shareScoreImage(bragScore, prettyName);
   };
 
   useEffect(() => {
