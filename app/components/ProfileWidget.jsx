@@ -73,46 +73,134 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
   };
 
   const generateScoreImage = async (score) => {
+    // Wait for fonts to load first just in case
+    if (document.fonts) {
+      await document.fonts.ready;
+    }
+
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
     canvas.height = 1920;
     const ctx = canvas.getContext('2d');
     
-    // Background
+    // Base Background - very dark
     ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Grid/Pattern
+    // Add dynamic glowing orbs for that "modern crazy" feel
+    const createGlow = (x, y, r, color) => {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, color);
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    };
+    
+    createGlow(canvas.width, 0, 800, 'rgba(235, 215, 63, 0.2)'); // top right yellow glow
+    createGlow(0, canvas.height, 1000, 'rgba(235, 63, 63, 0.15)');  // bottom left red glow
+    
+    // Cool overlay grid
     ctx.strokeStyle = 'rgba(255,255,255,0.03)';
     ctx.lineWidth = 2;
-    for (let i = 0; i < canvas.width; i += 100) {
+    for (let i = 0; i < canvas.width; i += 80) {
       ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
     }
-    for (let i = 0; i < canvas.height; i += 100) {
+    for (let i = 0; i < canvas.height; i += 80) {
       ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
     }
-    
-    // Text: DRIPP MEDIA
+
+    // Add some random techy dashes for an "arcade" feel
+    ctx.fillStyle = 'rgba(235, 215, 63, 0.4)';
+    for(let i=0; i<40; i++) {
+       ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, Math.random()*8, Math.random()*25);
+    }
+
+    // Brand Header
     ctx.fillStyle = '#ebd73f'; 
-    ctx.font = 'bold 120px sans-serif'; 
+    ctx.font = '800 130px "Panchang", sans-serif'; 
     ctx.textAlign = 'center';
-    ctx.fillText('DRIPP MEDIA', canvas.width / 2, 500);
+    ctx.fillText('DRIPP MEDIA', canvas.width / 2, 350);
     
-    // Text: HIGH SCORE
+    // Sub-header (paired font)
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 80px sans-serif';
-    ctx.fillText('HIGH SCORE', canvas.width / 2, 800);
+    ctx.font = '500 45px "Clash Display", sans-serif';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '10px';
+    ctx.fillText('OFFICIAL ARCADE RECORD', canvas.width / 2, 430);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+
+    // Decorative glassmorphism box around the score
+    const boxY = 550;
+    const boxH = 650;
+    const boxW = 850;
+    const boxX = (canvas.width - boxW) / 2;
     
-    // Score
+    ctx.strokeStyle = 'rgba(235, 215, 63, 0.4)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 40);
+    ctx.stroke();
+    
+    // Inner glow for box
+    ctx.fillStyle = 'rgba(235, 215, 63, 0.05)';
+    ctx.fill();
+
+    // High Score Label
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = '600 65px "Panchang", sans-serif';
+    ctx.fillText('NEW HIGH SCORE', canvas.width / 2, boxY + 130);
+
+    // Score Value - Massive and stylized
     ctx.fillStyle = '#ebd73f';
-    ctx.font = 'bold 350px sans-serif';
-    ctx.fillText(score.toString(), canvas.width / 2, 1150);
+    ctx.font = '800 350px "Panchang", sans-serif';
     
-    // Text: Footer
-    ctx.fillStyle = '#888888';
-    ctx.font = '50px sans-serif';
-    ctx.fillText('Play now at drippmedia.com', canvas.width / 2, 1600);
+    // Drop shadow for the score to make it pop
+    ctx.shadowColor = 'rgba(235, 215, 63, 0.5)';
+    ctx.shadowBlur = 50;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 10;
+    ctx.fillText(score.toString(), canvas.width / 2, boxY + 460);
     
+    // Reset shadow
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.shadowOffsetY = 0;
+    
+    // Player tag
+    const storedUser = localStorage.getItem('dripp_user');
+    let playerName = 'PLAYER 1';
+    if(storedUser) {
+       try { playerName = JSON.parse(storedUser).name.toUpperCase(); } catch(e) {}
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 65px "Clash Display", sans-serif';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '5px';
+    ctx.fillText(playerName, canvas.width / 2, boxY + 800);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+
+    // Engaging Content / Dynamic Taunt
+    const getTaunt = (s) => {
+       if (s > 10000) return "GOD TIER 👑";
+       if (s > 5000) return "ABSOLUTE LEGEND 🔥";
+       if (s > 2000) return "UNSTOPPABLE 🚀";
+       if (s > 500) return "GETTING THERE 👀";
+       return "JUST WARMING UP 🎮";
+    };
+
+    ctx.fillStyle = '#ebd73f';
+    ctx.font = '700 50px "Panchang", sans-serif';
+    ctx.fillText(getTaunt(score), canvas.width / 2, boxY + 900);
+
+    // Call to Action Footer
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = '500 55px "Clash Display", sans-serif';
+    ctx.fillText('THINK YOU CAN BEAT THIS?', canvas.width / 2, 1650);
+
+    // Link styling
+    ctx.fillStyle = '#ebd73f';
+    ctx.font = '600 60px "Panchang", sans-serif';
+    ctx.fillText('DRIPPMEDIA.COM', canvas.width / 2, 1750);
+
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
         resolve(blob);
