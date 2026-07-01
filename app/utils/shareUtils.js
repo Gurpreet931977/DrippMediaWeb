@@ -85,14 +85,23 @@ export const generateScoreImage = async (score, gameName = null, isTopRecord = f
 
     // Score Value - Massive, centered, beautiful typography
     ctx.fillStyle = '#ebd73f';
-    ctx.font = '800 300px "Panchang", sans-serif';
+    
+    let fontSize = 280;
+    const scoreStr = score.toString();
+    ctx.font = `800 ${fontSize}px "Panchang", sans-serif`;
+    
+    // Scale down font size if score text is too wide to fit in the box
+    while (ctx.measureText(scoreStr).width > 750 && fontSize > 60) {
+      fontSize -= 10;
+      ctx.font = `800 ${fontSize}px "Panchang", sans-serif`;
+    }
     
     ctx.shadowColor = 'rgba(235, 215, 63, 0.4)';
     ctx.shadowBlur = 40;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 10;
     // Adjusted Y coordinate for better vertical centering in the box
-    ctx.fillText(score.toString(), canvas.width / 2, boxY + 410);
+    ctx.fillText(scoreStr, canvas.width / 2, boxY + 410);
     
     // Reset shadow
     ctx.shadowBlur = 0;
