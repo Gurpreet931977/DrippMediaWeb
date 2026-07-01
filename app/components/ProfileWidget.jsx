@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-
-export default function ProfileWidget({ showScore, onLoginClick }) {
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Upload, Image as ImageIcon } from 'lucide-react';export default function ProfileWidget({ showScore, onLoginClick }) {
   const [user, setUser] = useState(null);
   const [highScore, setHighScore] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -59,6 +59,22 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
       setUser(null);
       setDropdownOpen(false);
       window.location.reload();
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const updatedUser = { ...user, profileImage: reader.result };
+        setUser(updatedUser);
+        localStorage.setItem('dripp_user', JSON.stringify(updatedUser));
+        
+        // Dispatch event for other components to know
+        window.dispatchEvent(new Event('dripp_profile_updated'));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -120,8 +136,6 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
     );
   }
 
-  const initials = user.name ? user.name.substring(0, 2).toUpperCase() : 'US';
-
   return (
     <div style={{ position: 'relative', zIndex: 9999, display: 'flex', alignItems: 'center', gap: '15px' }}>
       {/* Score moved to page.jsx */}
@@ -141,12 +155,18 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
       >
         <div style={{
           width: '36px', height: '36px', borderRadius: '50%',
-          background: 'linear-gradient(135deg, var(--brand-yellow), #d4c23b)',
+          background: user?.profileImage ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
           display: 'flex', justifyContent: 'center', alignItems: 'center',
-          color: 'var(--deep-black)', fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem',
-          boxShadow: '0 4px 15px rgba(235, 215, 63, 0.3)'
+          color: 'var(--pure-white)', overflow: 'hidden',
+          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          transition: 'all 0.3s ease'
         }}>
-          {initials}
+          {user?.profileImage ? (
+            <img src={user.profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <User size={18} strokeWidth={2.5} />
+          )}
         </div>
         <span className="profile-name" style={{ color: 'var(--pure-white)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem', fontWeight: 500 }}>
           {user.name}
@@ -165,7 +185,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
           boxShadow: '0 10px 30px rgba(0,0,0,0.5)', animation: 'dropdownFade 0.2s ease forwards',
           transformOrigin: 'top right'
         }}>
-          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', marginBottom: '5px' }}>
+           <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', marginBottom: '5px' }}>
              <h4 style={{ margin: 0, fontFamily: "'Clash Display', sans-serif", color: 'white', fontSize: '1.1rem' }}>{user.name}</h4>
              <p style={{ margin: '5px 0 0 0', fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>{user.email}</p>
              {user.nature && (
@@ -179,12 +199,37 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
              )}
           </div>
           
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+            accept="image/*" 
+            style={{ display: 'none' }} 
+          />
+          
+          <button 
+             onClick={() => {
+               fileInputRef.current?.click();
+             }}
+             style={{
+                background: 'transparent', border: 'none', color: 'var(--pure-white)', textAlign: 'left',
+                padding: '5px 0', fontFamily: "'Clash Display', sans-serif", fontSize: '0.9rem',
+                cursor: 'pointer', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '8px'
+             }}
+             onMouseEnter={e => e.currentTarget.style.color = 'var(--brand-yellow)'}
+             onMouseLeave={e => e.currentTarget.style.color = 'var(--pure-white)'}
+          >
+             <Upload size={14} />
+             Upload Picture
+          </button>
+          
           <button 
              onClick={handleLogout}
              style={{
                 background: 'transparent', border: 'none', color: '#ff6b6b', textAlign: 'left',
                 padding: '5px 0', fontFamily: "'Clash Display', sans-serif", fontSize: '0.9rem',
-                cursor: 'pointer', transition: 'color 0.2s'
+                cursor: 'pointer', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '8px',
+                marginTop: '4px'
              }}
              onMouseEnter={e => e.currentTarget.style.color = '#ff4f4f'}
              onMouseLeave={e => e.currentTarget.style.color = '#ff6b6b'}
