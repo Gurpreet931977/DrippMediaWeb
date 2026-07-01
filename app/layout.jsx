@@ -32,6 +32,17 @@ export const metadata = {
       'max-snippet': -1,
     },
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Dripp Media | Surreal Digital & Creative Agency',
+    description: 'Immersive digital experiences, web development, video production, and cutting-edge design by Dripp Media.',
+    creator: '@drippmedia_',
+  },
+  alternates: {
+    canonical: 'https://drippmedia.com',
+  },
+  applicationName: 'Dripp Media',
+  category: 'technology',
 };
 
 export default function RootLayout({ children }) {
