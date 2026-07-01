@@ -1340,6 +1340,19 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   const isMountedRef = useRef(false); // Skip first-render effect execution
   const audioRef = useRef(null);
 
+  const checkIsHighScore = () => {
+    let currentScore = score;
+    if (activeGame === "breaker") currentScore = breakerScore;
+    if (activeGame === "scope") currentScore = scopeScore;
+
+    if (activeGame === 'dripp') {
+      const globalBest = parseInt(localStorage.getItem('dripp_highScore') || '0', 10);
+      return currentScore >= globalBest && currentScore > 0;
+    }
+    const localBest = parseInt(localStorage.getItem(`dripp_${activeGame}_highScore`) || '0', 10);
+    return currentScore >= localBest && currentScore > 0;
+  };
+
   const handleBrag = async () => {
     let bragScore = score;
     if (activeGame === "breaker") bragScore = breakerScore;
@@ -1350,7 +1363,12 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
     };
     const prettyName = gameNamesMap[activeGame] || activeGame.toUpperCase();
 
-    await shareScoreImage(bragScore, prettyName);
+    const isTopRecord = checkIsHighScore();
+    if (isTopRecord && activeGame !== 'dripp') {
+      localStorage.setItem(`dripp_${activeGame}_highScore`, bragScore.toString());
+    }
+
+    await shareScoreImage(bragScore, prettyName, isTopRecord);
   };
 
   useEffect(() => {
@@ -1709,7 +1727,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
             </button>
             {!isCreativeGame && (
               <button onClick={handleBrag} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
-                BRAG YOUR SCORE
+                {checkIsHighScore() ? "SHARE #1 LEADERBOARD SCORE" : "BRAG YOUR SCORE"}
               </button>
             )}
             
@@ -1765,7 +1783,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
             </button>
             {!isCreativeGame && (
               <button onClick={handleBrag} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
-                BRAG YOUR SCORE
+                {checkIsHighScore() ? "SHARE #1 LEADERBOARD SCORE" : "BRAG YOUR SCORE"}
               </button>
             )}
             <button onClick={() => { setActiveGame("none"); if (onClose) onClose(); }} style={{ padding: "12px 32px", borderRadius: "30px", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", fontFamily: "'Clash Display', sans-serif", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "2px", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>

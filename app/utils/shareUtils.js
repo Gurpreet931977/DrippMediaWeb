@@ -1,4 +1,4 @@
-export const generateScoreImage = async (score, gameName = null) => {
+export const generateScoreImage = async (score, gameName = null, isTopRecord = false) => {
     // Wait for fonts to load first just in case
     if (typeof document !== 'undefined' && document.fonts) {
       await document.fonts.ready;
@@ -51,7 +51,7 @@ export const generateScoreImage = async (score, gameName = null) => {
     ctx.fillStyle = '#ffffff';
     ctx.font = '500 45px "Clash Display", sans-serif';
     if ('letterSpacing' in ctx) ctx.letterSpacing = '10px';
-    const subText = gameName ? `${gameName.toUpperCase()} RECORD` : 'CERTIFIED ARCADE FLEX';
+    const subText = isTopRecord ? 'GLOBAL #1 RECORD' : (gameName ? `${gameName.toUpperCase()} RECORD` : 'CERTIFIED ARCADE FLEX');
     ctx.fillText(subText, canvas.width / 2, 430);
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
@@ -74,7 +74,7 @@ export const generateScoreImage = async (score, gameName = null) => {
     // High Score Label
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = '600 65px "Panchang", sans-serif';
-    ctx.fillText('STATS JUST DROPPED', canvas.width / 2, boxY + 130);
+    ctx.fillText(isTopRecord ? 'TOP OF THE LEADERBOARD' : 'STATS JUST DROPPED', canvas.width / 2, boxY + 130);
 
     // Score Value - Massive and stylized
     ctx.fillStyle = '#ebd73f';
@@ -109,6 +109,7 @@ export const generateScoreImage = async (score, gameName = null) => {
 
     // Engaging Content / Dynamic Taunt
     const getTaunt = (s) => {
+       if (isTopRecord) return "UNDEFEATED CHAMPION 👑";
        if (s > 10000) return "LITERALLY HIM 👑";
        if (s > 5000) return "ABSOLUTE CINEMA 🍿";
        if (s > 2000) return "ATE & LEFT NO CRUMBS 🍽️";
@@ -137,13 +138,15 @@ export const generateScoreImage = async (score, gameName = null) => {
     });
 };
 
-export const shareScoreImage = async (score, gameName = null) => {
+export const shareScoreImage = async (score, gameName = null, isTopRecord = false) => {
     try {
-      const blob = await generateScoreImage(score, gameName);
+      const blob = await generateScoreImage(score, gameName, isTopRecord);
       const file = new File([blob], 'dripp-score.jpg', { type: 'image/jpeg' });
-      const text = gameName 
-        ? `I just scored ${score} in ${gameName} on Dripp Media Arcade! Can you beat it? 🕹️🔥 Play now at https://drippmedia.com`
-        : `I just set a new high score on Dripp Media Arcade! Can you beat it? 🕹️🔥 Play now at https://drippmedia.com`;
+      const text = isTopRecord 
+        ? `YAY! I am officially top of the leaderboard in ${gameName || 'Dripp Media Arcade'}! 🏆🔥 Can anyone beat my score of ${score}? Play now at https://drippmedia.com`
+        : (gameName 
+          ? `I just scored ${score} in ${gameName} on Dripp Media Arcade! Can you beat it? 🕹️🔥 Play now at https://drippmedia.com`
+          : `I just set a new high score on Dripp Media Arcade! Can you beat it? 🕹️🔥 Play now at https://drippmedia.com`);
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
@@ -162,9 +165,11 @@ export const shareScoreImage = async (score, gameName = null) => {
       }
     } catch (err) {
       console.error('Share failed', err);
-      const text = gameName 
-        ? `I just scored ${score} in ${gameName} on Dripp Media Arcade! Play now at https://drippmedia.com`
-        : `I just scored ${score} on the Dripp Media Arcade! Play now at https://drippmedia.com`;
+      const text = isTopRecord 
+        ? `YAY! I am officially top of the leaderboard in ${gameName || 'Dripp Media Arcade'}! 🏆🔥 Can anyone beat my score of ${score}? Play now at https://drippmedia.com`
+        : (gameName 
+          ? `I just scored ${score} in ${gameName} on Dripp Media Arcade! Play now at https://drippmedia.com`
+          : `I just scored ${score} on the Dripp Media Arcade! Play now at https://drippmedia.com`);
       navigator.clipboard.writeText(text);
       alert('Score text copied to clipboard! Paste it to share.');
     }
