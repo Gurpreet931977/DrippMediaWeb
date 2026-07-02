@@ -65,10 +65,15 @@ export default function QuoteMaker() {
   // Smart Paste
   const [smartText, setSmartText] = useState('');
 
-  const handleSmartPaste = () => {
+  const handleSmartPaste = async () => {
     if (!smartText.trim()) return;
     
+    // Dynamically import compromise
+    const nlp = (await import('compromise')).default;
+    const doc = nlp(smartText);
+    
     let updatedClient = { ...clientDetails };
+    let updatedQuote = { ...quoteDetails };
     
     // 1. Extract Email
     const emailMatch = smartText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
@@ -78,59 +83,119 @@ export default function QuoteMaker() {
     const phoneMatch = smartText.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
     if (phoneMatch) updatedClient.mobile = phoneMatch[0];
 
-    // 3. Extract Name/Brand
-    const lines = smartText.split('\n').map(l => l.trim()).filter(l => l);
-    const nameMatch = lines.find(l => l.toLowerCase().startsWith('name:') || l.toLowerCase().startsWith('client:'));
-    if (nameMatch) {
-       updatedClient.name = nameMatch.split(':')[1].trim();
-    } else if (lines.length > 0 && !lines[0].includes('@') && lines[0].length < 50 && !lines[0].match(/\d/)) {
-       updatedClient.name = lines[0]; // Guess first line is name if no numbers/emails
+    // 3. Extract Name & Brand
+    const people = doc.people().out('array');
+    if (people.length > 0) {
+        updatedClient.name = people[0].replace(/[.,;:!?]$/, '').trim();
+    } else {
+        const nameMatch = smartText.match(/(?:name|client):\s*([a-zA-Z\s]+)/i);
+        if (nameMatch) updatedClient.name = nameMatch[1].trim();
     }
 
-    const brandMatch = lines.find(l => l.toLowerCase().startsWith('brand:') || l.toLowerCase().startsWith('company:'));
-    if (brandMatch) {
-       updatedClient.brandName = brandMatch.split(':')[1].trim();
+    // Advanced Brand extraction (looks for "for [Brand]")
+    const forMatch = smartText.match(/for\s+([A-Z][a-zA-Z0-9'\s]+?(?=\.|\n))/);
+    if (forMatch) {
+        updatedClient.brandName = forMatch[1].trim();
+    } else {
+        const organizations = doc.organizations().out('array');
+        if (organizations.length > 0) {
+            updatedClient.brandName = organizations[0].replace(/[.,;:!?]$/, '').trim();
+        } else {
+            const brandMatch = smartText.match(/(?:brand|company):\s*([a-zA-Z\s0-9&]+)/i);
+            if (brandMatch) updatedClient.brandName = brandMatch[1].trim();
+        }
     }
     
     setClientDetails(updatedClient);
 
-    // 4. Extract Items/Prices
+    // 4. Extract Items/Prices using Advanced Heuristics + NLP
     const newItems = [];
-    // Match something like $500, 500 USD, 500$, £500
-    const priceRegex = /([$€£₹]?\s*\d+(?:,\d{3})*(?:\.\d+)?\s*(?:USD|EUR|GBP|INR)?(?:[a-zA-Z]{0,2})?)/i;
+    const lines = smartText.split('\n').map(l => l.trim()).filter(l => l);
     
     lines.forEach(line => {
-       // Basic check to see if line has a number and a currency indicator
-       if (line.match(/[$€£₹]|USD|EUR|GBP|INR|price|cost|rate/i) && line.match(/\d/)) {
-           const match = line.match(priceRegex);
-           if (match) {
-               // Parse the number safely
-               const priceStr = match[0].replace(/[^0-9.]/g, ''); 
-               const rate = parseFloat(priceStr);
-               if (!isNaN(rate)) {
-                   // Description is the line minus the price, cleaned up
-                   let desc = line.replace(match[0], '').replace(/^[-*•:]/, '').trim();
-                   // Clean up trailing dashes/colons
-                   desc = desc.replace(/[-*•:]$/, '').trim();
-                   if (desc) {
-                       newItems.push({ desc, qty: 1, rate });
-                   }
-               }
-           }
-       }
+        // Skip grand total lines
+        if (line.match(/\bTotal\b/i) && !line.match(/each/i) && line.match(/=/)) return;
+        if (line.match(/Total Investment/i)) return;
+        
+        let qty = 1;
+        let rate = 0;
+        let desc = "";
+        
+        // Format 1: Item (qty): rate each
+        let m1 = line.match(/^[-*•]?\s*(.*?)\s*\((\d+)\)\s*[:-]?\s*[$€£₹]?\s*([\d,.]+)\s*each/i);
+        if (m1) {
+            desc = m1[1].trim();
+            qty = parseInt(m1[2]);
+            rate = parseFloat(m1[3].replace(/,/g, ''));
+            newItems.push({desc, qty, rate});
+            return;
+        }
+        
+        // Format 2: Item = total
+        let m2 = line.match(/^[-*•]?\s*(.*?)\s*=\s*[$€£₹]?\s*([\d,.]+)/i);
+        if (m2) {
+             if (m2[1].toLowerCase().includes('total')) return;
+             desc = m2[1].trim();
+             rate = parseFloat(m2[2].replace(/,/g, ''));
+             newItems.push({desc, qty: 1, rate});
+             return;
+        }
+        
+        // Format 3: Item - rate
+        let m3 = line.match(/^[-*•]?\s*(.*?)\s*-\s*[$€£₹]?\s*([\d,.]+)/i);
+        if (m3) {
+             desc = m3[1].trim();
+             rate = parseFloat(m3[2].replace(/,/g, ''));
+             newItems.push({desc, qty: 1, rate});
+             return;
+        }
+
+        // Format 4: NLP Sentence Fallback
+        const sDoc = nlp(line);
+        const money = sDoc.money().out('array');
+        if (money.length > 0) {
+            const rateStr = money[0];
+            rate = parseFloat(rateStr.replace(/[^0-9.]/g, ''));
+            if (!isNaN(rate)) {
+                desc = line.replace(rateStr, '').replace(/for|at|costing|cost|USD|EUR|GBP|INR|\$|€|£|₹/gi, '');
+                desc = desc.replace(/we need to do (a|an)?/i, '').replace(/we need (a|an)?/i, '').replace(/they want (a|an)?/i, '');
+                desc = desc.replace(/^[^a-zA-Z0-9]+/, '').replace(/[^a-zA-Z0-9]+$/, '').trim();
+                if (desc) {
+                    desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+                    newItems.push({ desc, qty: 1, rate });
+                }
+            }
+        }
     });
 
     if (newItems.length > 0) {
-        setItems(newItems); // Replace items completely
+        setItems(newItems);
     }
     
-    // 5. Look for modality hints
-    if (smartText.toLowerCase().includes('monthly') || smartText.toLowerCase().includes('retainer') || smartText.toLowerCase().includes('/mo')) {
+    // 5. Extract Long Message / Quality Promise
+    const paragraphs = smartText.split('\n\n');
+    if (paragraphs.length > 0) {
+        // Look for a paragraph > 50 chars with no money symbols
+        const lastPara = paragraphs.slice(-2).find(p => p.length > 50 && !p.match(/₹|\$|£|€/));
+        if (lastPara) {
+            updatedQuote.message = lastPara.replace(/\n/g, ' ').trim();
+        }
+    }
+
+    // 6. Look for modality hints
+    if (smartText.toLowerCase().includes('monthly') || smartText.toLowerCase().includes('retainer') || smartText.toLowerCase().includes('/mo') || smartText.toLowerCase().includes('per month')) {
         setPackageType('monthly');
     } else if (smartText.toLowerCase().includes('project')) {
         setPackageType('project');
     }
 
+    // 7. Extract Currency
+    if (smartText.includes('₹') || smartText.includes('INR')) updatedQuote.currency = '₹';
+    else if (smartText.includes('€') || smartText.includes('EUR')) updatedQuote.currency = '€';
+    else if (smartText.includes('£') || smartText.includes('GBP')) updatedQuote.currency = '£';
+    else if (smartText.includes('$') || smartText.includes('USD')) updatedQuote.currency = '$';
+
+    setQuoteDetails(updatedQuote);
     setSmartText(''); 
   };
 
