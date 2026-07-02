@@ -1147,8 +1147,8 @@ export default function ComingSoon() {
 
       // Ball speed scaling based on level cycles (every 20 levels it gets slightly faster)
       const speedMult = 1 + Math.floor((level - 1) / 20) * 0.2;
-      balls[0].speedX *= speedMult;
-      balls[0].speedY *= speedMult;
+      balls[0].vx *= speedMult;
+      balls[0].vy *= speedMult;
     };
     
     window.initDrippGame = () => {
