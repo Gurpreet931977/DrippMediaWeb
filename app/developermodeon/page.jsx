@@ -1468,6 +1468,24 @@ export default function Page() {
         const customQuoteBtn = document.getElementById('custom-quote-btn');
         const receiptItemsContainer = document.getElementById('receipt-items');
 
+        window.clearCart = function() {
+            if (selectedServices.size > 0) {
+                selectedServices.clear();
+                
+                // Deselect all floating pills
+                document.querySelectorAll('.f-pill').forEach(pill => {
+                    pill.classList.remove('selected');
+                });
+                
+                // Deselect all custom chips
+                document.querySelectorAll('.custom-chip').forEach(chip => {
+                    chip.classList.remove('selected');
+                });
+                
+                updateReceipt();
+            }
+        };
+
         function updateReceipt() {
             if (!receiptItemsContainer) return;
             receiptItemsContainer.innerHTML = '';
@@ -1475,7 +1493,12 @@ export default function Page() {
             if (selectedServices.size === 0) {
                 receiptItemsContainer.innerHTML = '<div class="empty-receipt">No services selected...</div>';
                 if (customQuoteBtn) customQuoteBtn.href = 'mailto:hello@dripmedia.com';
+                const clearBtn = document.getElementById('clear-cart-btn');
+                if (clearBtn) clearBtn.style.display = 'none';
                 return;
+            } else {
+                const clearBtn = document.getElementById('clear-cart-btn');
+                if (clearBtn) clearBtn.style.display = 'block';
             }
 
             let list = [];
@@ -2167,10 +2190,7 @@ export default function Page() {
           </a>
         </div>
       </li>
-      <li style={{ marginLeft: '15px' }}>
-         <ProfileWidget onLoginClick={() => setShowAuthModal(true)} />
-      </li>
-      <li className="theme-switch-wrapper">
+      <li className="theme-switch-wrapper" style={{ marginLeft: '15px' }}>
         <button id="theme-switch" className="theme-switch-btn" aria-label="Toggle Theme">
           <div className="ts-inner">
             <svg className="ts-icon ts-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -2186,6 +2206,9 @@ export default function Page() {
             </svg>
           </div>
         </button>
+      </li>
+      <li style={{ marginLeft: '5px' }}>
+         <ProfileWidget onLoginClick={() => setShowAuthModal(true)} hideShareScore={true} />
       </li>
     </ul>
     <div className="hamburger" id="hamburger">
@@ -2626,7 +2649,10 @@ export default function Page() {
         <div className="builder-right">
           <div className="receipt-header">
             <div className="receipt-title">Est. Cart</div>
-            <div className="receipt-date" id="receipt-date">YYYY-MM-DD</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button id="clear-cart-btn" style={{ background: 'transparent', color: '#ff4d4d', border: '1px solid rgba(255, 60, 60, 0.2)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', display: 'none', fontFamily: "'Clash Display', sans-serif" }} onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `clearCart()`, target: event.currentTarget, originalEvent: event } }))}>Clear All</button>
+              <div className="receipt-date" id="receipt-date">YYYY-MM-DD</div>
+            </div>
           </div>
           <div className="receipt-items" id="receipt-items">
             <div className="empty-receipt">No services selected...</div>

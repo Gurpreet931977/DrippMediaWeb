@@ -2392,9 +2392,6 @@
             color: var(--pure-white);
             font-family: monospace;
             font-size: 0.95rem;
-            animation: typeIn 0.3s forwards;
-            opacity: 0;
-            transform: translateY(10px);
             line-height: 1.5;
         }
 

@@ -6,7 +6,7 @@ import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '../utils/cropImage';
 import { shareScoreImage } from '../utils/shareUtils';
 
-export default function ProfileWidget({ showScore, onLoginClick }) {
+export default function ProfileWidget({ showScore, onLoginClick, hideShareScore }) {
   const [user, setUser] = useState(null);
   const [highScore, setHighScore] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -293,38 +293,34 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
         className="profile-pill"
         onClick={() => setDropdownOpen(!dropdownOpen)}
         style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-          background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)',
-          padding: '6px 16px 6px 6px', borderRadius: '30px',
-          border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '0', borderRadius: '50%',
+          cursor: 'pointer',
           transition: 'all 0.3s ease'
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
       >
         <div 
           className="profile-icon-container"
           style={{
-          width: '36px', height: '36px', borderRadius: '50%',
+          width: '42px', height: '42px', borderRadius: '50%',
           background: user?.profileImage ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
           display: 'flex', justifyContent: 'center', alignItems: 'center',
           color: 'var(--pure-white)', overflow: 'hidden',
-          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 0 15px rgba(255, 255, 255, 0.2)',
+          border: '2px solid rgba(255, 255, 255, 0.1)',
           transition: 'all 0.3s ease'
-        }}>
+        }}
+        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 255, 255, 0.4)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'; }}
+        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 255, 255, 0.2)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; }}
+        >
           {user?.profileImage ? (
             <img src={user.profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
-            <User size={18} strokeWidth={2.5} />
+            <User size={20} strokeWidth={2.5} />
           )}
         </div>
-        <span className="profile-name" style={{ color: 'var(--pure-white)', fontFamily: "'Clash Display', sans-serif", fontSize: '0.95rem', fontWeight: 500 }}>
-          {user.name}
-        </span>
-        <svg className="profile-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'rgba(255,255,255,0.5)', transition: 'transform 0.3s', transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-           <path d="M6 9l6 6 6-6" />
-        </svg>
       </div>
 
       {dropdownOpen && (
@@ -367,6 +363,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
              Upload Picture
           </button>
           
+          { !hideShareScore && (
           <button 
              onClick={handleShareScore}
              style={{
@@ -380,6 +377,7 @@ export default function ProfileWidget({ showScore, onLoginClick }) {
              <Share2 size={14} />
              Share High Score
           </button>
+          )}
           
           <button 
              onClick={handleLogout}
