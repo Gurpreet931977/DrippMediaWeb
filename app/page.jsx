@@ -506,8 +506,8 @@ export default function ComingSoon() {
 
     class Paddle {
       constructor() {
-        this.baseW = 120;
-        this.w = 120;
+        this.baseW = Math.max(60, Math.min(120, canvas.width / 3));
+        this.w = this.baseW;
         this.h = 10;
         this.x = canvas.width / 2;
         this.y = canvas.height - 100;
@@ -698,7 +698,8 @@ export default function ComingSoon() {
        constructor(x, y) {
          this.x = x; 
          this.y = y; 
-         this.baseRadius = 15 + Math.random() * 10;
+         const scale = Math.min(canvas.width / 800, 1);
+         this.baseRadius = (15 + Math.random() * 10) * Math.max(0.6, scale);
          this.radius = this.baseRadius;
          this.markedForDeletion = false;
          this.color = Math.random() > 0.5 ? '#ebd73f' : '#ffffff';
@@ -984,14 +985,23 @@ export default function ComingSoon() {
 
     window.initBreakerGame = (level = 1) => {
       bricks = []; // storing TargetRings here for compatibility
-      balls = [new Ball()];
+      
+      const speedMult = 1 + (level * 0.08); // Speed increases with each level
+      const initialVx = (6 * Math.min(speedMult, 2)) * (Math.random() > 0.5 ? 1 : -1);
+      const initialVy = -7 * Math.min(speedMult, 2);
+      
+      balls = [new Ball(canvas.width / 2, canvas.height - 140, initialVx, initialVy)];
+      if (balls[0]) {
+         balls[0].speedLimit = 12 * Math.max(1, speedMult * 0.8);
+      }
+      
       powerUps = [];
       paddle = new Paddle();
       piercingTimer = 0;
       
       const pattern = level % 20;
-      const spacingX = 60;
-      const spacingY = 50;
+      const spacingX = Math.min(60, canvas.width / 10);
+      const spacingY = Math.min(50, canvas.width / 12);
       const offsetX = canvas.width / 2;
       const offsetY = 120;
       

@@ -2173,7 +2173,7 @@ export default function Page() {
       <li><a href="#work" className="nav-link">Work</a></li>
       <li><a href="#services" className="nav-link">Services</a></li>
       <li><a href="#founder-pin-section" className="nav-link">About</a></li>
-      <li>
+      <li style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         <div className="c-nav-group">
           <a href="#community" className="c-nav-btn c-community" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `document.getElementById('community').scrollIntoView({behavior: 'smooth'})`, target: event.currentTarget, originalEvent: event } }))}>
             <span className="c-txt-wrap"><span className="c-txt" data-text="Community">Community</span></span>
@@ -2185,26 +2185,28 @@ export default function Page() {
             </svg>
           </a>
         </div>
-      </li>
-      <li className="theme-switch-wrapper" style={{ marginLeft: '15px' }}>
-        <button id="theme-switch" className="theme-switch-btn" aria-label="Toggle Theme">
-          <div className="ts-inner">
-            <svg className="ts-icon ts-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx={12} cy={12} r={4} />
-              <path d="M12 2v2" />
-              <path d="M12 20v2" />
-              <path d="m4.93 4.93 1.41 1.41" />
-              <path d="m17.66 17.66 1.41 1.41" />
-              <path d="M2 12h2" />
-              <path d="M20 12h2" />
-              <path d="m6.34 17.66-1.41 1.41" />
-              <path d="m19.07 4.93-1.41 1.41" />
-            </svg>
-          </div>
-        </button>
-      </li>
-      <li style={{ marginLeft: '5px' }}>
-         <ProfileWidget onLoginClick={() => setShowAuthModal(true)} hideShareScore={true} />
+        
+        <div className="theme-switch-wrapper">
+          <button id="theme-switch" className="theme-switch-btn" aria-label="Toggle Theme">
+            <div className="ts-inner">
+              <svg className="ts-icon ts-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx={12} cy={12} r={4} />
+                <path d="M12 2v2" />
+                <path d="M12 20v2" />
+                <path d="m4.93 4.93 1.41 1.41" />
+                <path d="m17.66 17.66 1.41 1.41" />
+                <path d="M2 12h2" />
+                <path d="M20 12h2" />
+                <path d="m6.34 17.66-1.41 1.41" />
+                <path d="m19.07 4.93-1.41 1.41" />
+              </svg>
+            </div>
+          </button>
+        </div>
+        
+        <div>
+          <ProfileWidget onLoginClick={() => setShowAuthModal(true)} hideShareScore={true} />
+        </div>
       </li>
     </ul>
     <div className="hamburger" id="hamburger">
