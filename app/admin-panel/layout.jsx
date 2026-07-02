@@ -27,7 +27,7 @@ export default function AdminLayout({ children }) {
         
         // Check Supabase session first
         const { data: { session } } = await supabase.auth.getSession();
-        const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'gurpreet@drippmedia.com,admin@drippmedia.com').split(',');
+        const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'gurpreet@drippmedia.com,admin@drippmedia.com,gs335860@gmail.com').split(',');
 
         if (session && session.user && session.user.email) {
            if (adminEmails.includes(session.user.email)) {
