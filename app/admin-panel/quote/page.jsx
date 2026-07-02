@@ -199,6 +199,28 @@ export default function QuoteMaker() {
     setSmartText(''); 
   };
 
+  const handleClearForm = () => {
+    if (confirm('Are you sure you want to clear the entire form and start over?')) {
+      setClientDetails({
+        name: '',
+        brandName: '',
+        email: '',
+        mobile: '',
+        date: new Date().toISOString().split('T')[0]
+      });
+      setQuoteDetails({
+        number: 'QT-' + Math.floor(1000 + Math.random() * 9000),
+        currency: '$',
+        projectDuration: '',
+        expectedDelivery: '',
+        message: "At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality. While our rates reflect this premium standard, our results ensure you never have to second-guess the investment."
+      });
+      setItems([{ desc: 'Project Discovery & Strategy', qty: 1, rate: 0 }]);
+      setPackageType('project');
+      setSmartText('');
+    }
+  };
+
   useEffect(() => {
     setIsClient(true);
     const localPackages = localStorage.getItem('dripp_advanced_packages');
@@ -449,9 +471,14 @@ export default function QuoteMaker() {
               rows={4} 
               style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white', resize: 'vertical', marginBottom: '15px' }} 
             />
-            <button onClick={handleSmartPaste} style={{ background: '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-              Auto-Fill Form
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={handleSmartPaste} style={{ background: '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}>
+                Auto-Fill Form
+              </button>
+              <button onClick={handleClearForm} style={{ background: 'transparent', color: '#ff4d4d', border: '1px solid #ff4d4d', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+                Clear Form
+              </button>
+            </div>
           </div>
 
           {/* Section 1: Client Details */}
