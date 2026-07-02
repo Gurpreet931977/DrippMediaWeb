@@ -41,8 +41,12 @@ export default function AdminLayout({ children }) {
            if (localUser) {
               try {
                 const parsedUser = JSON.parse(localUser);
-                if (parsedUser && parsedUser.email && adminEmails.includes(parsedUser.email)) {
-                   isAuth = true;
+                if (parsedUser && parsedUser.email) {
+                   const normalizedEmail = parsedUser.email.toLowerCase().trim();
+                   const normalizedAdmins = adminEmails.map(e => e.toLowerCase().trim());
+                   if (normalizedAdmins.includes(normalizedEmail)) {
+                       isAuth = true;
+                   }
                 }
               } catch (e) {
                  console.error("Failed to parse dripp_user from localStorage");
@@ -82,15 +86,16 @@ export default function AdminLayout({ children }) {
     return <div style={{ cursor: 'auto', display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white' }}>Verifying Access...</div>;
   }
 
-  if (!isDesktop) {
-    return (
-      <div style={{ cursor: 'auto', display: 'flex', height: '100vh', padding: '20px', textAlign: 'center', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white', flexDirection: 'column' }}>
-        <h2 style={{ color: '#ebd73f', marginBottom: '10px' }}>Desktop Only</h2>
-        <p>The Dripp Admin Panel is restricted to desktop devices for security and usability.</p>
-        <button onClick={() => router.push('/')} style={{ marginTop: '20px', padding: '10px 20px', background: '#ebd73f', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Return to Site</button>
-      </div>
-    );
-  }
+  // TEMPORARILY DISABLED MOBILE BLOCK SO USER CAN ACCESS ADMIN PANEL
+  // if (!isDesktop) {
+  //   return (
+  //     <div style={{ cursor: 'auto', display: 'flex', height: '100vh', padding: '20px', textAlign: 'center', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white', flexDirection: 'column' }}>
+  //       <h2 style={{ color: '#ebd73f', marginBottom: '10px' }}>Desktop Only</h2>
+  //       <p>The Dripp Admin Panel is restricted to desktop devices for security and usability.</p>
+  //       <button onClick={() => router.push('/')} style={{ marginTop: '20px', padding: '10px 20px', background: '#ebd73f', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Return to Site</button>
+  //     </div>
+  //   );
+  // }
 
   if (!isAuthorized) {
     return (
