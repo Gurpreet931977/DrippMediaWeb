@@ -62,6 +62,78 @@ export default function QuoteMaker() {
   const [shareLink, setShareLink] = useState('');
   const [sharePassword, setSharePassword] = useState('');
 
+  // Smart Paste
+  const [smartText, setSmartText] = useState('');
+
+  const handleSmartPaste = () => {
+    if (!smartText.trim()) return;
+    
+    let updatedClient = { ...clientDetails };
+    
+    // 1. Extract Email
+    const emailMatch = smartText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
+    if (emailMatch) updatedClient.email = emailMatch[0];
+
+    // 2. Extract Phone
+    const phoneMatch = smartText.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+    if (phoneMatch) updatedClient.mobile = phoneMatch[0];
+
+    // 3. Extract Name/Brand
+    const lines = smartText.split('\n').map(l => l.trim()).filter(l => l);
+    const nameMatch = lines.find(l => l.toLowerCase().startsWith('name:') || l.toLowerCase().startsWith('client:'));
+    if (nameMatch) {
+       updatedClient.name = nameMatch.split(':')[1].trim();
+    } else if (lines.length > 0 && !lines[0].includes('@') && lines[0].length < 50 && !lines[0].match(/\d/)) {
+       updatedClient.name = lines[0]; // Guess first line is name if no numbers/emails
+    }
+
+    const brandMatch = lines.find(l => l.toLowerCase().startsWith('brand:') || l.toLowerCase().startsWith('company:'));
+    if (brandMatch) {
+       updatedClient.brandName = brandMatch.split(':')[1].trim();
+    }
+    
+    setClientDetails(updatedClient);
+
+    // 4. Extract Items/Prices
+    const newItems = [];
+    // Match something like $500, 500 USD, 500$, £500
+    const priceRegex = /([$€£₹]?\s*\d+(?:,\d{3})*(?:\.\d+)?\s*(?:USD|EUR|GBP|INR)?(?:[a-zA-Z]{0,2})?)/i;
+    
+    lines.forEach(line => {
+       // Basic check to see if line has a number and a currency indicator
+       if (line.match(/[$€£₹]|USD|EUR|GBP|INR|price|cost|rate/i) && line.match(/\d/)) {
+           const match = line.match(priceRegex);
+           if (match) {
+               // Parse the number safely
+               const priceStr = match[0].replace(/[^0-9.]/g, ''); 
+               const rate = parseFloat(priceStr);
+               if (!isNaN(rate)) {
+                   // Description is the line minus the price, cleaned up
+                   let desc = line.replace(match[0], '').replace(/^[-*•:]/, '').trim();
+                   // Clean up trailing dashes/colons
+                   desc = desc.replace(/[-*•:]$/, '').trim();
+                   if (desc) {
+                       newItems.push({ desc, qty: 1, rate });
+                   }
+               }
+           }
+       }
+    });
+
+    if (newItems.length > 0) {
+        setItems(newItems); // Replace items completely
+    }
+    
+    // 5. Look for modality hints
+    if (smartText.toLowerCase().includes('monthly') || smartText.toLowerCase().includes('retainer') || smartText.toLowerCase().includes('/mo')) {
+        setPackageType('monthly');
+    } else if (smartText.toLowerCase().includes('project')) {
+        setPackageType('project');
+    }
+
+    setSmartText(''); 
+  };
+
   useEffect(() => {
     setIsClient(true);
     const localPackages = localStorage.getItem('dripp_advanced_packages');
@@ -295,6 +367,28 @@ export default function QuoteMaker() {
         {/* LEFT COLUMN: BUILDER FORM */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
+          {/* Smart Paste Section */}
+          <div className={styles.card} style={{ border: '1px dashed #ebd73f', background: 'rgba(235, 215, 63, 0.05)' }}>
+            <h3 style={{ marginBottom: '10px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Search size={20} /> AI Smart Paste
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '15px', lineHeight: 1.4 }}>
+              Paste an unstructured paragraph of client requirements, meeting notes, or chat messages. 
+              We'll automatically extract emails, phone numbers, names, and service prices to build your quote instantly.
+            </p>
+            <textarea 
+              value={smartText} 
+              onChange={(e) => setSmartText(e.target.value)} 
+              placeholder="e.g. Client: John Doe. Phone: 555-1234. Email: john@doe.com. We need a Website Redesign for $1500 and Monthly SEO for $500."
+              className={styles.inputField} 
+              rows={4} 
+              style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white', resize: 'vertical', marginBottom: '15px' }} 
+            />
+            <button onClick={handleSmartPaste} style={{ background: '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+              Auto-Fill Form
+            </button>
+          </div>
+
           {/* Section 1: Client Details */}
           <div className={styles.card}>
             <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
