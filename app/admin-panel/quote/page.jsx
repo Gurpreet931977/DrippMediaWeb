@@ -111,19 +111,138 @@ export default function QuoteMaker() {
   const total = items.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.rate || 0)), 0);
 
   const generatePDF = async () => {
-    if (!pdfRef.current) return;
-    try {
-      const canvas = await html2canvas(pdfRef.current, { scale: 2, useCORS: true, logging: false });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Dripp_Media_Quote_${quoteDetails.number}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Check console.');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    // Header
+    pdf.setFillColor(10, 10, 10);
+    pdf.rect(0, 0, 210, 297, 'F'); // Dark background
+    
+    pdf.setTextColor(235, 215, 63); // Dripp Yellow
+    pdf.setFontSize(28);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("DRIPP MEDIA", 15, 30);
+    
+    pdf.setTextColor(150, 150, 150);
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Premium Digital Solutions", 15, 38);
+    
+    // Quote Info
+    pdf.setTextColor(235, 215, 63);
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("PROPOSAL", 195, 30, { align: 'right' });
+    
+    pdf.setTextColor(150, 150, 150);
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(quoteDetails.number, 195, 38, { align: 'right' });
+    pdf.text(`Date: ${clientDetails.date}`, 195, 44, { align: 'right' });
+
+    pdf.setDrawColor(235, 215, 63);
+    pdf.setLineWidth(0.5);
+    pdf.line(15, 55, 195, 55);
+    
+    // Client Details
+    pdf.setTextColor(235, 215, 63);
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("PREPARED FOR:", 15, 65);
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(11);
+    pdf.text(clientDetails.name || "Client Name", 15, 72);
+    pdf.setFont("helvetica", "normal");
+    if(clientDetails.brandName) pdf.text(clientDetails.brandName, 15, 78);
+    pdf.setTextColor(150, 150, 150);
+    if(clientDetails.email) pdf.text(clientDetails.email, 15, 84);
+    if(clientDetails.mobile) pdf.text(clientDetails.mobile, 15, 90);
+
+    // Package Details
+    if(packageType === 'project') {
+       pdf.setTextColor(235, 215, 63);
+       pdf.setFontSize(12);
+       pdf.setFont("helvetica", "bold");
+       pdf.text("PROJECT DETAILS:", 195, 65, { align: 'right' });
+       pdf.setTextColor(255, 255, 255);
+       pdf.setFontSize(10);
+       pdf.setFont("helvetica", "normal");
+       pdf.text(`Duration: ${quoteDetails.projectDuration}`, 195, 72, { align: 'right' });
+       pdf.text(`Delivery: ${quoteDetails.expectedDelivery}`, 195, 78, { align: 'right' });
+    } else {
+       pdf.setTextColor(235, 215, 63);
+       pdf.setFontSize(12);
+       pdf.setFont("helvetica", "bold");
+       pdf.text("PACKAGE DETAILS:", 195, 65, { align: 'right' });
+       pdf.setTextColor(255, 255, 255);
+       pdf.setFontSize(10);
+       pdf.setFont("helvetica", "normal");
+       pdf.text("Recurring Monthly Retainer", 195, 72, { align: 'right' });
     }
+
+    // Creative Message
+    let messageY = 105;
+    if (quoteDetails.message) {
+      pdf.setDrawColor(235, 215, 63);
+      pdf.setLineWidth(1);
+      pdf.line(15, 95, 15, 115);
+      pdf.setTextColor(200, 200, 200);
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "italic");
+      
+      const splitText = pdf.splitTextToSize(`"${quoteDetails.message}"`, 170);
+      pdf.text(splitText, 19, 100);
+      messageY = 100 + (splitText.length * 5) + 10;
+    }
+
+    // Services Table
+    const tableData = items.map(item => [
+      item.desc || 'Service Item',
+      item.qty.toString(),
+      `${quoteDetails.currency}${parseFloat(item.rate || 0).toFixed(2)}`,
+      `${quoteDetails.currency}${(item.qty * item.rate).toFixed(2)}`
+    ]);
+
+    import('jspdf-autotable').then(({ default: autoTable }) => {
+      autoTable(pdf, {
+        startY: messageY,
+        head: [['Description', 'Qty', 'Rate', 'Amount']],
+        body: tableData,
+        theme: 'plain',
+        headStyles: { fillColor: [20, 20, 20], textColor: [235, 215, 63], fontStyle: 'bold' },
+        bodyStyles: { fillColor: [10, 10, 10], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [15, 15, 15] },
+        columnStyles: {
+           1: { halign: 'center' },
+           2: { halign: 'right' },
+           3: { halign: 'right' }
+        },
+        margin: { left: 15, right: 15 }
+      });
+
+      // Total
+      const finalY = pdf.lastAutoTable.finalY + 15;
+      pdf.setDrawColor(235, 215, 63);
+      pdf.setLineWidth(0.5);
+      pdf.line(120, finalY - 5, 195, finalY - 5);
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Total:", 120, finalY + 2);
+      
+      pdf.setTextColor(235, 215, 63);
+      pdf.text(`${quoteDetails.currency}${total.toFixed(2)}`, 195, finalY + 2, { align: 'right' });
+      
+      if(packageType === 'monthly') {
+         pdf.setTextColor(150, 150, 150);
+         pdf.setFontSize(9);
+         pdf.setFont("helvetica", "normal");
+         pdf.text("*Billed monthly", 195, finalY + 8, { align: 'right' });
+      }
+
+      pdf.save(`Dripp_Media_Quote_${quoteDetails.number}.pdf`);
+    });
   };
 
   const generateSecureLink = async () => {
