@@ -986,13 +986,13 @@ export default function ComingSoon() {
     window.initBreakerGame = (level = 1) => {
       bricks = []; // storing TargetRings here for compatibility
       
-      const speedMult = 1 + (level * 0.08); // Speed increases with each level
-      const initialVx = (6 * Math.min(speedMult, 2)) * (Math.random() > 0.5 ? 1 : -1);
-      const initialVy = -7 * Math.min(speedMult, 2);
+      const initialSpeedMult = 1 + (level * 0.08); // Speed increases with each level
+      const initialVx = (6 * Math.min(initialSpeedMult, 2)) * (Math.random() > 0.5 ? 1 : -1);
+      const initialVy = -7 * Math.min(initialSpeedMult, 2);
       
       balls = [new Ball(canvas.width / 2, canvas.height - 140, initialVx, initialVy)];
       if (balls[0]) {
-         balls[0].speedLimit = 12 * Math.max(1, speedMult * 0.8);
+         balls[0].speedLimit = 12 * Math.max(1, initialSpeedMult * 0.8);
       }
       
       powerUps = [];
