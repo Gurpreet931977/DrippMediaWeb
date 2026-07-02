@@ -60,6 +60,11 @@ export default function AdminLayout({ children }) {
     };
 
     checkAuth();
+    
+    // Ensure body is visible and cursor is normal for admin panel
+    document.body.classList.add('loaded');
+    document.body.style.opacity = '1';
+    document.body.style.cursor = 'auto';
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
