@@ -22,23 +22,41 @@ export default function AdminLayout({ children }) {
 
     // 2. Auth Check
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setIsAuthorized(false);
-        setLoading(false);
-        return;
-      }
+      try {
+        let isAuth = false;
+        
+        // Check Supabase session first
+        const { data: { session } } = await supabase.auth.getSession();
+        const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'gurpreet@drippmedia.com,admin@drippmedia.com').split(',');
 
-      const email = session.user.email;
-      // Admins are defined by an environment variable, fallback to default for this demo
-      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'gurpreet@drippmedia.com,admin@drippmedia.com').split(',');
-      
-      if (adminEmails.includes(email)) {
-        setIsAuthorized(true);
-      } else {
+        if (session && session.user && session.user.email) {
+           if (adminEmails.includes(session.user.email)) {
+              isAuth = true;
+           }
+        }
+
+        // Fallback: Check custom dripp_user in localStorage (used by AuthModal)
+        if (!isAuth) {
+           const localUser = localStorage.getItem('dripp_user');
+           if (localUser) {
+              try {
+                const parsedUser = JSON.parse(localUser);
+                if (parsedUser && parsedUser.email && adminEmails.includes(parsedUser.email)) {
+                   isAuth = true;
+                }
+              } catch (e) {
+                 console.error("Failed to parse dripp_user from localStorage");
+              }
+           }
+        }
+        
+        setIsAuthorized(isAuth);
+      } catch (error) {
+        console.error("Auth check error:", error);
         setIsAuthorized(false);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     checkAuth();
