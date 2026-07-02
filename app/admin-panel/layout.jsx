@@ -79,12 +79,12 @@ export default function AdminLayout({ children }) {
   }, []);
 
   if (loading) {
-    return <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white' }}>Verifying Access...</div>;
+    return <div style={{ cursor: 'auto', display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white' }}>Verifying Access...</div>;
   }
 
   if (!isDesktop) {
     return (
-      <div style={{ display: 'flex', height: '100vh', padding: '20px', textAlign: 'center', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white', flexDirection: 'column' }}>
+      <div style={{ cursor: 'auto', display: 'flex', height: '100vh', padding: '20px', textAlign: 'center', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white', flexDirection: 'column' }}>
         <h2 style={{ color: '#ebd73f', marginBottom: '10px' }}>Desktop Only</h2>
         <p>The Dripp Admin Panel is restricted to desktop devices for security and usability.</p>
         <button onClick={() => router.push('/')} style={{ marginTop: '20px', padding: '10px 20px', background: '#ebd73f', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Return to Site</button>
@@ -94,7 +94,7 @@ export default function AdminLayout({ children }) {
 
   if (!isAuthorized) {
     return (
-      <div style={{ display: 'flex', height: '100vh', padding: '20px', textAlign: 'center', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white', flexDirection: 'column' }}>
+      <div style={{ cursor: 'auto', display: 'flex', height: '100vh', padding: '20px', textAlign: 'center', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white', flexDirection: 'column' }}>
         <h2 style={{ color: '#ff4d4d', marginBottom: '10px' }}>Access Denied</h2>
         <p>You do not have permission to view this page. Please log in with an authorized administrator account.</p>
         <button onClick={() => router.push('/')} style={{ marginTop: '20px', padding: '10px 20px', background: '#ebd73f', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Return to Site</button>
