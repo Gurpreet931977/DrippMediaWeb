@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Lock, FileText, CheckCircle2 } from 'lucide-react';
 
@@ -11,6 +11,11 @@ export default function SharedQuote() {
   const [quoteData, setQuoteData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleUnlock = async (e) => {
     e.preventDefault();
@@ -37,6 +42,10 @@ export default function SharedQuote() {
       setLoading(false);
     }
   };
+
+  if (!mounted) {
+      return <div style={{ height: '100vh', background: '#0a0a0a', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#ebd73f' }}>Loading secure link...</div>;
+  }
 
   if (isLocked) {
     return (
