@@ -153,6 +153,7 @@ export default function QuoteMaker() {
   const [isAutoFillSuccess, setIsAutoFillSuccess] = useState(false);
   const [isAutoFillDone, setIsAutoFillDone] = useState(false);
   const [copiedItem, setCopiedItem] = useState(null);
+  const [showClearModal, setShowClearModal] = useState(false);
 
   const handleSmartPaste = async () => {
     if (!smartText.trim()) return;
@@ -307,29 +308,32 @@ export default function QuoteMaker() {
     }, 2000);
   };
 
-  const handleClearForm = () => {
-    if (confirm('Are you sure you want to clear the entire form and start over?')) {
-      const tzOffsetMs = new Date().getTimezoneOffset() * 60000;
-      const localDate = new Date(Date.now() - tzOffsetMs).toISOString().split('T')[0];
-      setClientDetails({
-        name: '',
-        brandName: '',
-        email: '',
-        mobile: '',
-        date: localDate
-      });
-      setQuoteDetails({
-        number: 'QT-' + Math.floor(1000 + Math.random() * 9000),
-        date: localDate,
-        currency: '₹',
-        projectDuration: '',
-        expectedDelivery: '',
-        message: "At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality. While our rates reflect this premium standard, our results ensure you never have to second-guess the investment."
-      });
-      setItems([{ desc: 'Project Discovery & Strategy', qty: 1, rate: 0 }]);
-      setPackageType('project');
-      setSmartText('');
-    }
+  const handleClearFormClick = () => {
+    setShowClearModal(true);
+  };
+
+  const confirmClearForm = () => {
+    const tzOffsetMs = new Date().getTimezoneOffset() * 60000;
+    const localDate = new Date(Date.now() - tzOffsetMs).toISOString().split('T')[0];
+    setClientDetails({
+      name: '',
+      brandName: '',
+      email: '',
+      mobile: '',
+      date: localDate
+    });
+    setQuoteDetails({
+      number: 'QT-' + Math.floor(1000 + Math.random() * 9000),
+      date: localDate,
+      currency: '₹',
+      projectDuration: '',
+      expectedDelivery: '',
+      message: "At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality. While our rates reflect this premium standard, our results ensure you never have to second-guess the investment."
+    });
+    setItems([{ desc: 'Project Discovery & Strategy', qty: 1, rate: 0 }]);
+    setPackageType('project');
+    setSmartText('');
+    setShowClearModal(false);
   };
 
   useEffect(() => {
@@ -459,6 +463,23 @@ export default function QuoteMaker() {
 
   return (
     <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
+      
+      {/* Clear Form Modal */}
+      {showClearModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+           <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '16px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+              <div style={{ background: 'rgba(255, 77, 77, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
+                 <Trash2 size={30} color="#ff4d4d" />
+              </div>
+              <h2 style={{ color: '#fff', marginBottom: '15px', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem' }}>Clear Entire Form?</h2>
+              <p style={{ color: '#aaa', marginBottom: '30px', fontSize: '0.9rem', lineHeight: '1.5' }}>This action cannot be undone. All client details, services, and customizations will be permanently erased.</p>
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                 <button onClick={() => setShowClearModal(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', flex: 1, fontWeight: 'bold' }}>Cancel</button>
+                 <button onClick={confirmClearForm} style={{ background: '#ff4d4d', border: 'none', color: '#fff', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', flex: 1, fontWeight: 'bold', boxShadow: '0 5px 15px rgba(255,77,77,0.3)' }}>Yes, Clear It</button>
+              </div>
+           </div>
+        </div>
+      )}
       <div className={styles.header}>
         <h1 className={styles.title}>Package Maker Pro</h1>
         <p className={styles.subtitle}>Build customized, premium quotes and packages.</p>
@@ -498,8 +519,13 @@ export default function QuoteMaker() {
                    'Auto-Fill Package'
                 )}
               </button>
-              <button onClick={handleClearForm} style={{ background: 'transparent', color: '#ff4d4d', border: '1px solid #ff4d4d', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-                Clear Form
+              <button 
+                onClick={handleClearFormClick} 
+                style={{ background: 'rgba(255, 77, 77, 0.05)', color: '#ff4d4d', border: '1px solid rgba(255, 77, 77, 0.3)', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 77, 77, 0.15)'; e.currentTarget.style.transform = 'scale(1.02)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 77, 77, 0.05)'; e.currentTarget.style.transform = 'scale(1)' }}
+              >
+                <Trash2 size={16} /> Clear Form
               </button>
             </div>
           </div>
