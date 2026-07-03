@@ -419,12 +419,12 @@ export default function QuoteMaker() {
 
   const handleCopyMessage = () => {
     const clientName = clientDetails.name ? clientDetails.name.split(' ')[0] : (clientDetails.brandName || 'Client');
-    const msg = `Hey ${clientName}!\n\nHere is your secure proposal from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 Password: ${sharePassword}\n\nLet me know if you have any questions!`;
+    const msg = `Hey ${clientName}!\n\nHere is your secure proposal from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 PIN: ${sharePassword}\n\nLet me know if you have any questions!`;
     copyToClipboard(msg, 'message');
   };
 
   const generateSecureLink = async () => {
-    const pass = Math.random().toString(36).slice(-6).toUpperCase();
+    const pass = Math.floor(1000 + Math.random() * 9000).toString();
     setSharePassword(pass);
     
     // In a real app, this posts to an API route that stores it in Supabase
@@ -694,10 +694,10 @@ export default function QuoteMaker() {
                         {copiedItem === 'link' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
                       </button>
                    </div>
-                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client Password:</p>
+                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client PIN:</p>
                    <div style={{ display: 'flex', gap: '8px' }}>
                       <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
-                      <button onClick={() => copyToClipboard(sharePassword, 'password')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password">
+                      <button onClick={() => copyToClipboard(sharePassword, 'password')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy PIN">
                         {copiedItem === 'password' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
                       </button>
                    </div>
