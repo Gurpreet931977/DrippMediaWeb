@@ -389,7 +389,8 @@ export default function QuoteMaker() {
         }
     }
     
-    pdf.save(`Dripp_Media_Proposal_${quoteDetails.number}.pdf`);
+    const brandNameStr = clientDetails.brandName ? `_${clientDetails.brandName.replace(/\s+/g, '_')}` : (clientDetails.name ? `_${clientDetails.name.replace(/\s+/g, '_')}` : '');
+    pdf.save(`Dripp_Media_Proposal${brandNameStr}_${quoteDetails.number}.pdf`);
   };
 
   const generateSecureLink = async () => {

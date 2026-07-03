@@ -482,7 +482,8 @@ export default function InvoiceMaker() {
           pdf.text(splitNotes, 15, notesY + 8);
       }
 
-      pdf.save(`Dripp_Media_Invoice_${invoiceDetails.number}.pdf`);
+      const brandNameStr = clientDetails.brandName ? `_${clientDetails.brandName.replace(/\s+/g, '_')}` : (clientDetails.name ? `_${clientDetails.name.replace(/\s+/g, '_')}` : '');
+      pdf.save(`Dripp_Media_Invoice${brandNameStr}_${invoiceDetails.number}.pdf`);
       
       // Save to local history
       const savedInvoices = JSON.parse(localStorage.getItem('dripp_invoices') || '[]');

@@ -26,6 +26,15 @@
   cursor: auto !important;
 }
 
+.adminContainer h1, 
+.adminContainer h2, 
+.adminContainer h3, 
+.adminContainer h4, 
+.adminContainer h5, 
+.adminContainer h6 {
+  font-family: 'Panchang', sans-serif;
+}
+
 .adminContainer * {
   cursor: auto !important;
 }
