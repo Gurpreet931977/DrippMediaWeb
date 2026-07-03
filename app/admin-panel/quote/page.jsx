@@ -614,6 +614,7 @@ export default function QuoteMaker() {
                       className={styles.inputField}
                       style={{ padding: '8px 12px' }}
                     />
+                  </div>
                   <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '100px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
                      <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toFixed(2)}
                   </div>
