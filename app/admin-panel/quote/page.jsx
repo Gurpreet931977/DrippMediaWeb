@@ -1039,8 +1039,9 @@ export default function QuoteMaker() {
                             </div>
                             <div>
                                 <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>Contact Us</h3>
-                                <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Email: hello@drippmedia.com</p>
-                                <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Phone: +91 98765 43210</p>
+                                <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Founder: Gurpreet Singh</p>
+                                <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Email: mediadripp@gmail.com</p>
+                                <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Instagram: @drippmedia_</p>
                                 <p style={{ fontSize: '24px', color: '#ccc', margin: '0' }}>Web: www.drippmedia.com</p>
                             </div>
                         </div>
