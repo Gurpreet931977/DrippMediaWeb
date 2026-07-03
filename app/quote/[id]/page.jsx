@@ -166,20 +166,42 @@ export default function SharedQuote() {
         )}
 
         {/* Services Section */}
-        <div>
-          <h3 style={{ fontSize: 'clamp(1.5rem, 6vw, 2rem)', color: '#ebd73f', margin: '0 0 30px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'center' }}>Proposed Services</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {items.map((item, i) => (
-              <div key={i} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(235, 215, 63, 0.15)', borderRadius: '16px', padding: 'clamp(15px, 4vw, 25px) clamp(15px, 5vw, 30px)', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', transition: 'transform 0.3s ease', cursor: 'default' }}>
-                 <div style={{ flex: '1 1 200px' }}>
-                    <h4 style={{ fontSize: 'clamp(1.1rem, 5vw, 1.4rem)', color: '#fff', margin: '0 0 8px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h4>
-                    <p style={{ fontSize: 'clamp(0.8rem, 3.5vw, 0.9rem)', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {currency}{parseFloat(item.rate).toLocaleString()}</p>
-                 </div>
-                 <div style={{ fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', fontWeight: 'bold', color: '#ebd73f', textShadow: '0 0 10px rgba(235, 215, 63, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: '#666', fontSize: 'clamp(1rem, 4vw, 1.2rem)', fontWeight: 'normal' }}>=</span> {currency}{(item.qty * item.rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                 </div>
+        <div style={{ marginTop: '10px' }}>
+          <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'center' }}>Proposed Services</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {(quoteData.items || []).map((item, i) => {
+              const qty = parseFloat(item.qty || 0);
+              const rate = parseFloat(item.rate || 0);
+              const rowTotal = qty * rate;
+              return (
+                <div key={i} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(235, 215, 63, 0.15)', borderRadius: '12px', padding: 'clamp(10px, 3vw, 20px) clamp(10px, 4vw, 20px)', display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <div style={{ flex: '1 1 200px' }}>
+                      <h4 style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#fff', margin: '0 0 5px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h4>
+                      <p style={{ fontSize: 'clamp(0.75rem, 3vw, 0.85rem)', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {currency}{rate.toLocaleString()}</p>
+                   </div>
+                   <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: 'bold', color: '#ebd73f', textShadow: '0 0 10px rgba(235, 215, 63, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ color: '#666', fontSize: 'clamp(0.9rem, 3vw, 1rem)', fontWeight: 'normal' }}>=</span> {currency}{rowTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                   </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Investment Section */}
+        <div style={{ marginBottom: '30px' }}>
+          <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '20px', padding: 'clamp(30px, 8vw, 40px) clamp(10px, 4vw, 15px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', width: '100%', boxSizing: 'border-box' }}>
+              <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#888', textTransform: 'uppercase', letterSpacing: 'clamp(1px, 1vw, 2px)', margin: '0 0 10px 0', textAlign: 'center' }}>Total {quoteData.packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
+              
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', textShadow: '0 0 20px rgba(235, 215, 63, 0.4)', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
+                  <span style={{ fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', color: '#ebd73f', fontWeight: '500' }}>{currency}</span>
+                  <span style={{ fontSize: 'clamp(1.8rem, 7vw, 3.5rem)', color: '#ebd73f', fontWeight: '800', fontFamily: "'Panchang', sans-serif", letterSpacing: '-1px', wordBreak: 'break-word', textAlign: 'center' }}>{parseFloat(quoteData.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
-            ))}
+
+              <div style={{ marginTop: '20px', textAlign: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px', width: '100%', maxWidth: '300px' }}>
+                  <p style={{ color: '#888', fontSize: 'clamp(0.75rem, 3vw, 0.9rem)', margin: '0 0 5px 0' }}>Thank you for considering Dripp Media.</p>
+                  <p style={{ color: '#666', fontSize: 'clamp(0.65rem, 2.5vw, 0.75rem)', margin: 0 }}>This proposal is valid for 30 days.</p>
+              </div>
           </div>
         </div>
 
