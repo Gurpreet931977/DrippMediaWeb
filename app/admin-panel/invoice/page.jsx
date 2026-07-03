@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import styles from '../admin.module.css';
@@ -149,12 +149,17 @@ export default function InvoiceMaker() {
   const handleSmartPaste = async () => {
     if (!smartText.trim()) return;
     
+    setIsAutoFilling(true);
+    
+    // Simulate dramatic AI processing time
+    await new Promise(r => setTimeout(r, 800));
+    
     // Dynamically import compromise for NLP
     const nlp = (await import('compromise')).default;
     const doc = nlp(smartText);
     
     let updatedClient = { ...clientDetails };
-    let updatedInv = { ...invoiceDetails };
+    let updatedInvoice = { ...invoiceDetails };
     
     // Extract Email
     const emailMatch = smartText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
@@ -230,14 +235,18 @@ export default function InvoiceMaker() {
     if (newItems.length > 0) setItems(newItems);
     
     // Extract Currency
-    if (smartText.includes('₹') || smartText.includes('INR')) updatedInv.currency = '₹';
-    else if (smartText.includes('€') || smartText.includes('EUR')) updatedInv.currency = '€';
-    else if (smartText.includes('£') || smartText.includes('GBP')) updatedInv.currency = '£';
-    else if (smartText.includes('$') || smartText.includes('USD')) updatedInv.currency = '$';
+    if (smartText.includes('₹') || smartText.includes('INR')) updatedInvoice.currency = '₹';
+    else if (smartText.includes('€') || smartText.includes('EUR')) updatedInvoice.currency = '€';
+    else if (smartText.includes('£') || smartText.includes('GBP')) updatedInvoice.currency = '£';
+    else if (smartText.includes('$') || smartText.includes('USD')) updatedInvoice.currency = '$';
 
     setClientDetails(updatedClient);
-    setInvoiceDetails(updatedInv);
+    setInvoiceDetails(updatedInvoice);
     setSmartText(''); 
+    
+    setIsAutoFilling(false);
+    setIsAutoFillSuccess(true);
+    setTimeout(() => setIsAutoFillSuccess(false), 2000);
   };
 
   const handleClearForm = () => {
@@ -491,8 +500,14 @@ export default function InvoiceMaker() {
               style={{ resize: 'vertical', marginBottom: '15px' }} 
             />
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSmartPaste} className={styles.btnPrimary} style={{ flex: 1, padding: '10px' }}>
-                Auto-Fill Invoice
+              <button onClick={handleSmartPaste} disabled={isAutoFilling} style={{ background: isAutoFillSuccess ? '#4ade80' : '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: isAutoFilling ? 'wait' : 'pointer', fontWeight: 'bold', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}>
+                {isAutoFilling ? (
+                   <><Loader size={18} className={styles.spin} /> Analyzing text...</>
+                ) : isAutoFillSuccess ? (
+                   <><CheckCircle2 size={18} /> Success!</>
+                ) : (
+                   'Auto-Fill Invoice'
+                )}
               </button>
               <button onClick={handleClearForm} className={styles.btnDanger} style={{ padding: '10px 20px', borderRadius: '8px' }}>
                 Clear Form

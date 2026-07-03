@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Search, Share2, Calendar, FileText, Lock, Save } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, Calendar, FileText, Lock, Save, Loader, CheckCircle2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import styles from '../admin.module.css';
@@ -63,11 +63,18 @@ export default function QuoteMaker() {
   const [shareLink, setShareLink] = useState('');
   const [sharePassword, setSharePassword] = useState('');
 
-  // Smart Paste
+  // Smart Paste State
   const [smartText, setSmartText] = useState('');
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
+  const [isAutoFillSuccess, setIsAutoFillSuccess] = useState(false);
 
   const handleSmartPaste = async () => {
     if (!smartText.trim()) return;
+    
+    setIsAutoFilling(true);
+    
+    // Simulate dramatic AI processing time
+    await new Promise(r => setTimeout(r, 800));
     
     // Dynamically import compromise
     const nlp = (await import('compromise')).default;
@@ -198,6 +205,10 @@ export default function QuoteMaker() {
 
     setQuoteDetails(updatedQuote);
     setSmartText(''); 
+    
+    setIsAutoFilling(false);
+    setIsAutoFillSuccess(true);
+    setTimeout(() => setIsAutoFillSuccess(false), 2000);
   };
 
   const handleClearForm = () => {
@@ -473,8 +484,14 @@ export default function QuoteMaker() {
               style={{ resize: 'vertical', marginBottom: '15px' }} 
             />
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSmartPaste} style={{ background: '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}>
-                Auto-Fill Form
+              <button onClick={handleSmartPaste} disabled={isAutoFilling} style={{ background: isAutoFillSuccess ? '#4ade80' : '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: isAutoFilling ? 'wait' : 'pointer', fontWeight: 'bold', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}>
+                {isAutoFilling ? (
+                   <><Loader size={18} className={styles.spin} /> Analyzing text...</>
+                ) : isAutoFillSuccess ? (
+                   <><CheckCircle2 size={18} /> Success!</>
+                ) : (
+                   'Auto-Fill Quote'
+                )}
               </button>
               <button onClick={handleClearForm} style={{ background: 'transparent', color: '#ff4d4d', border: '1px solid #ff4d4d', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
                 Clear Form
