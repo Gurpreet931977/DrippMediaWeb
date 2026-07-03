@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, ArrowUp, ArrowDown, Layers, Type, Image, EyeOff, Eye } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import styles from '../admin.module.css';
@@ -62,6 +62,81 @@ export default function QuoteMaker() {
   const [items, setItems] = useState([
     { desc: 'Project Discovery & Strategy', qty: 1, rate: 0 }
   ]);
+
+  // PDF Pages State (Dynamic Builder)
+  const [pdfPages, setPdfPages] = useState([
+    { id: 'cover_1', type: 'cover', title: 'Immersive Visual Narratives & Strategic Growth', subtitle: 'Prepared Exclusively For', hideHeading: false },
+    { id: 'services_1', type: 'services', title: 'Scope of Work', hideHeading: false },
+    { id: 'investment_1', type: 'investment', title: 'Investment Overview', hideHeading: false },
+    { id: 'next_steps_1', type: 'next_steps', title: 'Next Steps', hideHeading: false }
+  ]);
+  const [selectedPageIndex, setSelectedPageIndex] = useState(0);
+
+  const movePage = (index, direction) => {
+      const newPages = [...pdfPages];
+      if (direction === 'up' && index > 0) {
+          [newPages[index - 1], newPages[index]] = [newPages[index], newPages[index - 1]];
+          setSelectedPageIndex(index - 1);
+      } else if (direction === 'down' && index < newPages.length - 1) {
+          [newPages[index + 1], newPages[index]] = [newPages[index], newPages[index + 1]];
+          setSelectedPageIndex(index + 1);
+      }
+      setPdfPages(newPages);
+  };
+
+  const removePage = (index) => {
+      if (pdfPages.length <= 1) return;
+      const newPages = [...pdfPages];
+      newPages.splice(index, 1);
+      setPdfPages(newPages);
+      setSelectedPageIndex(Math.max(0, index - 1));
+  };
+
+  const addPage = (type) => {
+      let newPage = { id: Date.now().toString(), type, hideHeading: false };
+      
+      if (type === 'custom_text') {
+          newPage.title = 'Custom Details';
+          newPage.content = 'Add your custom text here...';
+      } else if (type === 'infographic') {
+          newPage.title = 'Our Value Proposition';
+          newPage.cards = [
+              { title: 'Feature 1', desc: 'Description of this feature.' },
+              { title: 'Feature 2', desc: 'Description of this feature.' }
+          ];
+      }
+      
+      setPdfPages([...pdfPages, newPage]);
+      setSelectedPageIndex(pdfPages.length);
+  };
+
+  const updatePage = (index, field, value) => {
+      const newPages = [...pdfPages];
+      newPages[index] = { ...newPages[index], [field]: value };
+      setPdfPages(newPages);
+  };
+
+  const updateCard = (pageIndex, cardIndex, field, value) => {
+      const newPages = [...pdfPages];
+      const updatedCards = [...newPages[pageIndex].cards];
+      updatedCards[cardIndex] = { ...updatedCards[cardIndex], [field]: value };
+      newPages[pageIndex].cards = updatedCards;
+      setPdfPages(newPages);
+  };
+
+  const addCard = (pageIndex) => {
+      const newPages = [...pdfPages];
+      if (newPages[pageIndex].cards.length < 4) {
+          newPages[pageIndex].cards.push({ title: 'New Feature', desc: 'Description here.' });
+          setPdfPages(newPages);
+      }
+  };
+
+  const removeCard = (pageIndex, cardIndex) => {
+      const newPages = [...pdfPages];
+      newPages[pageIndex].cards.splice(cardIndex, 1);
+      setPdfPages(newPages);
+  };
 
   // Templates
   const [savedPackages, setSavedPackages] = useState([]);
@@ -297,15 +372,15 @@ export default function QuoteMaker() {
     // We will generate the PDF using the hidden DOM elements via html2canvas
     const pdf = new jsPDF('l', 'px', [1920, 1080]);
     
-    // We have 4 slides
-    for (let i = 1; i <= 4; i++) {
-        const slide = document.getElementById(`pdf-slide-${i}`);
+    for (let i = 0; i < pdfPages.length; i++) {
+        const pageId = pdfPages[i].id;
+        const slide = document.getElementById(`pdf-slide-${pageId}`);
         if (slide) {
-            slide.style.display = 'block'; // Ensure it's rendered for canvas
+            slide.style.display = 'flex'; // Ensure it's rendered for canvas
             try {
                 const canvas = await html2canvas(slide, { scale: 2, backgroundColor: '#050505' });
                 const imgData = canvas.toDataURL('image/jpeg', 0.9);
-                if (i > 1) pdf.addPage([1920, 1080], 'l');
+                if (i > 0) pdf.addPage([1920, 1080], 'l');
                 pdf.addImage(imgData, 'JPEG', 0, 0, 1920, 1080);
             } catch (err) {
                 console.error(`Error rendering slide ${i}`, err);
@@ -535,6 +610,151 @@ export default function QuoteMaker() {
                <span style={{ fontSize: '1.3rem', color: '#ebd73f', fontWeight: 'bold' }}>{quoteDetails.currency}{total.toFixed(2)}</span>
             </div>
           </div>
+
+          {/* PDF PAGE BUILDER */}
+          <div className={styles.card}>
+            <h3 style={{ marginBottom: '20px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Layers size={20} /> PDF Pages & Layout
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr', gap: '20px' }}>
+               {/* Left: Page List */}
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {pdfPages.map((page, index) => (
+                      <div key={page.id} 
+                           onClick={() => setSelectedPageIndex(index)}
+                           style={{ 
+                             padding: '12px', 
+                             background: selectedPageIndex === index ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.02)', 
+                             border: `1px solid ${selectedPageIndex === index ? '#ebd73f' : 'rgba(255,255,255,0.05)'}`, 
+                             borderRadius: '8px', 
+                             cursor: 'pointer',
+                             display: 'flex',
+                             alignItems: 'center',
+                             justifyContent: 'space-between',
+                             transition: 'all 0.2s'
+                           }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                             {page.type === 'cover' && <Image size={16} color="#888" />}
+                             {page.type === 'services' && <FileText size={16} color="#888" />}
+                             {page.type === 'investment' && <Package size={16} color="#888" />}
+                             {page.type === 'next_steps' && <CheckCircle size={16} color="#888" />}
+                             {page.type === 'custom_text' && <Type size={16} color="#888" />}
+                             {page.type === 'infographic' && <Layers size={16} color="#888" />}
+                             <span style={{ fontSize: '0.9rem', color: selectedPageIndex === index ? '#fff' : '#aaa' }}>
+                                {page.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                             </span>
+                          </div>
+                          
+                          <div style={{ display: 'flex', gap: '5px' }} onClick={e => e.stopPropagation()}>
+                             <button onClick={() => movePage(index, 'up')} disabled={index === 0} style={{ background: 'transparent', border: 'none', color: index === 0 ? '#333' : '#ebd73f', cursor: index === 0 ? 'not-allowed' : 'pointer' }}><ArrowUp size={14} /></button>
+                             <button onClick={() => movePage(index, 'down')} disabled={index === pdfPages.length - 1} style={{ background: 'transparent', border: 'none', color: index === pdfPages.length - 1 ? '#333' : '#ebd73f', cursor: index === pdfPages.length - 1 ? 'not-allowed' : 'pointer' }}><ArrowDown size={14} /></button>
+                             {pdfPages.length > 1 && (
+                               <button onClick={() => removePage(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', marginLeft: '5px' }}><Trash2 size={14} /></button>
+                             )}
+                          </div>
+                      </div>
+                  ))}
+                  
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                      <button onClick={() => addPage('custom_text')} className={styles.btn} style={{ flex: 1, fontSize: '0.8rem', padding: '8px' }}>+ Text Page</button>
+                      <button onClick={() => addPage('infographic')} className={styles.btn} style={{ flex: 1, fontSize: '0.8rem', padding: '8px' }}>+ Infographic</button>
+                  </div>
+               </div>
+
+               {/* Right: Page Editor */}
+               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '20px' }}>
+                  {pdfPages[selectedPageIndex] && (
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                             <h4 style={{ color: '#ebd73f', margin: 0, textTransform: 'capitalize' }}>
+                                 {pdfPages[selectedPageIndex].type.replace('_', ' ')} Settings
+                             </h4>
+                             <button 
+                                onClick={() => updatePage(selectedPageIndex, 'hideHeading', !pdfPages[selectedPageIndex].hideHeading)}
+                                style={{ background: 'transparent', border: '1px solid #333', padding: '5px 10px', borderRadius: '6px', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem' }}
+                             >
+                                 {pdfPages[selectedPageIndex].hideHeading ? <><EyeOff size={14}/> Heading Hidden</> : <><Eye size={14}/> Heading Visible</>}
+                             </button>
+                         </div>
+                         
+                         {(pdfPages[selectedPageIndex].type === 'cover' || pdfPages[selectedPageIndex].type === 'services' || pdfPages[selectedPageIndex].type === 'investment' || pdfPages[selectedPageIndex].type === 'next_steps' || pdfPages[selectedPageIndex].type === 'custom_text' || pdfPages[selectedPageIndex].type === 'infographic') && (
+                             <div>
+                                <label className={styles.label}>Heading Text</label>
+                                <input 
+                                  type="text" 
+                                  value={pdfPages[selectedPageIndex].title || ''} 
+                                  onChange={e => updatePage(selectedPageIndex, 'title', e.target.value)} 
+                                  className={styles.inputField} 
+                                />
+                             </div>
+                         )}
+
+                         {pdfPages[selectedPageIndex].type === 'cover' && (
+                             <div>
+                                <label className={styles.label}>Subtitle / Prepared For Label</label>
+                                <input 
+                                  type="text" 
+                                  value={pdfPages[selectedPageIndex].subtitle || ''} 
+                                  onChange={e => updatePage(selectedPageIndex, 'subtitle', e.target.value)} 
+                                  className={styles.inputField} 
+                                />
+                             </div>
+                         )}
+                         
+                         {pdfPages[selectedPageIndex].type === 'custom_text' && (
+                             <div>
+                                <label className={styles.label}>Page Content</label>
+                                <textarea 
+                                  value={pdfPages[selectedPageIndex].content || ''} 
+                                  onChange={e => updatePage(selectedPageIndex, 'content', e.target.value)} 
+                                  className={styles.inputField} 
+                                  style={{ minHeight: '200px', resize: 'vertical' }}
+                                />
+                             </div>
+                         )}
+
+                         {pdfPages[selectedPageIndex].type === 'infographic' && (
+                             <div>
+                                <label className={styles.label} style={{ marginBottom: '15px', display: 'block' }}>Design Cards</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    {pdfPages[selectedPageIndex].cards?.map((card, cIdx) => (
+                                        <div key={cIdx} style={{ background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid #222' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                                <span style={{ fontSize: '0.8rem', color: '#888' }}>Card {cIdx + 1}</span>
+                                                <button onClick={() => removeCard(selectedPageIndex, cIdx)} style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer' }}><Trash2 size={12} /></button>
+                                            </div>
+                                            <input type="text" value={card.title} onChange={e => updateCard(selectedPageIndex, cIdx, 'title', e.target.value)} className={styles.inputField} style={{ padding: '8px', marginBottom: '10px', fontSize: '0.9rem' }} placeholder="Card Title" />
+                                            <textarea value={card.desc} onChange={e => updateCard(selectedPageIndex, cIdx, 'desc', e.target.value)} className={styles.inputField} style={{ padding: '8px', fontSize: '0.8rem', minHeight: '60px', resize: 'vertical' }} placeholder="Card Description" />
+                                        </div>
+                                    ))}
+                                </div>
+                                {pdfPages[selectedPageIndex].cards?.length < 4 && (
+                                    <button onClick={() => addCard(selectedPageIndex)} className={styles.btn} style={{ marginTop: '15px', padding: '8px 15px', fontSize: '0.85rem' }}>+ Add Card</button>
+                                )}
+                             </div>
+                         )}
+
+                         {pdfPages[selectedPageIndex].type === 'services' && (
+                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem' }}>
+                                 The Scope of Work details are managed in the "Services & Scope" section above. This page simply formats them for the PDF.
+                             </div>
+                         )}
+                         {pdfPages[selectedPageIndex].type === 'investment' && (
+                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem' }}>
+                                 The Investment breakdown is calculated automatically from your Services above.
+                             </div>
+                         )}
+                         {pdfPages[selectedPageIndex].type === 'next_steps' && (
+                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem' }}>
+                                 The personal message is pulled from the "Quality Promise / Message" field in the Package Configuration section.
+                             </div>
+                         )}
+                     </div>
+                  )}
+               </div>
+            </div>
+          </div>
           
         </div>
         
@@ -673,118 +893,146 @@ export default function QuoteMaker() {
 
       {/* HIDDEN PDF TEMPLATE - ONLY VISIBLE DURING EXPORT */}
       <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
-          
-          {/* SLIDE 1: COVER */}
-          <div id="pdf-slide-1" className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column', justifyContent: 'space-between' }}>
-             <div>
-                 <h1 style={{ fontSize: '120px', color: '#ebd73f', margin: 0, letterSpacing: '-4px', fontWeight: '900' }}>DRIPP MEDIA</h1>
-                 <p style={{ fontSize: '32px', color: '#888', margin: '10px 0 0 0', fontWeight: '300' }}>Premium Digital Solutions</p>
-             </div>
-             
-             <div style={{ margin: 'auto 0' }}>
-                 <p style={{ fontSize: '24px', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px' }}>Proposal Prepared For</p>
-                 <h2 style={{ fontSize: '80px', color: '#fff', margin: '0 0 10px 0', lineHeight: 1.1 }}>{clientDetails.brandName || clientDetails.name || 'Client'}</h2>
-                 <p style={{ fontSize: '30px', color: '#aaa', margin: 0 }}>{clientDetails.name ? clientDetails.name + ' | ' : ''}{clientDetails.email}</p>
-             </div>
-             
-             <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid rgba(235, 215, 63, 0.3)', paddingTop: '40px' }}>
-                 <div>
-                     <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Date</p>
-                     <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{clientDetails.date}</p>
-                 </div>
-                 <div style={{ textAlign: 'right' }}>
-                     <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Proposal Number</p>
-                     <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{quoteDetails.number}</p>
-                 </div>
-             </div>
-          </div>
-          
-          {/* SLIDE 2: SCOPE OF WORK */}
-          <div id="pdf-slide-2" className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column' }}>
-              <div style={{ marginBottom: '60px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
-                  <h1 className={styles.pdfTitle} style={{ margin: 0 }}>Scope of Work</h1>
-                  <p className={styles.pdfSubtitle} style={{ margin: 0 }}>{packageType === 'project' ? 'Project Details' : 'Monthly Retainer'}</p>
-              </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
-                  {items.slice(0, 5).map((item, i) => (
-                      <div key={i} className={styles.pdfServiceCard}>
-                          <div style={{ flex: 1 }}>
-                              <h3 style={{ fontSize: '36px', color: '#fff', margin: '0 0 10px 0' }}>{item.desc || 'Service Item'}</h3>
-                              <p style={{ fontSize: '24px', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {quoteDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</p>
-                          </div>
-                          <div className={styles.pdfAmount}>
-                              <span style={{ color: '#666' }}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toLocaleString()}
-                          </div>
-                      </div>
-                  ))}
-                  {items.length > 5 && (
-                      <div style={{ fontSize: '24px', color: '#888', textAlign: 'center', marginTop: '20px' }}>
-                          + {items.length - 5} more items detailed in the full agreement.
-                      </div>
-                  )}
-              </div>
-          </div>
-          
-          {/* SLIDE 3: INVESTMENT */}
-          <div id="pdf-slide-3" className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column' }}>
-              <div style={{ marginBottom: '80px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
-                  <h1 className={styles.pdfTitle} style={{ margin: 0 }}>The Investment</h1>
-                  <p className={styles.pdfSubtitle} style={{ margin: 0 }}>Transparent pricing for premium results.</p>
-              </div>
-              
-              <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '24px', padding: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                  <p style={{ fontSize: '30px', color: '#888', textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px' }}>Total {packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
+          {pdfPages.map((page, index) => (
+              <div key={page.id} id={`pdf-slide-${page.id}`} className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column', justifyContent: page.type === 'cover' || page.type === 'next_steps' || page.type === 'custom_text' ? 'space-between' : 'flex-start' }}>
                   
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '20px' }}>
-                      <span style={{ fontSize: '60px', color: '#ebd73f', fontWeight: '500' }}>{quoteDetails.currency}</span>
-                      <span style={{ fontSize: '180px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-5px', lineHeight: 1 }}>{total.toLocaleString()}</span>
-                  </div>
-                  
-                  {packageType === 'monthly' && (
-                      <p style={{ fontSize: '24px', color: '#aaa', marginTop: '20px' }}>*Billed monthly. Cancel anytime with 30 days notice.</p>
-                  )}
-                  {packageType === 'project' && (
-                      <div style={{ display: 'flex', gap: '40px', marginTop: '40px' }}>
-                          <p style={{ fontSize: '24px', color: '#aaa' }}><strong style={{color: '#fff'}}>Duration:</strong> {quoteDetails.projectDuration}</p>
-                          <p style={{ fontSize: '24px', color: '#aaa' }}><strong style={{color: '#fff'}}>Delivery:</strong> {quoteDetails.expectedDelivery}</p>
+                  {/* Common Header if not hidden and not cover/investment */}
+                  {!page.hideHeading && page.type !== 'cover' && page.type !== 'investment' && (
+                      <div style={{ marginBottom: '60px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                          <h1 className={styles.pdfTitle} style={{ margin: 0, fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
                       </div>
                   )}
+
+                  {/* COVER PAGE */}
+                  {page.type === 'cover' && (
+                      <>
+                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                             <h1 style={{ fontSize: '120px', color: '#ebd73f', margin: 0, letterSpacing: '-4px', fontWeight: '900', fontFamily: "'Panchang', sans-serif" }}>DRIPP MEDIA</h1>
+                             {!page.hideHeading && <p style={{ fontSize: '32px', color: '#888', margin: '10px 0 0 0', fontWeight: '300' }}>{page.title}</p>}
+                         </div>
+                         
+                         <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                             <p style={{ fontSize: '24px', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px' }}>{page.subtitle}</p>
+                             <h2 style={{ fontSize: '80px', color: '#fff', margin: '0 0 10px 0', lineHeight: 1.1, fontFamily: "'Panchang', sans-serif" }}>{clientDetails.brandName || clientDetails.name || 'Client'}</h2>
+                             <p style={{ fontSize: '30px', color: '#aaa', margin: 0 }}>{clientDetails.name ? clientDetails.name + ' | ' : ''}{clientDetails.email}</p>
+                         </div>
+                         
+                         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid rgba(235, 215, 63, 0.3)', paddingTop: '40px', marginTop: 'auto' }}>
+                             <div>
+                                 <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Date</p>
+                                 <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{clientDetails.date}</p>
+                             </div>
+                             <div style={{ textAlign: 'right' }}>
+                                 <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Proposal Number</p>
+                                 <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{quoteDetails.number}</p>
+                             </div>
+                         </div>
+                      </>
+                  )}
+
+                  {/* SERVICES PAGE */}
+                  {page.type === 'services' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                          {items.slice(0, 5).map((item, i) => (
+                              <div key={i} className={styles.pdfServiceCard}>
+                                  <div style={{ flex: 1 }}>
+                                      <h3 style={{ fontSize: '36px', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h3>
+                                      <p style={{ fontSize: '24px', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {quoteDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</p>
+                                  </div>
+                                  <div className={styles.pdfAmount}>
+                                      <span style={{ color: '#666' }}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toLocaleString()}
+                                  </div>
+                              </div>
+                          ))}
+                          {items.length > 5 && (
+                              <div style={{ fontSize: '24px', color: '#888', textAlign: 'center', marginTop: '20px' }}>
+                                  + {items.length - 5} more items detailed in the full agreement.
+                              </div>
+                          )}
+                      </div>
+                  )}
+
+                  {/* INVESTMENT PAGE */}
+                  {page.type === 'investment' && (
+                      <>
+                        {!page.hideHeading && (
+                            <div style={{ marginBottom: '80px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                                <h1 className={styles.pdfTitle} style={{ margin: 0, fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
+                            </div>
+                        )}
+                        <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '24px', padding: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                            <p style={{ fontSize: '30px', color: '#888', textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px' }}>Total {packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
+                            
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '20px' }}>
+                                <span style={{ fontSize: '60px', color: '#ebd73f', fontWeight: '500' }}>{quoteDetails.currency}</span>
+                                <span style={{ fontSize: '180px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-5px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{total.toLocaleString()}</span>
+                            </div>
+                            
+                            {packageType === 'monthly' && (
+                                <p style={{ fontSize: '24px', color: '#aaa', marginTop: '20px' }}>*Billed monthly. Cancel anytime with 30 days notice.</p>
+                            )}
+                            {packageType === 'project' && (
+                                <div style={{ display: 'flex', gap: '40px', marginTop: '40px' }}>
+                                    <p style={{ fontSize: '24px', color: '#aaa' }}><strong style={{color: '#fff'}}>Duration:</strong> {quoteDetails.projectDuration}</p>
+                                    <p style={{ fontSize: '24px', color: '#aaa' }}><strong style={{color: '#fff'}}>Delivery:</strong> {quoteDetails.expectedDelivery}</p>
+                                </div>
+                            )}
+                        </div>
+                      </>
+                  )}
+
+                  {/* NEXT STEPS PAGE */}
+                  {page.type === 'next_steps' && (
+                      <>
+                        {quoteDetails.message && (
+                            <div style={{ borderLeft: '8px solid #ebd73f', paddingLeft: '40px', margin: '60px 0', maxWidth: '1400px' }}>
+                                <p style={{ fontSize: '36px', color: '#fff', fontStyle: 'italic', lineHeight: 1.5, margin: 0 }}>
+                                    "{quoteDetails.message}"
+                                </p>
+                            </div>
+                        )}
+                        <div style={{ marginTop: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', background: '#111', padding: '60px', borderRadius: '24px' }}>
+                            <div>
+                                <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>How to Proceed</h3>
+                                <ol style={{ fontSize: '24px', color: '#ccc', lineHeight: 1.8, margin: 0, paddingLeft: '30px' }}>
+                                    <li>Review this proposal and ensure it aligns with your vision.</li>
+                                    <li>Let us know if you need any adjustments.</li>
+                                    <li>Once approved, we will send over the formal agreement and first invoice.</li>
+                                </ol>
+                            </div>
+                            <div>
+                                <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>Contact Us</h3>
+                                <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Email: hello@drippmedia.com</p>
+                                <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Phone: +91 98765 43210</p>
+                                <p style={{ fontSize: '24px', color: '#ccc', margin: '0' }}>Web: www.drippmedia.com</p>
+                            </div>
+                        </div>
+                      </>
+                  )}
+
+                  {/* CUSTOM TEXT PAGE */}
+                  {page.type === 'custom_text' && (
+                      <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '32px', color: '#ddd', lineHeight: 1.8, whiteSpace: 'pre-wrap', marginTop: '40px' }}>
+                              {page.content}
+                          </div>
+                      </div>
+                  )}
+
+                  {/* INFOGRAPHIC PAGE */}
+                  {page.type === 'infographic' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', flex: 1, alignContent: 'center' }}>
+                          {page.cards?.map((card, idx) => (
+                              <div key={idx} style={{ background: '#111', border: '1px solid #333', borderRadius: '24px', padding: '60px' }}>
+                                  <h3 style={{ fontSize: '42px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{card.title}</h3>
+                                  <p style={{ fontSize: '28px', color: '#ccc', lineHeight: 1.6, margin: 0 }}>{card.desc}</p>
+                              </div>
+                          ))}
+                      </div>
+                  )}
+
               </div>
-          </div>
-          
-          {/* SLIDE 4: NEXT STEPS */}
-          <div id="pdf-slide-4" className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                  <h1 className={styles.pdfTitle}>Next Steps</h1>
-                  <p className={styles.pdfSubtitle}>Ready to elevate your digital presence?</p>
-              </div>
-              
-              {quoteDetails.message && (
-                  <div style={{ borderLeft: '8px solid #ebd73f', paddingLeft: '40px', margin: '60px 0', maxWidth: '1400px' }}>
-                      <p style={{ fontSize: '36px', color: '#fff', fontStyle: 'italic', lineHeight: 1.5, margin: 0 }}>
-                          "{quoteDetails.message}"
-                      </p>
-                  </div>
-              )}
-              
-              <div style={{ marginTop: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', background: '#111', padding: '60px', borderRadius: '24px' }}>
-                  <div>
-                      <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0' }}>How to Proceed</h3>
-                      <ol style={{ fontSize: '24px', color: '#ccc', lineHeight: 1.8, margin: 0, paddingLeft: '30px' }}>
-                          <li>Review this proposal and ensure it aligns with your vision.</li>
-                          <li>Let us know if you need any adjustments.</li>
-                          <li>Once approved, we will send over the formal agreement and first invoice.</li>
-                      </ol>
-                  </div>
-                  <div>
-                      <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0' }}>Contact Us</h3>
-                      <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Email: hello@drippmedia.com</p>
-                      <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Phone: +91 98765 43210</p>
-                      <p style={{ fontSize: '24px', color: '#ccc', margin: '0' }}>Web: www.drippmedia.com</p>
-                  </div>
-              </div>
-          </div>
+          ))}
       </div>
 
     </div>

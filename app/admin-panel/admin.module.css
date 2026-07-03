@@ -338,6 +338,7 @@
 }
 
 .pdfTitle {
+  font-family: 'Panchang', sans-serif;
   font-size: 80px;
   font-weight: 800;
   color: #ebd73f;
