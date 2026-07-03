@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Lock, FileText, CheckCircle2, Globe, Mail, Instagram } from 'lucide-react';
+import { Lock, FileText, CheckCircle2, Globe, Mail, AtSign } from 'lucide-react';
 
 export default function SharedQuote() {
   const params = useParams();
@@ -279,7 +279,7 @@ export default function SharedQuote() {
                    <Mail size={18} color="#ebd73f" /> mediadripp@gmail.com
                 </a>
                 <a href="https://instagram.com/drippmedia_" target="_blank" rel="noopener noreferrer" style={{ color: '#aaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'clamp(0.85rem, 3vw, 1rem)', transition: 'all 0.3s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-                   <Instagram size={18} color="#ebd73f" /> instagram.com/drippmedia_
+                   <AtSign size={18} color="#ebd73f" /> instagram.com/drippmedia_
                 </a>
             </div>
 
