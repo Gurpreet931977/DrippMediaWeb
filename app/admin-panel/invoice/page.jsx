@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import styles from '../admin.module.css';
@@ -557,6 +557,13 @@ export default function InvoiceMaker() {
     navigator.clipboard.writeText(text);
   };
 
+  const handleCopyMessage = () => {
+    const clientName = clientDetails.name ? clientDetails.name.split(' ')[0] : 'Client';
+    const msg = `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 Password: ${sharePassword}\n\nLet me know if you have any questions!`;
+    copyToClipboard(msg);
+    alert('Message copied to clipboard!');
+  };
+
   const generateSecureLink = async () => {
     const pass = Math.random().toString(36).slice(-6).toUpperCase();
     setSharePassword(pass);
@@ -898,6 +905,9 @@ export default function InvoiceMaker() {
                       <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
                       <button onClick={() => copyToClipboard(sharePassword)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
                    </div>
+                   <button onClick={handleCopyMessage} className={styles.btnPrimary} style={{ width: '100%', padding: '10px', justifyContent: 'center', marginTop: '15px', background: '#25D366', color: '#fff', border: 'none' }}>
+                     <MessageCircle size={18} /> Copy WhatsApp Message
+                   </button>
                 </div>
              )}
            </div>
