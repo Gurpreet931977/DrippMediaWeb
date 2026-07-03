@@ -36,6 +36,7 @@ export default function InvoiceMaker() {
   });
 
   // -- BANK ACCOUNTS & PAYMENTS --
+  const [includeGST, setIncludeGST] = useState(true);
   const [bankAccounts, setBankAccounts] = useState([
     {
       id: 'default_bank',
@@ -264,7 +265,7 @@ export default function InvoiceMaker() {
     pdf.setTextColor(150, 150, 150);
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
-    if (myDetails.gst) pdf.text(`GSTIN: ${myDetails.gst}`, 15, 38);
+    if (includeGST && myDetails.gst) pdf.text(`GSTIN: ${myDetails.gst}`, 15, 38);
     
     // Invoice Title & Info
     pdf.setTextColor(235, 215, 63);
@@ -518,8 +519,13 @@ export default function InvoiceMaker() {
                  <input type="text" value={myDetails.companyName} onChange={e => handleMyDetailsChange('companyName', e.target.value)} disabled={myDetailsLocked} className={styles.inputField} />
               </div>
               <div>
-                 <label className={styles.label}>GST Number</label>
-                 <input type="text" value={myDetails.gst} onChange={e => handleMyDetailsChange('gst', e.target.value)} disabled={myDetailsLocked} className={styles.inputField} />
+                 <label className={styles.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    GST Number
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', color: '#ebd73f', fontSize: '0.75rem', textTransform: 'none', letterSpacing: 'normal', fontWeight: 'normal' }}>
+                       <input type="checkbox" checked={includeGST} onChange={e => setIncludeGST(e.target.checked)} /> Include in Invoice
+                    </label>
+                 </label>
+                 <input type="text" value={myDetails.gst} onChange={e => handleMyDetailsChange('gst', e.target.value)} disabled={myDetailsLocked || !includeGST} className={styles.inputField} style={{ opacity: includeGST ? 1 : 0.5 }} />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                  <label className={styles.label}>Official Address</label>
