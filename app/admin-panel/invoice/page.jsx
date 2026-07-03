@@ -905,7 +905,7 @@ export default function InvoiceMaker() {
                       <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
                       <button onClick={() => copyToClipboard(sharePassword)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
                    </div>
-                   <button onClick={handleCopyMessage} className={styles.btnPrimary} style={{ width: '100%', padding: '10px', justifyContent: 'center', marginTop: '15px', background: '#25D366', color: '#fff', border: 'none' }}>
+                   <button onClick={handleCopyMessage} className={styles.btnWhatsApp}>
                      <MessageCircle size={18} /> Copy WhatsApp Message
                    </button>
                 </div>

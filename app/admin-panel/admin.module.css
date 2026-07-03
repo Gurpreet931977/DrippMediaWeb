@@ -333,6 +333,31 @@
   color: #ff6b6b;
 }
 
+.btnWhatsApp {
+  background: rgba(37, 211, 102, 0.05);
+  color: #25D366;
+  border: 1px solid rgba(37, 211, 102, 0.2);
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.75rem;
+  cursor: pointer !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 15px;
+}
+
+.btnWhatsApp:hover {
+  background: rgba(37, 211, 102, 0.15);
+  border-color: rgba(37, 211, 102, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.15);
+}
+
 /* PDF Preview Area */
 .pdfPreview {
   background-color: white;
