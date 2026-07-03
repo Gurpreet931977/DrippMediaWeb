@@ -333,10 +333,10 @@
   color: #ff6b6b;
 }
 
-.btnWhatsApp {
-  background: rgba(37, 211, 102, 0.05);
-  color: #25D366;
-  border: 1px solid rgba(37, 211, 102, 0.2);
+.btnShare {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 0.875rem 1.5rem;
   border-radius: 0.75rem;
   cursor: pointer !important;
@@ -351,11 +351,12 @@
   margin-top: 15px;
 }
 
-.btnWhatsApp:hover {
-  background: rgba(37, 211, 102, 0.15);
-  border-color: rgba(37, 211, 102, 0.4);
+.btnShare:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(235, 215, 63, 0.5);
+  color: #ebd73f;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.15);
+  box-shadow: 0 8px 25px rgba(235, 215, 63, 0.15);
 }
 
 /* PDF Preview Area */

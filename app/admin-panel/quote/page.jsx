@@ -56,6 +56,7 @@ export default function QuoteMaker() {
     const tzOffsetMs = new Date().getTimezoneOffset() * 60000;
     const localDate = new Date(Date.now() - tzOffsetMs).toISOString().split('T')[0];
     setQuoteDetails(prev => ({ ...prev, date: localDate }));
+    setClientDetails(prev => ({ ...prev, date: localDate }));
   }, []);
 
   // Services
@@ -307,15 +308,18 @@ export default function QuoteMaker() {
 
   const handleClearForm = () => {
     if (confirm('Are you sure you want to clear the entire form and start over?')) {
+      const tzOffsetMs = new Date().getTimezoneOffset() * 60000;
+      const localDate = new Date(Date.now() - tzOffsetMs).toISOString().split('T')[0];
       setClientDetails({
         name: '',
         brandName: '',
         email: '',
         mobile: '',
-        date: new Date().toISOString().split('T')[0]
+        date: localDate
       });
       setQuoteDetails({
         number: 'QT-' + Math.floor(1000 + Math.random() * 9000),
+        date: localDate,
         currency: '₹',
         projectDuration: '',
         expectedDelivery: '',
@@ -807,9 +811,9 @@ export default function QuoteMaker() {
                       <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
                       <button onClick={() => copyToClipboard(sharePassword)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
                    </div>
-                   <button onClick={handleCopyMessage} className={styles.btnWhatsApp}>
-                     <MessageCircle size={18} /> Copy WhatsApp Message
-                   </button>
+                    <button onClick={handleCopyMessage} className={styles.btnShare}>
+                      <Share2 size={18} /> Copy Share Message
+                    </button>
                 </div>
              )}
            </div>
