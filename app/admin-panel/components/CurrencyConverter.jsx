@@ -127,7 +127,7 @@ export default function CurrencyConverter() {
                 </button>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
               <div style={{ flex: 1 }}>
                 <label className={styles.label}>To</label>
                 <select value={toCurrency} onChange={e => setToCurrency(e.target.value)} className={styles.inputField} style={{ width: '100%' }}>
@@ -136,7 +136,7 @@ export default function CurrencyConverter() {
               </div>
               <div style={{ flex: 1 }}>
                  <label className={styles.label}>Result</label>
-                 <div style={{ padding: '10px', background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '8px', color: '#ebd73f', fontWeight: 'bold', fontSize: '1.1rem', textAlign: 'center', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 <div className={styles.inputField} style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', fontWeight: 'bold', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                    {loading ? '...' : calculateResult()}
                  </div>
               </div>
