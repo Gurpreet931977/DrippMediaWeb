@@ -601,6 +601,8 @@ export default function InvoiceMaker() {
                       className={styles.inputField}
                       style={{ padding: '8px 12px' }}
                     />
+                  <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '100px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
+                     <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {invoiceDetails.currency}{(item.qty * item.rate).toFixed(2)}
                   </div>
                   <button onClick={() => removeItem(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '5px', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity=1} onMouseOut={(e) => e.currentTarget.style.opacity=0.7}>
                     <Trash2 size={18} />
@@ -612,6 +614,11 @@ export default function InvoiceMaker() {
             <button onClick={addItem} className={styles.btn}>
               <Plus size={16} /> Add Another Item
             </button>
+            
+            <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <span style={{ fontSize: '1.1rem', color: '#888' }}>Total Amount:</span>
+               <span style={{ fontSize: '1.3rem', color: '#ebd73f', fontWeight: 'bold' }}>{invoiceDetails.currency}{total.toFixed(2)}</span>
+            </div>
           </div>
           
         </div>
