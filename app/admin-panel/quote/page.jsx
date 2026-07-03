@@ -741,7 +741,6 @@ export default function QuoteMaker() {
            </div>
 
         </div>
-      </div>
 
       {/* PDF PAGE BUILDER - FULL WIDTH */}
       <div style={{ marginTop: "40px" }}>
@@ -890,7 +889,10 @@ export default function QuoteMaker() {
             </div>
       </div>
 
+
+
       {/* HIDDEN RENDER AREA FOR PDF */}
+
 
       <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
         <div ref={pdfRef} style={{ width: '800px', background: '#0a0a0a', padding: '60px', color: 'white', fontFamily: 'Arial, sans-serif' }}>
@@ -1116,5 +1118,6 @@ export default function QuoteMaker() {
       </div>
 
     </div>
+  </div>
   );
 }
