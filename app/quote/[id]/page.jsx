@@ -15,7 +15,32 @@ export default function SharedQuote() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pwdParam = urlParams.get('pwd');
+      if (pwdParam) {
+        setPassword(pwdParam);
+        setLoading(true);
+        fetch(`/api/quote/${params?.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwdParam })
+        })
+        .then(res => {
+          if (res.ok) {
+            return res.json().then(data => {
+              setQuoteData(data.quote);
+              setIsLocked(false);
+            });
+          } else {
+            setError('Incorrect password or quote not found.');
+          }
+        })
+        .catch(() => setError('An error occurred. Please try again.'))
+        .finally(() => setLoading(false));
+      }
+    }
+  }, [params?.id]);
 
   const handleUnlock = async (e) => {
     e.preventDefault();
@@ -96,15 +121,39 @@ export default function SharedQuote() {
             {quoteData.clientDetails.brandName && <p style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#aaa', margin: '0 0 5px 0' }}>{quoteData.clientDetails.name}</p>}
             <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#666', margin: '0 0 20px 0', wordBreak: 'break-all' }}>{quoteData.clientDetails.email}</p>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px', textAlign: 'left' }}>
-               <div style={{ flex: '1 1 auto' }}>
-                  <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>Date</p>
-                  <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.clientDetails.date}</p>
-               </div>
-               <div style={{ textAlign: 'right', flex: '1 1 auto' }}>
-                  <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>Proposal #</p>
-                  <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.quoteDetails.number}</p>
-               </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px', textAlign: 'left', marginTop: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
+                 <div style={{ flex: '1 1 auto' }}>
+                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Project Type</p>
+                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#fff', margin: 0, fontWeight: '600' }}>
+                       {quoteData.packageType === 'project' ? 'One-time Project' : 'Monthly Retainer'}
+                    </p>
+                 </div>
+                 
+                 {quoteData.packageType === 'project' && (
+                    <>
+                       <div style={{ flex: '1 1 auto' }}>
+                          <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Duration</p>
+                          <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.quoteDetails.projectDuration || 'N/A'}</p>
+                       </div>
+                       <div style={{ flex: '1 1 auto' }}>
+                          <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Est. Delivery</p>
+                          <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.quoteDetails.expectedDelivery || 'N/A'}</p>
+                       </div>
+                    </>
+                 )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '20px' }}>
+                 <div style={{ flex: '1 1 auto' }}>
+                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>Date</p>
+                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.clientDetails.date}</p>
+                 </div>
+                 <div style={{ textAlign: 'right', flex: '1 1 auto' }}>
+                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>Proposal #</p>
+                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.quoteDetails.number}</p>
+                 </div>
+              </div>
             </div>
           </div>
         </div>
