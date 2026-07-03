@@ -43,7 +43,7 @@ export default function QuoteMaker() {
   // Quote Details
   const [quoteDetails, setQuoteDetails] = useState({
     number: 'QT-' + Math.floor(1000 + Math.random() * 9000),
-    currency: '$',
+    currency: '₹',
     projectDuration: '',
     expectedDelivery: '',
     message: "At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality. While our rates reflect this premium standard, our results ensure you never have to second-guess the investment."
@@ -210,7 +210,7 @@ export default function QuoteMaker() {
       });
       setQuoteDetails({
         number: 'QT-' + Math.floor(1000 + Math.random() * 9000),
-        currency: '$',
+        currency: '₹',
         projectDuration: '',
         expectedDelivery: '',
         message: "At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality. While our rates reflect this premium standard, our results ensure you never have to second-guess the investment."
