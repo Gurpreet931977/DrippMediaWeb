@@ -666,13 +666,92 @@ export default function QuoteMaker() {
             </div>
           </div>
 
+          </div>
+          
+        </div>
+        
+        {/* RIGHT COLUMN: TEMPLATES & ACTIONS */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+           
+           <CurrencyConverter />
+
+           {/* Actions */}
+           <div className={styles.card}>
+             <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Export & Share</h3>
+             <button onClick={generatePDF} className={styles.btnPrimary} style={{ width: '100%', padding: '12px', justifyContent: 'center', marginBottom: '15px' }}>
+               <Download size={18} /> Download as PDF
+             </button>
+             <button onClick={generateSecureLink} className={styles.btn} style={{ width: '100%', padding: '12px', justifyContent: 'center' }}>
+               <Lock size={18} /> Generate Secure Link
+             </button>
+             
+             {shareLink && (
+                <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '0.75rem' }}>
+                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
+                   <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                      <input type="text" readOnly value={shareLink} onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} className={styles.inputField} style={{ padding: '8px', flex: 1, cursor: 'pointer' }} title="Click to open link directly" />
+                      <button onClick={() => copyToClipboard(shareLink, 'link')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link">
+                        {copiedItem === 'link' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
+                      </button>
+                   </div>
+                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client Password:</p>
+                   <div style={{ display: 'flex', gap: '8px' }}>
+                      <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
+                      <button onClick={() => copyToClipboard(sharePassword, 'password')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password">
+                        {copiedItem === 'password' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
+                      </button>
+                   </div>
+                    <button onClick={handleCopyMessage} className={styles.btnShare}>
+                      {copiedItem === 'message' ? (
+                          <><CheckCircle2 size={18} /> Message Copied!</>
+                      ) : (
+                          <><Share2 size={18} /> Copy Share Message</>
+                      )}
+                    </button>
+                </div>
+             )}
+           </div>
+
+           {/* Templates Manager */}
+           <div className={styles.card}>
+             <h3 style={{ marginBottom: '15px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+               Templates
+               <button onClick={saveCurrentAsPackage} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.75rem' }}>Save Current</button>
+             </h3>
+             <div style={{ position: 'relative', marginBottom: '15px' }}>
+               <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
+               <input type="text" placeholder="Search templates..." value={searchTemplate} onChange={e => setSearchTemplate(e.target.value)} className={styles.inputField} style={{ paddingLeft: '40px' }} />
+             </div>
+             
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
+               {filteredTemplates.length === 0 ? (
+                 <p style={{ fontSize: '0.8rem', color: '#666', textAlign: 'center', padding: '20px 0' }}>No templates found.</p>
+               ) : (
+                 filteredTemplates.map((pkg, idx) => (
+                   <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.2s' }}>
+                     <div>
+                       <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{pkg.name}</div>
+                       <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '3px' }}>{pkg.type === 'project' ? 'Project' : 'Monthly'} • {pkg.items.length} items</div>
+                     </div>
+                     <button onClick={() => loadPackage(pkg)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: 'rgba(235, 215, 63, 0.3)', color: '#ebd73f' }}>Load</button>
+                   </div>
+                 ))
+               )}
+             </div>
+           </div>
+
+        </div>
+      </div>
+
+      {/* PDF PAGE BUILDER - FULL WIDTH */}
+      <div style={{ marginTop: "40px" }}>
           {/* PDF PAGE BUILDER */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '20px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h3 style={{ marginBottom: '30px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', borderBottom: '1px solid rgba(235, 215, 63, 0.2)', paddingBottom: '15px' }}>
               <Layers size={20} /> PDF Pages & Layout
             </h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '40px', alignItems: 'stretch' }}>
                {/* Left: Page List */}
                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {pdfPages.map((page, index) => (
@@ -718,7 +797,7 @@ export default function QuoteMaker() {
                </div>
 
                {/* Right: Page Editor */}
-               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '20px' }}>
+               <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(235, 215, 63, 0.1)', borderRadius: '16px', padding: '30px', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)', position: 'relative' }}>
                   {pdfPages[selectedPageIndex] && (
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -809,84 +888,10 @@ export default function QuoteMaker() {
                   )}
                </div>
             </div>
-          </div>
-          
-        </div>
-        
-        {/* RIGHT COLUMN: TEMPLATES & ACTIONS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-           
-           <CurrencyConverter />
-
-           {/* Actions */}
-           <div className={styles.card}>
-             <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Export & Share</h3>
-             <button onClick={generatePDF} className={styles.btnPrimary} style={{ width: '100%', padding: '12px', justifyContent: 'center', marginBottom: '15px' }}>
-               <Download size={18} /> Download as PDF
-             </button>
-             <button onClick={generateSecureLink} className={styles.btn} style={{ width: '100%', padding: '12px', justifyContent: 'center' }}>
-               <Lock size={18} /> Generate Secure Link
-             </button>
-             
-             {shareLink && (
-                <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '0.75rem' }}>
-                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
-                   <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                      <input type="text" readOnly value={shareLink} onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} className={styles.inputField} style={{ padding: '8px', flex: 1, cursor: 'pointer' }} title="Click to open link directly" />
-                      <button onClick={() => copyToClipboard(shareLink, 'link')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link">
-                        {copiedItem === 'link' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
-                      </button>
-                   </div>
-                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client Password:</p>
-                   <div style={{ display: 'flex', gap: '8px' }}>
-                      <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
-                      <button onClick={() => copyToClipboard(sharePassword, 'password')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password">
-                        {copiedItem === 'password' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
-                      </button>
-                   </div>
-                    <button onClick={handleCopyMessage} className={styles.btnShare}>
-                      {copiedItem === 'message' ? (
-                          <><CheckCircle2 size={18} /> Message Copied!</>
-                      ) : (
-                          <><Share2 size={18} /> Copy Share Message</>
-                      )}
-                    </button>
-                </div>
-             )}
-           </div>
-
-           {/* Templates Manager */}
-           <div className={styles.card}>
-             <h3 style={{ marginBottom: '15px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
-               Templates
-               <button onClick={saveCurrentAsPackage} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.75rem' }}>Save Current</button>
-             </h3>
-             <div style={{ position: 'relative', marginBottom: '15px' }}>
-               <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
-               <input type="text" placeholder="Search templates..." value={searchTemplate} onChange={e => setSearchTemplate(e.target.value)} className={styles.inputField} style={{ paddingLeft: '40px' }} />
-             </div>
-             
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
-               {filteredTemplates.length === 0 ? (
-                 <p style={{ fontSize: '0.8rem', color: '#666', textAlign: 'center', padding: '20px 0' }}>No templates found.</p>
-               ) : (
-                 filteredTemplates.map((pkg, idx) => (
-                   <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.2s' }}>
-                     <div>
-                       <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{pkg.name}</div>
-                       <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '3px' }}>{pkg.type === 'project' ? 'Project' : 'Monthly'} • {pkg.items.length} items</div>
-                     </div>
-                     <button onClick={() => loadPackage(pkg)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: 'rgba(235, 215, 63, 0.3)', color: '#ebd73f' }}>Load</button>
-                   </div>
-                 ))
-               )}
-             </div>
-           </div>
-
-        </div>
       </div>
 
       {/* HIDDEN RENDER AREA FOR PDF */}
+
       <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
         <div ref={pdfRef} style={{ width: '800px', background: '#0a0a0a', padding: '60px', color: 'white', fontFamily: 'Arial, sans-serif' }}>
           
