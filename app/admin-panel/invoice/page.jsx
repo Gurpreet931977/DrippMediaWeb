@@ -51,6 +51,10 @@ export default function InvoiceMaker() {
   // Bank Editor State
   const [isEditingBank, setIsEditingBank] = useState(false);
   const [editingBankDetails, setEditingBankDetails] = useState(null);
+  
+  // Smart Paste State
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
+  const [isAutoFillSuccess, setIsAutoFillSuccess] = useState(false);
 
   // -- INVOICE STATE --
   const [invoiceDetails, setInvoiceDetails] = useState({

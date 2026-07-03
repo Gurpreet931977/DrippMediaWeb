@@ -323,3 +323,50 @@
 .spin {
   animation: spin 1s linear infinite;
 }
+
+/* PDF SLIDE STYLES */
+.pdfSlide {
+  width: 1920px;
+  height: 1080px;
+  background-color: #050505;
+  color: #ffffff;
+  padding: 100px 120px;
+  box-sizing: border-box;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+.pdfTitle {
+  font-size: 80px;
+  font-weight: 800;
+  color: #ebd73f;
+  margin-bottom: 20px;
+  letter-spacing: -2px;
+}
+
+.pdfSubtitle {
+  font-size: 30px;
+  color: #888888;
+  font-weight: 400;
+}
+
+.pdfServiceCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(235, 215, 63, 0.2);
+  border-radius: 16px;
+  padding: 40px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pdfAmount {
+  font-size: 32px;
+  font-weight: bold;
+  color: #ebd73f;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

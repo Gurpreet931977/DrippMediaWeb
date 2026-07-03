@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Search, Share2, Calendar, FileText, Lock, Save, Loader, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import styles from '../admin.module.css';
@@ -282,138 +282,27 @@ export default function QuoteMaker() {
   const total = items.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.rate || 0)), 0);
 
   const generatePDF = async () => {
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    // We will generate the PDF using the hidden DOM elements via html2canvas
+    const pdf = new jsPDF('l', 'px', [1920, 1080]);
     
-    // Header
-    pdf.setFillColor(10, 10, 10);
-    pdf.rect(0, 0, 210, 297, 'F'); // Dark background
-    
-    pdf.setTextColor(235, 215, 63); // Dripp Yellow
-    pdf.setFontSize(28);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("DRIPP MEDIA", 15, 30);
-    
-    pdf.setTextColor(150, 150, 150);
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.text("Premium Digital Solutions", 15, 38);
-    
-    // Quote Info
-    pdf.setTextColor(235, 215, 63);
-    pdf.setFontSize(16);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("PROPOSAL", 195, 30, { align: 'right' });
-    
-    pdf.setTextColor(150, 150, 150);
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(quoteDetails.number, 195, 38, { align: 'right' });
-    pdf.text(`Date: ${clientDetails.date}`, 195, 44, { align: 'right' });
-
-    pdf.setDrawColor(235, 215, 63);
-    pdf.setLineWidth(0.5);
-    pdf.line(15, 55, 195, 55);
-    
-    // Client Details
-    pdf.setTextColor(235, 215, 63);
-    pdf.setFontSize(12);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("PREPARED FOR:", 15, 65);
-    
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(11);
-    pdf.text(clientDetails.name || "NIL (not provided)", 15, 72);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(clientDetails.brandName || "NIL (not provided)", 15, 78);
-    pdf.setTextColor(150, 150, 150);
-    pdf.text(clientDetails.email || "NIL (not provided)", 15, 84);
-    pdf.text(clientDetails.mobile || "NIL (not provided)", 15, 90);
-
-    // Package Details
-    if(packageType === 'project') {
-       pdf.setTextColor(235, 215, 63);
-       pdf.setFontSize(12);
-       pdf.setFont("helvetica", "bold");
-       pdf.text("PROJECT DETAILS:", 195, 65, { align: 'right' });
-       pdf.setTextColor(255, 255, 255);
-       pdf.setFontSize(10);
-       pdf.setFont("helvetica", "normal");
-       pdf.text(`Duration: ${quoteDetails.projectDuration}`, 195, 72, { align: 'right' });
-       pdf.text(`Delivery: ${quoteDetails.expectedDelivery}`, 195, 78, { align: 'right' });
-    } else {
-       pdf.setTextColor(235, 215, 63);
-       pdf.setFontSize(12);
-       pdf.setFont("helvetica", "bold");
-       pdf.text("PACKAGE DETAILS:", 195, 65, { align: 'right' });
-       pdf.setTextColor(255, 255, 255);
-       pdf.setFontSize(10);
-       pdf.setFont("helvetica", "normal");
-       pdf.text("Recurring Monthly Retainer", 195, 72, { align: 'right' });
+    // We have 4 slides
+    for (let i = 1; i <= 4; i++) {
+        const slide = document.getElementById(`pdf-slide-${i}`);
+        if (slide) {
+            slide.style.display = 'block'; // Ensure it's rendered for canvas
+            try {
+                const canvas = await html2canvas(slide, { scale: 2, backgroundColor: '#050505' });
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                if (i > 1) pdf.addPage([1920, 1080], 'l');
+                pdf.addImage(imgData, 'JPEG', 0, 0, 1920, 1080);
+            } catch (err) {
+                console.error(`Error rendering slide ${i}`, err);
+            }
+            slide.style.display = 'none'; // Hide again
+        }
     }
-
-    // Creative Message
-    let messageY = 105;
-    if (quoteDetails.message) {
-      pdf.setDrawColor(235, 215, 63);
-      pdf.setLineWidth(1);
-      pdf.line(15, 95, 15, 115);
-      pdf.setTextColor(200, 200, 200);
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "italic");
-      
-      const splitText = pdf.splitTextToSize(`"${quoteDetails.message}"`, 170);
-      pdf.text(splitText, 19, 100);
-      messageY = 100 + (splitText.length * 5) + 10;
-    }
-
-    // Services Table
-    const tableData = items.map(item => [
-      item.desc || 'Service Item',
-      item.qty.toString(),
-      `${quoteDetails.currency}${parseFloat(item.rate || 0).toFixed(2)}`,
-      `${quoteDetails.currency}${(item.qty * item.rate).toFixed(2)}`
-    ]);
-
-    import('jspdf-autotable').then(({ default: autoTable }) => {
-      autoTable(pdf, {
-        startY: messageY,
-        head: [['Description', 'Qty', 'Rate', 'Amount']],
-        body: tableData,
-        theme: 'plain',
-        headStyles: { fillColor: [20, 20, 20], textColor: [235, 215, 63], fontStyle: 'bold' },
-        bodyStyles: { fillColor: [10, 10, 10], textColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [15, 15, 15] },
-        columnStyles: {
-           1: { halign: 'center' },
-           2: { halign: 'right' },
-           3: { halign: 'right' }
-        },
-        margin: { left: 15, right: 15 }
-      });
-
-      // Total
-      const finalY = pdf.lastAutoTable.finalY + 15;
-      pdf.setDrawColor(235, 215, 63);
-      pdf.setLineWidth(0.5);
-      pdf.line(120, finalY - 5, 195, finalY - 5);
-      
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Total:", 120, finalY + 2);
-      
-      pdf.setTextColor(235, 215, 63);
-      pdf.text(`${quoteDetails.currency}${total.toFixed(2)}`, 195, finalY + 2, { align: 'right' });
-      
-      if(packageType === 'monthly') {
-         pdf.setTextColor(150, 150, 150);
-         pdf.setFontSize(9);
-         pdf.setFont("helvetica", "normal");
-         pdf.text("*Billed monthly", 195, finalY + 8, { align: 'right' });
-      }
-
-      pdf.save(`Dripp_Media_Quote_${quoteDetails.number}.pdf`);
-    });
+    
+    pdf.save(`Dripp_Media_Proposal_${quoteDetails.number}.pdf`);
   };
 
   const generateSecureLink = async () => {
@@ -768,6 +657,122 @@ export default function QuoteMaker() {
           </div>
 
         </div>
+      </div>
+
+      {/* HIDDEN PDF TEMPLATE - ONLY VISIBLE DURING EXPORT */}
+      <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
+          
+          {/* SLIDE 1: COVER */}
+          <div id="pdf-slide-1" className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column', justifyContent: 'space-between' }}>
+             <div>
+                 <h1 style={{ fontSize: '120px', color: '#ebd73f', margin: 0, letterSpacing: '-4px', fontWeight: '900' }}>DRIPP MEDIA</h1>
+                 <p style={{ fontSize: '32px', color: '#888', margin: '10px 0 0 0', fontWeight: '300' }}>Premium Digital Solutions</p>
+             </div>
+             
+             <div style={{ margin: 'auto 0' }}>
+                 <p style={{ fontSize: '24px', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px' }}>Proposal Prepared For</p>
+                 <h2 style={{ fontSize: '80px', color: '#fff', margin: '0 0 10px 0', lineHeight: 1.1 }}>{clientDetails.brandName || clientDetails.name || 'Client'}</h2>
+                 <p style={{ fontSize: '30px', color: '#aaa', margin: 0 }}>{clientDetails.name ? clientDetails.name + ' | ' : ''}{clientDetails.email}</p>
+             </div>
+             
+             <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid rgba(235, 215, 63, 0.3)', paddingTop: '40px' }}>
+                 <div>
+                     <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Date</p>
+                     <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{clientDetails.date}</p>
+                 </div>
+                 <div style={{ textAlign: 'right' }}>
+                     <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Proposal Number</p>
+                     <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{quoteDetails.number}</p>
+                 </div>
+             </div>
+          </div>
+          
+          {/* SLIDE 2: SCOPE OF WORK */}
+          <div id="pdf-slide-2" className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column' }}>
+              <div style={{ marginBottom: '60px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                  <h1 className={styles.pdfTitle} style={{ margin: 0 }}>Scope of Work</h1>
+                  <p className={styles.pdfSubtitle} style={{ margin: 0 }}>{packageType === 'project' ? 'Project Details' : 'Monthly Retainer'}</p>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                  {items.slice(0, 5).map((item, i) => (
+                      <div key={i} className={styles.pdfServiceCard}>
+                          <div style={{ flex: 1 }}>
+                              <h3 style={{ fontSize: '36px', color: '#fff', margin: '0 0 10px 0' }}>{item.desc || 'Service Item'}</h3>
+                              <p style={{ fontSize: '24px', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {quoteDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</p>
+                          </div>
+                          <div className={styles.pdfAmount}>
+                              <span style={{ color: '#666' }}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toLocaleString()}
+                          </div>
+                      </div>
+                  ))}
+                  {items.length > 5 && (
+                      <div style={{ fontSize: '24px', color: '#888', textAlign: 'center', marginTop: '20px' }}>
+                          + {items.length - 5} more items detailed in the full agreement.
+                      </div>
+                  )}
+              </div>
+          </div>
+          
+          {/* SLIDE 3: INVESTMENT */}
+          <div id="pdf-slide-3" className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column' }}>
+              <div style={{ marginBottom: '80px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                  <h1 className={styles.pdfTitle} style={{ margin: 0 }}>The Investment</h1>
+                  <p className={styles.pdfSubtitle} style={{ margin: 0 }}>Transparent pricing for premium results.</p>
+              </div>
+              
+              <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '24px', padding: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                  <p style={{ fontSize: '30px', color: '#888', textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px' }}>Total {packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
+                  
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '20px' }}>
+                      <span style={{ fontSize: '60px', color: '#ebd73f', fontWeight: '500' }}>{quoteDetails.currency}</span>
+                      <span style={{ fontSize: '180px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-5px', lineHeight: 1 }}>{total.toLocaleString()}</span>
+                  </div>
+                  
+                  {packageType === 'monthly' && (
+                      <p style={{ fontSize: '24px', color: '#aaa', marginTop: '20px' }}>*Billed monthly. Cancel anytime with 30 days notice.</p>
+                  )}
+                  {packageType === 'project' && (
+                      <div style={{ display: 'flex', gap: '40px', marginTop: '40px' }}>
+                          <p style={{ fontSize: '24px', color: '#aaa' }}><strong style={{color: '#fff'}}>Duration:</strong> {quoteDetails.projectDuration}</p>
+                          <p style={{ fontSize: '24px', color: '#aaa' }}><strong style={{color: '#fff'}}>Delivery:</strong> {quoteDetails.expectedDelivery}</p>
+                      </div>
+                  )}
+              </div>
+          </div>
+          
+          {/* SLIDE 4: NEXT STEPS */}
+          <div id="pdf-slide-4" className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                  <h1 className={styles.pdfTitle}>Next Steps</h1>
+                  <p className={styles.pdfSubtitle}>Ready to elevate your digital presence?</p>
+              </div>
+              
+              {quoteDetails.message && (
+                  <div style={{ borderLeft: '8px solid #ebd73f', paddingLeft: '40px', margin: '60px 0', maxWidth: '1400px' }}>
+                      <p style={{ fontSize: '36px', color: '#fff', fontStyle: 'italic', lineHeight: 1.5, margin: 0 }}>
+                          "{quoteDetails.message}"
+                      </p>
+                  </div>
+              )}
+              
+              <div style={{ marginTop: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', background: '#111', padding: '60px', borderRadius: '24px' }}>
+                  <div>
+                      <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0' }}>How to Proceed</h3>
+                      <ol style={{ fontSize: '24px', color: '#ccc', lineHeight: 1.8, margin: 0, paddingLeft: '30px' }}>
+                          <li>Review this proposal and ensure it aligns with your vision.</li>
+                          <li>Let us know if you need any adjustments.</li>
+                          <li>Once approved, we will send over the formal agreement and first invoice.</li>
+                      </ol>
+                  </div>
+                  <div>
+                      <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0' }}>Contact Us</h3>
+                      <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Email: hello@drippmedia.com</p>
+                      <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Phone: +91 98765 43210</p>
+                      <p style={{ fontSize: '24px', color: '#ccc', margin: '0' }}>Web: www.drippmedia.com</p>
+                  </div>
+              </div>
+          </div>
       </div>
 
     </div>
