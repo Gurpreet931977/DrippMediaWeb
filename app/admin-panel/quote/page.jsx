@@ -310,12 +310,12 @@ export default function QuoteMaker() {
     
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(11);
-    pdf.text(clientDetails.name || "Client Name", 15, 72);
+    pdf.text(clientDetails.name || "NIL (not provided)", 15, 72);
     pdf.setFont("helvetica", "normal");
-    if(clientDetails.brandName) pdf.text(clientDetails.brandName, 15, 78);
+    pdf.text(clientDetails.brandName || "NIL (not provided)", 15, 78);
     pdf.setTextColor(150, 150, 150);
-    if(clientDetails.email) pdf.text(clientDetails.email, 15, 84);
-    if(clientDetails.mobile) pdf.text(clientDetails.mobile, 15, 90);
+    pdf.text(clientDetails.email || "NIL (not provided)", 15, 84);
+    pdf.text(clientDetails.mobile || "NIL (not provided)", 15, 90);
 
     // Package Details
     if(packageType === 'project') {

@@ -309,7 +309,7 @@ export default function InvoiceMaker() {
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
-    pdf.text(clientDetails.name || "Client Name", 195, 75, { align: 'right' });
+    pdf.text(clientDetails.name || "NIL (not provided)", 195, 75, { align: 'right' });
     pdf.setTextColor(150, 150, 150);
     if(clientDetails.address) {
        const splitClientAddress = pdf.splitTextToSize(clientDetails.address, 70);
@@ -321,10 +321,23 @@ export default function InvoiceMaker() {
        });
        currentY = Math.max(currentY, addrY);
     } else {
-       currentY = Math.max(currentY, 80);
+       pdf.text("NIL (not provided)", 195, 80, { align: 'right' });
+       currentY = Math.max(currentY, 85);
     }
-    if(clientDetails.email) { pdf.text(clientDetails.email, 195, currentY, { align: 'right' }); currentY += 5; }
-    if(clientDetails.mobile) { pdf.text(clientDetails.mobile, 195, currentY, { align: 'right' }); }
+    
+    if(clientDetails.email) { 
+        pdf.text(clientDetails.email, 195, currentY, { align: 'right' }); 
+        currentY += 5; 
+    } else {
+        pdf.text("NIL (not provided)", 195, currentY, { align: 'right' }); 
+        currentY += 5; 
+    }
+    
+    if(clientDetails.mobile) { 
+        pdf.text(clientDetails.mobile, 195, currentY, { align: 'right' }); 
+    } else {
+        pdf.text("NIL (not provided)", 195, currentY, { align: 'right' }); 
+    }
 
     // Services Table
     const tableData = items.map(item => [
