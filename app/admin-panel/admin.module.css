@@ -353,6 +353,7 @@
   color: #ebd73f;
   margin-bottom: 20px;
   letter-spacing: -2px;
+  text-shadow: 0 0 20px rgba(235, 215, 63, 0.5);
 }
 
 .pdfSubtitle {
@@ -379,4 +380,27 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  text-shadow: 0 0 15px rgba(235, 215, 63, 0.4);
+}
+
+.pdfGlowOrb1 {
+  position: absolute;
+  top: -300px;
+  right: -300px;
+  width: 1000px;
+  height: 1000px;
+  background: radial-gradient(circle, rgba(235, 215, 63, 0.12) 0%, rgba(5, 5, 5, 0) 60%);
+  z-index: 0;
+  border-radius: 50%;
+}
+
+.pdfGlowOrb2 {
+  position: absolute;
+  bottom: -300px;
+  left: -200px;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(235, 215, 63, 0.08) 0%, rgba(5, 5, 5, 0) 60%);
+  z-index: 0;
+  border-radius: 50%;
 }

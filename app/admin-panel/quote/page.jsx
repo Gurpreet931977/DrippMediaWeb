@@ -916,6 +916,8 @@ export default function QuoteMaker() {
       <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
           {pdfPages.map((page, index) => (
               <div key={page.id} id={`pdf-slide-${page.id}`} className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column', justifyContent: page.type === 'cover' || page.type === 'next_steps' || page.type === 'custom_text' ? 'space-between' : 'flex-start' }}>
+                  <div className={styles.pdfGlowOrb1} />
+                  <div className={styles.pdfGlowOrb2} />
                   
                   {/* Common Header if not hidden and not cover/investment */}
                   {!page.hideHeading && page.type !== 'cover' && page.type !== 'investment' && (
