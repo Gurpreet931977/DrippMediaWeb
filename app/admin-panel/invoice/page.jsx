@@ -5,6 +5,7 @@ import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3,
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import styles from '../admin.module.css';
+import CurrencyConverter from '../components/CurrencyConverter';
 
 const DEFAULT_SERVICES = [
   'Video Production - 1 Minute Edit',
@@ -639,6 +640,8 @@ export default function InvoiceMaker() {
         {/* RIGHT COLUMN: PAYMENT & ACTIONS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
            
+           <CurrencyConverter />
+
            {/* Payment Methods */}
            <div className={styles.card}>
               <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>

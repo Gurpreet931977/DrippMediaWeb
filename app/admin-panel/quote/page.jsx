@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Search, Share2, Calendar, FileText, Lock } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, Calendar, FileText, Lock, Save } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import styles from '../admin.module.css';
+import CurrencyConverter from '../components/CurrencyConverter';
 
 const DEFAULT_SERVICES = [
   'Custom Landing Page Design',
@@ -621,6 +622,8 @@ export default function QuoteMaker() {
         {/* RIGHT COLUMN: TEMPLATES & ACTIONS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
            
+           <CurrencyConverter />
+
            {/* Actions */}
            <div className={styles.card}>
              <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Export & Share</h3>
