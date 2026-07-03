@@ -1,17 +1,46 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { Lock, FileText, CheckCircle2, Globe, Mail, AtSign } from 'lucide-react';
 
 export default function SharedQuote() {
   const params = useParams();
+  const [pin, setPin] = useState(['', '', '', '']);
   const [password, setPassword] = useState('');
   const [isLocked, setIsLocked] = useState(true);
   const [quoteData, setQuoteData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const pinRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
+
+  const handlePinChange = (index, value) => {
+    if (!/^[0-9]?$/.test(value)) return;
+    const newPin = [...pin];
+    newPin[index] = value;
+    setPin(newPin);
+    setPassword(newPin.join(''));
+    if (value && index < 3) {
+      pinRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handlePinKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !pin[index] && index > 0) {
+      pinRefs[index - 1].current?.focus();
+    }
+  };
+
+  const handlePinPaste = (e) => {
+    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
+    const newPin = text.split('');
+    while (newPin.length < 4) newPin.push('');
+    setPin(newPin);
+    setPassword(newPin.join(''));
+    pinRefs[Math.min(text.length, 3)].current?.focus();
+    e.preventDefault();
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -84,19 +113,52 @@ export default function SharedQuote() {
              <Lock size={40} color="#ebd73f" />
           </div>
           <h2 style={{ marginBottom: '10px', fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontFamily: "'Panchang', sans-serif", letterSpacing: '1px' }}>Secure Proposal</h2>
-          <p style={{ color: '#888', marginBottom: '35px', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)', lineHeight: '1.6' }}>Please enter the private password provided by Dripp Media to access your tailored proposal.</p>
+          <p style={{ color: '#888', marginBottom: '35px', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)', lineHeight: '1.6' }}>Enter the 4-digit PIN provided by Dripp Media to access your tailored proposal.</p>
           
-          <div style={{ position: 'relative', marginBottom: '20px' }}>
-             <input 
-               type="password" 
-               value={password}
-               onChange={(e) => setPassword(e.target.value)}
-               placeholder="Enter Password" 
-               style={{ width: '100%', padding: '16px 20px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(0, 0, 0, 0.4)', color: 'white', textAlign: 'center', letterSpacing: '3px', fontSize: '1.1rem', outline: 'none', boxSizing: 'border-box', transition: 'all 0.3s' }} 
-               onFocus={(e) => { e.target.style.border = '1px solid #ebd73f'; e.target.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.2)'; }}
-               onBlur={(e) => { e.target.style.border = '1px solid rgba(255, 255, 255, 0.1)'; e.target.style.boxShadow = 'none'; }}
-               required
-             />
+          {/* PIN Input Boxes */}
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '20px' }}>
+            {pin.map((digit, index) => (
+              <div key={index} style={{
+                width: 'clamp(60px, 15vw, 72px)',
+                height: 'clamp(70px, 18vw, 84px)',
+                background: 'rgba(255,255,255,0.04)',
+                border: `2px solid ${digit ? '#ebd73f' : 'rgba(255,255,255,0.08)'}`,
+                borderRadius: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: digit ? '0 0 20px rgba(235, 215, 63, 0.15)' : 'none',
+                transition: 'all 0.2s ease',
+                position: 'relative'
+              }}>
+                <input
+                  ref={pinRefs[index]}
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handlePinChange(index, e.target.value)}
+                  onKeyDown={(e) => handlePinKeyDown(index, e)}
+                  onPaste={handlePinPaste}
+                  onFocus={(e) => { e.target.parentElement.style.border = '2px solid #ebd73f'; e.target.parentElement.style.boxShadow = '0 0 20px rgba(235, 215, 63, 0.25)'; }}
+                  onBlur={(e) => { if (!digit) { e.target.parentElement.style.border = '2px solid rgba(255,255,255,0.08)'; e.target.parentElement.style.boxShadow = 'none'; } }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    textAlign: 'center',
+                    fontSize: 'clamp(1.5rem, 5vw, 2rem)',
+                    fontWeight: '700',
+                    color: '#ebd73f',
+                    caretColor: '#ebd73f',
+                    letterSpacing: '0'
+                  }}
+                />
+                {!digit && <span style={{ position: 'absolute', width: '20px', height: '2px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', pointerEvents: 'none' }}></span>}
+              </div>
+            ))}
           </div>
           {error && <p style={{ color: '#ff4d4d', fontSize: '0.85rem', marginBottom: '20px', padding: '10px', background: 'rgba(255, 77, 77, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 77, 77, 0.2)' }}>{error}</p>}
           
