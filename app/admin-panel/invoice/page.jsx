@@ -47,6 +47,10 @@ export default function InvoiceMaker() {
   ]);
   const [selectedBankId, setSelectedBankId] = useState('default_bank');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+  
+  // Bank Editor State
+  const [isEditingBank, setIsEditingBank] = useState(false);
+  const [editingBankDetails, setEditingBankDetails] = useState(null);
 
   // -- INVOICE STATE --
   const [invoiceDetails, setInvoiceDetails] = useState({
@@ -97,6 +101,16 @@ export default function InvoiceMaker() {
             setInvoiceDetails(prev => ({ ...prev, number: `INV-${nextNum.toString().padStart(4, '0')}` }));
           }
         }
+       const storedBanks = localStorage.getItem('dripp_bank_accounts');
+       if (storedBanks) {
+          try {
+             const parsed = JSON.parse(storedBanks);
+             if (parsed && parsed.length > 0) {
+                 setBankAccounts(parsed);
+                 setSelectedBankId(parsed[0].id);
+             }
+          } catch(e) {}
+       }
       } catch (e) {}
     }
   }, []);
@@ -129,6 +143,34 @@ export default function InvoiceMaker() {
      localStorage.setItem('dripp_my_details', JSON.stringify(myDetails));
      setMyDetailsLocked(true);
      alert("Default details saved successfully!");
+  };
+
+  const handleSaveBank = () => {
+      let updatedBanks = [...bankAccounts];
+      const existingIdx = updatedBanks.findIndex(b => b.id === editingBankDetails.id);
+      if (existingIdx >= 0) {
+          updatedBanks[existingIdx] = editingBankDetails;
+      } else {
+          updatedBanks.push(editingBankDetails);
+      }
+      setBankAccounts(updatedBanks);
+      setSelectedBankId(editingBankDetails.id);
+      setIsEditingBank(false);
+      localStorage.setItem('dripp_bank_accounts', JSON.stringify(updatedBanks));
+  };
+  
+  const handleDeleteBank = (id) => {
+      if(confirm("Are you sure you want to delete this payment method?")) {
+          const updatedBanks = bankAccounts.filter(b => b.id !== id);
+          if (updatedBanks.length === 0) {
+              alert("You must have at least one payment method.");
+              return;
+          }
+          setBankAccounts(updatedBanks);
+          setSelectedBankId(updatedBanks[0].id);
+          setIsEditingBank(false);
+          localStorage.setItem('dripp_bank_accounts', JSON.stringify(updatedBanks));
+      }
   };
 
   const handleMyDetailsChange = (field, value) => setMyDetails(prev => ({ ...prev, [field]: value }));
@@ -668,27 +710,69 @@ export default function InvoiceMaker() {
               <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <ShieldCheck size={18} /> Payment Methods
               </h3>
-              <label className={styles.label}>Select Bank Account to display</label>
-              <select 
-                  className={styles.inputField} 
-                  value={selectedBankId} 
-                  onChange={(e) => setSelectedBankId(e.target.value)}
-                  style={{ marginBottom: '15px' }}
-              >
-                  {bankAccounts.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-              
-              {selectedBankId && bankAccounts.find(b => b.id === selectedBankId) && (
-                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', fontSize: '0.85rem', color: '#ccc', lineHeight: '1.6' }}>
-                     {bankAccounts.find(b => b.id === selectedBankId).details.split('\n').map((line, i) => (
-                         <div key={i}>{line}</div>
-                     ))}
-                     {qrCodeDataUrl && (
-                         <div style={{ marginTop: '15px', textAlign: 'center' }}>
-                             <img src={qrCodeDataUrl} alt="Payment QR" style={{ width: '120px', borderRadius: '8px', border: '2px solid #fff' }} />
-                             <div style={{ fontSize: '0.7rem', color: '#888', marginTop: '5px' }}>Scan to Pay</div>
-                         </div>
-                     )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '15px' }}>
+                <div style={{ flex: 1 }}>
+                  <label className={styles.label}>Select Bank Account</label>
+                  <select 
+                      className={styles.inputField} 
+                      value={selectedBankId} 
+                      onChange={(e) => setSelectedBankId(e.target.value)}
+                      style={{ width: '100%' }}
+                  >
+                      {bankAccounts.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {!isEditingBank ? (
+                  <>
+                      {selectedBankId && bankAccounts.find(b => b.id === selectedBankId) && (
+                          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', fontSize: '0.85rem', color: '#ccc', lineHeight: '1.6', position: 'relative' }}>
+                             <button onClick={() => {
+                                 setEditingBankDetails(bankAccounts.find(b => b.id === selectedBankId));
+                                 setIsEditingBank(true);
+                             }} style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: '#ebd73f', cursor: 'pointer' }}><Edit3 size={16} /></button>
+                             {bankAccounts.find(b => b.id === selectedBankId).details.split('\n').map((line, i) => (
+                                 <div key={i}>{line}</div>
+                             ))}
+                             {qrCodeDataUrl && (
+                                 <div style={{ marginTop: '15px', textAlign: 'center' }}>
+                                     <img src={qrCodeDataUrl} alt="Payment QR" style={{ width: '120px', borderRadius: '8px', border: '2px solid #fff' }} />
+                                     <div style={{ fontSize: '0.7rem', color: '#888', marginTop: '5px' }}>Scan to Pay via UPI</div>
+                                 </div>
+                             )}
+                          </div>
+                      )}
+                      <button onClick={() => {
+                          setEditingBankDetails({ id: 'bank_' + Date.now(), name: '', details: '', upi: '' });
+                          setIsEditingBank(true);
+                      }} className={styles.btn} style={{ width: '100%', marginTop: '10px', justifyContent: 'center' }}>
+                          <Plus size={16} /> Add New Payment Method
+                      </button>
+                  </>
+              ) : (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <div style={{ marginBottom: '10px' }}>
+                          <label className={styles.label}>Display Name</label>
+                          <input type="text" value={editingBankDetails.name} onChange={e => setEditingBankDetails({...editingBankDetails, name: e.target.value})} placeholder="e.g., HDFC Current" className={styles.inputField} />
+                      </div>
+                      <div style={{ marginBottom: '10px' }}>
+                          <label className={styles.label}>Bank Details (Account No, IFSC, etc.)</label>
+                          <textarea value={editingBankDetails.details} onChange={e => setEditingBankDetails({...editingBankDetails, details: e.target.value})} placeholder="Bank: HDFC\nA/C No: 123456" className={styles.inputField} rows={4} />
+                      </div>
+                      <div style={{ marginBottom: '15px' }}>
+                          <label className={styles.label}>UPI ID (optional, generates QR)</label>
+                          <input type="text" value={editingBankDetails.upi} onChange={e => setEditingBankDetails({...editingBankDetails, upi: e.target.value})} placeholder="name@bank" className={styles.inputField} />
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                          <button onClick={handleSaveBank} className={styles.btnPrimary} style={{ flex: 1, padding: '8px' }}>Save</button>
+                          <button onClick={() => setIsEditingBank(false)} className={styles.btn} style={{ flex: 1, padding: '8px', justifyContent: 'center' }}>Cancel</button>
+                      </div>
+                      {editingBankDetails.id.includes('bank_') && bankAccounts.find(b => b.id === editingBankDetails.id) && (
+                          <button onClick={() => handleDeleteBank(editingBankDetails.id)} className={styles.btnDanger} style={{ width: '100%', padding: '8px', marginTop: '10px' }}>
+                              Delete Method
+                          </button>
+                      )}
                   </div>
               )}
            </div>
