@@ -30,7 +30,7 @@ export default function InvoiceMaker() {
   });
 
   // -- BANK ACCOUNTS & PAYMENTS --
-  const [includeGST, setIncludeGST] = useState(true);
+  const [includeGST, setIncludeGST] = useState(false);
   const [bankAccounts, setBankAccounts] = useState([
     {
       id: 'default_bank',
