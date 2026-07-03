@@ -50,6 +50,7 @@ export default function InvoiceMaker() {
   // Smart Paste State
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [isAutoFillSuccess, setIsAutoFillSuccess] = useState(false);
+  const [isAutoFillDone, setIsAutoFillDone] = useState(false);
 
   // -- INVOICE STATE --
   const [invoiceDetails, setInvoiceDetails] = useState({
@@ -348,11 +349,17 @@ export default function InvoiceMaker() {
     
     // Switch to Filling animation phase
     setIsAutoFilling(false);
-    setIsAutoFillSuccess(true); // Re-using this state to mean "filling phase"
+    setIsAutoFillSuccess(true);
     
     // Brief delay to show "filling" state
     await new Promise(r => setTimeout(r, 600));
     setIsAutoFillSuccess(false);
+    setIsAutoFillDone(true);
+    
+    setTimeout(() => {
+        setIsAutoFillDone(false);
+        setSmartText('');
+    }, 2000);
   };
 
   const handleClearForm = () => {
@@ -611,11 +618,13 @@ export default function InvoiceMaker() {
               style={{ resize: 'vertical', marginBottom: '15px' }} 
             />
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSmartPaste} disabled={isAutoFilling || isAutoFillSuccess} style={{ background: isAutoFillSuccess ? '#ebd73f' : '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: (isAutoFilling || isAutoFillSuccess) ? 'wait' : 'pointer', fontWeight: 'bold', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}>
+              <button onClick={handleSmartPaste} disabled={isAutoFilling || isAutoFillSuccess || isAutoFillDone} style={{ background: (isAutoFillSuccess || isAutoFillDone) ? '#ebd73f' : '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: (isAutoFilling || isAutoFillSuccess || isAutoFillDone) ? 'wait' : 'pointer', fontWeight: 'bold', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}>
                 {isAutoFilling ? (
                    <><Loader size={18} className={styles.spin} /> Analyzing text...</>
                 ) : isAutoFillSuccess ? (
                    <><div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #000', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} /> Filling form...</>
+                ) : isAutoFillDone ? (
+                   <><CheckCircle2 size={18} color="#000" /> Success!</>
                 ) : (
                    'Auto-Fill Invoice'
                 )}
