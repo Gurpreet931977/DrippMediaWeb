@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, ArrowUp, ArrowDown, Layers, Type, Image, EyeOff, Eye } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, ArrowUp, ArrowDown, Layers, Type, Image, EyeOff, Eye, Copy } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import styles from '../admin.module.css';
@@ -393,6 +393,11 @@ export default function QuoteMaker() {
     pdf.save(`Dripp_Media_Proposal${brandNameStr}_${quoteDetails.number}.pdf`);
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    // Could add a toast notification here if desired
+  };
+
   const generateSecureLink = async () => {
     const pass = Math.random().toString(36).slice(-6).toUpperCase();
     setSharePassword(pass);
@@ -777,9 +782,15 @@ export default function QuoteMaker() {
              {shareLink && (
                 <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '0.75rem' }}>
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
-                   <input type="text" readOnly value={shareLink} className={styles.inputField} style={{ padding: '8px', marginBottom: '10px' }} />
+                   <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                      <input type="text" readOnly value={shareLink} className={styles.inputField} style={{ padding: '8px', flex: 1 }} />
+                      <button onClick={() => copyToClipboard(shareLink)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link"><Copy size={16} /></button>
+                   </div>
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client Password:</p>
-                   <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold' }} />
+                   <div style={{ display: 'flex', gap: '8px' }}>
+                      <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
+                      <button onClick={() => copyToClipboard(sharePassword)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
+                   </div>
                 </div>
              )}
            </div>
