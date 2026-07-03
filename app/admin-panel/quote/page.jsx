@@ -152,6 +152,7 @@ export default function QuoteMaker() {
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [isAutoFillSuccess, setIsAutoFillSuccess] = useState(false);
   const [isAutoFillDone, setIsAutoFillDone] = useState(false);
+  const [copiedItem, setCopiedItem] = useState(null);
 
   const handleSmartPaste = async () => {
     if (!smartText.trim()) return;
@@ -404,16 +405,18 @@ export default function QuoteMaker() {
     pdf.save(`Dripp_Media_Proposal${brandNameStr}_${quoteDetails.number}.pdf`);
   };
 
-  const copyToClipboard = (text) => {
+  const copyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
-    // Could add a toast notification here if desired
+    if (id) {
+        setCopiedItem(id);
+        setTimeout(() => setCopiedItem(null), 2000);
+    }
   };
 
   const handleCopyMessage = () => {
     const clientName = clientDetails.name ? clientDetails.name.split(' ')[0] : (clientDetails.brandName || 'Client');
     const msg = `Hey ${clientName}!\n\nHere is your secure proposal from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 Password: ${sharePassword}\n\nLet me know if you have any questions!`;
-    copyToClipboard(msg);
-    alert('Message copied to clipboard!');
+    copyToClipboard(msg, 'message');
   };
 
   const generateSecureLink = async () => {
@@ -804,15 +807,23 @@ export default function QuoteMaker() {
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
                    <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                       <input type="text" readOnly value={shareLink} onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} className={styles.inputField} style={{ padding: '8px', flex: 1, cursor: 'pointer' }} title="Click to open link directly" />
-                      <button onClick={() => copyToClipboard(shareLink)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link"><Copy size={16} /></button>
+                      <button onClick={() => copyToClipboard(shareLink, 'link')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link">
+                        {copiedItem === 'link' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
+                      </button>
                    </div>
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client Password:</p>
                    <div style={{ display: 'flex', gap: '8px' }}>
                       <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
-                      <button onClick={() => copyToClipboard(sharePassword)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
+                      <button onClick={() => copyToClipboard(sharePassword, 'password')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password">
+                        {copiedItem === 'password' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
+                      </button>
                    </div>
                     <button onClick={handleCopyMessage} className={styles.btnShare}>
-                      <Share2 size={18} /> Copy Share Message
+                      {copiedItem === 'message' ? (
+                          <><CheckCircle2 size={18} /> Message Copied!</>
+                      ) : (
+                          <><Share2 size={18} /> Copy Share Message</>
+                      )}
                     </button>
                 </div>
              )}
