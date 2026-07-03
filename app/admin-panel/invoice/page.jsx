@@ -5,6 +5,7 @@ import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3,
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import styles from '../admin.module.css';
+import { supabase } from '../../utils/supabaseClient';
 import CurrencyConverter from '../components/CurrencyConverter';
 import { allCurrencies } from '../components/currencies';
 
@@ -83,7 +84,7 @@ export default function InvoiceMaker() {
   const [shareLink, setShareLink] = useState('');
   const [sharePassword, setSharePassword] = useState('');
 
-  // -- INITIALIZATION & LOCAL STORAGE --
+  // -- INITIALIZATION & LOCAL STORAGE & SUPABASE --
   useEffect(() => {
     setIsClient(true);
     // Load Defaults
@@ -91,10 +92,42 @@ export default function InvoiceMaker() {
     if (localMyDetails) {
         try { setMyDetails(JSON.parse(localMyDetails)); } catch (e) {}
     }
-    const localBankAccounts = localStorage.getItem('dripp_bank_accounts');
-    if (localBankAccounts) {
-        try { setBankAccounts(JSON.parse(localBankAccounts)); } catch (e) {}
-    }
+    
+    const fetchBanks = async () => {
+      try {
+        const { data, error } = await supabase.from('bank_accounts').select('*').order('created_at', { ascending: true });
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+           setBankAccounts(data);
+           setSelectedBankId(data[0].id);
+        } else {
+           // Fallback to localStorage if Supabase is empty (potential first run)
+           const storedBanks = localStorage.getItem('dripp_bank_accounts');
+           if (storedBanks) {
+              const parsed = JSON.parse(storedBanks);
+              if (parsed && parsed.length > 0) {
+                  setBankAccounts(parsed);
+                  setSelectedBankId(parsed[0].id);
+              }
+           }
+        }
+      } catch (err) {
+        console.warn("Could not fetch from Supabase. Falling back to local storage.", err);
+        const storedBanks = localStorage.getItem('dripp_bank_accounts');
+        if (storedBanks) {
+           try {
+              const parsed = JSON.parse(storedBanks);
+              if (parsed && parsed.length > 0) {
+                  setBankAccounts(parsed);
+                  setSelectedBankId(parsed[0].id);
+              }
+           } catch(e) {}
+        }
+      }
+    };
+    fetchBanks();
+
     const savedInvoices = localStorage.getItem('dripp_invoices');
     if (savedInvoices) {
       try {
@@ -107,16 +140,6 @@ export default function InvoiceMaker() {
             setInvoiceDetails(prev => ({ ...prev, number: `INV-${nextNum.toString().padStart(4, '0')}` }));
           }
         }
-       const storedBanks = localStorage.getItem('dripp_bank_accounts');
-       if (storedBanks) {
-          try {
-             const parsed = JSON.parse(storedBanks);
-             if (parsed && parsed.length > 0) {
-                 setBankAccounts(parsed);
-                 setSelectedBankId(parsed[0].id);
-             }
-          } catch(e) {}
-       }
       } catch (e) {}
     }
   }, []);
@@ -151,31 +174,62 @@ export default function InvoiceMaker() {
      alert("Default details saved successfully!");
   };
 
-  const handleSaveBank = () => {
+  const handleSaveBank = async () => {
       let updatedBanks = [...bankAccounts];
       const existingIdx = updatedBanks.findIndex(b => b.id === editingBankDetails.id);
-      if (existingIdx >= 0) {
-          updatedBanks[existingIdx] = editingBankDetails;
-      } else {
-          updatedBanks.push(editingBankDetails);
+      
+      try {
+        if (existingIdx >= 0) {
+            const { error } = await supabase.from('bank_accounts').update({
+                name: editingBankDetails.name,
+                details: editingBankDetails.details,
+                upi: editingBankDetails.upi
+            }).eq('id', editingBankDetails.id);
+            if (error) throw error;
+            updatedBanks[existingIdx] = editingBankDetails;
+        } else {
+            const { id, ...bankData } = editingBankDetails;
+            const { data, error } = await supabase.from('bank_accounts').insert(bankData).select().single();
+            if (error) throw error;
+            if (data) {
+                updatedBanks.push(data);
+                editingBankDetails.id = data.id;
+            } else {
+                updatedBanks.push(editingBankDetails);
+            }
+        }
+      } catch (err) {
+        console.error("Supabase Error, saving to local storage fallback", err);
+        if (existingIdx >= 0) {
+           updatedBanks[existingIdx] = editingBankDetails;
+        } else {
+           updatedBanks.push(editingBankDetails);
+        }
+        localStorage.setItem('dripp_bank_accounts', JSON.stringify(updatedBanks));
       }
+
       setBankAccounts(updatedBanks);
       setSelectedBankId(editingBankDetails.id);
       setIsEditingBank(false);
-      localStorage.setItem('dripp_bank_accounts', JSON.stringify(updatedBanks));
   };
   
-  const handleDeleteBank = (id) => {
+  const handleDeleteBank = async (id) => {
       if(confirm("Are you sure you want to delete this payment method?")) {
           const updatedBanks = bankAccounts.filter(b => b.id !== id);
           if (updatedBanks.length === 0) {
               alert("You must have at least one payment method.");
               return;
           }
+          try {
+             const { error } = await supabase.from('bank_accounts').delete().eq('id', id);
+             if (error) throw error;
+          } catch (err) {
+             console.error("Supabase delete failed", err);
+             localStorage.setItem('dripp_bank_accounts', JSON.stringify(updatedBanks));
+          }
           setBankAccounts(updatedBanks);
           setSelectedBankId(updatedBanks[0].id);
           setIsEditingBank(false);
-          localStorage.setItem('dripp_bank_accounts', JSON.stringify(updatedBanks));
       }
   };
 
