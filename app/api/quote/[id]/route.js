@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../utils/supabaseClient';
 
-export async function POST(request, { params }) {
+export async function POST(request, context) {
   try {
     const { password } = await request.json();
-    const id = params.id;
+    const { id } = await context.params;
     
     // Fetch the quote from Supabase
     const { data, error } = await supabase

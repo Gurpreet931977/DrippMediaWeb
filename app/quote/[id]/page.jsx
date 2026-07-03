@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
 import { Lock, FileText, CheckCircle2 } from 'lucide-react';
 
-export default function SharedQuote({ params }) {
+export default function SharedQuote() {
+  const params = useParams();
   const [password, setPassword] = useState('');
   const [isLocked, setIsLocked] = useState(true);
   const [quoteData, setQuoteData] = useState(null);
@@ -16,7 +18,7 @@ export default function SharedQuote({ params }) {
     setError('');
 
     try {
-      const res = await fetch(`/api/quote/${params.id}`, {
+      const res = await fetch(`/api/quote/${params?.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
