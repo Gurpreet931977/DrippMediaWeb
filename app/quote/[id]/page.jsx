@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Lock, FileText, CheckCircle2 } from 'lucide-react';
+import { Lock, FileText, CheckCircle2, Globe, Mail, Instagram } from 'lucide-react';
 
 export default function SharedQuote() {
   const params = useParams();
@@ -269,26 +269,26 @@ export default function SharedQuote() {
         </div>
 
         {/* Footer Section */}
-        <div style={{ gridColumn: '1 / -1', marginTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '50px', paddingBottom: '30px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '25px', alignItems: 'center' }}>
-            <h4 style={{ fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif", letterSpacing: '2px' }}>DRIPP MEDIA</h4>
+        <div style={{ gridColumn: '1 / -1', marginTop: '40px', paddingTop: '40px', paddingBottom: '30px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '35px', alignItems: 'center' }}>
             
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(15px, 4vw, 30px)', color: '#888', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)' }}>
-                <a href="https://www.drippmedia.com" target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', transition: 'color 0.3s' }} onMouseEnter={e => e.target.style.color = '#fff'} onMouseLeave={e => e.target.style.color = '#888'}>
-                   <span style={{ color: '#ebd73f' }}>🌍</span> www.drippmedia.com
+            <div style={{ background: 'rgba(235, 215, 63, 0.05)', padding: 'clamp(20px, 4vw, 30px) clamp(30px, 6vw, 60px)', borderRadius: '100px', border: '1px solid rgba(235, 215, 63, 0.2)', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(20px, 5vw, 40px)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                <a href="https://www.drippmedia.com" target="_blank" rel="noopener noreferrer" style={{ color: '#aaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'clamp(0.85rem, 3vw, 1rem)', transition: 'all 0.3s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                   <Globe size={18} color="#ebd73f" /> www.drippmedia.com
                 </a>
-                <a href="mailto:mediadripp@gmail.com" style={{ color: '#888', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', transition: 'color 0.3s' }} onMouseEnter={e => e.target.style.color = '#fff'} onMouseLeave={e => e.target.style.color = '#888'}>
-                   <span style={{ color: '#ebd73f' }}>✉️</span> mediadripp@gmail.com
+                <a href="mailto:mediadripp@gmail.com" style={{ color: '#aaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'clamp(0.85rem, 3vw, 1rem)', transition: 'all 0.3s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                   <Mail size={18} color="#ebd73f" /> mediadripp@gmail.com
                 </a>
-                <a href="https://instagram.com/drippmedia_" target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', transition: 'color 0.3s' }} onMouseEnter={e => e.target.style.color = '#fff'} onMouseLeave={e => e.target.style.color = '#888'}>
-                   <span style={{ color: '#ebd73f' }}>📸</span> @drippmedia_
+                <a href="https://instagram.com/drippmedia_" target="_blank" rel="noopener noreferrer" style={{ color: '#aaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'clamp(0.85rem, 3vw, 1rem)', transition: 'all 0.3s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                   <Instagram size={18} color="#ebd73f" /> instagram.com/drippmedia_
                 </a>
             </div>
 
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '12px 30px', borderRadius: '50px', border: '1px solid rgba(255, 255, 255, 0.08)', marginTop: '10px' }}>
-                <p style={{ margin: 0, color: '#aaa', fontSize: 'clamp(0.8rem, 3vw, 0.9rem)' }}>Founded by <strong style={{ color: '#fff' }}>Gurpreet Singh</strong></p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+              <div style={{ background: 'linear-gradient(90deg, rgba(235, 215, 63, 0) 0%, rgba(235, 215, 63, 0.2) 50%, rgba(235, 215, 63, 0) 100%)', width: '250px', height: '2px' }}></div>
+              <p style={{ margin: 0, color: '#888', fontSize: 'clamp(0.8rem, 3vw, 0.9rem)', letterSpacing: '1px', textTransform: 'uppercase' }}>Founded by <span style={{ color: '#ebd73f', fontWeight: 'bold' }}>Gurpreet Singh</span></p>
             </div>
             
-            <p style={{ fontSize: '0.75rem', color: '#444', marginTop: '20px', letterSpacing: '1px' }}>© {new Date().getFullYear()} Dripp Media. All Rights Reserved.</p>
+            <p style={{ fontSize: '0.75rem', color: '#444', margin: 0, letterSpacing: '2px' }}>© {new Date().getFullYear()} DRIPP MEDIA. ALL RIGHTS RESERVED.</p>
         </div>
 
       </div>
