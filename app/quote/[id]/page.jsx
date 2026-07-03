@@ -74,24 +74,37 @@ export default function SharedQuote() {
 
   if (isLocked) {
     return (
-      <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white' }}>
-        <form onSubmit={handleUnlock} style={{ background: '#111', padding: '40px', borderRadius: '12px', border: '1px solid #333', textAlign: 'center', maxWidth: '400px', width: '90%' }}>
-          <Lock size={48} color="#ebd73f" style={{ marginBottom: '20px' }} />
-          <h2 style={{ marginBottom: '10px' }}>Secure Proposal</h2>
-          <p style={{ color: '#888', marginBottom: '30px', fontSize: '0.9rem' }}>Please enter the password provided by Dripp Media to view your proposal.</p>
+      <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', background: '#050505', color: 'white', position: 'relative', overflow: 'hidden' }}>
+         {/* Background Glows */}
+         <div style={{ position: 'absolute', top: '10%', left: '10%', width: '40vw', height: '40vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', zIndex: 0 }}></div>
+         <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '30vw', height: '30vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.03) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', zIndex: 0 }}></div>
+
+        <form onSubmit={handleUnlock} style={{ position: 'relative', zIndex: 1, background: 'rgba(255, 255, 255, 0.02)', padding: 'clamp(40px, 8vw, 60px) clamp(20px, 5vw, 40px)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.05)', borderTop: '2px solid #ebd73f', textAlign: 'center', maxWidth: '450px', width: '90%', backdropFilter: 'blur(20px)', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
+          <div style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', marginBottom: '25px', boxShadow: '0 0 30px rgba(235, 215, 63, 0.2)' }}>
+             <Lock size={40} color="#ebd73f" />
+          </div>
+          <h2 style={{ marginBottom: '10px', fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontFamily: "'Panchang', sans-serif", letterSpacing: '1px' }}>Secure Proposal</h2>
+          <p style={{ color: '#888', marginBottom: '35px', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)', lineHeight: '1.6' }}>Please enter the private password provided by Dripp Media to access your tailored proposal.</p>
           
-          <input 
-            type="password" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter Password" 
-            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #333', background: '#000', color: 'white', marginBottom: '15px', textAlign: 'center', letterSpacing: '2px' }} 
-            required
-          />
-          {error && <p style={{ color: '#ff4d4d', fontSize: '0.85rem', marginBottom: '15px' }}>{error}</p>}
+          <div style={{ position: 'relative', marginBottom: '20px' }}>
+             <input 
+               type="password" 
+               value={password}
+               onChange={(e) => setPassword(e.target.value)}
+               placeholder="Enter Password" 
+               style={{ width: '100%', padding: '16px 20px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(0, 0, 0, 0.4)', color: 'white', textAlign: 'center', letterSpacing: '3px', fontSize: '1.1rem', outline: 'none', boxSizing: 'border-box', transition: 'all 0.3s' }} 
+               onFocus={(e) => { e.target.style.border = '1px solid #ebd73f'; e.target.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.2)'; }}
+               onBlur={(e) => { e.target.style.border = '1px solid rgba(255, 255, 255, 0.1)'; e.target.style.boxShadow = 'none'; }}
+               required
+             />
+          </div>
+          {error && <p style={{ color: '#ff4d4d', fontSize: '0.85rem', marginBottom: '20px', padding: '10px', background: 'rgba(255, 77, 77, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 77, 77, 0.2)' }}>{error}</p>}
           
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: '#ebd73f', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
-            {loading ? 'Unlocking...' : 'View Proposal'}
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '16px', background: '#ebd73f', color: '#000', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: '800', cursor: 'pointer', fontFamily: "'Clash Display', sans-serif", letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.3s ease' }}
+            onMouseEnter={(e) => { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 10px 20px rgba(235, 215, 63, 0.3)'; }}
+            onMouseLeave={(e) => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = 'none'; }}
+          >
+            {loading ? 'Decrypting...' : 'View Proposal'}
           </button>
         </form>
       </div>
@@ -205,21 +218,27 @@ export default function SharedQuote() {
           </div>
         </div>
 
-        {/* Investment Section */}
-        <div style={{ marginBottom: '40px' }}>
-          <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '24px', padding: 'clamp(40px, 10vw, 60px) clamp(15px, 5vw, 20px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', width: '100%', boxSizing: 'border-box' }}>
-              <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', color: '#888', textTransform: 'uppercase', letterSpacing: 'clamp(2px, 1vw, 4px)', margin: '0 0 20px 0', textAlign: 'center' }}>Total {quoteData.packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
-              
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', textShadow: '0 0 30px rgba(235, 215, 63, 0.4)', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
-                  <span style={{ fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', color: '#ebd73f', fontWeight: '500' }}>{currency}</span>
-                  <span style={{ fontSize: 'clamp(2.2rem, 9vw, 4.5rem)', color: '#ebd73f', fontWeight: '800', fontFamily: "'Panchang', sans-serif", letterSpacing: '-2px', wordBreak: 'break-word', textAlign: 'center' }}>{quoteData.total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-              </div>
+        {/* Footer Section */}
+        <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '50px', paddingBottom: '30px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '25px', alignItems: 'center' }}>
+            <h4 style={{ fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif", letterSpacing: '2px' }}>DRIPP MEDIA</h4>
+            
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(15px, 4vw, 30px)', color: '#888', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)' }}>
+                <a href="https://www.drippmedia.com" target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', transition: 'color 0.3s' }} onMouseEnter={e => e.target.style.color = '#fff'} onMouseLeave={e => e.target.style.color = '#888'}>
+                   <span style={{ color: '#ebd73f' }}>🌍</span> www.drippmedia.com
+                </a>
+                <a href="mailto:mediadripp@gmail.com" style={{ color: '#888', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', transition: 'color 0.3s' }} onMouseEnter={e => e.target.style.color = '#fff'} onMouseLeave={e => e.target.style.color = '#888'}>
+                   <span style={{ color: '#ebd73f' }}>✉️</span> mediadripp@gmail.com
+                </a>
+                <a href="https://instagram.com/drippmedia_" target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', transition: 'color 0.3s' }} onMouseEnter={e => e.target.style.color = '#fff'} onMouseLeave={e => e.target.style.color = '#888'}>
+                   <span style={{ color: '#ebd73f' }}>📸</span> @drippmedia_
+                </a>
+            </div>
 
-              <div style={{ marginTop: '40px', textAlign: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '30px', width: '100%', maxWidth: '400px' }}>
-                  <p style={{ color: '#888', fontSize: 'clamp(0.85rem, 3.5vw, 1rem)', margin: '0 0 10px 0' }}>Thank you for considering Dripp Media.</p>
-                  <p style={{ color: '#666', fontSize: 'clamp(0.75rem, 3vw, 0.85rem)', margin: 0 }}>This proposal is valid for 30 days.</p>
-              </div>
-          </div>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '12px 30px', borderRadius: '50px', border: '1px solid rgba(255, 255, 255, 0.08)', marginTop: '10px' }}>
+                <p style={{ margin: 0, color: '#aaa', fontSize: 'clamp(0.8rem, 3vw, 0.9rem)' }}>Founded by <strong style={{ color: '#fff' }}>Gurpreet Singh</strong></p>
+            </div>
+            
+            <p style={{ fontSize: '0.75rem', color: '#444', marginTop: '20px', letterSpacing: '1px' }}>© {new Date().getFullYear()} Dripp Media. All Rights Reserved.</p>
         </div>
 
       </div>
