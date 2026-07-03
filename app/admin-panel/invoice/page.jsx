@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import styles from '../admin.module.css';
 import CurrencyConverter from '../components/CurrencyConverter';
+import { allCurrencies } from '../components/currencies';
 
 const DEFAULT_SERVICES = [
   'Video Production - 1 Minute Edit',
@@ -13,13 +14,6 @@ const DEFAULT_SERVICES = [
   'Graphic Design Retainer',
   'Web Development Retainer',
   'SEO Monthly Optimization',
-];
-
-const CURRENCIES = [
-  { label: 'USD ($)', symbol: '$' },
-  { label: 'EUR (€)', symbol: '€' },
-  { label: 'GBP (£)', symbol: '£' },
-  { label: 'INR (₹)', symbol: '₹' },
 ];
 
 export default function InvoiceMaker() {
@@ -64,6 +58,14 @@ export default function InvoiceMaker() {
     dueDate: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
     notes: 'Payment is due within 15 days. Thank you for your business!'
   });
+
+  // Fix timezone issue on mount
+  useEffect(() => {
+    const tzOffsetMs = new Date().getTimezoneOffset() * 60000;
+    const localDate = new Date(Date.now() - tzOffsetMs).toISOString().split('T')[0];
+    const dueLocalDate = new Date(Date.now() - tzOffsetMs + 15 * 86400000).toISOString().split('T')[0];
+    setInvoiceDetails(prev => ({ ...prev, date: localDate, dueDate: dueLocalDate }));
+  }, []);
 
   const [clientDetails, setClientDetails] = useState({
     name: '',
@@ -290,9 +292,13 @@ export default function InvoiceMaker() {
     setInvoiceDetails(updatedInvoice);
     setSmartText(''); 
     
+    // Switch to Filling animation phase
     setIsAutoFilling(false);
-    setIsAutoFillSuccess(true);
-    setTimeout(() => setIsAutoFillSuccess(false), 2000);
+    setIsAutoFillSuccess(true); // Re-using this state to mean "filling phase"
+    
+    // Brief delay to show "filling" state
+    await new Promise(r => setTimeout(r, 600));
+    setIsAutoFillSuccess(false);
   };
 
   const handleClearForm = () => {
@@ -546,11 +552,11 @@ export default function InvoiceMaker() {
               style={{ resize: 'vertical', marginBottom: '15px' }} 
             />
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSmartPaste} disabled={isAutoFilling} style={{ background: isAutoFillSuccess ? '#4ade80' : '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: isAutoFilling ? 'wait' : 'pointer', fontWeight: 'bold', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}>
+              <button onClick={handleSmartPaste} disabled={isAutoFilling || isAutoFillSuccess} style={{ background: isAutoFillSuccess ? '#ebd73f' : '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: (isAutoFilling || isAutoFillSuccess) ? 'wait' : 'pointer', fontWeight: 'bold', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}>
                 {isAutoFilling ? (
                    <><Loader size={18} className={styles.spin} /> Analyzing text...</>
                 ) : isAutoFillSuccess ? (
-                   <><CheckCircle2 size={18} /> Success!</>
+                   <><div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #000', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} /> Filling form...</>
                 ) : (
                    'Auto-Fill Invoice'
                 )}
@@ -616,8 +622,10 @@ export default function InvoiceMaker() {
               </div>
               <div>
                  <label className={styles.label}>Currency</label>
-                 <select value={invoiceDetails.currency} onChange={e => handleInvoiceChange('currency', e.target.value)} className={styles.inputField}>
-                    {CURRENCIES.map(c => <option key={c.symbol} value={c.symbol}>{c.label}</option>)}
+                 <select value={invoiceDetails.currency} onChange={e => setInvoiceDetails({...invoiceDetails, currency: e.target.value})} className={styles.inputField}>
+                    {allCurrencies.map(c => (
+                        <option key={c.code} value={c.symbol}>{c.code} ({c.symbol})</option>
+                    ))}
                  </select>
               </div>
               <div>

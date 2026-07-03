@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import styles from '../admin.module.css';
 import CurrencyConverter from '../components/CurrencyConverter';
+import { allCurrencies } from '../components/currencies';
 
 const DEFAULT_SERVICES = [
   'Custom Landing Page Design',
@@ -18,11 +19,10 @@ const DEFAULT_SERVICES = [
   'Google Business Profile Setup'
 ];
 
-const CURRENCIES = [
-  { label: 'USD ($)', symbol: '$' },
-  { label: 'EUR (€)', symbol: '€' },
-  { label: 'GBP (£)', symbol: '£' },
-  { label: 'INR (₹)', symbol: '₹' },
+const DEFAULT_MODALITIES = [
+  'Project Basis',
+  'Monthly / Retainer Basis',
+  'Hourly Rate',
 ];
 
 export default function QuoteMaker() {
@@ -44,11 +44,19 @@ export default function QuoteMaker() {
   // Quote Details
   const [quoteDetails, setQuoteDetails] = useState({
     number: 'QT-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
     currency: '₹',
     projectDuration: '',
     expectedDelivery: '',
     message: "At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality. While our rates reflect this premium standard, our results ensure you never have to second-guess the investment."
   });
+
+  // Fix timezone issue on mount
+  useEffect(() => {
+    const tzOffsetMs = new Date().getTimezoneOffset() * 60000;
+    const localDate = new Date(Date.now() - tzOffsetMs).toISOString().split('T')[0];
+    setQuoteDetails(prev => ({ ...prev, date: localDate }));
+  }, []);
 
   // Services
   const [items, setItems] = useState([
@@ -206,9 +214,13 @@ export default function QuoteMaker() {
     setQuoteDetails(updatedQuote);
     setSmartText(''); 
     
+    // Switch to Filling animation phase
     setIsAutoFilling(false);
-    setIsAutoFillSuccess(true);
-    setTimeout(() => setIsAutoFillSuccess(false), 2000);
+    setIsAutoFillSuccess(true); // Re-using this state to mean "filling phase"
+    
+    // Brief delay to show "filling" state
+    await new Promise(r => setTimeout(r, 600));
+    setIsAutoFillSuccess(false);
   };
 
   const handleClearForm = () => {
@@ -373,13 +385,13 @@ export default function QuoteMaker() {
               style={{ resize: 'vertical', marginBottom: '15px' }} 
             />
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSmartPaste} disabled={isAutoFilling} style={{ background: isAutoFillSuccess ? '#4ade80' : '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: isAutoFilling ? 'wait' : 'pointer', fontWeight: 'bold', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}>
+              <button onClick={handleSmartPaste} disabled={isAutoFilling || isAutoFillSuccess} style={{ background: isAutoFillSuccess ? '#ebd73f' : '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: (isAutoFilling || isAutoFillSuccess) ? 'wait' : 'pointer', fontWeight: 'bold', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}>
                 {isAutoFilling ? (
                    <><Loader size={18} className={styles.spin} /> Analyzing text...</>
                 ) : isAutoFillSuccess ? (
-                   <><CheckCircle2 size={18} /> Success!</>
+                   <><div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #000', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} /> Filling form...</>
                 ) : (
-                   'Auto-Fill Quote'
+                   'Auto-Fill Package'
                 )}
               </button>
               <button onClick={handleClearForm} style={{ background: 'transparent', color: '#ff4d4d', border: '1px solid #ff4d4d', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
@@ -431,7 +443,7 @@ export default function QuoteMaker() {
               <div style={{ flex: 1 }}>
                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Currency</label>
                  <select value={quoteDetails.currency} onChange={e => handleQuoteChange('currency', e.target.value)} className={styles.inputField} >
-                    {CURRENCIES.map(c => <option key={c.symbol} value={c.symbol}>{c.label}</option>)}
+                    {allCurrencies.map(c => <option key={c.code} value={c.symbol}>{c.code} ({c.symbol})</option>)}
                  </select>
               </div>
             </div>
