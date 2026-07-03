@@ -469,7 +469,7 @@ export default function QuoteMaker() {
               placeholder="e.g. Client: John Doe. Phone: 555-1234. Email: john@doe.com. We need a Website Redesign for $1500 and Monthly SEO for $500."
               className={styles.inputField} 
               rows={4} 
-              style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white', resize: 'vertical', marginBottom: '15px' }} 
+              style={{ resize: 'vertical', marginBottom: '15px' }} 
             />
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={handleSmartPaste} style={{ background: '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}>
@@ -489,23 +489,23 @@ export default function QuoteMaker() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div>
                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Client Name</label>
-                 <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="John Doe" className={styles.inputField} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white' }} />
+                 <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="John Doe" className={styles.inputField}  />
               </div>
               <div>
                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Brand Name</label>
-                 <input type="text" value={clientDetails.brandName} onChange={e => handleClientChange('brandName', e.target.value)} placeholder="Acme Corp" className={styles.inputField} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white' }} />
+                 <input type="text" value={clientDetails.brandName} onChange={e => handleClientChange('brandName', e.target.value)} placeholder="Acme Corp" className={styles.inputField}  />
               </div>
               <div>
                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Email Address</label>
-                 <input type="email" value={clientDetails.email} onChange={e => handleClientChange('email', e.target.value)} placeholder="john@acme.com" className={styles.inputField} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white' }} />
+                 <input type="email" value={clientDetails.email} onChange={e => handleClientChange('email', e.target.value)} placeholder="john@acme.com" className={styles.inputField}  />
               </div>
               <div>
                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Mobile Number</label>
-                 <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="+1 555-0199" className={styles.inputField} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white' }} />
+                 <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="+1 555-0199" className={styles.inputField}  />
               </div>
               <div>
                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Date</label>
-                 <input type="date" value={clientDetails.date} onChange={e => handleClientChange('date', e.target.value)} className={styles.inputField} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white' }} />
+                 <input type="date" value={clientDetails.date} onChange={e => handleClientChange('date', e.target.value)} className={styles.inputField}  />
               </div>
             </div>
           </div>
@@ -519,21 +519,21 @@ export default function QuoteMaker() {
             <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
               <div style={{ flex: 1 }}>
                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Quotation Number</label>
-                 <input type="text" value={quoteDetails.number} onChange={e => handleQuoteChange('number', e.target.value)} className={styles.inputField} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white' }} />
+                 <input type="text" value={quoteDetails.number} onChange={e => handleQuoteChange('number', e.target.value)} className={styles.inputField}  />
               </div>
               <div style={{ flex: 1 }}>
                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Currency</label>
-                 <select value={quoteDetails.currency} onChange={e => handleQuoteChange('currency', e.target.value)} className={styles.inputField} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white' }}>
+                 <select value={quoteDetails.currency} onChange={e => handleQuoteChange('currency', e.target.value)} className={styles.inputField} >
                     {CURRENCIES.map(c => <option key={c.symbol} value={c.symbol}>{c.label}</option>)}
                  </select>
               </div>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '10px' }}>Modality</label>
+              <label className={styles.label}>Modality</label>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => setPackageType('project')} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: packageType === 'project' ? '1px solid #ebd73f' : '1px solid #333', background: packageType === 'project' ? 'rgba(235, 215, 63, 0.1)' : '#111', color: packageType === 'project' ? '#ebd73f' : 'white', cursor: 'pointer' }}>Project Basis</button>
-                <button onClick={() => setPackageType('monthly')} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: packageType === 'monthly' ? '1px solid #ebd73f' : '1px solid #333', background: packageType === 'monthly' ? 'rgba(235, 215, 63, 0.1)' : '#111', color: packageType === 'monthly' ? '#ebd73f' : 'white', cursor: 'pointer' }}>Monthly / Retainer Basis</button>
+                <button onClick={() => setPackageType('project')} className={styles.btn} style={{ flex: 1, borderColor: packageType === 'project' ? '#ebd73f' : 'rgba(255,255,255,0.1)', background: packageType === 'project' ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.05)', color: packageType === 'project' ? '#ebd73f' : 'white' }}>Project Basis</button>
+                <button onClick={() => setPackageType('monthly')} className={styles.btn} style={{ flex: 1, borderColor: packageType === 'monthly' ? '#ebd73f' : 'rgba(255,255,255,0.1)', background: packageType === 'monthly' ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.05)', color: packageType === 'monthly' ? '#ebd73f' : 'white' }}>Monthly / Retainer Basis</button>
               </div>
             </div>
 
@@ -541,18 +541,18 @@ export default function QuoteMaker() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
                 <div>
                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Project Duration (e.g. 4 Weeks)</label>
-                   <input type="text" value={quoteDetails.projectDuration} onChange={e => handleQuoteChange('projectDuration', e.target.value)} className={styles.inputField} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white' }} />
+                   <input type="text" value={quoteDetails.projectDuration} onChange={e => handleQuoteChange('projectDuration', e.target.value)} className={styles.inputField}  />
                 </div>
                 <div>
                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Expected Delivery Date</label>
-                   <input type="date" value={quoteDetails.expectedDelivery} onChange={e => handleQuoteChange('expectedDelivery', e.target.value)} className={styles.inputField} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white' }} />
+                   <input type="date" value={quoteDetails.expectedDelivery} onChange={e => handleQuoteChange('expectedDelivery', e.target.value)} className={styles.inputField}  />
                 </div>
               </div>
             )}
 
             <div>
               <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Creative Message / Quality Promise</label>
-              <textarea value={quoteDetails.message} onChange={e => handleQuoteChange('message', e.target.value)} className={styles.inputField} rows={4} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #333', background: '#111', color: 'white', resize: 'vertical' }} />
+              <textarea value={quoteDetails.message} onChange={e => handleQuoteChange('message', e.target.value)} className={styles.inputField} rows={4} style={{ resize: 'vertical' }} />
             </div>
           </div>
 
@@ -562,7 +562,7 @@ export default function QuoteMaker() {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {items.map((item, index) => (
-                <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#1a1a1a', padding: '15px', borderRadius: '8px' }}>
+                <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <div style={{ flex: 2 }}>
                     <input 
                        list="services-list"
@@ -570,7 +570,8 @@ export default function QuoteMaker() {
                        value={item.desc} 
                        onChange={(e) => handleItemChange(index, 'desc', e.target.value)}
                        placeholder="Service Description"
-                       style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px solid #333', color: 'white', borderRadius: '4px' }}
+                       className={styles.inputField}
+                       style={{ padding: '8px 12px' }}
                     />
                     <datalist id="services-list">
                       {DEFAULT_SERVICES.map(s => <option key={s} value={s} />)}
@@ -582,7 +583,8 @@ export default function QuoteMaker() {
                       type="number" 
                       value={item.qty} 
                       onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
-                      style={{ width: '60px', padding: '8px', background: 'transparent', border: '1px solid #333', color: 'white', borderRadius: '4px' }}
+                      className={styles.inputField}
+                      style={{ padding: '8px 12px' }}
                     />
                   </div>
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -591,17 +593,18 @@ export default function QuoteMaker() {
                       type="number" 
                       value={item.rate} 
                       onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-                      style={{ width: '100px', padding: '8px', background: 'transparent', border: '1px solid #333', color: 'white', borderRadius: '4px' }}
+                      className={styles.inputField}
+                      style={{ padding: '8px 12px' }}
                     />
                   </div>
-                  <button onClick={() => removeItem(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '5px' }}>
+                  <button onClick={() => removeItem(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '5px', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity=1} onMouseOut={(e) => e.currentTarget.style.opacity=0.7}>
                     <Trash2 size={18} />
                   </button>
                 </div>
               ))}
             </div>
 
-            <button onClick={addItem} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid #333', color: 'white', padding: '10px 15px', borderRadius: '6px', cursor: 'pointer' }}>
+            <button onClick={addItem} className={styles.btn}>
               <Plus size={16} /> Add Another Service
             </button>
           </div>
@@ -612,21 +615,21 @@ export default function QuoteMaker() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
            
            {/* Actions */}
-           <div className={styles.card} style={{ background: 'linear-gradient(145deg, #1a1a1a, #111)' }}>
+           <div className={styles.card}>
              <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Export & Share</h3>
-             <button onClick={generatePDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#ebd73f', color: '#000', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer', marginBottom: '10px' }}>
+             <button onClick={generatePDF} className={styles.btnPrimary} style={{ width: '100%', padding: '12px', justifyContent: 'center', marginBottom: '15px' }}>
                <Download size={18} /> Download as PDF
              </button>
-             <button onClick={generateSecureLink} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'transparent', color: 'white', border: '1px solid #ebd73f', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+             <button onClick={generateSecureLink} className={styles.btn} style={{ width: '100%', padding: '12px', justifyContent: 'center' }}>
                <Lock size={18} /> Generate Secure Link
              </button>
              
              {shareLink && (
-                <div style={{ marginTop: '15px', padding: '15px', background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '8px' }}>
+                <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '0.75rem' }}>
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
-                   <input type="text" readOnly value={shareLink} style={{ width: '100%', padding: '8px', background: '#000', border: '1px solid #333', color: '#ebd73f', borderRadius: '4px', marginBottom: '10px' }} />
+                   <input type="text" readOnly value={shareLink} className={styles.inputField} style={{ padding: '8px', marginBottom: '10px' }} />
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client Password:</p>
-                   <input type="text" readOnly value={sharePassword} style={{ width: '100%', padding: '8px', background: '#000', border: '1px solid #333', color: 'white', borderRadius: '4px', letterSpacing: '2px', fontWeight: 'bold' }} />
+                   <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold' }} />
                 </div>
              )}
            </div>
@@ -635,11 +638,11 @@ export default function QuoteMaker() {
            <div className={styles.card}>
              <h3 style={{ marginBottom: '15px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
                Templates
-               <button onClick={saveCurrentAsPackage} style={{ background: '#333', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>Save Current</button>
+               <button onClick={saveCurrentAsPackage} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.75rem' }}>Save Current</button>
              </h3>
              <div style={{ position: 'relative', marginBottom: '15px' }}>
-               <Search size={16} style={{ position: 'absolute', left: '10px', top: '10px', color: '#888' }} />
-               <input type="text" placeholder="Search templates..." value={searchTemplate} onChange={e => setSearchTemplate(e.target.value)} style={{ width: '100%', padding: '8px 10px 8px 32px', background: '#111', border: '1px solid #333', color: 'white', borderRadius: '6px' }} />
+               <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
+               <input type="text" placeholder="Search templates..." value={searchTemplate} onChange={e => setSearchTemplate(e.target.value)} className={styles.inputField} style={{ paddingLeft: '40px' }} />
              </div>
              
              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
@@ -647,12 +650,12 @@ export default function QuoteMaker() {
                  <p style={{ fontSize: '0.8rem', color: '#666', textAlign: 'center', padding: '20px 0' }}>No templates found.</p>
                ) : (
                  filteredTemplates.map((pkg, idx) => (
-                   <div key={idx} style={{ background: '#1a1a1a', padding: '12px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.2s' }}>
                      <div>
-                       <div style={{ fontWeight: '500', fontSize: '0.9rem' }}>{pkg.name}</div>
+                       <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{pkg.name}</div>
                        <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '3px' }}>{pkg.type === 'project' ? 'Project' : 'Monthly'} • {pkg.items.length} items</div>
                      </div>
-                     <button onClick={() => loadPackage(pkg)} style={{ background: 'transparent', color: '#ebd73f', border: '1px solid rgba(235, 215, 63, 0.3)', padding: '5px 10px', borderRadius: '4px', fontSize: '0.8rem', cursor: 'pointer' }}>Load</button>
+                     <button onClick={() => loadPackage(pkg)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: 'rgba(235, 215, 63, 0.3)', color: '#ebd73f' }}>Load</button>
                    </div>
                  ))
                )}

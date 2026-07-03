@@ -1,18 +1,15 @@
 
-> final-dripp@1.0.0 dev
-> next dev
+> final-dripp@1.0.0 start
+> next start
 
-▲ Next.js 16.2.9 (Turbopack)
+▲ Next.js 16.2.9
 - Local:         http://localhost:3000
 - Network:       http://192.168.1.88:3000
-- Environments: .env.local
-✓ Ready in 403ms
+✓ Ready in 156ms
 ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
  We detected multiple lockfiles and selected the directory of /Users/gurpreetsingh/Desktop/Dripp Media Website/package-lock.json as the root directory.
- To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
-   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
  Detected additional lockfiles: 
    * /Users/gurpreetsingh/Desktop/Dripp Media Website/Final Dripp/package-lock.json
 
-
-[?25h

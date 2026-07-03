@@ -151,7 +151,7 @@ export default function InvoiceMaker() {
           <div className={styles.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ color: '#ebd73f', margin: 0 }}>Line Items</h3>
-              <button className={styles.btn} onClick={addItem} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+              <button className={styles.btn} onClick={addItem}>
                 <Plus size={16} /> Add Item
               </button>
             </div>
@@ -201,10 +201,10 @@ export default function InvoiceMaker() {
                     </td>
                     <td className={styles.td} style={{ textAlign: 'center' }}>
                       <button 
-                        className={styles.btnDanger} 
-                        style={{ padding: '0.5rem', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                        className={`${styles.btn} ${styles.btnDanger}`} 
                         onClick={() => removeItem(index)}
                         title="Remove Item"
+                        style={{ padding: '0.5rem' }}
                       >
                         <Trash2 size={16} />
                       </button>
