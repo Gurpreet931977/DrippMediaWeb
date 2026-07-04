@@ -54,7 +54,7 @@ export default function QuoteMaker() {
     date: new Date().toISOString().split('T')[0],
     currency: '₹',
     projectDuration: '',
-    expectedDelivery: '',
+    expectedDelivery: '', theme: 'dark',
     message: "At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality. While our rates reflect this premium standard, our results ensure you never have to second-guess the investment."
   });
 
@@ -500,7 +500,7 @@ export default function QuoteMaker() {
       date: localDate,
       currency: '₹',
       projectDuration: '',
-      expectedDelivery: '',
+      expectedDelivery: '', theme: 'dark',
       message: "At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality. While our rates reflect this premium standard, our results ensure you never have to second-guess the investment."
     });
     setItems([{ desc: 'Project Discovery & Strategy', qty: 1, rate: 0 }]);
@@ -630,22 +630,22 @@ export default function QuoteMaker() {
     }
   };
 
-  if (!isClient) return <div style={{padding: '50px', color: 'white'}}>Loading Package Maker...</div>;
+  if (!isClient) return <div style={{padding: '50px', color: quoteDetails.theme === 'light' ? '#111111' : 'white'}}>Loading Package Maker...</div>;
 
   const filteredTemplates = savedPackages.filter(p => p.name.toLowerCase().includes(searchTemplate.toLowerCase()));
 
   return (
-    <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ color: quoteDetails.theme === 'light' ? '#111111' : 'white', maxWidth: '1400px', margin: '0 auto' }}>
 
       {/* CUSTOM DIALOG (ALERT / CONFIRM) */}
       {customDialog.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100000 }}>
           <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-            <h3 style={{ fontSize: '24px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{customDialog.title}</h3>
+            <h3 style={{ fontSize: '24px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{customDialog.title}</h3>
             <p style={{ fontSize: '16px', color: '#ccc', marginBottom: '30px', lineHeight: '1.5' }}>{customDialog.message}</p>
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
               {customDialog.type === 'confirm' && (
-                <button onClick={closeDialog} style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
+                <button onClick={closeDialog} style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: quoteDetails.theme === 'light' ? '#666666' : '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
               )}
               <button 
                 onClick={() => {
@@ -669,10 +669,10 @@ export default function QuoteMaker() {
       {showConflictModal && conflicts[currentConflictIdx] && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#111', border: '1px solid #ebd73f', borderRadius: '12px', padding: '30px', maxWidth: '500px', width: '100%' }}>
-            <h3 style={{ color: '#ebd73f', marginBottom: '20px' }}>Resolve Auto-Fill Conflict</h3>
+            <h3 style={{ color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', marginBottom: '20px' }}>Resolve Auto-Fill Conflict</h3>
             
             <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                <strong style={{ display: 'block', marginBottom: '10px', color: '#fff' }}>{conflicts[currentConflictIdx].label}</strong>
+                <strong style={{ display: 'block', marginBottom: '10px', color: quoteDetails.theme === 'light' ? '#111111' : '#fff' }}>{conflicts[currentConflictIdx].label}</strong>
                 
                 {conflicts[currentConflictIdx].type === 'scalar_multiple' && (
                     <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
@@ -702,7 +702,7 @@ export default function QuoteMaker() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {conflicts[currentConflictIdx].type.startsWith('scalar') && (
                     <>
-                        <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                        <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className={styles.btn} style={{ borderColor: '#ebd73f', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f' }}>
                             Overwrite Current Value
                         </button>
                         <button onClick={() => handleConflictResolution('append')} className={styles.btn}>
@@ -713,7 +713,7 @@ export default function QuoteMaker() {
                 
                 {conflicts[currentConflictIdx].type === 'item_match_rate' && (
                     <>
-                        <button onClick={() => handleConflictResolution('merge')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                        <button onClick={() => handleConflictResolution('merge')} className={styles.btn} style={{ borderColor: '#ebd73f', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f' }}>
                             Merge (Add +{conflicts[currentConflictIdx].item.qty} Quantity)
                         </button>
                         <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
@@ -724,7 +724,7 @@ export default function QuoteMaker() {
                 
                 {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
                     <>
-                        <button onClick={() => handleConflictResolution('merge', 'new')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                        <button onClick={() => handleConflictResolution('merge', 'new')} className={styles.btn} style={{ borderColor: '#ebd73f', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f' }}>
                             Update Rate & Add Quantity
                         </button>
                         <button onClick={() => handleConflictResolution('merge', 'old')} className={styles.btn}>
@@ -740,7 +740,7 @@ export default function QuoteMaker() {
                     Skip / Ignore Pasted Value
                 </button>
             </div>
-            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>
+            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888' }}>
                 Conflict {currentConflictIdx + 1} of {conflicts.length}
             </div>
           </div>
@@ -753,11 +753,11 @@ export default function QuoteMaker() {
               <div style={{ background: 'rgba(255, 77, 77, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
                  <Trash2 size={30} color="#ff4d4d" />
               </div>
-              <h2 style={{ color: '#fff', marginBottom: '15px', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem' }}>Clear Entire Form?</h2>
-              <p style={{ color: '#aaa', marginBottom: '30px', fontSize: '0.9rem', lineHeight: '1.5' }}>This action cannot be undone. All client details, services, and customizations will be permanently erased.</p>
+              <h2 style={{ color: quoteDetails.theme === 'light' ? '#111111' : '#fff', marginBottom: '15px', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem' }}>Clear Entire Form?</h2>
+              <p style={{ color: quoteDetails.theme === 'light' ? '#444444' : '#aaa', marginBottom: '30px', fontSize: '0.9rem', lineHeight: '1.5' }}>This action cannot be undone. All client details, services, and customizations will be permanently erased.</p>
               <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                 <button onClick={() => setShowClearModal(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', flex: 1, fontWeight: 'bold' }}>Cancel</button>
-                 <button onClick={confirmClearForm} style={{ background: '#ff4d4d', border: 'none', color: '#fff', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', flex: 1, fontWeight: 'bold', boxShadow: '0 5px 15px rgba(255,77,77,0.3)' }}>Yes, Clear It</button>
+                 <button onClick={() => setShowClearModal(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: quoteDetails.theme === 'light' ? '#111111' : '#fff', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', flex: 1, fontWeight: 'bold' }}>Cancel</button>
+                 <button onClick={confirmClearForm} style={{ background: '#ff4d4d', border: 'none', color: quoteDetails.theme === 'light' ? '#111111' : '#fff', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', flex: 1, fontWeight: 'bold', boxShadow: '0 5px 15px rgba(255,77,77,0.3)' }}>Yes, Clear It</button>
               </div>
            </div>
         </div>
@@ -774,10 +774,10 @@ export default function QuoteMaker() {
           
           {/* Smart Paste Section */}
           <div className={styles.card} style={{ border: '1px dashed #ebd73f', background: 'rgba(235, 215, 63, 0.05)' }}>
-            <h3 style={{ marginBottom: '10px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ marginBottom: '10px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Search size={20} /> AI Smart Paste
             </h3>
-            <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '15px', lineHeight: 1.4 }}>
+            <p style={{ fontSize: '0.8rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '15px', lineHeight: 1.4 }}>
               Paste an unstructured paragraph of client requirements, meeting notes, or chat messages. 
               We'll automatically extract emails, phone numbers, names, and service prices to build your quote instantly.
             </p>
@@ -814,28 +814,28 @@ export default function QuoteMaker() {
 
           {/* Section 1: Client Details */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ marginBottom: '15px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <FileText size={20} /> Client Information
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Client Name</label>
+                 <label style={{ display: 'block', fontSize: '0.85rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Client Name</label>
                  <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="John Doe" className={styles.inputField}  />
               </div>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Brand Name</label>
+                 <label style={{ display: 'block', fontSize: '0.85rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Brand Name</label>
                  <input type="text" value={clientDetails.brandName} onChange={e => handleClientChange('brandName', e.target.value)} placeholder="Acme Corp" className={styles.inputField}  />
               </div>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Email Address</label>
+                 <label style={{ display: 'block', fontSize: '0.85rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Email Address</label>
                  <input type="email" value={clientDetails.email} onChange={e => handleClientChange('email', e.target.value)} placeholder="john@acme.com" className={styles.inputField}  />
               </div>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Mobile Number</label>
+                 <label style={{ display: 'block', fontSize: '0.85rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Mobile Number</label>
                  <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="+1 555-0199" className={styles.inputField}  />
               </div>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Date</label>
+                 <label style={{ display: 'block', fontSize: '0.85rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Date</label>
                  <input type="date" value={clientDetails.date} onChange={e => handleClientChange('date', e.target.value)} className={styles.inputField}  />
               </div>
             </div>
@@ -843,17 +843,17 @@ export default function QuoteMaker() {
 
           {/* Section 2: Package Settings */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ marginBottom: '15px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Package size={20} /> Package Configuration
             </h3>
             
             <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
               <div style={{ flex: 1 }}>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Quotation Number</label>
+                 <label style={{ display: 'block', fontSize: '0.85rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Quotation Number</label>
                  <input type="text" value={quoteDetails.number} onChange={e => handleQuoteChange('number', e.target.value)} className={styles.inputField}  />
               </div>
               <div style={{ flex: 1 }}>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Currency</label>
+                 <label style={{ display: 'block', fontSize: '0.85rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Currency</label>
                  <select value={quoteDetails.currency} onChange={e => handleQuoteChange('currency', e.target.value)} className={styles.inputField} >
                     {allCurrencies.map(c => <option key={c.code} value={c.symbol}>{c.code} ({c.symbol})</option>)}
                  </select>
@@ -871,25 +871,25 @@ export default function QuoteMaker() {
             {packageType === 'project' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
                 <div>
-                   <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Project Duration (e.g. 4 Weeks)</label>
+                   <label style={{ display: 'block', fontSize: '0.85rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Project Duration (e.g. 4 Weeks)</label>
                    <input type="text" value={quoteDetails.projectDuration} onChange={e => handleQuoteChange('projectDuration', e.target.value)} className={styles.inputField}  />
                 </div>
                 <div>
-                   <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Expected Delivery Date</label>
+                   <label style={{ display: 'block', fontSize: '0.85rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Expected Delivery Date</label>
                    <input type="date" value={quoteDetails.expectedDelivery} onChange={e => handleQuoteChange('expectedDelivery', e.target.value)} className={styles.inputField}  />
                 </div>
               </div>
             )}
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Creative Message / Quality Promise</label>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Creative Message / Quality Promise</label>
               <textarea value={quoteDetails.message} onChange={e => handleQuoteChange('message', e.target.value)} className={styles.inputField} rows={4} style={{ resize: 'vertical' }} />
             </div>
           </div>
 
           {/* Section 3: Services & Rates */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Services List</h3>
+            <h3 style={{ marginBottom: '15px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f' }}>Services List</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {items.map((item, index) => (
@@ -909,7 +909,7 @@ export default function QuoteMaker() {
                     </datalist>
                   </div>
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{color: '#888'}}>Qty</span>
+                    <span style={{color: quoteDetails.theme === 'light' ? '#666666' : '#888'}}>Qty</span>
                     <input 
                       type="number" 
                       value={item.qty} 
@@ -919,7 +919,7 @@ export default function QuoteMaker() {
                     />
                   </div>
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{color: '#888'}}>{quoteDetails.currency}</span>
+                    <span style={{color: quoteDetails.theme === 'light' ? '#666666' : '#888'}}>{quoteDetails.currency}</span>
                     <input 
                       type="number" 
                       value={item.rate} 
@@ -928,7 +928,7 @@ export default function QuoteMaker() {
                       style={{ padding: '8px 12px' }}
                     />
                   </div>
-                  <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '100px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
+                  <div style={{ padding: '0 10px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '100px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
                      <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toFixed(2)}
                   </div>
                   <button onClick={() => removeItem(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '5px', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity=1} onMouseOut={(e) => e.currentTarget.style.opacity=0.7}>
@@ -943,8 +943,8 @@ export default function QuoteMaker() {
             </button>
             
             <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-               <span style={{ fontSize: '1.1rem', color: '#888' }}>Total Amount:</span>
-               <span style={{ fontSize: '1.3rem', color: '#ebd73f', fontWeight: 'bold' }}>{quoteDetails.currency}{total.toFixed(2)}</span>
+               <span style={{ fontSize: '1.1rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888' }}>Total Amount:</span>
+               <span style={{ fontSize: '1.3rem', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontWeight: 'bold' }}>{quoteDetails.currency}{total.toFixed(2)}</span>
             </div>
           </div>
 
@@ -957,7 +957,7 @@ export default function QuoteMaker() {
 
            {/* Actions */}
            <div className={styles.card}>
-             <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Export & Share</h3>
+             <h3 style={{ marginBottom: '15px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f' }}>Export & Share</h3>
              <button onClick={generatePDF} className={styles.btnPrimary} style={{ width: '100%', padding: '12px', justifyContent: 'center', marginBottom: '15px' }}>
                <Download size={18} /> Download as PDF
              </button>
@@ -967,14 +967,14 @@ export default function QuoteMaker() {
              
              {shareLink && (
                 <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '0.75rem' }}>
-                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
+                   <p style={{ fontSize: '0.8rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
                    <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                       <input type="text" readOnly value={shareLink} onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} className={styles.inputField} style={{ padding: '8px', flex: 1, cursor: 'pointer' }} title="Click to open link directly" />
                       <button onClick={() => copyToClipboard(shareLink, 'link')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link">
                         {copiedItem === 'link' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
                       </button>
                    </div>
-                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client PIN:</p>
+                   <p style={{ fontSize: '0.8rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginBottom: '5px' }}>Client PIN:</p>
                    <div style={{ display: 'flex', gap: '8px' }}>
                       <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
                       <button onClick={() => copyToClipboard(sharePassword, 'password')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy PIN">
@@ -994,12 +994,12 @@ export default function QuoteMaker() {
 
            {/* Templates Manager */}
            <div className={styles.card}>
-             <h3 style={{ marginBottom: '15px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+             <h3 style={{ marginBottom: '15px', color: quoteDetails.theme === 'light' ? '#111111' : 'white', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
                Templates
                <button onClick={saveCurrentAsPackage} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.75rem' }}>Save Current</button>
              </h3>
              <div style={{ position: 'relative', marginBottom: '15px' }}>
-               <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
+               <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: quoteDetails.theme === 'light' ? '#666666' : '#888' }} />
                <input type="text" placeholder="Search templates..." value={searchTemplate} onChange={e => setSearchTemplate(e.target.value)} className={styles.inputField} style={{ paddingLeft: '40px' }} />
              </div>
              
@@ -1011,9 +1011,9 @@ export default function QuoteMaker() {
                    <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.2s' }}>
                      <div>
                        <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{pkg.name}</div>
-                       <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '3px' }}>{pkg.type === 'project' ? 'Project' : 'Monthly'} • {pkg.items.length} items</div>
+                       <div style={{ fontSize: '0.75rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888', marginTop: '3px' }}>{pkg.type === 'project' ? 'Project' : 'Monthly'} • {pkg.items.length} items</div>
                      </div>
-                     <button onClick={() => loadPackage(pkg)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: 'rgba(235, 215, 63, 0.3)', color: '#ebd73f' }}>Load</button>
+                     <button onClick={() => loadPackage(pkg)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: 'rgba(235, 215, 63, 0.3)', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f' }}>Load</button>
                    </div>
                  ))
                )}
@@ -1027,7 +1027,7 @@ export default function QuoteMaker() {
       <div style={{ marginTop: "40px" }}>
           {/* PDF PAGE BUILDER */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '30px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', borderBottom: '1px solid rgba(235, 215, 63, 0.2)', paddingBottom: '15px' }}>
+            <h3 style={{ marginBottom: '30px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', borderBottom: '1px solid rgba(235, 215, 63, 0.2)', paddingBottom: '15px' }}>
               <Layers size={20} /> PDF Pages & Layout
             </h3>
             
@@ -1081,12 +1081,12 @@ export default function QuoteMaker() {
                   {pdfPages[selectedPageIndex] && (
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                             <h4 style={{ color: '#ebd73f', margin: 0, textTransform: 'capitalize' }}>
+                             <h4 style={{ color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: 0, textTransform: 'capitalize' }}>
                                  {pdfPages[selectedPageIndex].type.replace('_', ' ')} Settings
                              </h4>
                              <button 
                                 onClick={() => updatePage(selectedPageIndex, 'hideHeading', !pdfPages[selectedPageIndex].hideHeading)}
-                                style={{ background: 'transparent', border: '1px solid #333', padding: '5px 10px', borderRadius: '6px', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                                style={{ background: 'transparent', border: '1px solid #333', padding: '5px 10px', borderRadius: '6px', color: quoteDetails.theme === 'light' ? '#666666' : '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
                              >
                                  {pdfPages[selectedPageIndex].hideHeading ? <><EyeOff size={14}/> Heading Hidden</> : <><Eye size={14}/> Heading Visible</>}
                              </button>
@@ -1135,7 +1135,7 @@ export default function QuoteMaker() {
                                     {pdfPages[selectedPageIndex].cards?.map((card, cIdx) => (
                                         <div key={cIdx} style={{ background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid #222' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                                <span style={{ fontSize: '0.8rem', color: '#888' }}>Card {cIdx + 1}</span>
+                                                <span style={{ fontSize: '0.8rem', color: quoteDetails.theme === 'light' ? '#666666' : '#888' }}>Card {cIdx + 1}</span>
                                                 <button onClick={() => removeCard(selectedPageIndex, cIdx)} style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer' }}><Trash2 size={12} /></button>
                                             </div>
                                             <input type="text" value={card.title} onChange={e => updateCard(selectedPageIndex, cIdx, 'title', e.target.value)} className={styles.inputField} style={{ padding: '8px', marginBottom: '10px', fontSize: '0.9rem' }} placeholder="Card Title" />
@@ -1150,17 +1150,17 @@ export default function QuoteMaker() {
                          )}
 
                          {pdfPages[selectedPageIndex].type === 'services' && (
-                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem' }}>
+                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: quoteDetails.theme === 'light' ? '#666666' : '#888', fontSize: '0.85rem' }}>
                                  The Scope of Work details are managed in the "Services & Scope" section above. This page simply formats them for the PDF.
                              </div>
                          )}
                          {pdfPages[selectedPageIndex].type === 'investment' && (
-                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem' }}>
+                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: quoteDetails.theme === 'light' ? '#666666' : '#888', fontSize: '0.85rem' }}>
                                  The Investment breakdown is calculated automatically from your Services above.
                              </div>
                          )}
                          {pdfPages[selectedPageIndex].type === 'next_steps' && (
-                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem' }}>
+                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: quoteDetails.theme === 'light' ? '#666666' : '#888', fontSize: '0.85rem' }}>
                                  The personal message is pulled from the "Quality Promise / Message" field in the Package Configuration section.
                              </div>
                          )}
@@ -1176,38 +1176,38 @@ export default function QuoteMaker() {
 
 
       <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-        <div ref={pdfRef} style={{ width: '800px', background: '#0a0a0a', padding: '60px', color: 'white', fontFamily: 'Arial, sans-serif' }}>
+        <div ref={pdfRef} style={{ width: '800px', background: '#0a0a0a', padding: '60px', color: quoteDetails.theme === 'light' ? '#111111' : 'white', fontFamily: 'Arial, sans-serif' }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #ebd73f', paddingBottom: '30px', marginBottom: '30px' }}>
             <div>
               <h1 style={{ fontSize: '2.5rem', margin: '0 0 10px 0', letterSpacing: '-1px' }}>DRIPP MEDIA</h1>
-              <p style={{ color: '#888', margin: 0 }}>Premium Digital Solutions</p>
+              <p style={{ color: quoteDetails.theme === 'light' ? '#666666' : '#888', margin: 0 }}>Premium Digital Solutions</p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <h2 style={{ fontSize: '1.5rem', color: '#ebd73f', margin: '0 0 10px 0' }}>PROPOSAL</h2>
-              <p style={{ color: '#888', margin: 0 }}>{quoteDetails.number}</p>
-              <p style={{ color: '#888', margin: 0 }}>Date: {clientDetails.date}</p>
+              <h2 style={{ fontSize: '1.5rem', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 10px 0' }}>PROPOSAL</h2>
+              <p style={{ color: quoteDetails.theme === 'light' ? '#666666' : '#888', margin: 0 }}>{quoteDetails.number}</p>
+              <p style={{ color: quoteDetails.theme === 'light' ? '#666666' : '#888', margin: 0 }}>Date: {clientDetails.date}</p>
             </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
             <div>
-              <h3 style={{ color: '#ebd73f', fontSize: '1rem', marginBottom: '10px' }}>PREPARED FOR:</h3>
+              <h3 style={{ color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontSize: '1rem', marginBottom: '10px' }}>PREPARED FOR:</h3>
               <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>{clientDetails.name}</p>
               <p style={{ margin: '0 0 5px 0' }}>{clientDetails.brandName}</p>
-              <p style={{ margin: '0 0 5px 0', color: '#888' }}>{clientDetails.email}</p>
-              <p style={{ margin: 0, color: '#888' }}>{clientDetails.mobile}</p>
+              <p style={{ margin: '0 0 5px 0', color: quoteDetails.theme === 'light' ? '#666666' : '#888' }}>{clientDetails.email}</p>
+              <p style={{ margin: 0, color: quoteDetails.theme === 'light' ? '#666666' : '#888' }}>{clientDetails.mobile}</p>
             </div>
             {packageType === 'project' && (
                <div style={{ textAlign: 'right' }}>
-                 <h3 style={{ color: '#ebd73f', fontSize: '1rem', marginBottom: '10px' }}>PROJECT DETAILS:</h3>
+                 <h3 style={{ color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontSize: '1rem', marginBottom: '10px' }}>PROJECT DETAILS:</h3>
                  <p style={{ margin: '0 0 5px 0' }}>Duration: {quoteDetails.projectDuration}</p>
                  <p style={{ margin: 0 }}>Expected Delivery: {quoteDetails.expectedDelivery}</p>
                </div>
             )}
             {packageType === 'monthly' && (
                <div style={{ textAlign: 'right' }}>
-                 <h3 style={{ color: '#ebd73f', fontSize: '1rem', marginBottom: '10px' }}>PACKAGE DETAILS:</h3>
+                 <h3 style={{ color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontSize: '1rem', marginBottom: '10px' }}>PACKAGE DETAILS:</h3>
                  <p style={{ margin: 0 }}>Recurring Monthly Retainer</p>
                </div>
             )}
@@ -1220,10 +1220,10 @@ export default function QuoteMaker() {
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '40px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #333' }}>
-                <th style={{ textAlign: 'left', padding: '15px 0', color: '#888' }}>Description</th>
-                <th style={{ textAlign: 'center', padding: '15px 0', color: '#888' }}>Qty</th>
-                <th style={{ textAlign: 'right', padding: '15px 0', color: '#888' }}>Rate</th>
-                <th style={{ textAlign: 'right', padding: '15px 0', color: '#888' }}>Amount</th>
+                <th style={{ textAlign: 'left', padding: '15px 0', color: quoteDetails.theme === 'light' ? '#666666' : '#888' }}>Description</th>
+                <th style={{ textAlign: 'center', padding: '15px 0', color: quoteDetails.theme === 'light' ? '#666666' : '#888' }}>Qty</th>
+                <th style={{ textAlign: 'right', padding: '15px 0', color: quoteDetails.theme === 'light' ? '#666666' : '#888' }}>Rate</th>
+                <th style={{ textAlign: 'right', padding: '15px 0', color: quoteDetails.theme === 'light' ? '#666666' : '#888' }}>Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -1242,9 +1242,9 @@ export default function QuoteMaker() {
             <div style={{ width: '300px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 0', borderTop: '2px solid #ebd73f' }}>
                 <strong style={{ fontSize: '1.2rem' }}>Total:</strong>
-                <strong style={{ fontSize: '1.2rem', color: '#ebd73f' }}>{quoteDetails.currency}{total.toFixed(2)}</strong>
+                <strong style={{ fontSize: '1.2rem', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f' }}>{quoteDetails.currency}{total.toFixed(2)}</strong>
               </div>
-              {packageType === 'monthly' && <p style={{ textAlign: 'right', color: '#888', fontSize: '0.85rem' }}>*Billed monthly</p>}
+              {packageType === 'monthly' && <p style={{ textAlign: 'right', color: quoteDetails.theme === 'light' ? '#666666' : '#888', fontSize: '0.85rem' }}>*Billed monthly</p>}
             </div>
           </div>
 
@@ -1260,7 +1260,7 @@ export default function QuoteMaker() {
                   
                   {/* Common Header if not hidden and not cover/investment */}
                   {!page.hideHeading && page.type !== 'cover' && page.type !== 'investment' && (
-                      <div style={{ marginBottom: '60px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                      <div style={{ marginBottom: '60px', borderBottom: quoteDetails.theme === 'light' ? '2px solid rgba(181, 161, 16, 0.3)' : '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
                           <h1 className={styles.pdfTitle} style={{ margin: 0, fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
                       </div>
                   )}
@@ -1269,24 +1269,24 @@ export default function QuoteMaker() {
                   {page.type === 'cover' && (
                       <>
                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                             <h1 style={{ fontSize: '120px', color: '#ebd73f', margin: 0, letterSpacing: '-4px', fontWeight: '900', fontFamily: "'Panchang', sans-serif" }}>DRIPP MEDIA</h1>
-                             {!page.hideHeading && <p style={{ fontSize: '32px', color: '#888', margin: '10px 0 0 0', fontWeight: '300' }}>{page.title}</p>}
+                             <h1 style={{ fontSize: '120px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: 0, letterSpacing: '-4px', fontWeight: '900', fontFamily: "'Panchang', sans-serif" }}>DRIPP MEDIA</h1>
+                             {!page.hideHeading && <p style={{ fontSize: '32px', color: quoteDetails.theme === 'light' ? '#666666' : '#888', margin: '10px 0 0 0', fontWeight: '300' }}>{page.title}</p>}
                          </div>
                          
                          <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                             <p style={{ fontSize: '24px', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px' }}>{page.subtitle}</p>
-                             <h2 style={{ fontSize: '80px', color: '#fff', margin: '0 0 10px 0', lineHeight: 1.1, fontFamily: "'Panchang', sans-serif" }}>{clientDetails.brandName || clientDetails.name || 'Client'}</h2>
-                             <p style={{ fontSize: '30px', color: '#aaa', margin: 0 }}>{clientDetails.name ? clientDetails.name + ' | ' : ''}{clientDetails.email}</p>
+                             <p style={{ fontSize: '24px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px' }}>{page.subtitle}</p>
+                             <h2 style={{ fontSize: '80px', color: quoteDetails.theme === 'light' ? '#111111' : '#fff', margin: '0 0 10px 0', lineHeight: 1.1, fontFamily: "'Panchang', sans-serif" }}>{clientDetails.brandName || clientDetails.name || 'Client'}</h2>
+                             <p style={{ fontSize: '30px', color: quoteDetails.theme === 'light' ? '#444444' : '#aaa', margin: 0 }}>{clientDetails.name ? clientDetails.name + ' | ' : ''}{clientDetails.email}</p>
                          </div>
                          
                          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid rgba(235, 215, 63, 0.3)', paddingTop: '40px', marginTop: 'auto' }}>
                              <div>
                                  <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Date</p>
-                                 <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{clientDetails.date}</p>
+                                 <p style={{ fontSize: '28px', color: quoteDetails.theme === 'light' ? '#111111' : '#fff', margin: 0 }}>{clientDetails.date}</p>
                              </div>
                              <div style={{ textAlign: 'right' }}>
                                  <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Proposal Number</p>
-                                 <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{quoteDetails.number}</p>
+                                 <p style={{ fontSize: '28px', color: quoteDetails.theme === 'light' ? '#111111' : '#fff', margin: 0 }}>{quoteDetails.number}</p>
                              </div>
                          </div>
                       </>
@@ -1298,8 +1298,8 @@ export default function QuoteMaker() {
                           {items.slice(0, 5).map((item, i) => (
                               <div key={i} className={styles.pdfServiceCard}>
                                   <div style={{ flex: 1 }}>
-                                      <h3 style={{ fontSize: '36px', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h3>
-                                      <p style={{ fontSize: '24px', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {quoteDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</p>
+                                      <h3 style={{ fontSize: '36px', color: quoteDetails.theme === 'light' ? '#111111' : '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h3>
+                                      <p style={{ fontSize: '24px', color: quoteDetails.theme === 'light' ? '#666666' : '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {quoteDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</p>
                                   </div>
                                   <div className={styles.pdfAmount}>
                                       <span style={{ color: '#666' }}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toLocaleString()}
@@ -1307,7 +1307,7 @@ export default function QuoteMaker() {
                               </div>
                           ))}
                           {items.length > 5 && (
-                              <div style={{ fontSize: '24px', color: '#888', textAlign: 'center', marginTop: '20px' }}>
+                              <div style={{ fontSize: '24px', color: quoteDetails.theme === 'light' ? '#666666' : '#888', textAlign: 'center', marginTop: '20px' }}>
                                   + {items.length - 5} more items detailed in the full agreement.
                               </div>
                           )}
@@ -1318,25 +1318,25 @@ export default function QuoteMaker() {
                   {page.type === 'investment' && (
                       <>
                         {!page.hideHeading && (
-                            <div style={{ marginBottom: '80px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                            <div style={{ marginBottom: '80px', borderBottom: quoteDetails.theme === 'light' ? '2px solid rgba(181, 161, 16, 0.3)' : '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
                                 <h1 className={styles.pdfTitle} style={{ margin: 0, fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
                             </div>
                         )}
                         <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '24px', padding: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                            <p style={{ fontSize: '30px', color: '#888', textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px' }}>Total {packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
+                            <p style={{ fontSize: '30px', color: quoteDetails.theme === 'light' ? '#666666' : '#888', textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px' }}>Total {packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
                             
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: '20px' }}>
-                                <span style={{ fontSize: '60px', color: '#ebd73f', fontWeight: '500' }}>{quoteDetails.currency}</span>
-                                <span style={{ fontSize: '180px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-5px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{total.toLocaleString()}</span>
+                                <span style={{ fontSize: '60px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontWeight: '500' }}>{quoteDetails.currency}</span>
+                                <span style={{ fontSize: '180px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontWeight: '900', letterSpacing: '-5px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{total.toLocaleString()}</span>
                             </div>
                             
                             {packageType === 'monthly' && (
-                                <p style={{ fontSize: '24px', color: '#aaa', marginTop: '20px' }}>*Billed monthly. Cancel anytime with 30 days notice.</p>
+                                <p style={{ fontSize: '24px', color: quoteDetails.theme === 'light' ? '#444444' : '#aaa', marginTop: '20px' }}>*Billed monthly. Cancel anytime with 30 days notice.</p>
                             )}
                             {packageType === 'project' && (
                                 <div style={{ display: 'flex', gap: '40px', marginTop: '40px' }}>
-                                    <p style={{ fontSize: '24px', color: '#aaa' }}><strong style={{color: '#fff'}}>Duration:</strong> {quoteDetails.projectDuration}</p>
-                                    <p style={{ fontSize: '24px', color: '#aaa' }}><strong style={{color: '#fff'}}>Delivery:</strong> {quoteDetails.expectedDelivery}</p>
+                                    <p style={{ fontSize: '24px', color: quoteDetails.theme === 'light' ? '#444444' : '#aaa' }}><strong style={{color: quoteDetails.theme === 'light' ? '#111111' : '#fff'}}>Duration:</strong> {quoteDetails.projectDuration}</p>
+                                    <p style={{ fontSize: '24px', color: quoteDetails.theme === 'light' ? '#444444' : '#aaa' }}><strong style={{color: quoteDetails.theme === 'light' ? '#111111' : '#fff'}}>Delivery:</strong> {quoteDetails.expectedDelivery}</p>
                                 </div>
                             )}
                         </div>
@@ -1348,14 +1348,14 @@ export default function QuoteMaker() {
                       <>
                         {quoteDetails.message && (
                             <div style={{ borderLeft: '8px solid #ebd73f', paddingLeft: '40px', margin: '60px 0', maxWidth: '1400px' }}>
-                                <p style={{ fontSize: '36px', color: '#fff', fontStyle: 'italic', lineHeight: 1.5, margin: 0 }}>
+                                <p style={{ fontSize: '36px', color: quoteDetails.theme === 'light' ? '#111111' : '#fff', fontStyle: 'italic', lineHeight: 1.5, margin: 0 }}>
                                     "{quoteDetails.message}"
                                 </p>
                             </div>
                         )}
                         <div style={{ marginTop: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', background: '#111', padding: '60px', borderRadius: '24px' }}>
                             <div>
-                                <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>How to Proceed</h3>
+                                <h3 style={{ fontSize: '32px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>How to Proceed</h3>
                                 <ol style={{ fontSize: '24px', color: '#ccc', lineHeight: 1.8, margin: 0, paddingLeft: '30px' }}>
                                     <li>Review this proposal and ensure it aligns with your vision.</li>
                                     <li>Let us know if you need any adjustments.</li>
@@ -1363,7 +1363,7 @@ export default function QuoteMaker() {
                                 </ol>
                             </div>
                             <div>
-                                <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>Contact Us</h3>
+                                <h3 style={{ fontSize: '32px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>Contact Us</h3>
                                 <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Founder: Gurpreet Singh</p>
                                 <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Email: mediadripp@gmail.com</p>
                                 <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0' }}>Instagram: @drippmedia_</p>
@@ -1387,7 +1387,7 @@ export default function QuoteMaker() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', flex: 1, alignContent: 'center' }}>
                           {page.cards?.map((card, idx) => (
                               <div key={idx} style={{ background: '#111', border: '1px solid #333', borderRadius: '24px', padding: '60px' }}>
-                                  <h3 style={{ fontSize: '42px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{card.title}</h3>
+                                  <h3 style={{ fontSize: '42px', color: quoteDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{card.title}</h3>
                                   <p style={{ fontSize: '28px', color: '#ccc', lineHeight: 1.6, margin: 0 }}>{card.desc}</p>
                               </div>
                           ))}

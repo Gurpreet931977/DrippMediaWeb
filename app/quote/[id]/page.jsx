@@ -11,6 +11,9 @@ export default function SharedQuote() {
   const [isLocked, setIsLocked] = useState(true);
   const [quoteData, setQuoteData] = useState(null);
   const [error, setError] = useState('');
+
+  const is_light = quoteData ? ((quoteData.type === 'invoice' ? quoteData.invoiceDetails?.theme : quoteData.quoteDetails?.theme) === 'light') : false;
+
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pinRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
@@ -98,22 +101,22 @@ export default function SharedQuote() {
   };
 
   if (!mounted) {
-      return <div style={{ height: '100vh', background: '#0a0a0a', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#ebd73f' }}>Loading secure link...</div>;
+      return <div style={{ height: '100vh', background: '#0a0a0a', display: 'flex', justifyContent: 'center', alignItems: 'center', color: is_light ? '#b5a110' : '#ebd73f' }}>Loading secure link...</div>;
   }
 
   if (isLocked) {
     return (
-      <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', background: '#050505', color: 'white', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', background: is_light ? '#f4f4f4' : '#050505', color: is_light ? '#111' : 'white', position: 'relative', overflow: 'hidden' }}>
          {/* Background Glows */}
          <div style={{ position: 'absolute', top: '10%', left: '10%', width: '40vw', height: '40vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', zIndex: 0 }}></div>
          <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '30vw', height: '30vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.03) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', zIndex: 0 }}></div>
 
-        <form onSubmit={handleUnlock} style={{ position: 'relative', zIndex: 1, background: 'rgba(255, 255, 255, 0.02)', padding: 'clamp(40px, 8vw, 60px) clamp(20px, 5vw, 40px)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.05)', borderTop: '2px solid #ebd73f', textAlign: 'center', maxWidth: '450px', width: '90%', backdropFilter: 'blur(20px)', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
+        <form onSubmit={handleUnlock} style={{ position: 'relative', zIndex: 1, background: is_light ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.02)', padding: 'clamp(40px, 8vw, 60px) clamp(20px, 5vw, 40px)', borderRadius: '24px', border: is_light ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.05)', borderTop: '2px solid #ebd73f', textAlign: 'center', maxWidth: '450px', width: '90%', backdropFilter: 'blur(20px)', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
           <div style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', marginBottom: '25px', boxShadow: '0 0 30px rgba(235, 215, 63, 0.2)' }}>
              <Lock size={40} color="#ebd73f" />
           </div>
           <h2 style={{ marginBottom: '10px', fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontFamily: "'Panchang', sans-serif", letterSpacing: '1px' }}>Secure Proposal</h2>
-          <p style={{ color: '#888', marginBottom: '35px', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)', lineHeight: '1.6' }}>Enter the 4-digit PIN provided by Dripp Media to access your tailored proposal.</p>
+          <p style={{ color: is_light ? '#666' : '#888', marginBottom: '35px', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)', lineHeight: '1.6' }}>Enter the 4-digit PIN provided by Dripp Media to access your tailored proposal.</p>
           
           {/* PIN Input Boxes */}
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '20px' }}>
@@ -151,7 +154,7 @@ export default function SharedQuote() {
                     textAlign: 'center',
                     fontSize: 'clamp(1.5rem, 5vw, 2rem)',
                     fontWeight: '700',
-                    color: '#ebd73f',
+                    color: is_light ? '#b5a110' : '#ebd73f',
                     caretColor: '#ebd73f',
                     letterSpacing: '0'
                   }}
@@ -180,10 +183,10 @@ export default function SharedQuote() {
   const currency = details?.currency || '$';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: 'white', padding: 'clamp(20px, 5vw, 60px) clamp(15px, 4vw, 20px)', fontFamily: "'Inter', sans-serif", position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: is_light ? '#f4f4f4' : '#050505', color: is_light ? '#111' : 'white', padding: 'clamp(20px, 5vw, 60px) clamp(15px, 4vw, 20px)', fontFamily: "'Inter', sans-serif", position: 'relative', overflow: 'hidden' }}>
       {/* Background Glows */}
-      <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: 'clamp(400px, 80vw, 800px)', height: 'clamp(400px, 80vw, 800px)', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.08) 0%, rgba(5, 5, 5, 0) 60%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: 'clamp(300px, 60vw, 600px)', height: 'clamp(300px, 60vw, 600px)', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(5, 5, 5, 0) 60%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: 'clamp(400px, 80vw, 800px)', height: 'clamp(400px, 80vw, 800px)', background: is_light ? 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(255, 255, 255, 0) 60%)' : 'radial-gradient(circle, rgba(235, 215, 63, 0.08) 0%, rgba(5, 5, 5, 0) 60%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: 'clamp(300px, 60vw, 600px)', height: 'clamp(300px, 60vw, 600px)', background: is_light ? 'radial-gradient(circle, rgba(235, 215, 63, 0.03) 0%, rgba(255, 255, 255, 0) 60%)' : 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(5, 5, 5, 0) 60%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }} />
 
       <style>{`
         .quote-grid {
@@ -232,24 +235,24 @@ export default function SharedQuote() {
         
         {/* Cover Header Section */}
         <div className="quote-header">
-          <h1 style={{ fontSize: 'clamp(2.5rem, 10vw, 4rem)', color: '#ebd73f', margin: '0 0 10px 0', letterSpacing: '-2px', fontWeight: '900', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 20px rgba(235, 215, 63, 0.3)', wordBreak: 'break-word' }}>DRIPP MEDIA</h1>
-          <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', color: '#888', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{isInvoice ? 'TAX INVOICE' : 'Proposal & Investment Overview'}</p>
+          <h1 style={{ fontSize: 'clamp(2.5rem, 10vw, 4rem)', color: is_light ? '#b5a110' : '#ebd73f', margin: '0 0 10px 0', letterSpacing: '-2px', fontWeight: '900', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 20px rgba(235, 215, 63, 0.3)', wordBreak: 'break-word' }}>DRIPP MEDIA</h1>
+          <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', color: is_light ? '#666' : '#888', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{isInvoice ? 'TAX INVOICE' : 'Proposal & Investment Overview'}</p>
         </div>
 
         {/* LEFT PANEL */}
         <div className="quote-left">
           {/* Client Details */}
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', backdropFilter: 'blur(10px)', width: '100%', boxSizing: 'border-box' }}>
-            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.9rem)', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px' }}>Prepared For</p>
-            <h2 style={{ fontSize: 'clamp(1.8rem, 7vw, 2.5rem)', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", wordBreak: 'break-word' }}>{quoteData.clientDetails.brandName || quoteData.clientDetails.name}</h2>
-            {quoteData.clientDetails.brandName && <p style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#aaa', margin: '0 0 5px 0' }}>{quoteData.clientDetails.name}</p>}
-            <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#666', margin: '0 0 20px 0', wordBreak: 'break-all' }}>{quoteData.clientDetails.email}</p>
+          <div style={{ background: is_light ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.02)', border: is_light ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.05)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', backdropFilter: 'blur(10px)', width: '100%', boxSizing: 'border-box' }}>
+            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.9rem)', color: is_light ? '#b5a110' : '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px' }}>Prepared For</p>
+            <h2 style={{ fontSize: 'clamp(1.8rem, 7vw, 2.5rem)', color: is_light ? '#111' : '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", wordBreak: 'break-word' }}>{quoteData.clientDetails.brandName || quoteData.clientDetails.name}</h2>
+            {quoteData.clientDetails.brandName && <p style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: is_light ? '#444' : '#aaa', margin: '0 0 5px 0' }}>{quoteData.clientDetails.name}</p>}
+            <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: is_light ? '#888' : '#666', margin: '0 0 20px 0', wordBreak: 'break-all' }}>{quoteData.clientDetails.email}</p>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px', textAlign: 'left', marginTop: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', borderTop: is_light ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px', textAlign: 'left', marginTop: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
                  <div style={{ flex: '1 1 auto' }}>
-                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Project Type</p>
-                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#fff', margin: 0, fontWeight: '600' }}>
+                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#b5a110' : '#ebd73f', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Project Type</p>
+                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: is_light ? '#111' : '#fff', margin: 0, fontWeight: '600' }}>
                        {quoteData.packageType === 'project' ? 'One-time Project' : 'Monthly Retainer'}
                     </p>
                  </div>
@@ -257,25 +260,25 @@ export default function SharedQuote() {
                  {quoteData.packageType === 'project' && (
                     <>
                        <div style={{ flex: '1 1 auto' }}>
-                          <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Duration</p>
-                          <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.quoteDetails.projectDuration || 'N/A'}</p>
+                          <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#888' : '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Duration</p>
+                          <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: is_light ? '#222' : '#ddd', margin: 0 }}>{quoteData.quoteDetails.projectDuration || 'N/A'}</p>
                        </div>
                        <div style={{ flex: '1 1 auto' }}>
-                          <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Est. Delivery</p>
-                          <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.quoteDetails.expectedDelivery || 'N/A'}</p>
+                          <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#888' : '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Est. Delivery</p>
+                          <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: is_light ? '#222' : '#ddd', margin: 0 }}>{quoteData.quoteDetails.expectedDelivery || 'N/A'}</p>
                        </div>
                     </>
                  )}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px', borderTop: is_light ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '20px' }}>
                  <div style={{ flex: '1 1 auto' }}>
-                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>Date</p>
-                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.clientDetails.date}</p>
+                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#888' : '#666', margin: '0 0 5px 0' }}>Date</p>
+                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: is_light ? '#222' : '#ddd', margin: 0 }}>{quoteData.clientDetails.date}</p>
                  </div>
                  <div style={{ textAlign: 'right', flex: '1 1 auto' }}>
-                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>Proposal #</p>
-                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.quoteDetails.number}</p>
+                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#888' : '#666', margin: '0 0 5px 0' }}>Proposal #</p>
+                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: is_light ? '#222' : '#ddd', margin: 0 }}>{quoteData.quoteDetails.number}</p>
                  </div>
               </div>
             </div>
@@ -284,43 +287,43 @@ export default function SharedQuote() {
           {/* Message Section */}
           {!isInvoice && details?.message && (
             <div style={{ background: 'rgba(235, 215, 63, 0.03)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', borderLeft: '4px solid #ebd73f', border: '1px solid rgba(235, 215, 63, 0.1)' }}>
-              <p style={{ fontStyle: 'italic', margin: 0, lineHeight: '1.8', color: '#ddd', fontSize: 'clamp(1rem, 4vw, 1.2rem)', textAlign: 'center' }}>"{details.message}"</p>
+              <p style={{ fontStyle: 'italic', margin: 0, lineHeight: '1.8', color: is_light ? '#222' : '#ddd', fontSize: 'clamp(1rem, 4vw, 1.2rem)', textAlign: 'center' }}>"{details.message}"</p>
             </div>
           )}
           
           {/* Bank Details Section for Invoice */}
           {isInvoice && quoteData.selectedBank && (
-            <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', backdropFilter: 'blur(10px)', width: '100%', boxSizing: 'border-box' }}>
-                <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.9rem)', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px' }}>Payment Details</p>
+            <div style={{ background: is_light ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.02)', border: is_light ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.05)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', backdropFilter: 'blur(10px)', width: '100%', boxSizing: 'border-box' }}>
+                <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.9rem)', color: is_light ? '#b5a110' : '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px' }}>Payment Details</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <div>
-                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Bank Name</p>
-                        <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: '#fff', margin: 0 }}>{quoteData.selectedBank.bankName}</p>
+                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#888' : '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Bank Name</p>
+                        <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: is_light ? '#111' : '#fff', margin: 0 }}>{quoteData.selectedBank.bankName}</p>
                     </div>
                     <div>
-                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Account Name</p>
-                        <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: '#fff', margin: 0 }}>{quoteData.selectedBank.accountName}</p>
+                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#888' : '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Account Name</p>
+                        <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: is_light ? '#111' : '#fff', margin: 0 }}>{quoteData.selectedBank.accountName}</p>
                     </div>
                     <div>
-                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Account Number</p>
-                        <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: '#fff', margin: 0 }}>{quoteData.selectedBank.accountNumber}</p>
+                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#888' : '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Account Number</p>
+                        <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: is_light ? '#111' : '#fff', margin: 0 }}>{quoteData.selectedBank.accountNumber}</p>
                     </div>
                     {quoteData.selectedBank.ifsc && (
                         <div>
-                            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Routing / IFSC</p>
-                            <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: '#fff', margin: 0 }}>{quoteData.selectedBank.ifsc}</p>
+                            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#888' : '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Routing / IFSC</p>
+                            <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: is_light ? '#111' : '#fff', margin: 0 }}>{quoteData.selectedBank.ifsc}</p>
                         </div>
                     )}
                     {quoteData.selectedBank.swift && (
                         <div>
-                            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>SWIFT Code</p>
-                            <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: '#fff', margin: 0 }}>{quoteData.selectedBank.swift}</p>
+                            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#888' : '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>SWIFT Code</p>
+                            <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: is_light ? '#111' : '#fff', margin: 0 }}>{quoteData.selectedBank.swift}</p>
                         </div>
                     )}
                     
                     {quoteData.selectedBank.qrCode && (
                         <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 10px 0' }}>Scan to Pay</p>
+                            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: is_light ? '#888' : '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 10px 0' }}>Scan to Pay</p>
                             <div style={{ background: '#fff', padding: '10px', borderRadius: '12px', display: 'inline-block' }}>
                                 <img src={quoteData.selectedBank.qrCode} alt="QR Code" style={{ width: '150px', height: '150px', objectFit: 'contain' }} />
                             </div>
@@ -335,20 +338,20 @@ export default function SharedQuote() {
         <div className="quote-right">
           {/* Services Section */}
           <div>
-            <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'left' }}>{isInvoice ? 'Billed Items' : 'Proposed Services'}</h3>
+            <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: is_light ? '#b5a110' : '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'left' }}>{isInvoice ? 'Billed Items' : 'Proposed Services'}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {(quoteData.items || []).map((item, i) => {
                 const qty = parseFloat(item.qty || 0);
                 const rate = parseFloat(item.rate || 0);
                 const rowTotal = qty * rate;
                 return (
-                  <div key={i} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(235, 215, 63, 0.15)', borderRadius: '12px', padding: 'clamp(15px, 3vw, 20px) clamp(15px, 4vw, 20px)', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={i} style={{ background: is_light ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(235, 215, 63, 0.15)', borderRadius: '12px', padding: 'clamp(15px, 3vw, 20px) clamp(15px, 4vw, 20px)', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center' }}>
                      <div style={{ flex: '1 1 200px' }}>
-                        <h4 style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#fff', margin: '0 0 8px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h4>
-                        <p style={{ fontSize: 'clamp(0.75rem, 3vw, 0.85rem)', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {currency}{rate.toLocaleString()}</p>
+                        <h4 style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: is_light ? '#111' : '#fff', margin: '0 0 8px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h4>
+                        <p style={{ fontSize: 'clamp(0.75rem, 3vw, 0.85rem)', color: is_light ? '#666' : '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {currency}{rate.toLocaleString()}</p>
                      </div>
-                     <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: 'bold', color: '#ebd73f', textShadow: '0 0 10px rgba(235, 215, 63, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#666', fontSize: 'clamp(0.9rem, 3vw, 1rem)', fontWeight: 'normal' }}>=</span> {currency}{rowTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                     <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: 'bold', color: is_light ? '#b5a110' : '#ebd73f', textShadow: '0 0 10px rgba(235, 215, 63, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: is_light ? '#888' : '#666', fontSize: 'clamp(0.9rem, 3vw, 1rem)', fontWeight: 'normal' }}>=</span> {currency}{rowTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                      </div>
                   </div>
                 );
@@ -359,16 +362,16 @@ export default function SharedQuote() {
           {/* Investment Section */}
           <div style={{ marginTop: '20px' }}>
             <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '20px', padding: 'clamp(40px, 6vw, 60px) clamp(20px, 4vw, 40px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', width: '100%', boxSizing: 'border-box' }}>
-                <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#888', textTransform: 'uppercase', letterSpacing: 'clamp(1px, 1vw, 2px)', margin: '0 0 10px 0', textAlign: 'center' }}>{isInvoice ? 'Total Due' : `Total ${quoteData.packageType === 'monthly' ? 'Monthly ' : ''}Investment`}</p>
+                <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: is_light ? '#666' : '#888', textTransform: 'uppercase', letterSpacing: 'clamp(1px, 1vw, 2px)', margin: '0 0 10px 0', textAlign: 'center' }}>{isInvoice ? 'Total Due' : `Total ${quoteData.packageType === 'monthly' ? 'Monthly ' : ''}Investment`}</p>
                 
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', textShadow: '0 0 20px rgba(235, 215, 63, 0.4)', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
-                    <span style={{ fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', color: '#ebd73f', fontWeight: '500' }}>{currency}</span>
-                    <span style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', color: '#ebd73f', fontWeight: '800', fontFamily: "'Panchang', sans-serif", letterSpacing: '-1px', wordBreak: 'break-word', textAlign: 'center' }}>{parseFloat(quoteData.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span style={{ fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', color: is_light ? '#b5a110' : '#ebd73f', fontWeight: '500' }}>{currency}</span>
+                    <span style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', color: is_light ? '#b5a110' : '#ebd73f', fontWeight: '800', fontFamily: "'Panchang', sans-serif", letterSpacing: '-1px', wordBreak: 'break-word', textAlign: 'center' }}>{parseFloat(quoteData.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
 
-                <div style={{ marginTop: '30px', textAlign: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px', width: '100%', maxWidth: '300px' }}>
-                    <p style={{ color: '#888', fontSize: 'clamp(0.75rem, 3vw, 0.9rem)', margin: '0 0 5px 0' }}>Thank you for considering Dripp Media.</p>
-                    <p style={{ color: '#666', fontSize: 'clamp(0.65rem, 2.5vw, 0.75rem)', margin: 0 }}>This proposal is valid for 30 days.</p>
+                <div style={{ marginTop: '30px', textAlign: 'center', borderTop: is_light ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px', width: '100%', maxWidth: '300px' }}>
+                    <p style={{ color: is_light ? '#666' : '#888', fontSize: 'clamp(0.75rem, 3vw, 0.9rem)', margin: '0 0 5px 0' }}>Thank you for considering Dripp Media.</p>
+                    <p style={{ color: is_light ? '#888' : '#666', fontSize: 'clamp(0.65rem, 2.5vw, 0.75rem)', margin: 0 }}>This proposal is valid for 30 days.</p>
                 </div>
             </div>
           </div>
@@ -378,20 +381,20 @@ export default function SharedQuote() {
         <div style={{ gridColumn: '1 / -1', marginTop: '40px', paddingTop: '40px', paddingBottom: '30px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '35px', alignItems: 'center' }}>
             
             <div style={{ background: 'rgba(235, 215, 63, 0.05)', padding: 'clamp(20px, 4vw, 30px) clamp(30px, 6vw, 60px)', borderRadius: '100px', border: '1px solid rgba(235, 215, 63, 0.2)', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(20px, 5vw, 40px)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-                <a href="https://www.drippmedia.com" target="_blank" rel="noopener noreferrer" style={{ color: '#aaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'clamp(0.85rem, 3vw, 1rem)', transition: 'all 0.3s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                <a href="https://www.drippmedia.com" target="_blank" rel="noopener noreferrer" style={{ color: is_light ? '#444' : '#aaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'clamp(0.85rem, 3vw, 1rem)', transition: 'all 0.3s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                    <Globe size={18} color="#ebd73f" /> www.drippmedia.com
                 </a>
-                <a href="mailto:mediadripp@gmail.com" style={{ color: '#aaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'clamp(0.85rem, 3vw, 1rem)', transition: 'all 0.3s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                <a href="mailto:mediadripp@gmail.com" style={{ color: is_light ? '#444' : '#aaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'clamp(0.85rem, 3vw, 1rem)', transition: 'all 0.3s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                    <Mail size={18} color="#ebd73f" /> mediadripp@gmail.com
                 </a>
-                <a href="https://instagram.com/drippmedia_" target="_blank" rel="noopener noreferrer" style={{ color: '#aaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'clamp(0.85rem, 3vw, 1rem)', transition: 'all 0.3s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                <a href="https://instagram.com/drippmedia_" target="_blank" rel="noopener noreferrer" style={{ color: is_light ? '#444' : '#aaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'clamp(0.85rem, 3vw, 1rem)', transition: 'all 0.3s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                    <AtSign size={18} color="#ebd73f" /> instagram.com/drippmedia_
                 </a>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
               <div style={{ background: 'linear-gradient(90deg, rgba(235, 215, 63, 0) 0%, rgba(235, 215, 63, 0.2) 50%, rgba(235, 215, 63, 0) 100%)', width: '250px', height: '2px' }}></div>
-              <p style={{ margin: 0, color: '#888', fontSize: 'clamp(0.8rem, 3vw, 0.9rem)', letterSpacing: '1px', textTransform: 'uppercase' }}>Founded by <span style={{ color: '#ebd73f', fontWeight: 'bold' }}>Gurpreet Singh</span></p>
+              <p style={{ margin: 0, color: is_light ? '#666' : '#888', fontSize: 'clamp(0.8rem, 3vw, 0.9rem)', letterSpacing: '1px', textTransform: 'uppercase' }}>Founded by <span style={{ color: is_light ? '#b5a110' : '#ebd73f', fontWeight: 'bold' }}>Gurpreet Singh</span></p>
             </div>
             
             <p style={{ fontSize: '0.75rem', color: '#444', margin: 0, letterSpacing: '2px' }}>© {new Date().getFullYear()} DRIPP MEDIA. ALL RIGHTS RESERVED.</p>
