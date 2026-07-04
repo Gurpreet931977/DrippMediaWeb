@@ -276,15 +276,33 @@ export default function InvoiceMaker() {
     let parsedClient = {};
     let parsedInvoice = {};
     
-    // 1. Extract Emails (All)
+    // 1. Pre-process address lines and GST so they don't interfere
+    const lines = smartText.split('\n').map(l => l.trim()).filter(l => l);
+    const addressLines = [];
+    
+    // Extract GST upfront if present, and remove from lines
+    let gstFound = '';
+    const gstMatch = smartText.match(/GST(?:[\s:-]+)?([0-9A-Z]{15})/i);
+    if (gstMatch) {
+        gstFound = gstMatch[1].toUpperCase();
+        // Remove GST from individual lines to prevent it matching as an item
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].toLowerCase().includes('gst')) {
+                lines[i] = lines[i].replace(/GST(?:[\s:-]+)?([0-9A-Z]{15})/i, '').trim();
+            }
+        }
+    }
+    
+    // 2. Extract Emails (All)
     const emailMatches = [...smartText.matchAll(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/g)].map(m => m[0]);
     if (emailMatches.length > 0) parsedClient.emails = [...new Set(emailMatches)];
 
-    // 2. Extract Phones (All)
-    const phoneMatches = [...smartText.matchAll(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g)].map(m => m[0]);
+    // 3. Extract Phones (All)
+    const phoneRegex = /(?:\+\d{1,3}[\s-]*)?(?:\d{10}|\d{5}[\s-]\d{5}|\(?\d{3}\)?[\s-]\d{3}[\s-]\d{4})/g;
+    const phoneMatches = [...smartText.matchAll(phoneRegex)].map(m => m[0]);
     if (phoneMatches.length > 0) parsedClient.phones = [...new Set(phoneMatches)];
 
-    // 3. Extract Name & Brand
+    // 4. Extract Name & Brand
     const people = doc.people().out('array');
     if (people.length > 0) {
         parsedClient.names = [people[0].replace(/[.,;:!?]$/, '').trim()];
@@ -293,16 +311,15 @@ export default function InvoiceMaker() {
         if (nameMatch) parsedClient.names = [nameMatch[1].trim()];
     }
 
-    // 4. Extract Items/Prices using Advanced Heuristics + NLP
+    // 5. Extract Items/Prices using Advanced Heuristics + NLP
     const parsedItems = [];
-    const addressLines = [];
-    const lines = smartText.split('\n').map(l => l.trim()).filter(l => l);
     
     lines.forEach(line => {
+        if (!line) return;
         if (line.match(/\bTotal\b/i) && !line.match(/each/i) && line.match(/=/)) return;
         if (line.match(/Total Investment/i)) return;
         if (line.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/)) return;
-        if (line.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/)) return;
+        if (line.match(phoneRegex)) return; // Don't parse phones as items
         if (line.match(/^(?:name|client|brand|company|for):\s*/i)) return;
         
         let qty = 1;
@@ -355,14 +372,6 @@ export default function InvoiceMaker() {
     if (addressLines.length > 0) {
         let rawAddress = addressLines.join('\n');
         
-        // Extract GST if present (and remove it from raw address so it can be appended neatly at the end)
-        let gstFound = '';
-        const gstMatch = rawAddress.match(/GST(?:[\s:-]+)?([0-9A-Z]{15})/i);
-        if (gstMatch) {
-            gstFound = gstMatch[1].toUpperCase();
-            rawAddress = rawAddress.replace(gstMatch[0], '');
-        }
-
         // Remove typical address labels before the colon (e.g., "Building No./Flat No.:", "State:")
         let cleaned = rawAddress.replace(/(?:[a-zA-Z /.-]+:)/g, ',');
         
@@ -378,13 +387,14 @@ export default function InvoiceMaker() {
         });
         
         let finalAddress = uniqueParts.join(', ');
-        if (gstFound) {
-             finalAddress += `\nGST: ${gstFound}`;
-        }
         
         if (finalAddress) {
             parsedClient.address = [finalAddress];
         }
+    }
+    
+    if (gstFound) {
+        parsedClient.gst = [gstFound];
     }
 
     if (smartText.includes('₹') || smartText.includes('INR')) parsedInvoice.currency = '₹';
@@ -425,6 +435,7 @@ export default function InvoiceMaker() {
     checkScalarConflict('mobile', parsedClient.phones, clientDetails.mobile, 'Phone Number');
     checkScalarConflict('name', parsedClient.names, clientDetails.name, 'Client Name');
     checkScalarConflict('address', parsedClient.address, clientDetails.address, 'Address');
+    checkScalarConflict('gst', parsedClient.gst, clientDetails.gst, 'GST Number');
 
     // Helper for Items
     const pendingItems = [];

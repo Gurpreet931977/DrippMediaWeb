@@ -4148,3 +4148,15 @@
         body:has(.admin-body-marker) *, body:has(.arcade-body-marker) * {
             cursor: auto !important;
         }
+
+/* Hide number input arrows globally */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
