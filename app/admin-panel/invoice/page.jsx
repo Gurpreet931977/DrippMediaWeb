@@ -100,6 +100,7 @@ export default function InvoiceMaker() {
   const [sharePassword, setSharePassword] = useState('');
   const [isSharing, setIsSharing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // -- INITIALIZATION & LOCAL STORAGE & SUPABASE --
   useEffect(() => {
