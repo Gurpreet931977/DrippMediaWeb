@@ -1193,9 +1193,15 @@ export default function InvoiceMaker() {
                                       </div>
                                   )}
                                   {bank.swift && (
-                                      <div>
+                                      <div style={{ marginBottom: '30px' }}>
                                           <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>SWIFT Code</p>
                                           <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.swift}</p>
+                                      </div>
+                                  )}
+                                  {bank.upi && (
+                                      <div>
+                                          <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>UPI ID</p>
+                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.upi}</p>
                                       </div>
                                   )}
                               </div>
@@ -1207,12 +1213,12 @@ export default function InvoiceMaker() {
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px' }}>
                       {(() => {
                           const bank = bankAccounts.find(b => b.id === selectedBankId);
-                          if (bank && bank.qrCode) {
+                          if (bank && qrCodeDataUrl) {
                               return (
                                   <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '50px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                      <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 20px 0' }}>Scan to Pay</p>
+                                      <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 20px 0' }}>Scan to Pay via UPI</p>
                                       <div style={{ background: '#fff', padding: '20px', borderRadius: '16px' }}>
-                                          <img src={bank.qrCode} alt="QR Code" style={{ width: '250px', height: '250px', objectFit: 'contain' }} />
+                                          <img src={qrCodeDataUrl} alt="QR Code" style={{ width: '250px', height: '250px', objectFit: 'contain' }} />
                                       </div>
                                   </div>
                               );
