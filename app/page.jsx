@@ -66,29 +66,23 @@ export default function ComingSoon() {
           try { userObj = JSON.parse(userStr); } catch(e) {}
       }
 
-      let localHigh = 0;
-      const cachedHighScore = localStorage.getItem('dripp_highScore');
-      if (cachedHighScore) {
-          localHigh = parseInt(cachedHighScore, 10);
-          highScoreRef.current = localHigh;
-      } else {
-          localStorage.setItem('dripp_highScore', '0');
-      }
-
-      // Sync high score in both directions
+      // Load high score from DB only (never trust localStorage as source of truth for DB)
       if (userObj && userObj.email) {
           supabase.from('users').select('highscore').eq('email', userObj.email).single()
             .then(({ data }) => {
                 if (data) {
                     const dbHigh = data.highscore || 0;
-                    if (localHigh > dbHigh) {
-                        supabase.from('users').update({ highscore: localHigh }).eq('email', userObj.email).then();
-                    } else if (dbHigh > localHigh) {
-                        highScoreRef.current = dbHigh;
-                        localStorage.setItem('dripp_highScore', dbHigh.toString());
-                    }
+                    // Always use DB value as the source of truth
+                    highScoreRef.current = dbHigh;
+                    localStorage.setItem('dripp_highScore', dbHigh.toString());
                 }
             });
+      } else {
+          // Guest: just read localStorage (won't be synced to DB)
+          const cachedHighScore = localStorage.getItem('dripp_highScore');
+          if (cachedHighScore) {
+              highScoreRef.current = parseInt(cachedHighScore, 10);
+          }
       }
     } catch(e) {}
   }, []);
@@ -96,22 +90,8 @@ export default function ComingSoon() {
   const fetchLeaderboard = async () => {
     setLeaderboardLoading(true);
     setLeaderboardError(false);
-    
-    // Sync local score to DB before fetching leaderboard to ensure it's up to date
-    try {
-      const userStr = localStorage.getItem('dripp_user');
-      const localHigh = parseInt(localStorage.getItem('dripp_highScore') || '0', 10);
-      if (userStr && localHigh > 0) {
-          const userObj = JSON.parse(userStr);
-          if (userObj.email) {
-             const { data } = await supabase.from('users').select('highscore').eq('email', userObj.email).single();
-             if (data && localHigh > (data.highscore || 0)) {
-                 await supabase.from('users').update({ highscore: localHigh }).eq('email', userObj.email);
-             }
-          }
-      }
-    } catch(e) {}
-
+    // NOTE: We intentionally do NOT sync localStorage → DB here anymore.
+    // All score saves go through /api/submit-score (server-side validated).
     try {
       const { data, error } = await supabase
         .from('users')
@@ -151,11 +131,9 @@ export default function ComingSoon() {
       });
     }
 
-    // High Score tracking and saving to Supabase for Dripp game
+    // High Score tracking – route through secure server API (no direct DB writes)
     if (gameState === 'failed' && activeGame === 'dripp') {
-       console.log("GAME FAILED - Checking score. Score:", score, "HighScoreRef:", highScoreRef.current);
        if (score > highScoreRef.current) {
-          console.log("Score is greater! Updating local and DB...");
           highScoreRef.current = score;
           localStorage.setItem('dripp_highScore', score.toString());
           const userStr = localStorage.getItem('dripp_user');
@@ -163,19 +141,23 @@ export default function ComingSoon() {
              try {
                 const userObj = JSON.parse(userStr);
                 if (userObj.email) {
-                   console.log("Found user email:", userObj.email, "Updating supabase...");
-                   supabase.from('users')
-                      .update({ highscore: score })
-                      .eq('email', userObj.email)
-                      .then(({error}) => {
-                         if (error) console.error("Error saving highscore to Supabase:", error);
-                         else console.log("Supabase update SUCCESS!");
-                      });
-                } else {
-                   console.log("No email found in userObj");
+                   // Get the secure submission payload from the score guard
+                   const payload = scoreGuardRef.current.getSubmissionPayload(userObj.email);
+                   if (payload && !scoreGuardRef.current.isCheated()) {
+                      fetch('/api/submit-score', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                      }).then(r => r.json()).then(data => {
+                        if (data.ok) console.log('Score saved securely:', data.highscore);
+                        else console.warn('Score rejected by server:', data.error);
+                      }).catch(e => console.error('Score submit error:', e));
+                   } else {
+                      console.warn('Score guard flagged cheated session – not submitting.');
+                   }
                 }
              } catch (e) {
-                console.error("Error parsing user for highscore:", e);
+                console.error("Error submitting score:", e);
              }
           }
        }
@@ -213,6 +195,14 @@ export default function ComingSoon() {
       setCheatedSession(false);
       setGameState('playing');
       setIsPaused(false);
+      // Init a new signed session token for this game session
+      try {
+        const userStr = localStorage.getItem('dripp_user');
+        if (userStr) {
+          const userObj = JSON.parse(userStr);
+          if (userObj.email) scoreGuardRef.current.initSession(userObj.email);
+        }
+      } catch(e) {}
     }
   }, [activeGame]);
 

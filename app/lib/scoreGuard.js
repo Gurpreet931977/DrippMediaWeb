@@ -2,13 +2,19 @@
  * scoreGuard.js
  * Anti-cheat score integrity system for the Dripp Drop game.
  *
- * Strategy:
+ * CLIENT-SIDE strategy (first line of defence):
  *  1. Shadow checksum  – two independent shadow refs XOR'd with a salt
  *  2. Rate-gate        – max one score event per 50 ms (human-impossible to beat legitimately)
  *  3. Delta validation – each increment must be exactly 1, 5 or 69 (legal values only)
  *  4. Monotonic guard  – score may never decrease (drops only go up)
  *  5. Tampering flag   – any violation sets a permanent "cheated" flag that poisons
  *                        the display and blocks the share flow
+ *
+ * SERVER-SIDE strategy (second line of defence via /api/submit-score):
+ *  6. HMAC session token – a token is generated at session start using
+ *     the user's email + sessionStart timestamp; the server verifies it
+ *     so no one can submit a score without having started a genuine session.
+ *  7. Physics caps & hit-count plausibility – enforced on the server
  */
 
 const LEGAL_DELTAS = new Set([1, 5, 69]);
@@ -16,11 +22,15 @@ const MIN_MS_BETWEEN_HITS = 50; // ~20 catches/sec absolute max for any human
 const XOR_SALT = 0x44727070; // "Drpp" in hex – obfuscates shadow values in memory
 
 export function createScoreGuard() {
-  let _primary   = 0;         // primary running total
-  let _shadow    = 0 ^ XOR_SALT; // XOR'd shadow copy
-  let _lastHitTs = 0;         // timestamp of last accepted hit
-  let _cheated   = false;     // permanent cheat flag
-  let _hitCount  = 0;         // total accepted hits
+  let _primary   = 0;             // primary running total
+  let _shadow    = 0 ^ XOR_SALT;  // XOR'd shadow copy
+  let _lastHitTs = 0;             // timestamp of last accepted hit
+  let _cheated   = false;         // permanent cheat flag
+  let _hitCount  = 0;             // total accepted hits
+
+  // Session token fields – set once per game session by calling initSession()
+  let _sessionStart = 0;
+  let _sessionToken = null;
 
   /** Internal checksum – both refs must agree at all times */
   function _checkIntegrity() {
@@ -30,6 +40,31 @@ export function createScoreGuard() {
       return false;
     }
     return true;
+  }
+
+  /**
+   * initSession(email)
+   *  Call once at game start to bind this guard instance to the logged-in user.
+   *  Fetches an HMAC token from the server (via /api/session-token) so we
+   *  don't have to embed the secret in client-side code.
+   */
+  async function initSession(email) {
+    if (!email) return;
+    _sessionStart = Date.now();
+    try {
+      const res = await fetch('/api/session-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, sessionStart: _sessionStart }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        _sessionToken = data.token || null;
+      }
+    } catch (e) {
+      // If the request fails, the server will reject any submission – acceptable
+      _sessionToken = null;
+    }
   }
 
   /**
@@ -74,11 +109,13 @@ export function createScoreGuard() {
 
   /** Hard reset (called on game restart) */
   function reset() {
-    _primary   = 0;
-    _shadow    = 0 ^ XOR_SALT;
-    _lastHitTs = 0;
-    _cheated   = false;
-    _hitCount  = 0;
+    _primary      = 0;
+    _shadow       = 0 ^ XOR_SALT;
+    _lastHitTs    = 0;
+    _cheated      = false;
+    _hitCount     = 0;
+    _sessionStart = 0;
+    _sessionToken = null;
   }
 
   /** How many real hits were registered */
@@ -87,5 +124,21 @@ export function createScoreGuard() {
   /** Has the session been flagged as cheated? */
   function isCheated() { return _cheated; }
 
-  return { tryAddScore, getScore, reset, getHitCount, isCheated };
+  /**
+   * getSubmissionPayload()
+   * Returns the payload needed for /api/submit-score, including the HMAC token.
+   * Returns null if this session has been flagged as cheated.
+   */
+  function getSubmissionPayload(email) {
+    if (_cheated || !_checkIntegrity()) return null;
+    return {
+      email,
+      score:        _primary,
+      hitCount:     _hitCount,
+      sessionStart: _sessionStart,
+      token:        _sessionToken,
+    };
+  }
+
+  return { tryAddScore, getScore, reset, getHitCount, isCheated, initSession, getSubmissionPayload };
 }
