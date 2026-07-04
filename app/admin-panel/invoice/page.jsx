@@ -86,6 +86,7 @@ export default function InvoiceMaker() {
 
   const [clientDetails, setClientDetails] = useState({
     name: '',
+    brandName: '',
     address: '',
     email: '',
     mobile: '',
@@ -311,6 +312,19 @@ export default function InvoiceMaker() {
         if (nameMatch) parsedClient.names = [nameMatch[1].trim()];
     }
 
+    const forMatch = smartText.match(/for\s+([A-Z][a-zA-Z0-9'\s]+?(?=\.|\n))/);
+    if (forMatch) {
+        parsedClient.brands = [forMatch[1].trim()];
+    } else {
+        const organizations = doc.organizations().out('array');
+        if (organizations.length > 0) {
+            parsedClient.brands = [organizations[0].replace(/[.,;:!?]$/, '').trim()];
+        } else {
+            const brandMatch = smartText.match(/(?:brand|company):\s*([a-zA-Z\s0-9&]+)/i);
+            if (brandMatch) parsedClient.brands = [brandMatch[1].trim()];
+        }
+    }
+
     // 5. Extract Items/Prices using Advanced Heuristics + NLP
     const parsedItems = [];
     
@@ -434,6 +448,7 @@ export default function InvoiceMaker() {
     checkScalarConflict('email', parsedClient.emails, clientDetails.email, 'Email Address');
     checkScalarConflict('mobile', parsedClient.phones, clientDetails.mobile, 'Phone Number');
     checkScalarConflict('name', parsedClient.names, clientDetails.name, 'Client Name');
+    checkScalarConflict('brandName', parsedClient.brands, clientDetails.brandName, 'Brand Name');
     checkScalarConflict('address', parsedClient.address, clientDetails.address, 'Address');
     checkScalarConflict('gst', parsedClient.gst, clientDetails.gst, 'GST Number');
 
@@ -871,10 +886,14 @@ export default function InvoiceMaker() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
               <div>
                  <label className={styles.label}>Client Name</label>
-                 <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="Acme Corp" className={styles.inputField} />
+                 <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="John Doe" className={styles.inputField} />
+              </div>
+              <div>
+                 <label className={styles.label}>Brand Name</label>
+                 <input type="text" value={clientDetails.brandName} onChange={e => handleClientChange('brandName', e.target.value)} placeholder="Acme Corp" className={styles.inputField} />
               </div>
               <div>
                  <label className={styles.label}>Client Email</label>
