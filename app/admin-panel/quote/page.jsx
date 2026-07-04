@@ -699,8 +699,6 @@ export default function QuoteMaker() {
 
           </div>
           
-        </div>
-        
         {/* RIGHT COLUMN: TEMPLATES & ACTIONS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
            
@@ -772,6 +770,7 @@ export default function QuoteMaker() {
            </div>
 
         </div>
+      </div>
 
       {/* PDF PAGE BUILDER - FULL WIDTH */}
       <div style={{ marginTop: "40px" }}>
