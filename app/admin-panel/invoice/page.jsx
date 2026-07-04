@@ -611,11 +611,10 @@ export default function InvoiceMaker() {
       invoiceDetails,
       items,
       selectedBankId,
-      includeGST,
-      myDetails
+      includeGST
     };
     navigator.clipboard.writeText(JSON.stringify(data, null, 2))
-      .then(() => showAlert('All form details copied to clipboard! You can paste them later.'))
+      .then(() => showAlert('All form details copied to clipboard! You can paste them later using the Paste button.'))
       .catch(() => showAlert('Failed to copy to clipboard.'));
   };
 
@@ -628,7 +627,6 @@ export default function InvoiceMaker() {
       if (data.items) setItems(data.items);
       if (data.selectedBankId) setSelectedBankId(data.selectedBankId);
       if (data.includeGST !== undefined) setIncludeGST(data.includeGST);
-      if (data.myDetails) setMyDetails(data.myDetails);
       showAlert('All form details pasted successfully!');
     } catch (err) {
       showAlert('Failed to paste. Make sure you copied valid form details earlier.');
