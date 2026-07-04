@@ -79,9 +79,9 @@ export default function InvoiceMaker() {
 
   
   // Custom Dialog State
-  const [customDialog, setCustomDialog] = useState({ isOpen: false, type: 'alert', title: '', message: '', onConfirm: null });
-  const showAlert = (message, title = 'Notification') => setCustomDialog({ isOpen: true, type: 'alert', title, message, onConfirm: null });
-  const showConfirm = (message, onConfirm, title = 'Confirm Action') => setCustomDialog({ isOpen: true, type: 'confirm', title, message, onConfirm });
+  const [customDialog, setCustomDialog] = useState({ isOpen: false, type: 'alert', title: '', message: '', onConfirm: null, onCancel: null });
+  const showAlert = (message, title = 'Notification') => setCustomDialog({ isOpen: true, type: 'alert', title, message, onConfirm: null, onCancel: null });
+  const showConfirm = (message, onConfirm, onCancel = null, title = 'Confirm Action') => setCustomDialog({ isOpen: true, type: 'confirm', title, message, onConfirm, onCancel });
   const closeDialog = () => setCustomDialog(prev => ({ ...prev, isOpen: false }));
 
   const [clientDetails, setClientDetails] = useState({
@@ -93,9 +93,7 @@ export default function InvoiceMaker() {
     gst: ''
   });
 
-  const [items, setItems] = useState([
-    { desc: 'Video Production Services', details: '', qty: 1, rate: 0 }
-  ]);
+  const [items, setItems] = useState([]);
 
   // -- SMART PASTE & SHARING --
   const [smartText, setSmartText] = useState('');
@@ -300,8 +298,28 @@ export default function InvoiceMaker() {
 
     // 3. Extract Phones (All)
     const phoneRegex = /(?:\+\d{1,3}[\s-]*)?(?:\d{10}|\d{5}[\s-]\d{5}|\(?\d{3}\)?[\s-]\d{3}[\s-]\d{4})/g;
-    const phoneMatches = [...smartText.matchAll(phoneRegex)].map(m => m[0]);
-    if (phoneMatches.length > 0) parsedClient.phones = [...new Set(phoneMatches)];
+    const rawPhoneMatches = [...smartText.matchAll(phoneRegex)].map(m => m[0]);
+    
+    const confirmedPhones = [];
+    for (let phone of [...new Set(rawPhoneMatches)]) {
+        if (!phone.includes('+')) {
+            const isPhone = await new Promise(resolve => {
+                 showConfirm(
+                     `We detected the number "${phone}". Is this a mobile/contact number?`,
+                     () => resolve(true),
+                     () => resolve(false),
+                     'Confirm Contact Number'
+                 );
+            });
+            if (isPhone) {
+                confirmedPhones.push(phone);
+            }
+        } else {
+            confirmedPhones.push(phone);
+        }
+    }
+    
+    if (confirmedPhones.length > 0) parsedClient.phones = confirmedPhones;
 
     // 4. Extract Name & Brand
     const people = doc.people().out('array');
@@ -333,7 +351,12 @@ export default function InvoiceMaker() {
         if (line.match(/\bTotal\b/i) && !line.match(/each/i) && line.match(/=/)) return;
         if (line.match(/Total Investment/i)) return;
         if (line.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/)) return;
-        if (line.match(phoneRegex)) return; // Don't parse phones as items
+        // Don't parse phones as items if they were confirmed
+        let isPhoneLine = false;
+        for (let cp of confirmedPhones) {
+             if (line.includes(cp)) isPhoneLine = true;
+        }
+        if (isPhoneLine) return;
         if (line.match(/^(?:name|client|brand|company|for):\s*/i)) return;
         
         let qty = 1;
@@ -577,7 +600,7 @@ export default function InvoiceMaker() {
     showConfirm('Are you sure you want to clear the entire form?', () => {
         setClientDetails({ name: '', address: '', email: '', mobile: '' });
         setInvoiceDetails(prev => ({ ...prev, number: 'INV-' + Math.floor(1000 + Math.random() * 9000), notes: 'Payment is due within 15 days. Thank you for your business!' }));
-        setItems([{ desc: 'Video Production Services', qty: 1, rate: 0 }]);
+        setItems([]);
     });
   };
 
@@ -674,7 +697,15 @@ export default function InvoiceMaker() {
             <p style={{ fontSize: '16px', color: '#ccc', marginBottom: '30px', lineHeight: '1.5' }}>{customDialog.message}</p>
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
               {customDialog.type === 'confirm' && (
-                <button onClick={closeDialog} style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
+                <button 
+                  onClick={() => {
+                    if (customDialog.onCancel) customDialog.onCancel();
+                    closeDialog();
+                  }} 
+                  style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  Cancel
+                </button>
               )}
               <button 
                 onClick={() => {
@@ -694,8 +725,8 @@ export default function InvoiceMaker() {
 
       {/* CONFLICT RESOLUTION MODAL */}
       {showConflictModal && conflicts[currentConflictIdx] && createPortal(
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#111', border: '1px solid #ebd73f', borderRadius: '12px', padding: '30px', maxWidth: '500px', width: '100%' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '24px', padding: '40px', maxWidth: '500px', width: '90%', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <h3 style={{ color: '#ebd73f', marginBottom: '20px' }}>Resolve Auto-Fill Conflict</h3>
             
             <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
@@ -927,7 +958,7 @@ export default function InvoiceMaker() {
                        type="text" 
                        value={item.desc} 
                        onChange={(e) => handleItemChange(index, 'desc', e.target.value)}
-                       placeholder="Service Description"
+                       placeholder="e.g. Website Development or Social Media Management"
                        className={styles.inputField}
                        style={{ padding: '8px 12px' }}
                     />
@@ -941,6 +972,7 @@ export default function InvoiceMaker() {
                       type="number" 
                       value={item.qty} 
                       onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
+                      placeholder="1"
                       className={styles.inputField}
                       style={{ padding: '8px 12px' }}
                     />
@@ -951,6 +983,7 @@ export default function InvoiceMaker() {
                       type="number" 
                       value={item.rate} 
                       onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
+                      placeholder="0"
                       className={styles.inputField}
                       style={{ padding: '8px 12px' }}
                     />
@@ -965,7 +998,7 @@ export default function InvoiceMaker() {
                      <textarea 
                        value={item.details || ''} 
                        onChange={(e) => handleItemChange(index, 'details', e.target.value)}
-                       placeholder="Item description (optional)"
+                       placeholder="e.g. Includes 5 custom pages, responsive design, and 1 year of hosting..."
                        className={styles.inputField}
                        style={{ padding: '8px 12px', fontSize: '0.9rem', width: '100%', minHeight: '60px' }}
                      />

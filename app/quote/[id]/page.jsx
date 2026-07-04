@@ -272,11 +272,11 @@ export default function SharedQuote() {
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '20px' }}>
                  <div style={{ flex: '1 1 auto' }}>
                     <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>Date</p>
-                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.clientDetails.date}</p>
+                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{details?.date || quoteData.clientDetails?.date}</p>
                  </div>
                  <div style={{ textAlign: 'right', flex: '1 1 auto' }}>
-                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>Proposal #</p>
-                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{quoteData.quoteDetails.number}</p>
+                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>{isInvoice ? 'Invoice #' : 'Proposal #'}</p>
+                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{details?.number}</p>
                  </div>
               </div>
             </div>
