@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle, X, Upload } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
@@ -98,9 +98,6 @@ export default function InvoiceMaker() {
   const [smartText, setSmartText] = useState('');
   const [shareLink, setShareLink] = useState('');
   const [sharePassword, setSharePassword] = useState('');
-  const [isSharing, setIsSharing] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // -- INITIALIZATION & LOCAL STORAGE & SUPABASE --
   useEffect(() => {
@@ -190,17 +187,6 @@ export default function InvoiceMaker() {
      localStorage.setItem('dripp_my_details', JSON.stringify(myDetails));
      setMyDetailsLocked(true);
      showAlert("Default details saved successfully!");
-  };
-
-  const handleQRUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleMyDetailsChange('qrCode', reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const handleSaveBank = async () => {
@@ -567,87 +553,37 @@ export default function InvoiceMaker() {
     });
   };
 
-  // -- PDF GENERATION (A4 SINGLE PAGER) --
-  
-  const handleShare = async () => {
-    let adminKey = localStorage.getItem('dripp_admin_key');
-    if (!adminKey) {
-      adminKey = window.prompt("Enter Admin Secret Key to generate the secure link:");
-      if (!adminKey) return; // cancelled
-    }
-
-    setIsSharing(true);
-    try {
-      const payload = {
-        password: sharePassword,
-        type: 'invoice',
-        invoiceDetails,
-        clientDetails,
-        items,
-        total,
-        selectedBankId,
-        bankAccounts
-      };
-      
-      const response = await fetch('/api/quote', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-admin-key': adminKey 
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        localStorage.setItem('dripp_admin_key', adminKey); // save for future
-        setShareLink(`${window.location.origin}/quote/${data.id}`);
-        setShowShareModal(true);
-      } else if (response.status === 401) {
-        localStorage.removeItem('dripp_admin_key');
-        customAlert('Unauthorized: Invalid Admin Secret Key');
-      } else {
-        customAlert(data.error || 'Failed to generate link');
-      }
-    } catch (error) {
-      console.error(error);
-      customAlert('An error occurred');
-    }
-    setIsSharing(false);
-  };
-
+  // -- PDF GENERATION (PRESENTATION STYLE) --
   const generatePDF = async () => {
-    const slide = document.getElementById(`inv-a4-template`);
-    if (slide) {
-        slide.style.display = 'block';
-        try {
-            // A4 width in px at 96 DPI is ~794px. We'll use 800px for a clean container.
-            // Scale up for better resolution
-            const canvas = await html2canvas(slide, { scale: 3, backgroundColor: '#050505', useCORS: true });
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
-            
-            // Create portrait A4 pdf
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-            
-            // Render as a single long page if it exceeds A4 height, 
-            // by customizing the PDF size to match exactly the content height!
-            // Wait, standard jsPDF addPage does not support dynamic sizes well if the document was init as A4.
-            // Actually, we can just init the document with custom dimensions matching the ratio!
-            // Let's create a custom sized PDF that perfectly fits the single pager.
-            const customPdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
-            customPdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-            
-            const brandNameStr = clientDetails.brandName ? `_${clientDetails.brandName.replace(/\s+/g, '_')}` : (clientDetails.name ? `_${clientDetails.name.replace(/\s+/g, '_')}` : '');
-            customPdf.save(`Dripp_Media_Invoice${brandNameStr}_${invoiceDetails.number}.pdf`);
-            
-        } catch (err) {
-            console.error(`Error rendering PDF`, err);
-        }
-        slide.style.display = 'none';
+    const pdf = new jsPDF('l', 'px', [1920, 1080]);
+    
+    // Build array of page IDs to capture
+    const validItems = items.filter(i => i.desc || i.rate > 0);
+    const pages = ['cover'];
+    for (let i = 0; i < validItems.length; i += 5) {
+        pages.push(`items_${i}`);
     }
+    pages.push('payment');
+    
+    for (let i = 0; i < pages.length; i++) {
+        const pageId = pages[i];
+        const slide = document.getElementById(`inv-slide-${pageId}`);
+        if (slide) {
+            slide.style.display = 'flex';
+            try {
+                const canvas = await html2canvas(slide, { scale: 2, backgroundColor: '#050505' });
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                if (i > 0) pdf.addPage([1920, 1080], 'l');
+                pdf.addImage(imgData, 'JPEG', 0, 0, 1920, 1080);
+            } catch (err) {
+                console.error(`Error rendering slide ${i}`, err);
+            }
+            slide.style.display = 'none';
+        }
+    }
+    
+    const brandNameStr = clientDetails.brandName ? `_${clientDetails.brandName.replace(/\s+/g, '_')}` : (clientDetails.name ? `_${clientDetails.name.replace(/\s+/g, '_')}` : '');
+    pdf.save(`Dripp_Media_Invoice${brandNameStr}_${invoiceDetails.number}.pdf`);
     
     // Save to local history
     const savedInvoices = JSON.parse(localStorage.getItem('dripp_invoices') || '[]');
@@ -663,14 +599,45 @@ export default function InvoiceMaker() {
     const clientName = clientDetails.name ? clientDetails.name.split(' ')[0] : 'Client';
     const msg = `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 Password: ${sharePassword}\n\nLet me know if you have any questions!`;
     copyToClipboard(msg);
-    customAlert("Message copied to clipboard!");
+    showAlert('Message copied to clipboard!');
   };
 
-  const activeBank = bankAccounts.find(b => b.id === selectedBankId) || null;
-  const validItems = items.filter(i => i.desc || i.rate > 0);
+  const generateSecureLink = async () => {
+    const pass = Math.random().toString(36).slice(-6).toUpperCase();
+    setSharePassword(pass);
+    try {
+        const payload = {
+            clientDetails,
+            invoiceDetails,
+            items,
+            myDetails,
+            selectedBank: bankAccounts.find(b => b.id === selectedBankId),
+            total,
+            password: pass,
+            type: 'invoice'
+        };
+        const response = await fetch('/api/quote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (response.ok) {
+            const data = await response.json();
+            setShareLink(`${window.location.origin}/quote/${data.id}`);
+        } else {
+            showAlert("Failed to save invoice securely.");
+        }
+    } catch(err) {
+        showAlert("API error while generating secure link.");
+    }
+  };
+
+  if (!isClient) return <div style={{padding: '50px', color: 'white'}}>Loading Invoice Maker...</div>;
 
   return (
-    <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
+
+      <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
+
       {/* CUSTOM DIALOG (ALERT / CONFIRM) */}
       {customDialog.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100000 }}>
@@ -697,145 +664,181 @@ export default function InvoiceMaker() {
         </div>
       )}
 
-      {/* SHARE MODAL */}
-      {showShareModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '600px', position: 'relative' }}>
-            <button onClick={() => setShowShareModal(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
-            <h2 style={{ fontSize: '28px', color: '#ebd73f', margin: '0 0 30px 0', fontFamily: "'Panchang', sans-serif" }}>Share Invoice</h2>
+      {/* CONFLICT RESOLUTION MODAL */}
+      {showConflictModal && conflicts[currentConflictIdx] && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#111', border: '1px solid #ebd73f', borderRadius: '12px', padding: '30px', maxWidth: '500px', width: '100%' }}>
+            <h3 style={{ color: '#ebd73f', marginBottom: '20px' }}>Resolve Auto-Fill Conflict</h3>
             
-            <div style={{ marginBottom: '20px' }}>
-                <label className={styles.label}>Secure Link</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <input type="text" value={shareLink} readOnly className={styles.inputField} style={{ flex: 1 }} />
-                    <button onClick={() => { copyToClipboard(shareLink); customAlert('Link copied!'); }} className={styles.btn} style={{ padding: '0 20px' }}><Copy size={20} /></button>
-                </div>
-            </div>
-            
-            <div style={{ marginBottom: '30px' }}>
-                <label className={styles.label}>Password</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <input type="text" value={sharePassword} readOnly className={styles.inputField} style={{ flex: 1 }} />
-                    <button onClick={() => { copyToClipboard(sharePassword); customAlert('Password copied!'); }} className={styles.btn} style={{ padding: '0 20px' }}><Copy size={20} /></button>
-                </div>
-            </div>
-
-            <button onClick={handleCopyMessage} className={styles.btn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '10px' }}>
-                <Share2 size={20} /> Copy Share Message
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* PAYMENT METHODS MODAL */}
-      {showPaymentModal && (
-          <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-             <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
-                <button onClick={() => {
-                    setShowPaymentModal(false);
-                    setIsEditingBank(false);
-                }} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
-                <h2 style={{ fontSize: '28px', color: '#ebd73f', margin: '0 0 30px 0', fontFamily: "'Panchang', sans-serif" }}>Payment Methods</h2>
+            <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                <strong style={{ display: 'block', marginBottom: '10px', color: '#fff' }}>{conflicts[currentConflictIdx].label}</strong>
                 
-                {isEditingBank ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <input type="text" value={myDetails.bankName} onChange={e => handleMyDetailsChange('bankName', e.target.value)} placeholder="Bank Name" className={styles.inputField} />
-                        <input type="text" value={myDetails.accountName} onChange={e => handleMyDetailsChange('accountName', e.target.value)} placeholder="Account Name" className={styles.inputField} />
-                        <input type="text" value={myDetails.accountNumber} onChange={e => handleMyDetailsChange('accountNumber', e.target.value)} placeholder="Account Number" className={styles.inputField} />
-                        <input type="text" value={myDetails.ifsc} onChange={e => handleMyDetailsChange('ifsc', e.target.value)} placeholder="Routing / IFSC Code" className={styles.inputField} />
-                        <input type="text" value={myDetails.swift} onChange={e => handleMyDetailsChange('swift', e.target.value)} placeholder="SWIFT Code (Optional)" className={styles.inputField} />
-                        
-                        <div style={{ marginTop: '10px' }}>
-                            <label className={styles.label}>Upload QR Code (Optional)</label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255, 255, 255, 0.05)', padding: '15px', borderRadius: '12px', cursor: 'pointer', border: '1px dashed rgba(255, 255, 255, 0.2)' }}>
-                                <Upload size={20} /> {myDetails.qrCode ? 'Change QR Code' : 'Select Image'}
-                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleQRUpload} />
-                            </label>
-                        </div>
-                        {myDetails.qrCode && (
-                            <img src={myDetails.qrCode} alt="QR Preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '12px', marginTop: '10px' }} />
-                        )}
-                        <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
-                           <button onClick={() => setIsEditingBank(false)} className={styles.btn} style={{ flex: 1, background: 'transparent', border: '1px solid #444', color: '#888' }}>Cancel</button>
-                           <button onClick={handleSaveBank} className={styles.btn} style={{ flex: 1 }}>Save</button>
-                        </div>
-                    </div>
-                ) : (
-                    <div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '30px' }}>
-                            {bankAccounts.map(bank => (
-                                <div key={bank.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '16px', border: selectedBankId === bank.id ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setSelectedBankId(bank.id)}>
-                                    <div>
-                                        <h4 style={{ margin: '0 0 5px 0', fontSize: '18px' }}>{bank.bankName}</h4>
-                                        <p style={{ margin: 0, color: '#888', fontSize: '14px' }}>{bank.accountNumber}</p>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <button onClick={(e) => { e.stopPropagation(); startEditBank(bank); }} style={{ background: 'transparent', border: 'none', color: '#ebd73f', cursor: 'pointer' }}>Edit</button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteBank(bank.id); }} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer' }}>Delete</button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <button onClick={() => {
-                            setMyDetails({ id: '', bankName: '', accountName: '', accountNumber: '', ifsc: '', swift: '', qrCode: null });
-                            setIsEditingBank(true);
-                        }} className={styles.btn} style={{ width: '100%', background: 'rgba(235, 215, 63, 0.1)', color: '#ebd73f', border: '1px solid rgba(235, 215, 63, 0.3)' }}>
-                            + Add New Payment Method
-                        </button>
+                {conflicts[currentConflictIdx].type === 'scalar_multiple' && (
+                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                        Multiple values found in pasted text: <br/>
+                        {conflicts[currentConflictIdx].values.map((v, i) => <div key={i}>- {v}</div>)}
                     </div>
                 )}
-             </div>
+                {conflicts[currentConflictIdx].type === 'scalar_exists' && (
+                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                        Current form has: <strong>{conflicts[currentConflictIdx].currentValue}</strong><br/>
+                        Pasted text has: <strong>{conflicts[currentConflictIdx].value}</strong>
+                    </div>
+                )}
+                {conflicts[currentConflictIdx].type === 'item_match_rate' && (
+                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                        Item already exists with the same rate ({invoiceDetails.currency}{conflicts[currentConflictIdx].item.rate}).
+                    </div>
+                )}
+                {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
+                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                        Existing Item Rate: {invoiceDetails.currency}{conflicts[currentConflictIdx].existingItem.rate}<br/>
+                        Pasted Item Rate: {invoiceDetails.currency}{conflicts[currentConflictIdx].item.rate}
+                    </div>
+                )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {conflicts[currentConflictIdx].type.startsWith('scalar') && (
+                    <>
+                        <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                            Overwrite Current Value
+                        </button>
+                        <button onClick={() => handleConflictResolution('append')} className={styles.btn}>
+                            Append / Keep Both
+                        </button>
+                    </>
+                )}
+                
+                {conflicts[currentConflictIdx].type === 'item_match_rate' && (
+                    <>
+                        <button onClick={() => handleConflictResolution('merge')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                            Merge (Add +{conflicts[currentConflictIdx].item.qty} Quantity)
+                        </button>
+                        <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
+                            Add as Separate Line Item
+                        </button>
+                    </>
+                )}
+                
+                {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
+                    <>
+                        <button onClick={() => handleConflictResolution('merge', 'new')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                            Update Rate & Add Quantity
+                        </button>
+                        <button onClick={() => handleConflictResolution('merge', 'old')} className={styles.btn}>
+                            Keep Old Rate & Add Quantity
+                        </button>
+                        <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
+                            Add as Separate Line Item
+                        </button>
+                    </>
+                )}
+
+                <button onClick={() => handleConflictResolution('skip')} className={styles.btn} style={{ marginTop: '10px', borderColor: '#ff4d4d', color: '#ff4d4d' }}>
+                    Skip / Ignore Pasted Value
+                </button>
+            </div>
+            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>
+                Conflict {currentConflictIdx + 1} of {conflicts.length}
+            </div>
           </div>
+        </div>
       )}
 
-      {/* HEADER SECTION */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', background: 'rgba(255, 255, 255, 0.02)', padding: '20px 30px', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <div style={{ width: '40px', height: '40px', background: '#ebd73f', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'black', fontWeight: 'bold', fontSize: '20px', fontFamily: "'Panchang', sans-serif" }}>D</div>
-            <h1 style={{ fontSize: '24px', margin: 0, fontWeight: '700', fontFamily: "'Panchang', sans-serif" }}>Invoice Maker</h1>
-        </div>
-        <div style={{ display: 'flex', gap: '15px' }}>
-            <button onClick={handleClearForm} className={styles.btn} style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'white' }}>Clear</button>
-            <button onClick={handleShare} className={styles.btn} style={{ background: 'rgba(235, 215, 63, 0.1)', color: '#ebd73f', border: '1px solid rgba(235, 215, 63, 0.3)' }} disabled={isSharing}>
-                {isSharing ? 'Saving...' : <><Share2 size={18} style={{ marginRight: '8px', display: 'inline-block', verticalAlign: 'middle' }}/> Share Invoice</>}
-            </button>
-            <button onClick={generatePDF} className={styles.btn}>Download PDF</button>
-        </div>
+    
+      <div className={styles.header}>
+        <h1 className={styles.title}>Invoice Maker Pro</h1>
+        <p className={styles.subtitle}>Generate premium, secure invoices with integrated payment codes.</p>
       </div>
 
-      <div style={{ display: 'flex', gap: '30px' }}>
-        {/* MAIN EDITOR COLUMN */}
-        <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '30px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
+        
+        {/* LEFT COLUMN: BUILDER FORM */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Smart Paste Section */}
-          <div className={styles.card} style={{ background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(235, 215, 63, 0.2)' }}>
-              <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Search size={20} /> AI Smart Paste
-              </h3>
-              <p style={{ color: '#aaa', fontSize: '14px', marginBottom: '20px' }}>Paste a block of text (address, email, phone, gst) and our AI will instantly format it into the correct fields.</p>
-              
-              <textarea 
-                  value={smartText}
-                  onChange={(e) => setSmartText(e.target.value)}
-                  placeholder="Paste details here (e.g. John Doe, +1 234 567 890, 123 Main St...)"
-                  className={styles.inputField}
-                  rows={3}
-                  style={{ marginBottom: '15px' }}
-              />
-              
-              <button 
-                  onClick={handleSmartPaste} 
-                  className={styles.btn} 
-                  style={{ width: '100%', opacity: isAutoFilling ? 0.7 : 1 }}
-                  disabled={isAutoFilling}
-              >
-                  {isAutoFilling ? 'Extracting Details...' : 'Auto-Fill Details'}
+          <div className={styles.smartPasteCard}>
+            <h3 style={{ marginBottom: '10px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Search size={20} /> AI Smart Paste
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '15px', lineHeight: 1.4 }}>
+              Paste unstructured project details here. We'll extract the client name, contact info, and line items automatically.
+            </p>
+            <textarea 
+              value={smartText} 
+              onChange={(e) => setSmartText(e.target.value)} 
+              placeholder="e.g. Invoice for John Doe. Email: john@doe.com. Web Dev for $1500 and Hosting for $200."
+              className={styles.inputField} 
+              rows={3} 
+              style={{ resize: 'vertical', marginBottom: '15px' }} 
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={handleSmartPaste} disabled={isAutoFilling || isAutoFillSuccess || isAutoFillDone} style={{ background: (isAutoFillSuccess || isAutoFillDone) ? '#ebd73f' : '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: (isAutoFilling || isAutoFillSuccess || isAutoFillDone) ? 'wait' : 'pointer', fontWeight: 'bold', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}>
+                {isAutoFilling ? (
+                   <><Loader size={18} className={styles.spin} /> Analyzing text...</>
+                ) : isAutoFillSuccess ? (
+                   <><div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #000', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} /> Filling form...</>
+                ) : isAutoFillDone ? (
+                   <><CheckCircle2 size={18} color="#000" /> Success!</>
+                ) : (
+                   'Auto-Fill Invoice'
+                )}
               </button>
+              <button onClick={handleClearForm} className={styles.btnDanger} style={{ padding: '10px 20px', borderRadius: '8px' }}>
+                Clear Form
+              </button>
+            </div>
           </div>
 
-          {/* Section 2: Invoice & Client Info */}
+          {/* Section 1: My Details (Defaults) */}
+          <div className={styles.card} style={{ borderLeft: '4px solid #ebd73f' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h3 style={{ color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                  {myDetailsLocked ? <Lock size={20} /> : <Edit3 size={20} />} My Default Details
+                </h3>
+                {myDetailsLocked ? (
+                   <button onClick={() => setMyDetailsLocked(false)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.75rem' }}>Unlock to Edit</button>
+                ) : (
+                   <button onClick={saveMyDetails} className={styles.btnPrimary} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '5px' }}><Save size={14}/> Save Defaults</button>
+                )}
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', opacity: myDetailsLocked ? 0.6 : 1, transition: 'opacity 0.3s' }}>
+              <div>
+                 <label className={styles.label}>Company Name</label>
+                 <input type="text" value={myDetails.companyName} onChange={e => handleMyDetailsChange('companyName', e.target.value)} disabled={myDetailsLocked} className={styles.inputField} />
+              </div>
+              <div>
+                 <label className={styles.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    GST Number
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', color: '#ebd73f', fontSize: '0.75rem', textTransform: 'none', letterSpacing: 'normal', fontWeight: 'normal' }}>
+                       <input type="checkbox" checked={includeGST} onChange={e => setIncludeGST(e.target.checked)} /> Include in Invoice
+                    </label>
+                 </label>
+                 <input type="text" value={myDetails.gst} onChange={e => handleMyDetailsChange('gst', e.target.value)} disabled={myDetailsLocked || !includeGST} className={styles.inputField} style={{ opacity: includeGST ? 1 : 0.5 }} />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                 <label className={styles.label}>Official Address</label>
+                 <textarea value={myDetails.address} onChange={e => handleMyDetailsChange('address', e.target.value)} disabled={myDetailsLocked} className={styles.inputField} rows={2} />
+              </div>
+              <div>
+                 <label className={styles.label}>Email Address</label>
+                 <input type="email" value={myDetails.email} onChange={e => handleMyDetailsChange('email', e.target.value)} disabled={myDetailsLocked} className={styles.inputField} />
+              </div>
+              <div>
+                 <label className={styles.label}>Phone Number</label>
+                 <input type="text" value={myDetails.phone} onChange={e => handleMyDetailsChange('phone', e.target.value)} disabled={myDetailsLocked} className={styles.inputField} />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Client & Invoice Info */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '20px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '10px' }}><FileText size={20} /> Invoice & Client Info</h3>
+            <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={20} /> Invoice & Client Info
+            </h3>
+            
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginBottom: '20px' }}>
               <div>
                  <label className={styles.label}>Invoice Number</label>
@@ -843,13 +846,10 @@ export default function InvoiceMaker() {
               </div>
               <div>
                  <label className={styles.label}>Currency</label>
-                 <select value={invoiceDetails.currency} onChange={e => handleInvoiceChange('currency', e.target.value)} className={styles.inputField}>
-                   <option value="$">USD ($)</option>
-                   <option value="₹">INR (₹)</option>
-                   <option value="€">EUR (€)</option>
-                   <option value="£">GBP (£)</option>
-                   <option value="A$">AUD (A$)</option>
-                   <option value="C$">CAD (C$)</option>
+                 <select value={invoiceDetails.currency} onChange={e => setInvoiceDetails({...invoiceDetails, currency: e.target.value})} className={styles.inputField}>
+                    {allCurrencies.map(c => (
+                        <option key={c.code} value={c.symbol}>{c.code} ({c.symbol})</option>
+                    ))}
                  </select>
               </div>
               <div>
@@ -882,174 +882,354 @@ export default function InvoiceMaker() {
           <div className={styles.card}>
             <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Line Items</h3>
             
-            {items.map((item, idx) => (
-              <div key={idx} style={{ display: 'flex', gap: '15px', marginBottom: '15px', alignItems: 'flex-start' }}>
-                <div style={{ flex: 2 }}>
-                  <input type="text" placeholder="Service Description" value={item.desc} onChange={e => handleItemChange(idx, 'desc', e.target.value)} className={styles.inputField} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+              {items.map((item, index) => (
+                <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '2 1 250px', minWidth: '250px' }}>
+                    <input 
+                       list="inv-services-list"
+                       type="text" 
+                       value={item.desc} 
+                       onChange={(e) => handleItemChange(index, 'desc', e.target.value)}
+                       placeholder="Service Description"
+                       className={styles.inputField}
+                       style={{ padding: '8px 12px' }}
+                    />
+                    <datalist id="inv-services-list">
+                      {DEFAULT_SERVICES.map(s => <option key={s} value={s} />)}
+                    </datalist>
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span style={{color: '#888'}}>Qty</span>
+                    <input 
+                      type="number" 
+                      value={item.qty} 
+                      onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
+                      className={styles.inputField}
+                      style={{ padding: '8px 12px' }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span style={{color: '#888'}}>{invoiceDetails.currency}</span>
+                    <input 
+                      type="number" 
+                      value={item.rate} 
+                      onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
+                      className={styles.inputField}
+                      style={{ padding: '8px 12px' }}
+                    />
+                  </div>
+                  <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '100px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
+                     <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {invoiceDetails.currency}{(item.qty * item.rate).toFixed(2)}
+                  </div>
+                  <button onClick={() => removeItem(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '5px', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity=1} onMouseOut={(e) => e.currentTarget.style.opacity=0.7}>
+                    <Trash2 size={18} />
+                  </button>
                 </div>
-                <div style={{ width: '100px' }}>
-                  <input type="number" placeholder="Qty" value={item.qty} onChange={e => handleItemChange(idx, 'qty', e.target.value)} className={styles.inputField} />
-                </div>
-                <div style={{ width: '150px' }}>
-                  <input type="number" placeholder="Rate" value={item.rate} onChange={e => handleItemChange(idx, 'rate', e.target.value)} className={styles.inputField} />
-                </div>
-                <div style={{ width: '120px', display: 'flex', alignItems: 'center', height: '50px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', justifyContent: 'center', fontWeight: 'bold' }}>
-                   {invoiceDetails.currency}{(item.qty * item.rate).toLocaleString()}
-                </div>
-                <button onClick={() => removeItem(idx)} className={styles.btn} style={{ background: 'rgba(255, 68, 68, 0.1)', color: '#ff4444', padding: '0 15px', height: '50px' }}><X size={20} /></button>
-              </div>
-            ))}
-            <button onClick={addItem} className={styles.btn} style={{ background: 'transparent', border: '1px dashed rgba(255, 255, 255, 0.2)', width: '100%' }}>+ Add Item</button>
+              ))}
+            </div>
+
+            <button onClick={addItem} className={styles.btn}>
+              <Plus size={16} /> Add Another Item
+            </button>
             
-            <div style={{ marginTop: '20px' }}>
-                <label className={styles.label}>Invoice Notes (Terms/Conditions)</label>
-                <textarea value={invoiceDetails.notes} onChange={e => handleInvoiceChange('notes', e.target.value)} className={styles.inputField} rows={3} />
+            <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <span style={{ fontSize: '1.1rem', color: '#888' }}>Total Amount:</span>
+               <span style={{ fontSize: '1.3rem', color: '#ebd73f', fontWeight: 'bold' }}>{invoiceDetails.currency}{total.toFixed(2)}</span>
             </div>
           </div>
-        </div>
-
-        {/* RIGHT COLUMN (TOTALS & PAYMENT) */}
-        <div style={{ width: '380px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
-          <div className={styles.card} style={{ background: 'linear-gradient(180deg, rgba(235, 215, 63, 0.1) 0%, rgba(5, 5, 5, 0) 100%)', border: '1px solid rgba(235, 215, 63, 0.2)' }}>
-            <h3 style={{ color: '#ebd73f', margin: '0 0 20px 0', fontSize: '16px', letterSpacing: '2px', textTransform: 'uppercase' }}>Total Amount Due</h3>
-            <h1 style={{ fontSize: '48px', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{invoiceDetails.currency}{parseFloat(total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h1>
-            
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', color: '#888' }}>
-                <span>Subtotal</span>
-                <span>{invoiceDetails.currency}{total.toLocaleString()}</span>
-            </div>
-          </div>
+        </div>
+        
+        {/* RIGHT COLUMN: PAYMENT & ACTIONS */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+           
+           <CurrencyConverter />
 
-          <div className={styles.card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ color: '#ebd73f', margin: 0 }}>Payment Method</h3>
-                  <button onClick={() => setShowPaymentModal(true)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', textDecoration: 'underline' }}>Manage</button>
+           {/* Payment Methods */}
+           <div className={styles.card}>
+              <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldCheck size={18} /> Payment Methods
+              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '15px' }}>
+                <div style={{ flex: 1 }}>
+                  <label className={styles.label}>Select Bank Account</label>
+                  <select 
+                      className={styles.inputField} 
+                      value={selectedBankId} 
+                      onChange={(e) => setSelectedBankId(e.target.value)}
+                      style={{ width: '100%' }}
+                  >
+                      {bankAccounts.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
               </div>
 
-              {activeBank ? (
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <p style={{ color: '#fff', margin: '0 0 10px 0', fontSize: '18px', fontWeight: 'bold' }}>{activeBank.bankName}</p>
-                      <p style={{ color: '#888', margin: '0 0 5px 0', fontSize: '14px' }}>Name: {activeBank.accountName}</p>
-                      <p style={{ color: '#888', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>A/C: {activeBank.accountNumber}</p>
-                      {activeBank.ifsc && <p style={{ color: '#888', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>IFSC/Routing: {activeBank.ifsc}</p>}
-                      {activeBank.qrCode && (
-                          <div style={{ marginTop: '15px', background: '#fff', padding: '10px', borderRadius: '12px', display: 'inline-block' }}>
-                              <img src={activeBank.qrCode} alt="QR Code" style={{ width: '100px', height: '100px', objectFit: 'contain' }} />
+              {!isEditingBank ? (
+                  <>
+                      {selectedBankId && bankAccounts.find(b => b.id === selectedBankId) && (
+                          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', fontSize: '0.85rem', color: '#ccc', lineHeight: '1.6', position: 'relative' }}>
+                             <button onClick={() => {
+                                 setEditingBankDetails(bankAccounts.find(b => b.id === selectedBankId));
+                                 setIsEditingBank(true);
+                             }} style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: '#ebd73f', cursor: 'pointer' }}><Edit3 size={16} /></button>
+                             {(() => {
+                                 const b = bankAccounts.find(b => b.id === selectedBankId);
+                                 if (!b.bankName && b.details) {
+                                     return b.details.split('\n').map((line, i) => <div key={i}>{line}</div>);
+                                 }
+                                 return (
+                                     <>
+                                         <div>Bank: {b.bankName}</div>
+                                         <div>Name: {b.accountName}</div>
+                                         <div style={{ fontFamily: 'monospace' }}>A/C: {b.accountNumber}</div>
+                                         {b.ifsc && <div style={{ fontFamily: 'monospace' }}>IFSC: {b.ifsc}</div>}
+                                         {b.swift && <div style={{ fontFamily: 'monospace' }}>SWIFT: {b.swift}</div>}
+                                     </>
+                                 );
+                             })()}
+                             {qrCodeDataUrl && (
+                                 <div style={{ marginTop: '15px', textAlign: 'center' }}>
+                                     <img src={qrCodeDataUrl} alt="Payment QR" style={{ width: '120px', borderRadius: '8px', border: '2px solid #fff' }} />
+                                     <div style={{ fontSize: '0.7rem', color: '#888', marginTop: '5px' }}>Scan to Pay via UPI</div>
+                                 </div>
+                             )}
                           </div>
                       )}
-                  </div>
+                      <button onClick={() => {
+                          setEditingBankDetails({ id: 'bank_' + Date.now(), name: '', details: '', upi: '' });
+                          setIsEditingBank(true);
+                      }} className={styles.btn} style={{ width: '100%', marginTop: '10px', justifyContent: 'center' }}>
+                          <Plus size={16} /> Add New Payment Method
+                      </button>
+                  </>
               ) : (
-                  <button onClick={() => setShowPaymentModal(true)} className={styles.btn} style={{ width: '100%', background: 'rgba(255,255,255,0.05)' }}>
-                      Select Payment Method
-                  </button>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <div style={{ marginBottom: '10px' }}>
+                          <label className={styles.label}>Display Name</label>
+                          <input type="text" value={editingBankDetails.name} onChange={e => setEditingBankDetails({...editingBankDetails, name: e.target.value})} placeholder="e.g., HDFC Current" className={styles.inputField} />
+                      </div>
+                      <div style={{ marginBottom: '10px' }}>
+                          <label className={styles.label}>Bank Details (Account No, IFSC, etc.)</label>
+                          <textarea value={editingBankDetails.details} onChange={e => setEditingBankDetails({...editingBankDetails, details: e.target.value})} placeholder="Bank: HDFC\nA/C No: 123456" className={styles.inputField} rows={4} />
+                      </div>
+                      <div style={{ marginBottom: '15px' }}>
+                          <label className={styles.label}>UPI ID (optional, generates QR)</label>
+                          <input type="text" value={editingBankDetails.upi} onChange={e => setEditingBankDetails({...editingBankDetails, upi: e.target.value})} placeholder="name@bank" className={styles.inputField} />
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                          <button onClick={handleSaveBank} className={styles.btnPrimary} style={{ flex: 1, padding: '8px' }}>Save</button>
+                          <button onClick={() => setIsEditingBank(false)} className={styles.btn} style={{ flex: 1, padding: '8px', justifyContent: 'center' }}>Cancel</button>
+                      </div>
+                      {editingBankDetails.id.includes('bank_') && bankAccounts.find(b => b.id === editingBankDetails.id) && (
+                          <button onClick={() => handleDeleteBank(editingBankDetails.id)} className={styles.btnDanger} style={{ width: '100%', padding: '8px', marginTop: '10px' }}>
+                              Delete Method
+                          </button>
+                      )}
+                  </div>
               )}
-          </div>
-        </div>
-      </div>
+           </div>
 
-      {/* HIDDEN A4 TEMPLATE FOR PDF */}
-      <div style={{ position: 'absolute', top: '-15000px', left: '-15000px' }}>
-          <div id="inv-a4-template" style={{ 
-              width: '800px', 
-              background: '#050505', 
-              color: 'white', 
-              padding: '60px', 
-              display: 'none', 
-              flexDirection: 'column', 
-              boxSizing: 'border-box', 
-              position: 'relative', 
-              overflow: 'hidden',
-              fontFamily: "'Inter', sans-serif"
-          }}>
-              {/* Background Ambient Glow */}
-              <div style={{ position: 'absolute', top: '-20%', right: '-20%', width: '60%', height: '60%', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.1) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(80px)', zIndex: 0 }} />
+           <div className={styles.card}>
+              <label className={styles.label}>Footer Notes (Optional)</label>
+              <textarea 
+                  className={styles.inputField} 
+                  rows={3} 
+                  value={invoiceDetails.notes} 
+                  onChange={e => handleInvoiceChange('notes', e.target.value)} 
+                  placeholder="Thank you for your business!" 
+                  style={{ resize: 'vertical' }}
+              />
+           </div>
+
+           {/* Actions */}
+           <div className={styles.card} style={{ background: 'linear-gradient(145deg, #1a1a1a, #111)' }}>
+             <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Export & Share</h3>
+             
+             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '15px' }}>
+                <strong style={{ fontSize: '1.1rem', whiteSpace: 'nowrap' }}>Total Due:</strong>
+                <strong style={{ fontSize: '1.2rem', color: '#ebd73f', wordBreak: 'break-word', textAlign: 'right' }}>{invoiceDetails.currency}{total.toFixed(2)}</strong>
+             </div>
+
+             <button onClick={generatePDF} className={styles.btnPrimary} style={{ width: '100%', padding: '12px', justifyContent: 'center', marginBottom: '15px' }}>
+               <Download size={18} /> Download Invoice PDF
+             </button>
+             <button onClick={generateSecureLink} className={styles.btn} style={{ width: '100%', padding: '12px', justifyContent: 'center' }}>
+               <Lock size={18} /> Generate Secure Link
+             </button>
+             
+             {shareLink && (
+                <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '0.75rem' }}>
+                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
+                   <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                      <input type="text" readOnly value={shareLink} onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} className={styles.inputField} style={{ padding: '8px', flex: 1, cursor: 'pointer' }} title="Click to open link directly" />
+                      <button onClick={() => copyToClipboard(shareLink)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link"><Copy size={16} /></button>
+                   </div>
+                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client Password:</p>
+                   <div style={{ display: 'flex', gap: '8px' }}>
+                      <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
+                      <button onClick={() => copyToClipboard(sharePassword)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
+                   </div>
+                   <button onClick={handleCopyMessage} className={styles.btnShare}>
+                     <Share2 size={18} /> Copy Share Message
+                   </button>
+                </div>
+             )}
+           </div>
+
+
+      {/* HIDDEN INVOICE SLIDES FOR PDF GENERATION */}
+      <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
+          
+          {/* COVER SLIDE */}
+          <div id={`inv-slide-cover`} style={{ width: '1920px', height: '1080px', background: '#050505', color: 'white', padding: '100px 120px', display: 'none', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '60%', height: '60%', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.15) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(60px)', zIndex: 0 }} />
+              <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '50%', height: '50%', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.1) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(60px)', zIndex: 0 }} />
               
-              <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '30px', marginBottom: '30px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <h1 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 5px 0', fontFamily: "'Panchang', sans-serif" }}>Dripp Media</h1>
-                      <p style={{ color: '#888', margin: 0, fontSize: '14px' }}>hello@drippmedia.com</p>
-                      <p style={{ color: '#888', margin: '5px 0 0 0', fontSize: '14px' }}>www.drippmedia.com</p>
+              <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <h1 style={{ fontSize: '120px', color: '#ebd73f', margin: 0, letterSpacing: '-4px', fontWeight: '900', fontFamily: "'Panchang', sans-serif" }}>{myDetails.companyName.toUpperCase()}</h1>
+                  <p style={{ fontSize: '32px', color: '#888', margin: '10px 0 0 0', fontWeight: '300' }}>TAX INVOICE</p>
+              </div>
+              
+              <div style={{ position: 'relative', zIndex: 1, flex: 1.5, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <p style={{ fontSize: '24px', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px' }}>Billed To</p>
+                  <h2 style={{ fontSize: '80px', color: '#fff', margin: '0 0 10px 0', lineHeight: 1.1, fontFamily: "'Panchang', sans-serif" }}>{clientDetails.brandName || clientDetails.name || 'Client'}</h2>
+                  <p style={{ fontSize: '30px', color: '#aaa', margin: 0 }}>{clientDetails.name ? clientDetails.name + ' | ' : ''}{clientDetails.email}</p>
+              </div>
+              
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', borderTop: '2px solid rgba(235, 215, 63, 0.3)', paddingTop: '40px', marginTop: 'auto' }}>
+                  <div>
+                      <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Invoice Date</p>
+                      <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{clientDetails.date}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                      <h1 style={{ fontSize: '36px', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", letterSpacing: '2px' }}>INVOICE</h1>
-                      <p style={{ color: '#ebd73f', margin: '0 0 5px 0', fontSize: '16px', fontWeight: 'bold' }}>#{invoiceDetails.number}</p>
-                      <p style={{ color: '#888', margin: 0, fontSize: '14px' }}>Date: {invoiceDetails.date}</p>
+                      <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Invoice Number</p>
+                      <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{invoiceDetails.number}</p>
                   </div>
               </div>
-
-              <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
-                  <div style={{ flex: 1, paddingRight: '20px' }}>
-                      <p style={{ color: '#ebd73f', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 10px 0', fontWeight: 'bold' }}>Billed To</p>
-                      <h3 style={{ color: '#fff', fontSize: '20px', margin: '0 0 5px 0' }}>{clientDetails.name || 'Client Name'}</h3>
-                      {clientDetails.email && <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px' }}>{clientDetails.email}</p>}
-                      {clientDetails.mobile && <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px' }}>{clientDetails.mobile}</p>}
-                      {clientDetails.address && <p style={{ color: '#888', margin: '0', fontSize: '14px', whiteSpace: 'pre-wrap' }}>{clientDetails.address}</p>}
-                  </div>
-              </div>
-
-              <div style={{ position: 'relative', zIndex: 1, flex: 1 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
-                      <thead>
-                          <tr style={{ borderBottom: '2px solid rgba(235, 215, 63, 0.3)' }}>
-                              <th style={{ textAlign: 'left', padding: '15px 10px', color: '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>Description</th>
-                              <th style={{ textAlign: 'center', padding: '15px 10px', color: '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', width: '80px' }}>Qty</th>
-                              <th style={{ textAlign: 'right', padding: '15px 10px', color: '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', width: '120px' }}>Rate</th>
-                              <th style={{ textAlign: 'right', padding: '15px 10px', color: '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', width: '120px' }}>Amount</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          {validItems.map((item, idx) => (
-                              <tr key={idx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                                  <td style={{ padding: '20px 10px', color: '#fff', fontSize: '15px' }}>{item.desc || 'Service Item'}</td>
-                                  <td style={{ padding: '20px 10px', color: '#aaa', fontSize: '15px', textAlign: 'center' }}>{item.qty}</td>
-                                  <td style={{ padding: '20px 10px', color: '#aaa', fontSize: '15px', textAlign: 'right' }}>{invoiceDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</td>
-                                  <td style={{ padding: '20px 10px', color: '#fff', fontSize: '15px', textAlign: 'right', fontWeight: 'bold' }}>{invoiceDetails.currency}{(item.qty * item.rate).toLocaleString()}</td>
-                              </tr>
-                          ))}
-                      </tbody>
-                  </table>
-              </div>
-
-              <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
-                  <div style={{ width: '350px', background: 'rgba(255, 255, 255, 0.02)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#aaa', marginBottom: '15px', fontSize: '15px' }}>
-                          <span>Subtotal</span>
-                          <span>{invoiceDetails.currency}{parseFloat(total || 0).toLocaleString()}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '15px', alignItems: 'center' }}>
-                          <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Total Due</span>
-                          <span style={{ fontSize: '28px', color: '#ebd73f', fontWeight: 'bold', fontFamily: "'Panchang', sans-serif" }}>{invoiceDetails.currency}{parseFloat(total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                      </div>
-                  </div>
-              </div>
-
-              {activeBank && (
-                  <div style={{ position: 'relative', zIndex: 1, borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ flex: 1 }}>
-                          <p style={{ color: '#ebd73f', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 10px 0', fontWeight: 'bold' }}>Payment Details</p>
-                          <p style={{ color: '#fff', margin: '0 0 5px 0', fontSize: '15px', fontWeight: 'bold' }}>{activeBank.bankName}</p>
-                          <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px' }}>Name: {activeBank.accountName}</p>
-                          <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>A/C: {activeBank.accountNumber}</p>
-                          {activeBank.ifsc && <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>Routing/IFSC: {activeBank.ifsc}</p>}
-                          {activeBank.swift && <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>SWIFT: {activeBank.swift}</p>}
-                      </div>
-                      {activeBank.qrCode && (
-                          <div style={{ background: '#fff', padding: '10px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                              <img src={activeBank.qrCode} alt="QR Code" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
-                              <span style={{ color: 'black', fontSize: '10px', marginTop: '5px', fontWeight: 'bold' }}>Scan to Pay</span>
-                          </div>
-                      )}
-                  </div>
-              )}
-              
-              {invoiceDetails.notes && (
-                  <div style={{ position: 'relative', zIndex: 1, marginTop: '30px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px' }}>
-                      <p style={{ color: '#888', margin: 0, fontSize: '12px', whiteSpace: 'pre-wrap' }}>{invoiceDetails.notes}</p>
-                  </div>
-              )}
           </div>
-    </div>
+
+          {/* ITEM SLIDES */}
+          {(() => {
+              const validItems = items.filter(i => i.desc || i.rate > 0);
+              const slides = [];
+              for (let i = 0; i < validItems.length; i += 5) {
+                  const chunk = validItems.slice(i, i + 5);
+                  slides.push(
+                      <div key={i} id={`inv-slide-items_${i}`} style={{ width: '1920px', height: '1080px', background: '#050505', color: 'white', padding: '100px 120px', display: 'none', flexDirection: 'column', boxSizing: 'border-box', position: 'relative', overflow: 'hidden' }}>
+                          <div style={{ position: 'absolute', top: '10%', left: '20%', width: '40%', height: '40%', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(80px)', zIndex: 0 }} />
+                          
+                          <div style={{ position: 'relative', zIndex: 1, marginBottom: '60px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                              <h1 style={{ fontSize: '50px', color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif" }}>Line Items {validItems.length > 5 ? `(Part ${Math.floor(i/5)+1})` : ''}</h1>
+                          </div>
+                          
+                          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                              {chunk.map((item, idx) => (
+                                  <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '30px 40px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <div style={{ flex: 1 }}>
+                                          <h3 style={{ fontSize: '36px', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h3>
+                                          <p style={{ fontSize: '24px', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {invoiceDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</p>
+                                      </div>
+                                      <div style={{ fontSize: '42px', color: '#fff', fontWeight: 'bold' }}>
+                                          <span style={{ color: '#666' }}>=</span> {invoiceDetails.currency}{(item.qty * item.rate).toLocaleString()}
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  );
+              }
+              return slides;
+          })()}
+
+          {/* PAYMENT & TOTAL SLIDE */}
+          <div id={`inv-slide-payment`} style={{ width: '1920px', height: '1080px', background: '#050505', color: 'white', padding: '100px 120px', display: 'none', flexDirection: 'column', boxSizing: 'border-box', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', bottom: '0', right: '0', width: '60%', height: '60%', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.1) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(80px)', zIndex: 0 }} />
+              
+              <div style={{ position: 'relative', zIndex: 1, marginBottom: '60px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                  <h1 style={{ fontSize: '50px', color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif" }}>Payment Details</h1>
+              </div>
+              
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: '60px', flex: 1 }}>
+                  {/* Left: Bank Info */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                      {(() => {
+                          const bank = bankAccounts.find(b => b.id === selectedBankId);
+                          if (!bank) return <p style={{ fontSize: '24px', color: '#888' }}>No payment details selected.</p>;
+                          
+                          // Handle fallback schema (name, details)
+                          if (!bank.bankName && bank.details) {
+                              const lines = bank.details.split('\n');
+                              return (
+                                  <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '50px', borderRadius: '24px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                      {lines.map((line, idx) => (
+                                          <div key={idx} style={{ marginBottom: '20px' }}>
+                                              <p style={{ fontSize: '30px', color: '#fff', margin: 0 }}>{line}</p>
+                                          </div>
+                                      ))}
+                                  </div>
+                              );
+                          }
+
+                          return (
+                              <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '50px', borderRadius: '24px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                  <div style={{ marginBottom: '30px' }}>
+                                      <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Bank Name</p>
+                                      <p style={{ fontSize: '36px', color: '#fff', margin: 0 }}>{bank.bankName}</p>
+                                  </div>
+                                  <div style={{ marginBottom: '30px' }}>
+                                      <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Account Name</p>
+                                      <p style={{ fontSize: '36px', color: '#fff', margin: 0 }}>{bank.accountName}</p>
+                                  </div>
+                                  <div style={{ marginBottom: '30px' }}>
+                                      <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Account Number</p>
+                                      <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.accountNumber}</p>
+                                  </div>
+                                  {bank.ifsc && (
+                                      <div style={{ marginBottom: '30px' }}>
+                                          <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Routing / IFSC</p>
+                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.ifsc}</p>
+                                      </div>
+                                  )}
+                                  {bank.swift && (
+                                      <div>
+                                          <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>SWIFT Code</p>
+                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.swift}</p>
+                                      </div>
+                                  )}
+                              </div>
+                          );
+                      })()}
+                  </div>
+                  
+                  {/* Right: QR Code and Total */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                      {(() => {
+                          const bank = bankAccounts.find(b => b.id === selectedBankId);
+                          if (bank && bank.qrCode) {
+                              return (
+                                  <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '50px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                      <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 20px 0' }}>Scan to Pay</p>
+                                      <div style={{ background: '#fff', padding: '20px', borderRadius: '16px' }}>
+                                          <img src={bank.qrCode} alt="QR Code" style={{ width: '250px', height: '250px', objectFit: 'contain' }} />
+                                      </div>
+                                  </div>
+                              );
+                          }
+                          return null;
+                      })()}
+                      
+                      <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '50px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minWidth: '0' }}>
+                          <p style={{ fontSize: '24px', color: '#888', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0', whiteSpace: 'nowrap' }}>Total Amount Due</p>
+                          <h2 style={{ fontSize: 'clamp(40px, 5vw, 70px)', color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif", wordBreak: 'break-word', textAlign: 'center' }}>{invoiceDetails.currency}{parseFloat(total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+                      </div>
+                  </div>
+              </div>
+          </div>
       </div>
+
+        </div>
+      </div>
+    </div>
   );
 }

@@ -3,11 +3,6 @@ import { supabase } from '../../utils/supabaseClient';
 
 export async function POST(request) {
   try {
-    const adminKey = request.headers.get('x-admin-key');
-    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-      return NextResponse.json({ error: 'Unauthorized: Invalid Admin Key' }, { status: 401 });
-    }
-
     const data = await request.json();
     
     // Generate a unique ID for the quote link
