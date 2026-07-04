@@ -98,6 +98,8 @@ export default function InvoiceMaker() {
   const [smartText, setSmartText] = useState('');
   const [shareLink, setShareLink] = useState('');
   const [sharePassword, setSharePassword] = useState('');
+  const [isSharing, setIsSharing] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // -- INITIALIZATION & LOCAL STORAGE & SUPABASE --
   useEffect(() => {
@@ -554,6 +556,42 @@ export default function InvoiceMaker() {
   };
 
   // -- PDF GENERATION (A4 SINGLE PAGER) --
+  
+  const handleShare = async () => {
+    setIsSharing(true);
+    try {
+      const payload = {
+        password: sharePassword,
+        type: 'invoice',
+        invoiceDetails,
+        clientDetails,
+        items,
+        total,
+        selectedBankId,
+        bankAccounts
+      };
+      
+      const response = await fetch('/api/quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setShareLink(`${window.location.origin}/quote/${data.id}`);
+        setShowShareModal(true);
+      } else {
+        customAlert(data.error || 'Failed to generate link');
+      }
+    } catch (error) {
+      console.error(error);
+      customAlert('An error occurred');
+    }
+    setIsSharing(false);
+  };
+
   const generatePDF = async () => {
     const slide = document.getElementById(`inv-a4-template`);
     if (slide) {
