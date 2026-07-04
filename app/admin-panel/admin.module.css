@@ -452,3 +452,13 @@
   z-index: 0;
   border-radius: 50%;
 }
+
+/* Hide number input arrows */
+:global(input[type=number]::-webkit-inner-spin-button), 
+:global(input[type=number]::-webkit-outer-spin-button) { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+:global(input[type=number]) {
+  -moz-appearance: textfield;
+}

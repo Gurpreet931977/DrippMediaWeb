@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -603,7 +604,7 @@ export default function InvoiceMaker() {
   };
 
   const generateSecureLink = async () => {
-    const pass = Math.random().toString(36).slice(-6).toUpperCase();
+    const pass = Math.floor(1000 + Math.random() * 9000).toString();
     setSharePassword(pass);
     try {
         const payload = {
@@ -639,7 +640,7 @@ export default function InvoiceMaker() {
       <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
 
       {/* CUSTOM DIALOG (ALERT / CONFIRM) */}
-      {customDialog.isOpen && (
+      {customDialog.isOpen && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100000 }}>
           <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <h3 style={{ fontSize: '24px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{customDialog.title}</h3>
@@ -662,10 +663,10 @@ export default function InvoiceMaker() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
 
       {/* CONFLICT RESOLUTION MODAL */}
-      {showConflictModal && conflicts[currentConflictIdx] && (
+      {showConflictModal && conflicts[currentConflictIdx] && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#111', border: '1px solid #ebd73f', borderRadius: '12px', padding: '30px', maxWidth: '500px', width: '100%' }}>
             <h3 style={{ color: '#ebd73f', marginBottom: '20px' }}>Resolve Auto-Fill Conflict</h3>
@@ -744,7 +745,7 @@ export default function InvoiceMaker() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
 
     
       <div className={styles.header}>

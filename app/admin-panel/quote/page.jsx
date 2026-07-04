@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, ArrowUp, ArrowDown, Layers, Type, Image, EyeOff, Eye, Copy, MessageCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -620,9 +621,8 @@ export default function QuoteMaker() {
         
         if (response.ok) {
             const data = await response.json();
-        setShareLink(`${window.location.origin}/quote/${data.id}`);
-        setShowShareModal(true);
-      } else {
+            setShareLink(`${window.location.origin}/quote/${data.id}`);
+        } else {
             showAlert("Failed to save quote securely.");
         }
     } catch(err) {
@@ -639,7 +639,7 @@ export default function QuoteMaker() {
     <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
 
       {/* CUSTOM DIALOG (ALERT / CONFIRM) */}
-      {customDialog.isOpen && (
+      {customDialog.isOpen && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100000 }}>
           <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <h3 style={{ fontSize: '24px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{customDialog.title}</h3>
@@ -662,7 +662,7 @@ export default function QuoteMaker() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
 
       
       
