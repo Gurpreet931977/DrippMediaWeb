@@ -94,6 +94,7 @@ export default function InvoiceMaker() {
   });
 
   const [items, setItems] = useState([]);
+  const [activeDropdown, setActiveDropdown] = useState(null);
 
   // -- SMART PASTE & SHARING --
   const [smartText, setSmartText] = useState('');
@@ -662,7 +663,7 @@ export default function InvoiceMaker() {
             invoiceDetails,
             items,
             myDetails,
-            selectedBank: bankAccounts.find(b => b.id === selectedBankId),
+            selectedBank: { ...(bankAccounts.find(b => b.id === selectedBankId) || {}), qrCode: qrCodeDataUrl },
             total,
             password: pass,
             type: 'invoice'
@@ -674,7 +675,7 @@ export default function InvoiceMaker() {
         });
         if (response.ok) {
             const data = await response.json();
-            setShareLink(`${window.location.origin}/quote/${data.id}`);
+            setShareLink(`${window.location.origin}/invoice/${data.id}`);
         } else {
             showAlert("Failed to save invoice securely.");
         }
@@ -952,19 +953,62 @@ export default function InvoiceMaker() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {items.map((item, index) => (
                 <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
-                  <div style={{ flex: '2 1 250px', minWidth: '250px' }}>
-                    <input 
-                       list="inv-services-list"
-                       type="text" 
-                       value={item.desc} 
-                       onChange={(e) => handleItemChange(index, 'desc', e.target.value)}
-                       placeholder="e.g. Website Development or Social Media Management"
-                       className={styles.inputField}
-                       style={{ padding: '8px 12px' }}
-                    />
-                    <datalist id="inv-services-list">
-                      {DEFAULT_SERVICES.map(s => <option key={s} value={s} />)}
-                    </datalist>
+                  <div style={{ flex: '2 1 250px', minWidth: '250px', position: 'relative' }}>
+                    <div style={{ position: 'relative' }}>
+                      <input 
+                         type="text" 
+                         value={item.desc} 
+                         onChange={(e) => handleItemChange(index, 'desc', e.target.value)}
+                         placeholder="Item Title"
+                         className={styles.inputField}
+                         onFocus={() => setActiveDropdown(index)}
+                         onBlur={() => setTimeout(() => setActiveDropdown(null), 200)}
+                         style={{ padding: '12px 40px 12px 15px', width: '100%', boxSizing: 'border-box' }}
+                      />
+                      <div style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#ebd73f', pointerEvents: 'none', fontSize: '0.8rem' }}>
+                         ▼
+                      </div>
+                    </div>
+                    {activeDropdown === index && (
+                      <div style={{ 
+                        position: 'absolute', 
+                        top: 'calc(100% + 8px)', 
+                        left: 0, 
+                        width: '100%', 
+                        background: '#1a1a1a', 
+                        border: '1px solid #333', 
+                        borderRadius: '12px', 
+                        zIndex: 50, 
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.8)' 
+                      }}>
+                         <div style={{ position: 'absolute', top: '-6px', left: '20px', width: '12px', height: '12px', background: '#1a1a1a', borderTop: '1px solid #333', borderLeft: '1px solid #333', transform: 'rotate(45deg)' }} />
+                         <div style={{ padding: '10px 0', position: 'relative', zIndex: 2, background: '#1a1a1a', borderRadius: '12px' }}>
+                           {DEFAULT_SERVICES.map((s, i) => (
+                              <div 
+                                 key={s} 
+                                 onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleItemChange(index, 'desc', s);
+                                    setActiveDropdown(null);
+                                 }}
+                                 style={{ 
+                                   padding: '12px 20px', 
+                                   cursor: 'pointer', 
+                                   color: '#fff', 
+                                   fontWeight: '500',
+                                   fontSize: '0.9rem',
+                                   transition: 'background 0.2s',
+                                   borderBottom: i < DEFAULT_SERVICES.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
+                                 }}
+                                 onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                 onMouseOut={(e) => e.target.style.background = 'transparent'}
+                              >
+                                 {s}
+                              </div>
+                           ))}
+                         </div>
+                      </div>
+                    )}
                   </div>
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span style={{color: '#888'}}>Qty</span>
@@ -1007,8 +1051,27 @@ export default function InvoiceMaker() {
               ))}
             </div>
 
-            <button onClick={addItem} className={styles.btn}>
-              <Plus size={16} /> Add Another Item
+            <button 
+              onClick={addItem} 
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                background: '#1a1a1a',
+                color: '#fff',
+                border: '1px solid #333',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '0.9rem',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.background = '#2a2a2a'; e.currentTarget.style.borderColor = '#ebd73f'; e.currentTarget.style.color = '#ebd73f'; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#fff'; }}
+            >
+              <Plus size={16} /> Another Item
             </button>
             
             <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
