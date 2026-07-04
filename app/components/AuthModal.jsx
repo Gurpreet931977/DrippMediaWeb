@@ -128,41 +128,26 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
     try {
       const fullPhone = `${signupCountryCode}${rawPhone}`;
 
-      // Check for uniqueness of email or phone
-      const { data: existingEmailPhone } = await supabase
-         .from('users')
-         .select('email, phone')
-         .or(`email.eq.${signupEmail},phone.eq.${fullPhone}`);
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: signupName,
+          email: signupEmail,
+          phone: fullPhone,
+          nature: signupNature,
+          password: signupPassword,
+          security_phrase: signupSecurityPhrase
+        })
+      });
 
-      if (existingEmailPhone && existingEmailPhone.length > 0) {
-         setErrorMsg("An account with this email or phone number already exists.");
-         setIsSubmitting(false);
-         return;
-      }
+      const result = await response.json();
 
-      // Check for uniqueness of username
-      const { data: existingUser, error: existError } = await supabase
-         .from('users')
-         .select('name')
-         .ilike('name', signupName)
-         .maybeSingle();
-
-      if (existingUser) {
-         setErrorMsg(`Username "${signupName}" is already taken.`);
-         setIsSubmitting(false);
-         return;
-      }
-      
-      const { data, error } = await supabase.from('users').insert([
-        { name: signupName, email: signupEmail, phone: fullPhone, nature: signupNature, password: signupPassword, security_phrase: signupSecurityPhrase }
-      ]).select('*');
-
-      if (error) {
-         console.error("Supabase error:", error);
-         setErrorMsg(`Supabase Error: ${error.message}.`);
+      if (!response.ok) {
+         setErrorMsg(result.error || "Failed to create account.");
       } else {
          if (typeof window !== 'undefined') {
-            const userData = data && data.length > 0 ? data[0] : { name: signupName, email: signupEmail, nature: signupNature };
+            const userData = result;
             localStorage.setItem('dripp_user', JSON.stringify(userData));
             if (userData.highscore !== undefined) {
                 localStorage.setItem('dripp_highScore', userData.highscore.toString());
@@ -197,30 +182,26 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
 
     setIsSubmitting(true);
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', resetEmail)
-        .eq('security_phrase', resetSecurityPhrase);
+      const response = await fetch('/api/auth/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: resetEmail,
+          security_phrase: resetSecurityPhrase,
+          new_password: resetNewPassword
+        })
+      });
 
-      if (error || !data || data.length === 0) {
-         setErrorMsg("Invalid email or secret recovery phrase.");
+      const result = await response.json();
+
+      if (!response.ok) {
+         setErrorMsg(result.error || "Invalid email or secret recovery phrase.");
       } else {
-         const user = data[0];
-         const { error: updateError } = await supabase
-            .from('users')
-            .update({ password: resetNewPassword })
-            .eq('id', user.id);
-
-         if (updateError) {
-             setErrorMsg(`Error updating password: ${updateError.message}`);
-         } else {
-             setIsSuccess(true);
-             setTimeout(() => {
-                 setIsSuccess(false);
-                 setActiveTab('login');
-             }, 1500);
-         }
+         setIsSuccess(true);
+         setTimeout(() => {
+             setIsSuccess(false);
+             setActiveTab('login');
+         }, 1500);
       }
     } catch (err) {
       console.error(err);
@@ -237,37 +218,33 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
     setIsSubmitting(true);
     
     try {
-      let query = supabase.from('users').select('*');
-      if (loginEmail.includes('@')) {
-        query = query.eq('email', loginEmail);
-      } else {
-        query = query.ilike('name', loginEmail);
-      }
-      const { data, error } = await query;
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: loginEmail,
+          password: loginPassword
+        })
+      });
 
-      if (error) {
-         console.error("Supabase error:", error);
-         setErrorMsg(`Error fetching user: ${error.message}`);
-      } else if (!data || data.length === 0) {
-         setErrorMsg("Email or Player Tag not found, or not registered.");
+      const result = await response.json();
+
+      if (!response.ok) {
+         setErrorMsg(result.error || "Email or Player Tag not found, or not registered.");
       } else {
-         const userData = data[0];
-         if (userData.password !== loginPassword) {
-            setErrorMsg("Incorrect password. Please try again.");
-         } else {
-            if (typeof window !== 'undefined') {
-               localStorage.setItem('dripp_user', JSON.stringify(userData));
-               if (userData.highscore !== undefined) {
-                   localStorage.setItem('dripp_highScore', userData.highscore.toString());
-               }
+         const userData = result;
+         if (typeof window !== 'undefined') {
+            localStorage.setItem('dripp_user', JSON.stringify(userData));
+            if (userData.highscore !== undefined) {
+                localStorage.setItem('dripp_highScore', userData.highscore.toString());
             }
-            setIsSuccess(true);
-            setTimeout(() => {
-                setIsSuccess(false);
-                if (onLoginSuccess) onLoginSuccess();
-                onClose();
-            }, 1500);
          }
+         setIsSuccess(true);
+         setTimeout(() => {
+             setIsSuccess(false);
+             if (onLoginSuccess) onLoginSuccess();
+             onClose();
+         }, 1500);
       }
     } catch (err) {
       console.error(err);
