@@ -1,3 +1,4 @@
+import { customAlert } from './customAlert';
 export const generateScoreImage = async (score, gameName = null, isTopRecord = false) => {
     // Wait for fonts to load first just in case
     if (typeof document !== 'undefined' && document.fonts) {
@@ -180,7 +181,7 @@ export const shareScoreImage = async (score, gameName = null, isTopRecord = fals
         a.download = 'dripp-highscore.jpg';
         a.click();
         URL.revokeObjectURL(url);
-        alert('Score image downloaded! You can now share it.');
+        customAlert('Score image downloaded! You can now share it.');
       }
     } catch (err) {
       console.error('Share failed', err);
@@ -190,6 +191,6 @@ export const shareScoreImage = async (score, gameName = null, isTopRecord = fals
           ? `I just scored ${score} in ${gameName} on Dripp Media Arcade! Play now at https://drippmedia.com`
           : `I just scored ${score} on the Dripp Media Arcade! Play now at https://drippmedia.com`);
       navigator.clipboard.writeText(text);
-      alert('Score text copied to clipboard! Paste it to share.');
+      customAlert('Score text copied to clipboard! Paste it to share.');
     }
 };

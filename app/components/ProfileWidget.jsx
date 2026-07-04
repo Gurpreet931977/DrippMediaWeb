@@ -1,4 +1,5 @@
 'use client';
+import { customAlert } from '../utils/customAlert';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Upload, Image as ImageIcon, X, Check, Share2 } from 'lucide-react';
@@ -76,7 +77,7 @@ export default function ProfileWidget({ showScore, onLoginClick, hideShareScore 
   const handleShareScore = async () => {
     const scoreToShare = highScore > 0 ? highScore : parseInt(localStorage.getItem('dripp_highScore') || '0', 10);
     if (scoreToShare === 0) {
-      alert("Play a game first to get a high score!");
+      customAlert("Play a game first to get a high score!");
       return;
     }
     

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
 import styles from '../admin.module.css';
 import { supabase } from '../../utils/supabaseClient';
@@ -51,6 +52,12 @@ export default function InvoiceMaker() {
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [isAutoFillSuccess, setIsAutoFillSuccess] = useState(false);
   const [isAutoFillDone, setIsAutoFillDone] = useState(false);
+  
+  // Conflict Resolution State
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [conflicts, setConflicts] = useState([]);
+  const [currentConflictIdx, setCurrentConflictIdx] = useState(0);
+  const [pendingAutoFillData, setPendingAutoFillData] = useState(null);
 
   // -- INVOICE STATE --
   const [invoiceDetails, setInvoiceDetails] = useState({
@@ -68,6 +75,13 @@ export default function InvoiceMaker() {
     const dueLocalDate = new Date(Date.now() - tzOffsetMs + 15 * 86400000).toISOString().split('T')[0];
     setInvoiceDetails(prev => ({ ...prev, date: localDate, dueDate: dueLocalDate }));
   }, []);
+
+  
+  // Custom Dialog State
+  const [customDialog, setCustomDialog] = useState({ isOpen: false, type: 'alert', title: '', message: '', onConfirm: null });
+  const showAlert = (message, title = 'Notification') => setCustomDialog({ isOpen: true, type: 'alert', title, message, onConfirm: null });
+  const showConfirm = (message, onConfirm, title = 'Confirm Action') => setCustomDialog({ isOpen: true, type: 'confirm', title, message, onConfirm });
+  const closeDialog = () => setCustomDialog(prev => ({ ...prev, isOpen: false }));
 
   const [clientDetails, setClientDetails] = useState({
     name: '',
@@ -172,7 +186,7 @@ export default function InvoiceMaker() {
   const saveMyDetails = () => {
      localStorage.setItem('dripp_my_details', JSON.stringify(myDetails));
      setMyDetailsLocked(true);
-     alert("Default details saved successfully!");
+     showAlert("Default details saved successfully!");
   };
 
   const handleSaveBank = async () => {
@@ -215,10 +229,10 @@ export default function InvoiceMaker() {
   };
   
   const handleDeleteBank = async (id) => {
-      if(confirm("Are you sure you want to delete this payment method?")) {
+      showConfirm("Are you sure you want to delete this payment method?", async () => {
           const updatedBanks = bankAccounts.filter(b => b.id !== id);
           if (updatedBanks.length === 0) {
-              alert("You must have at least one payment method.");
+              showAlert("You must have at least one payment method.");
               return;
           }
           try {
@@ -231,7 +245,7 @@ export default function InvoiceMaker() {
           setBankAccounts(updatedBanks);
           setSelectedBankId(updatedBanks[0].id);
           setIsEditingBank(false);
-      }
+      });
   };
 
   const handleMyDetailsChange = (field, value) => setMyDetails(prev => ({ ...prev, [field]: value }));
@@ -251,58 +265,43 @@ export default function InvoiceMaker() {
   // -- SMART PASTE (AI) --
   const handleSmartPaste = async () => {
     if (!smartText.trim()) return;
-    
-    const hasExistingClient = clientDetails.name || clientDetails.address || clientDetails.email || clientDetails.mobile;
-    const hasExistingItems = items.length > 1 || (items[0] && items[0].rate > 0);
-    if (hasExistingClient || hasExistingItems) {
-        if (!confirm('Existing data found. Do you want to overwrite it with the smart paste? Click OK to overwrite, or Cancel to abort.')) {
-            return;
-        }
-    }
 
     setIsAutoFilling(true);
-    
-    // Simulate dramatic AI processing time
     await new Promise(r => setTimeout(r, 800));
-    
-    // Dynamically import compromise for NLP
     const nlp = (await import('compromise')).default;
     const doc = nlp(smartText);
-    
-    let updatedClient = { ...clientDetails };
-    let updatedInvoice = { ...invoiceDetails };
-    
-    // Extract Email
-    const emailMatch = smartText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
-    if (emailMatch) updatedClient.email = emailMatch[0];
 
-    // Extract Phone
-    const phoneMatch = smartText.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
-    if (phoneMatch) updatedClient.mobile = phoneMatch[0];
+    let parsedClient = {};
+    let parsedInvoice = {};
+    
+    // 1. Extract Emails (All)
+    const emailMatches = [...smartText.matchAll(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/g)].map(m => m[0]);
+    if (emailMatches.length > 0) parsedClient.emails = [...new Set(emailMatches)];
 
-    // Extract Name
+    // 2. Extract Phones (All)
+    const phoneMatches = [...smartText.matchAll(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g)].map(m => m[0]);
+    if (phoneMatches.length > 0) parsedClient.phones = [...new Set(phoneMatches)];
+
+    // 3. Extract Name & Brand
     const people = doc.people().out('array');
     if (people.length > 0) {
-        updatedClient.name = people[0].replace(/[.,;:!?]$/, '').trim();
+        parsedClient.names = [people[0].replace(/[.,;:!?]$/, '').trim()];
     } else {
         const nameMatch = smartText.match(/(?:name|client):\s*([a-zA-Z\s]+)/i);
-        if (nameMatch) updatedClient.name = nameMatch[1].trim();
+        if (nameMatch) parsedClient.names = [nameMatch[1].trim()];
     }
-    
-    // Items extraction using identical heuristics to Quote Maker
-    const newItems = [];
+
+    // 4. Extract Items/Prices using Advanced Heuristics + NLP
+    const parsedItems = [];
     const addressLines = [];
     const lines = smartText.split('\n').map(l => l.trim()).filter(l => l);
     
     lines.forEach(line => {
         if (line.match(/\bTotal\b/i) && !line.match(/each/i) && line.match(/=/)) return;
-        
-        // Skip Email
+        if (line.match(/Total Investment/i)) return;
         if (line.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/)) return;
-        // Skip Phone
         if (line.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/)) return;
-        // Skip Name label lines
-        if (line.match(/^(?:name|client):\s*/i)) return;
+        if (line.match(/^(?:name|client|brand|company|for):\s*/i)) return;
         
         let qty = 1;
         let rate = 0;
@@ -310,27 +309,20 @@ export default function InvoiceMaker() {
         
         let m1 = line.match(/^[-*•]?\s*(.*?)\s*\((\d+)\)\s*[:-]?\s*[$€£₹]?\s*([\d,.]+)\s*each/i);
         if (m1) {
-            desc = m1[1].trim();
-            qty = parseInt(m1[2]);
-            rate = parseFloat(m1[3].replace(/,/g, ''));
-            newItems.push({desc, qty, rate});
+            parsedItems.push({desc: m1[1].trim(), qty: parseInt(m1[2]), rate: parseFloat(m1[3].replace(/,/g, ''))});
             return;
         }
         
         let m2 = line.match(/^[-*•]?\s*(.*?)\s*=\s*[$€£₹]?\s*([\d,.]+)/i);
         if (m2) {
              if (m2[1].toLowerCase().includes('total')) return;
-             desc = m2[1].trim();
-             rate = parseFloat(m2[2].replace(/,/g, ''));
-             newItems.push({desc, qty: 1, rate});
+             parsedItems.push({desc: m2[1].trim(), qty: 1, rate: parseFloat(m2[2].replace(/,/g, ''))});
              return;
         }
         
         let m3 = line.match(/^[-*•]?\s*(.*?)\s*-\s*[$€£₹]?\s*([\d,.]+)/i);
         if (m3) {
-             desc = m3[1].trim();
-             rate = parseFloat(m3[2].replace(/,/g, ''));
-             newItems.push({desc, qty: 1, rate});
+             parsedItems.push({desc: m3[1].trim(), qty: 1, rate: parseFloat(m3[2].replace(/,/g, ''))});
              return;
         }
 
@@ -340,9 +332,7 @@ export default function InvoiceMaker() {
             const rateStr = money[0];
             const hasCurrency = rateStr.match(/[$€£₹]/) || line.match(/[$€£₹]|dollars?|usd|eur|gbp|inr|rupees?|bucks?|cents?/i);
             
-            if (!hasCurrency && rateStr.trim().match(/^[\d,.\s]+$/)) {
-                // Ignore false positive money match
-            } else {
+            if (hasCurrency || !rateStr.trim().match(/^[\d,.\s]+$/)) {
                 rate = parseFloat(rateStr.replace(/[^0-9.]/g, ''));
                 if (!isNaN(rate)) {
                     desc = line.replace(rateStr, '').replace(/for|at|costing|cost|USD|EUR|GBP|INR|\$|€|£|₹/gi, '');
@@ -350,237 +340,255 @@ export default function InvoiceMaker() {
                     desc = desc.replace(/^[^a-zA-Z0-9]+/, '').replace(/[^a-zA-Z0-9]+$/, '').trim();
                     if (desc) {
                         desc = desc.charAt(0).toUpperCase() + desc.slice(1);
-                        newItems.push({ desc, qty: 1, rate });
+                        parsedItems.push({ desc, qty: 1, rate });
                     }
                     return;
                 }
             }
         }
         
-        // If not matched as an item, consider it part of address or notes
         addressLines.push(line);
     });
 
     if (addressLines.length > 0) {
-        updatedClient.address = addressLines.join('\n').replace(/^(?:Address|Addr|Location):\s*/i, '').trim();
+        let rawAddress = addressLines.join('\n');
+        
+        // Extract GST if present (and remove it from raw address so it can be appended neatly at the end)
+        let gstFound = '';
+        const gstMatch = rawAddress.match(/GST(?:[\s:-]+)?([0-9A-Z]{15})/i);
+        if (gstMatch) {
+            gstFound = gstMatch[1].toUpperCase();
+            rawAddress = rawAddress.replace(gstMatch[0], '');
+        }
+
+        // Remove typical address labels before the colon (e.g., "Building No./Flat No.:", "State:")
+        let cleaned = rawAddress.replace(/(?:[a-zA-Z /.-]+:)/g, ',');
+        
+        // Split by commas or newlines, trim, and remove empty
+        let parts = cleaned.replace(/\n/g, ',').split(',').map(s => s.trim()).filter(s => s);
+        
+        // Deduplicate sequential or identical words
+        let uniqueParts = [];
+        parts.forEach(p => {
+            if (!uniqueParts.some(u => u.toLowerCase() === p.toLowerCase())) {
+                uniqueParts.push(p);
+            }
+        });
+        
+        let finalAddress = uniqueParts.join(', ');
+        if (gstFound) {
+             finalAddress += `\nGST: ${gstFound}`;
+        }
+        
+        if (finalAddress) {
+            parsedClient.address = [finalAddress];
+        }
     }
 
-    if (newItems.length > 0) setItems(newItems);
-    
-    // Extract Currency
-    if (smartText.includes('₹') || smartText.includes('INR')) updatedInvoice.currency = '₹';
-    else if (smartText.includes('€') || smartText.includes('EUR')) updatedInvoice.currency = '€';
-    else if (smartText.includes('£') || smartText.includes('GBP')) updatedInvoice.currency = '£';
-    else if (smartText.includes('$') || smartText.includes('USD')) updatedInvoice.currency = '$';
+    if (smartText.includes('₹') || smartText.includes('INR')) parsedInvoice.currency = '₹';
+    else if (smartText.includes('€') || smartText.includes('EUR')) parsedInvoice.currency = '€';
+    else if (smartText.includes('£') || smartText.includes('GBP')) parsedInvoice.currency = '£';
+    else if (smartText.includes('$') || smartText.includes('USD')) parsedInvoice.currency = '$';
 
-    setClientDetails(updatedClient);
-    setInvoiceDetails(updatedInvoice);
-    setSmartText(''); 
+    // --- CONFLICT DETECTION ---
+    const detectedConflicts = [];
+
+    const checkScalarConflict = (fieldName, parsedValues, currentValue, label) => {
+        if (!parsedValues || parsedValues.length === 0) return;
+        const uniqueValues = [...new Set(parsedValues)];
+        
+        if (uniqueValues.length > 1) {
+            detectedConflicts.push({
+                type: 'scalar_multiple',
+                field: fieldName,
+                label,
+                values: uniqueValues,
+                currentValue
+            });
+        } else if (currentValue && currentValue !== uniqueValues[0]) {
+            detectedConflicts.push({
+                type: 'scalar_exists',
+                field: fieldName,
+                label,
+                value: uniqueValues[0],
+                currentValue
+            });
+        } else {
+            if (!parsedClient.staged) parsedClient.staged = {};
+            parsedClient.staged[fieldName] = uniqueValues[0];
+        }
+    };
+
+    checkScalarConflict('email', parsedClient.emails, clientDetails.email, 'Email Address');
+    checkScalarConflict('mobile', parsedClient.phones, clientDetails.mobile, 'Phone Number');
+    checkScalarConflict('name', parsedClient.names, clientDetails.name, 'Client Name');
+    checkScalarConflict('address', parsedClient.address, clientDetails.address, 'Address');
+
+    // Helper for Items
+    const pendingItems = [];
     
-    // Switch to Filling animation phase
+    // First, consolidate parsed items themselves
+    const consolidatedParsedItems = [];
+    parsedItems.forEach(pi => {
+        const sim = consolidatedParsedItems.find(c => c.desc.toLowerCase().replace(/s$/, '') === pi.desc.toLowerCase().replace(/s$/, ''));
+        if (sim && sim.rate === pi.rate) {
+            sim.qty += pi.qty;
+        } else {
+            consolidatedParsedItems.push(pi);
+        }
+    });
+
+    consolidatedParsedItems.forEach(pi => {
+        const sim = items.find(ex => ex.desc && ex.desc.toLowerCase().replace(/s$/, '') === pi.desc.toLowerCase().replace(/s$/, ''));
+        if (sim) {
+            if (sim.rate === pi.rate) {
+                detectedConflicts.push({
+                    type: 'item_match_rate',
+                    item: pi,
+                    existingItem: sim,
+                    label: `Duplicate Item Found: ${pi.desc}`
+                });
+            } else {
+                detectedConflicts.push({
+                    type: 'item_diff_rate',
+                    item: pi,
+                    existingItem: sim,
+                    label: `Item with different rate found: ${pi.desc}`
+                });
+            }
+        } else {
+            pendingItems.push(pi);
+        }
+    });
+
+    setPendingAutoFillData({
+        parsedClient,
+        parsedInvoice,
+        pendingItems,
+        stagedClient: parsedClient.staged || {}
+    });
+
     setIsAutoFilling(false);
-    setIsAutoFillSuccess(true);
-    
-    // Brief delay to show "filling" state
-    await new Promise(r => setTimeout(r, 600));
-    setIsAutoFillSuccess(false);
-    setIsAutoFillDone(true);
-    
-    setTimeout(() => {
-        setIsAutoFillDone(false);
-        setSmartText('');
-    }, 2000);
+
+    if (detectedConflicts.length > 0) {
+        setConflicts(detectedConflicts);
+        setCurrentConflictIdx(0);
+        setShowConflictModal(true);
+    } else {
+        applySmartPaste({
+            parsedClient,
+            parsedInvoice,
+            pendingItems,
+            stagedClient: parsedClient.staged || {}
+        });
+    }
+  };
+
+  const applySmartPaste = (data) => {
+      let updatedClient = { ...clientDetails, ...data.stagedClient };
+      let updatedInvoice = { ...invoiceDetails };
+      
+      if (data.parsedInvoice.currency) updatedInvoice.currency = data.parsedInvoice.currency;
+      
+      setClientDetails(updatedClient);
+      setInvoiceDetails(updatedInvoice);
+      
+      if (data.pendingItems.length > 0) {
+          const validCurrent = items.filter(i => i.desc || i.rate > 0);
+          setItems([...validCurrent, ...data.pendingItems]);
+      }
+      
+      setSmartText('');
+      setIsAutoFillSuccess(true);
+      setTimeout(() => {
+          setIsAutoFillSuccess(false);
+          setIsAutoFillDone(true);
+          setTimeout(() => setIsAutoFillDone(false), 2000);
+      }, 600);
+  };
+
+  const handleConflictResolution = (action, valueOverride = null) => {
+      const conflict = conflicts[currentConflictIdx];
+      const data = { ...pendingAutoFillData };
+      
+      if (conflict.type.startsWith('scalar')) {
+          if (action === 'overwrite') {
+              data.stagedClient[conflict.field] = valueOverride || conflict.value || conflict.values[0];
+          } else if (action === 'append') {
+              const current = data.stagedClient[conflict.field] || conflict.currentValue;
+              const toAppend = valueOverride || conflict.value || conflict.values.join(' / ');
+              data.stagedClient[conflict.field] = current ? `${current} / ${toAppend}` : toAppend;
+          }
+      } else if (conflict.type.startsWith('item')) {
+          if (action === 'merge') {
+              const itemsCopy = [...items];
+              const idx = itemsCopy.findIndex(i => i === conflict.existingItem);
+              if (idx !== -1) {
+                  itemsCopy[idx].qty += conflict.item.qty;
+                  if (valueOverride === 'new' && conflict.type === 'item_diff_rate') {
+                       itemsCopy[idx].rate = conflict.item.rate;
+                  }
+                  setItems(itemsCopy);
+              }
+          } else if (action === 'add_new') {
+              data.pendingItems.push(conflict.item);
+          }
+      }
+      
+      setPendingAutoFillData(data);
+      
+      if (currentConflictIdx < conflicts.length - 1) {
+          setCurrentConflictIdx(currentConflictIdx + 1);
+      } else {
+          setShowConflictModal(false);
+          applySmartPaste(data);
+      }
   };
 
   const handleClearForm = () => {
-    if(confirm('Are you sure you want to clear the entire form?')) {
+    showConfirm('Are you sure you want to clear the entire form?', () => {
         setClientDetails({ name: '', address: '', email: '', mobile: '' });
         setInvoiceDetails(prev => ({ ...prev, number: 'INV-' + Math.floor(1000 + Math.random() * 9000), notes: 'Payment is due within 15 days. Thank you for your business!' }));
         setItems([{ desc: 'Video Production Services', qty: 1, rate: 0 }]);
-    }
+    });
   };
 
-  // -- PDF GENERATION (NATIVE jsPDF) --
+  // -- PDF GENERATION (PRESENTATION STYLE) --
   const generatePDF = async () => {
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdf = new jsPDF('l', 'px', [1920, 1080]);
     
-    // Header & Background (Same premium aesthetic as Quote Maker)
-    pdf.setFillColor(10, 10, 10);
-    pdf.rect(0, 0, 210, 297, 'F');
+    // Build array of page IDs to capture
+    const validItems = items.filter(i => i.desc || i.rate > 0);
+    const pages = ['cover'];
+    for (let i = 0; i < validItems.length; i += 5) {
+        pages.push(`items_${i}`);
+    }
+    pages.push('payment');
     
-    // Logo / Company Name
-    pdf.setTextColor(235, 215, 63); // Dripp Yellow
-    pdf.setFontSize(28);
-    pdf.setFont("helvetica", "bold");
-    pdf.text(myDetails.companyName.toUpperCase(), 15, 30);
-    
-    pdf.setTextColor(150, 150, 150);
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    if (includeGST && myDetails.gst) pdf.text(`GSTIN: ${myDetails.gst}`, 15, 38);
-    
-    // Invoice Title & Info
-    pdf.setTextColor(235, 215, 63);
-    pdf.setFontSize(20);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("TAX INVOICE", 195, 30, { align: 'right' });
-    
-    pdf.setTextColor(150, 150, 150);
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(invoiceDetails.number, 195, 38, { align: 'right' });
-    pdf.text(`Date: ${invoiceDetails.date}`, 195, 44, { align: 'right' });
-    pdf.text(`Due Date: ${invoiceDetails.dueDate}`, 195, 50, { align: 'right' });
-
-    pdf.setDrawColor(235, 215, 63);
-    pdf.setLineWidth(0.5);
-    pdf.line(15, 58, 195, 58);
-    
-    // Split Section: Bill From vs Bill To
-    // BILL FROM
-    pdf.setTextColor(235, 215, 63);
-    pdf.setFontSize(11);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("BILL FROM:", 15, 68);
-    
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(myDetails.companyName, 15, 75);
-    pdf.setTextColor(150, 150, 150);
-    const splitMyAddress = pdf.splitTextToSize(myDetails.address, 70);
-    pdf.text(splitMyAddress, 15, 80);
-    let currentY = 80 + (splitMyAddress.length * 4) + 2;
-    if(myDetails.email) { pdf.text(myDetails.email, 15, currentY); currentY += 5; }
-    if(myDetails.phone) { pdf.text(myDetails.phone, 15, currentY); }
-
-    // BILL TO
-    pdf.setTextColor(235, 215, 63);
-    pdf.setFontSize(11);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("BILL TO:", 195, 68, { align: 'right' });
-    
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(clientDetails.name || "NIL (not provided)", 195, 75, { align: 'right' });
-    pdf.setTextColor(150, 150, 150);
-    if(clientDetails.address) {
-       const splitClientAddress = pdf.splitTextToSize(clientDetails.address, 70);
-       let addrY = 80;
-       // align right for arrays requires drawing line by line or a specific plugin, we'll draw line by line
-       splitClientAddress.forEach(line => {
-           pdf.text(line, 195, addrY, { align: 'right' });
-           addrY += 5;
-       });
-       currentY = Math.max(currentY, addrY);
-    } else {
-       pdf.text("NIL (not provided)", 195, 80, { align: 'right' });
-       currentY = Math.max(currentY, 85);
+    for (let i = 0; i < pages.length; i++) {
+        const pageId = pages[i];
+        const slide = document.getElementById(`inv-slide-${pageId}`);
+        if (slide) {
+            slide.style.display = 'flex';
+            try {
+                const canvas = await html2canvas(slide, { scale: 2, backgroundColor: '#050505' });
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                if (i > 0) pdf.addPage([1920, 1080], 'l');
+                pdf.addImage(imgData, 'JPEG', 0, 0, 1920, 1080);
+            } catch (err) {
+                console.error(`Error rendering slide ${i}`, err);
+            }
+            slide.style.display = 'none';
+        }
     }
     
-    if(clientDetails.email) { 
-        pdf.text(clientDetails.email, 195, currentY, { align: 'right' }); 
-        currentY += 5; 
-    } else {
-        pdf.text("NIL (not provided)", 195, currentY, { align: 'right' }); 
-        currentY += 5; 
-    }
+    const brandNameStr = clientDetails.brandName ? `_${clientDetails.brandName.replace(/\s+/g, '_')}` : (clientDetails.name ? `_${clientDetails.name.replace(/\s+/g, '_')}` : '');
+    pdf.save(`Dripp_Media_Invoice${brandNameStr}_${invoiceDetails.number}.pdf`);
     
-    if(clientDetails.mobile) { 
-        pdf.text(clientDetails.mobile, 195, currentY, { align: 'right' }); 
-    } else {
-        pdf.text("NIL (not provided)", 195, currentY, { align: 'right' }); 
-    }
-
-    // Services Table
-    const tableData = items.map(item => [
-      item.desc || 'Service Item',
-      item.qty.toString(),
-      `${invoiceDetails.currency}${parseFloat(item.rate || 0).toFixed(2)}`,
-      `${invoiceDetails.currency}${(item.qty * item.rate).toFixed(2)}`
-    ]);
-
-    let finalY = currentY + 15;
-
-    import('jspdf-autotable').then(({ default: autoTable }) => {
-      autoTable(pdf, {
-        startY: finalY,
-        head: [['Description', 'Qty', 'Rate', 'Amount']],
-        body: tableData,
-        theme: 'plain',
-        headStyles: { fillColor: [20, 20, 20], textColor: [235, 215, 63], fontStyle: 'bold' },
-        bodyStyles: { fillColor: [10, 10, 10], textColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [15, 15, 15] },
-        columnStyles: {
-           1: { halign: 'center' },
-           2: { halign: 'right' },
-           3: { halign: 'right' }
-        },
-        margin: { left: 15, right: 15 }
-      });
-
-      // Total Section
-      finalY = pdf.lastAutoTable.finalY + 15;
-      pdf.setDrawColor(235, 215, 63);
-      pdf.setLineWidth(0.5);
-      pdf.line(120, finalY - 5, 195, finalY - 5);
-      
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Total Due:", 120, finalY + 2);
-      
-      pdf.setTextColor(235, 215, 63);
-      pdf.text(`${invoiceDetails.currency}${total.toFixed(2)}`, 195, finalY + 2, { align: 'right' });
-
-      // Bank Details & QR Code section at the bottom
-      const bottomStartY = finalY + 25;
-      
-      const selectedBank = bankAccounts.find(b => b.id === selectedBankId);
-      if (selectedBank) {
-         pdf.setTextColor(235, 215, 63);
-         pdf.setFontSize(11);
-         pdf.setFont("helvetica", "bold");
-         pdf.text("PAYMENT DETAILS:", 15, bottomStartY);
-         
-         pdf.setTextColor(200, 200, 200);
-         pdf.setFontSize(10);
-         pdf.setFont("helvetica", "normal");
-         const splitBankDetails = pdf.splitTextToSize(selectedBank.details, 100);
-         pdf.text(splitBankDetails, 15, bottomStartY + 7);
-         
-         // Inject QR Code if available
-         if (qrCodeDataUrl) {
-             // Add QR Code at the bottom right
-             pdf.addImage(qrCodeDataUrl, 'PNG', 160, bottomStartY - 5, 35, 35);
-             pdf.setTextColor(150, 150, 150);
-             pdf.setFontSize(8);
-             pdf.text("Scan to Pay", 177, bottomStartY + 33, { align: 'center' });
-         }
-      }
-
-      // Footer Notes
-      if (invoiceDetails.notes) {
-          const notesY = bottomStartY + 45;
-          pdf.setDrawColor(50, 50, 50);
-          pdf.line(15, notesY, 195, notesY);
-          
-          pdf.setTextColor(150, 150, 150);
-          pdf.setFontSize(9);
-          pdf.setFont("helvetica", "italic");
-          const splitNotes = pdf.splitTextToSize(invoiceDetails.notes, 180);
-          pdf.text(splitNotes, 15, notesY + 8);
-      }
-
-      const brandNameStr = clientDetails.brandName ? `_${clientDetails.brandName.replace(/\s+/g, '_')}` : (clientDetails.name ? `_${clientDetails.name.replace(/\s+/g, '_')}` : '');
-      pdf.save(`Dripp_Media_Invoice${brandNameStr}_${invoiceDetails.number}.pdf`);
-      
-      // Save to local history
-      const savedInvoices = JSON.parse(localStorage.getItem('dripp_invoices') || '[]');
-      savedInvoices.push({ ...invoiceDetails, clientDetails, items, total, id: Date.now() });
-      localStorage.setItem('dripp_invoices', JSON.stringify(savedInvoices));
-    });
+    // Save to local history
+    const savedInvoices = JSON.parse(localStorage.getItem('dripp_invoices') || '[]');
+    savedInvoices.push({ ...invoiceDetails, clientDetails, items, total, id: Date.now() });
+    localStorage.setItem('dripp_invoices', JSON.stringify(savedInvoices));
   };
 
   const copyToClipboard = (text) => {
@@ -591,7 +599,7 @@ export default function InvoiceMaker() {
     const clientName = clientDetails.name ? clientDetails.name.split(' ')[0] : 'Client';
     const msg = `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 Password: ${sharePassword}\n\nLet me know if you have any questions!`;
     copyToClipboard(msg);
-    alert('Message copied to clipboard!');
+    showAlert('Message copied to clipboard!');
   };
 
   const generateSecureLink = async () => {
@@ -617,17 +625,128 @@ export default function InvoiceMaker() {
             const data = await response.json();
             setShareLink(`${window.location.origin}/quote/${data.id}`);
         } else {
-            alert("Failed to save invoice securely.");
+            showAlert("Failed to save invoice securely.");
         }
     } catch(err) {
-        alert("API error while generating secure link.");
+        showAlert("API error while generating secure link.");
     }
   };
 
   if (!isClient) return <div style={{padding: '50px', color: 'white'}}>Loading Invoice Maker...</div>;
 
   return (
-    <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
+
+      <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
+
+      {/* CUSTOM DIALOG (ALERT / CONFIRM) */}
+      {customDialog.isOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100000 }}>
+          <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+            <h3 style={{ fontSize: '24px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{customDialog.title}</h3>
+            <p style={{ fontSize: '16px', color: '#ccc', marginBottom: '30px', lineHeight: '1.5' }}>{customDialog.message}</p>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+              {customDialog.type === 'confirm' && (
+                <button onClick={closeDialog} style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
+              )}
+              <button 
+                onClick={() => {
+                  if (customDialog.type === 'confirm' && customDialog.onConfirm) {
+                    customDialog.onConfirm();
+                  }
+                  closeDialog();
+                }} 
+                style={{ flex: 1, padding: '12px', background: '#ebd73f', border: 'none', color: '#111', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                {customDialog.type === 'confirm' ? 'Confirm' : 'OK'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFLICT RESOLUTION MODAL */}
+      {showConflictModal && conflicts[currentConflictIdx] && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#111', border: '1px solid #ebd73f', borderRadius: '12px', padding: '30px', maxWidth: '500px', width: '100%' }}>
+            <h3 style={{ color: '#ebd73f', marginBottom: '20px' }}>Resolve Auto-Fill Conflict</h3>
+            
+            <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                <strong style={{ display: 'block', marginBottom: '10px', color: '#fff' }}>{conflicts[currentConflictIdx].label}</strong>
+                
+                {conflicts[currentConflictIdx].type === 'scalar_multiple' && (
+                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                        Multiple values found in pasted text: <br/>
+                        {conflicts[currentConflictIdx].values.map((v, i) => <div key={i}>- {v}</div>)}
+                    </div>
+                )}
+                {conflicts[currentConflictIdx].type === 'scalar_exists' && (
+                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                        Current form has: <strong>{conflicts[currentConflictIdx].currentValue}</strong><br/>
+                        Pasted text has: <strong>{conflicts[currentConflictIdx].value}</strong>
+                    </div>
+                )}
+                {conflicts[currentConflictIdx].type === 'item_match_rate' && (
+                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                        Item already exists with the same rate ({invoiceDetails.currency}{conflicts[currentConflictIdx].item.rate}).
+                    </div>
+                )}
+                {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
+                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
+                        Existing Item Rate: {invoiceDetails.currency}{conflicts[currentConflictIdx].existingItem.rate}<br/>
+                        Pasted Item Rate: {invoiceDetails.currency}{conflicts[currentConflictIdx].item.rate}
+                    </div>
+                )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {conflicts[currentConflictIdx].type.startsWith('scalar') && (
+                    <>
+                        <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                            Overwrite Current Value
+                        </button>
+                        <button onClick={() => handleConflictResolution('append')} className={styles.btn}>
+                            Append / Keep Both
+                        </button>
+                    </>
+                )}
+                
+                {conflicts[currentConflictIdx].type === 'item_match_rate' && (
+                    <>
+                        <button onClick={() => handleConflictResolution('merge')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                            Merge (Add +{conflicts[currentConflictIdx].item.qty} Quantity)
+                        </button>
+                        <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
+                            Add as Separate Line Item
+                        </button>
+                    </>
+                )}
+                
+                {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
+                    <>
+                        <button onClick={() => handleConflictResolution('merge', 'new')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                            Update Rate & Add Quantity
+                        </button>
+                        <button onClick={() => handleConflictResolution('merge', 'old')} className={styles.btn}>
+                            Keep Old Rate & Add Quantity
+                        </button>
+                        <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
+                            Add as Separate Line Item
+                        </button>
+                    </>
+                )}
+
+                <button onClick={() => handleConflictResolution('skip')} className={styles.btn} style={{ marginTop: '10px', borderColor: '#ff4d4d', color: '#ff4d4d' }}>
+                    Skip / Ignore Pasted Value
+                </button>
+            </div>
+            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>
+                Conflict {currentConflictIdx + 1} of {conflicts.length}
+            </div>
+          </div>
+        </div>
+      )}
+
+    
       <div className={styles.header}>
         <h1 className={styles.title}>Invoice Maker Pro</h1>
         <p className={styles.subtitle}>Generate premium, secure invoices with integrated payment codes.</p>
@@ -739,7 +858,7 @@ export default function InvoiceMaker() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
               <div>
                  <label className={styles.label}>Client Name</label>
                  <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="Acme Corp" className={styles.inputField} />
@@ -747,6 +866,10 @@ export default function InvoiceMaker() {
               <div>
                  <label className={styles.label}>Client Email</label>
                  <input type="email" value={clientDetails.email} onChange={e => handleClientChange('email', e.target.value)} placeholder="john@acme.com" className={styles.inputField} />
+              </div>
+              <div>
+                 <label className={styles.label}>Client Mobile</label>
+                 <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="+1 555-0199" className={styles.inputField} />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                  <label className={styles.label}>Client Billing Address</label>
@@ -941,6 +1064,142 @@ export default function InvoiceMaker() {
                 </div>
              )}
            </div>
+
+
+      {/* HIDDEN INVOICE SLIDES FOR PDF GENERATION */}
+      <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
+          
+          {/* COVER SLIDE */}
+          <div id={`inv-slide-cover`} style={{ width: '1920px', height: '1080px', background: '#050505', color: 'white', padding: '100px 120px', display: 'none', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '60%', height: '60%', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.15) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(60px)', zIndex: 0 }} />
+              <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '50%', height: '50%', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.1) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(60px)', zIndex: 0 }} />
+              
+              <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <h1 style={{ fontSize: '120px', color: '#ebd73f', margin: 0, letterSpacing: '-4px', fontWeight: '900', fontFamily: "'Panchang', sans-serif" }}>{myDetails.companyName.toUpperCase()}</h1>
+                  <p style={{ fontSize: '32px', color: '#888', margin: '10px 0 0 0', fontWeight: '300' }}>TAX INVOICE</p>
+              </div>
+              
+              <div style={{ position: 'relative', zIndex: 1, flex: 1.5, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <p style={{ fontSize: '24px', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px' }}>Billed To</p>
+                  <h2 style={{ fontSize: '80px', color: '#fff', margin: '0 0 10px 0', lineHeight: 1.1, fontFamily: "'Panchang', sans-serif" }}>{clientDetails.brandName || clientDetails.name || 'Client'}</h2>
+                  <p style={{ fontSize: '30px', color: '#aaa', margin: 0 }}>{clientDetails.name ? clientDetails.name + ' | ' : ''}{clientDetails.email}</p>
+              </div>
+              
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', borderTop: '2px solid rgba(235, 215, 63, 0.3)', paddingTop: '40px', marginTop: 'auto' }}>
+                  <div>
+                      <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Invoice Date</p>
+                      <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{clientDetails.date}</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Invoice Number</p>
+                      <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{invoiceDetails.number}</p>
+                  </div>
+              </div>
+          </div>
+
+          {/* ITEM SLIDES */}
+          {(() => {
+              const validItems = items.filter(i => i.desc || i.rate > 0);
+              const slides = [];
+              for (let i = 0; i < validItems.length; i += 5) {
+                  const chunk = validItems.slice(i, i + 5);
+                  slides.push(
+                      <div key={i} id={`inv-slide-items_${i}`} style={{ width: '1920px', height: '1080px', background: '#050505', color: 'white', padding: '100px 120px', display: 'none', flexDirection: 'column', boxSizing: 'border-box', position: 'relative', overflow: 'hidden' }}>
+                          <div style={{ position: 'absolute', top: '10%', left: '20%', width: '40%', height: '40%', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(80px)', zIndex: 0 }} />
+                          
+                          <div style={{ position: 'relative', zIndex: 1, marginBottom: '60px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                              <h1 style={{ fontSize: '50px', color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif" }}>Line Items {validItems.length > 5 ? `(Part ${Math.floor(i/5)+1})` : ''}</h1>
+                          </div>
+                          
+                          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                              {chunk.map((item, idx) => (
+                                  <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '30px 40px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <div style={{ flex: 1 }}>
+                                          <h3 style={{ fontSize: '36px', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h3>
+                                          <p style={{ fontSize: '24px', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {invoiceDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</p>
+                                      </div>
+                                      <div style={{ fontSize: '42px', color: '#fff', fontWeight: 'bold' }}>
+                                          <span style={{ color: '#666' }}>=</span> {invoiceDetails.currency}{(item.qty * item.rate).toLocaleString()}
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  );
+              }
+              return slides;
+          })()}
+
+          {/* PAYMENT & TOTAL SLIDE */}
+          <div id={`inv-slide-payment`} style={{ width: '1920px', height: '1080px', background: '#050505', color: 'white', padding: '100px 120px', display: 'none', flexDirection: 'column', boxSizing: 'border-box', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', bottom: '0', right: '0', width: '60%', height: '60%', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.1) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(80px)', zIndex: 0 }} />
+              
+              <div style={{ position: 'relative', zIndex: 1, marginBottom: '60px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                  <h1 style={{ fontSize: '50px', color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif" }}>Payment Details</h1>
+              </div>
+              
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: '60px', flex: 1 }}>
+                  {/* Left: Bank Info */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                      {(() => {
+                          const bank = bankAccounts.find(b => b.id === selectedBankId);
+                          if (!bank) return <p style={{ fontSize: '24px', color: '#888' }}>No payment details selected.</p>;
+                          return (
+                              <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '50px', borderRadius: '24px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                  <div style={{ marginBottom: '30px' }}>
+                                      <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Bank Name</p>
+                                      <p style={{ fontSize: '36px', color: '#fff', margin: 0 }}>{bank.bankName}</p>
+                                  </div>
+                                  <div style={{ marginBottom: '30px' }}>
+                                      <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Account Name</p>
+                                      <p style={{ fontSize: '36px', color: '#fff', margin: 0 }}>{bank.accountName}</p>
+                                  </div>
+                                  <div style={{ marginBottom: '30px' }}>
+                                      <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Account Number</p>
+                                      <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.accountNumber}</p>
+                                  </div>
+                                  {bank.ifsc && (
+                                      <div style={{ marginBottom: '30px' }}>
+                                          <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Routing / IFSC</p>
+                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.ifsc}</p>
+                                      </div>
+                                  )}
+                                  {bank.swift && (
+                                      <div>
+                                          <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>SWIFT Code</p>
+                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.swift}</p>
+                                      </div>
+                                  )}
+                              </div>
+                          );
+                      })()}
+                  </div>
+                  
+                  {/* Right: QR Code and Total */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                      {(() => {
+                          const bank = bankAccounts.find(b => b.id === selectedBankId);
+                          if (bank && bank.qrCode) {
+                              return (
+                                  <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '50px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                      <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 20px 0' }}>Scan to Pay</p>
+                                      <div style={{ background: '#fff', padding: '20px', borderRadius: '16px' }}>
+                                          <img src={bank.qrCode} alt="QR Code" style={{ width: '250px', height: '250px', objectFit: 'contain' }} />
+                                      </div>
+                                  </div>
+                              );
+                          }
+                          return null;
+                      })()}
+                      
+                      <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '50px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                          <p style={{ fontSize: '24px', color: '#888', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Total Amount Due</p>
+                          <h2 style={{ fontSize: '70px', color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif" }}>{invoiceDetails.currency}{parseFloat(total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
 
         </div>
       </div>

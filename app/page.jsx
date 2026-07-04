@@ -1,4 +1,5 @@
 "use client";
+import { customAlert } from './utils/customAlert';
 
 import { useEffect, useRef, useState, memo } from "react";
 import gsap from "gsap";
@@ -1364,7 +1365,7 @@ export default function ComingSoon() {
              link.download = `DrippMedia-Score-${currentScore}.png`;
              link.href = pregeneratedShareUrl;
              link.click();
-             alert("Instagram sharing via browser is unsupported on this device. The image has been downloaded so you can share it manually!");
+             customAlert("Instagram sharing via browser is unsupported on this device. The image has been downloaded so you can share it manually!");
          }
       }
       

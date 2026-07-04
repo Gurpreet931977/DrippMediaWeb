@@ -1,4 +1,5 @@
 'use client';
+import { customAlert } from '../utils/customAlert';
 import { useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -2024,11 +2025,11 @@ export default function Page() {
                         }, 500);
                     }, 1500);
                 } else {
-                    alert("Something went wrong. Please try again.");
+                    customAlert("Something went wrong. Please try again.");
                     contactSubmit.classList.remove('loading');
                 }
             } catch (err) {
-                alert("Failed to connect to the server.");
+                customAlert("Failed to connect to the server.");
                 contactSubmit.classList.remove('loading');
             }
         });

@@ -174,8 +174,10 @@ export default function SharedQuote() {
   }
 
   // Calculate Subtotals
+  const isInvoice = quoteData.type === 'invoice';
+  const details = isInvoice ? quoteData.invoiceDetails : quoteData.quoteDetails;
   const items = quoteData.items || [];
-  const currency = quoteData.quoteDetails.currency;
+  const currency = details?.currency || '$';
 
   return (
     <div style={{ minHeight: '100vh', background: '#050505', color: 'white', padding: 'clamp(20px, 5vw, 60px) clamp(15px, 4vw, 20px)', fontFamily: "'Inter', sans-serif", position: 'relative', overflow: 'hidden' }}>
@@ -231,7 +233,7 @@ export default function SharedQuote() {
         {/* Cover Header Section */}
         <div className="quote-header">
           <h1 style={{ fontSize: 'clamp(2.5rem, 10vw, 4rem)', color: '#ebd73f', margin: '0 0 10px 0', letterSpacing: '-2px', fontWeight: '900', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 20px rgba(235, 215, 63, 0.3)', wordBreak: 'break-word' }}>DRIPP MEDIA</h1>
-          <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', color: '#888', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>Proposal & Investment Overview</p>
+          <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', color: '#888', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{isInvoice ? 'TAX INVOICE' : 'Proposal & Investment Overview'}</p>
         </div>
 
         {/* LEFT PANEL */}
@@ -280,9 +282,51 @@ export default function SharedQuote() {
           </div>
 
           {/* Message Section */}
-          {quoteData.quoteDetails.message && (
+          {!isInvoice && details?.message && (
             <div style={{ background: 'rgba(235, 215, 63, 0.03)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', borderLeft: '4px solid #ebd73f', border: '1px solid rgba(235, 215, 63, 0.1)' }}>
-              <p style={{ fontStyle: 'italic', margin: 0, lineHeight: '1.8', color: '#ddd', fontSize: 'clamp(1rem, 4vw, 1.2rem)', textAlign: 'center' }}>"{quoteData.quoteDetails.message}"</p>
+              <p style={{ fontStyle: 'italic', margin: 0, lineHeight: '1.8', color: '#ddd', fontSize: 'clamp(1rem, 4vw, 1.2rem)', textAlign: 'center' }}>"{details.message}"</p>
+            </div>
+          )}
+          
+          {/* Bank Details Section for Invoice */}
+          {isInvoice && quoteData.selectedBank && (
+            <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', backdropFilter: 'blur(10px)', width: '100%', boxSizing: 'border-box' }}>
+                <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.9rem)', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px' }}>Payment Details</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <div>
+                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Bank Name</p>
+                        <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: '#fff', margin: 0 }}>{quoteData.selectedBank.bankName}</p>
+                    </div>
+                    <div>
+                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Account Name</p>
+                        <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: '#fff', margin: 0 }}>{quoteData.selectedBank.accountName}</p>
+                    </div>
+                    <div>
+                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Account Number</p>
+                        <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: '#fff', margin: 0 }}>{quoteData.selectedBank.accountNumber}</p>
+                    </div>
+                    {quoteData.selectedBank.ifsc && (
+                        <div>
+                            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Routing / IFSC</p>
+                            <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: '#fff', margin: 0 }}>{quoteData.selectedBank.ifsc}</p>
+                        </div>
+                    )}
+                    {quoteData.selectedBank.swift && (
+                        <div>
+                            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>SWIFT Code</p>
+                            <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: '#fff', margin: 0 }}>{quoteData.selectedBank.swift}</p>
+                        </div>
+                    )}
+                    
+                    {quoteData.selectedBank.qrCode && (
+                        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 10px 0' }}>Scan to Pay</p>
+                            <div style={{ background: '#fff', padding: '10px', borderRadius: '12px', display: 'inline-block' }}>
+                                <img src={quoteData.selectedBank.qrCode} alt="QR Code" style={{ width: '150px', height: '150px', objectFit: 'contain' }} />
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
           )}
         </div>
@@ -291,7 +335,7 @@ export default function SharedQuote() {
         <div className="quote-right">
           {/* Services Section */}
           <div>
-            <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'left' }}>Proposed Services</h3>
+            <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'left' }}>{isInvoice ? 'Billed Items' : 'Proposed Services'}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {(quoteData.items || []).map((item, i) => {
                 const qty = parseFloat(item.qty || 0);
@@ -315,7 +359,7 @@ export default function SharedQuote() {
           {/* Investment Section */}
           <div style={{ marginTop: '20px' }}>
             <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '20px', padding: 'clamp(40px, 6vw, 60px) clamp(20px, 4vw, 40px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', width: '100%', boxSizing: 'border-box' }}>
-                <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#888', textTransform: 'uppercase', letterSpacing: 'clamp(1px, 1vw, 2px)', margin: '0 0 10px 0', textAlign: 'center' }}>Total {quoteData.packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
+                <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#888', textTransform: 'uppercase', letterSpacing: 'clamp(1px, 1vw, 2px)', margin: '0 0 10px 0', textAlign: 'center' }}>{isInvoice ? 'Total Due' : `Total ${quoteData.packageType === 'monthly' ? 'Monthly ' : ''}Investment`}</p>
                 
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', textShadow: '0 0 20px rgba(235, 215, 63, 0.4)', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
                     <span style={{ fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', color: '#ebd73f', fontWeight: '500' }}>{currency}</span>
