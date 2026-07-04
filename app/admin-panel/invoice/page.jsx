@@ -605,6 +605,37 @@ export default function InvoiceMaker() {
     });
   };
 
+  const handleCopyAllDetails = () => {
+    const data = {
+      clientDetails,
+      invoiceDetails,
+      items,
+      selectedBankId,
+      includeGST,
+      myDetails
+    };
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+      .then(() => showAlert('All form details copied to clipboard! You can paste them later.'))
+      .catch(() => showAlert('Failed to copy to clipboard.'));
+  };
+
+  const handlePasteAllDetails = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const data = JSON.parse(text);
+      if (data.clientDetails) setClientDetails(data.clientDetails);
+      if (data.invoiceDetails) setInvoiceDetails(data.invoiceDetails);
+      if (data.items) setItems(data.items);
+      if (data.selectedBankId) setSelectedBankId(data.selectedBankId);
+      if (data.includeGST !== undefined) setIncludeGST(data.includeGST);
+      if (data.myDetails) setMyDetails(data.myDetails);
+      showAlert('All form details pasted successfully!');
+    } catch (err) {
+      showAlert('Failed to paste. Make sure you copied valid form details earlier.');
+    }
+  };
+
+
   // -- PDF GENERATION (PRESENTATION STYLE) --
   const generatePDF = async () => {
     const pdf = new jsPDF('l', 'px', [1920, 1080]);
@@ -847,6 +878,14 @@ export default function InvoiceMaker() {
               </button>
               <button onClick={handleClearForm} className={styles.btnDanger} style={{ padding: '10px 20px', borderRadius: '8px' }}>
                 Clear Form
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button onClick={handleCopyAllDetails} className={styles.btn} style={{ padding: '10px 20px', borderRadius: '8px', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                <Copy size={18} /> Copy Form Details
+              </button>
+              <button onClick={handlePasteAllDetails} className={styles.btn} style={{ padding: '10px 20px', borderRadius: '8px', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                <FileText size={18} /> Paste Form Details
               </button>
             </div>
           </div>
