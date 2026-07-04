@@ -192,6 +192,18 @@ export default function InvoiceMaker() {
      showAlert("Default details saved successfully!");
   };
 
+  
+  const handleQRUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleMyDetailsChange('qrCode', reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveBank = async () => {
       let updatedBanks = [...bankAccounts];
       const existingIdx = updatedBanks.findIndex(b => b.id === editingBankDetails.id);
@@ -799,8 +811,8 @@ export default function InvoiceMaker() {
               <p style={{ color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', fontSize: '14px', marginBottom: '20px' }}>Paste a block of text (address, email, phone, gst) and our AI will instantly format it into the correct fields.</p>
               
               <textarea 
-                  value={smartPasteText}
-                  onChange={(e) => setSmartPasteText(e.target.value)}
+                  value={smartText}
+                  onChange={(e) => setSmartText(e.target.value)}
                   placeholder="Paste details here (e.g. John Doe, +1 234 567 890, 123 Main St...)"
                   className={styles.inputField}
                   rows={3}
@@ -810,10 +822,10 @@ export default function InvoiceMaker() {
               <button 
                   onClick={handleSmartPaste} 
                   className={styles.btn} 
-                  style={{ width: '100%', opacity: isProcessingSmartPaste ? 0.7 : 1 }}
-                  disabled={isProcessingSmartPaste}
+                  style={{ width: '100%', opacity: isAutoFilling ? 0.7 : 1 }}
+                  disabled={isAutoFilling}
               >
-                  {isProcessingSmartPaste ? 'Extracting Details...' : 'Auto-Fill Details'}
+                  {isAutoFilling ? 'Extracting Details...' : 'Auto-Fill Details'}
               </button>
           </div>
 
