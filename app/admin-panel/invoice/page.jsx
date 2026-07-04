@@ -571,6 +571,12 @@ export default function InvoiceMaker() {
   // -- PDF GENERATION (A4 SINGLE PAGER) --
   
   const handleShare = async () => {
+    let adminKey = localStorage.getItem('dripp_admin_key');
+    if (!adminKey) {
+      adminKey = window.prompt("Enter Admin Secret Key to generate the secure link:");
+      if (!adminKey) return; // cancelled
+    }
+
     setIsSharing(true);
     try {
       const payload = {
@@ -586,15 +592,22 @@ export default function InvoiceMaker() {
       
       const response = await fetch('/api/quote', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey 
+        },
         body: JSON.stringify(payload)
       });
       
       const data = await response.json();
       
       if (response.ok) {
+        localStorage.setItem('dripp_admin_key', adminKey); // save for future
         setShareLink(`${window.location.origin}/quote/${data.id}`);
         setShowShareModal(true);
+      } else if (response.status === 401) {
+        localStorage.removeItem('dripp_admin_key');
+        customAlert('Unauthorized: Invalid Admin Secret Key');
       } else {
         customAlert(data.error || 'Failed to generate link');
       }

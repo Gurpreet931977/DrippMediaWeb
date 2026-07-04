@@ -597,11 +597,15 @@ export default function QuoteMaker() {
   };
 
   const generateSecureLink = async () => {
+    let adminKey = localStorage.getItem('dripp_admin_key');
+    if (!adminKey) {
+      adminKey = window.prompt("Enter Admin Secret Key to generate the secure link:");
+      if (!adminKey) return; // cancelled
+    }
+
     const pass = Math.floor(1000 + Math.random() * 9000).toString();
     setSharePassword(pass);
     
-    // In a real app, this posts to an API route that stores it in Supabase
-    // For now, we simulate the link creation.
     try {
         const payload = {
             clientDetails,
@@ -614,13 +618,20 @@ export default function QuoteMaker() {
         
         const response = await fetch('/api/quote', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-admin-key': adminKey
+            },
             body: JSON.stringify(payload)
         });
         
         if (response.ok) {
             const data = await response.json();
+            localStorage.setItem('dripp_admin_key', adminKey); // save for future
             setShareLink(`${window.location.origin}/quote/${data.id}`);
+        } else if (response.status === 401) {
+            localStorage.removeItem('dripp_admin_key');
+            showAlert("Unauthorized: Invalid Admin Secret Key");
         } else {
             showAlert("Failed to save quote securely.");
         }
