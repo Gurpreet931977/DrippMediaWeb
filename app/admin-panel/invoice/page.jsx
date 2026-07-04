@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle, X, Upload } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
@@ -100,6 +100,7 @@ export default function InvoiceMaker() {
   const [sharePassword, setSharePassword] = useState('');
   const [isSharing, setIsSharing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // -- INITIALIZATION & LOCAL STORAGE & SUPABASE --
   useEffect(() => {
@@ -189,6 +190,17 @@ export default function InvoiceMaker() {
      localStorage.setItem('dripp_my_details', JSON.stringify(myDetails));
      setMyDetailsLocked(true);
      showAlert("Default details saved successfully!");
+  };
+
+  const handleQRUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleMyDetailsChange('qrCode', reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSaveBank = async () => {
@@ -803,8 +815,8 @@ export default function InvoiceMaker() {
               <p style={{ color: '#aaa', fontSize: '14px', marginBottom: '20px' }}>Paste a block of text (address, email, phone, gst) and our AI will instantly format it into the correct fields.</p>
               
               <textarea 
-                  value={smartPasteText}
-                  onChange={(e) => setSmartPasteText(e.target.value)}
+                  value={smartText}
+                  onChange={(e) => setSmartText(e.target.value)}
                   placeholder="Paste details here (e.g. John Doe, +1 234 567 890, 123 Main St...)"
                   className={styles.inputField}
                   rows={3}
@@ -814,10 +826,10 @@ export default function InvoiceMaker() {
               <button 
                   onClick={handleSmartPaste} 
                   className={styles.btn} 
-                  style={{ width: '100%', opacity: isProcessingSmartPaste ? 0.7 : 1 }}
-                  disabled={isProcessingSmartPaste}
+                  style={{ width: '100%', opacity: isAutoFilling ? 0.7 : 1 }}
+                  disabled={isAutoFilling}
               >
-                  {isProcessingSmartPaste ? 'Extracting Details...' : 'Auto-Fill Details'}
+                  {isAutoFilling ? 'Extracting Details...' : 'Auto-Fill Details'}
               </button>
           </div>
 
