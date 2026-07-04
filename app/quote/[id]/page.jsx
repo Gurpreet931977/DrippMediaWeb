@@ -243,7 +243,8 @@ export default function SharedQuote() {
             <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.9rem)', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px' }}>Prepared For</p>
             <h2 style={{ fontSize: 'clamp(1.8rem, 7vw, 2.5rem)', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", wordBreak: 'break-word' }}>{quoteData.clientDetails.brandName || quoteData.clientDetails.name}</h2>
             {quoteData.clientDetails.brandName && <p style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#aaa', margin: '0 0 5px 0' }}>{quoteData.clientDetails.name}</p>}
-            <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#666', margin: '0 0 20px 0', wordBreak: 'break-all' }}>{quoteData.clientDetails.email}</p>
+            <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#666', margin: '0 0 5px 0', wordBreak: 'break-all' }}>{quoteData.clientDetails.email}</p>
+            {quoteData.clientDetails.gst && <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#888', margin: '0 0 20px 0' }}>GST: {quoteData.clientDetails.gst}</p>}
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px', textAlign: 'left', marginTop: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
@@ -345,6 +346,7 @@ export default function SharedQuote() {
                   <div key={i} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(235, 215, 63, 0.15)', borderRadius: '12px', padding: 'clamp(15px, 3vw, 20px) clamp(15px, 4vw, 20px)', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center' }}>
                      <div style={{ flex: '1 1 200px' }}>
                         <h4 style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#fff', margin: '0 0 8px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h4>
+                        {item.details && <p style={{ fontSize: 'clamp(0.8rem, 3.5vw, 0.95rem)', color: '#ccc', margin: '0 0 10px 0', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{item.details}</p>}
                         <p style={{ fontSize: 'clamp(0.75rem, 3vw, 0.85rem)', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {currency}{rate.toLocaleString()}</p>
                      </div>
                      <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: 'bold', color: '#ebd73f', textShadow: '0 0 10px rgba(235, 215, 63, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>

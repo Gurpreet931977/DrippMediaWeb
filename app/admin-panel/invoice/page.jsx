@@ -88,11 +88,12 @@ export default function InvoiceMaker() {
     name: '',
     address: '',
     email: '',
-    mobile: ''
+    mobile: '',
+    gst: ''
   });
 
   const [items, setItems] = useState([
-    { desc: 'Video Production Services', qty: 1, rate: 0 }
+    { desc: 'Video Production Services', details: '', qty: 1, rate: 0 }
   ]);
 
   // -- SMART PASTE & SHARING --
@@ -859,7 +860,7 @@ export default function InvoiceMaker() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
               <div>
                  <label className={styles.label}>Client Name</label>
                  <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="Acme Corp" className={styles.inputField} />
@@ -871,6 +872,10 @@ export default function InvoiceMaker() {
               <div>
                  <label className={styles.label}>Client Mobile</label>
                  <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="+1 555-0199" className={styles.inputField} />
+              </div>
+              <div>
+                 <label className={styles.label}>GST Number (Optional)</label>
+                 <input type="text" value={clientDetails.gst} onChange={e => handleClientChange('gst', e.target.value)} placeholder="22AAAAA0000A1Z5" className={styles.inputField} />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                  <label className={styles.label}>Client Billing Address</label>
@@ -926,6 +931,15 @@ export default function InvoiceMaker() {
                   <button onClick={() => removeItem(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '5px', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity=1} onMouseOut={(e) => e.currentTarget.style.opacity=0.7}>
                     <Trash2 size={18} />
                   </button>
+                  <div style={{ flexBasis: '100%', marginTop: '10px' }}>
+                     <textarea 
+                       value={item.details || ''} 
+                       onChange={(e) => handleItemChange(index, 'details', e.target.value)}
+                       placeholder="Item description (optional)"
+                       className={styles.inputField}
+                       style={{ padding: '8px 12px', fontSize: '0.9rem', width: '100%', minHeight: '60px' }}
+                     />
+                  </div>
                 </div>
               ))}
             </div>
@@ -1096,6 +1110,7 @@ export default function InvoiceMaker() {
                   <p style={{ fontSize: '24px', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px' }}>Billed To</p>
                   <h2 style={{ fontSize: '80px', color: '#fff', margin: '0 0 10px 0', lineHeight: 1.1, fontFamily: "'Panchang', sans-serif" }}>{clientDetails.brandName || clientDetails.name || 'Client'}</h2>
                   <p style={{ fontSize: '30px', color: '#aaa', margin: 0 }}>{clientDetails.name ? clientDetails.name + ' | ' : ''}{clientDetails.email}</p>
+                  {clientDetails.gst && <p style={{ fontSize: '24px', color: '#aaa', margin: '10px 0 0 0' }}>GST: {clientDetails.gst}</p>}
               </div>
               
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', borderTop: '2px solid rgba(235, 215, 63, 0.3)', paddingTop: '40px', marginTop: 'auto' }}>
@@ -1126,12 +1141,15 @@ export default function InvoiceMaker() {
                           
                           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
                               {chunk.map((item, idx) => (
-                                  <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '30px 40px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                      <div style={{ flex: 1 }}>
+                                  <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '30px 40px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                      <div style={{ flex: 1, paddingRight: '30px' }}>
                                           <h3 style={{ fontSize: '36px', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h3>
+                                          {item.details && (
+                                              <p style={{ fontSize: '20px', color: '#ccc', margin: '0 0 15px 0', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{item.details}</p>
+                                          )}
                                           <p style={{ fontSize: '24px', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {invoiceDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</p>
                                       </div>
-                                      <div style={{ fontSize: '42px', color: '#fff', fontWeight: 'bold' }}>
+                                      <div style={{ fontSize: '42px', color: '#fff', fontWeight: 'bold', paddingTop: '5px' }}>
                                           <span style={{ color: '#666' }}>=</span> {invoiceDetails.currency}{(item.qty * item.rate).toLocaleString()}
                                       </div>
                                   </div>
