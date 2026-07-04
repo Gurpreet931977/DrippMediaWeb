@@ -252,6 +252,14 @@ export default function InvoiceMaker() {
   const handleSmartPaste = async () => {
     if (!smartText.trim()) return;
     
+    const hasExistingClient = clientDetails.name || clientDetails.address || clientDetails.email || clientDetails.mobile;
+    const hasExistingItems = items.length > 1 || (items[0] && items[0].rate > 0);
+    if (hasExistingClient || hasExistingItems) {
+        if (!confirm('Existing data found. Do you want to overwrite it with the smart paste? Click OK to overwrite, or Cancel to abort.')) {
+            return;
+        }
+    }
+
     setIsAutoFilling(true);
     
     // Simulate dramatic AI processing time
@@ -283,10 +291,18 @@ export default function InvoiceMaker() {
     
     // Items extraction using identical heuristics to Quote Maker
     const newItems = [];
+    const addressLines = [];
     const lines = smartText.split('\n').map(l => l.trim()).filter(l => l);
     
     lines.forEach(line => {
         if (line.match(/\bTotal\b/i) && !line.match(/each/i) && line.match(/=/)) return;
+        
+        // Skip Email
+        if (line.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/)) return;
+        // Skip Phone
+        if (line.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/)) return;
+        // Skip Name label lines
+        if (line.match(/^(?:name|client):\s*/i)) return;
         
         let qty = 1;
         let rate = 0;
@@ -322,18 +338,32 @@ export default function InvoiceMaker() {
         const money = sDoc.money().out('array');
         if (money.length > 0) {
             const rateStr = money[0];
-            rate = parseFloat(rateStr.replace(/[^0-9.]/g, ''));
-            if (!isNaN(rate)) {
-                desc = line.replace(rateStr, '').replace(/for|at|costing|cost|USD|EUR|GBP|INR|\$|€|£|₹/gi, '');
-                desc = desc.replace(/we need to do (a|an)?/i, '').replace(/we need (a|an)?/i, '').replace(/they want (a|an)?/i, '');
-                desc = desc.replace(/^[^a-zA-Z0-9]+/, '').replace(/[^a-zA-Z0-9]+$/, '').trim();
-                if (desc) {
-                    desc = desc.charAt(0).toUpperCase() + desc.slice(1);
-                    newItems.push({ desc, qty: 1, rate });
+            const hasCurrency = rateStr.match(/[$€£₹]/) || line.match(/[$€£₹]|dollars?|usd|eur|gbp|inr|rupees?|bucks?|cents?/i);
+            
+            if (!hasCurrency && rateStr.trim().match(/^[\d,.\s]+$/)) {
+                // Ignore false positive money match
+            } else {
+                rate = parseFloat(rateStr.replace(/[^0-9.]/g, ''));
+                if (!isNaN(rate)) {
+                    desc = line.replace(rateStr, '').replace(/for|at|costing|cost|USD|EUR|GBP|INR|\$|€|£|₹/gi, '');
+                    desc = desc.replace(/we need to do (a|an)?/i, '').replace(/we need (a|an)?/i, '').replace(/they want (a|an)?/i, '');
+                    desc = desc.replace(/^[^a-zA-Z0-9]+/, '').replace(/[^a-zA-Z0-9]+$/, '').trim();
+                    if (desc) {
+                        desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+                        newItems.push({ desc, qty: 1, rate });
+                    }
+                    return;
                 }
             }
         }
+        
+        // If not matched as an item, consider it part of address or notes
+        addressLines.push(line);
     });
+
+    if (addressLines.length > 0) {
+        updatedClient.address = addressLines.join('\n').replace(/^(?:Address|Addr|Location):\s*/i, '').trim();
+    }
 
     if (newItems.length > 0) setItems(newItems);
     

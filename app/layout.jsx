@@ -5,17 +5,17 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata = {
   metadataBase: new URL('https://drippmedia.com'),
   title: {
-    default: 'Dripp Media | Creative Agency',
+    default: 'Dripp Media | Digital Branding & Creative Agency',
     template: '%s | Dripp Media'
   },
-  description: 'Dripp Media is a creative agency specializing in immersive digital experiences, web development, video production, and cutting-edge design. We transform ideas into interactive realities.',
-  keywords: ['Dripp Media', 'drip media', 'dripmedia', 'creative agency', 'digital agency', 'web development', 'video production', 'interactive portfolio', 'design agency', 'marketing', 'branding'],
+  description: 'Dripp Media is a digital branding and creative agency specializing in immersive digital experiences, web development, video production, and cutting-edge design. We transform ideas into interactive realities.',
+  keywords: ['Dripp Media', 'drip media', 'dripmedia', 'digital branding', 'creative agency', 'digital agency', 'web development', 'video production', 'interactive portfolio', 'design agency', 'marketing', 'branding'],
   authors: [{ name: 'Dripp Media' }],
   creator: 'Dripp Media',
   publisher: 'Dripp Media',
   openGraph: {
-    title: 'Dripp Media | Creative Agency',
-    description: 'Dripp Media is a creative agency specializing in immersive digital experiences, web development, and video production.',
+    title: 'Dripp Media | Digital Branding & Creative Agency',
+    description: 'Dripp Media is a digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
     url: 'https://drippmedia.com',
     siteName: 'Dripp Media',
     locale: 'en_US',
@@ -34,8 +34,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Dripp Media | Creative Agency',
-    description: 'Immersive digital experiences, web development, video production, and cutting-edge design by Dripp Media.',
+    title: 'Dripp Media | Digital Branding & Creative Agency',
+    description: 'Digital branding and creative agency specializing in immersive digital experiences, web development, video production, and cutting-edge design.',
     creator: '@drippmedia_',
   },
   alternates: {

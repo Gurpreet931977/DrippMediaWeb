@@ -60,6 +60,7 @@
   padding-left: 0.5rem;
   background: linear-gradient(90deg, #ebd73f, #fff);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.5px;
   font-family: 'Panchang', sans-serif;
