@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle , X, Upload } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
@@ -100,7 +100,6 @@ export default function InvoiceMaker() {
   const [sharePassword, setSharePassword] = useState('');
   const [isSharing, setIsSharing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // -- INITIALIZATION & LOCAL STORAGE & SUPABASE --
   useEffect(() => {
@@ -190,18 +189,6 @@ export default function InvoiceMaker() {
      localStorage.setItem('dripp_my_details', JSON.stringify(myDetails));
      setMyDetailsLocked(true);
      showAlert("Default details saved successfully!");
-  };
-
-  
-  const handleQRUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleMyDetailsChange('qrCode', reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const handleSaveBank = async () => {
@@ -671,16 +658,16 @@ export default function InvoiceMaker() {
   const validItems = items.filter(i => i.desc || i.rate > 0);
 
   return (
-    <div style={{ color: invoiceDetails.theme === 'light' ? '#111111' : 'white', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
       {/* CUSTOM DIALOG (ALERT / CONFIRM) */}
       {customDialog.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100000 }}>
           <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-            <h3 style={{ fontSize: '24px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{customDialog.title}</h3>
+            <h3 style={{ fontSize: '24px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{customDialog.title}</h3>
             <p style={{ fontSize: '16px', color: '#ccc', marginBottom: '30px', lineHeight: '1.5' }}>{customDialog.message}</p>
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
               {customDialog.type === 'confirm' && (
-                <button onClick={closeDialog} style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: invoiceDetails.theme === 'light' ? '#666666' : '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
+                <button onClick={closeDialog} style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
               )}
               <button 
                 onClick={() => {
@@ -702,8 +689,8 @@ export default function InvoiceMaker() {
       {showShareModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '600px', position: 'relative' }}>
-            <button onClick={() => setShowShareModal(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: invoiceDetails.theme === 'light' ? '#111111' : 'white', cursor: 'pointer' }}><X size={24} /></button>
-            <h2 style={{ fontSize: '28px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 30px 0', fontFamily: "'Panchang', sans-serif" }}>Share Invoice</h2>
+            <button onClick={() => setShowShareModal(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
+            <h2 style={{ fontSize: '28px', color: '#ebd73f', margin: '0 0 30px 0', fontFamily: "'Panchang', sans-serif" }}>Share Invoice</h2>
             
             <div style={{ marginBottom: '20px' }}>
                 <label className={styles.label}>Secure Link</label>
@@ -735,8 +722,8 @@ export default function InvoiceMaker() {
                 <button onClick={() => {
                     setShowPaymentModal(false);
                     setIsEditingBank(false);
-                }} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: invoiceDetails.theme === 'light' ? '#111111' : 'white', cursor: 'pointer' }}><X size={24} /></button>
-                <h2 style={{ fontSize: '28px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 30px 0', fontFamily: "'Panchang', sans-serif" }}>Payment Methods</h2>
+                }} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
+                <h2 style={{ fontSize: '28px', color: '#ebd73f', margin: '0 0 30px 0', fontFamily: "'Panchang', sans-serif" }}>Payment Methods</h2>
                 
                 {isEditingBank ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -757,7 +744,7 @@ export default function InvoiceMaker() {
                             <img src={myDetails.qrCode} alt="QR Preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '12px', marginTop: '10px' }} />
                         )}
                         <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
-                           <button onClick={() => setIsEditingBank(false)} className={styles.btn} style={{ flex: 1, background: 'transparent', border: '1px solid #444', color: invoiceDetails.theme === 'light' ? '#666666' : '#888' }}>Cancel</button>
+                           <button onClick={() => setIsEditingBank(false)} className={styles.btn} style={{ flex: 1, background: 'transparent', border: '1px solid #444', color: '#888' }}>Cancel</button>
                            <button onClick={handleSaveBank} className={styles.btn} style={{ flex: 1 }}>Save</button>
                         </div>
                     </div>
@@ -768,10 +755,10 @@ export default function InvoiceMaker() {
                                 <div key={bank.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '16px', border: selectedBankId === bank.id ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setSelectedBankId(bank.id)}>
                                     <div>
                                         <h4 style={{ margin: '0 0 5px 0', fontSize: '18px' }}>{bank.bankName}</h4>
-                                        <p style={{ margin: 0, color: invoiceDetails.theme === 'light' ? '#666666' : '#888', fontSize: '14px' }}>{bank.accountNumber}</p>
+                                        <p style={{ margin: 0, color: '#888', fontSize: '14px' }}>{bank.accountNumber}</p>
                                     </div>
                                     <div style={{ display: 'flex', gap: '10px' }}>
-                                        <button onClick={(e) => { e.stopPropagation(); startEditBank(bank); }} style={{ background: 'transparent', border: 'none', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', cursor: 'pointer' }}>Edit</button>
+                                        <button onClick={(e) => { e.stopPropagation(); startEditBank(bank); }} style={{ background: 'transparent', border: 'none', color: '#ebd73f', cursor: 'pointer' }}>Edit</button>
                                         <button onClick={(e) => { e.stopPropagation(); handleDeleteBank(bank.id); }} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer' }}>Delete</button>
                                     </div>
                                 </div>
@@ -780,7 +767,7 @@ export default function InvoiceMaker() {
                         <button onClick={() => {
                             setMyDetails({ id: '', bankName: '', accountName: '', accountNumber: '', ifsc: '', swift: '', qrCode: null });
                             setIsEditingBank(true);
-                        }} className={styles.btn} style={{ width: '100%', background: 'rgba(235, 215, 63, 0.1)', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', border: '1px solid rgba(235, 215, 63, 0.3)' }}>
+                        }} className={styles.btn} style={{ width: '100%', background: 'rgba(235, 215, 63, 0.1)', color: '#ebd73f', border: '1px solid rgba(235, 215, 63, 0.3)' }}>
                             + Add New Payment Method
                         </button>
                     </div>
@@ -790,22 +777,14 @@ export default function InvoiceMaker() {
       )}
 
       {/* HEADER SECTION */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', background: invoiceDetails.theme === 'light' ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)', padding: '20px 30px', borderRadius: '24px', border: invoiceDetails.theme === 'light' ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.05)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', background: 'rgba(255, 255, 255, 0.02)', padding: '20px 30px', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <div style={{ width: '40px', height: '40px', background: '#ebd73f', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: invoiceDetails.theme === 'light' ? '#ffffff' : 'black', fontWeight: 'bold', fontSize: '20px', fontFamily: "'Panchang', sans-serif" }}>D</div>
+            <div style={{ width: '40px', height: '40px', background: '#ebd73f', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'black', fontWeight: 'bold', fontSize: '20px', fontFamily: "'Panchang', sans-serif" }}>D</div>
             <h1 style={{ fontSize: '24px', margin: 0, fontWeight: '700', fontFamily: "'Panchang', sans-serif" }}>Invoice Maker</h1>
         </div>
         <div style={{ display: 'flex', gap: '15px' }}>
-            <button onClick={handleClearForm} className={styles.btn} style={{ background: 'rgba(255, 255, 255, 0.05)', color: invoiceDetails.theme === 'light' ? '#111111' : 'white' }}>Clear</button>
-            
-            <button 
-                onClick={() => handleInvoiceChange('theme', invoiceDetails.theme === 'light' ? 'dark' : 'light')} 
-                className={styles.btn} 
-                style={{ background: invoiceDetails.theme === 'light' ? '#fff' : '#222', color: invoiceDetails.theme === 'light' ? '#000' : '#fff', border: '1px solid rgba(235, 215, 63, 0.3)' }}
-            >
-                {invoiceDetails.theme === 'light' ? 'Light Mode ☀️' : 'Dark Mode 🌙'}
-            </button>
-            <button onClick={handleShare} className={styles.btn} style={{ background: 'rgba(235, 215, 63, 0.1)', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', border: '1px solid rgba(235, 215, 63, 0.3)' }} disabled={isSharing}>
+            <button onClick={handleClearForm} className={styles.btn} style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'white' }}>Clear</button>
+            <button onClick={handleShare} className={styles.btn} style={{ background: 'rgba(235, 215, 63, 0.1)', color: '#ebd73f', border: '1px solid rgba(235, 215, 63, 0.3)' }} disabled={isSharing}>
                 {isSharing ? 'Saving...' : <><Share2 size={18} style={{ marginRight: '8px', display: 'inline-block', verticalAlign: 'middle' }}/> Share Invoice</>}
             </button>
             <button onClick={generatePDF} className={styles.btn}>Download PDF</button>
@@ -818,14 +797,14 @@ export default function InvoiceMaker() {
           
           {/* Smart Paste Section */}
           <div className={styles.card} style={{ background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%)', border: '1px solid rgba(235, 215, 63, 0.2)' }}>
-              <h3 style={{ marginBottom: '15px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Search size={20} /> AI Smart Paste
               </h3>
-              <p style={{ color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', fontSize: '14px', marginBottom: '20px' }}>Paste a block of text (address, email, phone, gst) and our AI will instantly format it into the correct fields.</p>
+              <p style={{ color: '#aaa', fontSize: '14px', marginBottom: '20px' }}>Paste a block of text (address, email, phone, gst) and our AI will instantly format it into the correct fields.</p>
               
               <textarea 
-                  value={smartText}
-                  onChange={(e) => setSmartText(e.target.value)}
+                  value={smartPasteText}
+                  onChange={(e) => setSmartPasteText(e.target.value)}
                   placeholder="Paste details here (e.g. John Doe, +1 234 567 890, 123 Main St...)"
                   className={styles.inputField}
                   rows={3}
@@ -835,16 +814,16 @@ export default function InvoiceMaker() {
               <button 
                   onClick={handleSmartPaste} 
                   className={styles.btn} 
-                  style={{ width: '100%', opacity: isAutoFilling ? 0.7 : 1 }}
-                  disabled={isAutoFilling}
+                  style={{ width: '100%', opacity: isProcessingSmartPaste ? 0.7 : 1 }}
+                  disabled={isProcessingSmartPaste}
               >
-                  {isAutoFilling ? 'Extracting Details...' : 'Auto-Fill Details'}
+                  {isProcessingSmartPaste ? 'Extracting Details...' : 'Auto-Fill Details'}
               </button>
           </div>
 
           {/* Section 2: Invoice & Client Info */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '20px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', display: 'flex', alignItems: 'center', gap: '10px' }}><FileText size={20} /> Invoice & Client Info</h3>
+            <h3 style={{ marginBottom: '20px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '10px' }}><FileText size={20} /> Invoice & Client Info</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginBottom: '20px' }}>
               <div>
                  <label className={styles.label}>Invoice Number</label>
@@ -889,7 +868,7 @@ export default function InvoiceMaker() {
 
           {/* Section 3: Services & Rates */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '15px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f' }}>Line Items</h3>
+            <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Line Items</h3>
             
             {items.map((item, idx) => (
               <div key={idx} style={{ display: 'flex', gap: '15px', marginBottom: '15px', alignItems: 'flex-start' }}>
@@ -921,10 +900,10 @@ export default function InvoiceMaker() {
         <div style={{ width: '380px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
           <div className={styles.card} style={{ background: 'linear-gradient(180deg, rgba(235, 215, 63, 0.1) 0%, rgba(5, 5, 5, 0) 100%)', border: '1px solid rgba(235, 215, 63, 0.2)' }}>
-            <h3 style={{ color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 20px 0', fontSize: '16px', letterSpacing: '2px', textTransform: 'uppercase' }}>Total Amount Due</h3>
+            <h3 style={{ color: '#ebd73f', margin: '0 0 20px 0', fontSize: '16px', letterSpacing: '2px', textTransform: 'uppercase' }}>Total Amount Due</h3>
             <h1 style={{ fontSize: '48px', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{invoiceDetails.currency}{parseFloat(total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h1>
             
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', color: invoiceDetails.theme === 'light' ? '#666666' : '#888' }}>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', color: '#888' }}>
                 <span>Subtotal</span>
                 <span>{invoiceDetails.currency}{total.toLocaleString()}</span>
             </div>
@@ -932,18 +911,18 @@ export default function InvoiceMaker() {
 
           <div className={styles.card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: 0 }}>Payment Method</h3>
-                  <button onClick={() => setShowPaymentModal(true)} style={{ background: 'transparent', border: 'none', color: invoiceDetails.theme === 'light' ? '#666666' : '#888', cursor: 'pointer', textDecoration: 'underline' }}>Manage</button>
+                  <h3 style={{ color: '#ebd73f', margin: 0 }}>Payment Method</h3>
+                  <button onClick={() => setShowPaymentModal(true)} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', textDecoration: 'underline' }}>Manage</button>
               </div>
 
               {activeBank ? (
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <p style={{ color: invoiceDetails.theme === 'light' ? '#111111' : '#fff', margin: '0 0 10px 0', fontSize: '18px', fontWeight: 'bold' }}>{activeBank.bankName}</p>
-                      <p style={{ color: invoiceDetails.theme === 'light' ? '#666666' : '#888', margin: '0 0 5px 0', fontSize: '14px' }}>Name: {activeBank.accountName}</p>
-                      <p style={{ color: invoiceDetails.theme === 'light' ? '#666666' : '#888', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>A/C: {activeBank.accountNumber}</p>
-                      {activeBank.ifsc && <p style={{ color: invoiceDetails.theme === 'light' ? '#666666' : '#888', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>IFSC/Routing: {activeBank.ifsc}</p>}
+                      <p style={{ color: '#fff', margin: '0 0 10px 0', fontSize: '18px', fontWeight: 'bold' }}>{activeBank.bankName}</p>
+                      <p style={{ color: '#888', margin: '0 0 5px 0', fontSize: '14px' }}>Name: {activeBank.accountName}</p>
+                      <p style={{ color: '#888', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>A/C: {activeBank.accountNumber}</p>
+                      {activeBank.ifsc && <p style={{ color: '#888', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>IFSC/Routing: {activeBank.ifsc}</p>}
                       {activeBank.qrCode && (
-                          <div style={{ marginTop: '15px', background: invoiceDetails.theme === 'light' ? '#000' : '#fff', padding: '10px', borderRadius: '12px', display: 'inline-block' }}>
+                          <div style={{ marginTop: '15px', background: '#fff', padding: '10px', borderRadius: '12px', display: 'inline-block' }}>
                               <img src={activeBank.qrCode} alt="QR Code" style={{ width: '100px', height: '100px', objectFit: 'contain' }} />
                           </div>
                       )}
@@ -961,8 +940,8 @@ export default function InvoiceMaker() {
       <div style={{ position: 'absolute', top: '-15000px', left: '-15000px' }}>
           <div id="inv-a4-template" style={{ 
               width: '800px', 
-              background: invoiceDetails.theme === 'light' ? '#ffffff' : '#050505', 
-              color: invoiceDetails.theme === 'light' ? '#111111' : 'white', 
+              background: '#050505', 
+              color: 'white', 
               padding: '60px', 
               display: 'none', 
               flexDirection: 'column', 
@@ -972,28 +951,28 @@ export default function InvoiceMaker() {
               fontFamily: "'Inter', sans-serif"
           }}>
               {/* Background Ambient Glow */}
-              <div style={{ position: 'absolute', top: '-20%', right: '-20%', width: '60%', height: '60%', background: invoiceDetails.theme === 'light' ? 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(255, 255, 255, 0) 70%)' : 'radial-gradient(circle, rgba(235, 215, 63, 0.1) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(80px)', zIndex: 0 }} />
+              <div style={{ position: 'absolute', top: '-20%', right: '-20%', width: '60%', height: '60%', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.1) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', filter: 'blur(80px)', zIndex: 0 }} />
               
-              <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: invoiceDetails.theme === 'light' ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '30px', marginBottom: '30px' }}>
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '30px', marginBottom: '30px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <h1 style={{ fontSize: '32px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 5px 0', fontFamily: "'Panchang', sans-serif" }}>Dripp Media</h1>
-                      <p style={{ color: invoiceDetails.theme === 'light' ? '#666666' : '#888', margin: 0, fontSize: '14px' }}>hello@drippmedia.com</p>
-                      <p style={{ color: invoiceDetails.theme === 'light' ? '#666666' : '#888', margin: '5px 0 0 0', fontSize: '14px' }}>www.drippmedia.com</p>
+                      <h1 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 5px 0', fontFamily: "'Panchang', sans-serif" }}>Dripp Media</h1>
+                      <p style={{ color: '#888', margin: 0, fontSize: '14px' }}>hello@drippmedia.com</p>
+                      <p style={{ color: '#888', margin: '5px 0 0 0', fontSize: '14px' }}>www.drippmedia.com</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                      <h1 style={{ fontSize: '36px', color: invoiceDetails.theme === 'light' ? '#111111' : '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", letterSpacing: '2px' }}>INVOICE</h1>
-                      <p style={{ color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', margin: '0 0 5px 0', fontSize: '16px', fontWeight: 'bold' }}>#{invoiceDetails.number}</p>
-                      <p style={{ color: invoiceDetails.theme === 'light' ? '#666666' : '#888', margin: 0, fontSize: '14px' }}>Date: {invoiceDetails.date}</p>
+                      <h1 style={{ fontSize: '36px', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", letterSpacing: '2px' }}>INVOICE</h1>
+                      <p style={{ color: '#ebd73f', margin: '0 0 5px 0', fontSize: '16px', fontWeight: 'bold' }}>#{invoiceDetails.number}</p>
+                      <p style={{ color: '#888', margin: 0, fontSize: '14px' }}>Date: {invoiceDetails.date}</p>
                   </div>
               </div>
 
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
                   <div style={{ flex: 1, paddingRight: '20px' }}>
-                      <p style={{ color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 10px 0', fontWeight: 'bold' }}>Billed To</p>
-                      <h3 style={{ color: invoiceDetails.theme === 'light' ? '#111111' : '#fff', fontSize: '20px', margin: '0 0 5px 0' }}>{clientDetails.name || 'Client Name'}</h3>
-                      {clientDetails.email && <p style={{ color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', margin: '0 0 5px 0', fontSize: '14px' }}>{clientDetails.email}</p>}
-                      {clientDetails.mobile && <p style={{ color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', margin: '0 0 5px 0', fontSize: '14px' }}>{clientDetails.mobile}</p>}
-                      {clientDetails.address && <p style={{ color: invoiceDetails.theme === 'light' ? '#666666' : '#888', margin: '0', fontSize: '14px', whiteSpace: 'pre-wrap' }}>{clientDetails.address}</p>}
+                      <p style={{ color: '#ebd73f', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 10px 0', fontWeight: 'bold' }}>Billed To</p>
+                      <h3 style={{ color: '#fff', fontSize: '20px', margin: '0 0 5px 0' }}>{clientDetails.name || 'Client Name'}</h3>
+                      {clientDetails.email && <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px' }}>{clientDetails.email}</p>}
+                      {clientDetails.mobile && <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px' }}>{clientDetails.mobile}</p>}
+                      {clientDetails.address && <p style={{ color: '#888', margin: '0', fontSize: '14px', whiteSpace: 'pre-wrap' }}>{clientDetails.address}</p>}
                   </div>
               </div>
 
@@ -1001,19 +980,19 @@ export default function InvoiceMaker() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
                       <thead>
                           <tr style={{ borderBottom: '2px solid rgba(235, 215, 63, 0.3)' }}>
-                              <th style={{ textAlign: 'left', padding: '15px 10px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>Description</th>
-                              <th style={{ textAlign: 'center', padding: '15px 10px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', width: '80px' }}>Qty</th>
-                              <th style={{ textAlign: 'right', padding: '15px 10px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', width: '120px' }}>Rate</th>
-                              <th style={{ textAlign: 'right', padding: '15px 10px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', width: '120px' }}>Amount</th>
+                              <th style={{ textAlign: 'left', padding: '15px 10px', color: '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>Description</th>
+                              <th style={{ textAlign: 'center', padding: '15px 10px', color: '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', width: '80px' }}>Qty</th>
+                              <th style={{ textAlign: 'right', padding: '15px 10px', color: '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', width: '120px' }}>Rate</th>
+                              <th style={{ textAlign: 'right', padding: '15px 10px', color: '#ebd73f', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', width: '120px' }}>Amount</th>
                           </tr>
                       </thead>
                       <tbody>
                           {validItems.map((item, idx) => (
-                              <tr key={idx} style={{ borderBottom: invoiceDetails.theme === 'light' ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.05)' }}>
-                                  <td style={{ padding: '20px 10px', color: invoiceDetails.theme === 'light' ? '#111111' : '#fff', fontSize: '15px' }}>{item.desc || 'Service Item'}</td>
-                                  <td style={{ padding: '20px 10px', color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', fontSize: '15px', textAlign: 'center' }}>{item.qty}</td>
-                                  <td style={{ padding: '20px 10px', color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', fontSize: '15px', textAlign: 'right' }}>{invoiceDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</td>
-                                  <td style={{ padding: '20px 10px', color: invoiceDetails.theme === 'light' ? '#111111' : '#fff', fontSize: '15px', textAlign: 'right', fontWeight: 'bold' }}>{invoiceDetails.currency}{(item.qty * item.rate).toLocaleString()}</td>
+                              <tr key={idx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                  <td style={{ padding: '20px 10px', color: '#fff', fontSize: '15px' }}>{item.desc || 'Service Item'}</td>
+                                  <td style={{ padding: '20px 10px', color: '#aaa', fontSize: '15px', textAlign: 'center' }}>{item.qty}</td>
+                                  <td style={{ padding: '20px 10px', color: '#aaa', fontSize: '15px', textAlign: 'right' }}>{invoiceDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</td>
+                                  <td style={{ padding: '20px 10px', color: '#fff', fontSize: '15px', textAlign: 'right', fontWeight: 'bold' }}>{invoiceDetails.currency}{(item.qty * item.rate).toLocaleString()}</td>
                               </tr>
                           ))}
                       </tbody>
@@ -1021,40 +1000,40 @@ export default function InvoiceMaker() {
               </div>
 
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
-                  <div style={{ width: '350px', background: invoiceDetails.theme === 'light' ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)', padding: '25px', borderRadius: '16px', border: invoiceDetails.theme === 'light' ? '1px solid rgba(0, 0, 0, 0.05)' : '1px solid rgba(255, 255, 255, 0.05)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', marginBottom: '15px', fontSize: '15px' }}>
+                  <div style={{ width: '350px', background: 'rgba(255, 255, 255, 0.02)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#aaa', marginBottom: '15px', fontSize: '15px' }}>
                           <span>Subtotal</span>
                           <span>{invoiceDetails.currency}{parseFloat(total || 0).toLocaleString()}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: invoiceDetails.theme === 'light' ? '#111111' : '#fff', borderTop: invoiceDetails.theme === 'light' ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '15px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '15px', alignItems: 'center' }}>
                           <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Total Due</span>
-                          <span style={{ fontSize: '28px', color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontWeight: 'bold', fontFamily: "'Panchang', sans-serif" }}>{invoiceDetails.currency}{parseFloat(total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                          <span style={{ fontSize: '28px', color: '#ebd73f', fontWeight: 'bold', fontFamily: "'Panchang', sans-serif" }}>{invoiceDetails.currency}{parseFloat(total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                       </div>
                   </div>
               </div>
 
               {activeBank && (
-                  <div style={{ position: 'relative', zIndex: 1, borderTop: invoiceDetails.theme === 'light' ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ position: 'relative', zIndex: 1, borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ flex: 1 }}>
-                          <p style={{ color: invoiceDetails.theme === 'light' ? '#b5a110' : '#ebd73f', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 10px 0', fontWeight: 'bold' }}>Payment Details</p>
-                          <p style={{ color: invoiceDetails.theme === 'light' ? '#111111' : '#fff', margin: '0 0 5px 0', fontSize: '15px', fontWeight: 'bold' }}>{activeBank.bankName}</p>
-                          <p style={{ color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', margin: '0 0 5px 0', fontSize: '14px' }}>Name: {activeBank.accountName}</p>
-                          <p style={{ color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>A/C: {activeBank.accountNumber}</p>
-                          {activeBank.ifsc && <p style={{ color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>Routing/IFSC: {activeBank.ifsc}</p>}
-                          {activeBank.swift && <p style={{ color: invoiceDetails.theme === 'light' ? '#444444' : '#aaa', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>SWIFT: {activeBank.swift}</p>}
+                          <p style={{ color: '#ebd73f', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 10px 0', fontWeight: 'bold' }}>Payment Details</p>
+                          <p style={{ color: '#fff', margin: '0 0 5px 0', fontSize: '15px', fontWeight: 'bold' }}>{activeBank.bankName}</p>
+                          <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px' }}>Name: {activeBank.accountName}</p>
+                          <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>A/C: {activeBank.accountNumber}</p>
+                          {activeBank.ifsc && <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>Routing/IFSC: {activeBank.ifsc}</p>}
+                          {activeBank.swift && <p style={{ color: '#aaa', margin: '0 0 5px 0', fontSize: '14px', fontFamily: 'monospace' }}>SWIFT: {activeBank.swift}</p>}
                       </div>
                       {activeBank.qrCode && (
-                          <div style={{ background: invoiceDetails.theme === 'light' ? '#000' : '#fff', padding: '10px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{ background: '#fff', padding: '10px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                               <img src={activeBank.qrCode} alt="QR Code" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
-                              <span style={{ color: invoiceDetails.theme === 'light' ? '#ffffff' : 'black', fontSize: '10px', marginTop: '5px', fontWeight: 'bold' }}>Scan to Pay</span>
+                              <span style={{ color: 'black', fontSize: '10px', marginTop: '5px', fontWeight: 'bold' }}>Scan to Pay</span>
                           </div>
                       )}
                   </div>
               )}
               
               {invoiceDetails.notes && (
-                  <div style={{ position: 'relative', zIndex: 1, marginTop: '30px', borderTop: invoiceDetails.theme === 'light' ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px' }}>
-                      <p style={{ color: invoiceDetails.theme === 'light' ? '#666666' : '#888', margin: 0, fontSize: '12px', whiteSpace: 'pre-wrap' }}>{invoiceDetails.notes}</p>
+                  <div style={{ position: 'relative', zIndex: 1, marginTop: '30px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px' }}>
+                      <p style={{ color: '#888', margin: 0, fontSize: '12px', whiteSpace: 'pre-wrap' }}>{invoiceDetails.notes}</p>
                   </div>
               )}
           </div>
