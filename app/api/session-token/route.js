@@ -4,11 +4,20 @@
  * The token binds the user's email to the session start timestamp.
  * This is called by the client at game start and must be presented
  * back to /api/submit-score when saving a score.
+ *
+ * Security layers:
+ *  1. Rate limiting — 10 requests/min per IP
+ *  2. Auth token verification — caller must present a valid dripp_auth_token
+ *     issued by /api/auth/login or /api/auth/signup; the email in the token
+ *     must match the email in the request body (prevents submitting under
+ *     someone else's account)
+ *  3. Session age check — sessionStart must be fresh (within 30 s)
  */
 
 import { createHmac } from 'crypto';
 import { rateLimit } from '@/app/lib/rateLimit';
 import { withCors, corsHeaders } from '@/app/lib/cors';
+import { verifyAuthToken, extractBearerToken } from '@/app/lib/authToken';
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 const HMAC_SECRET = process.env.SCORE_HMAC_SECRET;
@@ -47,6 +56,17 @@ export async function POST(request) {
     return withCors(Response.json({ error: 'Server misconfigured' }, { status: 500 }), request);
   }
 
+  // ── Auth token verification ─────────────────────────────────────────────────
+  // The caller must present a valid dripp_auth_token issued at login/signup.
+  // This proves they actually authenticated — they can't just guess an email.
+  const rawAuthToken = extractBearerToken(request);
+  const authResult   = verifyAuthToken(rawAuthToken);
+
+  if (!authResult.ok) {
+    console.warn(`[session-token] Auth token rejected — reason=${authResult.reason}`);
+    return withCors(Response.json({ error: 'Unauthorized' }, { status: 401 }), request);
+  }
+
   try {
     const body = await request.json();
     const { email, sessionStart } = body;
@@ -57,6 +77,14 @@ export async function POST(request) {
 
     if (typeof email !== 'string' || email.length > 254) {
       return withCors(Response.json({ error: 'Invalid email' }, { status: 400 }), request);
+    }
+
+    // ── Email ownership check ─────────────────────────────────────────────────
+    // The email in the auth token must match the email in the request.
+    // This prevents a logged-in user from obtaining tokens for other accounts.
+    if (authResult.email.toLowerCase() !== email.toLowerCase().trim()) {
+      console.warn(`[session-token] Email mismatch — token=${authResult.email} request=${email}`);
+      return withCors(Response.json({ error: 'Unauthorized' }, { status: 403 }), request);
     }
 
     const sessionTs = parseInt(sessionStart, 10);
@@ -70,7 +98,7 @@ export async function POST(request) {
       return withCors(Response.json({ error: 'Session timestamp out of range' }, { status: 400 }), request);
     }
 
-    const token = signSessionToken(email, sessionTs);
+    const token = signSessionToken(email.toLowerCase().trim(), sessionTs);
     return withCors(Response.json({ token }), request);
   } catch (err) {
     console.error('[session-token] Unexpected error:', err?.message);
@@ -87,3 +115,4 @@ export async function OPTIONS(request) {
 export async function GET()    { return Response.json({ error: 'Method not allowed' }, { status: 405 }); }
 export async function PUT()    { return Response.json({ error: 'Method not allowed' }, { status: 405 }); }
 export async function DELETE() { return Response.json({ error: 'Method not allowed' }, { status: 405 }); }
+

@@ -17,6 +17,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { rateLimit } from '@/app/lib/rateLimit';
 import { withCors, corsHeaders } from '@/app/lib/cors';
+import { verifyAuthToken, extractBearerToken } from '@/app/lib/authToken';
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 const MAX_PLAUSIBLE_SCORE = 50000;
@@ -85,6 +86,20 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const { email, score, hitCount, sessionStart, token } = body;
+
+    // ── 0. Identity verification (new) ──────────────────────────────────────
+    // The caller must present a valid dripp_auth_token proving they own the email.
+    const rawAuthToken = extractBearerToken(request);
+    const authResult   = verifyAuthToken(rawAuthToken);
+    if (!authResult.ok) {
+      console.warn(`[submit-score] Auth token rejected — reason=${authResult.reason} email=${email}`);
+      return withCors(Response.json({ error: 'Unauthorized' }, { status: 401 }), request);
+    }
+    // Email in the auth token must match the email in the submission
+    if (!email || authResult.email.toLowerCase() !== email.toLowerCase().trim()) {
+      console.warn(`[submit-score] Email mismatch — token=${authResult.email} request=${email}`);
+      return withCors(Response.json({ error: 'Unauthorized' }, { status: 403 }), request);
+    }
 
     // ── 1. Input presence check ──────────────────────────────────────────────
     if (!email || score === undefined || hitCount === undefined || !sessionStart || !token) {

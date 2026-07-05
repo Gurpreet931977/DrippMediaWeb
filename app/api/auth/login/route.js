@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 import { rateLimit } from '@/app/lib/rateLimit';
 import { withCors, corsHeaders } from '@/app/lib/cors';
+import { issueAuthToken } from '@/app/lib/authToken';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -75,7 +76,11 @@ export async function POST(request) {
     // Don't send the password or security_phrase back to the client
     const { password: _pw, security_phrase: _sp, ...safeUser } = user;
 
-    return withCors(Response.json(safeUser, { status: 200 }), request);
+    // Issue a signed identity token so the client can prove ownership of this
+    // email when requesting a game session token or submitting a score.
+    const authToken = issueAuthToken(safeUser.email);
+
+    return withCors(Response.json({ ...safeUser, _authToken: authToken }, { status: 200 }), request);
   } catch (error) {
     // Log internally but never expose details to client
     console.error('[login] Unexpected error:', error?.message);

@@ -147,8 +147,10 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
          setErrorMsg(result.error || "Failed to create account.");
       } else {
          if (typeof window !== 'undefined') {
-            const userData = result;
+            // Extract and store the server-issued auth token separately
+            const { _authToken, ...userData } = result;
             localStorage.setItem('dripp_user', JSON.stringify(userData));
+            if (_authToken) localStorage.setItem('dripp_auth_token', _authToken);
             if (userData.highscore !== undefined) {
                 localStorage.setItem('dripp_highScore', userData.highscore.toString());
             } else {
@@ -232,9 +234,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
       if (!response.ok) {
          setErrorMsg(result.error || "Email or Player Tag not found, or not registered.");
       } else {
-         const userData = result;
          if (typeof window !== 'undefined') {
+            // Extract and store the server-issued auth token separately
+            const { _authToken, ...userData } = result;
             localStorage.setItem('dripp_user', JSON.stringify(userData));
+            if (_authToken) localStorage.setItem('dripp_auth_token', _authToken);
             if (userData.highscore !== undefined) {
                 localStorage.setItem('dripp_highScore', userData.highscore.toString());
             }

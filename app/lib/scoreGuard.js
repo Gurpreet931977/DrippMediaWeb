@@ -52,9 +52,18 @@ export function createScoreGuard() {
     if (!email) return;
     _sessionStart = Date.now();
     try {
+      // Read the server-issued identity token — set by AuthModal on login/signup
+      const authToken = (typeof window !== 'undefined')
+        ? localStorage.getItem('dripp_auth_token') || ''
+        : '';
+
       const res = await fetch('/api/session-token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          // Prove to the server that we own this email
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+        },
         body: JSON.stringify({ email, sessionStart: _sessionStart }),
       });
       if (res.ok) {

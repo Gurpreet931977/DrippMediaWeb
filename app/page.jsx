@@ -144,9 +144,15 @@ export default function ComingSoon() {
                    // Get the secure submission payload from the score guard
                    const payload = scoreGuardRef.current.getSubmissionPayload(userObj.email);
                    if (payload && !scoreGuardRef.current.isCheated()) {
+                      // Attach the server-issued identity token so the server can
+                      // verify this request belongs to the logged-in user
+                      const authToken = localStorage.getItem('dripp_auth_token') || '';
                       fetch('/api/submit-score', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                          'Content-Type': 'application/json',
+                          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+                        },
                         body: JSON.stringify(payload),
                       }).then(r => r.json()).then(data => {
                         if (data.ok) console.log('Score saved securely:', data.highscore);
