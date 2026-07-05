@@ -3,110 +3,140 @@
  * Secure server-side score submission endpoint.
  *
  * Security layers:
- *  1. HMAC-SHA256 session token verification – the score and a server secret are used
- *     to generate a token at session start; that same token must arrive with the submission.
- *  2. Server-side sanity caps – score is checked against a hard physics maximum for the game.
- *  3. Hit-count plausibility – score is checked against the number of reported catches;
- *     average points-per-catch must stay within a physically possible range.
- *  4. All Supabase writes happen here (server) – the anon key can never be used
- *     to write scores directly any more (enforce via RLS, see README note).
+ *  1. CORS restriction — only drippmedia.com may call this endpoint
+ *  2. Rate limiting — max 5 submissions per minute per IP
+ *  3. HMAC-SHA256 session token verification – score and server secret are used
+ *     to generate a token at session start; that same token must arrive with submission
+ *  4. Session age check — token must be fresh (max 2 hours)
+ *  5. Server-side sanity caps – score checked against a hard physics maximum
+ *  6. Hit-count plausibility – score checked against number of reported catches
+ *  7. All Supabase writes happen here (server) – anon key cannot write scores directly
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
+import { rateLimit } from '@/app/lib/rateLimit';
+import { withCors, corsHeaders } from '@/app/lib/cors';
 
-// --- Config -----------------------------------------------------------
-// Max possible score for a ~10 minute session: speed caps + frame rate limits
+// ── Config ─────────────────────────────────────────────────────────────────────
 const MAX_PLAUSIBLE_SCORE = 50000;
-
-// The average points per catch must be between 0.8 and 70 (accounting for bonus drops)
-const MIN_PTS_PER_CATCH = 0.8;
-const MAX_PTS_PER_CATCH = 70;
-
-// Min catches required for any score above 0 
+const MIN_PTS_PER_CATCH   = 0.8;
+const MAX_PTS_PER_CATCH   = 70;
 const MIN_CATCHES_FOR_NONZERO = 3;
 
-// --- Supabase (server-side, uses service role key from env) -----------
+// 5 score submissions per minute per IP
+const limiter = rateLimit({ limit: 5, windowMs: 60_000 });
+
+// ── Supabase (server-side, uses service role key) ──────────────────────────────
 function getServerSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  // Use SERVICE ROLE key for server-side writes (set in Vercel env vars, never exposed to client)
-  // Falls back to anon key if service key not yet configured
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Supabase env vars missing');
   return createClient(url, key);
 }
 
-// --- HMAC helpers -----------------------------------------------------
-const HMAC_SECRET = process.env.SCORE_HMAC_SECRET || 'dripp-fallback-secret-change-me';
+// ── HMAC helpers ───────────────────────────────────────────────────────────────
+const HMAC_SECRET = process.env.SCORE_HMAC_SECRET;
+
+if (!HMAC_SECRET) {
+  console.error('[submit-score] CRITICAL: SCORE_HMAC_SECRET env var is not set.');
+}
 
 export function signSessionToken(email, sessionStart) {
+  if (!HMAC_SECRET) throw new Error('SCORE_HMAC_SECRET is not configured');
   return createHmac('sha256', HMAC_SECRET)
     .update(`${email}:${sessionStart}`)
     .digest('hex');
 }
 
 function verifyToken(email, sessionStart, token) {
+  if (!HMAC_SECRET) return false;
   const expected = signSessionToken(email, sessionStart);
   // Constant-time comparison to prevent timing attacks
-  if (expected.length !== token.length) return false;
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) {
-    diff |= expected.charCodeAt(i) ^ token.charCodeAt(i);
+  try {
+    const a = Buffer.from(expected, 'hex');
+    const b = Buffer.from(token, 'hex');
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
   }
-  return diff === 0;
 }
 
-// --- POST /api/submit-score ------------------------------------------
+// ── POST /api/submit-score ─────────────────────────────────────────────────────
+
 export async function POST(request) {
+  // ── Rate limit ─────────────────────────────────────────────────────────────
+  const { ok: rlOk, retryAfter } = limiter.check(request);
+  if (!rlOk) {
+    return withCors(
+      Response.json({ error: 'Too many score submissions. Slow down.' }, {
+        status: 429,
+        headers: { 'Retry-After': String(retryAfter) },
+      }),
+      request
+    );
+  }
+
+  if (!HMAC_SECRET) {
+    return withCors(Response.json({ error: 'Server misconfigured' }, { status: 500 }), request);
+  }
+
   try {
     const body = await request.json();
     const { email, score, hitCount, sessionStart, token } = body;
 
-    // ── 1. Input presence check ─────────────────────────────────────
+    // ── 1. Input presence check ──────────────────────────────────────────────
     if (!email || score === undefined || hitCount === undefined || !sessionStart || !token) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+      return withCors(Response.json({ error: 'Missing required fields' }, { status: 400 }), request);
     }
 
-    // ── 2. Type guards ───────────────────────────────────────────────
+    // ── 2. Type guards ───────────────────────────────────────────────────────
     const scoreNum    = parseInt(score, 10);
     const hitCountNum = parseInt(hitCount, 10);
     const sessionTs   = parseInt(sessionStart, 10);
 
     if (isNaN(scoreNum) || isNaN(hitCountNum) || isNaN(sessionTs)) {
-      return Response.json({ error: 'Invalid numeric fields' }, { status: 400 });
+      return withCors(Response.json({ error: 'Invalid numeric fields' }, { status: 400 }), request);
     }
 
-    // ── 3. HMAC token verification ───────────────────────────────────
+    if (typeof token !== 'string' || token.length !== 64) {
+      return withCors(Response.json({ error: 'Invalid token format' }, { status: 403 }), request);
+    }
+
+    // ── 3. HMAC token verification ───────────────────────────────────────────
     if (!verifyToken(email, sessionTs, token)) {
-      console.warn(`[submit-score] INVALID TOKEN for ${email} score=${scoreNum}`);
-      return Response.json({ error: 'Invalid session token' }, { status: 403 });
+      // Log without revealing which part failed
+      console.warn(`[submit-score] Invalid token — email=${email} score=${scoreNum}`);
+      return withCors(Response.json({ error: 'Invalid session token' }, { status: 403 }), request);
     }
 
-    // ── 4. Session age check (token must be fresh, max 2 hours) ─────
+    // ── 4. Session age check (token must be fresh, max 2 hours) ─────────────
     const sessionAgeMs = Date.now() - sessionTs;
     if (sessionAgeMs > 2 * 60 * 60 * 1000 || sessionAgeMs < 0) {
-      return Response.json({ error: 'Session token expired' }, { status: 403 });
+      return withCors(Response.json({ error: 'Session token expired' }, { status: 403 }), request);
     }
 
-    // ── 5. Score sanity caps ─────────────────────────────────────────
+    // ── 5. Score sanity caps ─────────────────────────────────────────────────
     if (scoreNum < 0 || scoreNum > MAX_PLAUSIBLE_SCORE) {
-      console.warn(`[submit-score] SCORE OUT OF RANGE for ${email}: ${scoreNum}`);
-      return Response.json({ error: 'Score out of plausible range' }, { status: 400 });
+      console.warn(`[submit-score] Score out of range — email=${email} score=${scoreNum}`);
+      return withCors(Response.json({ error: 'Score out of plausible range' }, { status: 400 }), request);
     }
 
-    // ── 6. Hit-count plausibility check ─────────────────────────────
+    // ── 6. Hit-count plausibility check ─────────────────────────────────────
     if (scoreNum > 0) {
       if (hitCountNum < MIN_CATCHES_FOR_NONZERO) {
-        console.warn(`[submit-score] TOO FEW CATCHES for score ${scoreNum} by ${email}`);
-        return Response.json({ error: 'Score not plausible for hit count' }, { status: 400 });
+        console.warn(`[submit-score] Too few catches — email=${email} score=${scoreNum}`);
+        return withCors(Response.json({ error: 'Score not plausible for hit count' }, { status: 400 }), request);
       }
       const avgPts = scoreNum / hitCountNum;
       if (avgPts < MIN_PTS_PER_CATCH || avgPts > MAX_PTS_PER_CATCH) {
-        console.warn(`[submit-score] BAD AVG PTS/CATCH (${avgPts.toFixed(1)}) for ${email}`);
-        return Response.json({ error: 'Score not plausible for hit count' }, { status: 400 });
+        console.warn(`[submit-score] Bad avg pts/catch (${avgPts.toFixed(1)}) — email=${email}`);
+        return withCors(Response.json({ error: 'Score not plausible for hit count' }, { status: 400 }), request);
       }
     }
 
-    // ── 7. Only update if it's genuinely a new high score ───────────
+    // ── 7. Only update if it's genuinely a new high score ───────────────────
     const supabase = getServerSupabase();
     const { data: userData, error: fetchError } = await supabase
       .from('users')
@@ -115,35 +145,39 @@ export async function POST(request) {
       .single();
 
     if (fetchError) {
-      console.error('[submit-score] Fetch error:', fetchError);
-      return Response.json({ error: 'Database error' }, { status: 500 });
+      console.error('[submit-score] Fetch error:', fetchError?.message);
+      return withCors(Response.json({ error: 'Database error' }, { status: 500 }), request);
     }
 
     const currentHigh = userData?.highscore || 0;
 
     if (scoreNum <= currentHigh) {
-      // Not a new high score — that's fine, nothing to do
-      return Response.json({ ok: true, updated: false, highscore: currentHigh });
+      return withCors(Response.json({ ok: true, updated: false, highscore: currentHigh }), request);
     }
 
-    // ── 8. Commit new high score ─────────────────────────────────────
+    // ── 8. Commit new high score ─────────────────────────────────────────────
     const { error: updateError } = await supabase
       .from('users')
       .update({ highscore: scoreNum })
       .eq('email', email);
 
     if (updateError) {
-      console.error('[submit-score] Update error:', updateError);
-      return Response.json({ error: 'Failed to save score' }, { status: 500 });
+      console.error('[submit-score] Update error:', updateError?.message);
+      return withCors(Response.json({ error: 'Failed to save score' }, { status: 500 }), request);
     }
 
-    console.log(`[submit-score] ✅ New high score for ${email}: ${scoreNum} (prev: ${currentHigh})`);
-    return Response.json({ ok: true, updated: true, highscore: scoreNum });
+    console.log(`[submit-score] New high score — email=${email} score=${scoreNum} prev=${currentHigh}`);
+    return withCors(Response.json({ ok: true, updated: true, highscore: scoreNum }), request);
 
   } catch (err) {
-    console.error('[submit-score] Unexpected error:', err);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('[submit-score] Unexpected error:', err?.message);
+    return withCors(Response.json({ error: 'Internal server error' }, { status: 500 }), request);
   }
+}
+
+// Handle CORS preflight
+export async function OPTIONS(request) {
+  return new Response(null, { status: 204, headers: corsHeaders(request) });
 }
 
 // Block all other methods

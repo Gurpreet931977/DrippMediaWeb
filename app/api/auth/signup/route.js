@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
+import { rateLimit } from '@/app/lib/rateLimit';
+import { withCors, corsHeaders } from '@/app/lib/cors';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -8,61 +10,112 @@ const getSupabase = () => {
   return createClient(supabaseUrl, supabaseKey);
 };
 
+// 3 signup attempts per minute per IP to prevent account spam
+const limiter = rateLimit({ limit: 3, windowMs: 60_000 });
+
+// Basic email format validation (no relying on client-side validation alone)
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(request) {
+  // ── Rate limit ─────────────────────────────────────────────────────────────
+  const { ok: rlOk, retryAfter } = limiter.check(request);
+  if (!rlOk) {
+    return withCors(
+      Response.json({ error: 'Too many signup attempts. Please wait before trying again.' }, {
+        status: 429,
+        headers: { 'Retry-After': String(retryAfter) },
+      }),
+      request
+    );
+  }
+
   try {
     const supabase = getSupabase();
-    if (!supabase) return Response.json({ error: 'Database configuration missing' }, { status: 500 });
+    if (!supabase) return withCors(Response.json({ error: 'Database configuration missing' }, { status: 500 }), request);
 
     const data = await request.json();
     const { name, email, phone, nature, password, security_phrase } = data;
 
-    if (!name || !email || !password) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    // ── Input validation ───────────────────────────────────────────────────
+    if (!name || !email || !password || !security_phrase) {
+      return withCors(Response.json({ error: 'Missing required fields' }, { status: 400 }), request);
     }
 
-    // Check if email already exists
+    if (typeof name !== 'string' || typeof email !== 'string' ||
+        typeof password !== 'string' || typeof security_phrase !== 'string') {
+      return withCors(Response.json({ error: 'Invalid input types' }, { status: 400 }), request);
+    }
+
+    // Length caps to prevent abuse
+    if (name.length > 64 || email.length > 254 || password.length > 128 || security_phrase.length > 256) {
+      return withCors(Response.json({ error: 'Input exceeds maximum length' }, { status: 400 }), request);
+    }
+
+    if (!EMAIL_RE.test(email)) {
+      return withCors(Response.json({ error: 'Invalid email format' }, { status: 400 }), request);
+    }
+
+    if (password.length < 8) {
+      return withCors(Response.json({ error: 'Password must be at least 8 characters' }, { status: 400 }), request);
+    }
+
+    // ── Duplicate check ────────────────────────────────────────────────────
     const { data: existingUser } = await supabase
       .from('users')
       .select('id')
-      .eq('email', email)
+      .eq('email', email.toLowerCase().trim())
       .single();
 
     if (existingUser) {
-      return Response.json({ error: 'User already exists' }, { status: 409 });
+      return withCors(Response.json({ error: 'User already exists' }, { status: 409 }), request);
     }
 
-    // Hash the password
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(password, salt);
+    // ── Hash password AND security_phrase ──────────────────────────────────
+    // Both are hashed with bcrypt so a DB breach doesn't expose either.
+    const [hashedPassword, hashedPhrase] = await Promise.all([
+      bcrypt.hash(password, 10),
+      bcrypt.hash(security_phrase.trim(), 10),
+    ]);
 
-    // Insert user
+    // ── Insert user ────────────────────────────────────────────────────────
     const { data: newUser, error } = await supabase
       .from('users')
       .insert([
-        { 
-          name, 
-          email, 
-          phone, 
-          nature, 
-          password: hashedPassword, 
-          security_phrase,
-          highscore: 0
-        }
+        {
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          phone: phone?.trim() || null,
+          nature: nature?.trim() || null,
+          password: hashedPassword,
+          security_phrase: hashedPhrase,
+          highscore: 0,
+        },
       ])
       .select()
       .single();
 
     if (error) {
-      console.error('Signup error:', error);
-      return Response.json({ error: 'Failed to create user' }, { status: 500 });
+      // Log internally, return generic message
+      console.error('[signup] DB insert error:', error?.message);
+      return withCors(Response.json({ error: 'Failed to create user' }, { status: 500 }), request);
     }
 
-    // Don't send the password back to the client
-    delete newUser.password;
+    // Don't send password or security_phrase back to the client
+    const { password: _pw, security_phrase: _sp, ...safeUser } = newUser;
 
-    return Response.json(newUser, { status: 201 });
+    return withCors(Response.json(safeUser, { status: 201 }), request);
   } catch (error) {
-    console.error('Signup error:', error);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('[signup] Unexpected error:', error?.message);
+    return withCors(Response.json({ error: 'Internal server error' }, { status: 500 }), request);
   }
 }
+
+// Handle CORS preflight
+export async function OPTIONS(request) {
+  return new Response(null, { status: 204, headers: corsHeaders(request) });
+}
+
+// Block all other methods
+export async function GET()    { return Response.json({ error: 'Method not allowed' }, { status: 405 }); }
+export async function PUT()    { return Response.json({ error: 'Method not allowed' }, { status: 405 }); }
+export async function DELETE() { return Response.json({ error: 'Method not allowed' }, { status: 405 }); }

@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
+import { rateLimit } from '@/app/lib/rateLimit';
+import { withCors, corsHeaders } from '@/app/lib/cors';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -8,45 +10,85 @@ const getSupabase = () => {
   return createClient(supabaseUrl, supabaseKey);
 };
 
+// 5 login attempts per minute per IP
+const limiter = rateLimit({ limit: 5, windowMs: 60_000 });
+
 export async function POST(request) {
+  // ── Rate limit ─────────────────────────────────────────────────────────────
+  const { ok: rlOk, retryAfter } = limiter.check(request);
+  if (!rlOk) {
+    return withCors(
+      Response.json({ error: 'Too many login attempts. Please wait before trying again.' }, {
+        status: 429,
+        headers: { 'Retry-After': String(retryAfter) },
+      }),
+      request
+    );
+  }
+
   try {
     const supabase = getSupabase();
-    if (!supabase) return Response.json({ error: 'Database configuration missing' }, { status: 500 });
+    if (!supabase) return withCors(Response.json({ error: 'Database configuration missing' }, { status: 500 }), request);
 
     const data = await request.json();
     const { email, password } = data;
 
     if (!email || !password) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+      return withCors(Response.json({ error: 'Missing required fields' }, { status: 400 }), request);
     }
 
-    // Fetch user (either by email or by name/player tag)
+    // Validate input types
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return withCors(Response.json({ error: 'Invalid input types' }, { status: 400 }), request);
+    }
+
+    // Enforce reasonable length limits to prevent abuse
+    if (email.length > 254 || password.length > 128) {
+      return withCors(Response.json({ error: 'Invalid credentials' }, { status: 401 }), request);
+    }
+
+    // Fetch user by email or by player name
     let query = supabase.from('users').select('*');
     if (email.includes('@')) {
-      query = query.eq('email', email);
+      query = query.eq('email', email.toLowerCase().trim());
     } else {
-      query = query.ilike('name', email);
+      // Escape wildcard characters to prevent SQL wildcard injection via ilike
+      const safeName = email.trim().replace(/[%_\\]/g, '\\$&');
+      query = query.ilike('name', safeName);
     }
-    
+
     const { data: user, error } = await query.single();
 
     if (error || !user) {
-      return Response.json({ error: 'Invalid email or password' }, { status: 401 });
+      // Use a constant-time delay to prevent timing-based email enumeration
+      await bcrypt.compare('dummy', '$2b$10$invalidhashplaceholderXXXXXXXXXXXXXXXXXXXXXXXX').catch(() => {});
+      return withCors(Response.json({ error: 'Invalid email or password' }, { status: 401 }), request);
     }
 
     // Compare passwords
-    const isValid = bcrypt.compareSync(password, user.password);
+    const isValid = await bcrypt.compare(password, user.password);
 
     if (!isValid) {
-      return Response.json({ error: 'Invalid email or password' }, { status: 401 });
+      return withCors(Response.json({ error: 'Invalid email or password' }, { status: 401 }), request);
     }
 
-    // Don't send the password back to the client
-    delete user.password;
+    // Don't send the password or security_phrase back to the client
+    const { password: _pw, security_phrase: _sp, ...safeUser } = user;
 
-    return Response.json(user, { status: 200 });
+    return withCors(Response.json(safeUser, { status: 200 }), request);
   } catch (error) {
-    console.error('Login error:', error);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    // Log internally but never expose details to client
+    console.error('[login] Unexpected error:', error?.message);
+    return withCors(Response.json({ error: 'Internal server error' }, { status: 500 }), request);
   }
 }
+
+// Handle CORS preflight
+export async function OPTIONS(request) {
+  return new Response(null, { status: 204, headers: corsHeaders(request) });
+}
+
+// Block all other methods
+export async function GET()    { return Response.json({ error: 'Method not allowed' }, { status: 405 }); }
+export async function PUT()    { return Response.json({ error: 'Method not allowed' }, { status: 405 }); }
+export async function DELETE() { return Response.json({ error: 'Method not allowed' }, { status: 405 }); }
