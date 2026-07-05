@@ -21,6 +21,7 @@
     "@vercel/speed-insights": "^2.0.0",
     "bcryptjs": "^3.0.3",
     "compromise": "^14.15.1",
+    "googleapis": "^173.0.0",
     "gsap": "^3.15.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",

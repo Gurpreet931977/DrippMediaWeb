@@ -100,6 +100,8 @@ export default function InvoiceMaker() {
   const [smartText, setSmartText] = useState('');
   const [shareLink, setShareLink] = useState('');
   const [sharePassword, setSharePassword] = useState('');
+  // 'idle' | 'logging' | 'success' | 'skipped' | 'error'
+  const [sheetLogStatus, setSheetLogStatus] = useState('idle');
 
   // -- INITIALIZATION & LOCAL STORAGE & SUPABASE --
   useEffect(() => {
@@ -692,6 +694,9 @@ export default function InvoiceMaker() {
     const savedInvoices = JSON.parse(localStorage.getItem('dripp_invoices') || '[]');
     savedInvoices.push({ ...invoiceDetails, clientDetails, items, total, id: Date.now() });
     localStorage.setItem('dripp_invoices', JSON.stringify(savedInvoices));
+
+    // 📊 Log to Google Sheets on PDF download
+    logToSalesSheet({ clientDetails, invoiceDetails, items, total, shareLink: shareLink || '', trigger: 'pdf' });
   };
 
   const copyToClipboard = (text) => {
@@ -726,13 +731,101 @@ export default function InvoiceMaker() {
         });
         if (response.ok) {
             const data = await response.json();
-            setShareLink(`${window.location.origin}/invoice/${data.id}`);
+            const generatedLink = `${window.location.origin}/invoice/${data.id}`;
+            setShareLink(generatedLink);
+            // 🔥 Silently log to Google Sheets sales tracker (fire-and-forget)
+            logToSalesSheet({ clientDetails, invoiceDetails, items, total, shareLink: generatedLink });
         } else {
             showAlert("Failed to save invoice securely.");
         }
     } catch(err) {
         showAlert("API error while generating secure link.");
     }
+  };
+
+  /**
+   * Logs an invoice to Google Sheets with full duplicate detection.
+   * Steps:
+   *  1. GET /api/invoice/log?invoiceNumber=... → check if it already exists
+   *  2. If found: show a 3-button dialog (Overwrite / Skip / Add as New Entry)
+   *  3. POST with the chosen mode
+   * Never throws — errors are swallowed so the invoice workflow is never blocked.
+   */
+  const logToSalesSheet = async (invoiceData) => {
+    setSheetLogStatus('logging');
+    try {
+      // ── Step 1: Duplicate check ─────────────────────────────────────────────
+      const invoiceNumber = invoiceData?.invoiceDetails?.number || '';
+      let existingRowIndex = null;
+
+      if (invoiceNumber) {
+        const checkRes = await fetch(
+          `/api/invoice/log?invoiceNumber=${encodeURIComponent(invoiceNumber)}`
+        ).catch(() => null);
+        if (checkRes && checkRes.ok) {
+          const checkJson = await checkRes.json().catch(() => ({}));
+          if (checkJson.exists) {
+            existingRowIndex = checkJson.rowIndex;
+          }
+        }
+      }
+
+      // ── Step 2: If duplicate found, ask the user what to do ──────────────────
+      if (existingRowIndex !== null) {
+        const choice = await new Promise((resolve) => {
+          setCustomDialog({
+            isOpen: true,
+            type: 'duplicate',
+            title: 'Invoice Already Exists',
+            message: `${invoiceNumber} is already in your Sales Sheet. What would you like to do?`,
+            onOverwrite: () => resolve('overwrite'),
+            onSkip:      () => resolve('skip'),
+            onAddNew:    () => resolve('addNew'),
+            onConfirm: null,
+            onCancel: null,
+          });
+        });
+
+        if (choice === 'skip') {
+          setSheetLogStatus('skipped');
+          setTimeout(() => setSheetLogStatus('idle'), 5000);
+          return;
+        }
+
+        if (choice === 'overwrite') {
+          const res = await fetch('/api/invoice/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...invoiceData, mode: 'overwrite', rowIndex: existingRowIndex }),
+          });
+          const json = await res.json().catch(() => ({}));
+          setSheetLogStatus(res.ok && json.success ? 'success' : 'error');
+          setTimeout(() => setSheetLogStatus('idle'), 5000);
+          return;
+        }
+
+        // choice === 'addNew' — fall through to append below
+      }
+
+      // ── Step 3: Append new row ───────────────────────────────────────────────
+      const res = await fetch('/api/invoice/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...invoiceData, mode: 'append' }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.success) {
+        setSheetLogStatus('success');
+      } else if (res.ok && json.skipped) {
+        setSheetLogStatus('skipped');
+      } else {
+        setSheetLogStatus('error');
+      }
+    } catch {
+      setSheetLogStatus('error');
+    }
+    // Auto-reset badge after 5 seconds
+    setTimeout(() => setSheetLogStatus('idle'), 5000);
   };
 
   if (!isClient) return <div style={{padding: '50px', color: 'white'}}>Loading Invoice Maker...</div>;
@@ -747,30 +840,56 @@ export default function InvoiceMaker() {
           <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <h3 style={{ fontSize: '24px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{customDialog.title}</h3>
             <p style={{ fontSize: '16px', color: '#ccc', marginBottom: '30px', lineHeight: '1.5' }}>{customDialog.message}</p>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              {customDialog.type === 'confirm' && (
-                <button 
-                  onClick={() => {
-                    if (customDialog.onCancel) customDialog.onCancel();
-                    closeDialog();
-                  }} 
-                  style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+
+            {/* 3-button duplicate resolution dialog */}
+            {customDialog.type === 'duplicate' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <button
+                  onClick={() => { customDialog.onOverwrite?.(); closeDialog(); }}
+                  style={{ width: '100%', padding: '13px 20px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#f87171', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', textAlign: 'left' }}
                 >
-                  Cancel
+                  ✏️ Overwrite existing entry
+                  <span style={{ display: 'block', fontSize: '0.75rem', color: '#888', fontWeight: '400', marginTop: '3px' }}>Replace the old row with the latest data</span>
                 </button>
-              )}
-              <button 
-                onClick={() => {
-                  if (customDialog.type === 'confirm' && customDialog.onConfirm) {
-                    customDialog.onConfirm();
-                  }
-                  closeDialog();
-                }} 
-                style={{ flex: 1, padding: '12px', background: '#ebd73f', border: 'none', color: '#111', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                {customDialog.type === 'confirm' ? 'Confirm' : 'OK'}
-              </button>
-            </div>
+                <button
+                  onClick={() => { customDialog.onSkip?.(); closeDialog(); }}
+                  style={{ width: '100%', padding: '13px 20px', background: 'rgba(156, 163, 175, 0.08)', border: '1px solid rgba(156, 163, 175, 0.2)', color: '#9ca3af', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', textAlign: 'left' }}
+                >
+                  ⏭ Skip — don\'t log again
+                  <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', fontWeight: '400', marginTop: '3px' }}>Keep the existing entry, do nothing</span>
+                </button>
+                <button
+                  onClick={() => { customDialog.onAddNew?.(); closeDialog(); }}
+                  style={{ width: '100%', padding: '13px 20px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', color: '#4ade80', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', textAlign: 'left' }}
+                >
+                  ➕ Add as a new entry
+                  <span style={{ display: 'block', fontSize: '0.75rem', color: '#888', fontWeight: '400', marginTop: '3px' }}>Keep both rows — useful for re-invoicing</span>
+                </button>
+              </div>
+            )}
+
+            {/* Standard alert / confirm buttons */}
+            {customDialog.type !== 'duplicate' && (
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                {customDialog.type === 'confirm' && (
+                  <button
+                    onClick={() => { if (customDialog.onCancel) customDialog.onCancel(); closeDialog(); }}
+                    style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    if (customDialog.type === 'confirm' && customDialog.onConfirm) customDialog.onConfirm();
+                    closeDialog();
+                  }}
+                  style={{ flex: 1, padding: '12px', background: '#ebd73f', border: 'none', color: '#111', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  {customDialog.type === 'confirm' ? 'Confirm' : 'OK'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       , document.body)}
@@ -1267,12 +1386,60 @@ export default function InvoiceMaker() {
                    </div>
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client Password:</p>
                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
-                      <button onClick={() => copyToClipboard(sharePassword)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
+                     <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
+                     <button onClick={() => copyToClipboard(sharePassword)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
                    </div>
                    <button onClick={handleCopyMessage} className={styles.btnShare}>
                      <Share2 size={18} /> Copy Share Message
                    </button>
+
+                   {/* Google Sheets log status badge */}
+                   {sheetLogStatus !== 'idle' && (
+                     <div style={{
+                       marginTop: '12px',
+                       display: 'flex',
+                       alignItems: 'center',
+                       gap: '8px',
+                       padding: '8px 14px',
+                       borderRadius: '8px',
+                       fontSize: '0.8rem',
+                       fontWeight: '600',
+                       background: sheetLogStatus === 'success'
+                         ? 'rgba(34, 197, 94, 0.12)'
+                         : sheetLogStatus === 'logging'
+                         ? 'rgba(235, 215, 63, 0.08)'
+                         : sheetLogStatus === 'skipped'
+                         ? 'rgba(156, 163, 175, 0.1)'
+                         : 'rgba(239, 68, 68, 0.1)',
+                       border: `1px solid ${
+                         sheetLogStatus === 'success'
+                           ? 'rgba(34, 197, 94, 0.3)'
+                           : sheetLogStatus === 'logging'
+                           ? 'rgba(235, 215, 63, 0.2)'
+                           : sheetLogStatus === 'skipped'
+                           ? 'rgba(156, 163, 175, 0.2)'
+                           : 'rgba(239, 68, 68, 0.3)'
+                       }`,
+                       color: sheetLogStatus === 'success'
+                         ? '#4ade80'
+                         : sheetLogStatus === 'logging'
+                         ? '#ebd73f'
+                         : sheetLogStatus === 'skipped'
+                         ? '#9ca3af'
+                         : '#f87171',
+                     }}>
+                       <span style={{ fontSize: '1rem' }}>
+                         {sheetLogStatus === 'logging' && '⏳'}
+                         {sheetLogStatus === 'success' && '✅'}
+                         {sheetLogStatus === 'skipped' && 'ℹ️'}
+                         {sheetLogStatus === 'error' && '⚠️'}
+                       </span>
+                       {sheetLogStatus === 'logging' && 'Logging to Sales Sheet…'}
+                       {sheetLogStatus === 'success' && 'Logged to Sales Sheet'}
+                       {sheetLogStatus === 'skipped' && 'Sheets not configured (see setup guide)'}
+                       {sheetLogStatus === 'error' && 'Sheet log failed (invoice saved OK)'}
+                     </div>
+                   )}
                 </div>
              )}
            </div>
