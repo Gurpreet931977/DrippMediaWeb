@@ -105,10 +105,22 @@ export default function InvoiceMaker() {
   useEffect(() => {
     setIsClient(true);
     // Load Defaults
-    const localMyDetails = localStorage.getItem('dripp_my_details');
-    if (localMyDetails) {
-        try { setMyDetails(JSON.parse(localMyDetails)); } catch (e) {}
-    }
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'my_details').single();
+        if (data && data.value) {
+            setMyDetails(data.value);
+            localStorage.setItem('dripp_my_details', JSON.stringify(data.value)); // keep local in sync
+        }
+      } catch (err) {
+        console.warn("Could not fetch settings from Supabase. Falling back to local storage.", err);
+        const localMyDetails = localStorage.getItem('dripp_my_details');
+        if (localMyDetails) {
+            try { setMyDetails(JSON.parse(localMyDetails)); } catch (e) {}
+        }
+      }
+    };
+    fetchSettings();
     
     const fetchBanks = async () => {
       try {
@@ -185,10 +197,20 @@ export default function InvoiceMaker() {
 
 
   // -- HANDLERS --
-  const saveMyDetails = () => {
-     localStorage.setItem('dripp_my_details', JSON.stringify(myDetails));
-     setMyDetailsLocked(true);
-     showAlert("Default details saved successfully!");
+  const saveMyDetails = async () => {
+     try {
+       const { error } = await supabase.from('app_settings').upsert({ key: 'my_details', value: myDetails });
+       if (error) throw error;
+       
+       localStorage.setItem('dripp_my_details', JSON.stringify(myDetails));
+       setMyDetailsLocked(true);
+       showAlert("Default details saved successfully to database!");
+     } catch (err) {
+       console.error("Supabase Error saving settings, falling back to local storage.", err);
+       localStorage.setItem('dripp_my_details', JSON.stringify(myDetails));
+       setMyDetailsLocked(true);
+       showAlert("Default details saved locally (database sync failed).");
+     }
   };
 
   const handleSaveBank = async () => {
