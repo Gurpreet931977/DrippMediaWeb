@@ -7,7 +7,6 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
 import styles from '../admin.module.css';
-import { supabase } from '../../utils/supabaseClient';
 import CurrencyConverter from '../components/CurrencyConverter';
 import { allCurrencies } from '../components/currencies';
 
@@ -109,13 +108,16 @@ export default function InvoiceMaker() {
     // Load Defaults
     const fetchSettings = async () => {
       try {
-        const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'my_details').single();
-        if (data && data.value) {
-            setMyDetails(data.value);
-            localStorage.setItem('dripp_my_details', JSON.stringify(data.value)); // keep local in sync
+        const res = await fetch('/api/admin/settings');
+        if (!res.ok) throw new Error('Failed to fetch settings');
+        const json = await res.json();
+        
+        if (json.data) {
+            setMyDetails(json.data);
+            localStorage.setItem('dripp_my_details', JSON.stringify(json.data)); // keep local in sync
         }
       } catch (err) {
-        console.warn("Could not fetch settings from Supabase. Falling back to local storage.", err);
+        console.warn("Could not fetch settings from API. Falling back to local storage.", err);
         const localMyDetails = localStorage.getItem('dripp_my_details');
         if (localMyDetails) {
             try { setMyDetails(JSON.parse(localMyDetails)); } catch (e) {}
@@ -126,14 +128,16 @@ export default function InvoiceMaker() {
     
     const fetchBanks = async () => {
       try {
-        const { data, error } = await supabase.from('bank_accounts').select('*').order('created_at', { ascending: true });
-        if (error) throw error;
+        const res = await fetch('/api/admin/bank');
+        if (!res.ok) throw new Error('Failed to fetch bank accounts');
+        const json = await res.json();
+        const data = json.data;
         
         if (data && data.length > 0) {
            setBankAccounts(data);
            setSelectedBankId(data[0].id);
         } else {
-           // Fallback to localStorage if Supabase is empty (potential first run)
+           // Fallback to localStorage if API returns empty (potential first run)
            const storedBanks = localStorage.getItem('dripp_bank_accounts');
            if (storedBanks) {
               const parsed = JSON.parse(storedBanks);
@@ -144,7 +148,7 @@ export default function InvoiceMaker() {
            }
         }
       } catch (err) {
-        console.warn("Could not fetch from Supabase. Falling back to local storage.", err);
+        console.warn("Could not fetch from API. Falling back to local storage.", err);
         const storedBanks = localStorage.getItem('dripp_bank_accounts');
         if (storedBanks) {
            try {
@@ -201,14 +205,18 @@ export default function InvoiceMaker() {
   // -- HANDLERS --
   const saveMyDetails = async () => {
      try {
-       const { error } = await supabase.from('app_settings').upsert({ key: 'my_details', value: myDetails });
-       if (error) throw error;
+       const res = await fetch('/api/admin/settings', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ myDetails })
+       });
+       if (!res.ok) throw new Error('API save failed');
        
        localStorage.setItem('dripp_my_details', JSON.stringify(myDetails));
        setMyDetailsLocked(true);
        showAlert("Default details saved successfully to database!");
      } catch (err) {
-       console.error("Supabase Error saving settings, falling back to local storage.", err);
+       console.error("API Error saving settings, falling back to local storage.", err);
        localStorage.setItem('dripp_my_details', JSON.stringify(myDetails));
        setMyDetailsLocked(true);
        showAlert("Default details saved locally (database sync failed).");
@@ -220,27 +228,25 @@ export default function InvoiceMaker() {
       const existingIdx = updatedBanks.findIndex(b => b.id === editingBankDetails.id);
       
       try {
+        const payload = existingIdx >= 0 ? editingBankDetails : { ...editingBankDetails, id: 'new' };
+        
+        const res = await fetch('/api/admin/bank', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) throw new Error('API save bank failed');
+        const json = await res.json();
+        
         if (existingIdx >= 0) {
-            const { error } = await supabase.from('bank_accounts').update({
-                name: editingBankDetails.name,
-                details: editingBankDetails.details,
-                upi: editingBankDetails.upi
-            }).eq('id', editingBankDetails.id);
-            if (error) throw error;
-            updatedBanks[existingIdx] = editingBankDetails;
+            updatedBanks[existingIdx] = json.data;
         } else {
-            const { id, ...bankData } = editingBankDetails;
-            const { data, error } = await supabase.from('bank_accounts').insert(bankData).select().single();
-            if (error) throw error;
-            if (data) {
-                updatedBanks.push(data);
-                editingBankDetails.id = data.id;
-            } else {
-                updatedBanks.push(editingBankDetails);
-            }
+            updatedBanks.push(json.data);
+            editingBankDetails.id = json.data.id;
         }
       } catch (err) {
-        console.error("Supabase Error, saving to local storage fallback", err);
+        console.error("API Error, saving to local storage fallback", err);
         if (existingIdx >= 0) {
            updatedBanks[existingIdx] = editingBankDetails;
         } else {
@@ -262,10 +268,10 @@ export default function InvoiceMaker() {
               return;
           }
           try {
-             const { error } = await supabase.from('bank_accounts').delete().eq('id', id);
-             if (error) throw error;
+             const res = await fetch(`/api/admin/bank?id=${id}`, { method: 'DELETE' });
+             if (!res.ok) throw new Error('API delete failed');
           } catch (err) {
-             console.error("Supabase delete failed", err);
+             console.error("API delete failed", err);
              localStorage.setItem('dripp_bank_accounts', JSON.stringify(updatedBanks));
           }
           setBankAccounts(updatedBanks);

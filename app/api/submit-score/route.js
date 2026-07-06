@@ -138,6 +138,15 @@ export async function POST(request) {
       return withCors(Response.json({ error: 'Score out of plausible range' }, { status: 400 }), request);
     }
 
+    // ── 5.5 Time-based plausibility check ───────────────────────────────────
+    // The client allows max 1 hit per 50ms. We use 40ms to allow for network/clock skew.
+    const MIN_MS_PER_HIT = 40;
+    const minRequiredTime = hitCountNum * MIN_MS_PER_HIT;
+    if (sessionAgeMs < minRequiredTime) {
+      console.warn(`[submit-score] Score achieved impossibly fast — email=${email} hits=${hitCountNum} time=${sessionAgeMs}ms`);
+      return withCors(Response.json({ error: 'Score not plausible for session duration' }, { status: 400 }), request);
+    }
+
     // ── 6. Hit-count plausibility check ─────────────────────────────────────
     if (scoreNum > 0) {
       if (hitCountNum < MIN_CATCHES_FOR_NONZERO) {

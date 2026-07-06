@@ -68,15 +68,19 @@ export default function ComingSoon() {
 
       // Load high score from DB only (never trust localStorage as source of truth for DB)
       if (userObj && userObj.email) {
-          supabase.from('users').select('highscore').eq('email', userObj.email).single()
-            .then(({ data }) => {
-                if (data) {
-                    const dbHigh = data.highscore || 0;
-                    // Always use DB value as the source of truth
-                    highScoreRef.current = dbHigh;
-                    localStorage.setItem('dripp_highScore', dbHigh.toString());
-                }
-            });
+          const authToken = localStorage.getItem('dripp_auth_token') || '';
+          fetch('/api/arcade/highscore', {
+             headers: { 'Authorization': `Bearer ${authToken}` }
+          })
+          .then(res => res.json())
+          .then(data => {
+              if (data && data.highscore !== undefined) {
+                  const dbHigh = data.highscore || 0;
+                  // Always use DB value as the source of truth
+                  highScoreRef.current = dbHigh;
+                  localStorage.setItem('dripp_highScore', dbHigh.toString());
+              }
+          }).catch(e => console.error("Error fetching highscore", e));
       } else {
           // Guest: just read localStorage (won't be synced to DB)
           const cachedHighScore = localStorage.getItem('dripp_highScore');
@@ -93,16 +97,14 @@ export default function ComingSoon() {
     // NOTE: We intentionally do NOT sync localStorage → DB here anymore.
     // All score saves go through /api/submit-score (server-side validated).
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('name, highscore')
-        .order('highscore', { ascending: false })
-        .limit(3);
-      if (error) {
-        console.error("Leaderboard fetch error:", error);
+      const res = await fetch('/api/arcade/leaderboard');
+      if (!res.ok) throw new Error('Failed to fetch leaderboard');
+      const data = await res.json();
+      
+      if (data && data.leaderboard) {
+        setLeaderboardData(data.leaderboard);
+      } else {
         setLeaderboardError(true);
-      } else if (data) {
-        setLeaderboardData(data);
       }
     } catch (e) {
        console.error("Leaderboard catch error:", e);

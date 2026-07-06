@@ -63,7 +63,12 @@ export async function POST(request) {
     // For legacy users (plaintext stored before this update): fall back to direct
     // comparison. Run the migration script to upgrade all existing users.
     let phraseValid = false;
-    const storedPhrase = user.security_phrase || '';
+    const storedPhrase = String(user.security_phrase || '');
+
+    // If the user has no security phrase set in the DB, it cannot be reset via this method.
+    if (!storedPhrase) {
+      return withCors(Response.json({ error: 'Invalid email or security phrase' }, { status: 401 }), request);
+    }
 
     if (storedPhrase.startsWith('$2')) {
       // Bcrypt hash (new users or migrated users)

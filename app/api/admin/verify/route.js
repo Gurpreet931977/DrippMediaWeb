@@ -15,69 +15,14 @@
  *  - Returns { ok: true } if valid, 401 if not
  */
 
-import { createHmac, timingSafeEqual } from 'crypto';
+import { getAdminEmails, verifyCookie, buildCookieHeader } from '@/app/lib/adminAuth';
 import { rateLimit } from '@/app/lib/rateLimit';
 
 const ADMIN_SECRET = process.env.ADMIN_SESSION_SECRET;
-const ADMIN_EMAILS_RAW = process.env.ADMIN_EMAILS || '';
 const COOKIE_NAME = 'dripp_admin_session';
-const SESSION_MAX_AGE = 8 * 60 * 60; // 8 hours in seconds
 
 // Rate limit: 10 verify attempts per 15 minutes per IP
 const limiter = rateLimit({ limit: 10, windowMs: 15 * 60_000 });
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function getAdminEmails() {
-  return ADMIN_EMAILS_RAW.split(',')
-    .map((e) => e.toLowerCase().trim())
-    .filter(Boolean);
-}
-
-function signSession(email) {
-  if (!ADMIN_SECRET) throw new Error('ADMIN_SESSION_SECRET is not configured');
-  return createHmac('sha256', ADMIN_SECRET)
-    .update(`admin:${email}:${Math.floor(Date.now() / (SESSION_MAX_AGE * 1000))}`)
-    .digest('hex');
-}
-
-function verifyCookie(cookieValue) {
-  if (!cookieValue || !ADMIN_SECRET) return null;
-  try {
-    // Cookie format: email|hmac
-    const lastPipe = cookieValue.lastIndexOf('|');
-    if (lastPipe === -1) return null;
-    const email = cookieValue.slice(0, lastPipe);
-    const receivedHmac = cookieValue.slice(lastPipe + 1);
-    const expectedHmac = signSession(email);
-
-    // Constant-time comparison
-    const a = Buffer.from(receivedHmac, 'hex');
-    const b = Buffer.from(expectedHmac, 'hex');
-    if (a.length !== b.length) return null;
-    if (!timingSafeEqual(a, b)) return null;
-
-    if (!getAdminEmails().includes(email.toLowerCase())) return null;
-    return email;
-  } catch {
-    return null;
-  }
-}
-
-function buildCookieHeader(email) {
-  const hmac = signSession(email);
-  const value = `${email}|${hmac}`;
-  const flags = [
-    `${COOKIE_NAME}=${value}`,
-    `Max-Age=${SESSION_MAX_AGE}`,
-    'Path=/',
-    'HttpOnly',
-    'SameSite=Strict',
-  ];
-  // Only add Secure in production — localhost doesn't have HTTPS
-  if (process.env.NODE_ENV === 'production') flags.push('Secure');
-  return flags.join('; ');
-}
 
 // ── GET — verify existing session ──────────────────────────────────────────────
 

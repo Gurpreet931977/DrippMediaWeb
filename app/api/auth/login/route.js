@@ -63,11 +63,22 @@ export async function POST(request) {
     if (error || !user) {
       // Use a constant-time delay to prevent timing-based email enumeration
       await bcrypt.compare('dummy', '$2b$10$invalidhashplaceholderXXXXXXXXXXXXXXXXXXXXXXXX').catch(() => {});
+      
+      if (!email.includes('@')) {
+        return withCors(Response.json({ error: 'Player Tag not found, or multiple users share this tag. Please login with your Email.' }, { status: 401 }), request);
+      }
       return withCors(Response.json({ error: 'Invalid email or password' }, { status: 401 }), request);
     }
 
-    // Compare passwords
-    const isValid = await bcrypt.compare(password, user.password);
+    // Compare passwords gracefully (handling legacy plaintext passwords)
+    let isValid = false;
+    const storedPassword = String(user.password || '');
+
+    if (storedPassword.startsWith('$2')) {
+      isValid = await bcrypt.compare(password, storedPassword);
+    } else {
+      isValid = (password === storedPassword);
+    }
 
     if (!isValid) {
       return withCors(Response.json({ error: 'Invalid email or password' }, { status: 401 }), request);
