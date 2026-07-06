@@ -11,11 +11,12 @@
 //  - Frame:    none (no iframes used or needed)
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com blob:`,
   `style-src 'self' 'unsafe-inline' https://api.fontshare.com https://unicons.iconscout.com`,
-  `font-src 'self' https://api.fontshare.com https://unicons.iconscout.com data:`,
+  `font-src 'self' https://api.fontshare.com https://cdn.fontshare.com https://*.fontshare.com https://unicons.iconscout.com data:`,
   `img-src 'self' data: blob: https://*.supabase.co`,
-  `connect-src 'self' https://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
+  `connect-src 'self' https://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com blob:`,
+  `media-src 'self' blob:`,
   `worker-src 'self' blob:`,
   `frame-src 'none'`,
   `object-src 'none'`,
