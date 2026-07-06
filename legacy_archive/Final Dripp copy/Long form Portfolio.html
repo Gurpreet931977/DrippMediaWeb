@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dripp Media | Long Form Cinematics</title>
+    <!-- Fonts -->
+    <link
+        href="https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&f[]=clash-display@200,300,400,500,600,700&display=swap"
+        rel="stylesheet">
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        :root {
+            --brand-yellow: #ebd73f;
+            --deep-black: #050505;
+            --pure-white: #ffffff;
+            --card-radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--deep-black);
+            color: var(--pure-white);
+            font-family: 'Clash Display', sans-serif;
+            overflow-x: hidden;
+            width: 100vw;
+            min-height: 100vh;
+            /* To hide scrollbar visually but allow custom scroll */
+            scrollbar-width: thin;
+            scrollbar-color: var(--brand-yellow) var(--deep-black);
+        }
+
+        body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: var(--deep-black);
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background-color: var(--brand-yellow);
+            border-radius: 4px;
+        }
+
+        /* Nav back button */
+        .nav-back {
+            position: fixed;
+            top: 40px;
+            left: 50px;
+            z-index: 100;
+            color: var(--pure-white);
+            text-decoration: none;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            mix-blend-mode: difference;
+            transition: color 0.3s ease;
+        }
+
+        .nav-back:hover {
+            color: var(--brand-yellow);
+        }
+
+        /* Custom Cursor */
+        .cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--brand-yellow);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        }
+
+        .cursor.active {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(235, 215, 63, 0.1);
+            backdrop-filter: blur(2px);
+        }
+
+        /* --- HERO HEADER --- */
+        .header {
+            padding: 100px 30px 40px 30px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-family: 'Panchang', sans-serif;
+            font-size: 3.5vw;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+            margin-bottom: 10px;
+        }
+
+        .header h1 span {
+            color: var(--brand-yellow);
+            text-shadow: 0 0 25px rgba(235, 215, 63, 0.4);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* --- VIDEO GRID (YouTube Style) --- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 40px 24px;
+            padding: 20px 50px 100px 50px;
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Video Card */
+        .video-card {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        /* Thumbnail Container */
+        .thumbnail-container {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: var(--card-radius);
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(165deg, rgba(30, 30, 30, 0.8) 0%, rgba(10, 10, 10, 0.9) 100%);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+        }
+
+        .video-card:hover .thumbnail-container {
+            border-color: rgba(235, 215, 63, 0.4);
+            box-shadow: 0 15px 40px rgba(235, 215, 63, 0.15);
+            transform: scale(1.02);
+            z-index: 2;
+        }
+
+        .thumbnail-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+            transition: opacity 0.4s ease, transform 0.8s ease;
+        }
+
+        .video-card:hover .thumbnail-img {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .duration-badge {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            color: var(--pure-white);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 3;
+        }
+
+        .play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%);
+            opacity: 0;
+            backdrop-filter: blur(0px);
+            /* Initialize blur */
+            transition: opacity 0.5s ease, backdrop-filter 0.5s ease;
+            /* Smooth blur animation */
+            z-index: 2;
+        }
+
+        .video-card:hover .play-overlay {
+            opacity: 1;
+            backdrop-filter: blur(8px);
+            /* Blur value on hover */
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(235, 215, 63, 0.2);
+            border: 2px solid var(--brand-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(0px);
+            transform: scale(0.8);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), backdrop-filter 0.4s ease;
+            box-shadow: 0 0 20px rgba(235, 215, 63, 0.3);
+        }
+
+        .video-card:hover .play-btn {
+            transform: scale(1);
+            backdrop-filter: blur(10px);
+        }
+
+        .play-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--brand-yellow);
+            margin-left: 4px;
+        }
+
+        /* Meta Info Container */
+        .meta-container {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #222;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .video-card:hover .avatar {
+            border-color: var(--brand-yellow);
+        }
+
+        /* Placeholder Avatar text */
+        .avatar span {
+            font-family: 'Panchang', sans-serif;
+            font-weight: 700;
+            color: var(--brand-yellow);
+            font-size: 1.2rem;
+        }
+
+        .text-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .video-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--pure-white);
+            line-height: 1.4;
+            display: -webkit-box;
+            line-clamp: 2;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color 0.3s ease;
+        }
+
+        .video-card:hover .video-title {
+            color: var(--brand-yellow);
+        }
+
+        .channel-name {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .verified-badge {
+            width: 14px;
+            height: 14px;
+            fill: rgba(255, 255, 255, 0.5);
+        }
+
+        .video-stats {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+
+        /* --- VIDEO MODAL --- */
+        .video-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .video-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(15px);
+        }
+
+        .modal-content {
+            position: relative;
+            z-index: 10001;
+            width: 90%;
+            max-width: 1200px;
+            background: var(--deep-black);
+            border-radius: var(--card-radius);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(235, 215, 63, 0.2);
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .video-modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--pure-white);
+            font-size: 2rem;
+            line-height: 1;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .close-modal:hover {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            transform: rotate(90deg);
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            /* 16:9 ratio */
+            height: 0;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Category filters */
+        .filters {
+            display: flex;
+            gap: 12px;
+            padding: 0 50px 30px 50px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            position: relative;
+            z-index: 10;
+        }
+
+        .filters::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 20px;
+            border-radius: 30px;
+            color: var(--pure-white);
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-btn.active {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            border-color: var(--brand-yellow);
+            font-weight: 600;
+        }
+
+        /* Space Canvas */
+        #space-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 900px) {
+            * {
+                cursor: auto;
+            }
+
+            .cursor {
+                display: none;
+            }
+
+            .header h1 {
+                font-size: 7vw;
+            }
+
+            .grid-container {
+                grid-template-columns: 1fr;
+                padding: 20px 20px 80px 20px;
+            }
+
+            .filters {
+                padding: 0 20px 20px 20px;
+            }
+
+            .nav-back {
+                top: 20px;
+                left: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 3D Space Background -->
+    <canvas id="space-canvas"></canvas>
+
+    <a href="Video Portfolio.html" class="nav-back">← Back</a>
+
+    <div class="cursor" id="cursor"></div>
+
+    <div class="header">
+        <h1>Long Form <span>Cinematics</span></h1>
+        <p>Documentaries, Commercials, and High-Retention YouTube Videos tailored to the algorithm.</p>
+    </div>
+
+    <!-- Category Filters mimicking YouTube -->
+    <div class="filters">
+        <div class="filter-btn active">All Work</div>
+        <div class="filter-btn">Documentary</div>
+        <div class="filter-btn">Commercial</div>
+        <div class="filter-btn">YouTube Format</div>
+        <div class="filter-btn">Music Videos</div>
+    </div>
+
+    <div class="grid-container">
+
+        <!-- Video Card 1 -->
+        <div class="video-card" data-video-id="dQw4w9WgXcQ">
+            <div class="thumbnail-container">
+                <div class="thumbnail-img"
+                    style="background: url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1450&auto=format&fit=crop') center/cover;">
+                </div>
+                <div class="duration-badge">14:03</div>
+                <div class="play-overlay">
+                    <div class="play-btn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="meta-container">
+                <div class="avatar"><span>D</span></div>
+                <div class="text-info">
+                    <div class="video-title">The Art of Storytelling | Full Documentary [4K]</div>
+                    <div class="channel-name">Dripp Media Original <svg class="verified-badge" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
+                        </svg></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Card 2 -->
+        <div class="video-card" data-video-id="dQw4w9WgXcQ">
+            <div class="thumbnail-container">
+                <div class="thumbnail-img"
+                    style="background: url('https://images.unsplash.com/photo-1540656006096-7b8de6dbb899?q=80&w=1471&auto=format&fit=crop') center/cover;">
+                </div>
+                <div class="duration-badge">8:45</div>
+                <div class="play-overlay">
+                    <div class="play-btn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="meta-container">
+                <div class="avatar"><span>D</span></div>
+                <div class="text-info">
+                    <div class="video-title">Behind The Scenes: Shooting in Zero Gravity</div>
+                    <div class="channel-name">Dripp Media <svg class="verified-badge" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
+                        </svg></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Card 3 -->
+        <div class="video-card" data-video-id="dQw4w9WgXcQ">
+            <div class="thumbnail-container">
+                <div class="thumbnail-img"
+                    style="background: url('https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=1374&auto=format&fit=crop') center/cover;">
+                </div>
+                <div class="duration-badge">22:10</div>
+                <div class="play-overlay">
+                    <div class="play-btn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="meta-container">
+                <div class="avatar"><span>D</span></div>
+                <div class="text-info">
+                    <div class="video-title">Cybernetic Visuals: A Masterclass in VFX</div>
+                    <div class="channel-name">Dripp Media Academy <svg class="verified-badge" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
+                        </svg></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Card 4 -->
+        <div class="video-card" data-video-id="dQw4w9WgXcQ">
+            <div class="thumbnail-container">
+                <div class="thumbnail-img"
+                    style="background: url('https://images.unsplash.com/photo-1601506521937-0130a0d4bde9?q=80&w=1470&auto=format&fit=crop') center/cover;">
+                </div>
+                <div class="duration-badge">10:30</div>
+                <div class="play-overlay">
+                    <div class="play-btn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="meta-container">
+                <div class="avatar"><span>D</span></div>
+                <div class="text-info">
+                    <div class="video-title">High Speed Car Chase Commercial Breakdown</div>
+                    <div class="channel-name">Dripp Media Original <svg class="verified-badge" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
+                        </svg></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Card 5 -->
+        <div class="video-card" data-video-id="dQw4w9WgXcQ">
+            <div class="thumbnail-container">
+                <div class="thumbnail-img"
+                    style="background: url('https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1471&auto=format&fit=crop') center/cover;">
+                </div>
+                <div class="duration-badge">18:05</div>
+                <div class="play-overlay">
+                    <div class="play-btn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="meta-container">
+                <div class="avatar"><span>D</span></div>
+                <div class="text-info">
+                    <div class="video-title">The Evolution of Cinematic Lighting Styles</div>
+                    <div class="channel-name">Dripp Media <svg class="verified-badge" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
+                        </svg></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Card 6 -->
+        <div class="video-card" data-video-id="dQw4w9WgXcQ">
+            <div class="thumbnail-container">
+                <div class="thumbnail-img"
+                    style="background: url('https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=1632&auto=format&fit=crop') center/cover;">
+                </div>
+                <div class="duration-badge">11:55</div>
+                <div class="play-overlay">
+                    <div class="play-btn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="meta-container">
+                <div class="avatar"><span>D</span></div>
+                <div class="text-info">
+                    <div class="video-title">Sound Design That Makes You Feel The Visuals</div>
+                    <div class="channel-name">Dripp Media Original <svg class="verified-badge" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
+                        </svg></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Custom Video Modal -->
+    <div class="video-modal" id="videoModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <div class="video-wrapper">
+                <iframe id="youtubePlayer" src="" title="YouTube video player" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Custom Cursor Logic
+        const cursor = document.getElementById('cursor');
+        const clickables = document.querySelectorAll('.thumbnail-container, .avatar, .text-info, .filter-btn, .nav-back');
+
+        window.addEventListener('mousemove', (e) => {
+            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+        });
+
+        clickables.forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('active'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('active'));
+        });
+
+        // Intro Animation for Video Cards
+        gsap.to('.video-card', {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out",
+            delay: 0.2
+        });
+
+        // Filter button click logic
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Shuffle animation effect on cards
+                const cards = document.querySelectorAll('.video-card');
+                gsap.to(cards, {
+                    scale: 0.95,
+                    opacity: 0.5,
+                    y: 10,
+                    duration: 0.2,
+                    yoyo: true,
+                    repeat: 1,
+                    stagger: 0.05,
+                    ease: "power1.inOut"
+                });
+            });
+        });
+
+
+        // Video Modal Logic
+        const videoModal = document.getElementById('videoModal');
+        const closeModal = document.querySelector('.close-modal');
+        const youtubePlayer = document.getElementById('youtubePlayer');
+        const videoCards = document.querySelectorAll('.video-card');
+
+        videoCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const videoId = card.getAttribute('data-video-id');
+                if (videoId) {
+                    youtubePlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&color=white`;
+                    videoModal.classList.add('active');
+                    // Add active cursor for modal interactions
+                    cursor.classList.add('active');
+                }
+            });
+        });
+
+        const closeVideo = () => {
+            videoModal.classList.remove('active');
+            // Clear the src after a short delay to stop playback
+            setTimeout(() => {
+                youtubePlayer.src = '';
+            }, 400);
+            cursor.classList.remove('active');
+        };
+
+        closeModal.addEventListener('click', closeVideo);
+
+        document.querySelector('.modal-backdrop').addEventListener('click', closeVideo);
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && videoModal.classList.contains('active')) {
+                closeVideo();
+            }
+        });
+
+        // Ambient Space Background Particle Logic
+        const canvas = document.getElementById('space-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.z = Math.random() * 2 + 0.1;
+                this.vx = (Math.random() - 0.5) * 0.2;
+                this.vy = Math.random() * -0.5 - 0.1;
+                this.alpha = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.y < 0) {
+                    this.y = height;
+                    this.x = Math.random() * width;
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.z, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 150; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+
+</html>

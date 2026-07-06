@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dripp Media | Surreal Agency</title>
+    
+    <!-- Fonts -->
+    <link href="https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&f[]=clash-display@200,300,400,500,600,700&display=swap" rel="stylesheet">
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        :root {
+            --brand-yellow: #ebd73f;
+            --brand-yellow-glow: rgba(235, 215, 63, 0.15);
+            --deep-black: #050505;
+            --pure-white: #ffffff;
+            --card-w: 260px;
+            --card-h: 360px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+
+        body {
+            background-color: var(--deep-black);
+            color: var(--pure-white);
+            font-family: 'Clash Display', sans-serif;
+            overflow-x: hidden;
+            width: 100vw;
+            opacity: 0;
+            transition: opacity 0.8s ease-out;
+        }
+        
+        body.loaded { opacity: 1; }
+
+        /* --- BACKGROUND AESTHETIC (The "Nectar" Look) --- */
+        .ambient-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+            background: var(--deep-black);
+        }
+
+        /* Organic Glowing Blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.4;
+            mix-blend-mode: screen;
+            pointer-events: none;
+        }
+
+        .blob-1 {
+            width: 80vw;
+            height: 80vw;
+            background: radial-gradient(circle, var(--brand-yellow) 0%, transparent 70%);
+            top: -20%;
+            right: -10%;
+            animation: drift 20s infinite alternate ease-in-out;
+        }
+
+        .blob-2 {
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, var(--brand-yellow) 0%, transparent 70%);
+            bottom: -10%;
+            left: -10%;
+            opacity: 0.2;
+            animation: drift 25s infinite alternate-reverse ease-in-out;
+        }
+
+        /* Grain / Noise Overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.04;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        @keyframes drift {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(10%, 10%) scale(1.1); }
+        }
+
+        /* --- CURSOR --- */
+        .cursor {
+            position: fixed; top: 0; left: 0;
+            width: 20px; height: 20px;
+            border: 1.5px solid var(--brand-yellow);
+            border-radius: 50%;
+            pointer-events: none; z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        }
+        .cursor.active {
+            width: 70px; height: 70px;
+            background-color: var(--brand-yellow);
+            mix-blend-mode: normal; opacity: 0.2;
+            border-color: transparent;
+            backdrop-filter: blur(4px);
+        }
+
+        /* --- UI OVERLAY --- */
+        .velocity-gauge {
+            position: fixed; right: 30px; top: 50%;
+            transform: translateY(-50%);
+            width: 1px; height: 150px;
+            background: rgba(255,255,255,0.05); z-index: 100;
+        }
+        .velocity-fill {
+            position: absolute; bottom: 0; left: 0;
+            width: 100%; height: 0%;
+            background: var(--brand-yellow);
+            box-shadow: 0 0 15px var(--brand-yellow);
+        }
+        .gauge-label {
+            position: absolute; top: -25px; right: -12px;
+            font-size: 8px; color: var(--brand-yellow);
+            font-family: 'Panchang', sans-serif;
+            transform: rotate(90deg); opacity: 0.6;
+            letter-spacing: 2px;
+        }
+
+        .scroll-prompt {
+            position: fixed; bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; flex-direction: column;
+            align-items: center; gap: 10px;
+            z-index: 10; opacity: 0.5;
+        }
+        .scroll-text {
+            font-size: 0.6rem; letter-spacing: 4px;
+            text-transform: uppercase; font-weight: 500;
+        }
+        .scroll-line {
+            width: 1px; height: 50px;
+            background: linear-gradient(to bottom, var(--brand-yellow), transparent);
+            animation: scrollLine 2.5s infinite;
+        }
+        @keyframes scrollLine {
+            0% { transform: scaleY(0); transform-origin: top; }
+            50% { transform: scaleY(1); transform-origin: top; }
+            51% { transform: scaleY(1); transform-origin: bottom; }
+            100% { transform: scaleY(0); transform-origin: bottom; }
+        }
+
+        /* --- HERO --- */
+        section.hero {
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            position: relative; z-index: 2;
+        }
+        h1.brand-name {
+            font-family: 'Panchang', sans-serif; font-weight: 800;
+            font-size: 9vw; text-transform: uppercase; line-height: 0.8;
+            text-align: center; letter-spacing: -4px;
+            display: flex; gap: 20px;
+            text-shadow: 0 0 80px var(--brand-yellow-glow);
+        }
+        .hero-sub {
+            margin-top: 40px; color: var(--brand-yellow);
+            font-size: 0.75rem; font-weight: 600; letter-spacing: 4px;
+            text-transform: uppercase; background: rgba(0,0,0,0.4);
+            padding: 12px 28px; border-radius: 999px;
+            border: 1px solid rgba(235, 215, 63, 0.2);
+            backdrop-filter: blur(10px); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .hero-sub:hover {
+            background: var(--brand-yellow); color: var(--deep-black);
+            transform: translateY(-5px); box-shadow: 0 10px 30px var(--brand-yellow-glow);
+        }
+
+        /* --- CARDS --- */
+        section.portfolio {
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            perspective: 2000px; position: relative; z-index: 5;
+        }
+        .cards-container {
+            position: relative; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            transform-style: preserve-3d;
+        }
+        
+        .card-wrapper {
+            width: var(--card-w); height: var(--card-h);
+            position: absolute; top: 50%; left: 50%;
+            transform-style: preserve-3d;
+        }
+        
+        .card-inner {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d; will-change: transform;
+        }
+
+        .face {
+            position: absolute; inset: 0; border-radius: 20px;
+            -webkit-backface-visibility: hidden; backface-visibility: hidden;
+            overflow: hidden; display: flex; flex-direction: column;
+            transform-style: preserve-3d;
+        }
+
+        .face-front {
+            transform: rotateY(0deg) translateZ(1px); padding: 30px;
+            background: linear-gradient(165deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+            border: 1px solid rgba(255,255,255,0.08); 
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .face-back {
+            transform: rotateY(180deg) translateZ(1px);
+            background: var(--brand-yellow); color: var(--deep-black);
+            padding: 30px; justify-content: space-between;
+            border: 1px solid var(--brand-yellow);
+        }
+
+        /* Glass Decoration */
+        .glass-label {
+            background: rgba(235, 215, 63, 0.1); padding: 6px 14px;
+            border-radius: 30px; font-size: 0.6rem; font-weight: 800;
+            letter-spacing: 2px; color: var(--brand-yellow);
+            border: 1px solid rgba(235, 215, 63, 0.2); margin-bottom: auto;
+            display: inline-block; transform: translateZ(30px);
+        }
+        .face-front h2 {
+            font-family: 'Panchang', sans-serif; font-weight: 700;
+            font-size: 1.8rem; text-transform: uppercase; color: #fff;
+            line-height: 1; margin-bottom: 20px; pointer-events: none;
+            transform: translateZ(50px);
+        }
+        .front-desc {
+            font-size: 0.8rem; line-height: 1.6; color: rgba(255,255,255,0.5);
+            font-weight: 400; transform: translateZ(40px);
+        }
+        
+        .back-title {
+            font-family: 'Panchang', sans-serif; font-weight: 800; font-size: 1.4rem;
+            text-transform: uppercase; transform: translateZ(40px);
+        }
+        .back-text {
+            font-size: 0.9rem; font-weight: 600; line-height: 1.4;
+            transform: translateZ(30px);
+        }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; transform: translateZ(20px); }
+        .tag {
+            background: var(--deep-black); color: var(--brand-yellow);
+            padding: 5px 12px; font-size: 0.6rem; font-weight: 800; text-transform: uppercase;
+        }
+        
+        .spacer { height: 100vh; }
+
+        @media (max-width: 900px) {
+            * { cursor: auto; }
+            .cursor, .velocity-gauge { display: none; }
+            h1.brand-name { font-size: 14vw; flex-direction: column; gap: 0; }
+            :root { --card-w: 260px; --card-h: 360px; }
+            .scroll-prompt { bottom: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cursor"></div>
+    <div class="velocity-gauge"><div class="gauge-label">VELOCITY.IDX</div><div class="velocity-fill"></div></div>
+    
+    <div class="scroll-prompt">
+        <div class="scroll-text">Initiating Sequence</div>
+        <div class="scroll-line"></div>
+    </div>
+
+    <!-- BACKGROUND SYSTEM -->
+    <div class="ambient-container">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+    <div class="noise-overlay"></div>
+
+    <section class="hero">
+        <h1 class="brand-name">
+            <span class="word" id="word1">DRIPP</span>
+            <span class="word" id="word2">MEDIA</span>
+        </h1>
+        <div class="hero-sub">Creative Catalyst</div>
+    </section>
+
+    <section class="portfolio">
+        <div class="cards-container">
+            <!-- Card 1 -->
+            <div class="card-wrapper locked" id="card1">
+                <div class="card-inner">
+                    <div class="face face-front">
+                        <span class="glass-label">01 / RETENTION</span>
+                        <h2>The Rhythm</h2>
+                        <p class="front-desc">High-octane visual engineering designed for maximum audience grip.</p>
+                    </div>
+                    <div class="face face-back">
+                        <div class="back-title">Dopamine</div>
+                        <p class="back-text">We engineer spikes in engagement through psycho-acoustic pacing.</p>
+                        <div class="tags"><span class="tag">Post-Prod</span><span class="tag">VFX</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 2 -->
+            <div class="card-wrapper locked" id="card2">
+                <div class="card-inner">
+                    <div class="face face-front">
+                        <span class="glass-label">02 / IDENTITY</span>
+                        <h2>The System</h2>
+                        <p class="front-desc">Surreal design languages that redefine brand perception instantly.</p>
+                    </div>
+                    <div class="face face-back">
+                        <div class="back-title">Aesthetic</div>
+                        <p class="back-text">Cohesive systems that dominate mobile feeds and physical spaces.</p>
+                        <div class="tags"><span class="tag">Identity</span><span class="tag">3D</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 3 -->
+            <div class="card-wrapper locked" id="card3">
+                <div class="card-inner">
+                    <div class="face face-front">
+                        <span class="glass-label">03 / SCALE</span>
+                        <h2>The Growth</h2>
+                        <p class="front-desc">Cinematic assets optimized to trigger the viral loop mechanics.</p>
+                    </div>
+                    <div class="face face-back">
+                        <div class="back-title">Scale</div>
+                        <p class="back-text">Turning viewers into advocates through high-fidelity storytelling.</p>
+                        <div class="tags"><span class="tag">Growth</span><span class="tag">Ads</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div class="spacer"></div>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- INIT ---
+        window.addEventListener('load', () => {
+            document.body.classList.add('loaded');
+            gsap.to(".hero-sub", { opacity: 1, duration: 2, delay: 0.5 });
+        });
+
+        const cursor = document.querySelector('.cursor');
+        const velocityFill = document.querySelector('.velocity-fill');
+        
+        gsap.set(cursor, { xPercent: -50, yPercent: -50 });
+
+        // Cursor Logic
+        const xTo = gsap.quickTo(cursor, "x", {duration: 0.1, ease: "power3"});
+        const yTo = gsap.quickTo(cursor, "y", {duration: 0.1, ease: "power3"});
+
+        window.addEventListener('mousemove', (e) => {
+            xTo(e.clientX);
+            yTo(e.clientY);
+        });
+
+        // --- HERO SCROLL ANIMATION ---
+        const heroTl = gsap.timeline({
+            scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom center", scrub: 1.5 }
+        });
+        heroTl.to("#word1", { x: -300, opacity: 0, filter: 'blur(20px)', scale: 1.2 }, 0);
+        heroTl.to("#word2", { x: 300, opacity: 0, filter: 'blur(20px)', scale: 1.2 }, 0);
+        heroTl.to(".hero-sub", { opacity: 0, y: 100 }, 0);
+        heroTl.to(".scroll-prompt", { opacity: 0, y: 50 }, 0);
+
+        // --- CARD STACK LOGIC ---
+        const cards = document.querySelectorAll('.card-wrapper');
+        const isMobile = window.innerWidth < 900;
+        const spreadX = isMobile ? 0 : 360;
+        const spreadY = isMobile ? 420 : 0;
+
+        let interactionEnabled = false;
+
+        gsap.set(cards, { xPercent: -50, yPercent: -50, left: "50%", top: "50%" });
+        
+        // Initial Pile
+        gsap.set("#card1", { rotation: -8, scale: 0.9, zIndex: 1 });
+        gsap.set("#card2", { rotation: 0, scale: 0.95, zIndex: 2 });
+        gsap.set("#card3", { rotation: 8, scale: 1, zIndex: 3 });
+
+        const stackTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: ".portfolio",
+                start: "top top",
+                end: "+=120%", 
+                pin: true,
+                scrub: 1,
+                onUpdate: (self) => {
+                    const progress = self.progress;
+                    interactionEnabled = progress >= 0.3;
+                    
+                    if(interactionEnabled) {
+                        cards.forEach(c => c.classList.remove('locked'));
+                    } else {
+                        cards.forEach(c => c.classList.add('locked'));
+                    }
+
+                    // Velocity Tracking
+                    const vel = Math.abs(self.getVelocity());
+                    const normVel = Math.min(vel / 2500, 1);
+                    gsap.to(velocityFill, { height: `${normVel * 100}%`, duration: 0.15 });
+                    
+                    // Background Glow Pulse based on scroll velocity
+                    gsap.to(".blob", { opacity: 0.4 + (normVel * 0.4), scale: 1 + (normVel * 0.1), duration: 0.2 });
+                }
+            }
+        });
+
+        stackTl.to("#card1", { x: -spreadX, y: -spreadY, rotation: 0, scale: 1, duration: 1 }, 0)
+               .to("#card2", { x: 0, y: 0, rotation: 0, scale: 1, duration: 1 }, 0)
+               .to("#card3", { x: spreadX, y: spreadY, rotation: 0, scale: 1, duration: 1 }, 0);
+
+        // --- INTERACTION ---
+        cards.forEach((card) => {
+            const inner = card.querySelector('.card-inner');
+            const backContent = inner.querySelectorAll('.face-back > *');
+            
+            card.addEventListener('mouseenter', () => {
+                if(!interactionEnabled) return;
+                cursor.classList.add('active');
+                
+                gsap.to(inner, { 
+                    rotationY: 180, 
+                    z: 100, 
+                    scale: 1.1, 
+                    duration: 1.2, 
+                    ease: "power4.out",
+                    overwrite: true
+                });
+
+                gsap.fromTo(backContent, 
+                    { opacity: 0, y: 30, filter: 'blur(10px)' },
+                    { opacity: 1, y: 0, filter: 'blur(0px)', stagger: 0.08, duration: 0.8, delay: 0.4, ease: "power2.out" }
+                );
+            });
+
+            card.addEventListener('mouseleave', () => {
+                cursor.classList.remove('active');
+                gsap.to(inner, { 
+                    rotationY: 0, 
+                    rotationX: 0, 
+                    z: 0, 
+                    scale: 1, 
+                    duration: 1, 
+                    ease: "power3.inOut",
+                    overwrite: true
+                });
+            });
+
+            card.addEventListener('mousemove', (e) => {
+                if(!interactionEnabled || card.classList.contains('locked')) return;
+                
+                const rect = card.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width - 0.5;
+                const y = (e.clientY - rect.top) / rect.height - 0.5;
+                
+                // Dynamic tilt
+                gsap.to(inner, {
+                    rotationY: 180 + (x * 25),
+                    rotationX: -y * 25,
+                    duration: 0.6,
+                    ease: "power2.out"
+                });
+            });
+        });
+
+        // Ambient drift for blobs
+        gsap.to(".blob-1", {
+            x: "15vw",
+            y: "10vh",
+            duration: 15,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+
+    </script>
+</body>
+</html>

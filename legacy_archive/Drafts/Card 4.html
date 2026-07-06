@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dripp Media | Surreal Agency</title>
+    
+    <!-- Fonts: Panchang (Added 800) & Clash Display -->
+    <link href="https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&f[]=clash-display@200,300,400,500,600,700&display=swap" rel="stylesheet">
+
+    <!-- GSAP CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        :root {
+            /* --- STRICT PALETTE --- */
+            --brand-yellow: #edd828;
+            --deep-black: #050505;
+            --pure-white: #ffffff;
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --card-w: 280px;
+            --card-h: 420px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; /* Hide default cursor */ }
+
+        body {
+            background-color: var(--deep-black);
+            color: var(--pure-white);
+            font-family: 'Clash Display', sans-serif;
+            overflow-x: hidden;
+            width: 100vw;
+        }
+
+        /* --- REACTIVE ELEMENTS --- */
+        
+        /* 1. Custom Cursor */
+        .cursor {
+            position: fixed;
+            top: 0; left: 0;
+            width: 20px; height: 20px;
+            border: 2px solid var(--pure-white);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                        height 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                        background-color 0.3s,
+                        border-radius 0.3s;
+            mix-blend-mode: difference;
+        }
+
+        .cursor.active {
+            width: 60px;
+            height: 60px;
+            background-color: var(--pure-white);
+            opacity: 0.8;
+            border-color: transparent;
+            mix-blend-mode: normal; 
+        }
+
+        /* 2. HUD Velocity Bar */
+        .velocity-gauge {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 2px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+
+        .velocity-fill {
+            position: absolute;
+            bottom: 50%; left: 0;
+            width: 100%;
+            height: 0%;
+            background: var(--brand-yellow);
+            transform: translateY(50%);
+            box-shadow: 0 0 10px var(--brand-yellow);
+            transition: height 0.1s linear;
+        }
+
+        .gauge-label {
+            position: absolute;
+            top: -20px;
+            right: -10px;
+            font-size: 8px;
+            color: var(--brand-yellow);
+            font-family: 'Panchang', sans-serif;
+            font-weight: 700;
+            transform: rotate(90deg);
+            opacity: 0.5;
+            white-space: nowrap;
+        }
+
+        /* 3. Scroll Prompt */
+        .scroll-prompt {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+            opacity: 0.7;
+        }
+
+        .scroll-text {
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--pure-white);
+            font-family: 'Clash Display', sans-serif;
+            font-weight: 500;
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--brand-yellow), transparent);
+            animation: scrollLine 2s infinite;
+        }
+
+        @keyframes scrollLine {
+            0% { transform: scaleY(0); transform-origin: top; }
+            50% { transform: scaleY(1); transform-origin: top; }
+            51% { transform: scaleY(1); transform-origin: bottom; }
+            100% { transform: scaleY(0); transform-origin: bottom; }
+        }
+
+        /* --- COMPLEX BACKGROUND SYSTEM --- */
+        .scifi-stage {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% -20%, #1a1a1a, #000);
+        }
+
+        .moving-grid {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            bottom: -50%;
+            left: -50%;
+            background-image: 
+                linear-gradient(rgba(237, 216, 40, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(237, 216, 40, 0.1) 1px, transparent 1px);
+            background-size: 100px 100px;
+            transform: perspective(500px) rotateX(60deg);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 40%, black 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 40%, black 100%);
+        }
+
+        .plasma-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.3;
+            mix-blend-mode: screen;
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+
+        .glow-1 {
+            width: 700px; height: 700px;
+            background: rgba(255, 255, 255, 0.08);
+            top: -20%; left: 10%;
+        }
+
+        .glow-2 {
+            width: 600px; height: 600px;
+            background: var(--brand-yellow);
+            bottom: -10%; right: 5%;
+            animation-delay: -4s;
+            opacity: 0.15;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.2; }
+            100% { transform: scale(1.1); opacity: 0.4; }
+        }
+
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* --- HERO SECTION --- */
+        section.hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1.brand-name {
+            font-family: 'Panchang', sans-serif;
+            font-weight: 800; /* Extra Bold */
+            font-size: 9vw;
+            text-transform: uppercase;
+            line-height: 0.8;
+            text-align: center;
+            letter-spacing: -2px;
+            color: var(--pure-white);
+            display: flex;
+            gap: 20px;
+            text-shadow: 0 0 50px rgba(237, 216, 40, 0.15);
+        }
+
+        .hero-sub {
+            margin-top: 30px;
+            color: var(--brand-yellow);
+            font-family: 'Clash Display', sans-serif;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            font-weight: 600;
+            background: rgba(0,0,0,0.6);
+            padding: 12px 24px;
+            border: 1px solid rgba(237, 216, 40, 0.3);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+        }
+
+        /* --- STACKED CARDS SECTION --- */
+        section.portfolio {
+            height: 100vh; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 2500px;
+            position: relative;
+            z-index: 5;
+            overflow: visible; 
+        }
+
+        .cards-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+        }
+
+        .card-wrapper {
+            width: var(--card-w);
+            height: var(--card-h);
+            position: absolute; 
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+        }
+
+        /* Shadow Fix: Wrapper holds the shadow so it doesn't spin weirdly */
+        .card-wrapper::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 32px;
+            background: transparent;
+            z-index: -1;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8);
+            transform: translateZ(-2px);
+            pointer-events: none;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.1s; 
+        }
+
+        /* --- SHARED FACE PROPERTIES --- */
+        .face {
+            position: absolute;
+            inset: 0;
+            border-radius: 32px;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden; /* Fix for Safari */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- FRONT FACE (Thick Glass) --- */
+        .face-front {
+            transform: translateZ(1px);
+            padding: 30px;
+            text-align: left;
+            justify-content: flex-start;
+            align-items: flex-start;
+            z-index: 2;
+            
+            /* Glass Styles ONLY on front */
+            background: linear-gradient(165deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.01) 100%);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid rgba(255, 255, 255, 0.35);
+            border-left: 3px solid rgba(255, 255, 255, 0.25);
+            
+            backdrop-filter: blur(35px) saturate(120%); 
+            -webkit-backdrop-filter: blur(35px) saturate(120%);
+            
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+        }
+
+        /* --- BACK FACE (Solid) --- */
+        .face-back {
+            transform: rotateY(180deg) translateZ(1px);
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            padding: 30px;
+            justify-content: space-between;
+            
+            /* Clean borders for back (no glass effects to prevent distortion) */
+            border: 2px solid var(--brand-yellow); 
+        }
+        
+        /* Noise texture for back */
+        .face-back::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* --- CONTENT STYLING --- */
+        
+        .glass-label {
+            background: rgba(255,255,255,0.15);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--brand-yellow);
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+            display: inline-block;
+            font-family: 'Clash Display', sans-serif;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transform: translateZ(20px); /* Prevent Z-fighting */
+        }
+
+        .face-front h2 {
+            font-family: 'Panchang', sans-serif;
+            font-weight: 700; /* Bold (Not Extra Bold) */
+            font-size: 1.6rem;
+            text-transform: capitalize;
+            text-align: left;
+            color: #fff;
+            letter-spacing: 0px;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            pointer-events: none;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transform: translateZ(30px); /* Lift text off glass */
+        }
+
+        .glass-icon-box {
+            width: 70px;
+            height: 70px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-top: 2px solid rgba(255,255,255,0.3);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.6) 1.5px, transparent 1.5px);
+            background-size: 12px 12px;
+            background-position: center;
+            margin-bottom: auto;
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.02);
+            transform: translateZ(20px);
+        }
+
+        .glass-strip {
+            width: calc(100% + 60px);
+            height: 40px;
+            margin-left: -30px;
+            margin-bottom: 25px;
+            background: repeating-linear-gradient(
+                -45deg,
+                rgba(255,255,255,0.04),
+                rgba(255,255,255,0.04) 4px,
+                transparent 4px,
+                transparent 8px
+            );
+            border-top: 2px solid rgba(255,255,255,0.08);
+            border-bottom: 2px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(5px);
+            transform: translateZ(10px);
+        }
+
+        .front-desc {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.9);
+            font-weight: 400;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            transform: translateZ(20px);
+        }
+
+        .back-title {
+            font-family: 'Panchang', sans-serif;
+            font-weight: 700; /* Bold */
+            font-size: 1.2rem;
+            border-bottom: 3px solid var(--deep-black);
+            padding-bottom: 10px;
+            text-transform: uppercase;
+            z-index: 2;
+            transform: translateZ(20px);
+        }
+
+        .back-text {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1.5;
+            z-index: 2;
+            transform: translateZ(20px);
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            z-index: 2;
+            transform: translateZ(20px);
+        }
+
+        .tag {
+            background: var(--deep-black);
+            color: var(--brand-yellow);
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .spacer {
+            height: 50vh;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            * { cursor: auto; }
+            .cursor, .velocity-gauge { display: none; }
+            h1.brand-name { font-size: 13vw; flex-direction: column; gap: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Reactive Cursor -->
+    <div class="cursor"></div>
+    
+    <!-- Reactive Gauge -->
+    <div class="velocity-gauge">
+        <div class="gauge-label">SYS.VEL</div>
+        <div class="velocity-fill"></div>
+    </div>
+
+    <!-- Scroll Prompt -->
+    <div class="scroll-prompt">
+        <div class="scroll-text">Initialize</div>
+        <div class="scroll-line"></div>
+    </div>
+
+    <!-- Complex Background -->
+    <div class="scifi-stage">
+        <div class="moving-grid"></div>
+        <div class="plasma-glow glow-1"></div>
+        <div class="plasma-glow glow-2"></div>
+        <div class="scanlines"></div>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+        <h1 class="brand-name">
+            <span class="word" id="word1">DRIPP</span>
+            <span class="word" id="word2">MEDIA</span>
+        </h1>
+        <div class="hero-sub">Digital Reality Architects</div>
+    </section>
+
+    <!-- Portfolio (Pinned Stack) -->
+    <section class="portfolio">
+        <div class="cards-container">
+            
+            <!-- Card 1 -->
+            <div class="card-wrapper locked" id="card1">
+                <div class="card-inner">
+                    <div class="face face-front">
+                        <span class="glass-label">01 / EDIT</span>
+                        <h2>Video Editing</h2>
+                        <div class="glass-icon-box"></div>
+                        <div class="glass-strip"></div>
+                        <p class="front-desc">High-octane rhythmic editing engineered to keep retention glued.</p>
+                    </div>
+                    <div class="face face-back">
+                        <div class="back-title">The Cut</div>
+                        <p class="back-text">We don't just edit; we engineer dopamine spikes using advanced pacing.</p>
+                        <div class="tags">
+                            <span class="tag">Premiere</span>
+                            <span class="tag">VFX</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="card-wrapper locked" id="card2">
+                <div class="card-inner">
+                    <div class="face face-front">
+                        <span class="glass-label">02 / DESIGN</span>
+                        <h2>Graphic Design</h2>
+                        <div class="glass-icon-box"></div>
+                        <div class="glass-strip"></div>
+                        <p class="front-desc">Visual identities that melt faces. Bold typography & surreal art.</p>
+                    </div>
+                    <div class="face face-back">
+                        <div class="back-title">The Aesthetic</div>
+                        <p class="back-text">Scalable design systems that work from Instagram stories to billboards.</p>
+                        <div class="tags">
+                            <span class="tag">Branding</span>
+                            <span class="tag">3D</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="card-wrapper locked" id="card3">
+                <div class="card-inner">
+                    <div class="face face-front">
+                        <span class="glass-label">03 / CREATE</span>
+                        <h2>Content Creation</h2>
+                        <div class="glass-icon-box"></div>
+                        <div class="glass-strip"></div>
+                        <p class="front-desc">Cinematic storytelling optimized for the algorithm.</p>
+                    </div>
+                    <div class="face face-back">
+                        <div class="back-title">The Shot</div>
+                        <p class="back-text">From script to screen, we handle the entire production pipeline.</p>
+                        <div class="tags">
+                            <span class="tag">Direction</span>
+                            <span class="tag">Growth</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+    
+    <div class="spacer"></div>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- 0. CUSTOM CURSOR & REACTIVITY SETUP ---
+        const cursor = document.querySelector('.cursor');
+        const velocityFill = document.querySelector('.velocity-fill');
+        const grid = document.querySelector('.moving-grid');
+        
+        gsap.set(cursor, { xPercent: -50, yPercent: -50 });
+
+        const xTo = gsap.quickTo(cursor, "x", { duration: 0.1, ease: "power3" });
+        const yTo = gsap.quickTo(cursor, "y", { duration: 0.1, ease: "power3" });
+
+        // --- 1. HERO ANIMATION ---
+        const heroTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: ".hero",
+                start: "top top",
+                end: "bottom center",
+                scrub: 1
+            }
+        });
+
+        heroTl.to("#word1", { x: -300, opacity: 0, scale: 1.5, rotate: -5 }, 0);
+        heroTl.to("#word2", { x: 300, opacity: 0, scale: 1.5, rotate: 5 }, 0);
+        heroTl.to(".hero-sub", { opacity: 0, y: 50 }, 0);
+        heroTl.to(".scroll-prompt", { opacity: 0, y: 50 }, 0);
+
+        // --- 2. CARD STACK & UNSTACKING LOGIC ---
+        
+        const cards = document.querySelectorAll('.card-wrapper');
+        const card1 = document.querySelector('#card1');
+        const card2 = document.querySelector('#card2');
+        const card3 = document.querySelector('#card3');
+
+        // Initial "Stack" State
+        gsap.set(cards, {
+            xPercent: -50, 
+            yPercent: -50,
+            left: "50%",
+            top: "50%",
+            position: "absolute"
+        });
+
+        // Smaller initial scale
+        gsap.set(card1, { zIndex: 1, rotation: -6, scale: 0.7 });
+        gsap.set(card2, { zIndex: 2, rotation: 0, scale: 0.75 });
+        gsap.set(card3, { zIndex: 3, rotation: 4, scale: 0.8 });
+
+        // --- NEW: Proximity Logic ---
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        
+        // Track mouse globally
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            xTo(e.clientX);
+            yTo(e.clientY);
+            requestAnimationFrame(updateProximity);
+        });
+
+        const updateProximity = () => {
+            cards.forEach(card => {
+                if (card.matches(':hover')) return;
+
+                const rect = card.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                const dist = Math.hypot(mouseX - centerX, mouseY - centerY);
+                const triggerDist = 400; 
+                
+                let targetScale = 1; 
+                
+                if (dist < triggerDist) {
+                    const proximity = 1 - (dist / triggerDist);
+                    targetScale = 1 + (proximity * 0.15); 
+                }
+                
+                const inner = card.querySelector('.card-inner');
+                gsap.to(inner, {
+                    scale: targetScale,
+                    duration: 0.4,
+                    overwrite: 'auto', 
+                    ease: 'power2.out'
+                });
+            });
+        };
+
+        const resetAllFlips = () => {
+            cards.forEach(card => {
+                const inner = card.querySelector('.card-inner');
+                gsap.to(inner, { 
+                    rotationY: 0, 
+                    rotationX: 0, 
+                    z: 0,
+                    ease: "power3.out", 
+                    duration: 0.4 
+                });
+                card.classList.add('locked');
+            });
+        };
+
+        const enableInteraction = () => {
+             cards.forEach(card => card.classList.remove('locked'));
+        }
+
+        let interactionEnabled = false;
+
+        // The Unstacking Timeline (SMOOTHER SETTINGS)
+        const spreadDistance = 340; 
+        
+        const stackTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: ".portfolio",
+                start: "top top",
+                end: "+=150%", // Increased distance for smoothness
+                pin: true,
+                scrub: 2, // Higher scrub value for smoother lag
+                onUpdate: (self) => {
+                    // Interaction Logic
+                    const shouldEnable = self.progress >= 0.75;
+                    
+                    if (shouldEnable !== interactionEnabled) {
+                        interactionEnabled = shouldEnable;
+                        if (interactionEnabled) {
+                            enableInteraction();
+                        } else {
+                            resetAllFlips();
+                        }
+                    }
+
+                    updateProximity();
+
+                    // SCROLL VELOCITY REACTIVITY
+                    const v = Math.abs(self.getVelocity());
+                    const normalizedV = Math.min(v / 3000, 1); 
+
+                    gsap.to(velocityFill, { height: `${normalizedV * 100}%`, duration: 0.1 });
+
+                    gsap.to(grid, { 
+                        opacity: 0.5 + (normalizedV * 0.5), 
+                        scale: 1 + (normalizedV * 0.2), 
+                        duration: 0.1
+                    });
+                }
+            },
+            defaults: { ease: "power2.inOut", duration: 1.5 } // Smooth easing default
+        });
+
+        const isMobile = window.innerWidth < 900;
+        
+        if (!isMobile) {
+            stackTl
+                .to(card1, { xPercent: -50, x: -spreadDistance, rotation: 0, scale: 1 }, 0)
+                .to(card2, { xPercent: -50, x: 0, rotation: 0, scale: 1 }, 0)
+                .to(card3, { xPercent: -50, x: spreadDistance, rotation: 0, scale: 1 }, 0);
+        } else {
+            const vSpread = 450;
+            stackTl
+                .to(card1, { yPercent: -50, y: -vSpread, rotation: 0, scale: 1 }, 0)
+                .to(card2, { yPercent: -50, y: 0, rotation: 0, scale: 1 }, 0)
+                .to(card3, { yPercent: -50, y: vSpread, rotation: 0, scale: 1 }, 0);
+        }
+
+        // --- 3. HOVER PHYSICS ---
+
+        cards.forEach((card) => {
+            const inner = card.querySelector('.card-inner');
+            
+            let isHovering = false;
+
+            card.addEventListener('mouseenter', () => {
+                if(interactionEnabled) {
+                    cursor.classList.add('active');
+                }
+
+                gsap.to(inner, { 
+                    scale: 1.15, 
+                    duration: 0.3, 
+                    ease: "back.out(1.2)",
+                    overwrite: "auto" 
+                });
+
+                if(!interactionEnabled) return; 
+
+                isHovering = true;
+                gsap.to(inner, { 
+                    rotationY: 180, 
+                    z: 50, 
+                    scale: 1.15, 
+                    ease: "back.out(1.5)",
+                    duration: 0.6,
+                    overwrite: "auto"
+                });
+            });
+
+            card.addEventListener('mouseleave', () => {
+                cursor.classList.remove('active');
+                isHovering = false;
+                
+                gsap.to(inner, { 
+                    rotationY: 0, 
+                    rotationX: 0, 
+                    z: 0,
+                    ease: "power3.out", 
+                    duration: 0.6 
+                });
+
+                updateProximity();
+            });
+
+            card.addEventListener('mousemove', (e) => {
+                if(!isHovering || !interactionEnabled) return;
+
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const xPct = (x / rect.width - 0.5); 
+                const yPct = (y / rect.height - 0.5);
+                
+                gsap.to(inner, {
+                    rotationY: 180 + (xPct * 30), 
+                    rotationX: -yPct * 30,
+                    duration: 0.2,
+                    overwrite: "auto"
+                });
+            });
+        });
+
+        gsap.to(".hero-sub", { opacity: 1, duration: 2, delay: 0.5 });
+
+        gsap.to(".moving-grid", {
+            backgroundPosition: "0px 100px",
+            ease: "none",
+            repeat: -1,
+            duration: 2
+        });
+
+    </script>
+</body>
+</html>

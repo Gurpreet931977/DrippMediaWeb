@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dripp Media | Short Form Portfolio</title>
+    <!-- Fonts -->
+    <link
+        href="https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&f[]=clash-display@200,300,400,500,600,700&display=swap"
+        rel="stylesheet">
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        :root {
+            --brand-yellow: #ebd73f;
+            --deep-black: #050505;
+            --pure-white: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: blur(12px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+            user-select: none;
+        }
+
+        body,
+        html {
+            background-color: var(--deep-black);
+            color: var(--pure-white);
+            font-family: 'Clash Display', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Nav back button */
+        .nav-back {
+            position: fixed;
+            top: 40px;
+            left: 50px;
+            z-index: 1000;
+            color: var(--pure-white);
+            text-decoration: none;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            mix-blend-mode: difference;
+            transition: color 0.3s ease;
+        }
+
+        .nav-back:hover {
+            color: var(--brand-yellow);
+        }
+
+        /* Custom Cursor */
+        .cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--brand-yellow);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        }
+
+        .cursor.active {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(235, 215, 63, 0.1);
+            backdrop-filter: blur(2px);
+        }
+
+        /* Reels Container */
+        .reels-container {
+            width: 100vw;
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-behavior: auto;
+            will-change: transform;
+        }
+
+        .reels-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Individual Reel Snapshot */
+        .reel-item {
+            width: 100vw;
+            height: 100vh;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* The actual 9:16 Video Player Card */
+        .reel-content {
+            position: relative;
+            height: 90vh;
+            /* 90% of screen height to leave room for scrolling feel */
+            aspect-ratio: 9/16;
+            background-color: var(--deep-black);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            /* Smooth transitions for entering/exiting clean mode */
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+            will-change: transform;
+        }
+
+        .reel-content:hover {
+            border-color: rgba(235, 215, 63, 0.3);
+        }
+
+        /* Full container background ambient blur */
+        .reel-ambient-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: blur(80px) brightness(0.3);
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        .reel-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Interactive overlay for toggling mute/play & liking */
+        .video-interact-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            cursor: pointer;
+        }
+
+        /* Reduced Bottom Shadows for Text Legibility */
+        .reel-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            /* Lowered from 60% */
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.2) 60%, transparent 100%);
+            /* Lighter fade */
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Reduced Top Shadows */
+        .reel-overlay-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 15%;
+            /* Lowered from 20% */
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
+            /* Lighter fade */
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Dripp Media Logo Top Right - Minimal */
+        .reel-brand {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            z-index: 20;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.8);
+            pointer-events: none;
+        }
+
+        /* Info Section (Bottom Left) */
+        .reel-info {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            right: 80px;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .reel-username {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--pure-white);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            text-shadow: none;
+        }
+
+        .reel-desc {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 12px;
+            font-weight: 400;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Music Ticker */
+        .reel-music {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--pure-white);
+            max-width: 200px;
+            pointer-events: auto;
+            transition: all 0.3s ease;
+        }
+
+        .reel-music:hover {
+            border-color: rgba(235, 215, 63, 0.4);
+            background: rgba(235, 215, 63, 0.05);
+        }
+
+        /* Minimal animation */
+        @keyframes subtleBounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-2px);
+            }
+        }
+
+        .music-icon {
+            animation: subtleBounce 2s ease-in-out infinite;
+        }
+
+        .music-text {
+            white-space: nowrap;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .music-marquee {
+            display: inline-block;
+            animation: marquee 8s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(10%);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        /* Action Buttons (Bottom Right) */
+        .reel-actions {
+            position: absolute;
+            bottom: 30px;
+            right: 15px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            color: var(--pure-white);
+            outline: none;
+            position: relative;
+        }
+
+        .action-icon-bg {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-icon {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: all 0.3s ease;
+        }
+
+        /* Modern Hover & Animation for Icons */
+        @keyframes heartbeat {
+            0% {
+                transform: scale(1);
+            }
+
+            14% {
+                transform: scale(1.3);
+                stroke: var(--brand-yellow);
+                fill: rgba(235, 215, 63, 0.4);
+            }
+
+            28% {
+                transform: scale(1);
+            }
+
+            42% {
+                transform: scale(1.3);
+                stroke: var(--brand-yellow);
+                fill: rgba(235, 215, 63, 0.4);
+            }
+
+            70%,
+            100% {
+                transform: scale(1);
+                stroke: var(--brand-yellow);
+                fill: rgba(235, 215, 63, 0.4);
+            }
+        }
+
+        @keyframes bounceComment {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+                stroke: var(--brand-yellow);
+            }
+
+            100% {
+                transform: translateY(0);
+                stroke: var(--brand-yellow);
+            }
+        }
+
+        @keyframes swoopShare {
+            0% {
+                transform: translate(0, 0) rotate(0);
+            }
+
+            50% {
+                transform: translate(4px, -4px) rotate(15deg);
+                stroke: var(--brand-yellow);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(0);
+                stroke: var(--brand-yellow);
+            }
+        }
+
+        .action-btn:hover .action-icon-bg {
+            background: rgba(235, 215, 63, 0.15);
+            border-color: var(--brand-yellow);
+            transform: scale(1.1);
+        }
+
+        /* Forwards keeps the final state/color after the single animation cycle */
+        .action-btn:hover .icon-heart {
+            animation: heartbeat 0.8s ease-in-out forwards;
+        }
+
+        .action-btn:hover .icon-comment {
+            animation: bounceComment 0.5s ease forwards;
+        }
+
+        .action-btn:hover .icon-share {
+            animation: swoopShare 0.5s ease forwards;
+        }
+
+        .action-text {
+            display: none;
+        }
+
+        /* Play/Pause & Mute Indicators */
+        /* Updated Center Indicator for Like Burst */
+        .center-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 15;
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+
+        .center-indicator.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* The Animated Heart Burst Container */
+        .like-burst-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 25;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .like-burst-heart {
+            width: 100px;
+            height: 100px;
+            fill: var(--brand-yellow);
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        /* Little pop stars surrounding the heart */
+        .pop-star {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--brand-yellow);
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        @keyframes hugePop {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            15% {
+                transform: scale(1.4) rotate(-10deg);
+                opacity: 1;
+            }
+
+            30% {
+                transform: scale(1) rotate(5deg);
+                opacity: 1;
+            }
+
+            80% {
+                transform: scale(1) rotate(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.5) translateY(-50px);
+                opacity: 0;
+            }
+        }
+
+        .like-burst-heart.active {
+            animation: hugePop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes starShoot {
+            0% {
+                transform: translate(0, 0) scale(0);
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 1;
+                transform: translate(var(--tx), var(--ty)) scale(1);
+            }
+
+            100% {
+                transform: translate(calc(var(--tx) * 1.5), calc(var(--ty) * 1.5)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes hugePop {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            15% {
+                transform: scale(1.4) rotate(-10deg);
+                opacity: 1;
+            }
+
+            30% {
+                transform: scale(1) rotate(5deg);
+                opacity: 1;
+            }
+
+            80% {
+                transform: scale(1) rotate(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.5) translateY(-50px);
+                opacity: 0;
+            }
+        }
+
+        .like-burst-heart.active {
+            animation: hugePop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes starShoot {
+            0% {
+                transform: translate(0, 0) scale(0);
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 1;
+                transform: translate(var(--tx), var(--ty)) scale(1);
+            }
+
+            100% {
+                transform: translate(calc(var(--tx) * 1.5), calc(var(--ty) * 1.5)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .pop-star.active {
+            animation: starShoot 0.7s ease-out forwards;
+        }
+
+        /* Minimal Unlike Animation */
+        @keyframes unlikeFade {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(0.8);
+                opacity: 0.4;
+            }
+
+            100% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        .like-burst-heart.unlike {
+            animation: unlikeFade 0.4s ease-out forwards;
+            fill: rgba(255, 255, 255, 0.4) !important;
+            stroke: none !important;
+        }
+
+        .indicator-icon {
+            width: 32px;
+            height: 32px;
+            fill: var(--pure-white);
+            stroke: none;
+        }
+
+        /* Sound Toggle Badge */
+
+        .sound-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 20;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--pure-white);
+            transition: all 0.3s ease;
+        }
+
+        .sound-toggle:hover {
+            border-color: var(--brand-yellow);
+            color: var(--brand-yellow);
+        }
+
+        /* Slide-up Comments Sheet Overlay */
+        .comments-sheet {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: height 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .comments-sheet.open {
+            height: 50%;
+        }
+
+        .comments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .comments-header h3 {
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--pure-white);
+        }
+
+        .close-comments {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 5px;
+            outline: none;
+        }
+
+        .close-comments:hover {
+            color: var(--brand-yellow);
+        }
+
+        .comments-body {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Pure minimal text for comment box placeholder - no button shapes */
+        .reel-comment-box {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .comment-text-placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1rem;
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+
+        .reel-comment-box:hover .comment-text-placeholder {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Share Sheet */
+        .share-sheet {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 35;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: height 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .share-sheet.open {
+            height: 60%;
+        }
+
+        .share-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .share-option-btn {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 12px 20px;
+            border-radius: 15px;
+            color: var(--pure-white);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .share-option-btn:hover {
+            border-color: var(--brand-yellow);
+            background: rgba(235, 215, 63, 0.1);
+            color: var(--brand-yellow);
+        }
+
+        .share-link-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 0 20px 10px 20px;
+        }
+
+        .share-link-text {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 75%;
+        }
+
+        .copy-link-btn {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .copy-link-btn.copied {
+            background: var(--pure-white);
+        }
+
+        /* Clean Mode (Pseudo-Fullscreen) */
+        .reel-content.clean-mode {
+            height: 98vh !important;
+            max-width: 100vw !important;
+            width: auto !important;
+            aspect-ratio: 9/16 !important;
+            border-radius: 12px !important;
+            margin: 1vh auto;
+            background: #000;
+            z-index: 100;
+            /* Ensure it stays above everything */
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .reel-content.clean-mode .reel-video {
+            object-fit: cover !important;
+        }
+
+        /* Ensure UI elements fade out instead of snapping */
+        .reel-overlay,
+        .reel-overlay-top,
+        .sound-toggle,
+        .reel-brand,
+        .reel-info,
+        .reel-actions,
+        .sharesheet,
+        .comments-sheet,
+        .like-burst-container,
+        .center-indicator {
+            transition: opacity 0.4s ease, transform 0.4s ease !important;
+        }
+
+        /* Hide all UI elements entirely when in clean mode */
+        .reel-content.clean-mode .reel-overlay,
+        .reel-content.clean-mode .reel-overlay-top,
+        .reel-content.clean-mode .sound-toggle,
+        .reel-content.clean-mode .reel-brand,
+        .reel-content.clean-mode .reel-info,
+        .reel-content.clean-mode .reel-actions,
+        .reel-content.clean-mode .sharesheet,
+        .reel-content.clean-mode .comments-sheet,
+        .reel-content.clean-mode .like-burst-container,
+        .reel-content.clean-mode .center-indicator {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* Keep ambient background hidden to assure pure black pillars */
+        .reel-item:has(.clean-mode) .reel-ambient-bg {
+            display: none !important;
+        }
+
+        /* Keep the interact layer active to allow double tap to like/play/pause */
+        .reel-content.clean-mode .video-interact-layer {
+            cursor: pointer;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            * {
+                cursor: auto;
+            }
+
+            .cursor {
+                display: none;
+            }
+
+            .reel-content {
+                height: 100vh;
+                width: 100vw;
+                border-radius: 0;
+                border: none;
+            }
+
+            .nav-back {
+                top: 30px;
+                left: 20px;
+            }
+
+            .sound-toggle {
+                top: 70px;
+            }
+
+            .comments-sheet.open {
+                height: 60%;
+            }
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false;">
+
+    <a href="Video Portfolio.html" class="nav-back">← Back</a>
+
+    <div class="cursor" id="cursor"></div>
+
+    <div class="reels-container" id="reelsContainer">
+        <!-- Initial reels will be generated by JS -->
+    </div>
+
+    <script>
+        // Global mute state
+        let isGlobalMuted = true;
+
+        // Custom Cursor Logic
+        const cursor = document.getElementById('cursor');
+        window.addEventListener('mousemove', (e) => {
+            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+        });
+
+        function attachCursorEvents(element) {
+            const clickables = element.querySelectorAll('button, a, .video-interact-layer, .sound-toggle, .comment-text-placeholder');
+            clickables.forEach(el => {
+                el.addEventListener('mouseenter', () => cursor.classList.add('active'));
+                el.addEventListener('mouseleave', () => cursor.classList.remove('active'));
+            });
+        }
+
+        attachCursorEvents(document);
+
+        // Mute/Unmute Logic
+        const muteIconSVG = `<svg class="action-icon" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg><span>Muted</span>`;
+        const unmuteIconSVG = `<svg class="action-icon" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg><span>Sound On</span>`;
+
+        function updateVolumeUI() {
+            const allVideos = document.querySelectorAll('.reel-video');
+            const allToggles = document.querySelectorAll('.sound-toggle');
+
+            allVideos.forEach(v => v.muted = isGlobalMuted);
+            allToggles.forEach(toggle => {
+                toggle.innerHTML = isGlobalMuted ? muteIconSVG : unmuteIconSVG;
+                if (!isGlobalMuted) {
+                    toggle.style.borderColor = 'var(--brand-yellow)';
+                    toggle.style.color = 'var(--brand-yellow)';
+                } else {
+                    toggle.style.borderColor = '';
+                    toggle.style.color = '';
+                }
+            });
+        }
+
+        window.toggleMuteGlobal = function (element) {
+            isGlobalMuted = !isGlobalMuted;
+            updateVolumeUI();
+        };
+
+        // Comments Sheet Logic
+        window.openComments = function (btn) {
+            const reelContent = btn.closest('.reel-content');
+            const sheet = reelContent.querySelector('.comments-sheet');
+            sheet.classList.add('open');
+        };
+
+        window.closeComments = function (btn) {
+            const sheet = btn.closest('.comments-sheet');
+            sheet.classList.remove('open');
+        };
+
+        // Intersection Observer to Auto-play videos when in view
+        const observerOptions = {
+            root: document.getElementById('reelsContainer'),
+            rootMargin: '0px',
+            threshold: 0.6 // Video needs to be 60% visible to play
+        };
+
+        const videoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const mainVid = entry.target.querySelector('.reel-video');
+                const ambVid = entry.target.querySelector('.reel-ambient-bg');
+
+                if (entry.isIntersecting) {
+                    mainVid.currentTime = 0;
+                    ambVid.currentTime = 0;
+
+                    const playPromise = mainVid.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => { console.log('Autoplay prevented', error); });
+                    }
+                    ambVid.play().catch(e => { });
+
+                } else {
+                    mainVid.pause();
+                    ambVid.pause();
+
+                    const sheet = entry.target.querySelector('.comments-sheet');
+                    if (sheet && sheet.classList.contains('open')) {
+                        sheet.classList.remove('open');
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Click to play/pause functionality & Double tap to Like
+        window.togglePlay = function (event, layer) {
+            const container = layer.parentElement;
+
+            // Handle double tap to like
+            if (layer.dataset.lastTap) {
+                const now = new Date().getTime();
+                const diff = now - parseInt(layer.dataset.lastTap);
+                if (diff < 300) { // Double tap threshold
+                    layer.dataset.lastTap = ""; // Reset
+                    handleLike(container, true, event.clientX, event.clientY);
+                    return; // Prevent play/pause on double tap
+                }
+            }
+            layer.dataset.lastTap = new Date().getTime();
+
+            // Normal Play/pause
+            setTimeout(() => {
+                if (layer.dataset.lastTap) { // Only play/pause if not double tapped
+                    layer.dataset.lastTap = "";
+                    const vid = container.querySelector('.reel-video');
+                    const ambVid = container.parentElement.querySelector('.reel-ambient-bg');
+                    const indicator = container.querySelector('.center-indicator');
+                    const icon = indicator.querySelector('.indicator-icon');
+
+                    if (vid.paused) {
+                        vid.play();
+                        ambVid.play();
+                        icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+                    } else {
+                        vid.pause();
+                        ambVid.pause();
+                        icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                    }
+
+                    indicator.classList.remove('show');
+                    void indicator.offsetWidth;
+                    indicator.classList.add('show');
+
+                    setTimeout(() => {
+                        indicator.classList.remove('show');
+                    }, 800);
+                }
+            }, 300);
+        };
+
+        // Like Functionality
+        window.toggleLike = function (btn) {
+            const container = btn.closest('.reel-content');
+            handleLike(container, false);
+        };
+
+        function handleLike(container, showBurst, x = window.innerWidth / 2, y = window.innerHeight / 2) {
+            const heartBtn = container.querySelector('.icon-heart');
+            const bg = heartBtn.closest('.action-icon-bg');
+
+            // Toggle active state
+            const isLiked = heartBtn.classList.toggle('liked');
+
+            if (isLiked) {
+                heartBtn.style.fill = 'var(--brand-yellow)';
+                heartBtn.style.stroke = 'var(--brand-yellow)';
+                bg.style.borderColor = 'var(--brand-yellow)';
+                // re-trigger animation
+                heartBtn.style.animation = 'none';
+                void heartBtn.offsetWidth;
+                heartBtn.style.animation = 'heartbeat 0.8s ease-in-out forwards';
+            } else {
+                heartBtn.style.fill = 'none';
+                heartBtn.style.stroke = 'currentColor';
+                bg.style.borderColor = '';
+                heartBtn.style.animation = 'none';
+            }
+
+            if (showBurst) {
+                const burst = document.createElement('div');
+                burst.className = 'like-burst-container';
+
+                const rect = container.getBoundingClientRect();
+                burst.style.position = 'absolute';
+                burst.style.left = (x - rect.left) + 'px';
+                burst.style.top = (y - rect.top) + 'px';
+                burst.style.transform = 'translate(-50%, -50%)';
+
+                if (isLiked) {
+                    // Heart SVG (Softer, rounded bottom)
+                    const heartSvg = '<svg class="like-burst-heart active" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>';
+                    let starsHTML = '';
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (i / 6) * Math.PI * 2;
+                        const tx = Math.cos(angle) * 70;
+                        const ty = Math.sin(angle) * 70;
+                        starsHTML += '<div class="pop-star active" style="--tx: ' + tx + 'px; --ty: ' + ty + 'px;"></div>';
+                    }
+                    burst.innerHTML = heartSvg + starsHTML;
+                } else {
+                    // Minimal fade out animation
+                    const heartSvg = '<svg class="like-burst-heart unlike" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>';
+                    burst.innerHTML = heartSvg;
+                }
+
+                container.appendChild(burst);
+
+                // Cleanup
+                setTimeout(() => { burst.remove(); }, 1000);
+            }
+        }
+
+        // Share functionality custom sheet
+        window.openShare = function (btn) {
+            const reelContent = btn.closest('.reel-content');
+            const sheet = reelContent.querySelector('.share-sheet');
+            sheet.classList.add('open');
+
+            // Set link dynamically here (mocking unique URL)
+            const videoId = Math.random().toString(36).substr(2, 6).toUpperCase();
+            const generateLink = window.location.origin + window.location.pathname + '?reel=' + videoId;
+            const linkText = sheet.querySelector('.share-link-text');
+            linkText.innerText = generateLink;
+            linkText.dataset.link = generateLink;
+        };
+
+        window.closeShare = function (btn) {
+            const sheet = btn.closest('.share-sheet');
+            sheet.classList.remove('open');
+        };
+
+        window.copyShareLink = function (btn) {
+            const link = btn.previousElementSibling.dataset.link;
+            navigator.clipboard.writeText(link);
+            const origText = "COPY";
+            btn.innerText = "COPIED!";
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.innerText = origText;
+                btn.classList.remove('copied');
+            }, 2000);
+        };
+
+        // Fullscreen Functionality
+        window.toggleFullscreen = function (btn) {
+            const container = btn.closest('.reel-content');
+            container.classList.toggle('clean-mode');
+        };
+
+        // --- Truly Infinite Scroll Logic - Sequential Array Loop ---
+        const reelsContainer = document.getElementById('reelsContainer');
+        let isAppending = false;
+
+        // This is your mock "database" of your portfolio reels.
+        // It iterates sequentially through the array, looping back to 0 at the end.
+        const portfolioVideosList = [
+            {
+                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                musicText: "Original Audio - Dripp Media Mix • Trending",
+                description: "High-energy teaser for the latest urban lifestyle collection. Shot in 4K, 120fps with custom speed ramps."
+            },
+            {
+                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                musicText: "Synthwave Beats - Cyber City • Viral",
+                description: "Cyberpunk inspired promotional reel for an upcoming tech launch. Emphasizing dynamic lighting."
+            },
+            {
+                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                musicText: "EDM Anthem - Soundscape • Top 50",
+                description: "Recap montage capturing the raw energy of summer music festivals. Dynamic handheld shots."
+            },
+            {
+                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                musicText: "Cinematic Score - Dripp Original",
+                description: "Exclusive drop preview. Striking contrast, vibrant highlights, and unparalleled visual fidelity."
+            },
+            {
+                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                musicText: "Hip Hop Instrumental - LoFi Chills",
+                description: "A slow-paced, mood-setting sequence designed to highlight individual product textures."
+            }
+        ];
+
+        let currentVideoIndex = 0; // The tracker
+
+        // Create HTML for a single reel instance
+        function createReelHTML(videoData) {
+            const newReel = document.createElement('div');
+            newReel.className = 'reel-item';
+
+            newReel.innerHTML = `
+                <video class="reel-ambient-bg" src="${videoData.videoSrc}" muted loop oncontextmenu="return false;"></video>
+                <div class="reel-content">
+                    <video class="reel-video" src="${videoData.videoSrc}" loop playsinline oncontextmenu="return false;"></video>
+                    <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
+                    <div class="reel-overlay-top"></div>
+                    <div class="reel-overlay"></div>
+                    
+                    <div class="sound-toggle" onclick="toggleMuteGlobal(this)">
+                        ${isGlobalMuted ? muteIconSVG : unmuteIconSVG}
+                    </div>
+                    
+                    <div class="reel-brand">DRIPP</div>
+                    <div class="center-indicator"><svg class="indicator-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+                    
+                    <div class="reel-info">
+                        <h3 class="reel-username">@drippmedia</h3>
+                        <p class="reel-desc">${videoData.description}</p>
+                        <div class="reel-music">
+                            <svg class="music-icon action-icon" width="16" height="16" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M9 18V5l12-2v13"></path><circle fill="none" stroke="currentColor" stroke-width="2" cx="6" cy="18" r="3"></circle><circle fill="none" stroke="currentColor" stroke-width="2" cx="18" cy="16" r="3"></circle></svg>
+                            <div class="music-text"><span class="music-marquee">Original Audio - Dripp Media</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="reel-actions">
+                        <!-- Soft Heart Icon -->
+                        <button class="action-btn" onclick="toggleLike(this)">
+                            <div class="action-icon-bg"><svg class="action-icon icon-heart" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></div>
+                        </button>
+                        <!-- Soft Comment Icon -->
+                        <button class="action-btn" onclick="openComments(this)">
+                            <div class="action-icon-bg"><svg class="action-icon icon-comment" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></div>
+                        </button>
+                        <!-- Soft Share Icon -->
+                        <button class="action-btn" onclick="openShare(this)">
+                            <div class="action-icon-bg"><svg class="action-icon icon-share" viewBox="0 0 24 24"><polyline points="15 17 20 12 15 7"></polyline><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg></div>
+                        </button>
+                        <!-- Full Screen Button -->
+                        <button class="action-btn" onclick="toggleFullscreen(this)">
+                            <div class="action-icon-bg"><svg class="action-icon icon-expand" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg></div>
+                        </button>
+                    </div>
+
+                    <div class="comments-sheet">
+                        <div class="comments-header">
+                            <h3>Comments</h3>
+                            <button class="close-comments" onclick="closeComments(this)">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <div class="comments-body">
+                            <div class="reel-comment-box">
+                                <div class="comment-text-placeholder">Only your comment matters...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Share Sheet -->
+                    <div class="share-sheet">
+                        <div class="comments-header">
+                            <h3>Share</h3>
+                            <button class="close-comments" onclick="closeShare(this)">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <div class="share-link-box">
+                            <div class="share-link-text" data-link="">Generating link...</div>
+                            <button class="copy-link-btn" onclick="copyShareLink(this)">Copy</button>
+                        </div>
+                        <div class="share-options">
+                            <a href="#" class="share-option-btn" onclick="event.preventDefault(); window.open('https://wa.me/?text=Check out this awesome Dripp Media video! ' + encodeURIComponent(this.closest('.share-sheet').querySelector('.share-link-text').dataset.link));">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                                WhatsApp
+                            </a>
+                            <a href="#" class="share-option-btn" onclick="event.preventDefault(); alert('Instagram sharing is native. Use the app or copy link!');">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                                Instagram
+                            </a>
+                            <a href="#" class="share-option-btn" onclick="event.preventDefault(); window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(this.closest('.share-sheet').querySelector('.share-link-text').dataset.link) + '&text=Check out this reel from Dripp Media');">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg>
+                                X / Twitter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            reelsContainer.appendChild(newReel);
+
+            videoObserver.observe(newReel);
+            attachCursorEvents(newReel);
+
+            if (!isGlobalMuted) {
+                const toggle = newReel.querySelector('.sound-toggle');
+                toggle.style.borderColor = 'var(--brand-yellow)';
+                toggle.style.color = 'var(--brand-yellow)';
+            }
+            newReel.querySelector('.reel-video').muted = isGlobalMuted;
+        }
+
+        // --- Initial Load Setup ---
+        // Load the first 2 reels so there's one to see and one to scroll to immediately
+        function initializeFeed() {
+            for (let i = 0; i < 2; i++) {
+                createReelHTML(portfolioVideosList[currentVideoIndex]);
+                currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length; // Loop around to 0 sequentially
+            }
+            updateVolumeUI();
+        }
+
+        // Initialize early volume state & setup reels
+        initializeFeed();
+
+        reelsContainer.addEventListener('scroll', () => {
+            // Append exactly 1 entry effortlessly right before bottom hit.
+            if (reelsContainer.scrollTop + reelsContainer.clientHeight >= reelsContainer.scrollHeight - 10) {
+                if (!isAppending) {
+                    isAppending = true;
+
+                    // Fetch next sequential video from array
+                    const nextVideoData = portfolioVideosList[currentVideoIndex];
+
+                    // Increment and Loop sequentially
+                    currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length;
+
+                    // Add it
+                    createReelHTML(nextVideoData);
+
+                    setTimeout(() => {
+                        isAppending = false;
+                    }, 100);
+                }
+            }
+        });
+
+        setTimeout(() => {
+            const firstVid = document.querySelector('.reel-video');
+            if (firstVid && firstVid.paused) {
+                firstVid.play().catch(e => console.log(e));
+            }
+        }, 300);
+
+        // Exit full screen (clean mode) when pressing on the black background
+        document.addEventListener('click', (e) => {
+            const activeCleanMode = document.querySelector('.clean-mode');
+            if (activeCleanMode && !activeCleanMode.contains(e.target)) {
+                // If they clicked an element that is outside the clean-mode video (the black sides)
+                activeCleanMode.classList.remove('clean-mode');
+            }
+        });
+
+    </script>
+</body>
+
+</html>

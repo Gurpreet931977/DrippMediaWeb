@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dripp Media | Surreal Agency</title>
+
+    <!-- Fonts: Panchang & Clash Display -->
+    <link
+        href="https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&f[]=clash-display@200,300,400,500,600,700&display=swap"
+        rel="stylesheet">
+
+    <!-- GSAP CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        :root {
+            --brand-yellow: #edd828;
+            --deep-black: #050505;
+            --pure-white: #ffffff;
+            --card-w: 240px;
+            --card-h: 350px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        body {
+            background-color: var(--deep-black);
+            color: var(--pure-white);
+            font-family: 'Clash Display', sans-serif;
+            overflow-x: hidden;
+            width: 100vw;
+            opacity: 0;
+            transition: opacity 0.5s ease-out;
+        }
+
+        body.loaded {
+            opacity: 1;
+        }
+
+        /* --- UI ELEMENTS --- */
+        .cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--pure-white);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            mix-blend-mode: difference;
+        }
+
+        .cursor.active {
+            width: 50px;
+            height: 50px;
+            background-color: var(--pure-white);
+            mix-blend-mode: normal;
+            opacity: 0.8;
+            border-color: transparent;
+        }
+
+        .velocity-gauge {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 2px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+
+        .velocity-fill {
+            position: absolute;
+            bottom: 50%;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background: var(--brand-yellow);
+            transform: translateY(50%);
+            transition: height 0.1s linear;
+        }
+
+        .gauge-label {
+            position: absolute;
+            top: -20px;
+            right: -10px;
+            font-size: 8px;
+            color: var(--brand-yellow);
+            font-family: 'Panchang', sans-serif;
+            transform: rotate(90deg);
+            opacity: 0.5;
+        }
+
+        .scroll-prompt {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+            opacity: 0.7;
+        }
+
+        .scroll-text {
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--brand-yellow), transparent);
+            animation: scrollLine 2s infinite;
+        }
+
+        @keyframes scrollLine {
+            0% {
+                transform: scaleY(0);
+                transform-origin: top;
+            }
+
+            50% {
+                transform: scaleY(1);
+                transform-origin: top;
+            }
+
+            51% {
+                transform: scaleY(1);
+                transform-origin: bottom;
+            }
+
+            100% {
+                transform: scaleY(0);
+                transform-origin: bottom;
+            }
+        }
+
+        /* --- STAGE --- */
+        .scifi-stage {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% -20%, #1a1a1a, #000);
+        }
+
+        .moving-grid {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            bottom: -50%;
+            left: -50%;
+            background-image: linear-gradient(rgba(237, 216, 40, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(237, 216, 40, 0.1) 1px, transparent 1px);
+            background-size: 80px 80px;
+            transform: perspective(500px) rotateX(60deg);
+            mask-image: linear-gradient(to bottom, transparent, black 40%, black);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black);
+        }
+
+        .plasma-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.3;
+            mix-blend-mode: screen;
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+
+        .glow-1 {
+            width: 600px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.08);
+            top: -20%;
+            left: 10%;
+        }
+
+        .glow-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--brand-yellow);
+            bottom: -10%;
+            right: 5%;
+            animation-delay: -4s;
+            opacity: 0.15;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.2;
+            }
+
+            100% {
+                transform: scale(1.1);
+                opacity: 0.4;
+            }
+        }
+
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* --- HERO --- */
+        section.hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1.brand-name {
+            font-family: 'Panchang', sans-serif;
+            font-weight: 800;
+            font-size: 8vw;
+            text-transform: uppercase;
+            line-height: 0.8;
+            text-align: center;
+            letter-spacing: -2px;
+            display: flex;
+            gap: 20px;
+            text-shadow: 0 0 50px rgba(237, 216, 40, 0.15);
+        }
+
+        .hero-sub {
+            margin-top: 30px;
+            color: var(--brand-yellow);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 14px 32px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .hero-sub:hover {
+            background: rgba(237, 216, 40, 0.1);
+            border-color: var(--brand-yellow);
+            transform: translateY(-2px);
+        }
+
+        /* --- PORTFOLIO --- */
+        section.portfolio {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 3000px;
+            position: relative;
+            z-index: 5;
+            overflow: visible;
+        }
+
+        .cards-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+        }
+
+        .card-wrapper {
+            width: var(--card-w);
+            height: var(--card-h);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            will-change: transform;
+        }
+
+        .card-wrapper::before {
+            content: "";
+            position: absolute;
+            inset: 20px;
+            border-radius: 24px;
+            background: transparent;
+            z-index: -1;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+            transform: translateZ(-50px);
+            pointer-events: none;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card-wrapper:hover::before {
+            box-shadow: 0 50px 90px rgba(0, 0, 0, 0.9);
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .face {
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform-style: preserve-3d;
+        }
+
+        .glare {
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 20%, transparent 50%);
+            pointer-events: none;
+            mix-blend-mode: overlay;
+            z-index: 10;
+            will-change: transform;
+        }
+
+        .face-front {
+            transform: rotateY(0deg) translateZ(0.1px);
+            padding: 24px;
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+            border-left: 2px solid rgba(255, 255, 255, 0.2);
+            /* Optimized blur for performance */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+        }
+
+        .face-back {
+            transform: rotateY(180deg) translateZ(0.1px);
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            padding: 24px;
+            justify-content: space-between;
+            border: 2px solid var(--brand-yellow);
+            z-index: 2;
+        }
+
+        .face-back::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .glass-label {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--brand-yellow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: auto;
+            display: inline-block;
+            transform: translateZ(20px);
+        }
+
+        .face-front h2 {
+            font-family: 'Panchang', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+            text-transform: capitalize;
+            color: #fff;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            pointer-events: none;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            transform: translateZ(30px);
+        }
+
+        .glass-strip {
+            width: calc(100% + 48px);
+            height: 30px;
+            margin-left: -24px;
+            margin-bottom: 20px;
+            background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04) 4px, transparent 4px, transparent 8px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transform: translateZ(10px);
+        }
+
+        .front-desc {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 400;
+            transform: translateZ(20px);
+        }
+
+        .back-title {
+            font-family: 'Panchang', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border-bottom: 2px solid var(--deep-black);
+            padding-bottom: 8px;
+            text-transform: uppercase;
+            z-index: 2;
+            transform: translateZ(20px);
+        }
+
+        .back-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            line-height: 1.4;
+            z-index: 2;
+            transform: translateZ(20px);
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            z-index: 2;
+            transform: translateZ(20px);
+        }
+
+        .tag {
+            background: var(--deep-black);
+            color: var(--brand-yellow);
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .spacer {
+            height: 50vh;
+        }
+
+        @media (max-width: 900px) {
+            * {
+                cursor: auto;
+            }
+
+            .cursor,
+            .velocity-gauge {
+                display: none;
+            }
+
+            h1.brand-name {
+                font-size: 12vw;
+                flex-direction: column;
+                gap: 0;
+            }
+
+            :root {
+                --card-w: 220px;
+                --card-h: 320px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="cursor"></div>
+    <div class="velocity-gauge">
+        <div class="gauge-label">SYS.VEL</div>
+        <div class="velocity-fill"></div>
+    </div>
+    <div class="scroll-prompt">
+        <div class="scroll-text">Explore</div>
+        <div class="scroll-line"></div>
+    </div>
+
+    <div class="scifi-stage">
+        <div class="moving-grid"></div>
+        <div class="plasma-glow glow-1"></div>
+        <div class="plasma-glow glow-2"></div>
+        <div class="scanlines"></div>
+    </div>
+
+    <section class="hero">
+        <h1 class="brand-name">
+            <span class="word" id="word1">DRIPP</span>
+            <span class="word" id="word2">MEDIA</span>
+        </h1>
+        <div class="hero-sub">Creative Agency</div>
+    </section>
+
+    <section class="portfolio">
+        <div class="cards-container">
+            <div class="card-wrapper locked" id="card1">
+                <div class="card-inner">
+                    <div class="face face-front">
+                        <div class="glare"></div>
+                        <span class="glass-label">01 / EDIT</span>
+                        <h2>Video Editing</h2>
+                        <div class="glass-strip"></div>
+                        <p class="front-desc">High-octane rhythmic editing engineered to keep retention glued.</p>
+                    </div>
+                    <div class="face face-back">
+                        <div class="glare"></div>
+                        <div class="back-title">The Cut</div>
+                        <p class="back-text">We don't just edit; we engineer dopamine spikes using advanced pacing.</p>
+                        <div class="tags"><span class="tag">Premiere</span><span class="tag">VFX</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-wrapper locked" id="card2">
+                <div class="card-inner">
+                    <div class="face face-front">
+                        <div class="glare"></div>
+                        <span class="glass-label">02 / DESIGN</span>
+                        <h2>Graphic Design</h2>
+                        <div class="glass-strip"></div>
+                        <p class="front-desc">Visual identities that melt faces. Bold typography & surreal art.</p>
+                    </div>
+                    <div class="face face-back">
+                        <div class="glare"></div>
+                        <div class="back-title">The Aesthetic</div>
+                        <p class="back-text">Scalable design systems that work from Instagram stories to billboards.</p>
+                        <div class="tags"><span class="tag">Branding</span><span class="tag">3D</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-wrapper locked" id="card3">
+                <div class="card-inner">
+                    <div class="face face-front">
+                        <div class="glare"></div>
+                        <span class="glass-label">03 / CREATE</span>
+                        <h2>Content Creation</h2>
+                        <div class="glass-strip"></div>
+                        <p class="front-desc">Cinematic storytelling optimized for the algorithm.</p>
+                    </div>
+                    <div class="face face-back">
+                        <div class="glare"></div>
+                        <div class="back-title">The Shot</div>
+                        <p class="back-text">From script to screen, we handle the entire production pipeline.</p>
+                        <div class="tags"><span class="tag">Direction</span><span class="tag">Growth</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="spacer"></div>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        document.fonts.ready.then(function () {
+            document.body.classList.add('loaded');
+        });
+
+        const cursor = document.querySelector('.cursor');
+        const velocityFill = document.querySelector('.velocity-fill');
+        const grid = document.querySelector('.moving-grid');
+
+        gsap.set(cursor, { xPercent: -50, yPercent: -50 });
+
+        // Optimized Cursor Movement
+        const xTo = gsap.quickSetter(cursor, "x", "px");
+        const yTo = gsap.quickSetter(cursor, "y", "px");
+
+        // --- 1. HERO ANIMATION ---
+        const heroTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: ".hero",
+                start: "top top",
+                end: "bottom center",
+                scrub: 1
+            }
+        });
+
+        heroTl.to("#word1", { x: -200, opacity: 0, scale: 1.2, rotate: -5 }, 0);
+        heroTl.to("#word2", { x: 200, opacity: 0, scale: 1.2, rotate: 5 }, 0);
+        heroTl.to(".hero-sub", { opacity: 0, y: 50 }, 0);
+        heroTl.to(".scroll-prompt", { opacity: 0, y: 50 }, 0);
+
+        // --- 2. CARD LOGIC ---
+
+        const cards = document.querySelectorAll('.card-wrapper');
+        const card1 = document.querySelector('#card1');
+        const card2 = document.querySelector('#card2');
+        const card3 = document.querySelector('#card3');
+
+        // Initial setup
+        gsap.set(cards, {
+            xPercent: -50, yPercent: -50,
+            left: "50%", top: "50%",
+            position: "absolute"
+        });
+
+        gsap.set(card1, { zIndex: 1, rotation: -6, scale: 0.8 });
+        gsap.set(card2, { zIndex: 2, rotation: 0, scale: 0.85 });
+        gsap.set(card3, { zIndex: 3, rotation: 4, scale: 0.9 });
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let interactionEnabled = false;
+        const isMobile = window.innerWidth < 900;
+
+        // --- MOUSE TRACKING LOOP ---
+        // Using Ticker for max performance instead of event listener flooding
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            xTo(mouseX);
+            yTo(mouseY);
+        });
+
+        gsap.ticker.add(() => {
+            if (!interactionEnabled) return;
+
+            cards.forEach(card => {
+                // If flipping/hovered, handled by hover logic
+                if (card.matches(':hover')) return;
+
+                // Subtle Global Parallax for non-hovered cards
+                const xGlobal = (mouseX / window.innerWidth - 0.5) * 5;
+                const yGlobal = (mouseY / window.innerHeight - 0.5) * 5;
+
+                // Low-cost update using quickSetter if possible, or standard set
+                // Using .to with overwrite for smoothness
+                gsap.to(card, {
+                    rotationY: xGlobal,
+                    rotationX: -yGlobal,
+                    duration: 1,
+                    ease: "power1.out",
+                    overwrite: "auto"
+                });
+            });
+        });
+
+        // --- STACK ANIMATION ---
+        const spreadDistance = isMobile ? 0 : 280;
+        const vSpread = 360;
+
+        const stackTl = gsap.timeline({ defaults: { ease: "none" } });
+
+        if (!isMobile) {
+            stackTl
+                .to(card1, { x: -spreadDistance, rotation: 0, scale: 0.95 }, 0)
+                .to(card2, { x: 0, rotation: 0, scale: 1.1, zIndex: 10 }, 0)
+                .to(card3, { x: spreadDistance, rotation: 0, scale: 0.95 }, 0);
+        } else {
+            stackTl
+                .to(card1, { y: -vSpread, rotation: 0, scale: 0.95 }, 0)
+                .to(card2, { y: 0, rotation: 0, scale: 1.05 }, 0)
+                .to(card3, { y: vSpread, rotation: 0, scale: 0.95 }, 0);
+        }
+
+        ScrollTrigger.create({
+            trigger: ".portfolio",
+            start: "top 95%", end: "center 40%", scrub: 1, animation: stackTl
+        });
+
+        ScrollTrigger.create({
+            trigger: ".portfolio",
+            start: "top top", end: "+=120%", pin: true,
+            onEnter: () => {
+                interactionEnabled = true;
+                cards.forEach(c => c.classList.remove('locked'));
+            },
+            onLeaveBack: () => {
+                interactionEnabled = false;
+                resetAllFlips();
+            }
+        });
+
+        const resetAllFlips = () => {
+            cards.forEach(card => {
+                const inner = card.querySelector('.card-inner');
+                gsap.killTweensOf([card, inner]); // Kill active animations
+
+                card.classList.remove('flipped');
+                card.classList.add('locked');
+
+                gsap.to(inner, { rotationY: 0, z: 0, duration: 0.5, overwrite: true });
+                gsap.to(card, { rotationX: 0, rotationY: 0, scale: 1, duration: 0.5, overwrite: true });
+            });
+        };
+
+        const flipCard = (card, inner, isFlipping) => {
+            const backContent = inner.querySelectorAll('.face-back > *');
+
+            if (isFlipping) {
+                // FLIP
+                gsap.to(inner, {
+                    rotationY: 180, z: 0,
+                    ease: "power2.inOut", duration: 0.6,
+                    overwrite: "auto"
+                });
+                // SCALE UP
+                gsap.to(card, {
+                    scale: 1.1, zIndex: 50, duration: 0.4, ease: "power2.out", overwrite: "auto"
+                });
+                // CONTENT
+                gsap.fromTo(backContent,
+                    { opacity: 0, y: 15 },
+                    { opacity: 1, y: 0, stagger: 0.05, duration: 0.3, delay: 0.2, ease: "power2.out", overwrite: "auto" }
+                );
+            } else {
+                // UNFLIP
+                gsap.to(inner, {
+                    rotationY: 0, z: 0, ease: "power2.inOut", duration: 0.5, overwrite: true
+                });
+                gsap.to(card, {
+                    scale: 1, zIndex: 10, duration: 0.4, overwrite: true
+                });
+            }
+        };
+
+        // --- HOVER INTERACTION LOOP ---
+        cards.forEach((card) => {
+            const inner = card.querySelector('.card-inner');
+            const glares = card.querySelectorAll('.glare');
+
+            // Mouse Move Tilt (Reactive)
+            card.addEventListener('mousemove', (e) => {
+                if (!interactionEnabled) return;
+
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const xPct = (x / rect.width) - 0.5;
+                const yPct = (y / rect.height) - 0.5;
+
+                // Reduced Tilt Intensity (25)
+                gsap.to(card, {
+                    rotationY: xPct * 25,
+                    rotationX: -yPct * 25,
+                    duration: 0.2,
+                    ease: "power1.out",
+                    overwrite: "auto"
+                });
+
+                gsap.to(glares, {
+                    x: (x - rect.width / 2) * 1.5,
+                    y: (y - rect.height / 2) * 1.5,
+                    duration: 0.1,
+                    overwrite: "auto"
+                });
+            });
+
+            // Enter (Flip)
+            card.addEventListener('mouseenter', () => {
+                if (interactionEnabled) {
+                    cursor.classList.add('active');
+                    if (!isMobile) {
+                        card.classList.add('flipped');
+                        flipCard(card, inner, true);
+                    }
+                }
+            });
+
+            // Leave (Unflip & Reset)
+            card.addEventListener('mouseleave', () => {
+                cursor.classList.remove('active');
+
+                if (interactionEnabled) {
+                    // KILL TWEENS to stop conflict
+                    gsap.killTweensOf(card);
+                    gsap.killTweensOf(inner);
+                    gsap.killTweensOf(glares);
+
+                    if (card.classList.contains('flipped')) {
+                        card.classList.remove('flipped');
+                        flipCard(card, inner, false);
+                    }
+
+                    // Force Reset Tilt
+                    gsap.to(card, {
+                        rotationX: 0, rotationY: 0, scale: 1,
+                        duration: 0.5, ease: "power2.out",
+                        overwrite: true
+                    });
+                    gsap.to(glares, { x: 0, y: 0, duration: 0.5, overwrite: true });
+                }
+            });
+        });
+
+        gsap.to(".hero-sub", { opacity: 1, duration: 2, delay: 0.5 });
+        gsap.to(".moving-grid", { backgroundPosition: "0px 100px", ease: "none", repeat: -1, duration: 3 });
+
+    </script>
+</body>
+
+</html>

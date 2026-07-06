@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dripp Media | Video Portfolio</title>
+    <!-- Fonts -->
+    <link
+        href="https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&f[]=clash-display@200,300,400,500,600,700&display=swap"
+        rel="stylesheet">
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        :root {
+            --brand-yellow: #ebd73f;
+            --deep-black: #050505;
+            --pure-white: #ffffff;
+            --card-w-horizontal: 500px;
+            --card-h-horizontal: 281px;
+            /* ~16:9 */
+            --card-w-vertical: 281px;
+            --card-h-vertical: 500px;
+            /* ~9:16 */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--deep-black);
+            color: var(--pure-white);
+            font-family: 'Clash Display', sans-serif;
+            overflow-x: hidden;
+            width: 100vw;
+            min-height: 100vh;
+        }
+
+        /* Nav back button */
+        .nav-back {
+            position: fixed;
+            top: 40px;
+            left: 50px;
+            z-index: 100;
+            color: var(--pure-white);
+            text-decoration: none;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            mix-blend-mode: difference;
+            transition: color 0.3s ease;
+        }
+
+        .nav-back:hover {
+            color: var(--brand-yellow);
+        }
+
+        /* Custom Cursor */
+        .cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--brand-yellow);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        }
+
+        .cursor.active {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(235, 215, 63, 0.1);
+            backdrop-filter: blur(2px);
+        }
+
+        /* --- MODERN CREATIVE CARDS --- */
+        section.portfolio {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            perspective: 2000px;
+            position: relative;
+            z-index: 5;
+            padding: 100px 20px;
+        }
+
+        .portfolio-title-container {
+            margin-bottom: 60px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .cards-title {
+            font-family: 'Panchang', sans-serif;
+            font-size: 3vw;
+            font-weight: 700;
+            color: var(--pure-white);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+        }
+
+        .cards-title span {
+            color: var(--brand-yellow);
+            font-weight: 800;
+            text-shadow: 0 0 25px rgba(235, 215, 63, 0.4);
+        }
+
+        .cards-subtitle {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+
+        .cards-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            /* important for mobile */
+            transform-style: preserve-3d;
+        }
+
+        .card-wrapper {
+            position: relative;
+            transform-style: preserve-3d;
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+            cursor: pointer;
+        }
+
+        .card-wrapper.card-horizontal {
+            width: var(--card-w-horizontal);
+            height: var(--card-h-horizontal);
+        }
+
+        .card-wrapper.card-vertical {
+            width: var(--card-w-vertical);
+            height: var(--card-h-vertical);
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .card-inner::before,
+        .card-inner::after {
+            content: "";
+            position: absolute;
+            inset: 20px;
+            border-radius: 24px;
+            background: transparent;
+            z-index: -1;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+            transform: translateZ(-50px);
+            pointer-events: none;
+        }
+
+        .face {
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            transform-style: preserve-3d;
+        }
+
+        .face-bg {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            overflow: hidden;
+            background: linear-gradient(165deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: border-color 0.5s ease;
+        }
+
+        /* Interactive Border Spotlight */
+        .face-bg::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            padding: 1px;
+            background: radial-gradient(400px circle at var(--mouse-x) var(--mouse-y),
+                    rgba(235, 215, 63, 1),
+                    transparent 40%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Ambient background spotlight */
+        .face-bg::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y),
+                    rgba(255, 255, 255, 0.06),
+                    transparent 40%);
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .card-wrapper:hover .face-bg::before,
+        .card-wrapper:hover .face-bg::after,
+        .card-wrapper:hover .card-grid {
+            opacity: 1;
+        }
+
+        .card-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+            -webkit-mask-image: radial-gradient(350px circle at var(--mouse-x) var(--mouse-y),
+                    black 0%,
+                    transparent 100%);
+            mask-image: radial-gradient(350px circle at var(--mouse-x) var(--mouse-y),
+                    black 0%,
+                    transparent 100%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transform: translateZ(40px);
+            transform-style: preserve-3d;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .glass-label {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--pure-white);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            transform: translateZ(20px);
+        }
+
+        .format-icon {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 1.2rem;
+            transform: translateZ(20px);
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--brand-yellow);
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 10px var(--brand-yellow);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .card-body h2 {
+            font-family: 'Panchang', sans-serif;
+            font-weight: 800;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            color: var(--pure-white);
+            line-height: 1.1;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+            transform: translateZ(30px);
+        }
+
+        .card-body h2 span {
+            color: var(--brand-yellow);
+            display: block;
+        }
+
+        .front-desc {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 400;
+            transform: translateZ(20px);
+            max-width: 80%;
+        }
+
+        /* Abstract Shape inside card */
+        .abstract-shape {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 100px;
+            height: 100px;
+            background: repeating-linear-gradient(45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(235, 215, 63, 0.05) 10px,
+                    rgba(235, 215, 63, 0.05) 20px);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+            transform: translateZ(10px);
+        }
+
+        .card-horizontal .abstract-shape {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            right: 30px;
+            bottom: 30px;
+        }
+
+        /* Ambient Space Background Canvas */
+        #space-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        @media (max-width: 900px) {
+            * {
+                cursor: auto;
+            }
+
+            .cursor {
+                display: none;
+            }
+
+            .cards-title {
+                font-size: 6vw;
+            }
+
+            .card-wrapper.card-horizontal,
+            .card-wrapper.card-vertical {
+                width: 90vw;
+                height: 400px;
+                /* same height for both on mobile for consistency */
+            }
+
+            .cards-container {
+                flex-direction: column;
+                gap: 40px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 3D Space Background -->
+    <canvas id="space-canvas"></canvas>
+
+    <a href="../index.html" class="nav-back">← Explore More</a>
+
+    <div class="cursor" id="cursor"></div>
+
+    <section class="portfolio">
+        <div class="portfolio-title-container">
+            <h2 class="cards-title">Video <span>Dimensions</span></h2>
+            <p class="cards-subtitle">Choose your format. Experience the cut.</p>
+        </div>
+
+        <div class="cards-container">
+
+            <!-- HORIZONTAL LONG FORM CARD -->
+            <div class="card-wrapper card-horizontal" data-link="Long form Portfolio.html">
+                <div class="card-inner">
+                    <div class="face">
+                        <div class="face-bg">
+                            <div class="card-grid"></div>
+                            <div class="abstract-shape"></div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <span class="glass-label">
+                                    <span class="status-dot"></span> 16:9 FORMAT
+                                </span>
+                                <div class="format-icon">
+                                    <!-- simple horizontal rectangle icon -->
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h2>Long Form<br><span>Cinematics</span></h2>
+                                <p class="front-desc">Immersive storytelling, mini-documentaries, YouTube videos, and
+                                    high-production commercials that breathe life into your brand narrative.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VERTICAL SHORT FORM CARD -->
+            <div class="card-wrapper card-vertical" data-link="Short form Portfolio.html">
+                <div class="card-inner">
+                    <div class="face">
+                        <div class="face-bg">
+                            <div class="card-grid"></div>
+                            <div class="abstract-shape"></div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <span class="glass-label">
+                                    <span class="status-dot"></span> 9:16 FORMAT
+                                </span>
+                                <div class="format-icon">
+                                    <!-- simple vertical rectangle icon -->
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="6" y="2" width="12" height="20" rx="2" ry="2"></rect>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h2>Short Form<br><span>Viral Edits</span></h2>
+                                <p class="front-desc">High-retention, hyper-engaging content engineered perfectly for
+                                    Reels, TikToks, and Shorts.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <script>
+        // Custom Cursor Logic
+        const cursor = document.getElementById('cursor');
+        window.addEventListener('mousemove', (e) => {
+            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+        });
+        window.addEventListener('mousedown', () => cursor.classList.add('active'));
+        window.addEventListener('mouseup', () => cursor.classList.remove('active'));
+
+        // 3D Card Hover Interaction
+        const cards = document.querySelectorAll('.card-wrapper');
+
+        cards.forEach(card => {
+            const inner = card.querySelector('.card-inner');
+
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Set CSS variables for spotlight effects
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+
+                // Calculate 3D rotation
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const rotateX = ((y - centerY) / centerY) * -10;
+                const rotateY = ((x - centerX) / centerX) * 10;
+
+                gsap.to(inner, {
+                    rotationX: rotateX,
+                    rotationY: rotateY,
+                    duration: 0.4,
+                    ease: "power2.out",
+                    transformPerspective: 1000
+                });
+
+                // Active state for cursor
+                cursor.classList.add('active');
+            });
+
+            card.addEventListener('mouseleave', () => {
+                gsap.to(inner, {
+                    rotationX: 0,
+                    rotationY: 0,
+                    duration: 0.8,
+                    ease: "power2.out"
+                });
+                cursor.classList.remove('active');
+            });
+
+            // Smooth Exit Transition on Click
+            card.addEventListener('click', () => {
+                const targetUrl = card.getAttribute('data-link');
+                if (targetUrl) {
+                    // Zoom into the clicked card and fade everything out
+                    gsap.to(card, {
+                        scale: 1.5,
+                        opacity: 0,
+                        duration: 0.6,
+                        ease: "power2.inOut",
+                        zIndex: 100
+                    });
+
+                    // Fade out the rest of the body
+                    gsap.to('body', {
+                        opacity: 0,
+                        duration: 0.6,
+                        delay: 0.1,
+                        ease: "power2.inOut",
+                        onComplete: () => {
+                            window.location.href = targetUrl;
+                        }
+                    });
+                }
+            });
+        });
+
+        // Ambient Space Background Particle Logic
+        const canvas = document.getElementById('space-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.z = Math.random() * 2 + 0.1;
+                this.vx = (Math.random() - 0.5) * 0.2;
+                this.vy = Math.random() * -0.5 - 0.1;
+                this.alpha = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.y < 0) {
+                    this.y = height;
+                    this.x = Math.random() * width;
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.z, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 150; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+
+</html>
