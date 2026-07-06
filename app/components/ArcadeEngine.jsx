@@ -66,7 +66,6 @@ function createGameEngine(canvas, callbacks) {
   let bricks = [], balls = [], powerUps = [], paddle = null;
   let snake = [], snakeDir = {x: 1, y: 0}, snakeFood = null, snakeFrame = 0, snakeReverseTimer = 0;
   let pongBall = {x:0, y:0, vx:0, vy:0, r:8}, pongAI = 0, pongTrails = [];
-  let pongBall = {x:0, y:0, vx:0, vy:0, r:8}, pongAI = 0, pongTrails = [];
   let runnerState = {y:0, vy:0, frame:0}, runnerObs = [];
   let invPlayer = {x: 0, w: 40, h: 20}, invLasers = [], invaders = [], invFrame = 0, invKeys = {};
   let simonSeq = [], simonPlayerSeq = [], simonState = "showing", simonTimer = 0, simonActiveBtn = -1;
