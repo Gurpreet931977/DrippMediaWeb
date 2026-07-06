@@ -255,6 +255,10 @@ export default function ComingSoon() {
         if (Date.now() - lastTouchTime < 500) return;
         if (e.clientX !== undefined) {
           mouseRef.current = { x: e.clientX, y: e.clientY };
+          const cursorElem = document.querySelector('.cursor');
+          if (cursorElem && cursorElem.style.display === 'none') {
+             cursorElem.style.display = 'flex'; // Restore cursor on mouse move
+          }
         }
       }
       
@@ -1439,6 +1443,14 @@ export default function ComingSoon() {
       overflow: 'hidden',
       touchAction: 'none' 
     }}>
+      {/* SEO Visually Hidden Text */}
+      <div style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>
+        <h1>Dripp Media - Premium Digital Branding and Creative Agency</h1>
+        <p>
+          Dripp Media is a top-tier digital branding and creative agency based in India, specializing in building immersive digital experiences, high-performance web development, premium video production, and interactive design. Whether you search for Drip Media, DrippMedia, or the best creative website agency, Dripp Media delivers cutting-edge digital solutions. We are proud to serve clients across India (Dehradun, Delhi, Mumbai, Bangalore, Jaipur) and provide premier offshore outsourcing and digital agency services globally to clients in the USA, UK, United Arab Emirates, Australia, Canada, Singapore, the Middle East, and across the EU and Scandinavia.
+        </p>
+      </div>
+
       {/* Profile Widget moved to control-buttons-wrapper */}
 
       <AuthModal 
@@ -1618,36 +1630,38 @@ export default function ComingSoon() {
           )}
         </div>
         {activeGame !== 'none' && gameState === 'playing' && !isPaused && (
-          <div 
+          <button 
             onClick={() => setIsPaused(true)}
+            aria-label="Pause Game"
             style={{
               width: '40px', height: '40px',
               borderRadius: '50%', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', 
               border: '1px solid rgba(255,255,255,0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-              color: 'white', transition: 'all 0.3s ease'
+              color: 'white', transition: 'all 0.3s ease', padding: 0
             }}
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
             title="Pause"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <rect x="6" y="4" width="4" height="16"></rect>
               <rect x="14" y="4" width="4" height="16"></rect>
             </svg>
-          </div>
+          </button>
         )}
-        <div 
+        <button 
           onClick={() => setIsHelpOpen(true)}
+          aria-label="How to play"
           style={{
             width: '40px', height: '40px',
             borderRadius: '50%', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', 
             border: '1px solid rgba(255,255,255,0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-            color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1.2rem', transition: 'all 0.3s ease'
+            color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1.2rem', transition: 'all 0.3s ease', padding: 0
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
           title="How to play"
-        >?</div>
+        >?</button>
       </div>
 
       {/* Guidelines Overlay */}
@@ -1687,29 +1701,31 @@ export default function ComingSoon() {
 
       {/* Bottom Left Buttons */}
       <div className="bottom-controls">
-        <div 
+        <button 
           className="easter-egg"
           onClick={() => setActiveGame(prev => prev === 'breaker' ? 'dripp' : 'breaker')}
+          aria-label="Toggle game"
           style={{
             width: '40px', height: '40px', flexShrink: 0, borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', cursor: 'pointer',
             border: '1px solid rgba(235, 215, 63, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-            transition: 'all 0.3s ease', boxShadow: '0 0 10px rgba(235, 215, 63, 0.2)'
+            transition: 'all 0.3s ease', boxShadow: '0 0 10px rgba(235, 215, 63, 0.2)', padding: 0
           }}
           title="Play Jardinains!"
           onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.background = 'rgba(235, 215, 63, 0.2)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'; }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
             <line x1="6" y1="12" x2="10" y2="12"></line>
             <line x1="8" y1="10" x2="8" y2="14"></line>
             <line x1="15" y1="13" x2="15.01" y2="13"></line>
             <line x1="18" y1="11" x2="18.01" y2="11"></line>
           </svg>
-        </div>
+        </button>
 
-        <div 
+        <button 
           className="game-free-btn"
+          aria-label={activeGame === 'none' ? 'Ignite Canvas' : 'Disable Game'}
           onClick={() => {
              if (activeGame !== 'none') {
                  // Trigger fade out
@@ -1733,12 +1749,13 @@ export default function ComingSoon() {
           onMouseLeave={(e) => { e.currentTarget.style.color = activeGame === 'none' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
         >
           {activeGame === 'none' ? 'Ignite Canvas' : 'Disable Game'}
-        </div>
+        </button>
         
-        <div 
+        <button 
           onClick={() => {
              if (activeGame !== 'none') setHideHero(prev => !prev);
           }}
+          aria-label={hideHero ? 'Show Intro' : 'Hide Intro'}
           style={{
              height: '40px', padding: '0 15px', flexShrink: 0, borderRadius: '20px', background: 'rgba(255,255,255,0.05)', 
              cursor: activeGame === 'none' ? 'not-allowed' : 'pointer',
@@ -1761,7 +1778,7 @@ export default function ComingSoon() {
           }}
         >
           {hideHero ? 'Show Intro' : 'Hide Intro'}
-        </div>
+        </button>
       </div>
 
       {/* Pause Overlay */}
@@ -1887,8 +1904,9 @@ export default function ComingSoon() {
                            setShowRetryTooltip(false);
                         }}
                      >
-                       <div 
+                       <button 
                           className="tooltip-trigger"
+                          aria-label="Retry information"
                           onClick={() => setShowRetryTooltip(!showRetryTooltip)}
                           style={{
                              width: '28px', height: '28px', borderRadius: '50%', 
@@ -1896,11 +1914,11 @@ export default function ComingSoon() {
                              display: 'flex', justifyContent: 'center', alignItems: 'center', 
                              color: 'rgba(255,255,255,0.7)', cursor: 'help', 
                              fontSize: '0.9rem', marginTop: '15px',
-                             transition: 'all 0.3s ease'
+                             transition: 'all 0.3s ease', background: 'transparent', padding: 0
                           }}
                        >
                          ?
-                       </div>
+                       </button>
                        
                        {showRetryTooltip && (
                           <div style={{
