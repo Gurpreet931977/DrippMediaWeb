@@ -56,7 +56,7 @@ export const metadata = {
     'top rated website designers', 'affordable web development agency', 'custom software development company',
     'top B2B marketing agency', 'hire professional video editors', 'best creative agency for startups',
     'top ecommerce development agency', 'web design services for small business', 'top notch digital branding',
-    'hire dedicated developers offshore', 'find the best creative agency', 'award winning video production'
+    'hire dedicated developers offshore', 'find the best creative agency', 'award winning video production',
     
     // Geo-Targeted: Dehradun (HQ/Focus)
     'creative agency Dehradun', 'web development Dehradun', 'digital marketing Dehradun', 
