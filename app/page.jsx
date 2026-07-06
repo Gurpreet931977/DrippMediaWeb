@@ -62,8 +62,14 @@ export default function ComingSoon() {
       const userStr = localStorage.getItem('dripp_user');
       let userObj = null;
       if (userStr) {
-          setHasSignedUp(true);
-          try { userObj = JSON.parse(userStr); } catch(e) {}
+          const authToken = localStorage.getItem('dripp_auth_token');
+          if (!authToken) {
+              localStorage.removeItem('dripp_user');
+              setHasSignedUp(false);
+          } else {
+              setHasSignedUp(true);
+              try { userObj = JSON.parse(userStr); } catch(e) {}
+          }
       }
 
       // Load high score from DB only (never trust localStorage as source of truth for DB)
@@ -1955,6 +1961,13 @@ export default function ComingSoon() {
                         setGameState('playing');
                         setIsPaused(false);
                         setShowShareOptions(false);
+                        try {
+                          const userStr = localStorage.getItem('dripp_user');
+                          if (userStr) {
+                            const userObj = JSON.parse(userStr);
+                            if (userObj.email) scoreGuardRef.current.initSession(userObj.email);
+                          }
+                        } catch(e) {}
                         window.initDrippGame();
                         gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
                     }});

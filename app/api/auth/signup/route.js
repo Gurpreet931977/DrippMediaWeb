@@ -18,6 +18,11 @@ const limiter = rateLimit({ limit: 3, windowMs: 60_000 });
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request) {
+  if (!process.env.AUTH_SESSION_SECRET) {
+    console.error('[signup] CRITICAL: AUTH_SESSION_SECRET is not set in environment variables.');
+    return withCors(Response.json({ error: 'Server misconfigured: AUTH_SESSION_SECRET is missing.' }, { status: 500 }), request);
+  }
+
   // ── Rate limit ─────────────────────────────────────────────────────────────
   const { ok: rlOk, retryAfter } = limiter.check(request);
   if (!rlOk) {

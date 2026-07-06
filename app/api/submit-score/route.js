@@ -23,7 +23,7 @@ import { verifyAuthToken, extractBearerToken } from '@/app/lib/authToken';
 const MAX_PLAUSIBLE_SCORE = 50000;
 const MIN_PTS_PER_CATCH   = 0.8;
 const MAX_PTS_PER_CATCH   = 70;
-const MIN_CATCHES_FOR_NONZERO = 3;
+const MIN_CATCHES_FOR_NONZERO = 1;
 
 // 5 score submissions per minute per IP
 const limiter = rateLimit({ limit: 5, windowMs: 60_000 });
