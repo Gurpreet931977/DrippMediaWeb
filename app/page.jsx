@@ -1427,7 +1427,7 @@ export default function ComingSoon() {
   );
 
   return (
-    <div ref={containerRef} style={{
+    <main ref={containerRef} style={{
       width: '100vw',
       height: '100dvh',
       display: 'flex',
@@ -2287,6 +2287,6 @@ export default function ComingSoon() {
         ))}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

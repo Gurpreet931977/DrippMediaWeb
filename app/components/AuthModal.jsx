@@ -118,8 +118,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
        return;
     }
 
-    if (signupPassword.length > 20 || !/^[a-zA-Z0-9]+$/.test(signupPassword)) {
-       setErrorMsg("Password must be up to 20 alphanumeric characters only.");
+    if (signupPassword.length < 8) {
+       setErrorMsg("Password must be at least 8 characters.");
        return;
     }
 
@@ -177,8 +177,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
     setErrorMsg("");
     if (!resetEmail || !resetSecurityPhrase || !resetNewPassword) return;
 
-    if (resetNewPassword.length > 20 || !/^[a-zA-Z0-9]+$/.test(resetNewPassword)) {
-       setErrorMsg("New password must be up to 20 alphanumeric characters only.");
+    if (resetNewPassword.length < 8) {
+       setErrorMsg("New password must be at least 8 characters.");
        return;
     }
 
@@ -438,7 +438,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                   value={activeTab === 'signup' ? signupPassword : activeTab === 'forgot_password' ? resetNewPassword : loginPassword}
                   onChange={e => activeTab === 'signup' ? setSignupPassword(e.target.value) : activeTab === 'forgot_password' ? setResetNewPassword(e.target.value) : setLoginPassword(e.target.value)}
                   required
-                  maxLength={20}
+                  maxLength={128}
                   style={{
                     width: '100%', padding: '10px 14px', borderRadius: '12px',
                     background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
