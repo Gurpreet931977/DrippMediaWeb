@@ -34,14 +34,18 @@ export async function GET(request) {
       .from('users')
       .select('highscore')
       .eq('email', authResult.email)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('[arcade/highscore] GET error:', error?.message);
       return Response.json({ error: 'Failed to fetch highscore' }, { status: 500 });
     }
+    
+    if (!data) {
+      return Response.json({ error: 'User not found' }, { status: 404 });
+    }
 
-    return Response.json({ highscore: data?.highscore || 0 }, { status: 200 });
+    return Response.json({ highscore: data.highscore || 0 }, { status: 200 });
   } catch (error) {
     console.error('[arcade/highscore] GET unexpected error:', error?.message);
     return Response.json({ error: 'Internal server error' }, { status: 500 });

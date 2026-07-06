@@ -70,7 +70,7 @@ export async function POST(request) {
       .from('users')
       .select('id')
       .eq('email', email.toLowerCase().trim())
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       return withCors(Response.json({ error: 'User already exists' }, { status: 409 }), request);

@@ -166,14 +166,19 @@ export async function POST(request) {
       .from('users')
       .select('highscore')
       .eq('email', email)
-      .single();
+      .maybeSingle();
 
     if (fetchError) {
       console.error('[submit-score] Fetch error:', fetchError?.message);
       return withCors(Response.json({ error: 'Database error' }, { status: 500 }), request);
     }
+    
+    if (!userData) {
+      console.warn(`[submit-score] User not found in DB — email=${email}`);
+      return withCors(Response.json({ error: 'User not found' }, { status: 404 }), request);
+    }
 
-    const currentHigh = userData?.highscore || 0;
+    const currentHigh = userData.highscore || 0;
 
     if (scoreNum <= currentHigh) {
       return withCors(Response.json({ ok: true, updated: false, highscore: currentHigh }), request);
