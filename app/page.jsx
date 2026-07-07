@@ -52,6 +52,9 @@ export default function ComingSoon() {
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [leaderboardError, setLeaderboardError] = useState(false);
   const highScoreRef = useRef(0);
+  // displayHighScore drives the UI — highScoreRef is used for comparison in game logic.
+  // We need both: ref for synchronous in-frame access, state to trigger re-renders.
+  const [displayHighScore, setDisplayHighScore] = useState(0);
 
   useEffect(() => {
     try {
@@ -83,6 +86,7 @@ export default function ComingSoon() {
                   const dbHigh = data.highscore || 0;
                   // Always use DB value as the source of truth
                   highScoreRef.current = dbHigh;
+                  setDisplayHighScore(dbHigh);
                   localStorage.setItem('dripp_highScore', dbHigh.toString());
               }
           }).catch(e => console.error("Error fetching highscore", e));
@@ -90,7 +94,9 @@ export default function ComingSoon() {
           // Guest: just read localStorage (won't be synced to DB)
           const cachedHighScore = localStorage.getItem('dripp_highScore');
           if (cachedHighScore) {
-              highScoreRef.current = parseInt(cachedHighScore, 10);
+              const val = parseInt(cachedHighScore, 10);
+              highScoreRef.current = val;
+              setDisplayHighScore(val);
           }
       }
     } catch(e) {}
@@ -142,6 +148,7 @@ export default function ComingSoon() {
     if (gameState === 'failed' && activeGame === 'dripp') {
        if (score > highScoreRef.current) {
           highScoreRef.current = score;
+          setDisplayHighScore(score);
           localStorage.setItem('dripp_highScore', score.toString());
           const userStr = localStorage.getItem('dripp_user');
           if (userStr) {
@@ -1477,11 +1484,36 @@ export default function ComingSoon() {
         onLoginSuccess={() => {
            setHasSignedUp(true);
            setPlayCount(0);
-           const cachedHighScore = localStorage.getItem('dripp_highScore');
-           if (cachedHighScore) highScoreRef.current = parseInt(cachedHighScore, 10);
            setGameState('playing'); setIsPaused(false); setShowShareOptions(false);
            if (typeof window !== 'undefined' && window.initDrippGame) window.initDrippGame();
-           
+
+           // Fetch the real DB highscore — don't trust localStorage since
+           // this might be a new device or cleared browser.
+           const authToken = localStorage.getItem('dripp_auth_token') || '';
+           if (authToken) {
+             fetch('/api/arcade/highscore', {
+               headers: { 'Authorization': `Bearer ${authToken}` }
+             })
+             .then(res => res.json())
+             .then(data => {
+               if (data && data.highscore !== undefined) {
+                 const dbHigh = data.highscore || 0;
+                 highScoreRef.current = dbHigh;
+                 setDisplayHighScore(dbHigh);
+                 localStorage.setItem('dripp_highScore', dbHigh.toString());
+               }
+             })
+             .catch(() => {
+               // Fallback to localStorage if DB fetch fails
+               const cached = localStorage.getItem('dripp_highScore');
+               if (cached) {
+                 const val = parseInt(cached, 10);
+                 highScoreRef.current = val;
+                 setDisplayHighScore(val);
+               }
+             });
+           }
+
            // Dispatch event for other components listening
            if (typeof window !== 'undefined') {
              window.dispatchEvent(new Event('dripp_login_success'));
@@ -2157,7 +2189,7 @@ export default function ComingSoon() {
           {/* High Score / Leaderboard Display */}
           <div className="leaderboard-block" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginBottom: '10px' }}>
              <span className="highest-score-text" style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Your Highest Score</span>
-             <span className="highest-score-value" style={{ fontSize: '1.4rem', color: 'var(--brand-yellow)', fontWeight: 'bold' }}>{highScoreRef.current}</span>
+             <span className="highest-score-value" style={{ fontSize: '1.4rem', color: 'var(--brand-yellow)', fontWeight: 'bold' }}>{displayHighScore}</span>
              <button 
                 onClick={() => setShowLeaderboard(true)}
                 style={{
