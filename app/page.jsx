@@ -5,7 +5,6 @@ import { useEffect, useRef, useState, memo } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { createScoreGuard } from "./lib/scoreGuard";
-import { supabase } from "./utils/supabaseClient";
 import AuthModal from './components/AuthModal';
 import ProfileWidget from './components/ProfileWidget';
 import { generateScoreImage } from './utils/shareUtils';

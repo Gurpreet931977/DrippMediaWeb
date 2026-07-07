@@ -21,11 +21,9 @@ import { verifyAuthToken, extractBearerToken } from '@/app/lib/authToken';
 import { signScoreCommit } from '@/app/api/session-token/route';
 
 // ── Config ─────────────────────────────────────────────────────────────────────
-// Realistic physics cap: Dripp Drop drops at ~1 per 50ms, +1 each, rarely +5 or +69.
-// Max drops/sec even at high difficulty ~20/s over 2hrs = 144,000 hits but +1 each
-// would cap at ~144,000. However 69-point white drops are 1 in 20 chance,
-// a generous but realistic ceiling for a skilled player over 2 hours is ~15,000.
-const MAX_PLAUSIBLE_SCORE = 15000;
+// Physics sanity cap — secondary check only. The primary defence is the scoreCommit HMAC.
+// A legitimate player could theoretically reach very high scores over a 2-hour session.
+const MAX_PLAUSIBLE_SCORE = 50000;
 const MIN_PTS_PER_CATCH   = 0.8;
 const MAX_PTS_PER_CATCH   = 70;
 const MIN_CATCHES_FOR_NONZERO = 1;

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import styles from './admin.module.css';
-import { supabase } from '../utils/supabaseClient';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLayout({ children }) {
@@ -38,28 +37,17 @@ export default function AdminLayout({ children }) {
           return;
         }
 
-        // No valid session cookie — try issuing one using the logged-in user's email.
-        // We look at the dripp_user object from localStorage ONLY to get the email
-        // to present to the server; the server does the actual authorization check.
+        // Get the logged-in user's email from localStorage (custom dripp auth).
+        // The server does the actual admin authorization check against ADMIN_EMAILS.
         let email = null;
-
-        // Try Supabase session first
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email) {
-          email = session.user.email;
-        }
-
-        // Fallback: dripp_user email from AuthModal (custom auth)
-        if (!email) {
-          try {
-            const raw = localStorage.getItem('dripp_user');
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              if (parsed?.email) email = parsed.email;
-            }
-          } catch {
-            // Ignore malformed localStorage data
+        try {
+          const raw = localStorage.getItem('dripp_user');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed?.email) email = parsed.email;
           }
+        } catch {
+          // Ignore malformed localStorage data
         }
 
         if (!email) {
@@ -96,13 +84,8 @@ export default function AdminLayout({ children }) {
     document.body.style.opacity = '1';
     document.body.style.cursor = 'auto';
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      checkAuth();
-    });
-
     return () => {
       window.removeEventListener('resize', checkDevice);
-      authListener?.subscription.unsubscribe();
     };
   }, []);
 
