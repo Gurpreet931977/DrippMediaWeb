@@ -63,14 +63,23 @@ export async function POST(request) {
       query = query.ilike('name', safeName);
     }
 
-    const { data: user, error } = await query.single();
+    const { data: user, error } = await query.maybeSingle();
 
-    if (error || !user) {
-      // Use a constant-time delay to prevent timing-based email enumeration
-      await bcrypt.compare('dummy', '$2b$10$invalidhashplaceholderXXXXXXXXXXXXXXXXXXXXXXXX').catch(() => {});
-      
+    if (error) {
+      // PGRST116 = multiple rows returned (multiple users share the same player tag)
       if (!email.includes('@')) {
-        return withCors(Response.json({ error: 'Player Tag not found, or multiple users share this tag. Please login with your Email.' }, { status: 401 }), request);
+        return withCors(Response.json({ error: 'Multiple users share this Player Tag. Please login with your Email.' }, { status: 401 }), request);
+      }
+      // For any other DB error, log it and return generic message
+      console.error('[login] DB query error:', error?.message);
+      return withCors(Response.json({ error: 'Internal server error' }, { status: 500 }), request);
+    }
+
+    if (!user) {
+      // Constant-time delay to prevent timing-based email enumeration
+      await bcrypt.compare('dummy', '$2b$10$invalidhashplaceholderXXXXXXXXXXXXXXXXXXXXXXXX').catch(() => {});
+      if (!email.includes('@')) {
+        return withCors(Response.json({ error: 'Player Tag not found. Please login with your Email.' }, { status: 401 }), request);
       }
       return withCors(Response.json({ error: 'Invalid email or password' }, { status: 401 }), request);
     }

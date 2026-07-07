@@ -89,13 +89,18 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
   const handleSignup = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-    if (!signupName || !signupEmail || !signupPhone || !signupNature || !signupPassword) return;
+    if (!signupName || !signupEmail || !signupPhone || !signupNature || !signupPassword || !signupSecurityPhrase) return;
 
     // Validation Logic
     const trimmedName = signupName.trim();
     const usernameRegex = /^[a-zA-Z0-9]+$/;
     if (!usernameRegex.test(trimmedName)) {
        setErrorMsg("Player Name can only contain letters and numbers (no spaces or symbols).");
+       return;
+    }
+
+    if (!signupSecurityPhrase.trim()) {
+       setErrorMsg("Please enter a secret recovery phrase.");
        return;
     }
 
@@ -144,6 +149,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
 
       if (!response.ok) {
          setErrorMsg(result.error || "Failed to create account.");
+         setIsSubmitting(false);
       } else {
          if (typeof window !== 'undefined') {
             // Extract and store the server-issued auth token separately
@@ -156,6 +162,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                 localStorage.setItem('dripp_highScore', '0');
             }
          }
+         setIsSubmitting(false); // reset before modal closes
          setIsSuccess(true);
          setTimeout(() => {
              setIsSuccess(false);
@@ -166,8 +173,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
     } catch (err) {
       console.error(err);
       setErrorMsg("An unexpected error occurred.");
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   
@@ -232,6 +239,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
 
       if (!response.ok) {
          setErrorMsg(result.error || "Email or Player Tag not found, or not registered.");
+         setIsSubmitting(false);
       } else {
          if (typeof window !== 'undefined') {
             // Extract and store the server-issued auth token separately
@@ -242,6 +250,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                 localStorage.setItem('dripp_highScore', userData.highscore.toString());
             }
          }
+         setIsSubmitting(false); // reset before modal closes
          setIsSuccess(true);
          setTimeout(() => {
              setIsSuccess(false);
@@ -252,8 +261,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
     } catch (err) {
       console.error(err);
       setErrorMsg("An unexpected error occurred.");
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   return (
