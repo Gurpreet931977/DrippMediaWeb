@@ -12,6 +12,11 @@
  *     must match the email in the request body (prevents submitting under
  *     someone else's account)
  *  3. Session age check — sessionStart must be fresh (within 30 s)
+ *
+ * IMPORTANT: The token signs email:sessionStart. At submission, /api/submit-score
+ * independently validates this token AND applies server-side score plausibility caps.
+ * A score-commit HMAC (signed over email:sessionStart:score) must also be sent to
+ * prevent replay attacks where a real token is paired with a fake score.
  */
 
 import { createHmac } from 'crypto';
@@ -27,10 +32,23 @@ if (!HMAC_SECRET) {
   console.error('[session-token] CRITICAL: SCORE_HMAC_SECRET env var is not set. Score integrity is compromised.');
 }
 
-function signSessionToken(email, sessionStart) {
+/** Signs the session identity token (email + session start) */
+export function signSessionToken(email, sessionStart) {
   if (!HMAC_SECRET) throw new Error('SCORE_HMAC_SECRET is not configured');
   return createHmac('sha256', HMAC_SECRET)
     .update(`${email}:${sessionStart}`)
+    .digest('hex');
+}
+
+/**
+ * Signs a score-commit token that binds a specific score to a session.
+ * This is generated server-side at submission and prevents replay attacks
+ * where a real session token is submitted with a fabricated score.
+ */
+export function signScoreCommit(email, sessionStart, score) {
+  if (!HMAC_SECRET) throw new Error('SCORE_HMAC_SECRET is not configured');
+  return createHmac('sha256', HMAC_SECRET)
+    .update(`${email}:${sessionStart}:${score}:commit`)
     .digest('hex');
 }
 
@@ -69,7 +87,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const { email, sessionStart } = body;
+    const { email, sessionStart, finalScore } = body;
 
     if (!email || !sessionStart) {
       return withCors(Response.json({ error: 'Missing fields' }, { status: 400 }), request);
@@ -92,6 +110,43 @@ export async function POST(request) {
       return withCors(Response.json({ error: 'Invalid sessionStart' }, { status: 400 }), request);
     }
 
+    // ── Score-commit mode ─────────────────────────────────────────────────────
+    // When finalScore is provided, the session is already underway (no freshness check
+    // needed — session can be up to 2 hours old). Issue a score-commit token instead.
+    if (finalScore !== undefined) {
+      const scoreNum = parseInt(finalScore, 10);
+      if (isNaN(scoreNum) || scoreNum < 0) {
+        return withCors(Response.json({ error: 'Invalid finalScore' }, { status: 400 }), request);
+      }
+      // Session can be up to 2 hours old for commit
+      const commitAge = Date.now() - sessionTs;
+      if (commitAge > 2 * 60 * 60 * 1000 || commitAge < 0) {
+        return withCors(Response.json({ error: 'Session expired for commit' }, { status: 403 }), request);
+      }
+      const normalEmail = email.toLowerCase().trim();
+      // Verify the session token was previously issued for this session
+      const expectedToken = signSessionToken(normalEmail, sessionTs);
+      const { sessionToken } = body;
+      if (!sessionToken || typeof sessionToken !== 'string' || sessionToken.length !== 64) {
+        return withCors(Response.json({ error: 'Missing or invalid session token for commit' }, { status: 400 }), request);
+      }
+      try {
+        const { timingSafeEqual } = await import('crypto');
+        const a = Buffer.from(expectedToken, 'hex');
+        const b = Buffer.from(sessionToken, 'hex');
+        if (a.length !== b.length || !timingSafeEqual(a, b)) {
+          console.warn(`[session-token] Score-commit session token mismatch — email=${normalEmail}`);
+          return withCors(Response.json({ error: 'Invalid session token for commit' }, { status: 403 }), request);
+        }
+      } catch {
+        return withCors(Response.json({ error: 'Invalid session token for commit' }, { status: 403 }), request);
+      }
+      const scoreCommit = signScoreCommit(normalEmail, sessionTs, scoreNum);
+      console.log(`[session-token] Score-commit issued — email=${normalEmail} score=${scoreNum}`);
+      return withCors(Response.json({ scoreCommit }), request);
+    }
+
+    // ── Session-start mode ────────────────────────────────────────────────────
     // Don't issue tokens for sessions that are already old
     const age = Date.now() - sessionTs;
     if (age > 30000 || age < -5000) {

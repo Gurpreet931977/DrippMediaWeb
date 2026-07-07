@@ -18,9 +18,14 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { rateLimit } from '@/app/lib/rateLimit';
 import { withCors, corsHeaders } from '@/app/lib/cors';
 import { verifyAuthToken, extractBearerToken } from '@/app/lib/authToken';
+import { signScoreCommit } from '@/app/api/session-token/route';
 
 // ── Config ─────────────────────────────────────────────────────────────────────
-const MAX_PLAUSIBLE_SCORE = 50000;
+// Realistic physics cap: Dripp Drop drops at ~1 per 50ms, +1 each, rarely +5 or +69.
+// Max drops/sec even at high difficulty ~20/s over 2hrs = 144,000 hits but +1 each
+// would cap at ~144,000. However 69-point white drops are 1 in 20 chance,
+// a generous but realistic ceiling for a skilled player over 2 hours is ~15,000.
+const MAX_PLAUSIBLE_SCORE = 15000;
 const MIN_PTS_PER_CATCH   = 0.8;
 const MAX_PTS_PER_CATCH   = 70;
 const MIN_CATCHES_FOR_NONZERO = 1;
@@ -85,7 +90,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const { email, score, hitCount, sessionStart, token } = body;
+    const { email, score, hitCount, sessionStart, token, scoreCommit } = body;
 
     // ── 0. Identity verification (new) ──────────────────────────────────────
     // The caller must present a valid dripp_auth_token proving they own the email.
@@ -102,7 +107,7 @@ export async function POST(request) {
     }
 
     // ── 1. Input presence check ──────────────────────────────────────────────
-    if (!email || score === undefined || hitCount === undefined || !sessionStart || !token) {
+    if (!email || score === undefined || hitCount === undefined || !sessionStart || !token || !scoreCommit) {
       return withCors(Response.json({ error: 'Missing required fields' }, { status: 400 }), request);
     }
 
@@ -119,11 +124,32 @@ export async function POST(request) {
       return withCors(Response.json({ error: 'Invalid token format' }, { status: 403 }), request);
     }
 
+    if (typeof scoreCommit !== 'string' || scoreCommit.length !== 64) {
+      return withCors(Response.json({ error: 'Invalid scoreCommit format' }, { status: 403 }), request);
+    }
+
     // ── 3. HMAC token verification ───────────────────────────────────────────
     if (!verifyToken(email, sessionTs, token)) {
       // Log without revealing which part failed
       console.warn(`[submit-score] Invalid token — email=${email} score=${scoreNum}`);
       return withCors(Response.json({ error: 'Invalid session token' }, { status: 403 }), request);
+    }
+
+    // ── 3.5. Score-commit HMAC verification ─────────────────────────────────
+    // The scoreCommit token must be an HMAC of email:sessionStart:score:commit
+    // issued by /api/session-token in score-commit mode. This proves the server
+    // itself blessed this exact score for this exact session — not just any score.
+    try {
+      const expectedCommit = signScoreCommit(email.toLowerCase().trim(), sessionTs, scoreNum);
+      const a = Buffer.from(expectedCommit, 'hex');
+      const b = Buffer.from(scoreCommit, 'hex');
+      if (a.length !== b.length || !timingSafeEqual(a, b)) {
+        console.warn(`[submit-score] scoreCommit mismatch — email=${email} score=${scoreNum}`);
+        return withCors(Response.json({ error: 'Score commit verification failed' }, { status: 403 }), request);
+      }
+    } catch {
+      console.warn(`[submit-score] scoreCommit verification threw — email=${email}`);
+      return withCors(Response.json({ error: 'Score commit verification failed' }, { status: 403 }), request);
     }
 
     // ── 4. Session age check (token must be fresh, max 2 hours) ─────────────

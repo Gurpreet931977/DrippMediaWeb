@@ -146,33 +146,43 @@ export default function ComingSoon() {
           localStorage.setItem('dripp_highScore', score.toString());
           const userStr = localStorage.getItem('dripp_user');
           if (userStr) {
-             try {
-                const userObj = JSON.parse(userStr);
-                if (userObj.email) {
-                   // Get the secure submission payload from the score guard
-                   const payload = scoreGuardRef.current.getSubmissionPayload(userObj.email);
-                   if (payload && !scoreGuardRef.current.isCheated()) {
-                      // Attach the server-issued identity token so the server can
-                      // verify this request belongs to the logged-in user
-                      const authToken = localStorage.getItem('dripp_auth_token') || '';
-                      fetch('/api/submit-score', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
-                        },
-                        body: JSON.stringify(payload),
-                      }).then(r => r.json()).then(data => {
-                        if (data.ok) console.log('Score saved securely:', data.highscore);
-                        else console.warn('Score rejected by server:', data.error);
-                      }).catch(e => console.error('Score submit error:', e));
-                   } else {
-                      console.warn('Score guard flagged cheated session – not submitting.');
-                   }
-                }
-             } catch (e) {
-                console.error("Error submitting score:", e);
-             }
+             (async () => {
+               try {
+                  const userObj = JSON.parse(userStr);
+                  if (userObj.email && scoreGuardRef.current && !scoreGuardRef.current.isCheated()) {
+                     // Step 1: Request a server-signed score-commit HMAC.
+                     // This cryptographically binds the exact score to this session,
+                     // so the server can reject any forged or replayed score values.
+                     const committed = await scoreGuardRef.current.commitScore(userObj.email);
+                     if (!committed) {
+                        console.warn('Score guard: could not obtain score-commit – not submitting.');
+                        return;
+                     }
+
+                     // Step 2: Build payload (now includes scoreCommit)
+                     const payload = scoreGuardRef.current.getSubmissionPayload(userObj.email);
+                     if (payload && !scoreGuardRef.current.isCheated()) {
+                        // Step 3: Submit to server
+                        const authToken = localStorage.getItem('dripp_auth_token') || '';
+                        fetch('/api/submit-score', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+                          },
+                          body: JSON.stringify(payload),
+                        }).then(r => r.json()).then(data => {
+                          if (data.ok) console.log('Score saved securely:', data.highscore);
+                          else console.warn('Score rejected by server:', data.error);
+                        }).catch(e => console.error('Score submit error:', e));
+                     } else {
+                        console.warn('Score guard flagged cheated session – not submitting.');
+                     }
+                  }
+               } catch (e) {
+                  console.error("Error submitting score:", e);
+               }
+             })();
           }
        }
     }

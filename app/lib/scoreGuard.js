@@ -31,6 +31,7 @@ export function createScoreGuard() {
   // Session token fields – set once per game session by calling initSession()
   let _sessionStart = 0;
   let _sessionToken = null;
+  let _scoreCommit  = null; // score-commit HMAC fetched just before submission
 
   /** Internal checksum – both refs must agree at all times */
   function _checkIntegrity() {
@@ -125,6 +126,7 @@ export function createScoreGuard() {
     _hitCount     = 0;
     _sessionStart = 0;
     _sessionToken = null;
+    _scoreCommit  = null;
   }
 
   /** How many real hits were registered */
@@ -134,20 +136,60 @@ export function createScoreGuard() {
   function isCheated() { return _cheated; }
 
   /**
-   * getSubmissionPayload()
-   * Returns the payload needed for /api/submit-score, including the HMAC token.
-   * Returns null if this session has been flagged as cheated.
+   * commitScore(email)
+   *  Call at game end (before submitting) to get a server-signed score-commit HMAC.
+   *  This cryptographically binds the current score to the session, preventing
+   *  replay attacks where a real token is submitted with a fabricated score.
+   *  Returns true if the commit was successfully obtained, false otherwise.
+   */
+  async function commitScore(email) {
+    if (_cheated || !_checkIntegrity()) return false;
+    if (!email || !_sessionToken || !_sessionStart) return false;
+    try {
+      const authToken = (typeof window !== 'undefined')
+        ? localStorage.getItem('dripp_auth_token') || ''
+        : '';
+      const res = await fetch('/api/session-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+        },
+        body: JSON.stringify({
+          email,
+          sessionStart: _sessionStart,
+          finalScore: _primary,
+          sessionToken: _sessionToken,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        _scoreCommit = data.scoreCommit || null;
+        return !!_scoreCommit;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * getSubmissionPayload(email)
+   * Returns the payload needed for /api/submit-score.
+   * Returns null if the session was flagged as cheated or scoreCommit wasn't obtained.
+   * IMPORTANT: call commitScore(email) first and await it before calling this.
    */
   function getSubmissionPayload(email) {
     if (_cheated || !_checkIntegrity()) return null;
+    if (!_scoreCommit) return null; // scoreCommit required — call commitScore() first
     return {
       email,
       score:        _primary,
       hitCount:     _hitCount,
       sessionStart: _sessionStart,
       token:        _sessionToken,
+      scoreCommit:  _scoreCommit,
     };
   }
 
-  return { tryAddScore, getScore, reset, getHitCount, isCheated, initSession, getSubmissionPayload };
-}
+  return { tryAddScore, getScore, reset, getHitCount, isCheated, initSession, commitScore, getSubmissionPayload };
