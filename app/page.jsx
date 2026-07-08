@@ -2223,40 +2223,124 @@ export default function ComingSoon() {
         <div style={{
            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999,
            display: 'flex', justifyContent: 'center', alignItems: 'center',
-           background: 'rgba(5, 5, 5, 0.6)', backdropFilter: 'blur(12px)',
+           background: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(16px)',
+           WebkitBackdropFilter: 'blur(16px)',
            animation: 'modalFadeIn 0.3s forwards', padding: '20px'
         }}>
+           <style>{`
+             @keyframes slideUpFade {
+               from { opacity: 0; transform: translateY(30px); }
+               to { opacity: 1; transform: translateY(0); }
+             }
+             @keyframes pulseGlow {
+               0% { box-shadow: 0 0 20px rgba(235, 215, 63, 0.15), inset 0 0 10px rgba(235, 215, 63, 0.05); }
+               50% { box-shadow: 0 0 40px rgba(235, 215, 63, 0.4), inset 0 0 20px rgba(235, 215, 63, 0.15); }
+               100% { box-shadow: 0 0 20px rgba(235, 215, 63, 0.15), inset 0 0 10px rgba(235, 215, 63, 0.05); }
+             }
+             @keyframes shine {
+               0% { left: -100%; }
+               20% { left: 200%; }
+               100% { left: 200%; }
+             }
+             .lb-item {
+               animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+               opacity: 0;
+               transform-origin: center;
+             }
+             .lb-item:hover {
+               transform: translateY(-3px) scale(1.02);
+               background: rgba(255,255,255,0.06) !important;
+               border-color: rgba(255,255,255,0.15) !important;
+             }
+             .lb-first {
+               animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards, pulseGlow 3s infinite ease-in-out;
+               opacity: 0;
+               transform-origin: center;
+             }
+             .lb-first:hover {
+               transform: translateY(-4px) scale(1.03);
+             }
+           `}</style>
            <div style={{
-              background: 'linear-gradient(145deg, #161616, #0e0e0e)',
-              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px',
-              padding: '30px', width: '100%', maxWidth: '350px',
-              display: 'flex', flexDirection: 'column', alignItems: 'center'
+              background: 'linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(5,5,5,0.98) 100%)',
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '28px',
+              padding: '40px 30px', width: '100%', maxWidth: '420px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              boxShadow: '0 40px 80px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1)'
            }}>
-              <h2 style={{ color: 'var(--brand-yellow)', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', marginBottom: '20px', textTransform: 'uppercase' }}>
-                 Leaderboard
-              </h2>
-               <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '35px' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 10px rgba(235, 215, 63, 0.5))' }}>
+                   <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                   <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                   <path d="M4 22h16"></path>
+                   <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                   <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                   <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+                </svg>
+                <h2 style={{ color: '#fff', fontFamily: "'Panchang', sans-serif", fontSize: '1.6rem', textTransform: 'uppercase', letterSpacing: '2px', margin: 0, textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                   HALL OF FAME
+                </h2>
+              </div>
+               <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                  {leaderboardLoading ? (
-                    <div style={{ color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", textAlign: 'center' }}>
-                       Loading scores...
+                    <div style={{ color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", textAlign: 'center', padding: '30px 0' }}>
+                       Loading champions...
                     </div>
                  ) : leaderboardError ? (
-                    <div style={{ color: '#eb3f3f', fontFamily: "'Clash Display', sans-serif", textAlign: 'center', fontSize: '0.85rem' }}>
-                       Failed to load scores.<br/>(Database column 'highscore' might be missing)
+                    <div style={{ color: '#eb3f3f', fontFamily: "'Clash Display', sans-serif", textAlign: 'center', fontSize: '0.85rem', padding: '30px 0' }}>
+                       Failed to load scores.<br/>(Database connection issue)
                     </div>
-                 ) : leaderboardData.length > 0 ? leaderboardData.map((player, index) => (
-                    <div key={index} style={{
+                 ) : leaderboardData.length > 0 ? leaderboardData.map((player, index) => {
+                    const isFirst = index === 0;
+                    return (
+                    <div key={index} className={isFirst ? "lb-first" : "lb-item"} style={{
                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                       padding: '10px 15px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px'
+                       padding: isFirst ? '20px 24px' : '16px 20px', 
+                       background: isFirst ? 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(235, 215, 63, 0.02) 100%)' : 'rgba(255,255,255,0.03)', 
+                       borderRadius: '16px',
+                       border: isFirst ? '1px solid rgba(235, 215, 63, 0.5)' : '1px solid rgba(255,255,255,0.05)',
+                       marginBottom: isFirst ? '12px' : '4px',
+                       transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                       animationDelay: `${index * 0.1}s`,
+                       position: 'relative',
+                       overflow: 'hidden',
+                       cursor: 'default'
                     }}>
-                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span style={{ color: index === 0 ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.5)', fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem' }}>#{index + 1}</span>
-                          <span style={{ color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1rem' }}>{player.name}</span>
+                       {isFirst && (
+                          <div style={{ position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)', transform: 'skewX(-25deg)', animation: 'shine 4s infinite' }} />
+                       )}
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', zIndex: 1 }}>
+                          {isFirst ? (
+                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', background: 'var(--brand-yellow)', borderRadius: '50%', color: '#000', boxShadow: '0 0 20px rgba(235, 215, 63, 0.6)' }}>
+                                <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.1rem', fontWeight: 'bold', letterSpacing: '-1px', marginLeft: '-2px' }}>#1</span>
+                             </div>
+                          ) : (
+                             <span style={{ color: 'rgba(255,255,255,0.3)', fontFamily: "'Panchang', sans-serif", fontSize: '1rem', width: '36px', textAlign: 'center', letterSpacing: '1px' }}>
+                                #{index + 1}
+                             </span>
+                          )}
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ color: isFirst ? '#fff' : 'rgba(255,255,255,0.85)', fontFamily: "'Clash Display', sans-serif", fontSize: isFirst ? '1.25rem' : '1.1rem', fontWeight: isFirst ? 600 : 500, letterSpacing: '0.5px' }}>
+                               {player.name}
+                            </span>
+                            {isFirst && (
+                              <span style={{ fontSize: '0.65rem', color: 'var(--brand-yellow)', textTransform: 'uppercase', letterSpacing: '2px', marginTop: '4px', fontWeight: 600, filter: 'drop-shadow(0 0 5px rgba(235,215,63,0.5))' }}>Undisputed Champ</span>
+                            )}
+                          </div>
                        </div>
-                       <span style={{ color: 'var(--brand-yellow)', fontFamily: "'Panchang', sans-serif", fontSize: '1rem' }}>{player.highscore}</span>
+                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', zIndex: 1 }}>
+                          <span style={{ color: isFirst ? 'var(--brand-yellow)' : '#fff', fontFamily: "'Panchang', sans-serif", fontSize: isFirst ? '1.4rem' : '1.2rem', fontWeight: 600, textShadow: isFirst ? '0 0 15px rgba(235,215,63,0.6)' : 'none' }}>
+                             {player.highscore}
+                          </span>
+                          {!isFirst && leaderboardData[0] && (
+                             <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>
+                               {Math.abs(Number(leaderboardData[0].highscore) - Number(player.highscore))} pts to #1
+                             </span>
+                          )}
+                       </div>
                     </div>
-                 )) : (
-                    <div style={{ color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", textAlign: 'center' }}>
+                 )}) : (
+                    <div style={{ color: 'rgba(255,255,255,0.5)', fontFamily: "'Clash Display', sans-serif", textAlign: 'center', padding: '30px 0' }}>
                        No scores found. Be the first!
                     </div>
                  )}
@@ -2264,12 +2348,21 @@ export default function ComingSoon() {
               <button 
                  onClick={() => setShowLeaderboard(false)}
                  style={{
-                    marginTop: '25px', padding: '10px 20px', background: 'transparent',
-                    border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: '12px',
-                    cursor: 'pointer', fontFamily: "'Clash Display', sans-serif", width: '100%'
+                    marginTop: '32px', padding: '14px 20px', background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '16px',
+                    cursor: 'pointer', fontFamily: "'Clash Display', sans-serif", width: '100%',
+                    fontSize: '1rem', letterSpacing: '1px', transition: 'all 0.3s ease'
+                 }}
+                 onMouseEnter={e => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                 }}
+                 onMouseLeave={e => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
                  }}
               >
-                 Close
+                 CLOSE
               </button>
            </div>
         </div>
