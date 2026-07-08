@@ -2264,12 +2264,12 @@ export default function ComingSoon() {
            <div style={{
               background: 'linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(5,5,5,0.98) 100%)',
               border: '1px solid rgba(255,255,255,0.1)', borderRadius: '28px',
-              padding: '40px 30px', width: '100%', maxWidth: '420px',
+              padding: 'clamp(24px, 6vw, 40px) clamp(16px, 5vw, 30px)', width: '100%', maxWidth: '420px',
               display: 'flex', flexDirection: 'column', alignItems: 'center',
               boxShadow: '0 40px 80px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1)'
            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '35px' }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 10px rgba(235, 215, 63, 0.5))' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 3vw, 15px)', marginBottom: 'clamp(20px, 5vw, 35px)' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 10px rgba(235, 215, 63, 0.5))', flexShrink: 0, width: 'clamp(24px, 6vw, 32px)', height: 'clamp(24px, 6vw, 32px)' }}>
                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
                    <path d="M4 22h16"></path>
@@ -2277,7 +2277,7 @@ export default function ComingSoon() {
                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
                 </svg>
-                <h2 style={{ color: '#fff', fontFamily: "'Panchang', sans-serif", fontSize: '1.6rem', textTransform: 'uppercase', letterSpacing: '2px', margin: 0, textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                <h2 style={{ color: '#fff', fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(1.1rem, 4vw, 1.4rem)', textTransform: 'uppercase', letterSpacing: '2px', margin: 0, textShadow: '0 4px 20px rgba(0,0,0,0.5)', whiteSpace: 'nowrap' }}>
                    HALL OF FAME
                 </h2>
               </div>
@@ -2292,14 +2292,15 @@ export default function ComingSoon() {
                     </div>
                  ) : leaderboardData.length > 0 ? leaderboardData.map((player, index) => {
                     const isFirst = index === 0;
+                    const isSecond = index === 1;
                     return (
                     <div key={index} className={isFirst ? "lb-first" : "lb-item"} style={{
                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                       padding: isFirst ? '20px 24px' : '16px 20px', 
-                       background: isFirst ? 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(235, 215, 63, 0.02) 100%)' : 'rgba(255,255,255,0.03)', 
+                       padding: isFirst ? 'clamp(14px, 3.5vw, 20px) clamp(16px, 4vw, 24px)' : (isSecond ? 'clamp(12px, 3vw, 18px) clamp(14px, 3.5vw, 22px)' : 'clamp(10px, 2.5vw, 16px) clamp(12px, 3vw, 20px)'), 
+                       background: isFirst ? 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(235, 215, 63, 0.02) 100%)' : (isSecond ? 'linear-gradient(135deg, rgba(192, 192, 192, 0.12) 0%, rgba(192, 192, 192, 0.02) 100%)' : 'rgba(255,255,255,0.03)'), 
                        borderRadius: '16px',
-                       border: isFirst ? '1px solid rgba(235, 215, 63, 0.5)' : '1px solid rgba(255,255,255,0.05)',
-                       marginBottom: isFirst ? '12px' : '4px',
+                       border: isFirst ? '1px solid rgba(235, 215, 63, 0.5)' : (isSecond ? '1px solid rgba(192, 192, 192, 0.4)' : '1px solid rgba(255,255,255,0.05)'),
+                       marginBottom: isFirst ? '12px' : (isSecond ? '10px' : '4px'),
                        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                        animationDelay: `${index * 0.1}s`,
                        position: 'relative',
@@ -2309,31 +2310,41 @@ export default function ComingSoon() {
                        {isFirst && (
                           <div style={{ position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)', transform: 'skewX(-25deg)', animation: 'shine 4s infinite' }} />
                        )}
-                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', zIndex: 1 }}>
+                       {isSecond && (
+                          <div style={{ position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', transform: 'skewX(-25deg)', animation: 'shine 5s infinite 1.5s' }} />
+                       )}
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 2vw, 16px)', zIndex: 1 }}>
                           {isFirst ? (
-                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', background: 'var(--brand-yellow)', borderRadius: '50%', color: '#000', boxShadow: '0 0 20px rgba(235, 215, 63, 0.6)' }}>
-                                <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.1rem', fontWeight: 'bold', letterSpacing: '-1px', marginLeft: '-2px' }}>#1</span>
+                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 'clamp(28px, 7vw, 36px)', height: 'clamp(28px, 7vw, 36px)', background: 'var(--brand-yellow)', borderRadius: '50%', color: '#000', boxShadow: '0 0 20px rgba(235, 215, 63, 0.6)' }}>
+                                <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)', fontWeight: 'bold', letterSpacing: '-1px', marginLeft: '-2px' }}>#1</span>
+                             </div>
+                          ) : isSecond ? (
+                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 'clamp(26px, 6.5vw, 34px)', height: 'clamp(26px, 6.5vw, 34px)', background: 'linear-gradient(135deg, #e0e0e0, #a0a0a0)', borderRadius: '50%', color: '#111', boxShadow: '0 0 12px rgba(192, 192, 192, 0.3)' }}>
+                                <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(0.8rem, 2.2vw, 1rem)', fontWeight: 'bold', letterSpacing: '-1px', marginLeft: '-2px' }}>#2</span>
                              </div>
                           ) : (
-                             <span style={{ color: 'rgba(255,255,255,0.3)', fontFamily: "'Panchang', sans-serif", fontSize: '1rem', width: '36px', textAlign: 'center', letterSpacing: '1px' }}>
+                             <span style={{ color: 'rgba(255,255,255,0.3)', fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(0.8rem, 2.2vw, 1rem)', width: 'clamp(26px, 6.5vw, 36px)', textAlign: 'center', letterSpacing: '1px' }}>
                                 #{index + 1}
                              </span>
                           )}
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ color: isFirst ? '#fff' : 'rgba(255,255,255,0.85)', fontFamily: "'Clash Display', sans-serif", fontSize: isFirst ? '1.25rem' : '1.1rem', fontWeight: isFirst ? 600 : 500, letterSpacing: '0.5px' }}>
+                            <span style={{ color: isFirst ? '#fff' : (isSecond ? '#eaeaea' : 'rgba(255,255,255,0.85)'), fontFamily: "'Clash Display', sans-serif", fontSize: isFirst ? 'clamp(1rem, 3.5vw, 1.25rem)' : (isSecond ? 'clamp(0.95rem, 3vw, 1.15rem)' : 'clamp(0.9rem, 2.8vw, 1.1rem)'), fontWeight: isFirst ? 600 : (isSecond ? 600 : 500), letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
                                {player.name}
                             </span>
                             {isFirst && (
-                              <span style={{ fontSize: '0.65rem', color: 'var(--brand-yellow)', textTransform: 'uppercase', letterSpacing: '2px', marginTop: '4px', fontWeight: 600, filter: 'drop-shadow(0 0 5px rgba(235,215,63,0.5))' }}>Undisputed Champ</span>
+                              <span style={{ fontSize: 'clamp(0.5rem, 1.5vw, 0.65rem)', color: 'var(--brand-yellow)', textTransform: 'uppercase', letterSpacing: 'clamp(1px, 0.5vw, 2px)', marginTop: '4px', fontWeight: 600, filter: 'drop-shadow(0 0 5px rgba(235,215,63,0.5))', whiteSpace: 'nowrap' }}>Undisputed Champ</span>
+                            )}
+                            {isSecond && (
+                              <span style={{ fontSize: 'clamp(0.5rem, 1.5vw, 0.65rem)', color: '#c0c0c0', textTransform: 'uppercase', letterSpacing: 'clamp(0.5px, 0.25vw, 1px)', marginTop: '4px', fontWeight: 500, whiteSpace: 'nowrap' }}>Challenger</span>
                             )}
                           </div>
                        </div>
                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', zIndex: 1 }}>
-                          <span style={{ color: isFirst ? 'var(--brand-yellow)' : '#fff', fontFamily: "'Panchang', sans-serif", fontSize: isFirst ? '1.4rem' : '1.2rem', fontWeight: 600, textShadow: isFirst ? '0 0 15px rgba(235,215,63,0.6)' : 'none' }}>
+                          <span style={{ color: isFirst ? 'var(--brand-yellow)' : (isSecond ? '#eaeaea' : '#fff'), fontFamily: "'Panchang', sans-serif", fontSize: isFirst ? 'clamp(1.1rem, 4vw, 1.4rem)' : (isSecond ? 'clamp(1.05rem, 3.5vw, 1.25rem)' : 'clamp(1rem, 3vw, 1.2rem)'), fontWeight: 600, textShadow: isFirst ? '0 0 15px rgba(235,215,63,0.6)' : (isSecond ? '0 0 10px rgba(192,192,192,0.3)' : 'none') }}>
                              {player.highscore}
                           </span>
                           {!isFirst && leaderboardData[0] && (
-                             <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>
+                             <span style={{ fontSize: 'clamp(0.5rem, 1.5vw, 0.65rem)', color: isSecond ? 'rgba(192,192,192,0.7)' : 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 'clamp(0.5px, 0.25vw, 1px)', marginTop: '4px', whiteSpace: 'nowrap' }}>
                                {Math.abs(Number(leaderboardData[0].highscore) - Number(player.highscore))} pts to #1
                              </span>
                           )}
