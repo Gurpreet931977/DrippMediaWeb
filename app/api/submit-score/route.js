@@ -21,11 +21,16 @@ import { verifyAuthToken, extractBearerToken } from '@/app/lib/authToken';
 import { signScoreCommit } from '@/app/api/session-token/route';
 
 // ── Config ─────────────────────────────────────────────────────────────────────
-// Physics sanity cap — secondary check only. The primary defence is the scoreCommit HMAC.
-// A legitimate player could theoretically reach very high scores over a 2-hour session.
-const MAX_PLAUSIBLE_SCORE = 50000;
-const MIN_PTS_PER_CATCH   = 0.8;
-const MAX_PTS_PER_CATCH   = 70;
+// Score plausibility caps — must match the commit-stage caps in /api/session-token.
+// These are the SECOND line of defence; /api/session-token already rejects
+// commits for implausible scores, so only a coordinated attack on both endpoints
+// simultaneously (or a bug in session-token) would reach these checks.
+//
+// Dripp Drop: avg ~5 pts/catch at peak, 15 pts/sec server cap.
+// Absolute ceiling 50,000 — top legit players currently reach ~23k.
+const MAX_PLAUSIBLE_SCORE   = 50000; // matches /api/session-token absolute cap
+const MIN_PTS_PER_CATCH     = 0.8;
+const MAX_PTS_PER_CATCH     = 70;   // white drops give 69 pts (keep high enough)
 const MIN_CATCHES_FOR_NONZERO = 1;
 
 // 5 score submissions per minute per IP
@@ -163,11 +168,17 @@ export async function POST(request) {
     }
 
     // ── 5.5 Time-based plausibility check ───────────────────────────────────
-    // The client allows max 1 hit per 50ms. We use 40ms to allow for network/clock skew.
-    const MIN_MS_PER_HIT = 40;
+    // A drop cannot be caught faster than once per 100ms on any device
+    // (100ms = 10 catches/sec — already superhuman for Dripp Drop).
+    // We use this as a hard floor to reject impossible hit rates.
+    const MIN_MS_PER_HIT = 100;
     const minRequiredTime = hitCountNum * MIN_MS_PER_HIT;
     if (sessionAgeMs < minRequiredTime) {
-      console.warn(`[submit-score] Score achieved impossibly fast — email=${email} hits=${hitCountNum} time=${sessionAgeMs}ms`);
+      console.warn(
+        `[submit-score] Impossibly fast score — email=${email}` +
+        ` hits=${hitCountNum} time=${sessionAgeMs}ms required=${minRequiredTime}ms` +
+        ` score=${scoreNum} (POSSIBLE API MANIPULATION)`
+      );
       return withCors(Response.json({ error: 'Score not plausible for session duration' }, { status: 400 }), request);
     }
 

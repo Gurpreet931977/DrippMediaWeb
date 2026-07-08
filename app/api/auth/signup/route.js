@@ -112,7 +112,12 @@ export async function POST(request) {
     // Issue a signed identity token immediately after account creation
     const authToken = issueAuthToken(safeUser.email);
 
-    return withCors(Response.json({ ...safeUser, _authToken: authToken }, { status: 201 }), request);
+    // Return only what the client actually needs — don't leak internal DB fields
+    return withCors(Response.json({
+      name:       safeUser.name,
+      email:      safeUser.email,
+      _authToken: authToken,
+    }, { status: 201 }), request);
   } catch (error) {
     console.error('[signup] Unexpected error:', error?.message);
     return withCors(Response.json({ error: 'Internal server error' }, { status: 500 }), request);

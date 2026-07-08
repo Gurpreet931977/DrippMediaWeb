@@ -72,12 +72,24 @@ export function rateLimit({ limit = 10, windowMs = 60_000 } = {}) {
 }
 
 /**
- * Extract the real client IP from Next.js request headers.
- * Vercel sets x-forwarded-for; falls back to x-real-ip then 'unknown'.
+ * Extract the real client IP from Next.js/Vercel request headers.
+ *
+ * SECURITY: x-forwarded-for is a comma-separated chain of IPs where each
+ * proxy APPENDS the IP it received the request from. Vercel always appends
+ * the genuine client IP as the LAST entry before forwarding to the function.
+ * Trusting the FIRST entry is exploitable — an attacker can send:
+ *   X-Forwarded-For: 1.2.3.4
+ * and our function sees '1.2.3.4' as the "client", bypassing all rate limits
+ * by rotating fake IPs. Using the last entry prevents this because Vercel's
+ * infrastructure adds it and the client cannot control it.
  */
 function getClientIp(request) {
   const xff = request.headers.get('x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
+  if (xff) {
+    // Use the LAST entry — Vercel appends the real client IP here
+    const parts = xff.split(',').map(s => s.trim()).filter(Boolean);
+    if (parts.length > 0) return parts[parts.length - 1];
+  }
   const xri = request.headers.get('x-real-ip');
   if (xri) return xri.trim();
   return 'unknown';

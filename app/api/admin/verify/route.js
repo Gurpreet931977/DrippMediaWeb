@@ -17,9 +17,15 @@
 
 import { getAdminEmails, verifyCookie, buildCookieHeader } from '@/app/lib/adminAuth';
 import { rateLimit } from '@/app/lib/rateLimit';
+import { timingSafeEqual } from 'crypto';
 
-const ADMIN_SECRET = process.env.ADMIN_SESSION_SECRET;
+const ADMIN_SECRET   = process.env.ADMIN_SESSION_SECRET;
+const ADMIN_PASSWORD = process.env.ADMIN_ACCESS_PASSWORD; // NEW: required to log in to admin panel
 const COOKIE_NAME = 'dripp_admin_session';
+
+if (!ADMIN_PASSWORD) {
+  console.error('[admin/verify] WARNING: ADMIN_ACCESS_PASSWORD env var is not set. Admin login is insecure.');
+}
 
 // Rate limit: 10 verify attempts per 15 minutes per IP
 const limiter = rateLimit({ limit: 10, windowMs: 15 * 60_000 });
@@ -66,21 +72,42 @@ export async function POST(request) {
     return Response.json({ error: 'Server misconfigured' }, { status: 500 });
   }
 
-  let email;
+  let email, password;
   try {
     const body = await request.json();
-    email = body?.email?.toLowerCase?.()?.trim?.();
+    email    = body?.email?.toLowerCase?.()?.trim?.();
+    password = body?.password;
   } catch {
     return Response.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  if (!email) {
-    return Response.json({ error: 'Missing email' }, { status: 400 });
+  if (!email || !password) {
+    return Response.json({ error: 'Missing email or password' }, { status: 400 });
   }
 
+  // Check email is in admin list
   const adminEmails = getAdminEmails();
   if (!adminEmails.includes(email)) {
-    // Return same message as a non-admin to avoid email enumeration
+    return Response.json({ error: 'Unauthorized' }, { status: 403 });
+  }
+
+  // Check admin password (timing-safe comparison)
+  if (!ADMIN_PASSWORD) {
+    return Response.json({ error: 'Admin login is not configured' }, { status: 500 });
+  }
+  try {
+    const a = Buffer.from(password);
+    const b = Buffer.from(ADMIN_PASSWORD);
+    // Pad shorter buffer to avoid length-based timing leak
+    const maxLen = Math.max(a.length, b.length);
+    const pa = Buffer.concat([a, Buffer.alloc(maxLen - a.length)]);
+    const pb = Buffer.concat([b, Buffer.alloc(maxLen - b.length)]);
+    const match = timingSafeEqual(pa, pb) && a.length === b.length;
+    if (!match) {
+      console.warn(`[admin/verify] Wrong admin password attempt for email=${email}`);
+      return Response.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+  } catch {
     return Response.json({ error: 'Unauthorized' }, { status: 403 });
   }
 

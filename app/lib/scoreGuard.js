@@ -193,3 +193,4 @@ export function createScoreGuard() {
   }
 
   return { tryAddScore, getScore, reset, getHitCount, isCheated, initSession, commitScore, getSubmissionPayload };
+}
