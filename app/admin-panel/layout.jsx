@@ -85,7 +85,12 @@ export default function AdminLayout({ children }) {
 
   if (showLogin && !isAuthorized) {
     return (
-      <div style={{ cursor: 'auto', display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white', flexDirection: 'column' }}>
+      <div className="admin-layout-root" style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white', flexDirection: 'column' }}>
+        <style>{`
+          .admin-layout-root, .admin-layout-root * {
+            cursor: auto !important;
+          }
+        `}</style>
         <div style={{ background: '#111', border: '1px solid rgba(235,215,63,0.2)', borderRadius: '16px', padding: '40px 48px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
           <h2 style={{ color: '#ebd73f', marginBottom: '8px', fontFamily: "'Panchang', sans-serif", fontSize: '1.4rem', letterSpacing: '1px' }}>ADMIN ACCESS</h2>
           <p style={{ color: '#666', fontSize: '0.8rem', marginBottom: '28px', letterSpacing: '1px', textTransform: 'uppercase' }}>Dripp Media Control Panel</p>
@@ -138,7 +143,12 @@ export default function AdminLayout({ children }) {
 
   if (!isAuthorized) {
     return (
-      <div style={{ cursor: 'auto', display: 'flex', height: '100vh', padding: '20px', textAlign: 'center', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white', flexDirection: 'column' }}>
+      <div className="admin-layout-root" style={{ display: 'flex', height: '100vh', padding: '20px', textAlign: 'center', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a', color: 'white', flexDirection: 'column' }}>
+        <style>{`
+          .admin-layout-root, .admin-layout-root * {
+            cursor: auto !important;
+          }
+        `}</style>
         <h2 style={{ color: '#ff4d4d', marginBottom: '10px' }}>Access Denied</h2>
         <p>You do not have permission to view this page.</p>
         <button onClick={() => router.push('/')} style={{ marginTop: '20px', padding: '10px 20px', background: '#ebd73f', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Return to Site</button>
@@ -147,11 +157,17 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className={`${styles.adminContainer} admin-body-marker`} style={{ background: '#0a0a0a', minHeight: '100vh', display: 'flex' }}>
+    <div className={`${styles.adminContainer} admin-body-marker admin-layout-root`} style={{ background: '#0a0a0a', minHeight: '100vh', display: 'flex' }}>
+      <style>{`
+        .admin-layout-root, .admin-layout-root * {
+          cursor: auto !important;
+        }
+      `}</style>
       <AdminSidebar />
       <main className={styles.mainContent} style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
         {children}
       </main>
     </div>
   );
+
 }
