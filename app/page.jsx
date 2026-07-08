@@ -2264,7 +2264,7 @@ export default function ComingSoon() {
            <div style={{
               background: 'linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(5,5,5,0.98) 100%)',
               border: '1px solid rgba(255,255,255,0.1)', borderRadius: '28px',
-              padding: 'clamp(24px, 6vw, 40px) clamp(16px, 5vw, 30px)', width: '100%', maxWidth: '420px',
+              padding: 'clamp(24px, 6vw, 40px) clamp(16px, 5vw, 30px)', width: '100%', maxWidth: '480px',
               display: 'flex', flexDirection: 'column', alignItems: 'center',
               boxShadow: '0 40px 80px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1)'
            }}>
