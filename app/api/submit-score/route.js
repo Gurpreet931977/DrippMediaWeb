@@ -189,7 +189,11 @@ export async function POST(request) {
         return withCors(Response.json({ error: 'Score not plausible for hit count' }, { status: 400 }), request);
       }
       const avgPts = scoreNum / hitCountNum;
-      if (avgPts < MIN_PTS_PER_CATCH || avgPts > MAX_PTS_PER_CATCH) {
+      
+      // Dynamic max points per catch based on law of large numbers
+      const dynamicMaxPts = hitCountNum < 10 ? MAX_PTS_PER_CATCH : 12;
+
+      if (avgPts < MIN_PTS_PER_CATCH || avgPts > dynamicMaxPts) {
         console.warn(`[submit-score] Bad avg pts/catch (${avgPts.toFixed(1)}) — email=${email}`);
         return withCors(Response.json({ error: 'Score not plausible for hit count' }, { status: 400 }), request);
       }

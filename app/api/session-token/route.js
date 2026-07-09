@@ -78,7 +78,7 @@ const limiter = rateLimit({ limit: 10, windowMs: 60_000 });
 // while an attacker must wait session_score / 25 seconds before committing —
 // and even then they only get ONE commit per session (registry check below).
 const MAX_SCORE_ABSOLUTE    = 50000; // realistic ceiling for a long session
-const MAX_SCORE_RATE_PER_SEC = 25;   // pts/sec — covers burst white-drop streaks
+const MAX_SCORE_RATE_PER_SEC = 12;   // pts/sec — covers burst white-drop streaks
 
 // ── POST /api/session-token ─────────────────────────────────────────────────────
 
@@ -140,9 +140,9 @@ export async function POST(request) {
         return withCors(Response.json({ error: 'Invalid finalScore' }, { status: 400 }), request);
       }
 
-      // Session can be up to 2 hours old for commit
+      // Session can be up to 30 minutes old for commit
       const commitAge = Date.now() - sessionTs;
-      if (commitAge > 2 * 60 * 60 * 1000 || commitAge < 0) {
+      if (commitAge > 30 * 60 * 1000 || commitAge < 0) {
         return withCors(Response.json({ error: 'Session expired for commit' }, { status: 403 }), request);
       }
 
@@ -201,8 +201,12 @@ export async function POST(request) {
             .select('email');
 
           if (updateErr) {
-            // DB error — log but don't block legitimate players
+            // DB error — fail closed to prevent fail-open vulnerability
             console.error('[session-token] Session registry update error:', updateErr.message);
+            return withCors(
+              Response.json({ error: 'Failed to verify session status' }, { status: 500 }),
+              request
+            );
           } else if (!updated || updated.length === 0) {
             // Either: session was never registered (token not from our server),
             // or it was already committed (replay/double-submit attempt).
