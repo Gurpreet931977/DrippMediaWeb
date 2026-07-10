@@ -343,6 +343,22 @@ export default function EmailCampaignsPage() {
                 <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: templateType === 'announcement' ? '#ebd73f' : '#fff', fontSize: '1.05rem' }}>Announcement</div>
                 <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Sleek, centered focus. Perfect for major updates.</div>
               </button>
+
+              {/* Primary Inbox */}
+              <button 
+                type="button"
+                onClick={() => setTemplateType('primary')}
+                style={{ 
+                  padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  backgroundColor: templateType === 'primary' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+                  border: templateType === 'primary' ? '1px solid rgba(255, 255, 255, 0.5)' : '1px solid rgba(255,255,255,0.05)',
+                  color: '#fff',
+                  transform: templateType === 'primary' ? 'scale(1.02)' : 'scale(1)'
+                }}
+              >
+                <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: '#fff', fontSize: '1.05rem' }}>Primary Inbox (Plain Text)</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Zero styling, personal feel. Bypasses the promotions tab.</div>
+              </button>
               
               {/* Promo */}
               <button 

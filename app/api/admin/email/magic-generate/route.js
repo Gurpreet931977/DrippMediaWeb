@@ -40,6 +40,7 @@ Current Body: "${currentBody || ''}"
 
 Instructions for Alignment with Theme:
 - "announcement": Drop a nuke of an update. Make it sound like the industry just shifted. Authoritative and paradigm-breaking.
+- "primary": Write it like a 1-to-1 personal email to a friend. Casual, direct, NO marketing speak. Avoid words like "sale", "free", "discount". Do not sound like a brand.
 - "promo": Pure, unfiltered urgency. Make the offer sound so absurdly good they feel stupid for not clicking. 
 - "newsletter": Highly engaging, edgy storytelling. Spill the tea, break the rules, keep them addicted to reading.
 - "invitation": Velvet rope exclusivity. Make them feel like they just got handed the keys to a secret society. 
