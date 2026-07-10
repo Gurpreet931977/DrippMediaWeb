@@ -18,10 +18,8 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       gsap.set(headRef.current, { y: 0, x: 0, scale: 1, scaleY: 1, scaleX: 1, rotation: 0 });
 
       if (emotion === 'still') {
-        // Do absolutely nothing, just remain static
         return;
       } else if (emotion === 'greeting') {
-        // Very impactful pop-up from bottom with elastic overshoot
         gsap.fromTo(headRef.current, 
           { y: 200, scaleY: 0.5, scaleX: 1.5 }, 
           { y: 0, scaleY: 1, scaleX: 1, duration: 1.5, ease: "elastic.out(1, 0.3)" }
@@ -31,17 +29,15 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
           { scaleY: 1, y: 0, duration: 1.2, delay: 0.15, ease: "elastic.out(1, 0.3)" }
         );
       } else if (emotion === 'idle') {
-        // Gentle blinking, more fluid breathing (premium lottie style)
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          scaleY: 0.1,
+          keyframes: [
+            { scaleY: 0.1, duration: 0.05, ease: "power2.inOut" },
+            { scaleY: 1, duration: 0.05, ease: "power2.inOut" }
+          ],
           transformOrigin: "center center",
-          duration: 0.05,
           repeat: -1,
-          repeatDelay: 4.5,
-          yoyo: true,
-          ease: "power2.inOut"
+          repeatDelay: 4.5
         });
-        // Subtle floating with squash and stretch
         gsap.to(headRef.current, { 
           y: -4, 
           scaleY: 1.02,
@@ -52,133 +48,122 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
           repeat: -1, 
           ease: "sine.inOut" 
         });
-      } else if (emotion === 'greeting') {
-        // Pop up with a bouncy overshoot
-        gsap.fromTo(headRef.current, 
-          { y: 30, scaleY: 0.7, scaleX: 1.2 },
-          { y: 0, scaleY: 1, scaleX: 1, transformOrigin: "bottom center", duration: 1, ease: "elastic.out(1, 0.4)" }
-        );
-        gsap.fromTo([leftEyeRef.current, rightEyeRef.current],
-          { scaleY: 0, y: 30 },
-          { scaleY: 1, y: 0, transformOrigin: "center center", duration: 1, ease: "elastic.out(1, 0.4)", delay: 0.1 }
-        );
       } else if (emotion === 'listening') {
-        // Head leans in slightly, eyes wide and focused
         gsap.to(headRef.current, {
-          scale: 1.05,
-          y: -2,
+          scaleX: 1.03,
+          scaleY: 1.03,
+          y: -4,
           transformOrigin: "bottom center",
-          duration: 0.4,
-          ease: "power2.out"
+          duration: 2,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
         });
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          scaleY: 1.1,
           scaleX: 1.1,
+          scaleY: 1.1,
           transformOrigin: "center center",
           duration: 0.4,
           ease: "back.out(1.5)"
         });
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          scaleY: 0.1,
+          keyframes: [
+            { scaleY: 0.1, duration: 0.05, ease: "power2.inOut" },
+            { scaleY: 1.1, duration: 0.05, ease: "power2.inOut" }
+          ],
           transformOrigin: "center center",
-          duration: 0.05,
           repeat: -1,
           repeatDelay: 2.5,
-          yoyo: true,
-          ease: "power2.inOut",
           delay: 0.5
         });
       } else if (emotion === 'thinking') {
-        // Looking up and around in a figure-8, smooth overlapping action
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          y: -12,
-          x: 8,
-          duration: 0.8,
+          y: -10,
+          x: 6,
+          duration: 1,
           yoyo: true,
           repeat: -1,
           ease: "sine.inOut"
         });
         gsap.to(headRef.current, { 
-          y: -5, 
-          rotation: 6,
-          scaleY: 1.03,
-          scaleX: 0.97,
+          y: -4, 
+          rotation: 4,
+          scaleY: 1.02,
+          scaleX: 0.98,
           transformOrigin: "center center",
-          duration: 0.9, 
+          duration: 1.2, 
           yoyo: true, 
           repeat: -1,
-          ease: "sine.inOut",
-          delay: 0.1
+          ease: "sine.inOut"
         });
       } else if (emotion === 'success') {
-        // Happy bounce and big eyes, extreme squash and stretch
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          scaleY: 1.4,
-          scaleX: 1.4,
-          y: -12,
+          scaleY: 1.3,
+          scaleX: 1.3,
+          y: -10,
           transformOrigin: "center center",
           duration: 0.5,
           ease: "elastic.out(1, 0.5)"
         });
         gsap.to(headRef.current, { 
-          y: -25, 
-          scaleY: 1.1, 
-          scaleX: 0.9,
+          y: -15, 
+          scaleY: 1.05, 
+          scaleX: 0.95,
           transformOrigin: "bottom center",
-          duration: 0.35, 
+          duration: 0.5, 
           yoyo: true, 
-          repeat: 3, 
-          ease: "power2.out" 
+          repeat: -1, 
+          ease: "sine.inOut" 
         });
       } else if (emotion === 'disappointed') {
-        // Looking down heavily, squished eyes
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          scaleY: 0.25,
-          y: 20,
+          scaleY: 0.3,
+          y: 15,
           transformOrigin: "center center",
           duration: 0.8,
           ease: "back.out(1.2)"
         });
         gsap.to(headRef.current, { 
-          y: 18, 
-          scaleY: 0.9, 
+          y: 20, 
+          scaleY: 0.95, 
           scaleX: 1.05,
           transformOrigin: "bottom center",
-          duration: 0.8, 
-          ease: "back.out(1.2)" 
+          duration: 2, 
+          yoyo: true,
+          repeat: -1,
+          ease: "sine.inOut" 
         });
       } else if (emotion === 'waiting') {
-        // Tapping foot equivalent (pulsing head slightly, eyes half closed)
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          scaleY: 0.5,
-          y: 2,
+          scaleY: 0.6,
+          y: 4,
           transformOrigin: "center center",
           duration: 0.4,
           ease: "power2.out"
         });
         gsap.to(headRef.current, {
-          rotation: 6,
+          rotation: 4,
+          y: 2,
           transformOrigin: "bottom center",
           yoyo: true,
           repeat: -1,
-          duration: 0.6,
+          duration: 0.8,
           ease: "sine.inOut"
         });
       } else if (emotion === 'sleeping') {
-        // Slow heavy breathing, eyes closed
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
           scaleY: 0.05,
-          y: 5,
+          y: 8,
           transformOrigin: "center center",
           duration: 1,
           ease: "power2.inOut"
         });
         gsap.to(headRef.current, { 
-          y: 6, 
+          y: 8, 
           scaleY: 0.97,
           scaleX: 1.03,
           transformOrigin: "bottom center",
-          duration: 2.5, 
+          duration: 3, 
           yoyo: true, 
           repeat: -1, 
           ease: "sine.inOut" 
