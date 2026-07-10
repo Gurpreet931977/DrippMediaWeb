@@ -6,18 +6,26 @@ import gsap from 'gsap';
 import './wiki.css';
 import OrloIcon from '../admin-panel/components/OrloIcon'; // Use the same OrloIcon
 
-const OrloCursor = () => {
+const MagicCursor = () => {
     const cursorRef = useRef(null);
+    const auraRef = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        const xTo = gsap.quickTo(cursorRef.current, "x", { duration: 0.1, ease: "power3" });
-        const yTo = gsap.quickTo(cursorRef.current, "y", { duration: 0.1, ease: "power3" });
+        // Quick setters for the core (fast)
+        const xToCore = gsap.quickTo(cursorRef.current, "x", { duration: 0.1, ease: "power3.out" });
+        const yToCore = gsap.quickTo(cursorRef.current, "y", { duration: 0.1, ease: "power3.out" });
+        
+        // Quick setters for the aura (laggy/smooth)
+        const xToAura = gsap.quickTo(auraRef.current, "x", { duration: 0.6, ease: "power3.out" });
+        const yToAura = gsap.quickTo(auraRef.current, "y", { duration: 0.6, ease: "power3.out" });
 
         const handleMouseMove = (e) => {
             if (!isVisible) setIsVisible(true);
-            xTo(e.clientX);
-            yTo(e.clientY);
+            xToCore(e.clientX);
+            yToCore(e.clientY);
+            xToAura(e.clientX);
+            yToAura(e.clientY);
         };
         
         const handleMouseLeave = () => setIsVisible(false);
@@ -25,6 +33,16 @@ const OrloCursor = () => {
         window.addEventListener('mousemove', handleMouseMove);
         document.body.addEventListener('mouseleave', handleMouseLeave);
         
+        // Ambient pulsing effect for the aura
+        gsap.to(auraRef.current, {
+            scale: 1.5,
+            opacity: 0.5,
+            duration: 2,
+            yoyo: true,
+            repeat: -1,
+            ease: "sine.inOut"
+        });
+
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             document.body.removeEventListener('mouseleave', handleMouseLeave);
@@ -32,20 +50,41 @@ const OrloCursor = () => {
     }, [isVisible]);
 
     return (
-        <div
-            ref={cursorRef}
-            style={{
-                position: 'fixed',
-                top: -16,
-                left: -16,
-                pointerEvents: 'none',
-                zIndex: 9999999,
-                opacity: isVisible ? 1 : 0,
-                transition: 'opacity 0.2s ease',
-            }}
-        >
-            <OrloIcon size={32} color="#ebd73f" emotion="idle" />
-        </div>
+        <>
+            {/* The Aura (Trails behind) */}
+            <div
+                ref={auraRef}
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    pointerEvents: 'none',
+                    zIndex: 9999998,
+                    opacity: isVisible ? 1 : 0,
+                    transition: 'opacity 0.3s ease',
+                    transform: 'translate(-50%, -50%)'
+                }}
+            >
+                <div className="magic-cursor-aura"></div>
+            </div>
+            
+            {/* The Core (Fast) */}
+            <div
+                ref={cursorRef}
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    pointerEvents: 'none',
+                    zIndex: 9999999,
+                    opacity: isVisible ? 1 : 0,
+                    transition: 'opacity 0.1s ease',
+                    transform: 'translate(-50%, -50%)'
+                }}
+            >
+                <div className="magic-cursor-core"></div>
+            </div>
+        </>
     );
 };
 
@@ -56,7 +95,7 @@ export default function OrloWikiPage() {
 
     return (
         <div className="wiki-container">
-            <OrloCursor />
+            <MagicCursor />
             {/* Sidebar Navigation */}
             <aside className="wiki-sidebar">
                 <Link href="/" className="wiki-logo">

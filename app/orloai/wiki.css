@@ -265,3 +265,32 @@
         font-size: 2rem;
     }
 }
+
+/* Magical Cursor */
+.magic-cursor-core {
+    width: 8px;
+    height: 8px;
+    background-color: var(--brand-yellow, #ebd73f);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px var(--brand-yellow, #ebd73f),
+                0 0 20px #fff;
+    z-index: 2;
+}
+
+.magic-cursor-aura {
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, rgba(235, 215, 63, 0.25) 0%, rgba(235, 215, 63, 0) 70%);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    filter: blur(4px);
+    mix-blend-mode: screen;
+}
