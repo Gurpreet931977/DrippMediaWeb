@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Mail, Send, Users, AlertCircle, CheckCircle2, Info, Sparkles, LayoutTemplate, PenTool } from 'lucide-react';
+import { Mail, Send, Users, AlertCircle, CheckCircle2, Info, Sparkles, LayoutTemplate, PenTool, RefreshCw } from 'lucide-react';
 import styles from '../admin.module.css';
 import gsap from 'gsap';
 
@@ -16,6 +16,7 @@ export default function EmailCampaignsPage() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [status, setStatus] = useState({ type: '', msg: '' });
+  const [generatingMode, setGeneratingMode] = useState('');
 
   const containerRef = useRef(null);
   const aiBtnRef = useRef(null);
@@ -85,55 +86,68 @@ export default function EmailCampaignsPage() {
     }
   };
 
-  const handleAiGenerate = async () => {
+  const handleAiGenerate = async (mode = 'all') => {
     if (generating) return;
     setGenerating(true);
+    setGeneratingMode(mode);
     setStatus({ type: '', msg: '' });
-    gsap.to(aiBtnRef.current, { x: 0, y: 0, scale: 0.95, duration: 0.2 });
+    if (aiBtnRef.current) gsap.to(aiBtnRef.current, { x: 0, y: 0, scale: 0.95, duration: 0.2 });
     
     try {
+      const payload = { templateType };
+      if (mode === 'subject') {
+        payload.currentTitle = title;
+        payload.currentBody = body;
+      } else if (mode === 'title') {
+        payload.currentSubject = subject;
+        payload.currentBody = body;
+      } else if (mode === 'body') {
+        payload.currentSubject = subject;
+        payload.currentTitle = title;
+      }
+
       const res = await fetch('/api/admin/email/magic-generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          templateType,
-          currentSubject: subject,
-          currentTitle: title,
-          currentBody: body
-        })
+        body: JSON.stringify(payload)
       });
       
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate copy');
       
-      setSubject('');
-      setTitle('');
-      setBody('');
+      if (mode === 'all' || mode === 'subject') setSubject(data.subject || '');
+      if (mode === 'all' || mode === 'title') setTitle(data.title || '');
       
-      setSubject(data.subject || '');
-      setTitle(data.title || '');
-      setBody('');
-      
-      let currentText = '';
-      let charIndex = 0;
-      const fullText = data.body || '';
+      if (mode === 'all' || mode === 'body') {
+        setBody('');
+        
+        let currentText = '';
+        let charIndex = 0;
+        const fullText = data.body || '';
 
-      const typeInterval = setInterval(() => {
-        if (charIndex < fullText.length) {
-          currentText += fullText.charAt(charIndex);
-          setBody(currentText);
-          charIndex++;
-        }
-        if (charIndex >= fullText.length) {
-          clearInterval(typeInterval);
-          setGenerating(false);
-          gsap.to(aiBtnRef.current, { scale: 1, duration: 0.4, ease: 'back.out(1.5)' });
-        }
-      }, 15);
+        const typeInterval = setInterval(() => {
+          if (charIndex < fullText.length) {
+            currentText += fullText.charAt(charIndex);
+            setBody(currentText);
+            charIndex++;
+          }
+          if (charIndex >= fullText.length) {
+            clearInterval(typeInterval);
+            setGenerating(false);
+            setGeneratingMode('');
+            if (aiBtnRef.current) gsap.to(aiBtnRef.current, { scale: 1, duration: 0.4, ease: 'back.out(1.5)' });
+          }
+        }, 15);
+      } else {
+        setGenerating(false);
+        setGeneratingMode('');
+        if (aiBtnRef.current) gsap.to(aiBtnRef.current, { scale: 1, duration: 0.4, ease: 'back.out(1.5)' });
+      }
     } catch (err) {
       setStatus({ type: 'error', msg: err.message });
       setGenerating(false);
-      gsap.to(aiBtnRef.current, { scale: 1, duration: 0.4, ease: 'back.out(1.5)' });
+      setGeneratingMode('');
+      if (aiBtnRef.current) gsap.to(aiBtnRef.current, { scale: 1, duration: 0.4, ease: 'back.out(1.5)' });
     }
   };
 
@@ -210,13 +224,13 @@ export default function EmailCampaignsPage() {
                 </label>
                 
                 {/* AI Generate Button */}
-                <button
-                  ref={aiBtnRef}
-                  type="button"
-                  onClick={handleAiGenerate}
-                  onMouseMove={handleAiMouseMove}
-                  onMouseLeave={handleAiMouseLeave}
-                  disabled={generating}
+                  <button
+                    ref={aiBtnRef}
+                    type="button"
+                    onClick={() => handleAiGenerate('all')}
+                    onMouseMove={handleAiMouseMove}
+                    onMouseLeave={handleAiMouseLeave}
+                    disabled={generating}
                   style={{
                     background: 'linear-gradient(135deg, #ebd73f, #d4c235)',
                     border: 'none',
@@ -240,7 +254,12 @@ export default function EmailCampaignsPage() {
 
               <div style={{ display: 'grid', gap: '1.5rem' }}>
                 <div>
-                  <label className={styles.label}>Email Subject</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <label className={styles.label} style={{ margin: 0 }}>Email Subject</label>
+                    <button type="button" onClick={() => handleAiGenerate('subject')} disabled={generating} style={{ background: 'transparent', border: 'none', color: generatingMode === 'subject' ? '#ebd73f' : '#71717a', cursor: generating ? 'not-allowed' : 'pointer', padding: 0, display: 'flex' }}>
+                      <RefreshCw size={14} className={generatingMode === 'subject' ? "animate-spin" : ""} />
+                    </button>
+                  </div>
                   <input
                     type="text"
                     required
@@ -252,7 +271,12 @@ export default function EmailCampaignsPage() {
                 </div>
 
                 <div>
-                  <label className={styles.label}>Template Title</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <label className={styles.label} style={{ margin: 0 }}>Template Title</label>
+                    <button type="button" onClick={() => handleAiGenerate('title')} disabled={generating} style={{ background: 'transparent', border: 'none', color: generatingMode === 'title' ? '#ebd73f' : '#71717a', cursor: generating ? 'not-allowed' : 'pointer', padding: 0, display: 'flex' }}>
+                      <RefreshCw size={14} className={generatingMode === 'title' ? "animate-spin" : ""} />
+                    </button>
+                  </div>
                   <input
                     type="text"
                     required
@@ -264,7 +288,12 @@ export default function EmailCampaignsPage() {
                 </div>
 
                 <div>
-                  <label className={styles.label}>Message Body</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <label className={styles.label} style={{ margin: 0 }}>Message Body</label>
+                    <button type="button" onClick={() => handleAiGenerate('body')} disabled={generating} style={{ background: 'transparent', border: 'none', color: generatingMode === 'body' ? '#ebd73f' : '#71717a', cursor: generating ? 'not-allowed' : 'pointer', padding: 0, display: 'flex' }}>
+                      <RefreshCw size={14} className={generatingMode === 'body' ? "animate-spin" : ""} />
+                    </button>
+                  </div>
                   <textarea
                     required
                     className={styles.input}
