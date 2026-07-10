@@ -96,12 +96,6 @@ export default function OrloWikiPage() {
     return (
         <div className="wiki-container">
             <MagicCursor />
-            {/* Surreal Ambient Background */}
-            <div className="surreal-bg">
-                <div className="surreal-orb surreal-orb-1"></div>
-                <div className="surreal-orb surreal-orb-2"></div>
-                <div className="surreal-orb surreal-orb-3"></div>
-            </div>
             {/* Sidebar Navigation */}
             <aside className="wiki-sidebar">
                 <Link href="/" className="wiki-logo">

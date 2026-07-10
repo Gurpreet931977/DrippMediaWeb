@@ -4,22 +4,17 @@
     background-color: var(--deep-black, #050505);
     color: var(--pure-white, #ffffff);
     font-family: 'Clash Display', sans-serif;
-    position: relative;
-    overflow-x: hidden;
 }
 
 .wiki-sidebar {
     width: 250px;
-    background: rgba(10, 10, 10, 0.5);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background-color: #0a0a0a;
     padding: 2rem 1.5rem;
-    border-right: 1px solid rgba(235, 215, 63, 0.15);
+    border-right: 1px solid rgba(235, 215, 63, 0.2);
     position: sticky;
     top: 0;
     height: 100vh;
     overflow-y: auto;
-    z-index: 10;
 }
 
 .wiki-logo {
@@ -30,12 +25,6 @@
     margin-bottom: 2rem;
     display: block;
     text-decoration: none;
-    text-shadow: 0 0 15px rgba(235, 215, 63, 0.5);
-    transition: text-shadow 0.3s ease;
-}
-
-.wiki-logo:hover {
-    text-shadow: 0 0 25px rgba(235, 215, 63, 0.8);
 }
 
 .wiki-nav-section {
@@ -75,7 +64,6 @@
     padding: 3rem 4rem;
     max-width: 1200px;
     position: relative;
-    z-index: 10;
 }
 
 .wiki-header {
@@ -89,11 +77,9 @@
 
 .wiki-title {
     font-family: 'Panchang', sans-serif;
-    font-size: 3.5rem;
+    font-size: 3rem;
     font-weight: 600;
     margin: 0;
-    text-shadow: 0 0 30px rgba(235, 215, 63, 0.4);
-    letter-spacing: -1px;
 }
 
 .wiki-subtitle {
@@ -125,7 +111,6 @@
     padding-bottom: 0.5rem;
     margin: 2.5rem 0 1.5rem;
     color: var(--brand-yellow, #ebd73f);
-    text-shadow: 0 0 15px rgba(235, 215, 63, 0.3);
 }
 
 .wiki-content h3 {
@@ -147,16 +132,13 @@
 
 /* Table of Contents */
 .wiki-toc {
-    background: rgba(15, 15, 15, 0.4);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(235, 215, 63, 0.15);
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 1.5rem;
     margin-bottom: 2rem;
     display: inline-block;
     min-width: 300px;
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(235, 215, 63, 0.05);
+    border-radius: 4px;
 }
 
 .wiki-toc-title {
@@ -190,16 +172,14 @@
 /* Infobox */
 .wiki-infobox {
     width: 320px;
-    background: rgba(10, 10, 10, 0.5);
+    background: linear-gradient(145deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.9));
     border: 1px solid rgba(235, 215, 63, 0.2);
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 1.5rem;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(235, 215, 63, 0.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
     position: sticky;
     top: 2rem;
-    z-index: 10;
 }
 
 .wiki-infobox-header {
@@ -284,61 +264,6 @@
     .wiki-title {
         font-size: 2rem;
     }
-}
-
-/* Surreal Background */
-.surreal-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
-    background: radial-gradient(circle at 50% 50%, #0c0c0c 0%, #020202 100%);
-    overflow: hidden;
-    pointer-events: none;
-}
-
-.surreal-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(90px);
-    opacity: 0.6;
-    animation: floatOrb 25s infinite ease-in-out alternate;
-}
-
-.surreal-orb-1 {
-    width: 60vw;
-    height: 60vw;
-    background: radial-gradient(circle, rgba(235, 215, 63, 0.08) 0%, transparent 60%);
-    top: -10%;
-    left: -10%;
-}
-
-.surreal-orb-2 {
-    width: 50vw;
-    height: 50vw;
-    background: radial-gradient(circle, rgba(235, 215, 63, 0.06) 0%, transparent 60%);
-    bottom: -10%;
-    right: -10%;
-    animation-delay: -5s;
-    animation-duration: 30s;
-}
-
-.surreal-orb-3 {
-    width: 40vw;
-    height: 40vw;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
-    top: 40%;
-    left: 50%;
-    animation-delay: -12s;
-    animation-duration: 22s;
-}
-
-@keyframes floatOrb {
-    0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(8%, 5%) scale(1.1); }
-    100% { transform: translate(-5%, 8%) scale(0.9); }
 }
 
 /* Magical Cursor */
