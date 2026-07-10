@@ -1,6 +1,6 @@
 const apiKey = process.env.GEMINI_API_KEY || "YOUR_API_KEY";
 const prompt = "test";
-const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
 fetch(geminiUrl, {
   method: 'POST',
