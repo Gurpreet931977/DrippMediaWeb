@@ -106,6 +106,16 @@ export default function EmailCampaignsPage() {
         subject: "The strategy behind the fastest growing brands.",
         title: "The Weekly Edge",
         body: "Most brands fail because they follow the crowd. The ones that dominate are the ones that dictate the narrative.\n\nThis week, we are pulling back the curtain on the exact digital strategies the top 1% of creators are using to monopolize attention and convert audiences into loyal advocates. Dive into the breakdown below and start executing."
+      },
+      invitation: {
+        subject: "Your exclusive access is ready.",
+        title: "VIP Inner Circle.",
+        body: "You don't get this email by accident. You've been selected to join a highly curated network of elite creators and brands.\n\nThis is your private invitation to bypass the waitlist and immediately access our premium suite of tools. The inner circle is waiting. Will you step up?"
+      },
+      alert: {
+        subject: "Action Required: Time sensitive opportunity.",
+        title: "The Window is Closing.",
+        body: "Success is defined by the ability to act when the window is open. Right now, your window is closing fast.\n\nYou have less than 24 hours to secure your position before this offer is permanently removed from the table. Do not let hesitation cost you your edge. Act immediately."
       }
     };
 
@@ -314,28 +324,31 @@ export default function EmailCampaignsPage() {
         </div>
 
         {/* Right Sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Theme Selector */}
           <div className={styles.interactiveCard} style={{ padding: '2rem' }}>
             <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: '#ebd73f' }}>
               <LayoutTemplate size={18} /> Visual Theme
             </label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              
+              {/* Announcement */}
               <button 
                 type="button"
                 onClick={() => setTemplateType('announcement')}
                 style={{ 
                   padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  backgroundColor: templateType === 'announcement' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  border: templateType === 'announcement' ? '1px solid rgba(255,255,255,0.3)' : '1px solid rgba(255,255,255,0.05)',
+                  backgroundColor: templateType === 'announcement' ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
+                  border: templateType === 'announcement' ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid rgba(255,255,255,0.05)',
                   color: '#fff',
                   transform: templateType === 'announcement' ? 'scale(1.02)' : 'scale(1)'
                 }}
               >
-                <div style={{ fontWeight: '600', marginBottom: '0.35rem', fontSize: '1.05rem' }}>Announcement</div>
-                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Sleek, dark aesthetic. Perfect for major updates.</div>
+                <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: templateType === 'announcement' ? '#ebd73f' : '#fff', fontSize: '1.05rem' }}>Announcement</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Sleek, centered focus. Perfect for major updates.</div>
               </button>
               
+              {/* Promo */}
               <button 
                 type="button"
                 onClick={() => setTemplateType('promo')}
@@ -347,23 +360,56 @@ export default function EmailCampaignsPage() {
                   transform: templateType === 'promo' ? 'scale(1.02)' : 'scale(1)'
                 }}
               >
-                <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: '#ebd73f', fontSize: '1.05rem' }}>Promo Offer</div>
-                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Dripp Media gold accents designed to drive conversions.</div>
+                <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: templateType === 'promo' ? '#ebd73f' : '#fff', fontSize: '1.05rem' }}>Promo Offer</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Heavy gold block accents designed to drive conversions.</div>
               </button>
 
+              {/* Newsletter */}
               <button 
                 type="button"
                 onClick={() => setTemplateType('newsletter')}
                 style={{ 
                   padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  backgroundColor: templateType === 'newsletter' ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                  border: templateType === 'newsletter' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+                  backgroundColor: templateType === 'newsletter' ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
+                  border: templateType === 'newsletter' ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid rgba(255,255,255,0.05)',
                   color: '#fff',
                   transform: templateType === 'newsletter' ? 'scale(1.02)' : 'scale(1)'
                 }}
               >
-                <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: '#60a5fa', fontSize: '1.05rem' }}>Newsletter</div>
-                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Clean blue aesthetics for recurring content updates.</div>
+                <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: templateType === 'newsletter' ? '#ebd73f' : '#fff', fontSize: '1.05rem' }}>Newsletter</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Editorial left-aligned layout for rich content drops.</div>
+              </button>
+
+              {/* Invitation */}
+              <button 
+                type="button"
+                onClick={() => setTemplateType('invitation')}
+                style={{ 
+                  padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  backgroundColor: templateType === 'invitation' ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
+                  border: templateType === 'invitation' ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+                  color: '#fff',
+                  transform: templateType === 'invitation' ? 'scale(1.02)' : 'scale(1)'
+                }}
+              >
+                <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: templateType === 'invitation' ? '#ebd73f' : '#fff', fontSize: '1.05rem' }}>VIP Invitation</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Elegant bordered design for exclusive access limits.</div>
+              </button>
+
+              {/* Alert */}
+              <button 
+                type="button"
+                onClick={() => setTemplateType('alert')}
+                style={{ 
+                  padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  backgroundColor: templateType === 'alert' ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
+                  border: templateType === 'alert' ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+                  color: '#fff',
+                  transform: templateType === 'alert' ? 'scale(1.02)' : 'scale(1)'
+                }}
+              >
+                <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: templateType === 'alert' ? '#ebd73f' : '#fff', fontSize: '1.05rem' }}>Urgent Alert</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>High contrast hazard block for time-sensitive actions.</div>
               </button>
             </div>
           </div>
