@@ -52,7 +52,8 @@ Rules:
 3. If they provided all, rewrite them to be better.
 4. If they provided none, generate completely new, fresh content based on the template type.
 5. NEVER use em dashes (-) anywhere in the copy. Use regular hyphens (-) instead.
-6. Do NOT output any conversational text or markdown code blocks. Output ONLY valid JSON in this exact structure:
+6. ALWAYS use the exact string '{{name}}' (without quotes) as a placeholder to personally address the recipient.
+7. Do NOT output any conversational text or markdown code blocks. Output ONLY valid JSON in this exact structure:
 {
   "subject": "Email Subject Line",
   "title": "Large Header Title",

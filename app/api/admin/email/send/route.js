@@ -56,13 +56,13 @@ export async function POST(request) {
 
   // ── 4. Determine Recipients ──────────────────────────────────────────────
   let recipients = [];
-  if (isBroadcast) {
-    const supabase = getSupabase();
-    if (!supabase) return Response.json({ error: 'Database misconfigured' }, { status: 500 });
+  const supabase = getSupabase();
+  if (!supabase) return Response.json({ error: 'Database misconfigured' }, { status: 500 });
 
+  if (isBroadcast) {
     const { data: users, error } = await supabase
       .from('users')
-      .select('email')
+      .select('email, name')
       .not('email', 'is', null);
 
     if (error) {
@@ -70,9 +70,23 @@ export async function POST(request) {
       return Response.json({ error: 'Failed to fetch users' }, { status: 500 });
     }
 
-    recipients = users.map(u => u.email).filter(e => e.includes('@'));
+    recipients = users.filter(u => u.email.includes('@'));
   } else {
-    recipients = specificEmail.split(',').map(e => e.trim()).filter(e => e.includes('@'));
+    const manualEmails = specificEmail.split(',').map(e => e.trim()).filter(e => e.includes('@'));
+    const { data: users } = await supabase
+      .from('users')
+      .select('email, name')
+      .in('email', manualEmails);
+      
+    const dbUserMap = {};
+    if (users) {
+      users.forEach(u => dbUserMap[u.email.toLowerCase()] = u.name);
+    }
+    
+    recipients = manualEmails.map(email => ({
+      email,
+      name: dbUserMap[email.toLowerCase()] || null
+    }));
   }
 
   if (recipients.length === 0) {
@@ -88,12 +102,21 @@ export async function POST(request) {
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const batch = recipients.slice(i, i + BATCH_SIZE);
     
-    await Promise.all(batch.map(async (email) => {
-      const result = await sendCustomAdminEmail(email, subject, title, body, templateType);
+    await Promise.all(batch.map(async (recipient) => {
+      // Personalize
+      const firstName = recipient.name ? recipient.name.split(' ')[0] : 'friend';
+      const capFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+      
+      // Personalize and strip em-dashes
+      const pSubject = subject.replace(/{{name}}/gi, capFirstName).replace(/—/g, '-');
+      const pTitle = title.replace(/{{name}}/gi, capFirstName).replace(/—/g, '-');
+      const pBody = body.replace(/{{name}}/gi, capFirstName).replace(/—/g, '-');
+
+      const result = await sendCustomAdminEmail(recipient.email, pSubject, pTitle, pBody, templateType);
       if (result.success) {
         successCount++;
       } else {
-        console.error(`[admin/email] Failed to send to ${email}`);
+        console.error(`[admin/email] Failed to send to ${recipient.email}`);
         failCount++;
       }
     }));
