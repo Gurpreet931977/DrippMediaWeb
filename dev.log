@@ -1,0 +1,16 @@
+
+> final-dripp@1.0.0 dev
+> next dev
+
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.88:3000
+- Environments: .env.local
+✓ Ready in 381ms
+Warning: Custom Cache-Control headers detected for the following routes:
+  - /_next/static/(.*)
+
+Setting a custom Cache-Control header can break Next.js development behavior.
+
+○ Compiling /orloai ...
+ GET /orloai 200 in 9.7s (next.js: 9.0s, application-code: 648ms)
