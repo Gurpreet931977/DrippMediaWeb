@@ -218,12 +218,13 @@ export default function EmailCampaignsPage() {
 
             {/* Content Section */}
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ebd73f', margin: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ebd73f', margin: 0, marginTop: '0.5rem' }}>
                   <PenTool size={18} /> Message Content
                 </label>
                 
-                {/* AI Generate Button */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                  {/* AI Generate Button */}
                   <button
                     ref={aiBtnRef}
                     type="button"
@@ -231,25 +232,35 @@ export default function EmailCampaignsPage() {
                     onMouseMove={handleAiMouseMove}
                     onMouseLeave={handleAiMouseLeave}
                     disabled={generating}
-                  style={{
-                    background: 'linear-gradient(135deg, #ebd73f, #d4c235)',
-                    border: 'none',
-                    borderRadius: '2rem',
-                    padding: '0.6rem 1.25rem',
-                    color: '#000',
-                    fontWeight: '700',
-                    fontSize: '0.875rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    cursor: generating ? 'not-allowed' : 'pointer',
-                    opacity: generating ? 0.7 : 1,
-                    boxShadow: '0 4px 20px rgba(235, 215, 63, 0.4)'
-                  }}
-                >
-                  <Sparkles size={16} className={generating ? "animate-spin" : ""} />
-                  {generating ? 'Generating...' : 'Magic Generate'}
-                </button>
+                    style={{
+                      background: 'linear-gradient(135deg, #ebd73f, #d4c235)',
+                      border: 'none',
+                      borderRadius: '2rem',
+                      padding: '0.6rem 1.25rem',
+                      color: '#000',
+                      fontWeight: '700',
+                      fontSize: '0.875rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      cursor: generating ? 'not-allowed' : 'pointer',
+                      opacity: generating ? 0.7 : 1,
+                      boxShadow: '0 4px 20px rgba(235, 215, 63, 0.4)'
+                    }}
+                  >
+                    <Sparkles size={16} className={generating ? "animate-spin" : ""} />
+                    {generating ? 'Generating...' : 'Magic Generate'}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => { setSubject(''); setTitle(''); setBody(''); }}
+                    style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.75rem', cursor: 'pointer', padding: '0 0.5rem', transition: 'color 0.2s' }}
+                    onMouseOver={(e) => e.target.style.color = '#ebd73f'}
+                    onMouseOut={(e) => e.target.style.color = '#888'}
+                  >
+                    Clear all content
+                  </button>
+                </div>
               </div>
 
               <div style={{ display: 'grid', gap: '1.5rem' }}>
