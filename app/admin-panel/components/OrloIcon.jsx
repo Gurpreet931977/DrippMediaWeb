@@ -35,14 +35,15 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       } else if (emotion === 'excited') {
         // Happy and excited (fast bouncy breathing)
         gsap.to(headRef.current, {
-          y: -12,
+          y: -15,
+          rotation: 3,
           scaleY: 1.05,
           scaleX: 0.95,
           transformOrigin: "bottom center",
-          duration: 0.25,
+          duration: 0.3,
           yoyo: true,
           repeat: -1,
-          ease: "sine.inOut"
+          ease: "back.out(2)"
         });
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
           scaleY: 1.3,
@@ -127,6 +128,7 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
         });
         gsap.to(headRef.current, { 
           y: -4, 
+          rotation: 2,
           scaleY: 1.02,
           scaleX: 0.98,
           transformOrigin: "bottom center",
@@ -136,7 +138,9 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
           ease: "sine.inOut" 
         });
         gsap.to(mouthRef.current, {
-          scaleY: 1.1,
+          scaleY: 0.95,
+          scaleX: 1.15,
+          y: -2,
           duration: 2.5,
           yoyo: true,
           repeat: -1,
@@ -145,8 +149,9 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       } else if (emotion === 'listening') {
         gsap.to(headRef.current, {
           scaleX: 1.03,
-          scaleY: 1.03,
+          scaleY: 0.97,
           y: -4,
+          rotation: 8,
           transformOrigin: "bottom center",
           duration: 2,
           repeat: -1,
@@ -154,8 +159,10 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
           ease: "sine.inOut"
         });
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          scaleX: 1.1,
-          scaleY: 1.1,
+          scaleX: 1.2,
+          scaleY: 1.2,
+          x: -3,
+          y: -5,
           transformOrigin: "center center",
           duration: 0.4,
           ease: "back.out(1.5)"
@@ -207,9 +214,10 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
         });
       } else if (emotion === 'success') {
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          scaleY: 1.3,
-          scaleX: 1.3,
-          y: -10,
+          scaleY: 0.7,
+          scaleX: 1.4,
+          y: -12,
+          rotation: -5,
           transformOrigin: "center center",
           duration: 0.5,
           ease: "elastic.out(1, 0.5)"
@@ -222,11 +230,12 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
           ease: "elastic.out(1, 0.5)"
         });
         gsap.to(headRef.current, { 
-          y: -15, 
-          scaleY: 1.05, 
-          scaleX: 0.95,
+          y: -20,
+          rotation: 5,
+          scaleY: 1.1, 
+          scaleX: 0.9,
           transformOrigin: "bottom center",
-          duration: 0.5, 
+          duration: 0.4, 
           yoyo: true, 
           repeat: -1, 
           ease: "sine.inOut" 
