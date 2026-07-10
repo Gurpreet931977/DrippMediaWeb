@@ -582,12 +582,12 @@ export default function EmailCampaignsPage() {
           {/* AI Info */}
           <div className={styles.smartPasteCard}>
             <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '1.1rem', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <OrloIcon size={18} /> Orlo (AI Copywriter)
+              <OrloIcon size={18} /> Orlo (Dripp AI Copilot)
             </h4>
             <p style={{ margin: 0, color: '#aaa', lineHeight: '1.6', fontSize: '0.875rem' }}>
-              The magic button instantly generates premium, high-converting copy tailored to your selected theme. 
+              The magic button instantly generates premium, Dripp-oriented copy tailored to your selected theme. 
               <br/><br/>
-              <em>(Note: Currently utilizing simulated drafts. Ready to be hooked into OpenAI.)</em>
+              <em>(Note: Powered by advanced AI models to maximize your media presence and aesthetic.)</em>
             </p>
           </div>
         </div>
