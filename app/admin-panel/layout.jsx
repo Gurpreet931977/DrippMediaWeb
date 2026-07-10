@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AdminSidebar from './components/AdminSidebar';
+import CopilotChat from './components/CopilotChat';
 import styles from './admin.module.css';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
@@ -288,6 +289,7 @@ export default function AdminLayout({ children }) {
       <main className={styles.mainContent} style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
         {children}
       </main>
+      <CopilotChat />
     </div>
   );
 

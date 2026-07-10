@@ -1,0 +1,286 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import { Bot, X, Send, Sparkles } from 'lucide-react';
+import gsap from 'gsap';
+
+export default function CopilotChat() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([{ role: 'ai', text: 'Hey, I am your Copilot. What do you need me to do today?' }]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const chatRef = useRef(null);
+  const btnRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isTyping]);
+
+  const toggleChat = () => {
+    if (isOpen) {
+      gsap.to(chatRef.current, { opacity: 0, y: 20, scale: 0.95, duration: 0.3, ease: 'power2.in', onComplete: () => setIsOpen(false) });
+    } else {
+      setIsOpen(true);
+      setTimeout(() => {
+        gsap.fromTo(chatRef.current, 
+          { opacity: 0, y: 20, scale: 0.95 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'back.out(1.5)' }
+        );
+      }, 10);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || isTyping) return;
+
+    const userText = input.trim();
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', text: userText }]);
+    setIsTyping(true);
+
+    try {
+      const res = await fetch('/api/admin/copilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userPrompt: userText })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || 'Failed to process command');
+
+      setMessages(prev => [...prev, { role: 'ai', text: data.replyMessage || "Done. Check your form!" }]);
+      
+      // Dispatch event to window so forms can pick it up
+      if (data.intent && data.payload) {
+        window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
+      }
+
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'ai', text: `Error: ${error.message}` }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  return (
+    <>
+      <style>{`
+        .copilot-orb {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #ebd73f, #d4c235);
+          box-shadow: 0 0 20px rgba(235, 215, 63, 0.4), inset 0 0 10px rgba(255,255,255,0.5);
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          animation: pulseOrb 3s infinite alternate;
+        }
+        .copilot-orb:hover {
+          transform: scale(1.1);
+        }
+        @keyframes pulseOrb {
+          0% { box-shadow: 0 0 20px rgba(235, 215, 63, 0.3), inset 0 0 10px rgba(255,255,255,0.5); }
+          100% { box-shadow: 0 0 40px rgba(235, 215, 63, 0.6), inset 0 0 10px rgba(255,255,255,0.5); }
+        }
+        .copilot-ring {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          border: 1px solid rgba(235, 215, 63, 0.5);
+          animation: expandRing 2s infinite linear;
+          pointer-events: none;
+        }
+        @keyframes expandRing {
+          0% { transform: scale(1); opacity: 1; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+        
+        .chat-container {
+          position: fixed;
+          bottom: 110px;
+          right: 30px;
+          width: 380px;
+          height: 500px;
+          background: rgba(10, 10, 10, 0.85);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          z-index: 9998;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+          overflow: hidden;
+        }
+        
+        .chat-header {
+          padding: 20px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: linear-gradient(to right, rgba(235, 215, 63, 0.1), transparent);
+        }
+        
+        .chat-body {
+          flex: 1;
+          padding: 20px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        
+        .chat-body::-webkit-scrollbar {
+          width: 6px;
+        }
+        .chat-body::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.1);
+          border-radius: 3px;
+        }
+        
+        .msg-bubble {
+          max-width: 85%;
+          padding: 12px 16px;
+          border-radius: 16px;
+          font-size: 0.95rem;
+          line-height: 1.5;
+        }
+        .msg-ai {
+          background: rgba(255, 255, 255, 0.05);
+          color: #ddd;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-top-left-radius: 4px;
+          align-self: flex-start;
+        }
+        .msg-user {
+          background: rgba(235, 215, 63, 0.15);
+          color: #fff;
+          border: 1px solid rgba(235, 215, 63, 0.3);
+          border-top-right-radius: 4px;
+          align-self: flex-end;
+        }
+        
+        .chat-input-area {
+          padding: 16px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          background: rgba(0, 0, 0, 0.4);
+        }
+        
+        .typing-indicator {
+          display: flex;
+          gap: 4px;
+          padding: 12px 16px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          border-top-left-radius: 4px;
+          align-self: flex-start;
+          align-items: center;
+        }
+        .dot {
+          width: 6px;
+          height: 6px;
+          background: #ebd73f;
+          border-radius: 50%;
+          animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+          0%, 80%, 100% { transform: scale(0); }
+          40% { transform: scale(1); }
+        }
+      `}</style>
+
+      {isOpen && (
+        <div className="chat-container" ref={chatRef}>
+          <div className="chat-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ebd73f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '600' }}>Copilot</h3>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#ebd73f' }}>Online & Ready</p>
+              </div>
+            </div>
+            <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='#888'}>
+              <X size={20} />
+            </button>
+          </div>
+          
+          <div className="chat-body">
+            {messages.map((m, i) => (
+              <div key={i} className={`msg-bubble ${m.role === 'ai' ? 'msg-ai' : 'msg-user'}`}>
+                {m.text}
+              </div>
+            ))}
+            {isTyping && (
+              <div className="typing-indicator">
+                <div className="dot"></div><div className="dot"></div><div className="dot"></div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <form className="chat-input-area" onSubmit={handleSubmit}>
+            <div style={{ position: 'relative' }}>
+              <input 
+                type="text" 
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder="Ask me to draft an email..."
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  padding: '12px 45px 12px 16px',
+                  color: '#fff',
+                  outline: 'none',
+                  fontSize: '0.95rem'
+                }}
+                disabled={isTyping}
+              />
+              <button 
+                type="submit" 
+                disabled={!input.trim() || isTyping}
+                style={{
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  color: input.trim() ? '#ebd73f' : '#555',
+                  cursor: input.trim() ? 'pointer' : 'default',
+                  display: 'flex'
+                }}
+              >
+                <Send size={18} />
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="copilot-orb" onClick={toggleChat} ref={btnRef}>
+        <div className="copilot-ring"></div>
+        <Bot size={32} color="#000" />
+      </div>
+    </>
+  );
+}

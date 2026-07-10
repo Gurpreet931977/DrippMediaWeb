@@ -33,6 +33,24 @@ export default function EmailCampaignsPage() {
     }
   }, []);
 
+  // Listen for AI Copilot commands
+  useEffect(() => {
+    const handleCopilotAction = (e) => {
+      const data = e.detail;
+      if (data && data.intent === 'email' && data.payload) {
+        if (data.payload.subject) setSubject(data.payload.subject);
+        if (data.payload.title) setTitle(data.payload.title);
+        if (data.payload.body) setBody(data.payload.body);
+        if (data.payload.templateType) setTemplateType(data.payload.templateType);
+        
+        setStatus({ type: 'success', msg: 'Copilot has populated your email template.' });
+      }
+    };
+    
+    window.addEventListener('copilot-action', handleCopilotAction);
+    return () => window.removeEventListener('copilot-action', handleCopilotAction);
+  }, []);
+
   // Magnetic hover effect for AI button
   const handleAiMouseMove = (e) => {
     if (!aiBtnRef.current || generating) return;
