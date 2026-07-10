@@ -114,7 +114,7 @@ export async function POST(request) {
     const authToken = issueAuthToken(safeUser.email);
 
     // Send the welcome email asynchronously (don't await it to keep response fast)
-    sendWelcomeEmail(safeUser.email, safeUser.name).catch((err) => {
+    sendWelcomeEmail(safeUser.email, safeUser.name, safeUser.nature).catch((err) => {
       console.error('[signup] Welcome email background task failed:', err);
     });
 
