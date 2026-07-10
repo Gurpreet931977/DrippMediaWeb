@@ -48,7 +48,10 @@ const getHtmlLayout = (content) => `
     .arrow-move {
       display: inline-block;
       animation: arrowBounce 1.5s infinite;
-      margin-left: 8px;
+      margin-left: 6px;
+      vertical-align: middle;
+      position: relative;
+      top: -2px;
     }
   </style>
 </head>
@@ -240,7 +243,14 @@ export async function sendCustomAdminEmail(to, subject, title, body, templateTyp
     // 5. Urgent Alert: High contrast hazard/warning style
     innerContent = `
       <div style="border-left: 6px solid #ebd73f; background-color: rgba(235, 215, 63, 0.05); padding: 24px; border-radius: 0 12px 12px 0; margin-bottom: 32px;">
-        <h2 style="color: #ebd73f; font-size: 24px; margin-top: 0; margin-bottom: 12px; font-weight: 700; font-family: 'Panchang', sans-serif; text-transform: uppercase; display: flex; alignItems: center; gap: 8px;"> ${title}</h2>
+        <table border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
+          <tr>
+            <td valign="middle" style="padding-right: 8px; font-size: 24px; line-height: 1;">⚠️</td>
+            <td valign="middle">
+              <h2 style="color: #ebd73f; font-size: 24px; margin: 0; font-weight: 700; font-family: 'Panchang', sans-serif; text-transform: uppercase; line-height: 1.2;">${title}</h2>
+            </td>
+          </tr>
+        </table>
         <div style="color: #ffffff; font-weight: 500; font-size: 15px;">
           ${pBody}
         </div>
