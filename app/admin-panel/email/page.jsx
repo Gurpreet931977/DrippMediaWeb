@@ -23,6 +23,8 @@ export default function EmailCampaignsPage() {
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduleTime, setScheduleTime] = useState('');
   const [showClearAfterSend, setShowClearAfterSend] = useState(false);
+  const [editingScheduleId, setEditingScheduleId] = useState(null);
+  const [hoveredScheduleId, setHoveredScheduleId] = useState(null);
 
   const [scheduledList, setScheduledList] = useState([
     { id: 1, title: 'Black Friday VIP Invite', subject: 'Your Exclusive Access', body: 'The VIP access starts now...', templateType: 'invitation', isBroadcast: true, specificEmail: '', scheduledAt: new Date(Date.now() + 86400000).toISOString() },
@@ -93,32 +95,44 @@ export default function EmailCampaignsPage() {
     setStatus({ type: '', msg: '' });
 
     try {
-      const res = await fetch('/api/admin/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          isBroadcast,
-          specificEmail,
-          subject,
-          title,
-          body,
-          templateType,
-          scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null
-        })
-      });
+      if (editingScheduleId) {
+        setScheduledList(prev => prev.map(item => 
+          item.id === editingScheduleId ? {
+            ...item, title, subject, body, templateType, isBroadcast, specificEmail,
+            scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null
+          } : item
+        ));
+        setStatus({ type: 'success', msg: 'Scheduled campaign updated successfully!' });
+        setEditingScheduleId(null);
+        setShowClearAfterSend(true);
+      } else {
+        const res = await fetch('/api/admin/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            isBroadcast,
+            specificEmail,
+            subject,
+            title,
+            body,
+            templateType,
+            scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null
+          })
+        });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to send');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to send');
 
-      setStatus({ type: 'success', msg: data.message });
-      setShowClearAfterSend(true);
-      
-      if (isScheduled && scheduleTime) {
-        setScheduledList(prev => [...prev, {
-          id: Date.now(),
-          title, subject, body, templateType, isBroadcast, specificEmail,
-          scheduledAt: new Date(scheduleTime).toISOString()
-        }]);
+        setStatus({ type: 'success', msg: data.message });
+        setShowClearAfterSend(true);
+        
+        if (isScheduled && scheduleTime) {
+          setScheduledList(prev => [...prev, {
+            id: Date.now(),
+            title, subject, body, templateType, isBroadcast, specificEmail,
+            scheduledAt: new Date(scheduleTime).toISOString()
+          }]);
+        }
       }
     } catch (err) {
       setStatus({ type: 'error', msg: err.message });
@@ -452,7 +466,7 @@ export default function EmailCampaignsPage() {
                 ) : (
                   <>
                     <Send size={20} />
-                    {isBroadcast ? 'Launch Broadcast Sequence' : 'Dispatch Test Email'}
+                    {editingScheduleId ? 'Save Changes' : (isBroadcast ? 'Launch Broadcast Sequence' : 'Dispatch Test Email')}
                   </>
                 )}
               </button>
@@ -468,6 +482,7 @@ export default function EmailCampaignsPage() {
                     setIsScheduled(false);
                     setScheduleTime('');
                     setShowClearAfterSend(false);
+                    setEditingScheduleId(null);
                     setStatus({ type: '', msg: '' });
                   }}
                   className={styles.btn} 
@@ -615,7 +630,37 @@ export default function EmailCampaignsPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {scheduledList.map(item => (
-                  <div key={item.id} style={{ padding: '1rem', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={item.id} 
+                       onMouseEnter={() => setHoveredScheduleId(item.id)}
+                       onMouseLeave={() => setHoveredScheduleId(null)}
+                       style={{ position: 'relative', padding: '1rem', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    
+                    {hoveredScheduleId === item.id && (
+                      <div style={{
+                         position: 'absolute',
+                         right: '110%',
+                         top: '0',
+                         width: '320px',
+                         backgroundColor: '#111',
+                         border: '1px solid #ebd73f',
+                         borderRadius: '0.75rem',
+                         padding: '1.25rem',
+                         zIndex: 10,
+                         boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+                         color: '#fff',
+                         fontSize: '0.85rem'
+                      }}>
+                         <div style={{ fontWeight: '600', color: '#ebd73f', marginBottom: '1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Info size={16}/> Campaign Details</div>
+                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Scheduled:</strong> <span>{new Date(item.scheduledAt).toLocaleString()}</span></div>
+                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Template:</strong> <span style={{textTransform: 'capitalize'}}>{item.templateType}</span></div>
+                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Audience:</strong> <span>{item.isBroadcast ? 'All Users' : item.specificEmail}</span></div>
+                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Subject:</strong> <span>{item.subject}</span></div>
+                         <div style={{ marginTop: '1rem', color: '#ccc', fontStyle: 'italic', background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                           "{item.body.substring(0, 150)}{item.body.length > 150 ? '...' : ''}"
+                         </div>
+                      </div>
+                    )}
+
                     <div>
                       <div style={{ fontWeight: '600', color: '#fff', fontSize: '0.9rem', marginBottom: '0.25rem' }}>{item.title}</div>
                       <div style={{ fontSize: '0.75rem', color: '#ebd73f' }}>{new Date(item.scheduledAt).toLocaleString()}</div>
@@ -632,7 +677,8 @@ export default function EmailCampaignsPage() {
                           setSpecificEmail(item.specificEmail || '');
                           setIsScheduled(true);
                           setScheduleTime(new Date(item.scheduledAt).toISOString().slice(0, 16));
-                          setScheduledList(prev => prev.filter(i => i.id !== item.id));
+                          setEditingScheduleId(item.id);
+                          setShowClearAfterSend(true);
                         }}
                         style={{ background: 'rgba(235, 215, 63, 0.1)', border: 'none', color: '#ebd73f', cursor: 'pointer', padding: '0.4rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         title="Edit Campaign"
