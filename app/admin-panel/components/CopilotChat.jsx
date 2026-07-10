@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, Sparkles } from 'lucide-react';
+import { X, Send } from 'lucide-react';
+import OrloIcon from './OrloIcon';
 import gsap from 'gsap';
 
 export default function CopilotChat() {
@@ -70,6 +71,22 @@ export default function CopilotChat() {
   return (
     <>
       <style>{`
+        @keyframes orloBreathe {
+          0%, 100% { transform: scale(1) translateY(0); }
+          50% { transform: scale(1.05) translateY(-2px); }
+        }
+        @keyframes orloSpin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .orlo-icon-svg {
+          animation: orloBreathe 3s ease-in-out infinite;
+          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .copilot-orb:hover .orlo-icon-svg {
+          animation: none;
+          transform: scale(1.15) rotate(15deg);
+        }
         .copilot-orb {
           width: 64px;
           height: 64px;
@@ -210,7 +227,7 @@ export default function CopilotChat() {
           <div className="chat-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ebd73f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
-                <Sparkles size={16} />
+                <OrloIcon size={16} />
               </div>
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '600' }}>Orlo</h3>
@@ -279,7 +296,7 @@ export default function CopilotChat() {
 
       <div className="copilot-orb" onClick={toggleChat} ref={btnRef}>
         <div className="copilot-ring"></div>
-        <Bot size={32} color="#000" />
+        <OrloIcon size={32} color="#000" className="orlo-icon-svg" />
       </div>
     </>
   );
