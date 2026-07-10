@@ -150,7 +150,7 @@ export async function sendHighScoreEmail(email, score) {
       <div style="text-align: center; margin-bottom: 32px;"><span style="font-size: 48px;">🏆</span></div>
       <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">New High Score!</h2>
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px; text-align: center;">Incredible performance! You just set a new personal best of <strong style="color: #ebd73f; font-size: 18px;">${score} points</strong>.</p>
-      ${render3DButton('Defend Your Score', 'https://drippmedia.com/arcade')}
+      ${render3DButton('Defend Your Score', 'https://drippmedia.com')}
     `);
     const data = await resend.emails.send({ from: SENDER, to: email, subject: `New High Score: ${score}!`, html });
     return { success: true, data };
@@ -164,7 +164,7 @@ export async function sendReminderEmail(email, name) {
     const html = getHtmlLayout(`
       <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 24px; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">Hey ${name || 'Player'}, it's been a while! 👋</h2>
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">The leaderboard has been shifting since you last played Dripp Drop.</p>
-      ${render3DButton('Return to Arcade', 'https://drippmedia.com/arcade')}
+      ${render3DButton('Return to Arcade', 'https://drippmedia.com')}
     `);
     const data = await resend.emails.send({ from: SENDER, to: email, subject: 'Ready to beat your high score?', html });
     return { success: true, data };
