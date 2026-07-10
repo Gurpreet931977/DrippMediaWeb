@@ -93,19 +93,19 @@ export default function EmailCampaignsPage() {
     // Premium placeholder text to simulate AI generating copy
     const aiDrafts = {
       announcement: {
-        subject: "Introducing the Next Era of Dripp Media ✨",
-        title: "A New Chapter Begins",
-        body: "We are thrilled to unveil our latest features designed exclusively for our elite members.\n\nExperience unprecedented speed, enhanced analytics, and a community built for winners. Dive in today and see what the hype is all about."
+        subject: "The rules of the game just changed.",
+        title: "Welcome to the Next Era.",
+        body: "For the last six months, we've been quietly building something that will fundamentally alter how you interact with your audience.\n\nThis isn't just an update. It's a complete paradigm shift. We've stripped away the noise and engineered a platform designed purely for undeniable growth. It's time to step into the future. Are you ready?"
       },
       promo: {
-        subject: "Unlock Premium Access: 50% Off 🚀",
-        title: "Exclusive Partner Offer",
-        body: "Because you're one of our top users, we're giving you an exclusive opportunity to upgrade your experience.\n\nClaim this limited-time offer to supercharge your workflow and dominate your goals."
+        subject: "An unfair advantage, exclusively for you.",
+        title: "Scale Without Limits.",
+        body: "In this industry, momentum is everything. Right now, you have an opportunity to seize an unfair advantage that most of your competitors will never see coming.\n\nWe are unlocking our most powerful suite of tools for you at half the standard investment. This isn't just a discount; it's a strategic alliance. Claim your access before the window closes."
       },
       newsletter: {
-        subject: "Your Weekly Dripp Media Digest 🗞️",
-        title: "What's Trending This Week",
-        body: "Stay ahead of the curve. This week we explore the latest trends in digital strategy, highlight top creators, and share actionable tips to scale your brand.\n\nRead the full breakdown inside."
+        subject: "The strategy behind the fastest growing brands.",
+        title: "The Weekly Edge",
+        body: "Most brands fail because they follow the crowd. The ones that dominate are the ones that dictate the narrative.\n\nThis week, we are pulling back the curtain on the exact digital strategies the top 1% of creators are using to monopolize attention and convert audiences into loyal advocates. Dive into the breakdown below and start executing."
       }
     };
 
