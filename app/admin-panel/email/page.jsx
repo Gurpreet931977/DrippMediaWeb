@@ -254,55 +254,57 @@ export default function EmailCampaignsPage() {
 
               <div style={{ display: 'grid', gap: '1.5rem' }}>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <label className={styles.label} style={{ margin: 0 }}>Email Subject</label>
-                    <button type="button" onClick={() => handleAiGenerate('subject')} disabled={generating} style={{ background: 'transparent', border: 'none', color: generatingMode === 'subject' ? '#ebd73f' : '#71717a', cursor: generating ? 'not-allowed' : 'pointer', padding: 0, display: 'flex' }}>
-                      <RefreshCw size={14} className={generatingMode === 'subject' ? "animate-spin" : ""} />
+                  <label className={styles.label} style={{ marginBottom: '0.5rem', display: 'block' }}>Email Subject</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      required
+                      className={styles.input}
+                      placeholder="Subject line for the inbox"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      style={{ paddingRight: '3rem' }}
+                    />
+                    <button type="button" onClick={() => handleAiGenerate('subject')} disabled={generating} title="Regenerate Subject" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ebd73f', cursor: generating ? 'not-allowed' : 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 0 10px rgba(235, 215, 63, 0.15)' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.25)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.3)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(235, 215, 63, 0.15)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}>
+                      <Sparkles size={16} className={generatingMode === 'subject' ? "animate-spin" : ""} />
                     </button>
                   </div>
-                  <input
-                    type="text"
-                    required
-                    className={styles.input}
-                    placeholder="Subject line for the inbox"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                  />
                 </div>
 
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <label className={styles.label} style={{ margin: 0 }}>Template Title</label>
-                    <button type="button" onClick={() => handleAiGenerate('title')} disabled={generating} style={{ background: 'transparent', border: 'none', color: generatingMode === 'title' ? '#ebd73f' : '#71717a', cursor: generating ? 'not-allowed' : 'pointer', padding: 0, display: 'flex' }}>
-                      <RefreshCw size={14} className={generatingMode === 'title' ? "animate-spin" : ""} />
+                  <label className={styles.label} style={{ marginBottom: '0.5rem', display: 'block' }}>Template Title</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      required
+                      className={styles.input}
+                      placeholder="Large header inside the email"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      style={{ paddingRight: '3rem' }}
+                    />
+                    <button type="button" onClick={() => handleAiGenerate('title')} disabled={generating} title="Regenerate Title" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ebd73f', cursor: generating ? 'not-allowed' : 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 0 10px rgba(235, 215, 63, 0.15)' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.25)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.3)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(235, 215, 63, 0.15)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}>
+                      <Sparkles size={16} className={generatingMode === 'title' ? "animate-spin" : ""} />
                     </button>
                   </div>
-                  <input
-                    type="text"
-                    required
-                    className={styles.input}
-                    placeholder="Large header inside the email"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
                 </div>
 
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <label className={styles.label} style={{ margin: 0 }}>Message Body</label>
-                    <button type="button" onClick={() => handleAiGenerate('body')} disabled={generating} style={{ background: 'transparent', border: 'none', color: generatingMode === 'body' ? '#ebd73f' : '#71717a', cursor: generating ? 'not-allowed' : 'pointer', padding: 0, display: 'flex' }}>
-                      <RefreshCw size={14} className={generatingMode === 'body' ? "animate-spin" : ""} />
+                  <label className={styles.label} style={{ marginBottom: '0.5rem', display: 'block' }}>Message Body</label>
+                  <div style={{ position: 'relative' }}>
+                    <textarea
+                      required
+                      className={styles.input}
+                      placeholder="Type your message here..."
+                      rows={8}
+                      value={body}
+                      onChange={(e) => setBody(e.target.value)}
+                      style={{ resize: 'vertical', lineHeight: '1.6', paddingRight: '3rem' }}
+                    />
+                    <button type="button" onClick={() => handleAiGenerate('body')} disabled={generating} title="Regenerate Body" style={{ position: 'absolute', right: '12px', top: '12px', background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ebd73f', cursor: generating ? 'not-allowed' : 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 0 10px rgba(235, 215, 63, 0.15)' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.25)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.3)'; e.currentTarget.style.transform = 'scale(1.1)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(235, 215, 63, 0.15)'; e.currentTarget.style.transform = 'scale(1)'; }}>
+                      <Sparkles size={16} className={generatingMode === 'body' ? "animate-spin" : ""} />
                     </button>
                   </div>
-                  <textarea
-                    required
-                    className={styles.input}
-                    placeholder="Type your message here..."
-                    rows={8}
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    style={{ resize: 'vertical', lineHeight: '1.6' }}
-                  />
                 </div>
               </div>
             </div>
