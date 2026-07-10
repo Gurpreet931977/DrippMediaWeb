@@ -25,11 +25,7 @@ export async function POST(request) {
     }
 
     // 3. Build Prompt for Gemini
-    const prompt = `You are the lead provocateur and elite copywriter for Dripp Media.
-Your writing style is INSANELY creative, borderline crazy, unapologetic, and aggressively bold. 
-You don't write normal corporate emails. You write weapons-grade, high-voltage copy.
-Short sentences, aggressive growth tone, NO fluff, controversial hooks with undeniable swagger.
-Template type to generate for: ${templateType || 'announcement'}.
+    const prompt = `You are the lead elite copywriter for Dripp Media.
 
 CONTEXT ABOUT DRIPP MEDIA:
 Dripp Media is a premium, state-of-the-art digital agency. Our core services are:
@@ -39,20 +35,23 @@ Dripp Media is a premium, state-of-the-art digital agency. Our core services are
 
 CRITICAL INSTRUCTION FOR VARIETY:
 On every single generation, you MUST invent a completely different scenario, angle, or offer. 
-Pick ONE specific service from above (or invent a new wild growth strategy) and focus the email heavily on that. Do NOT write the same generic "we just shifted the paradigm" email. Make up a specific, hyper-creative scenario (e.g., a crazy new 3D website feature we just launched, a controversial take on modern branding, a limited-time web dev sprint, or a viral video strategy we used to get 10M views). BE SPECIFIC and wildly different every time.
+Pick ONE specific service from above (or invent a new wild growth strategy) and focus the email heavily on that. Make up a specific, hyper-creative scenario. BE SPECIFIC and wildly different every time.
+
+THEME AND TONE (CRITICAL):
+You are generating an email for the "${templateType || 'announcement'}" template.
+You MUST write the copy in the exact style and tone of this specific template:
+
+- "announcement": Tone is aggressively bold, unapologetic, weapons-grade copy. Drop a nuke of an update. Authoritative and paradigm-breaking.
+- "primary": Tone is a 1-to-1 personal email to a friend. Casual, direct, zero marketing speak. DO NOT sound like a brand. Avoid words like "sale" or "discount".
+- "promo": Tone is pure, unfiltered urgency and aggressive growth-hacker energy. Make the offer sound so absurdly good they feel stupid for not clicking.
+- "newsletter": Tone is highly engaging, edgy storytelling. Spill the tea, break the rules, keep them addicted to reading.
+- "invitation": Tone is velvet rope exclusivity and high-end luxury. Make them feel like they just got handed the keys to a secret society.
+- "alert": Tone is Defcon 1 urgency. Sirens blaring. Cut the pleasantries and tell them exactly what action to take right NOW.
 
 User's current drafts (may be empty):
 Current Subject: "${currentSubject || ''}"
 Current Title: "${currentTitle || ''}"
 Current Body: "${currentBody || ''}"
-
-Instructions for Alignment with Theme:
-- "announcement": Drop a nuke of an update. Make it sound like the industry just shifted. Authoritative and paradigm-breaking.
-- "primary": Write it like a 1-to-1 personal email to a friend. Casual, direct, NO marketing speak. Avoid words like "sale", "free", "discount". Do not sound like a brand.
-- "promo": Pure, unfiltered urgency. Make the offer sound so absurdly good they feel stupid for not clicking. 
-- "newsletter": Highly engaging, edgy storytelling. Spill the tea, break the rules, keep them addicted to reading.
-- "invitation": Velvet rope exclusivity. Make them feel like they just got handed the keys to a secret society. 
-- "alert": Defcon 1 urgency. Sirens blaring. Cut the pleasantries and tell them exactly what action to take right NOW.
 
 Rules:
 1. If the user provided a title, use it as inspiration to generate a matching subject and body.
