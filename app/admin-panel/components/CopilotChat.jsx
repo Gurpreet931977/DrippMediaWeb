@@ -268,51 +268,44 @@ export default function CopilotChat() {
                 <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}>
                   <defs>
                     <filter id="bokeh" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="3" />
+                      <feGaussianBlur stdDeviation="1.5" />
                     </filter>
-                    <linearGradient id="wallGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#1e2024" />
-                      <stop offset="100%" stopColor="#111216" />
+                    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#4facfe" />
+                      <stop offset="100%" stopColor="#00f2fe" />
                     </linearGradient>
-                    <linearGradient id="deskGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#4a3b2c" />
-                      <stop offset="100%" stopColor="#1a120b" />
+                    <linearGradient id="seaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#0288d1" />
+                      <stop offset="100%" stopColor="#26c6da" />
                     </linearGradient>
-                    <radialGradient id="screenGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#ebd73f" stopOpacity="0.4" />
-                      <stop offset="100%" stopColor="#ebd73f" stopOpacity="0" />
-                    </radialGradient>
+                    <linearGradient id="sandGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffe259" />
+                      <stop offset="100%" stopColor="#ffa751" />
+                    </linearGradient>
                   </defs>
                   
                   {/* Blurred Background Environment */}
                   <g filter="url(#bokeh)">
-                    <rect width="100" height="100" fill="url(#wallGrad)" />
-                    
-                    {/* Computer Monitor */}
-                    <rect x="10" y="15" width="80" height="50" fill="#0a0a0c" rx="4" />
-                    <rect x="14" y="19" width="72" height="42" fill="#15171e" rx="2" />
-                    <rect x="20" y="25" width="30" height="8" fill="#ebd73f" opacity="0.6" rx="1" />
-                    <rect x="20" y="38" width="40" height="4" fill="#fff" opacity="0.3" rx="1" />
-                    <rect x="20" y="46" width="25" height="4" fill="#fff" opacity="0.3" rx="1" />
-                    <circle cx="70" cy="35" r="8" fill="#ebd73f" opacity="0.4" />
-                    
-                    {/* Ambient Glow from screen */}
-                    <rect x="0" y="0" width="100" height="100" fill="url(#screenGlow)" style={{ mixBlendMode: 'screen' }} />
-                    
-                    {/* Monitor Stand */}
-                    <rect x="42" y="65" width="16" height="25" fill="#222" />
-                    <path d="M 30 85 L 70 85 L 75 90 L 25 90 Z" fill="#111" />
+                    {/* Sky */}
+                    <rect width="100" height="55" fill="url(#skyGrad)" />
+                    {/* Sun */}
+                    <circle cx="80" cy="20" r="12" fill="#fff9c4" />
+                    <circle cx="80" cy="20" r="20" fill="#fff9c4" opacity="0.3" />
+                    {/* Clouds */}
+                    <path d="M 10 30 Q 20 20 30 30 Q 40 25 45 35 L 10 35 Z" fill="#fff" opacity="0.7" />
+                    {/* Sea */}
+                    <rect y="50" width="100" height="25" fill="url(#seaGrad)" />
                   </g>
                   
-                  {/* Sharp Foreground Desk */}
-                  <path d="M 0 85 L 100 85 L 100 100 L 0 100 Z" fill="url(#deskGrad)" />
-                  <path d="M 0 85 L 100 85 L 100 86 L 0 86 Z" fill="rgba(255,255,255,0.2)" />
+                  {/* Sharp Foreground Sand */}
+                  <path d="M 0 70 Q 50 65 100 75 L 100 100 L 0 100 Z" fill="url(#sandGrad)" />
+                  <path d="M 0 70 Q 50 65 100 75 L 100 78 Q 50 68 0 73 Z" fill="rgba(255,255,255,0.3)" />
 
                   {/* Orlo's Drop Shadow */}
-                  <ellipse cx="50" cy="94" rx="18" ry="3" fill="rgba(0,0,0,0.8)" filter="url(#bokeh)" />
+                  <ellipse cx="50" cy="94" rx="14" ry="3" fill="rgba(200,100,0,0.4)" />
                 </svg>
-                <div style={{ zIndex: 1, paddingBottom: '2px' }}>
-                  <OrloIcon size={20} color="#000" emotion="still" />
+                <div style={{ zIndex: 1, paddingBottom: '2px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.25))' }}>
+                  <OrloIcon size={24} color="#FFFFFF" emotion="still" />
                 </div>
               </div>
               <div>
