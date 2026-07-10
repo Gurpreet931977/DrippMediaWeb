@@ -125,10 +125,22 @@ export async function sendWelcomeEmail(email, name, nature) {
   const resend = getResend();
   if (!resend) return { success: false, error: 'Misconfigured' };
   
-  let title = 'Welcome to Dripp Media.';
-  let p1 = `We're thrilled to have you join us, ${name || 'friend'}.`;
-  let p2 = "Step into the future of media, entertainment, and digital experiences.";
-  let btnText = 'Explore Dripp Media';
+  let title = 'The status quo just became obsolete.';
+  let p1 = `Welcome to the inside, ${name || 'friend'}. Most people settle for consuming content. You just took the first step toward controlling it.`;
+  let p2 = "Dripp Media is not just an agency or a platform. It is an ecosystem built for those who refuse to be ignored. From this moment on, the tools, the network, and the strategies used by the top tier are at your disposal. The only question left is what you will do with them.";
+  let btnText = 'Enter The Ecosystem';
+  
+  if (nature?.toLowerCase() === 'creator') {
+    title = 'Stop competing. Start dominating.';
+    p1 = `You are here because your ambition outgrew your current platform. Welcome to the creator hub, ${name || 'creator'}.`;
+    p2 = "The market is flooded with noise, but true attention is a highly guarded currency. We have engineered the exact frameworks required to break the algorithm, scale your audience unconditionally, and turn attention into equity. It is time to elevate your brand from a channel to an empire.";
+    btnText = 'Claim Your Advantage';
+  } else if (nature?.toLowerCase() === 'business') {
+    title = 'Growth is not a metric. It is a mandate.';
+    p1 = `Welcome to your unfair advantage, ${name || 'partner'}.`;
+    p2 = "In a landscape where traditional marketing yields diminishing returns, standard playbooks lead to stagnation. Dripp Media is designed specifically to engineer velocity for your brand. We bypass the noise to deliver precision, authority, and relentless scale. Let us show you what happens when elite strategy meets flawless execution.";
+    btnText = 'Scale Your Revenue';
+  }
   
   try {
     const html = getHtmlLayout(`
@@ -147,10 +159,10 @@ export async function sendHighScoreEmail(email, score) {
   if (!resend) return { success: false, error: 'Misconfigured' };
   try {
     const html = getHtmlLayout(`
-      <div style="text-align: center; margin-bottom: 32px;"><span style="font-size: 48px;">🏆</span></div>
-      <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">New High Score!</h2>
-      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px; text-align: center;">Incredible performance! You just set a new personal best of <strong style="color: #ebd73f; font-size: 18px;">${score} points</strong>.</p>
-      ${render3DButton('Defend Your Score', 'https://drippmedia.com')}
+      <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">A new benchmark has been set.</h2>
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px; text-align: center;">Average players plateau. Elite players redefine the ceiling. You just set a new personal record of <strong style="color: #ebd73f; font-size: 18px;">${score} points</strong>.</p>
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px; text-align: center;">But in this arena, a record is just a target painted on your back. The competition is already analyzing your strategy and coming for your spot. You proved you can reach the top. Now, prove you can defend it.</p>
+      ${render3DButton('Defend Your Title', 'https://drippmedia.com')}
     `);
     const data = await resend.emails.send({ from: SENDER, to: email, subject: `New High Score: ${score}!`, html });
     return { success: true, data };
@@ -162,9 +174,10 @@ export async function sendReminderEmail(email, name) {
   if (!resend) return { success: false, error: 'Misconfigured' };
   try {
     const html = getHtmlLayout(`
-      <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 24px; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">Hey ${name || 'Player'}, it's been a while! 👋</h2>
-      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">The leaderboard has been shifting since you last played Dripp Drop.</p>
-      ${render3DButton('Return to Arcade', 'https://drippmedia.com')}
+      <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 24px; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">Your position is vulnerable.</h2>
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">The leaderboard waits for no one. While you have been away, the hierarchy has shifted.</p>
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px;">Momentum is unforgiving. If you are not actively defending your rank, you are already losing it. Others are closing the gap and targeting your position. Do not let your previous victories become old news.</p>
+      ${render3DButton('Reclaim Your Rank', 'https://drippmedia.com')}
     `);
     const data = await resend.emails.send({ from: SENDER, to: email, subject: 'Ready to beat your high score?', html });
     return { success: true, data };
@@ -227,7 +240,7 @@ export async function sendCustomAdminEmail(to, subject, title, body, templateTyp
     // 5. Urgent Alert: High contrast hazard/warning style
     innerContent = `
       <div style="border-left: 6px solid #ebd73f; background-color: rgba(235, 215, 63, 0.05); padding: 24px; border-radius: 0 12px 12px 0; margin-bottom: 32px;">
-        <h2 style="color: #ebd73f; font-size: 24px; margin-top: 0; margin-bottom: 12px; font-weight: 700; font-family: 'Panchang', sans-serif; text-transform: uppercase; display: flex; alignItems: center; gap: 8px;">⚠️ ${title}</h2>
+        <h2 style="color: #ebd73f; font-size: 24px; margin-top: 0; margin-bottom: 12px; font-weight: 700; font-family: 'Panchang', sans-serif; text-transform: uppercase; display: flex; alignItems: center; gap: 8px;"> ${title}</h2>
         <div style="color: #ffffff; font-weight: 500; font-size: 15px;">
           ${pBody}
         </div>

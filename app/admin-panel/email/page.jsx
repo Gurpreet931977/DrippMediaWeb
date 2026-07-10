@@ -93,29 +93,29 @@ export default function EmailCampaignsPage() {
     // Premium placeholder text to simulate AI generating copy
     const aiDrafts = {
       announcement: {
-        subject: "The rules of the game just changed.",
+        subject: "The paradigm just shifted.",
         title: "Welcome to the Next Era.",
-        body: "For the last six months, we've been quietly building something that will fundamentally alter how you interact with your audience.\n\nThis isn't just an update. It's a complete paradigm shift. We've stripped away the noise and engineered a platform designed purely for undeniable growth. It's time to step into the future. Are you ready?"
+        body: "For the last six months, we have operated in stealth to build something that will fundamentally alter how you capture and convert attention.\n\nThis is not a feature update. It is a complete structural overhaul of the digital landscape. We stripped away the noise and engineered a vehicle designed purely for undeniable growth. The rules of the game have been rewritten. It is time to step into the future."
       },
       promo: {
         subject: "An unfair advantage, exclusively for you.",
         title: "Scale Without Limits.",
-        body: "In this industry, momentum is everything. Right now, you have an opportunity to seize an unfair advantage that most of your competitors will never see coming.\n\nWe are unlocking our most powerful suite of tools for you at half the standard investment. This isn't just a discount; it's a strategic alliance. Claim your access before the window closes."
+        body: "In this industry, momentum dictates survival. Right now, you have a rare opportunity to seize an unfair advantage that your competitors will never see coming.\n\nWe are unlocking our most aggressive growth suite for you at a fraction of the standard investment. This is not a discount. It is a strategic alliance designed to accelerate your revenue. Claim your access before the window permanently closes."
       },
       newsletter: {
-        subject: "The strategy behind the fastest growing brands.",
-        title: "The Weekly Edge",
-        body: "Most brands fail because they follow the crowd. The ones that dominate are the ones that dictate the narrative.\n\nThis week, we are pulling back the curtain on the exact digital strategies the top 1% of creators are using to monopolize attention and convert audiences into loyal advocates. Dive into the breakdown below and start executing."
+        subject: "The exact strategy behind the fastest growing brands.",
+        title: "The Weekly Edge.",
+        body: "Most brands fail because they follow the crowd. The ones that dominate are the ones that dictate the narrative.\n\nThis week, we are pulling back the curtain on the exact digital frameworks the top 1% are using to monopolize attention and convert passive scrollers into high-LTV clients. Dive into the breakdown below, absorb the mechanics, and execute ruthlessly."
       },
       invitation: {
         subject: "Your exclusive access is ready.",
-        title: "VIP Inner Circle.",
-        body: "You don't get this email by accident. You've been selected to join a highly curated network of elite creators and brands.\n\nThis is your private invitation to bypass the waitlist and immediately access our premium suite of tools. The inner circle is waiting. Will you step up?"
+        title: "The Inner Circle.",
+        body: "You do not receive this email by accident. Based on your trajectory, you have been selected to join a highly curated network of elite creators and brand operators.\n\nThis is your private invitation to bypass the public waitlist and immediately access our premium tier. The inner circle is waiting. Step up and claim your seat."
       },
       alert: {
-        subject: "Action Required: Time sensitive opportunity.",
-        title: "The Window is Closing.",
-        body: "Success is defined by the ability to act when the window is open. Right now, your window is closing fast.\n\nYou have less than 24 hours to secure your position before this offer is permanently removed from the table. Do not let hesitation cost you your edge. Act immediately."
+        subject: "The Dripp Drop Challenge is closing.",
+        title: "Your Spot is Slipping.",
+        body: "You have seen the leaderboard. You know exactly what is at stake.\n\nThe Dripp Drop Challenge is strictly a limited-time event, and the window to secure your position at the top is rapidly closing. This is not just about a high score. It is about the exclusive reward reserved entirely for those who refuse to lose.\n\nAre you really going to let someone else walk away with your prize? The arena is open, but time is bleeding out. Drop back in, set the record, and claim what is yours."
       }
     };
 
