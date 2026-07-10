@@ -10,9 +10,30 @@ export default function CopilotChat() {
   const [messages, setMessages] = useState([{ role: 'ai', text: 'Hey, I am Orlo. What do you need me to do today?' }]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [emotion, setEmotion] = useState('idle');
   const chatRef = useRef(null);
   const btnRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+
+  // Determine 'waiting' emotion
+  useEffect(() => {
+    if (input.length > 0) {
+      if (emotion !== 'success' && emotion !== 'disappointed') {
+        setEmotion('thinking'); 
+      }
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        setEmotion('waiting');
+      }, 3000);
+    } else {
+      if (!isTyping && emotion !== 'success' && emotion !== 'disappointed') {
+        setEmotion('idle');
+      }
+      clearTimeout(typingTimeoutRef.current);
+    }
+    return () => clearTimeout(typingTimeoutRef.current);
+  }, [input, isTyping, emotion]);
 
   // Scroll to bottom
   useEffect(() => {
@@ -43,6 +64,7 @@ export default function CopilotChat() {
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userText }]);
     setIsTyping(true);
+    setEmotion('thinking');
 
     try {
       const res = await fetch('/api/admin/copilot', {
@@ -54,6 +76,14 @@ export default function CopilotChat() {
       
       if (!res.ok) throw new Error(data.error || 'Failed to process command');
 
+      if (data.intent === 'unsupported' || !data.payload) {
+        setEmotion('disappointed');
+        setTimeout(() => setEmotion('idle'), 4000);
+      } else {
+        setEmotion('success');
+        setTimeout(() => setEmotion('idle'), 3000);
+      }
+
       setMessages(prev => [...prev, { role: 'ai', text: data.replyMessage || "Done. Check your form!" }]);
       
       // Dispatch event to window so forms can pick it up
@@ -62,6 +92,8 @@ export default function CopilotChat() {
       }
 
     } catch (error) {
+      setEmotion('disappointed');
+      setTimeout(() => setEmotion('idle'), 4000);
       setMessages(prev => [...prev, { role: 'ai', text: `Error: ${error.message}` }]);
     } finally {
       setIsTyping(false);
@@ -227,7 +259,7 @@ export default function CopilotChat() {
           <div className="chat-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ebd73f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
-                <OrloIcon size={16} />
+                <OrloIcon size={16} emotion={emotion} />
               </div>
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '600' }}>Orlo</h3>
@@ -296,7 +328,7 @@ export default function CopilotChat() {
 
       <div className="copilot-orb" onClick={toggleChat} ref={btnRef}>
         <div className="copilot-ring"></div>
-        <OrloIcon size={32} color="#000" className="orlo-icon-svg" />
+        <OrloIcon size={32} color="#000" className="orlo-icon-svg" emotion={isOpen ? emotion : 'idle'} />
       </div>
     </>
   );
