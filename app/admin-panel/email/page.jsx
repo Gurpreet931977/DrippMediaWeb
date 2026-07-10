@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Mail, Send, Users, AlertCircle, CheckCircle2, Info, Sparkles, LayoutTemplate, PenTool, RefreshCw, Clock } from 'lucide-react';
+import DrippDatePicker from '../components/DrippDatePicker';
 import styles from '../admin.module.css';
 import gsap from 'gsap';
 
@@ -390,14 +391,9 @@ export default function EmailCampaignsPage() {
 
               {isScheduled && (
                 <div style={{ marginTop: '1.5rem' }}>
-                  <label className={styles.label}>Select Date & Time</label>
-                  <input
-                    type="datetime-local"
-                    required={isScheduled}
-                    className={styles.input}
+                  <DrippDatePicker 
                     value={scheduleTime}
-                    onChange={(e) => setScheduleTime(e.target.value)}
-                    style={{ colorScheme: 'dark' }}
+                    onChange={(val) => setScheduleTime(val)}
                   />
                 </div>
               )}
