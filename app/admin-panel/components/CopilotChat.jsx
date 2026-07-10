@@ -264,7 +264,9 @@ export default function CopilotChat() {
         <div className="chat-container" ref={chatRef}>
           <div className="chat-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', position: 'relative', overflow: 'hidden' }}>
+                
+                {/* Background Layer (Sky & Distant Mountains) */}
                 <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}>
                   <defs>
                     <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -275,40 +277,48 @@ export default function CopilotChat() {
                       <stop offset="0%" stopColor="#039be5" />
                       <stop offset="100%" stopColor="#0277bd" />
                     </linearGradient>
-                    <linearGradient id="mountMid" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#43a047" />
-                      <stop offset="100%" stopColor="#2e7d32" />
-                    </linearGradient>
-                    <linearGradient id="mountFront" x1="0%" y1="0%" x2="0%" y2="100%">
+                  </defs>
+                  
+                  <rect width="100" height="100" fill="url(#skyGrad)" />
+                  
+                  <circle cx="20" cy="25" r="12" fill="#fff9c4" opacity="0.9" />
+                  <circle cx="20" cy="25" r="18" fill="#fff9c4" opacity="0.3" />
+                  
+                  <path d="M 45 35 Q 55 25 65 35 Q 75 30 80 40 L 45 40 Z" fill="#fff" opacity="0.7" />
+                  <path d="M 5 45 Q 15 35 25 45 Q 35 40 40 50 L 5 50 Z" fill="#fff" opacity="0.5" />
+                  
+                  <path d="M -20 100 L 30 45 L 70 85 L 100 55 L 130 100 Z" fill="url(#mountBack)" />
+                </svg>
+
+                {/* Orlo - Embedded in the midground */}
+                <div style={{ position: 'absolute', bottom: '15%', left: '20%', zIndex: 1, filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.3))' }}>
+                  <OrloIcon size={22} color="#FFFFFF" emotion="still" />
+                </div>
+                
+                {/* Foreground Layer (Hill, Tent, overlapping Orlo) */}
+                <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 2, pointerEvents: 'none' }}>
+                  <defs>
+                    <linearGradient id="mountFrontGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                       <stop offset="0%" stopColor="#7cb342" />
                       <stop offset="100%" stopColor="#558b2f" />
                     </linearGradient>
                   </defs>
                   
-                  {/* Sky */}
-                  <rect width="100" height="100" fill="url(#skyGrad)" />
+                  {/* Foreground lush hill covering the bottom of Orlo */}
+                  <path d="M -10 100 Q 50 65 110 100 Z" fill="url(#mountFrontGrad)" />
                   
-                  {/* Sun */}
-                  <circle cx="75" cy="30" r="14" fill="#fff9c4" opacity="0.9" />
+                  {/* Tiny Camping Tent on the hill */}
+                  <g transform="translate(60, 72)">
+                    <path d="M 5 15 L 15 0 L 25 15 Z" fill="#ffb74d" />
+                    <path d="M 15 0 L 25 15 L 15 15 Z" fill="#f57c00" />
+                    <path d="M 12 15 L 15 8 L 18 15 Z" fill="#3e2723" />
+                  </g>
                   
-                  {/* Fluffy Clouds */}
-                  <path d="M 10 35 Q 20 25 30 35 Q 40 30 45 40 L 10 40 Z" fill="#fff" opacity="0.7" />
-                  
-                  {/* Distant Blue Mountains */}
-                  <path d="M -20 100 L 25 50 L 65 85 L 95 60 L 120 100 Z" fill="url(#mountBack)" />
-                  
-                  {/* Mid Green Mountains */}
-                  <path d="M -10 100 L 40 65 L 85 100 Z" fill="url(#mountMid)" />
-                  
-                  {/* Foreground Lush Hill */}
-                  <path d="M 20 100 Q 60 75 110 100 Z" fill="url(#mountFront)" />
-
-                  {/* Orlo's Drop Shadow */}
-                  <ellipse cx="50" cy="94" rx="14" ry="3" fill="rgba(0,50,0,0.4)" />
+                  {/* Foreground Grass Blades */}
+                  <path d="M 10 100 Q 15 85 20 100 Z" fill="#33691e" opacity="0.4" />
+                  <path d="M 85 100 Q 90 90 95 100 Z" fill="#33691e" opacity="0.4" />
+                  <path d="M 45 100 Q 50 93 55 100 Z" fill="#33691e" opacity="0.4" />
                 </svg>
-                <div style={{ zIndex: 1, paddingBottom: '2px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.25))' }}>
-                  <OrloIcon size={24} color="#FFFFFF" emotion="still" />
-                </div>
               </div>
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '600' }}>Orlo</h3>
