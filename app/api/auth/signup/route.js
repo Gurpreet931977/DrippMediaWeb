@@ -118,7 +118,7 @@ export async function POST(request) {
       console.error('[signup] Welcome email background task failed:', err);
     });
 
-    // Return only what the client actually needs — don't leak internal DB fields
+    // Return only what the client actually needs - don't leak internal DB fields
     return withCors(Response.json({
       name:       safeUser.name,
       email:      safeUser.email,

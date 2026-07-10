@@ -60,22 +60,22 @@ def migrate(dry_run: bool = False):
         email  = user['email']
         phrase = user['security_phrase']
 
-        # Already bcrypt-hashed — skip safely
+        # Already bcrypt-hashed - skip safely
         if phrase.startswith('$2'):
-            print(f"  [SKIP] {email} — already hashed")
+            print(f"  [SKIP] {email} - already hashed")
             skipped += 1
             continue
 
         try:
             hashed = bcrypt.hashpw(phrase.strip().encode(), bcrypt.gensalt(rounds=10)).decode()
             if dry_run:
-                print(f"  [DRY]  {email} — would hash (len={len(phrase)})")
+                print(f"  [DRY]  {email} - would hash (len={len(phrase)})")
             else:
                 client.table('users').update({'security_phrase': hashed}).eq('id', uid).execute()
-                print(f"  [DONE] {email} — hashed successfully")
+                print(f"  [DONE] {email} - hashed successfully")
             migrated += 1
         except Exception as e:
-            print(f"  [ERR]  {email} — {e}")
+            print(f"  [ERR]  {email} - {e}")
             errors += 1
 
     label = "Would migrate" if dry_run else "Migrated"
@@ -87,7 +87,7 @@ def migrate(dry_run: bool = False):
 
 if __name__ == '__main__':
     dry_run = '--dry-run' in sys.argv
-    print(f"[INFO] {'DRY RUN — no changes will be made.' if dry_run else 'LIVE migration — will modify Supabase.'}\n")
+    print(f"[INFO] {'DRY RUN - no changes will be made.' if dry_run else 'LIVE migration - will modify Supabase.'}\n")
     if not dry_run:
         confirm = input("Type 'yes' to continue: ").strip()
         if confirm.lower() != 'yes':

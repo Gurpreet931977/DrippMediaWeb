@@ -1,15 +1,15 @@
 """
-server.py — Dripp Media Backend
+server.py - Dripp Media Backend
 Run: python3 server.py
 
 Endpoints:
-  POST /api/contact       — Save lead + send emails
-  POST /api/community     — Save community sign-up
-  GET  /admin             — Admin dashboard (password protected)
-  GET  /admin/login       — Login page
-  POST /admin/login       — Authenticate
-  GET  /admin/logout      — Clear session
-  POST /admin/status      — Update lead status
+  POST /api/contact       - Save lead + send emails
+  POST /api/community     - Save community sign-up
+  GET  /admin             - Admin dashboard (password protected)
+  GET  /admin/login       - Login page
+  POST /admin/login       - Authenticate
+  GET  /admin/logout      - Clear session
+  POST /admin/status      - Update lead status
 """
 
 import os
@@ -25,15 +25,15 @@ if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
     print("[ENV] Loaded .env")
 else:
-    print("[ENV] No .env found — using environment variables / defaults")
+    print("[ENV] No .env found - using environment variables / defaults")
     print("[ENV] Copy .env.example to .env and fill in your SMTP credentials.")
 
 # ─── Flask App ────────────────────────────────────────────────────────────────
 app = Flask(__name__, static_folder=None)
 app.secret_key = os.getenv("SECRET_KEY", "dripp-secret-key-change-me")
 
-# CORS — allow only localhost in development and the live domain in production.
-# 'null' (file:// origin) is intentionally removed — file:// access is not supported.
+# CORS - allow only localhost in development and the live domain in production.
+# 'null' (file:// origin) is intentionally removed - file:// access is not supported.
 ALLOWED_ORIGINS = [
     "http://localhost",
     "http://127.0.0.1",
@@ -92,5 +92,5 @@ if __name__ == "__main__":
     """)
     debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
     if debug_mode:
-        print("[WARN] Running in DEBUG mode — never enable this in production!")
+        print("[WARN] Running in DEBUG mode - never enable this in production!")
     app.run(host="0.0.0.0", port=port, debug=debug_mode)

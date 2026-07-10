@@ -91,7 +91,7 @@ export async function POST(request) {
     if (storedPassword.startsWith('$2')) {
       isValid = await bcrypt.compare(password, storedPassword);
     } else {
-      // Legacy plaintext password — compare directly
+      // Legacy plaintext password - compare directly
       isValid = (password === storedPassword);
       // Auto-upgrade to bcrypt in the background (fire-and-forget)
       // The user doesn't wait for this; their next login will use bcrypt.

@@ -1,5 +1,5 @@
 """
-emailer.py — SMTP email helper for Dripp Media backend.
+emailer.py - SMTP email helper for Dripp Media backend.
 Sends:
   - Agency notification when a new enquiry arrives
   - Auto-reply confirmation to the client
@@ -24,7 +24,7 @@ def _get_config():
 def _send(to: str, subject: str, html_body: str, text_body: str = ""):
     cfg = _get_config()
     if not cfg["user"] or not cfg["password"]:
-        print(f"[EMAIL] SMTP not configured — skipping send to {to}")
+        print(f"[EMAIL] SMTP not configured - skipping send to {to}")
         return False
 
     msg = MIMEMultipart("alternative")
@@ -66,7 +66,7 @@ def send_agency_notification(lead: dict):
       <div style="max-width:600px;margin:40px auto;background:#0d0d0d;border:1px solid #222;border-radius:16px;overflow:hidden;">
         <div style="background:#ebd73f;padding:24px 32px;">
           <h1 style="margin:0;color:#050505;font-size:22px;font-weight:800;letter-spacing:2px;">
-            DRIPP MEDIA — NEW ENQUIRY
+            DRIPP MEDIA - NEW ENQUIRY
           </h1>
         </div>
         <div style="padding:32px;">
@@ -83,7 +83,7 @@ def send_agency_notification(lead: dict):
             </tr>
             <tr>
               <td style="padding:10px 0;color:#888;font-size:13px;vertical-align:top;">MESSAGE</td>
-              <td style="padding:10px 0;color:#ccc;font-size:14px;line-height:1.6;">{lead.get('message','—')}</td>
+              <td style="padding:10px 0;color:#ccc;font-size:14px;line-height:1.6;">{lead.get('message','-')}</td>
             </tr>
           </table>
           <div style="margin-top:24px;border-top:1px solid #222;padding-top:24px;">
@@ -108,7 +108,7 @@ def send_agency_notification(lead: dict):
 
     _send(
         to=cfg["agency_email"],
-        subject=f"🎯 New Enquiry from {lead['name']} — Dripp Media",
+        subject=f"🎯 New Enquiry from {lead['name']} - Dripp Media",
         html_body=html,
         text_body=f"New enquiry from {lead['name']} ({lead['email']})\n\n{lead.get('message','')}\n\nServices: {', '.join(lead.get('services',[]))}"
     )
@@ -167,7 +167,7 @@ def send_client_autoreply(lead: dict):
 
     _send(
         to=lead["email"],
-        subject="We got your message — Dripp Media 🖤",
+        subject="We got your message - Dripp Media 🖤",
         html_body=html,
         text_body=f"Hey {lead['name']}, thanks for reaching out to Dripp Media! We'll get back to you within 24-48 hours.\n\nTeam Dripp"
     )

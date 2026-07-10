@@ -1,5 +1,5 @@
 """
-routes/community.py — POST /api/community
+routes/community.py - POST /api/community
 Handles community email sign-ups.
 """
 

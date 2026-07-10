@@ -91,7 +91,7 @@ async function runSetupOnce() {
   }
 }
 
-// ── GET — Check for duplicate invoice number ───────────────────────────────────
+// ── GET - Check for duplicate invoice number ───────────────────────────────────
 
 export async function GET(request) {
   if (!isAdminAuthenticated(request)) {
@@ -123,7 +123,7 @@ export async function GET(request) {
   }
 }
 
-// ── POST — Write invoice row (append or overwrite) ────────────────────────────
+// ── POST - Write invoice row (append or overwrite) ────────────────────────────
 
 export async function POST(request) {
   if (!isAdminAuthenticated(request)) {
@@ -131,7 +131,7 @@ export async function POST(request) {
   }
 
   if (!hasCredentials()) {
-    console.warn('[invoice/log] Google Sheets env vars not set — skipping log.');
+    console.warn('[invoice/log] Google Sheets env vars not set - skipping log.');
     return NextResponse.json(
       { skipped: true, reason: 'Google Sheets not configured' },
       { status: 200 }
@@ -153,7 +153,7 @@ export async function POST(request) {
     if (mode === 'overwrite' && rowIndex) {
       await overwriteInvoiceRow(rowIndex, invoiceData);
     } else {
-      // 'append' or any unknown mode — always add a new row
+      // 'append' or any unknown mode - always add a new row
       await appendInvoiceRow(invoiceData);
     }
 

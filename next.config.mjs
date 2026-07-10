@@ -30,9 +30,9 @@ const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   // Stops MIME-type sniffing
   { key: 'X-Content-Type-Options', value: 'nosniff' },
-  // Referrer policy — send origin only on same-origin, nothing cross-origin
+  // Referrer policy - send origin only on same-origin, nothing cross-origin
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  // HSTS — 2 years, include subdomains, preload-ready
+  // HSTS - 2 years, include subdomains, preload-ready
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
   // Disable invasive browser features
   {
@@ -54,21 +54,21 @@ const nextConfig = {
         headers: securityHeaders,
       },
       {
-        // Cache static assets aggressively — immutable since Next.js includes content hash in filename
+        // Cache static assets aggressively - immutable since Next.js includes content hash in filename
         source: '/_next/static/(.*)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
       {
-        // Public assets — moderate cache with revalidation
+        // Public assets - moderate cache with revalidation
         source: '/(.*)\\.(ico|png|jpg|jpeg|gif|webp|svg|woff|woff2)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=3600' },
         ],
       },
       {
-        // API routes — never cache, always fresh
+        // API routes - never cache, always fresh
         source: '/api/(.*)',
         headers: [
           { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },

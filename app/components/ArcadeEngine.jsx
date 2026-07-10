@@ -1248,7 +1248,7 @@ const getHelpText = (game) => {
         controls="Move your mouse in any direction to guide the snake's head." 
         howToPlay="Navigate the grid to eat glowing food orbs and grow longer. Do not hit the edges of the screen or collide with your own tail." 
         scoreSystem="Eating food increases your length and score. Surviving longer yields multiplier points." 
-        powerups="Glowing Orbs: Growth and points. Red Orbs (Hazard): Temporarily inverts your mouse controls—causing massive confusion!"
+        powerups="Glowing Orbs: Growth and points. Red Orbs (Hazard): Temporarily inverts your mouse controls-causing massive confusion!"
       />;
     case 'pong':
       return <HelpBrief 

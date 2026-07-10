@@ -755,7 +755,7 @@ export default function InvoiceMaker() {
    *  1. GET /api/invoice/log?invoiceNumber=... → check if it already exists
    *  2. If found: show a 3-button dialog (Overwrite / Skip / Add as New Entry)
    *  3. POST with the chosen mode
-   * Never throws — errors are swallowed so the invoice workflow is never blocked.
+   * Never throws - errors are swallowed so the invoice workflow is never blocked.
    */
   const logToSalesSheet = async (invoiceData) => {
     setSheetLogStatus('logging');
@@ -810,7 +810,7 @@ export default function InvoiceMaker() {
           return;
         }
 
-        // choice === 'addNew' — fall through to append below
+        // choice === 'addNew' - fall through to append below
       }
 
       // ── Step 3: Append new row ───────────────────────────────────────────────
@@ -861,7 +861,7 @@ export default function InvoiceMaker() {
                   onClick={() => { customDialog.onSkip?.(); closeDialog(); }}
                   style={{ width: '100%', padding: '13px 20px', background: 'rgba(156, 163, 175, 0.08)', border: '1px solid rgba(156, 163, 175, 0.2)', color: '#9ca3af', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', textAlign: 'left' }}
                 >
-                  ⏭ Skip — don\'t log again
+                  ⏭ Skip - don\'t log again
                   <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', fontWeight: '400', marginTop: '3px' }}>Keep the existing entry, do nothing</span>
                 </button>
                 <button
@@ -869,7 +869,7 @@ export default function InvoiceMaker() {
                   style={{ width: '100%', padding: '13px 20px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', color: '#4ade80', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', textAlign: 'left' }}
                 >
                   ➕ Add as a new entry
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: '#888', fontWeight: '400', marginTop: '3px' }}>Keep both rows — useful for re-invoicing</span>
+                  <span style={{ display: 'block', fontSize: '0.75rem', color: '#888', fontWeight: '400', marginTop: '3px' }}>Keep both rows - useful for re-invoicing</span>
                 </button>
               </div>
             )}

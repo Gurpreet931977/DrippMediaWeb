@@ -29,7 +29,7 @@ htmlFiles.forEach(file => {
     }
     
     // Replace emdashes with hyphens
-    content = content.replace(/—/g, '-');
+    content = content.replace(/-/g, '-');
     
     fs.writeFileSync(filePath, content);
     console.log(`Updated ${file}`);

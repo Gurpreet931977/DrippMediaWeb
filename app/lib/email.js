@@ -164,7 +164,7 @@ export async function sendHighScoreEmail(email, score) {
     const html = getHtmlLayout(`
       <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">You just set a new record.</h2>
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px; text-align: center;">Amazing job! You just set a brand new personal best of <strong style="color: #ebd73f; font-size: 18px;">${score} points</strong>.</p>
-      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px; text-align: center;">But watch out—the competition is close behind you. They are playing right now to beat your score. You proved you can reach the top spot. Now, prove you can keep it.</p>
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px; text-align: center;">But watch out-the competition is close behind you. They are playing right now to beat your score. You proved you can reach the top spot. Now, prove you can keep it.</p>
       ${render3DButton('Play Again', 'https://drippmedia.com')}
     `);
     const data = await resend.emails.send({ from: SENDER, to: email, subject: `New High Score: ${score}!`, html });

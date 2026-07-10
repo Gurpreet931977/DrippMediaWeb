@@ -1,5 +1,5 @@
 """
-routes/contact.py — POST /api/contact
+routes/contact.py - POST /api/contact
 Handles enquiry form submissions: saves lead + fires emails.
 """
 
@@ -44,7 +44,7 @@ def submit_contact():
     lead = {"id": lead_id, "name": name, "email": email,
             "message": message, "services": services}
 
-    # Fire emails (non-blocking — errors won't fail the request)
+    # Fire emails (non-blocking - errors won't fail the request)
     try:
         send_agency_notification(lead)
         send_client_autoreply(lead)

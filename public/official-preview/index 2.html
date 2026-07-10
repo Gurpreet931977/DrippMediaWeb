@@ -1211,7 +1211,7 @@
 
             .founder-3d-card {
                 max-width: min(340px, 80vw);
-                /* Disable 3D tilt on touch devices — no hover state on mobile */
+                /* Disable 3D tilt on touch devices - no hover state on mobile */
                 transform: none !important;
             }
 
@@ -2055,7 +2055,7 @@
             overflow: visible;
         }
 
-        /* Scroll wrapper — this is the only element that scrolls */
+        /* Scroll wrapper - this is the only element that scrolls */
         .chip-scroll {
             max-height: 320px;
             overflow-y: auto;
@@ -2132,7 +2132,7 @@
             transform: translateY(-2px);
         }
 
-        /* Spin the + on hover — same feel as the theme toggle button */
+        /* Spin the + on hover - same feel as the theme toggle button */
         .custom-chip:not(.selected):hover::after {
             transform: rotate(360deg) scale(1.2);
             background: rgba(235, 215, 63, 0.35);
@@ -3301,7 +3301,7 @@
         }
 
         /* ============================================
-           SERVICES SECTION — LIGHT MODE
+           SERVICES SECTION - LIGHT MODE
         ============================================ */
 
         body.light-theme .services-section {
@@ -3614,7 +3614,7 @@
         }
 
         /* ============================================
-           MOBILE OPTIMIZATION — COMPONENTS 2, 3, 4, 5, 8
+           MOBILE OPTIMIZATION - COMPONENTS 2, 3, 4, 5, 8
            All rules below are additive and gated behind
            media queries. Desktop experience is unchanged.
         ============================================ */
@@ -4186,7 +4186,7 @@
             <div class="service-header">
                 <span class="section-label">03.5 / SERVICES</span>
                 <h2 class="section-title">What We Do</h2>
-                <p class="service-intro">Click any service that interests you — it'll be added to your quote below.</p>
+                <p class="service-intro">Click any service that interests you - it'll be added to your quote below.</p>
             </div>
 
             <!-- Floating Services Cloud -->
@@ -4456,7 +4456,7 @@
                     I am Gurpreet, often known as Meta Gurpreet. At 18, I stepped away from formal education to learn
                     and build something that actually dictates digital culture rather than just participating in it.
                     While my title is Founder and CEO of Dripp Media, my foundation is behind the screen. I am, at my
-                    core, a visual artist — a video editor, web designer and graphic designer obsessed with the
+                    core, a visual artist - a video editor, web designer and graphic designer obsessed with the
                     mechanics of attention.
                 </p>
                 <p class="founder-bio">
@@ -5685,7 +5685,7 @@
             const parts = formatter.formatToParts(new Date());
             const get = (type) => parts.find(p => p.type === type)?.value ?? '00';
             let h = get('hour');
-            // '24' can appear for midnight in some locales — normalize to '00'
+            // '24' can appear for midnight in some locales - normalize to '00'
             if (h === '24') h = '00';
             return {
                 h: h.padStart(2, '0'),
@@ -5736,7 +5736,7 @@
             }
         }
 
-        // Fetch visitor timezone from IP geolocation (silent — no visible label)
+        // Fetch visitor timezone from IP geolocation (silent - no visible label)
         async function fetchIPTimezone() {
             try {
                 const res = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
@@ -5751,7 +5751,7 @@
         if (document.getElementById('clock-hours')) {
             updateLiveClock();
             setInterval(updateLiveClock, 1000);
-            fetchIPTimezone(); // Async — updates timezone label once resolved
+            fetchIPTimezone(); // Async - updates timezone label once resolved
 
             gsap.fromTo(".live-clock-section",
                 { opacity: 0, scale: 0.95, y: 50 },
@@ -5997,7 +5997,7 @@
                                 if (typeof window.handlePillAction === 'function') window.handlePillAction(e, pill);
                             } else {
                                 lastClickTime = now;
-                                // Single tap visual hint — gentle brightness pulse
+                                // Single tap visual hint - gentle brightness pulse
                                 gsap.fromTo(pill,
                                     { filter: 'brightness(1.5)' },
                                     { filter: 'brightness(1)', duration: 0.4, ease: 'power2.out' }

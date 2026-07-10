@@ -1,5 +1,5 @@
 """
-db.py — SQLite database helper for Dripp Media backend.
+db.py - SQLite database helper for Dripp Media backend.
 Tables:
   - leads         : contact form / quote requests
   - community     : community email sign-ups

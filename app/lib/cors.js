@@ -27,7 +27,7 @@ const ALLOWED_ORIGINS =
 /**
  * Returns the appropriate CORS headers for a given request.
  * If the origin is not in the allowlist, no Access-Control-Allow-Origin is set
- * (which causes the browser to block the request — correct behaviour).
+ * (which causes the browser to block the request - correct behaviour).
  *
  * @param {Request} request
  * @returns {Record<string, string>}

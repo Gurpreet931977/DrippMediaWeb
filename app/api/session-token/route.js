@@ -6,25 +6,25 @@
  * back to /api/submit-score when saving a score.
  *
  * Security layers:
- *  1. Rate limiting — 10 requests/min per IP
- *  2. Auth token verification — caller must present a valid dripp_auth_token
+ *  1. Rate limiting - 10 requests/min per IP
+ *  2. Auth token verification - caller must present a valid dripp_auth_token
  *     issued by /api/auth/login or /api/auth/signup; the email in the token
  *     must match the email in the request body (prevents submitting under
  *     someone else's account)
- *  3. Session age check — sessionStart must be fresh (within 30 s)
- *  4. Score-rate plausibility — in commit mode, the finalScore must be
+ *  3. Session age check - sessionStart must be fresh (within 30 s)
+ *  4. Score-rate plausibility - in commit mode, the finalScore must be
  *     achievable within the elapsed session time at the game's max drop rate
- *  5. One-time session registry — each session token (email+sessionStart pair)
+ *  5. One-time session registry - each session token (email+sessionStart pair)
  *     can only ever produce ONE scoreCommit. Stored in Supabase game_sessions.
  *     This closes the "waiting exploit" where an attacker gets a token and
- *     waits proportionally long to claim an inflated score — they only get
+ *     waits proportionally long to claim an inflated score - they only get
  *     one shot, so it's never worth it.
  *
  * ATTACK VECTORS BLOCKED:
- *  A. Instant fake score  — blocked by rate cap (score must fit elapsed time)
- *  B. Waiting exploit     — blocked by one-time-use registry (one commit per session)
- *  C. Replay attack       — blocked by scoreCommit HMAC binding email+session+score
- *  D. Cross-account abuse — blocked by auth token email ownership check
+ *  A. Instant fake score  - blocked by rate cap (score must fit elapsed time)
+ *  B. Waiting exploit     - blocked by one-time-use registry (one commit per session)
+ *  C. Replay attack       - blocked by scoreCommit HMAC binding email+session+score
+ *  D. Cross-account abuse - blocked by auth token email ownership check
  */
 
 import { createHmac } from 'crypto';
@@ -68,17 +68,17 @@ function getServerSupabase() {
   return createClient(url, key);
 }
 
-// 10 token requests per minute per IP — generous enough for game restarts
+// 10 token requests per minute per IP - generous enough for game restarts
 const limiter = rateLimit({ limit: 10, windowMs: 60_000 });
 
 // ── Score plausibility constants ───────────────────────────────────────────────
 // Dripp Drop: ~80% normal (+1), ~15% red (+5), ~5% white (+69).
 // Peak catch rate ~8–12 drops/sec at high intensity; generous server cap = 25 pts/sec.
 // This cap means legitimate players scoring at peak intensity are never blocked,
-// while an attacker must wait session_score / 25 seconds before committing —
+// while an attacker must wait session_score / 25 seconds before committing -
 // and even then they only get ONE commit per session (registry check below).
 const MAX_SCORE_ABSOLUTE    = 50000; // realistic ceiling for a long session
-const MAX_SCORE_RATE_PER_SEC = 12;   // pts/sec — covers burst white-drop streaks
+const MAX_SCORE_RATE_PER_SEC = 12;   // pts/sec - covers burst white-drop streaks
 
 // ── POST /api/session-token ─────────────────────────────────────────────────────
 
@@ -104,7 +104,7 @@ export async function POST(request) {
   const authResult   = verifyAuthToken(rawAuthToken);
 
   if (!authResult.ok) {
-    console.warn(`[session-token] Auth token rejected — reason=${authResult.reason}`);
+    console.warn(`[session-token] Auth token rejected - reason=${authResult.reason}`);
     return withCors(Response.json({ error: 'Unauthorized' }, { status: 401 }), request);
   }
 
@@ -122,7 +122,7 @@ export async function POST(request) {
 
     // ── Email ownership check ─────────────────────────────────────────────────
     if (authResult.email.toLowerCase() !== email.toLowerCase().trim()) {
-      console.warn(`[session-token] Email mismatch — token=${authResult.email} request=${email}`);
+      console.warn(`[session-token] Email mismatch - token=${authResult.email} request=${email}`);
       return withCors(Response.json({ error: 'Unauthorized' }, { status: 403 }), request);
     }
 
@@ -154,7 +154,7 @@ export async function POST(request) {
 
       if (scoreNum > maxPlausible) {
         console.warn(
-          `[session-token] Score-commit rejected (rate cap) — score=${scoreNum}` +
+          `[session-token] Score-commit rejected (rate cap) - score=${scoreNum}` +
           ` max=${maxPlausible} sessionAge=${Math.round(commitAge/1000)}s email=${normalEmail}`
         );
         return withCors(
@@ -174,7 +174,7 @@ export async function POST(request) {
         const a = Buffer.from(expectedToken, 'hex');
         const b = Buffer.from(sessionToken, 'hex');
         if (a.length !== b.length || !timingSafeEqual(a, b)) {
-          console.warn(`[session-token] Score-commit session token mismatch — email=${normalEmail}`);
+          console.warn(`[session-token] Score-commit session token mismatch - email=${normalEmail}`);
           return withCors(Response.json({ error: 'Invalid session token for commit' }, { status: 403 }), request);
         }
       } catch {
@@ -191,7 +191,7 @@ export async function POST(request) {
         try {
           // Atomically mark this session as committed.
           // The WHERE clause (committed = FALSE) ensures this is a no-op if
-          // the session was already committed — preventing double-commits.
+          // the session was already committed - preventing double-commits.
           const { data: updated, error: updateErr } = await supabase
             .from('game_sessions')
             .update({ committed: true, committed_at: Date.now(), score: scoreNum })
@@ -201,7 +201,7 @@ export async function POST(request) {
             .select('email');
 
           if (updateErr) {
-            // DB error — fail closed to prevent fail-open vulnerability
+            // DB error - fail closed to prevent fail-open vulnerability
             console.error('[session-token] Session registry update error:', updateErr.message);
             return withCors(
               Response.json({ error: 'Failed to verify session status' }, { status: 500 }),
@@ -211,8 +211,8 @@ export async function POST(request) {
             // Either: session was never registered (token not from our server),
             // or it was already committed (replay/double-submit attempt).
             console.warn(
-              `[session-token] Score-commit rejected (one-time-use) — ` +
-              `session already committed or not registered — email=${normalEmail} sessionStart=${sessionTs}`
+              `[session-token] Score-commit rejected (one-time-use) - ` +
+              `session already committed or not registered - email=${normalEmail} sessionStart=${sessionTs}`
             );
             return withCors(
               Response.json({ error: 'Session already used or invalid' }, { status: 403 }),
@@ -226,7 +226,7 @@ export async function POST(request) {
       }
 
       const scoreCommit = signScoreCommit(normalEmail, sessionTs, scoreNum);
-      console.log(`[session-token] Score-commit issued — email=${normalEmail} score=${scoreNum} sessionAge=${Math.round(commitAge/1000)}s`);
+      console.log(`[session-token] Score-commit issued - email=${normalEmail} score=${scoreNum} sessionAge=${Math.round(commitAge/1000)}s`);
       return withCors(Response.json({ scoreCommit }), request);
     }
 
@@ -252,7 +252,7 @@ export async function POST(request) {
           );
         if (insertErr) {
           console.error('[session-token] Session registry insert error:', insertErr.message);
-          // Non-fatal — token is still issued; commit will just skip the registry check
+          // Non-fatal - token is still issued; commit will just skip the registry check
         }
       } catch (dbErr) {
         console.error('[session-token] Session registry unreachable on start:', dbErr?.message);

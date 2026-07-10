@@ -53,7 +53,7 @@ export function createScoreGuard() {
     if (!email) return;
     _sessionStart = Date.now();
     try {
-      // Read the server-issued identity token — set by AuthModal on login/signup
+      // Read the server-issued identity token - set by AuthModal on login/signup
       const authToken = (typeof window !== 'undefined')
         ? localStorage.getItem('dripp_auth_token') || ''
         : '';
@@ -181,7 +181,7 @@ export function createScoreGuard() {
    */
   function getSubmissionPayload(email) {
     if (_cheated || !_checkIntegrity()) return null;
-    if (!_scoreCommit) return null; // scoreCommit required — call commitScore() first
+    if (!_scoreCommit) return null; // scoreCommit required - call commitScore() first
     return {
       email,
       score:        _primary,

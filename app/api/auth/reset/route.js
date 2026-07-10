@@ -10,7 +10,7 @@ const getSupabase = () => {
   return createClient(supabaseUrl, supabaseKey);
 };
 
-// 3 reset attempts per minute per IP — brute-forcing a security phrase is a real attack vector
+// 3 reset attempts per minute per IP - brute-forcing a security phrase is a real attack vector
 const limiter = rateLimit({ limit: 3, windowMs: 60_000 });
 
 export async function POST(request) {
@@ -74,7 +74,7 @@ export async function POST(request) {
       // Bcrypt hash (new users or migrated users)
       phraseValid = await bcrypt.compare(security_phrase.trim(), storedPhrase);
     } else {
-      // Legacy plaintext (unmigrated) — direct compare
+      // Legacy plaintext (unmigrated) - direct compare
       phraseValid = storedPhrase === security_phrase.trim();
     }
 

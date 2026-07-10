@@ -52,7 +52,7 @@ export default function ComingSoon() {
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [leaderboardError, setLeaderboardError] = useState(false);
   const highScoreRef = useRef(0);
-  // displayHighScore drives the UI — highScoreRef is used for comparison in game logic.
+  // displayHighScore drives the UI - highScoreRef is used for comparison in game logic.
   // We need both: ref for synchronous in-frame access, state to trigger re-renders.
   const [displayHighScore, setDisplayHighScore] = useState(0);
 
@@ -202,7 +202,7 @@ export default function ComingSoon() {
   const cursorActiveRef = useRef(false);
   const lastMilestoneRef = useRef(0);
 
-  // Anti-cheat score guard — lives in a closure, never exposed to React state
+  // Anti-cheat score guard - lives in a closure, never exposed to React state
   const scoreGuardRef = useRef(createScoreGuard());
   const [cheatedSession, setCheatedSession] = useState(false);
 
@@ -1487,7 +1487,7 @@ export default function ComingSoon() {
            setGameState('playing'); setIsPaused(false); setShowShareOptions(false);
            if (typeof window !== 'undefined' && window.initDrippGame) window.initDrippGame();
 
-           // Fetch the real DB highscore — don't trust localStorage since
+           // Fetch the real DB highscore - don't trust localStorage since
            // this might be a new device or cleared browser.
            const authToken = localStorage.getItem('dripp_auth_token') || '';
            if (authToken) {

@@ -3176,7 +3176,7 @@
             <div class="service-header">
                 <span class="section-label">03.5 / PACKAGES</span>
                 <h2 class="section-title">What We Build</h2>
-                <p class="service-intro">Precision-crafted packages designed to scale your content — or build your own
+                <p class="service-intro">Precision-crafted packages designed to scale your content - or build your own
                     from scratch.</p>
             </div>
 
@@ -4360,7 +4360,7 @@
             const parts = formatter.formatToParts(new Date());
             const get = (type) => parts.find(p => p.type === type)?.value ?? '00';
             let h = get('hour');
-            // '24' can appear for midnight in some locales — normalize to '00'
+            // '24' can appear for midnight in some locales - normalize to '00'
             if (h === '24') h = '00';
             return {
                 h: h.padStart(2, '0'),
@@ -4407,7 +4407,7 @@
             secOnes.style.transform = `translateY(calc(${heightVal} * ${s === 0 ? 0 : o}))`;
         }
 
-        // Fetch visitor timezone from IP geolocation (silent — no visible label)
+        // Fetch visitor timezone from IP geolocation (silent - no visible label)
         async function fetchIPTimezone() {
             try {
                 const res = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
@@ -4422,7 +4422,7 @@
         if (document.getElementById('clock-hours')) {
             updateLiveClock();
             setInterval(updateLiveClock, 1000);
-            fetchIPTimezone(); // Async — updates timezone label once resolved
+            fetchIPTimezone(); // Async - updates timezone label once resolved
 
             gsap.fromTo(".live-clock-section",
                 { opacity: 0, scale: 0.95, y: 50 },
@@ -4436,7 +4436,7 @@
         const packageData = {
             podcast: {
                 icon: '🎙️', name: 'Podcast to Profit', tagline: 'One recording. Infinite content.', badge: 'Most Popular',
-                description: 'Transform a single podcast recording into a full content ecosystem. From the full-length episode to scroll-stopping short clips — we handle the entire post-production pipeline so you can focus on talking.',
+                description: 'Transform a single podcast recording into a full content ecosystem. From the full-length episode to scroll-stopping short clips - we handle the entire post-production pipeline so you can focus on talking.',
                 includes: [
                     'Full-length episode edit (up to 90 min)',
                     '5× short clips cut from the episode (Reels / YT Shorts)',
@@ -4464,7 +4464,7 @@
             },
             brand: {
                 icon: '🎨', name: 'Brand Identity Kit', tagline: 'Your visual DNA, built to last.', badge: null,
-                description: 'A complete visual identity system built from the ground up. Every element — from the logo mark to the social templates — is designed to feel premium, cohesive, and unmistakably you.',
+                description: 'A complete visual identity system built from the ground up. Every element - from the logo mark to the social templates - is designed to feel premium, cohesive, and unmistakably you.',
                 includes: [
                     'Logo design (3 initial concepts)',
                     'Brand color palette & typography system',
@@ -4478,7 +4478,7 @@
             },
             cinematic: {
                 icon: '🎬', name: 'Cinematic Production', tagline: 'Premium long-form storytelling.', badge: null,
-                description: 'Turn raw footage into a cinematic experience. We apply Hollywood-level post-production techniques — color science, spatial audio, and VFX — to make your content feel like it belongs on a big screen.',
+                description: 'Turn raw footage into a cinematic experience. We apply Hollywood-level post-production techniques - color science, spatial audio, and VFX - to make your content feel like it belongs on a big screen.',
                 includes: [
                     'Full video edit (up to 60 minutes)',
                     'Hollywood-grade color grading & custom LUT',

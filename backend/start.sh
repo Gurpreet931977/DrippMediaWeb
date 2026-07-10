@@ -1,6 +1,6 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────────────────────
-#  Dripp Media Backend — One-Command Startup
+#  Dripp Media Backend - One-Command Startup
 #  Usage: bash start.sh
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -10,7 +10,7 @@ cd "$SCRIPT_DIR"
 
 echo ""
 echo "╔══════════════════════════════════════╗"
-echo "║      DRIPP MEDIA — STARTING UP       ║"
+echo "║      DRIPP MEDIA - STARTING UP       ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
 

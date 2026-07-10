@@ -3,11 +3,11 @@
  * Secure server-side score submission endpoint.
  *
  * Security layers:
- *  1. CORS restriction — only drippmedia.com may call this endpoint
- *  2. Rate limiting — max 5 submissions per minute per IP
+ *  1. CORS restriction - only drippmedia.com may call this endpoint
+ *  2. Rate limiting - max 5 submissions per minute per IP
  *  3. HMAC-SHA256 session token verification – score and server secret are used
  *     to generate a token at session start; that same token must arrive with submission
- *  4. Session age check — token must be fresh (max 2 hours)
+ *  4. Session age check - token must be fresh (max 2 hours)
  *  5. Server-side sanity caps – score checked against a hard physics maximum
  *  6. Hit-count plausibility – score checked against number of reported catches
  *  7. All Supabase writes happen here (server) – anon key cannot write scores directly
@@ -22,13 +22,13 @@ import { signScoreCommit } from '@/app/api/session-token/route';
 import { sendHighScoreEmail } from '@/app/lib/email';
 
 // ── Config ─────────────────────────────────────────────────────────────────────
-// Score plausibility caps — must match the commit-stage caps in /api/session-token.
+// Score plausibility caps - must match the commit-stage caps in /api/session-token.
 // These are the SECOND line of defence; /api/session-token already rejects
 // commits for implausible scores, so only a coordinated attack on both endpoints
 // simultaneously (or a bug in session-token) would reach these checks.
 //
 // Dripp Drop: avg ~5 pts/catch at peak, 15 pts/sec server cap.
-// Absolute ceiling 50,000 — top legit players currently reach ~23k.
+// Absolute ceiling 50,000 - top legit players currently reach ~23k.
 const MAX_PLAUSIBLE_SCORE   = 50000; // matches /api/session-token absolute cap
 const MIN_PTS_PER_CATCH     = 0.8;
 const MAX_PTS_PER_CATCH     = 70;   // white drops give 69 pts (keep high enough)
@@ -101,12 +101,12 @@ export async function POST(request) {
     const rawAuthToken = extractBearerToken(request);
     const authResult   = verifyAuthToken(rawAuthToken);
     if (!authResult.ok) {
-      console.warn(`[submit-score] Auth token rejected — reason=${authResult.reason} email=${email}`);
+      console.warn(`[submit-score] Auth token rejected - reason=${authResult.reason} email=${email}`);
       return withCors(Response.json({ error: 'Unauthorized' }, { status: 401 }), request);
     }
     // Email in the auth token must match the email in the submission
     if (!email || authResult.email.toLowerCase() !== email.toLowerCase().trim()) {
-      console.warn(`[submit-score] Email mismatch — token=${authResult.email} request=${email}`);
+      console.warn(`[submit-score] Email mismatch - token=${authResult.email} request=${email}`);
       return withCors(Response.json({ error: 'Unauthorized' }, { status: 403 }), request);
     }
 
@@ -135,24 +135,24 @@ export async function POST(request) {
     // ── 3. HMAC token verification ───────────────────────────────────────────
     if (!verifyToken(email, sessionTs, token)) {
       // Log without revealing which part failed
-      console.warn(`[submit-score] Invalid token — email=${email} score=${scoreNum}`);
+      console.warn(`[submit-score] Invalid token - email=${email} score=${scoreNum}`);
       return withCors(Response.json({ error: 'Invalid session token' }, { status: 403 }), request);
     }
 
     // ── 3.5. Score-commit HMAC verification ─────────────────────────────────
     // The scoreCommit token must be an HMAC of email:sessionStart:score:commit
     // issued by /api/session-token in score-commit mode. This proves the server
-    // itself blessed this exact score for this exact session — not just any score.
+    // itself blessed this exact score for this exact session - not just any score.
     try {
       const expectedCommit = signScoreCommit(email.toLowerCase().trim(), sessionTs, scoreNum);
       const a = Buffer.from(expectedCommit, 'hex');
       const b = Buffer.from(scoreCommit, 'hex');
       if (a.length !== b.length || !timingSafeEqual(a, b)) {
-        console.warn(`[submit-score] scoreCommit mismatch — email=${email} score=${scoreNum}`);
+        console.warn(`[submit-score] scoreCommit mismatch - email=${email} score=${scoreNum}`);
         return withCors(Response.json({ error: 'Score commit verification failed' }, { status: 403 }), request);
       }
     } catch {
-      console.warn(`[submit-score] scoreCommit verification threw — email=${email}`);
+      console.warn(`[submit-score] scoreCommit verification threw - email=${email}`);
       return withCors(Response.json({ error: 'Score commit verification failed' }, { status: 403 }), request);
     }
 
@@ -164,19 +164,19 @@ export async function POST(request) {
 
     // ── 5. Score sanity caps ─────────────────────────────────────────────────
     if (scoreNum < 0 || scoreNum > MAX_PLAUSIBLE_SCORE) {
-      console.warn(`[submit-score] Score out of range — email=${email} score=${scoreNum}`);
+      console.warn(`[submit-score] Score out of range - email=${email} score=${scoreNum}`);
       return withCors(Response.json({ error: 'Score out of plausible range' }, { status: 400 }), request);
     }
 
     // ── 5.5 Time-based plausibility check ───────────────────────────────────
     // A drop cannot be caught faster than once per 100ms on any device
-    // (100ms = 10 catches/sec — already superhuman for Dripp Drop).
+    // (100ms = 10 catches/sec - already superhuman for Dripp Drop).
     // We use this as a hard floor to reject impossible hit rates.
     const MIN_MS_PER_HIT = 100;
     const minRequiredTime = hitCountNum * MIN_MS_PER_HIT;
     if (sessionAgeMs < minRequiredTime) {
       console.warn(
-        `[submit-score] Impossibly fast score — email=${email}` +
+        `[submit-score] Impossibly fast score - email=${email}` +
         ` hits=${hitCountNum} time=${sessionAgeMs}ms required=${minRequiredTime}ms` +
         ` score=${scoreNum} (POSSIBLE API MANIPULATION)`
       );
@@ -186,7 +186,7 @@ export async function POST(request) {
     // ── 6. Hit-count plausibility check ─────────────────────────────────────
     if (scoreNum > 0) {
       if (hitCountNum < MIN_CATCHES_FOR_NONZERO) {
-        console.warn(`[submit-score] Too few catches — email=${email} score=${scoreNum}`);
+        console.warn(`[submit-score] Too few catches - email=${email} score=${scoreNum}`);
         return withCors(Response.json({ error: 'Score not plausible for hit count' }, { status: 400 }), request);
       }
       const avgPts = scoreNum / hitCountNum;
@@ -195,7 +195,7 @@ export async function POST(request) {
       const dynamicMaxPts = hitCountNum < 10 ? MAX_PTS_PER_CATCH : 12;
 
       if (avgPts < MIN_PTS_PER_CATCH || avgPts > dynamicMaxPts) {
-        console.warn(`[submit-score] Bad avg pts/catch (${avgPts.toFixed(1)}) — email=${email}`);
+        console.warn(`[submit-score] Bad avg pts/catch (${avgPts.toFixed(1)}) - email=${email}`);
         return withCors(Response.json({ error: 'Score not plausible for hit count' }, { status: 400 }), request);
       }
     }
@@ -214,7 +214,7 @@ export async function POST(request) {
     }
     
     if (!userData) {
-      console.warn(`[submit-score] User not found in DB — email=${email}`);
+      console.warn(`[submit-score] User not found in DB - email=${email}`);
       return withCors(Response.json({ error: 'User not found' }, { status: 404 }), request);
     }
 
@@ -240,7 +240,7 @@ export async function POST(request) {
       console.error('[submit-score] High score email background task failed:', err);
     });
 
-    console.log(`[submit-score] New high score — email=${email} score=${scoreNum} prev=${currentHigh}`);
+    console.log(`[submit-score] New high score - email=${email} score=${scoreNum} prev=${currentHigh}`);
     return withCors(Response.json({ ok: true, updated: true, highscore: scoreNum }), request);
 
   } catch (err) {

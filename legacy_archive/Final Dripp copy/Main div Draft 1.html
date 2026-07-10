@@ -2030,7 +2030,7 @@
             overflow: visible;
         }
 
-        /* Scroll wrapper — this is the only element that scrolls */
+        /* Scroll wrapper - this is the only element that scrolls */
         .chip-scroll {
             max-height: 280px;
             overflow-y: auto;
@@ -2052,7 +2052,7 @@
             background: transparent;
         }
 
-        /* Chip panel — layout only, NO overflow clipping */
+        /* Chip panel - layout only, NO overflow clipping */
         .chip-panel {
             display: none;
             flex-wrap: wrap;
@@ -2104,7 +2104,7 @@
             transform: translateY(-2px);
         }
 
-        /* Spin the + on hover — same feel as the theme toggle button */
+        /* Spin the + on hover - same feel as the theme toggle button */
         .custom-chip:not(.selected):hover::after {
             transform: rotate(360deg) scale(1.2);
             background: rgba(235, 215, 63, 0.35);
@@ -2835,7 +2835,7 @@
         }
 
         /* ============================================
-           SERVICES SECTION — LIGHT MODE
+           SERVICES SECTION - LIGHT MODE
         ============================================ */
 
         body.light-theme .services-section {
@@ -3447,7 +3447,7 @@
             <div class="service-header">
                 <span class="section-label">03.5 / SERVICES</span>
                 <h2 class="section-title">What We Do</h2>
-                <p class="service-intro">Click any service that interests you — it'll be added to your quote below.</p>
+                <p class="service-intro">Click any service that interests you - it'll be added to your quote below.</p>
             </div>
 
             <!-- Floating Services Cloud -->
@@ -4843,7 +4843,7 @@
             const parts = formatter.formatToParts(new Date());
             const get = (type) => parts.find(p => p.type === type)?.value ?? '00';
             let h = get('hour');
-            // '24' can appear for midnight in some locales — normalize to '00'
+            // '24' can appear for midnight in some locales - normalize to '00'
             if (h === '24') h = '00';
             return {
                 h: h.padStart(2, '0'),
@@ -4890,7 +4890,7 @@
             secOnes.style.transform = `translateY(calc(${heightVal} * ${s === 0 ? 0 : o}))`;
         }
 
-        // Fetch visitor timezone from IP geolocation (silent — no visible label)
+        // Fetch visitor timezone from IP geolocation (silent - no visible label)
         async function fetchIPTimezone() {
             try {
                 const res = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
@@ -4905,7 +4905,7 @@
         if (document.getElementById('clock-hours')) {
             updateLiveClock();
             setInterval(updateLiveClock, 1000);
-            fetchIPTimezone(); // Async — updates timezone label once resolved
+            fetchIPTimezone(); // Async - updates timezone label once resolved
 
             gsap.fromTo(".live-clock-section",
                 { opacity: 0, scale: 0.95, y: 50 },
@@ -5121,7 +5121,7 @@
                                 if (typeof window.handlePillAction === 'function') window.handlePillAction(e, pill);
                             } else {
                                 lastClickTime = now;
-                                // Single tap visual hint — gentle brightness pulse
+                                // Single tap visual hint - gentle brightness pulse
                                 gsap.fromTo(pill,
                                     { filter: 'brightness(1.5)' },
                                     { filter: 'brightness(1)', duration: 0.4, ease: 'power2.out' }

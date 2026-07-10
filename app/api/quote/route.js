@@ -5,7 +5,7 @@ import { rateLimit } from '@/app/lib/rateLimit';
 import { withCors, corsHeaders } from '@/app/lib/cors';
 
 // ── Supabase ───────────────────────────────────────────────────────────────────
-// Never hardcode credentials — always read from env
+// Never hardcode credentials - always read from env
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -51,7 +51,7 @@ export async function POST(request) {
 
     const supabase = getSupabase();
 
-    // Only store what we expect — avoid blindly passing the whole body
+    // Only store what we expect - avoid blindly passing the whole body
     const payload = {
       id,
       // password field is fine to store (it's a quote-viewing password, not a user password)

@@ -33,7 +33,7 @@ export default function AdminLayout({ children }) {
         if (res.ok) {
           setIsAuthorized(true);
         } else {
-          // No valid session — show the login form
+          // No valid session - show the login form
           setShowLogin(true);
         }
       } catch {

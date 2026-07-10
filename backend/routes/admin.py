@@ -1,5 +1,5 @@
 """
-routes/admin.py — /admin dashboard + /admin/status (lead status update)
+routes/admin.py - /admin dashboard + /admin/status (lead status update)
 Password-protected with HMAC-signed HttpOnly cookie.
 """
 
@@ -65,7 +65,7 @@ def _render_dashboard(leads, community):
             f'<span style="background:#ebd73f22;border:1px solid #ebd73f55;color:#ebd73f;'
             f'padding:2px 10px;border-radius:20px;font-size:11px;margin:2px;display:inline-block;">{s}</span>'
             for s in svcs
-        ) or "<span style='color:#444'>—</span>"
+        ) or "<span style='color:#444'>-</span>"
 
         lead_rows += f"""
         <tr>
@@ -75,7 +75,7 @@ def _render_dashboard(leads, community):
             <a href="mailto:{l['email']}" style="color:#ebd73f;font-size:12px;text-decoration:none;">{l['email']}</a>
           </td>
           <td style="padding:14px 16px;max-width:300px;">
-            <div style="color:#aaa;font-size:13px;line-height:1.5;white-space:pre-wrap;">{l.get('message','') or '—'}</div>
+            <div style="color:#aaa;font-size:13px;line-height:1.5;white-space:pre-wrap;">{l.get('message','') or '-'}</div>
             <div style="margin-top:6px;">{svcs_html}</div>
           </td>
           <td style="padding:14px 16px;">{_status_badge(l.get('status','new'))}</td>
@@ -105,7 +105,7 @@ def _render_dashboard(leads, community):
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Dripp Media — Admin</title>
+  <title>Dripp Media - Admin</title>
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet"/>
   <style>
     *{{margin:0;padding:0;box-sizing:border-box;}}
@@ -151,7 +151,7 @@ def _render_dashboard(leads, community):
           </tr>
         </thead>
         <tbody>
-          {lead_rows or '<tr><td colspan="6" style="padding:32px;text-align:center;color:#444;">No leads yet — share the site link!</td></tr>'}
+          {lead_rows or '<tr><td colspan="6" style="padding:32px;text-align:center;color:#444;">No leads yet - share the site link!</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -175,7 +175,7 @@ LOGIN_PAGE = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Dripp Admin — Login</title>
+  <title>Dripp Admin - Login</title>
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,600,700&display=swap" rel="stylesheet"/>
   <style>
     *{{margin:0;padding:0;box-sizing:border-box;}}

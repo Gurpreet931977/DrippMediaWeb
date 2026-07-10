@@ -50,7 +50,8 @@ Rules:
 2. If the user provided a body, rewrite it into our premium marketing format, and generate a matching subject and title.
 3. If they provided all, rewrite them to be better.
 4. If they provided none, generate completely new, fresh content based on the template type.
-5. Do NOT output any conversational text or markdown code blocks. Output ONLY valid JSON in this exact structure:
+5. NEVER use em dashes (-) anywhere in the copy. Use regular hyphens (-) instead.
+6. Do NOT output any conversational text or markdown code blocks. Output ONLY valid JSON in this exact structure:
 {
   "subject": "Email Subject Line",
   "title": "Large Header Title",

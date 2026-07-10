@@ -1,5 +1,5 @@
 /**
- * Google Sheets helper — used by /api/invoice/log
+ * Google Sheets helper - used by /api/invoice/log
  *
  * Lightweight, 0-dependency implementation using native fetch + crypto
  * (bypasses Vercel's 50MB Serverless Function limit caused by the massive `googleapis` package).

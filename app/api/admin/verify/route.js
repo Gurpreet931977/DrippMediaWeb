@@ -30,7 +30,7 @@ if (!ADMIN_PASSWORD) {
 // Rate limit: 10 verify attempts per 15 minutes per IP
 const limiter = rateLimit({ limit: 10, windowMs: 15 * 60_000 });
 
-// ── GET — verify existing session ──────────────────────────────────────────────
+// ── GET - verify existing session ──────────────────────────────────────────────
 
 export async function GET(request) {
   const { ok: rlOk, retryAfter } = limiter.check(request);
@@ -56,7 +56,7 @@ export async function GET(request) {
   return Response.json({ ok: true, email });
 }
 
-// ── POST — issue a new admin session ──────────────────────────────────────────
+// ── POST - issue a new admin session ──────────────────────────────────────────
 
 export async function POST(request) {
   const { ok: rlOk, retryAfter } = limiter.check(request);
