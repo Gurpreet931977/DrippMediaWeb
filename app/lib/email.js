@@ -20,7 +20,7 @@ const getHtmlLayout = (content) => `
   <style>
     @import url('https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&display=swap');
     
-    /* Email-safe CSS Animation (Supported in Apple Mail & some web clients, degrades gracefully in Gmail/Outlook) */
+    /* Email-safe CSS Animation */
     .cta-btn {
       transition: all 0.2s ease-in-out !important;
     }
@@ -30,26 +30,36 @@ const getHtmlLayout = (content) => `
     }
     .cta-btn:active {
       transform: translateY(2px) !important;
-      border-bottom-width: 0px !important;
-      margin-top: 5px !important;
+      border-bottom-width: 2px !important;
+      margin-top: 4px !important;
     }
     
-    @keyframes subtlePulse {
-      0% { box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); }
-      50% { box-shadow: 0 15px 35px rgba(235, 215, 63, 0.6); }
-      100% { box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); }
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 10px 25px rgba(235, 215, 63, 0.4); }
+      50% { box-shadow: 0 15px 40px rgba(235, 215, 63, 0.7); }
+      100% { box-shadow: 0 10px 25px rgba(235, 215, 63, 0.4); }
     }
-    @keyframes subtlePulseSilver {
-      0% { box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15); }
-      50% { box-shadow: 0 15px 35px rgba(255, 255, 255, 0.3); }
-      100% { box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15); }
+    @keyframes pulseSilver {
+      0% { box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2); }
+      50% { box-shadow: 0 15px 40px rgba(255, 255, 255, 0.4); }
+      100% { box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2); }
     }
     
     .animate-pulse-gold {
-      animation: subtlePulse 2.5s infinite ease-in-out !important;
+      animation: pulseGlow 2s infinite ease-in-out !important;
     }
     .animate-pulse-silver {
-      animation: subtlePulseSilver 2.5s infinite ease-in-out !important;
+      animation: pulseSilver 2s infinite ease-in-out !important;
+    }
+
+    @keyframes arrowBounce {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(6px); }
+    }
+    .arrow-move {
+      display: inline-block;
+      animation: arrowBounce 1.5s infinite;
+      margin-left: 8px;
     }
   </style>
 </head>
@@ -99,6 +109,37 @@ const getHtmlLayout = (content) => `
 </html>
 `;
 
+// Helper for rendering 3D bulletproof buttons
+const render3DButton = (text, link, isSilver = false) => {
+  const btnBg = isSilver ? '#ffffff' : '#ebd73f';
+  const btnBorderBottom = isSilver ? '6px solid #a1a1aa' : '6px solid #8a7b18';
+  const btnBorderRight = isSilver ? '2px solid #d4d4d8' : '2px solid #bba81c';
+  const btnBorderTop = isSilver ? '1px solid #ffffff' : '1px solid #fce844';
+  const btnBorderLeft = isSilver ? '1px solid #ffffff' : '1px solid #fce844';
+  const shadowColor = isSilver ? 'rgba(255, 255, 255, 0.2)' : 'rgba(235, 215, 63, 0.5)';
+  const pulseClass = isSilver ? 'animate-pulse-silver' : 'animate-pulse-gold';
+  
+  return `
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+      <tr>
+        <td align="center" style="padding-top: 24px;">
+          <div>
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${link}" style="height:56px;v-text-anchor:middle;width:260px;" arcsize="22%" strokecolor="${isSilver ? '#a1a1aa' : '#8a7b18'}" strokeweight="4pt" fillcolor="${btnBg}">
+              <w:anchorlock/>
+              <center style="color:#000000;font-family:'Panchang', sans-serif, Arial;font-size:15px;font-weight:800;text-transform:uppercase;">${text}</center>
+            </v:roundrect>
+            <![endif]-->
+            <a href="${link}" class="cta-btn ${pulseClass}" style="background-color:${btnBg}; border-bottom: ${btnBorderBottom}; border-right: ${btnBorderRight}; border-top: ${btnBorderTop}; border-left: ${btnBorderLeft}; border-radius:12px; color:#000000; display:inline-block; font-family:'Panchang', sans-serif, Arial; font-size:15px; font-weight:800; line-height:56px; text-align:center; text-decoration:none; width:260px; -webkit-text-size-adjust:none; mso-hide:all; box-shadow: 0 10px 25px ${shadowColor}; text-transform:uppercase; letter-spacing: 0.5px;">
+              ${text} <span class="arrow-move">→</span>
+            </a>
+          </div>
+        </td>
+      </tr>
+    </table>
+  `;
+};
+
 export async function sendWelcomeEmail(email, name, nature) {
   const resend = getResend();
   if (!resend) return { success: false, error: 'Misconfigured' };
@@ -125,12 +166,8 @@ export async function sendWelcomeEmail(email, name, nature) {
     const html = getHtmlLayout(`
       <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 24px; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">${title}</h2>
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">${p1}</p>
-      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 40px;">${p2}</p>
-      <div style="text-align: center;">
-        <a href="${btnLink}" class="cta-btn animate-pulse-gold" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
-          ${btnText}
-        </a>
-      </div>
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px;">${p2}</p>
+      ${render3DButton(btnText, btnLink, false)}
     `);
 
     const data = await resend.emails.send({
@@ -159,14 +196,10 @@ export async function sendHighScoreEmail(email, score) {
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px; text-align: center;">
         Incredible performance! You just set a new personal best of <strong style="color: #ebd73f; font-size: 18px;">${score} points</strong>.
       </p>
-      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 40px; text-align: center;">
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px; text-align: center;">
         The competition is fierce. Hop back in to defend your position and aim even higher!
       </p>
-      <div style="text-align: center;">
-        <a href="https://drippmedia.com/arcade" class="cta-btn animate-pulse-gold" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
-          Defend Your Score
-        </a>
-      </div>
+      ${render3DButton('Defend Your Score', 'https://drippmedia.com/arcade', false)}
     `);
 
     const data = await resend.emails.send({
@@ -192,14 +225,10 @@ export async function sendReminderEmail(email, name) {
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">
         The leaderboard has been shifting since you last played Dripp Drop. Others might be coming for your spot!
       </p>
-      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 40px;">
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px;">
         We thought you might want to jump back in and show them how it's done.
       </p>
-      <div style="text-align: center;">
-        <a href="https://drippmedia.com/arcade" class="cta-btn animate-pulse-gold" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
-          Return to Arcade
-        </a>
-      </div>
+      ${render3DButton('Return to Arcade', 'https://drippmedia.com/arcade', false)}
     `);
 
     const data = await resend.emails.send({
@@ -222,21 +251,16 @@ export async function sendCustomAdminEmail(to, subject, title, body, templateTyp
   const formattedBody = body.replace(/\n/g, '<br/>');
 
   let accentColor = '#ebd73f'; 
-  let btnBg = '#ebd73f';
-  let btnBorderBottom = '5px solid #a69420';
-  let btnColor = '#000000';
-  let shadowColor = 'rgba(235, 215, 63, 0.3)';
-  let pulseClass = 'animate-pulse-gold';
+  let isSilver = false;
+  let btnText = 'View Details';
 
   if (templateType === 'promo') {
     accentColor = '#ebd73f';
+    btnText = 'Claim Offer';
   } else if (templateType === 'newsletter') {
     accentColor = '#ffffff'; 
-    btnBg = '#ffffff';
-    btnBorderBottom = '5px solid #a1a1aa';
-    btnColor = '#000000';
-    shadowColor = 'rgba(255, 255, 255, 0.15)';
-    pulseClass = 'animate-pulse-silver';
+    isSilver = true;
+    btnText = 'Read More';
   }
 
   try {
@@ -247,16 +271,7 @@ export async function sendCustomAdminEmail(to, subject, title, body, templateTyp
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">
         ${formattedBody}
       </p>
-      ${
-        templateType === 'promo' 
-        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" class="cta-btn ${pulseClass}" style="display: inline-block; background: ${btnBg}; border-bottom: ${btnBorderBottom}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px ${shadowColor}; font-family: 'Panchang', sans-serif;">Claim Offer</a></div>`
-        : ''
-      }
-      ${
-        templateType === 'announcement'
-        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" class="cta-btn ${pulseClass}" style="display: inline-block; background: ${btnBg}; border-bottom: ${btnBorderBottom}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px ${shadowColor}; font-family: 'Panchang', sans-serif;">View Details</a></div>`
-        : ''
-      }
+      ${render3DButton(btnText, 'https://drippmedia.com', isSilver)}
     `);
 
     const data = await resend.emails.send({
