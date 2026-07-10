@@ -49,10 +49,10 @@ export default function CopilotChat() {
     } else {
       setIsOpen(true);
       
-      // Trigger Orlo's dramatic greeting animation
-      setEmotion('greeting');
+      // Trigger Orlo's happy greeting animation
+      setEmotion('excited');
       setTimeout(() => {
-        setEmotion(prev => prev === 'greeting' ? 'idle' : prev);
+        setEmotion(prev => prev === 'excited' ? 'idle' : prev);
       }, 1500);
 
       setTimeout(() => {
@@ -389,7 +389,7 @@ export default function CopilotChat() {
         style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
       >
         <div className="copilot-ring"></div>
-        <OrloIcon size={32} color="#000" className="orlo-icon-svg" emotion={isOpen ? emotion : (isHovered ? 'disturbed' : 'idle')} />
+        <OrloIcon size={32} color="#000" className="orlo-icon-svg" emotion={isOpen ? emotion : (isHovered ? 'excited' : 'sad')} />
       </div>
     </>
   );
