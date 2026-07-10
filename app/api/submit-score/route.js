@@ -19,6 +19,7 @@ import { rateLimit } from '@/app/lib/rateLimit';
 import { withCors, corsHeaders } from '@/app/lib/cors';
 import { verifyAuthToken, extractBearerToken } from '@/app/lib/authToken';
 import { signScoreCommit } from '@/app/api/session-token/route';
+import { sendHighScoreEmail } from '@/app/lib/email';
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 // Score plausibility caps — must match the commit-stage caps in /api/session-token.
@@ -233,6 +234,11 @@ export async function POST(request) {
       console.error('[submit-score] Update error:', updateError?.message);
       return withCors(Response.json({ error: 'Failed to save score' }, { status: 500 }), request);
     }
+
+    // Send high score email asynchronously
+    sendHighScoreEmail(email, scoreNum).catch((err) => {
+      console.error('[submit-score] High score email background task failed:', err);
+    });
 
     console.log(`[submit-score] New high score — email=${email} score=${scoreNum} prev=${currentHigh}`);
     return withCors(Response.json({ ok: true, updated: true, highscore: scoreNum }), request);

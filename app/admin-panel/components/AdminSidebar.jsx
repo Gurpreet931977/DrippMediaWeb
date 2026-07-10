@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, PackagePlus, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail } from 'lucide-react';
 import styles from '../admin.module.css';
 
 export default function AdminSidebar() {
@@ -12,6 +12,7 @@ export default function AdminSidebar() {
     { name: 'Dashboard', path: '/admin-panel', icon: LayoutDashboard },
     { name: 'Invoice Maker', path: '/admin-panel/invoice', icon: FileText },
     { name: 'Quotes & Packages', path: '/admin-panel/quote', icon: PackagePlus },
+    { name: 'Email Campaigns', path: '/admin-panel/email', icon: Mail },
   ];
 
   return (

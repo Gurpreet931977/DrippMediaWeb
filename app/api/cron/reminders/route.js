@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { Resend } from 'resend';
+import { sendReminderEmail } from '@/app/lib/email';
 
-// Initialize Resend (instantiated inside GET to prevent build errors if env var is missing)
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -17,11 +16,6 @@ export async function GET(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!process.env.RESEND_API_KEY) {
-      return Response.json({ error: 'RESEND_API_KEY is not configured' }, { status: 500 });
-    }
-
-    const resend = new Resend(process.env.RESEND_API_KEY);
     const supabase = getSupabase();
     if (!supabase) {
       return Response.json({ error: 'Database misconfigured' }, { status: 500 });
@@ -57,22 +51,13 @@ export async function GET(request) {
       if (!user.email || !user.email.includes('@')) continue; // Skip Player Tags without email
 
       try {
-        // Send Email via Resend
-        await resend.emails.send({
-          from: 'Dripp Media <noreply@drippmedia.com>', // Update this to a verified domain on Resend
-          to: user.email,
-          subject: 'Ready to beat your high score? 🏆',
-          html: `
-            <div style="font-family: sans-serif; text-align: center; padding: 20px;">
-              <h2>Hey ${user.name || 'Player'},</h2>
-              <p>It's been a while since you played <strong>Dripp Drop</strong>!</p>
-              <p>The leaderboard is heating up, and we thought you might want to defend your ranking.</p>
-              <a href="https://drippmedia.com/arcade" style="display: inline-block; background-color: #ffd700; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px;">
-                PLAY NOW
-              </a>
-            </div>
-          `,
-        });
+        // Send Email via Centralized Utility
+        const result = await sendReminderEmail(user.email, user.name);
+        
+        if (!result.success) {
+           console.error(`[cron/reminders] Resend failed for ${user.email}:`, result.error);
+           continue;
+        }
 
         // Update last_reminded_at in the database
         await supabase
