@@ -19,6 +19,34 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
 
       if (emotion === 'still') {
         return;
+      } else if (emotion === 'disturbed') {
+        // Look up at cursor, annoyed, narrow eyes, shake slightly
+        gsap.to(headRef.current, {
+          y: -8,
+          scaleY: 0.95,
+          scaleX: 1.05,
+          rotation: -8,
+          transformOrigin: "bottom center",
+          duration: 0.2,
+          ease: "power2.out"
+        });
+        gsap.to([leftEyeRef.current, rightEyeRef.current], {
+          scaleY: 0.3,
+          scaleX: 1.2,
+          y: -15,
+          x: -6,
+          transformOrigin: "center center",
+          duration: 0.2,
+          ease: "power2.out"
+        });
+        gsap.to(headRef.current, {
+          x: 2,
+          yoyo: true,
+          repeat: -1,
+          duration: 0.08,
+          ease: "sine.inOut",
+          delay: 0.2
+        });
       } else if (emotion === 'greeting') {
         gsap.fromTo(headRef.current, 
           { y: 200, scaleY: 0.5, scaleX: 1.5 }, 

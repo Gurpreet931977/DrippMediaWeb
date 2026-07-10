@@ -11,6 +11,7 @@ export default function CopilotChat() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [emotion, setEmotion] = useState('idle');
+  const [isHovered, setIsHovered] = useState(false);
   const chatRef = useRef(null);
   const btnRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -127,10 +128,6 @@ export default function CopilotChat() {
           animation: orloBreathe 3s ease-in-out infinite;
           transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .copilot-orb:hover .orlo-icon-svg {
-          animation: none;
-          transform: scale(1.15) rotate(15deg);
-        }
         .copilot-orb {
           width: 64px;
           height: 64px;
@@ -147,9 +144,6 @@ export default function CopilotChat() {
           cursor: pointer;
           transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           animation: pulseOrb 3s infinite alternate;
-        }
-        .copilot-orb:hover {
-          transform: scale(1.1);
         }
         @keyframes pulseOrb {
           0% { box-shadow: 0 0 20px rgba(235, 215, 63, 0.3), inset 0 0 10px rgba(255,255,255,0.5); }
@@ -356,9 +350,16 @@ export default function CopilotChat() {
         </div>
       )}
 
-      <div className="copilot-orb" onClick={toggleChat} ref={btnRef}>
+      <div 
+        className="copilot-orb" 
+        onClick={toggleChat} 
+        ref={btnRef}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
+      >
         <div className="copilot-ring"></div>
-        <OrloIcon size={32} color="#000" className="orlo-icon-svg" emotion={isOpen ? emotion : 'idle'} />
+        <OrloIcon size={32} color="#000" className="orlo-icon-svg" emotion={isOpen ? emotion : (isHovered ? 'disturbed' : 'idle')} />
       </div>
     </>
   );
