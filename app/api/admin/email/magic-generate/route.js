@@ -78,7 +78,8 @@ Instructions:
     
     let parsedResult;
     try {
-      parsedResult = JSON.parse(rawText);
+      const cleanedText = rawText.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();
+      parsedResult = JSON.parse(cleanedText);
     } catch (e) {
       console.error('Failed to parse JSON from AI', rawText);
       return Response.json({ error: 'AI returned invalid format' }, { status: 500 });
