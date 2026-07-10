@@ -18,16 +18,37 @@ export default function EmailCampaignsPage() {
   const [status, setStatus] = useState({ type: '', msg: '' });
 
   const containerRef = useRef(null);
+  const aiBtnRef = useRef(null);
 
   // Initial enter animation
   useEffect(() => {
     if (containerRef.current) {
       gsap.fromTo(containerRef.current.children, 
-        { y: 30, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: 'power3.out' }
+        { y: 40, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.8, stagger: 0.15, ease: 'power4.out' }
       );
     }
   }, []);
+
+  // Magnetic hover effect for AI button
+  const handleAiMouseMove = (e) => {
+    if (!aiBtnRef.current || generating) return;
+    const rect = aiBtnRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    
+    gsap.to(aiBtnRef.current, {
+      x: x * 0.3,
+      y: y * 0.3,
+      duration: 0.4,
+      ease: 'power3.out'
+    });
+  };
+
+  const handleAiMouseLeave = () => {
+    if (!aiBtnRef.current || generating) return;
+    gsap.to(aiBtnRef.current, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.3)' });
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -67,6 +88,7 @@ export default function EmailCampaignsPage() {
   const handleAiGenerate = () => {
     if (generating) return;
     setGenerating(true);
+    gsap.to(aiBtnRef.current, { x: 0, y: 0, scale: 0.95, duration: 0.2 });
     
     // Premium placeholder text to simulate AI generating copy
     const aiDrafts = {
@@ -89,7 +111,6 @@ export default function EmailCampaignsPage() {
 
     const draft = aiDrafts[templateType];
     
-    // Simulated typing effect
     setSubject('');
     setTitle('');
     setBody('');
@@ -106,45 +127,36 @@ export default function EmailCampaignsPage() {
       if (charIndex >= fullText.length) {
         clearInterval(typeInterval);
         setGenerating(false);
+        gsap.to(aiBtnRef.current, { scale: 1, duration: 0.4, ease: 'back.out(1.5)' });
       }
     }, 15);
   };
 
   return (
     <div ref={containerRef} style={{ paddingBottom: '4rem' }}>
-      <div className={styles.header} style={{ marginBottom: '3rem' }}>
-        <h1 className={styles.title} style={{ fontSize: '2.5rem', background: 'linear-gradient(90deg, #fff, #a1a1aa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          Email Studio
+      <div className={styles.header}>
+        <h1 className={styles.title}>
+          Email <span style={{ color: '#ebd73f' }}>Campaigns</span>
         </h1>
         <p className={styles.subtitle}>Craft and launch premium email experiences to your audience.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '2rem', alignItems: 'start' }}>
         {/* Main Form */}
-        <div className={styles.card} style={{ 
-          background: 'rgba(255,255,255,0.02)', 
-          backdropFilter: 'blur(12px)', 
-          border: '1px solid rgba(255,255,255,0.05)', 
-          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
-          padding: '2.5rem'
-        }}>
-          <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className={styles.interactiveCard} style={{ padding: '2.5rem' }}>
+          <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
             
             {/* Target Audience */}
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', fontWeight: '600', color: '#e4e4e7' }}>
+              <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#ebd73f' }}>
                 <Users size={18} /> Target Audience
               </label>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button
                   type="button"
                   onClick={() => setIsBroadcast(false)}
-                  style={{
-                    flex: 1, padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                    backgroundColor: !isBroadcast ? '#ffffff' : 'rgba(255,255,255,0.05)',
-                    color: !isBroadcast ? '#000000' : '#a1a1aa',
-                    border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s'
-                  }}
+                  className={!isBroadcast ? styles.btnPrimary : styles.btn}
+                  style={{ flex: 1, padding: '1.25rem' }}
                 >
                   <Mail size={18} />
                   Specific User
@@ -152,19 +164,15 @@ export default function EmailCampaignsPage() {
                 <button
                   type="button"
                   onClick={() => setIsBroadcast(true)}
-                  style={{
-                    flex: 1, padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                    backgroundColor: isBroadcast ? '#ef4444' : 'rgba(255,255,255,0.05)',
-                    color: isBroadcast ? '#ffffff' : '#a1a1aa',
-                    border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s'
-                  }}
+                  className={isBroadcast ? styles.btnDanger : styles.btn}
+                  style={{ flex: 1, padding: '1.25rem' }}
                 >
                   <Users size={18} />
                   Broadcast to All
                 </button>
               </div>
               {isBroadcast && (
-                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', borderRadius: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.875rem' }}>
+                <div style={{ marginTop: '1rem', padding: '1.25rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', borderRadius: '0.75rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.875rem' }}>
                   <AlertCircle size={20} style={{ flexShrink: 0 }} />
                   <div>
                     <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Proceed with caution</strong>
@@ -175,7 +183,7 @@ export default function EmailCampaignsPage() {
             </div>
 
             {!isBroadcast && (
-              <div>
+              <div className={styles.formGroup} style={{ marginBottom: 0 }}>
                 <label className={styles.label}>Recipient Email</label>
                 <input
                   type="email"
@@ -184,50 +192,49 @@ export default function EmailCampaignsPage() {
                   placeholder="user@example.com"
                   value={specificEmail}
                   onChange={(e) => setSpecificEmail(e.target.value)}
-                  style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
                 />
               </div>
             )}
 
             {/* Content Section */}
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '2rem' }}>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600', color: '#e4e4e7', margin: 0 }}>
+                <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ebd73f', margin: 0 }}>
                   <PenTool size={18} /> Message Content
                 </label>
                 
                 {/* AI Generate Button */}
                 <button
+                  ref={aiBtnRef}
                   type="button"
                   onClick={handleAiGenerate}
+                  onMouseMove={handleAiMouseMove}
+                  onMouseLeave={handleAiMouseLeave}
                   disabled={generating}
                   style={{
-                    background: 'linear-gradient(135deg, #6366f1, #a855f7, #ec4899)',
+                    background: 'linear-gradient(135deg, #ebd73f, #d4c235)',
                     border: 'none',
                     borderRadius: '2rem',
-                    padding: '0.5rem 1rem',
-                    color: '#fff',
-                    fontWeight: '600',
+                    padding: '0.6rem 1.25rem',
+                    color: '#000',
+                    fontWeight: '700',
                     fontSize: '0.875rem',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
                     cursor: generating ? 'not-allowed' : 'pointer',
                     opacity: generating ? 0.7 : 1,
-                    transition: 'transform 0.2s',
-                    boxShadow: '0 4px 14px rgba(168, 85, 247, 0.4)'
+                    boxShadow: '0 4px 20px rgba(235, 215, 63, 0.4)'
                   }}
-                  onMouseOver={(e) => { if(!generating) e.currentTarget.style.transform = 'scale(1.05)' }}
-                  onMouseOut={(e) => { if(!generating) e.currentTarget.style.transform = 'scale(1)' }}
                 >
                   <Sparkles size={16} className={generating ? "animate-spin" : ""} />
-                  {generating ? 'Generating...' : 'Generate with AI'}
+                  {generating ? 'Generating...' : 'Magic Generate'}
                 </button>
               </div>
 
               <div style={{ display: 'grid', gap: '1.5rem' }}>
                 <div>
-                  <label className={styles.label} style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Subject</label>
+                  <label className={styles.label}>Email Subject</label>
                   <input
                     type="text"
                     required
@@ -235,12 +242,11 @@ export default function EmailCampaignsPage() {
                     placeholder="Subject line for the inbox"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
                   />
                 </div>
 
                 <div>
-                  <label className={styles.label} style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Template Title</label>
+                  <label className={styles.label}>Template Title</label>
                   <input
                     type="text"
                     required
@@ -248,12 +254,11 @@ export default function EmailCampaignsPage() {
                     placeholder="Large header inside the email"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
                   />
                 </div>
 
                 <div>
-                  <label className={styles.label} style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Message Body</label>
+                  <label className={styles.label}>Message Body</label>
                   <textarea
                     required
                     className={styles.input}
@@ -261,7 +266,7 @@ export default function EmailCampaignsPage() {
                     rows={8}
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
-                    style={{ resize: 'vertical', backgroundColor: 'rgba(0,0,0,0.5)', lineHeight: '1.6' }}
+                    style={{ resize: 'vertical', lineHeight: '1.6' }}
                   />
                 </div>
               </div>
@@ -270,14 +275,15 @@ export default function EmailCampaignsPage() {
             {/* Status Messages */}
             {status.msg && (
               <div style={{ 
-                padding: '1rem', 
-                borderRadius: '0.5rem', 
-                backgroundColor: status.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-                color: status.type === 'error' ? '#ef4444' : '#22c55e',
-                border: `1px solid ${status.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)'}`,
+                padding: '1.25rem', 
+                borderRadius: '0.75rem', 
+                backgroundColor: status.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(235, 215, 63, 0.1)',
+                color: status.type === 'error' ? '#ef4444' : '#ebd73f',
+                border: `1px solid ${status.type === 'error' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(235, 215, 63, 0.3)'}`,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.75rem'
+                gap: '0.75rem',
+                fontWeight: '500'
               }}>
                 {status.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
                 {status.msg}
@@ -290,19 +296,13 @@ export default function EmailCampaignsPage() {
               className={styles.btnPrimary} 
               style={{ 
                 padding: '1.25rem', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                gap: '0.5rem', 
                 fontSize: '1.1rem',
-                backgroundColor: '#fff',
-                color: '#000',
-                border: 'none',
-                marginTop: '1rem'
+                marginTop: '1rem',
+                width: '100%'
               }}
             >
               {loading ? (
-                'Dispatching Campaign...'
+                'Dispatching...'
               ) : (
                 <>
                   <Send size={20} />
@@ -316,8 +316,8 @@ export default function EmailCampaignsPage() {
         {/* Right Sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Theme Selector */}
-          <div className={styles.card} style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontWeight: '600', color: '#e4e4e7' }}>
+          <div className={styles.interactiveCard} style={{ padding: '2rem' }}>
+            <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: '#ebd73f' }}>
               <LayoutTemplate size={18} /> Visual Theme
             </label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -325,53 +325,58 @@ export default function EmailCampaignsPage() {
                 type="button"
                 onClick={() => setTemplateType('announcement')}
                 style={{ 
-                  padding: '1rem', textAlign: 'left', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s',
+                  padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   backgroundColor: templateType === 'announcement' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  border: templateType === 'announcement' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.05)',
-                  color: '#fff'
+                  border: templateType === 'announcement' ? '1px solid rgba(255,255,255,0.3)' : '1px solid rgba(255,255,255,0.05)',
+                  color: '#fff',
+                  transform: templateType === 'announcement' ? 'scale(1.02)' : 'scale(1)'
                 }}
               >
-                <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>Announcement</div>
-                <div style={{ fontSize: '0.875rem', color: '#a1a1aa' }}>Sleek, dark aesthetic. Perfect for major updates.</div>
+                <div style={{ fontWeight: '600', marginBottom: '0.35rem', fontSize: '1.05rem' }}>Announcement</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Sleek, dark aesthetic. Perfect for major updates.</div>
               </button>
+              
               <button 
                 type="button"
                 onClick={() => setTemplateType('promo')}
                 style={{ 
-                  padding: '1rem', textAlign: 'left', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s',
-                  backgroundColor: templateType === 'promo' ? 'rgba(34, 197, 94, 0.1)' : 'transparent',
-                  border: templateType === 'promo' ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255,255,255,0.05)',
-                  color: '#fff'
+                  padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  backgroundColor: templateType === 'promo' ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
+                  border: templateType === 'promo' ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+                  color: '#fff',
+                  transform: templateType === 'promo' ? 'scale(1.02)' : 'scale(1)'
                 }}
               >
-                <div style={{ fontWeight: '600', marginBottom: '0.25rem', color: '#4ade80' }}>Promo Offer</div>
-                <div style={{ fontSize: '0.875rem', color: '#a1a1aa' }}>Vibrant green accents designed to drive conversions.</div>
+                <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: '#ebd73f', fontSize: '1.05rem' }}>Promo Offer</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Dripp Media gold accents designed to drive conversions.</div>
               </button>
+
               <button 
                 type="button"
                 onClick={() => setTemplateType('newsletter')}
                 style={{ 
-                  padding: '1rem', textAlign: 'left', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s',
+                  padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   backgroundColor: templateType === 'newsletter' ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                   border: templateType === 'newsletter' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(255,255,255,0.05)',
-                  color: '#fff'
+                  color: '#fff',
+                  transform: templateType === 'newsletter' ? 'scale(1.02)' : 'scale(1)'
                 }}
               >
-                <div style={{ fontWeight: '600', marginBottom: '0.25rem', color: '#60a5fa' }}>Newsletter</div>
-                <div style={{ fontSize: '0.875rem', color: '#a1a1aa' }}>Clean blue aesthetics for recurring content updates.</div>
+                <div style={{ fontWeight: '600', marginBottom: '0.35rem', color: '#60a5fa', fontSize: '1.05rem' }}>Newsletter</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.4' }}>Clean blue aesthetics for recurring content updates.</div>
               </button>
             </div>
           </div>
 
           {/* AI Info */}
-          <div className={styles.card} style={{ background: 'rgba(168, 85, 247, 0.05)', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
-            <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', color: '#c084fc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className={styles.smartPasteCard}>
+            <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '1.1rem', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Sparkles size={18} /> AI Copywriter
             </h4>
-            <p style={{ margin: 0, color: '#a1a1aa', lineHeight: '1.6', fontSize: '0.875rem' }}>
-              The AI magic button instantly generates premium, high-converting copy tailored to your selected theme. 
+            <p style={{ margin: 0, color: '#aaa', lineHeight: '1.6', fontSize: '0.875rem' }}>
+              The magic button instantly generates premium, high-converting copy tailored to your selected theme. 
               <br/><br/>
-              <em>(Note: Currently utilizing simulated drafts. Connect your OpenAI API key to enable dynamic, prompt-driven generation.)</em>
+              <em>(Note: Currently utilizing simulated drafts. Ready to be hooked into OpenAI.)</em>
             </p>
           </div>
         </div>
