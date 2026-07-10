@@ -109,13 +109,13 @@ const render3DButton = (text, link) => {
         <td align="center" style="padding-top: 24px;">
           <div>
             <!--[if mso]>
-            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${link}" style="height:56px;v-text-anchor:middle;width:260px;" arcsize="22%" strokecolor="#8a7b18" strokeweight="4pt" fillcolor="#ebd73f">
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${link}" style="height:60px;v-text-anchor:middle;width:340px;" arcsize="20%" strokecolor="#8a7b18" strokeweight="4pt" fillcolor="#ebd73f">
               <w:anchorlock/>
-              <center style="color:#000000;font-family:'Panchang', sans-serif, Arial;font-size:15px;font-weight:800;text-transform:uppercase;">${text}</center>
+              <center style="color:#000000;font-family:'Panchang', sans-serif, Arial;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">${text}</center>
             </v:roundrect>
             <![endif]-->
-            <a href="${link}" class="cta-btn animate-pulse-gold" style="background-color:#ebd73f; border-bottom: 6px solid #8a7b18; border-right: 2px solid #bba81c; border-top: 1px solid #fce844; border-left: 1px solid #fce844; border-radius:12px; color:#000000; display:inline-block; font-family:'Panchang', sans-serif, Arial; font-size:15px; font-weight:800; line-height:56px; text-align:center; text-decoration:none; width:260px; -webkit-text-size-adjust:none; mso-hide:all; box-shadow: 0 10px 25px rgba(235, 215, 63, 0.5); text-transform:uppercase; letter-spacing: 0.5px;">
-              ${text} <span class="arrow-move">→</span>
+            <a href="${link}" class="cta-btn animate-pulse-gold" style="background-color:#ebd73f; border-bottom: 6px solid #8a7b18; border-right: 2px solid #bba81c; border-top: 1px solid #fce844; border-left: 1px solid #fce844; border-radius:12px; color:#000000; display:inline-block; font-family:'Panchang', sans-serif, Arial; font-size:14px; font-weight:800; padding: 20px 40px; text-align:center; text-decoration:none; -webkit-text-size-adjust:none; mso-hide:all; box-shadow: 0 10px 25px rgba(235, 215, 63, 0.5); text-transform:uppercase; letter-spacing: 1px;">
+              ${text} <span class="arrow-move">&rarr;</span>
             </a>
           </div>
         </td>
