@@ -47,10 +47,17 @@ export default function CopilotChat() {
       gsap.to(chatRef.current, { opacity: 0, y: 20, scale: 0.95, duration: 0.3, ease: 'power2.in', onComplete: () => setIsOpen(false) });
     } else {
       setIsOpen(true);
+      
+      // Trigger Orlo's dramatic greeting animation
+      setEmotion('greeting');
+      setTimeout(() => {
+        setEmotion(prev => prev === 'greeting' ? 'idle' : prev);
+      }, 1500);
+
       setTimeout(() => {
         gsap.fromTo(chatRef.current, 
-          { opacity: 0, y: 20, scale: 0.95 }, 
-          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'back.out(1.5)' }
+          { opacity: 0, y: 80, scale: 0.85 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1.1, 0.5)' }
         );
       }, 10);
     }

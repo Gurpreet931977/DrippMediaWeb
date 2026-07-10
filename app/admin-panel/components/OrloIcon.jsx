@@ -20,6 +20,16 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       if (emotion === 'still') {
         // Do absolutely nothing, just remain static
         return;
+      } else if (emotion === 'greeting') {
+        // Very impactful pop-up from bottom with elastic overshoot
+        gsap.fromTo(headRef.current, 
+          { y: 200, scaleY: 0.5, scaleX: 1.5 }, 
+          { y: 0, scaleY: 1, scaleX: 1, duration: 1.5, ease: "elastic.out(1, 0.3)" }
+        );
+        gsap.fromTo([leftEyeRef.current, rightEyeRef.current],
+          { scaleY: 0.1, y: 80 },
+          { scaleY: 1, y: 0, duration: 1.2, delay: 0.15, ease: "elastic.out(1, 0.3)" }
+        );
       } else if (emotion === 'idle') {
         // Gentle blinking, more fluid breathing (premium lottie style)
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
