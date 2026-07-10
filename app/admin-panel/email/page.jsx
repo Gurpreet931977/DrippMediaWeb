@@ -639,7 +639,7 @@ export default function EmailCampaignsPage() {
                       <div style={{
                          position: 'absolute',
                          right: '110%',
-                         top: '0',
+                         bottom: '0',
                          width: '320px',
                          backgroundColor: '#111',
                          border: '1px solid #ebd73f',

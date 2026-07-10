@@ -330,8 +330,8 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       yTo(moveY);
       headRotTo(moveX * 0.15);
       if (mouthXTo && mouthYTo) {
-        mouthXTo(moveX * 0.5);
-        mouthYTo(moveY * 0.5);
+        mouthXTo(moveX * 0.1);
+        mouthYTo(moveY * 0.1);
       }
     };
 
