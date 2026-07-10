@@ -188,7 +188,7 @@ export async function sendReminderEmail(email, name) {
 }
 
 // ── 5 DISTINCT PREMIUM GOLD LAYOUTS ───────────────────────────────────────────
-export async function sendCustomAdminEmail(to, subject, title, body, templateType = 'announcement') {
+export async function sendCustomAdminEmail(to, subject, title, body, templateType = 'announcement', scheduledAt = null) {
   const resend = getResend();
   if (!resend) return { success: false, error: 'Misconfigured' };
 
@@ -269,12 +269,18 @@ export async function sendCustomAdminEmail(to, subject, title, body, templateTyp
 
   try {
     const html = templateType === 'primary' ? innerContent : getHtmlLayout(innerContent);
-    const data = await resend.emails.send({
+    const payload = {
       from: SENDER,
       to,
       subject,
       html,
-    });
+    };
+    
+    if (scheduledAt) {
+      payload.scheduled_at = scheduledAt;
+    }
+    
+    const data = await resend.emails.send(payload);
     return { success: true, data };
   } catch (error) {
     console.error('[email] Custom admin email failed:', error);

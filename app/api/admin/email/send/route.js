@@ -44,7 +44,7 @@ export async function POST(request) {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { isBroadcast, specificEmail, subject, title, body, templateType } = payload;
+  const { isBroadcast, specificEmail, subject, title, body, templateType, scheduledAt } = payload;
 
   if (!subject || !title || !body) {
     return Response.json({ error: 'Missing subject, title, or body' }, { status: 400 });
@@ -112,7 +112,7 @@ export async function POST(request) {
       const pTitle = title.replace(/{{name}}/gi, capFirstName).replace(/—/g, '-');
       const pBody = body.replace(/{{name}}/gi, capFirstName).replace(/—/g, '-');
 
-      const result = await sendCustomAdminEmail(recipient.email, pSubject, pTitle, pBody, templateType);
+      const result = await sendCustomAdminEmail(recipient.email, pSubject, pTitle, pBody, templateType, scheduledAt);
       if (result.success) {
         successCount++;
       } else {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Mail, Send, Users, AlertCircle, CheckCircle2, Info, Sparkles, LayoutTemplate, PenTool, RefreshCw } from 'lucide-react';
+import { Mail, Send, Users, AlertCircle, CheckCircle2, Info, Sparkles, LayoutTemplate, PenTool, RefreshCw, Clock } from 'lucide-react';
 import styles from '../admin.module.css';
 import gsap from 'gsap';
 
@@ -17,6 +17,8 @@ export default function EmailCampaignsPage() {
   const [generating, setGenerating] = useState(false);
   const [status, setStatus] = useState({ type: '', msg: '' });
   const [generatingMode, setGeneratingMode] = useState('');
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduleTime, setScheduleTime] = useState('');
 
   const containerRef = useRef(null);
   const aiBtnRef = useRef(null);
@@ -66,7 +68,8 @@ export default function EmailCampaignsPage() {
           subject,
           title,
           body,
-          templateType
+          templateType,
+          scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null
         })
       });
 
@@ -79,6 +82,8 @@ export default function EmailCampaignsPage() {
       setSubject('');
       setTitle('');
       setBody('');
+      setIsScheduled(false);
+      setScheduleTime('');
     } catch (err) {
       setStatus({ type: 'error', msg: err.message });
     } finally {
@@ -318,6 +323,66 @@ export default function EmailCampaignsPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Scheduling Section */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2.5rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ebd73f', margin: 0 }}>
+                  <Clock size={18} /> Dispatch Timing
+                </label>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsScheduled(false)}
+                  style={{
+                    padding: '1rem',
+                    borderRadius: '0.75rem',
+                    border: !isScheduled ? '1px solid rgba(235, 215, 63, 0.6)' : '1px solid rgba(255,255,255,0.05)',
+                    backgroundColor: !isScheduled ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    textAlign: 'left'
+                  }}
+                >
+                  <div style={{ fontWeight: '600', marginBottom: '0.25rem', color: !isScheduled ? '#ebd73f' : '#fff' }}>Live Now</div>
+                  <div style={{ fontSize: '0.85rem', color: '#888' }}>Send immediately upon dispatch.</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsScheduled(true)}
+                  style={{
+                    padding: '1rem',
+                    borderRadius: '0.75rem',
+                    border: isScheduled ? '1px solid rgba(235, 215, 63, 0.6)' : '1px solid rgba(255,255,255,0.05)',
+                    backgroundColor: isScheduled ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    textAlign: 'left'
+                  }}
+                >
+                  <div style={{ fontWeight: '600', marginBottom: '0.25rem', color: isScheduled ? '#ebd73f' : '#fff' }}>Schedule for Later</div>
+                  <div style={{ fontSize: '0.85rem', color: '#888' }}>Lock in a future delivery time.</div>
+                </button>
+              </div>
+
+              {isScheduled && (
+                <div style={{ marginTop: '1.5rem' }}>
+                  <label className={styles.label}>Select Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    required={isScheduled}
+                    className={styles.input}
+                    value={scheduleTime}
+                    onChange={(e) => setScheduleTime(e.target.value)}
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Status Messages */}
