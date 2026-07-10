@@ -110,15 +110,20 @@ export default function EmailCampaignsPage() {
       setTitle('');
       setBody('');
       
-      let charIndex = 0;
-      const fullText = data.body || '';
-      
       setSubject(data.subject || '');
       setTitle(data.title || '');
+      setBody('');
+      
+      let currentText = '';
+      let charIndex = 0;
+      const fullText = data.body || '';
 
       const typeInterval = setInterval(() => {
-        setBody(prev => prev + fullText.charAt(charIndex));
-        charIndex++;
+        if (charIndex < fullText.length) {
+          currentText += fullText.charAt(charIndex);
+          setBody(currentText);
+          charIndex++;
+        }
         if (charIndex >= fullText.length) {
           clearInterval(typeInterval);
           setGenerating(false);

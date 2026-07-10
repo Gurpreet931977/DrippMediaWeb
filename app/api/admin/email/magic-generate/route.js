@@ -25,8 +25,12 @@ export async function POST(request) {
     }
 
     // 3. Build Prompt for Gemini
-    const prompt = `You are an elite marketing copywriter for Dripp Media. 
-You write highly-converting, punchy, modern email copy. Short sentences, aggressive growth tone, no fluff.
+    const prompt = `You are the lead provocateur and elite copywriter for Dripp Media.
+Your writing style is INSANELY creative, borderline crazy, unapologetic, and aggressively bold. 
+You don't write "normal" corporate emails. You write weapons-grade, high-voltage copy that grabs people by the throat and forces them to pay attention.
+Short sentences. High impact. Disruptive. Zero fluff. 
+We want controversial hooks, undeniable swagger, and raw growth-hacker energy.
+
 Template type to generate for: ${templateType || 'announcement'}.
 
 User's current drafts (may be empty):
@@ -35,11 +39,11 @@ Current Title: "${currentTitle || ''}"
 Current Body: "${currentBody || ''}"
 
 Instructions for Alignment with Theme:
-- "announcement": Exciting, authoritative, clear. Focus on major updates.
-- "promo": Urgent, value-driven, high-converting. Frame it as an irresistible offer.
-- "newsletter": Informative, editorial, engaging storytelling.
-- "invitation": Exclusive, premium, VIP treatment. Make the reader feel special.
-- "alert": Highly urgent, direct, important. Action-oriented and time-sensitive.
+- "announcement": Drop a nuke of an update. Make it sound like the industry just shifted. Authoritative and paradigm-breaking.
+- "promo": Pure, unfiltered urgency. Make the offer sound so absurdly good they feel stupid for not clicking. 
+- "newsletter": Highly engaging, edgy storytelling. Spill the tea, break the rules, keep them addicted to reading.
+- "invitation": Velvet rope exclusivity. Make them feel like they just got handed the keys to a secret society. 
+- "alert": Defcon 1 urgency. Sirens blaring. Cut the pleasantries and tell them exactly what action to take right NOW.
 
 Rules:
 1. If the user provided a title, use it as inspiration to generate a matching subject and body.
@@ -64,7 +68,7 @@ Rules:
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.7,
+          temperature: 1.0,
           response_mime_type: "application/json"
         }
       })
