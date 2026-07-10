@@ -330,7 +330,7 @@ export default function EmailCampaignsPage() {
                 style={{ 
                   padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   backgroundColor: templateType === 'announcement' ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
-                  border: templateType === 'announcement' ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+                  border: templateType === 'announcement' ? '1px solid rgba(235, 215, 63, 0.6)' : '1px solid rgba(255,255,255,0.05)',
                   color: '#fff',
                   transform: templateType === 'announcement' ? 'scale(1.02)' : 'scale(1)'
                 }}
@@ -346,7 +346,7 @@ export default function EmailCampaignsPage() {
                 style={{ 
                   padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   backgroundColor: templateType === 'promo' ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
-                  border: templateType === 'promo' ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+                  border: templateType === 'promo' ? '2px dashed rgba(235, 215, 63, 0.6)' : '1px solid rgba(255,255,255,0.05)',
                   color: '#fff',
                   transform: templateType === 'promo' ? 'scale(1.02)' : 'scale(1)'
                 }}
@@ -362,7 +362,8 @@ export default function EmailCampaignsPage() {
                 style={{ 
                   padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   backgroundColor: templateType === 'newsletter' ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
-                  border: templateType === 'newsletter' ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+                  border: templateType === 'newsletter' ? '1px solid rgba(235, 215, 63, 0.2)' : '1px solid rgba(255,255,255,0.05)',
+                  borderLeft: templateType === 'newsletter' ? '4px solid #ebd73f' : '1px solid rgba(255,255,255,0.05)',
                   color: '#fff',
                   transform: templateType === 'newsletter' ? 'scale(1.02)' : 'scale(1)'
                 }}
@@ -378,7 +379,7 @@ export default function EmailCampaignsPage() {
                 style={{ 
                   padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   backgroundColor: templateType === 'invitation' ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
-                  border: templateType === 'invitation' ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+                  border: templateType === 'invitation' ? '3px double rgba(235, 215, 63, 0.8)' : '1px solid rgba(255,255,255,0.05)',
                   color: '#fff',
                   transform: templateType === 'invitation' ? 'scale(1.02)' : 'scale(1)'
                 }}
@@ -393,8 +394,8 @@ export default function EmailCampaignsPage() {
                 onClick={() => setTemplateType('alert')}
                 style={{ 
                   padding: '1.25rem', textAlign: 'left', borderRadius: '0.75rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  backgroundColor: templateType === 'alert' ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
-                  border: templateType === 'alert' ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+                  background: templateType === 'alert' ? 'repeating-linear-gradient(45deg, rgba(235, 215, 63, 0.1), rgba(235, 215, 63, 0.1) 10px, transparent 10px, transparent 20px)' : 'transparent',
+                  border: templateType === 'alert' ? '1px solid rgba(235, 215, 63, 0.8)' : '1px solid rgba(255,255,255,0.05)',
                   color: '#fff',
                   transform: templateType === 'alert' ? 'scale(1.02)' : 'scale(1)'
                 }}

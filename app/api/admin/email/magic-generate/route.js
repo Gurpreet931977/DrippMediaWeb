@@ -34,7 +34,14 @@ Current Subject: "${currentSubject || ''}"
 Current Title: "${currentTitle || ''}"
 Current Body: "${currentBody || ''}"
 
-Instructions:
+Instructions for Alignment with Theme:
+- "announcement": Exciting, authoritative, clear. Focus on major updates.
+- "promo": Urgent, value-driven, high-converting. Frame it as an irresistible offer.
+- "newsletter": Informative, editorial, engaging storytelling.
+- "invitation": Exclusive, premium, VIP treatment. Make the reader feel special.
+- "alert": Highly urgent, direct, important. Action-oriented and time-sensitive.
+
+Rules:
 1. If the user provided a title, use it as inspiration to generate a matching subject and body.
 2. If the user provided a body, rewrite it into our premium marketing format, and generate a matching subject and title.
 3. If they provided all, rewrite them to be better.
