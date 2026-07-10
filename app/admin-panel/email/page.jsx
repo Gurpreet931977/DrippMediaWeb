@@ -164,7 +164,7 @@ export default function EmailCampaignsPage() {
                 <button
                   type="button"
                   onClick={() => setIsBroadcast(true)}
-                  className={isBroadcast ? styles.btnDanger : styles.btn}
+                  className={isBroadcast ? styles.btnPrimary : styles.btn}
                   style={{ flex: 1, padding: '1.25rem' }}
                 >
                   <Users size={18} />
@@ -172,7 +172,7 @@ export default function EmailCampaignsPage() {
                 </button>
               </div>
               {isBroadcast && (
-                <div style={{ marginTop: '1rem', padding: '1.25rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', borderRadius: '0.75rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.875rem' }}>
+                <div style={{ marginTop: '1rem', padding: '1.25rem', backgroundColor: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', borderRadius: '0.75rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.875rem' }}>
                   <AlertCircle size={20} style={{ flexShrink: 0 }} />
                   <div>
                     <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Proceed with caution</strong>
