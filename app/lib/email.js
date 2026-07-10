@@ -139,7 +139,7 @@ export async function sendHighScoreEmail(email, score) {
     const data = await resend.emails.send({
       from: SENDER,
       to: email,
-      subject: \`New High Score: \${score}! 🏆\`,
+      subject: `New High Score: ${score}! 🏆`,
       html,
     });
     return { success: true, data };

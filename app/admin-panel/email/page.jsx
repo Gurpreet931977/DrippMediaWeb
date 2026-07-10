@@ -274,7 +274,7 @@ export default function EmailCampaignsPage() {
                 borderRadius: '0.5rem', 
                 backgroundColor: status.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
                 color: status.type === 'error' ? '#ef4444' : '#22c55e',
-                border: \`1px solid \${status.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)'}\`,
+                border: `1px solid ${status.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)'}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.75rem'
