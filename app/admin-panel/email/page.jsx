@@ -25,6 +25,11 @@ export default function EmailCampaignsPage() {
   const [showClearAfterSend, setShowClearAfterSend] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState(null);
   const [hoveredScheduleId, setHoveredScheduleId] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [scheduledList, setScheduledList] = useState([
     { id: 1, title: 'Black Friday VIP Invite', subject: 'Your Exclusive Access', body: 'The VIP access starts now...', templateType: 'invitation', isBroadcast: true, specificEmail: '', scheduledAt: new Date(Date.now() + 86400000).toISOString() },
@@ -651,19 +656,19 @@ export default function EmailCampaignsPage() {
                          fontSize: '0.85rem'
                       }}>
                          <div style={{ fontWeight: '600', color: '#ebd73f', marginBottom: '1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Info size={16}/> Campaign Details</div>
-                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Scheduled:</strong> <span>{new Date(item.scheduledAt).toLocaleString()}</span></div>
+                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Scheduled:</strong> <span>{mounted ? new Date(item.scheduledAt).toLocaleString() : ''}</span></div>
                          <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Template:</strong> <span style={{textTransform: 'capitalize'}}>{item.templateType}</span></div>
                          <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Audience:</strong> <span>{item.isBroadcast ? 'All Users' : item.specificEmail}</span></div>
                          <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Subject:</strong> <span>{item.subject}</span></div>
                          <div style={{ marginTop: '1rem', color: '#ccc', fontStyle: 'italic', background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                           "{item.body.substring(0, 150)}{item.body.length > 150 ? '...' : ''}"
+                           &quot;{item.body.substring(0, 150)}{item.body.length > 150 ? '...' : ''}&quot;
                          </div>
                       </div>
                     )}
 
                     <div>
                       <div style={{ fontWeight: '600', color: '#fff', fontSize: '0.9rem', marginBottom: '0.25rem' }}>{item.title}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#ebd73f' }}>{new Date(item.scheduledAt).toLocaleString()}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#ebd73f' }}>{mounted ? new Date(item.scheduledAt).toLocaleString() : ''}</div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button 

@@ -52,7 +52,7 @@ export default function OrloWikiPage() {
                         <p>
                             <b>Orlo</b> is an advanced artificial intelligence copilot developed by <Link href="/" className="wiki-link">Dripp Media</Link>. 
                             He is designed to act as a highly specialized, hyper-intelligent marketing assistant for users of the Dripp Admin Panel. 
-                            Known for his vibrant yellow aesthetic and distinct D-shaped mouth, Orlo specializes in generating "weapons-grade" email 
+                            Known for his vibrant yellow aesthetic and distinct D-shaped mouth, Orlo specializes in generating &quot;weapons-grade&quot; email 
                             campaigns, managing schedules, and providing real-time interactive feedback.
                         </p>
 
@@ -74,26 +74,26 @@ export default function OrloWikiPage() {
                         <h2 className="wiki-section-title" id="overview">Overview</h2>
                         <p>
                             Deployed exclusively within the Dripp ecosystem, Orlo acts as the central intelligence node for administrators. 
-                            Unlike traditional, sanitized corporate AI, Orlo was built with a "Dripp-oriented" persona—bold, 
+                            Unlike traditional, sanitized corporate AI, Orlo was built with a &quot;Dripp-oriented&quot; persona—bold, 
                             expressive, and deeply integrated into the user interface. He resides as a floating orb in the bottom right corner of the dashboard, constantly observing user actions and providing emotional reactions based on the context of the workflow.
                         </p>
 
                         <h2 className="wiki-section-title" id="development">Development</h2>
                         <p>
-                            Orlo's conceptualization began as a solution to automate tedious copywriting tasks while maintaining Dripp Media's 
-                            premium aesthetic. The directive was to create an AI that didn't just feel like a tool, but a coworker.
+                            Orlo&apos;s conceptualization began as a solution to automate tedious copywriting tasks while maintaining Dripp Media&apos;s 
+                            premium aesthetic. The directive was to create an AI that didn&apos;t just feel like a tool, but a coworker.
                         </p>
 
                         <h3 id="architecture">Architecture</h3>
                         <p>
                             Under the hood, Orlo is powered by a Next.js framework combined with <a href="https://gsap.com/" target="_blank" rel="noopener noreferrer" className="wiki-link">GSAP (GreenSock Animation Platform)</a>. 
-                            His visual representation is a highly complex, mask-driven SVG. In a notable update, Orlo's animation logic was split to prevent GSAP conflict states: 
+                            His visual representation is a highly complex, mask-driven SVG. In a notable update, Orlo&apos;s animation logic was split to prevent GSAP conflict states: 
                             his outer group handles physics-based mouse tracking, while his inner components handle emotional scaling and translation.
                         </p>
 
                         <h2 className="wiki-section-title" id="capabilities">Capabilities</h2>
                         <p>
-                            Orlo's primary function is the <b>Magic Generate</b> engine. Users can prompt Orlo with a basic idea, and he will synthesize 
+                            Orlo&apos;s primary function is the <b>Magic Generate</b> engine. Users can prompt Orlo with a basic idea, and he will synthesize 
                             high-converting email copy across several distinct tones:
                         </p>
                         <ul>
@@ -111,7 +111,7 @@ export default function OrloWikiPage() {
                             Orlo is programmed with a reactive emotional state machine. Depending on user interaction, he can exhibit the following states:
                         </p>
                         <ul>
-                            <li><b>Idle:</b> Orlo's default state. He breathes softly and his eyes track the user's cursor across the screen.</li>
+                            <li><b>Idle:</b> Orlo&apos;s default state. He breathes softly and his eyes track the user&apos;s cursor across the screen.</li>
                             <li><b>Thinking:</b> When processing a prompt, his head tilts and his eyes shift rapidly.</li>
                             <li><b>Excited:</b> Triggered when hovered over or when greeting the user; characterized by a wide, bouncy mouth.</li>
                             <li><b>Sad:</b> Exhibited when ignored or closed out of; he slouches and his eyes droop.</li>
@@ -120,9 +120,9 @@ export default function OrloWikiPage() {
 
                         <h2 className="wiki-section-title" id="trivia">Trivia</h2>
                         <ul>
-                            <li>Orlo is strictly prohibited from using em-dashes ("—") in his generated copy, a hardcoded constraint to maintain a specific typographic flow.</li>
-                            <li>His internal coordinate system requires exactly a 512x512 SVG canvas, with a mask origin carefully anchored at `256px 392px` to prevent jaw dislocation during speech.</li>
-                            <li>Clicking Orlo's profile picture opens a premium, Instagram-inspired bio modal.</li>
+                            <li>Orlo is strictly prohibited from using em-dashes (&quot;—&quot;) in his generated copy, a hardcoded constraint to maintain a specific typographic flow.</li>
+                            <li>His internal coordinate system requires exactly a 512x512 SVG canvas, with a mask origin carefully anchored at &apos;256px 392px&apos; to prevent jaw dislocation during speech.</li>
+                            <li>Clicking Orlo&apos;s profile picture opens a premium, Instagram-inspired bio modal.</li>
                         </ul>
                     </article>
 
