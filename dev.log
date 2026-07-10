@@ -14,3 +14,47 @@ Setting a custom Cache-Control header can break Next.js development behavior.
 
 ○ Compiling /orloai ...
  GET /orloai 200 in 9.7s (next.js: 9.0s, application-code: 648ms)
+
+<--- Last few GCs --->
+
+[19859:0x78680c000]   955554 ms: Scavenge 7848.6 (7921.5) -> 7816.5 (7935.0) MB, pooled: 0 MB, 30.46 / 0.00 ms  (average mu = 0.350, current mu = 0.301) allocation failure; 
+[19859:0x78680c000]   968437 ms: Mark-Compact (reduce) 7868.9 (7943.5) -> 7631.2 (7666.0) MB, pooled: 0 MB, 6189.21 / 688.17 ms  (+ 4178.7 ms in 736 steps since start of marking, biggest step 21.5 ms, walltime since start of marking 12883 ms) (average mu 
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 0x1001d883c node::OOMErrorHandler(char const*, v8::OOMDetails const&) [/usr/local/bin/node]
+ 2: 0x1003d8620 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [/usr/local/bin/node]
+ 3: 0x100637a1c v8::internal::Heap::stack() [/usr/local/bin/node]
+ 4: 0x10063adf0 v8::internal::Heap::HasLowYoungGenerationAllocationRate() [/usr/local/bin/node]
+ 5: 0x10064bfe4 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1::operator()() const [/usr/local/bin/node]
+ 6: 0x10064b8b8 void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1>(heap::base::Stack*, void*, void const*) [/usr/local/bin/node]
+ 7: 0x101001f10 PushAllRegistersAndIterateStack [/usr/local/bin/node]
+ 8: 0x100635720 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [/usr/local/bin/node]
+ 9: 0x1005ad0b8 v8::internal::StackGuard::HandleInterrupts(v8::internal::StackGuard::InterruptLevel) [/usr/local/bin/node]
+10: 0x100a9b564 v8::internal::Runtime_StackGuardWithGap(int, unsigned long*, v8::internal::Isolate*) [/usr/local/bin/node]
+11: 0x1010f2234 Builtins_CEntry_Return1_ArgvOnStack_NoBuiltinExit [/usr/local/bin/node]
+12: 0x12401f06c 
+13: 0x1010edfa0 Builtins_AsyncGeneratorYieldWithAwait [/usr/local/bin/node]
+14: 0x124228f9c 
+15: 0x1010eedf4 Builtins_AsyncGeneratorResumeNext [/usr/local/bin/node]
+16: 0x1010ef10c Builtins_AsyncGeneratorPrototypeNext [/usr/local/bin/node]
+17: 0x124231ec8 
+18: 0x1010937e8 Builtins_AsyncFunctionAwaitResolveClosure [/usr/local/bin/node]
+19: 0x101168e58 Builtins_PromiseFulfillReactionJob [/usr/local/bin/node]
+20: 0x101082bd0 Builtins_RunMicrotasks [/usr/local/bin/node]
+21: 0x1010527b0 Builtins_JSRunMicrotasksEntry [/usr/local/bin/node]
+22: 0x10057bb98 v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [/usr/local/bin/node]
+23: 0x10057c40c v8::internal::(anonymous namespace)::InvokeWithTryCatch(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [/usr/local/bin/node]
+24: 0x10057c548 v8::internal::Execution::TryRunMicrotasks(v8::internal::Isolate*, v8::internal::MicrotaskQueue*) [/usr/local/bin/node]
+25: 0x1005ab31c v8::internal::MicrotaskQueue::RunMicrotasks(v8::internal::Isolate*) [/usr/local/bin/node]
+26: 0x1005abc7c v8::internal::MicrotaskQueue::PerformCheckpoint(v8::Isolate*) [/usr/local/bin/node]
+27: 0x1000d9028 node::InternalCallbackScope::Close() [/usr/local/bin/node]
+28: 0x1000d8a94 node::CallbackScope::~CallbackScope() [/usr/local/bin/node]
+29: 0x100199c74 v8impl::(anonymous namespace)::ThreadSafeFunction::AsyncCb(uv_async_s*) [/usr/local/bin/node]
+30: 0x1010313e0 uv__async_io [/usr/local/bin/node]
+31: 0x101045778 uv__io_poll [/usr/local/bin/node]
+32: 0x101031948 uv_run [/usr/local/bin/node]
+33: 0x1000d9b44 node::SpinEventLoopInternal(node::Environment*) [/usr/local/bin/node]
+34: 0x10022c8c8 node::NodeMainInstance::Run() [/usr/local/bin/node]
+35: 0x100192468 node::Start(int, char**) [/usr/local/bin/node]
+36: 0x18e3abda4 start [/usr/lib/dyld]
