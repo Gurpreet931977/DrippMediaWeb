@@ -19,6 +19,38 @@ const getHtmlLayout = (content) => `
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     @import url('https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&display=swap');
+    
+    /* Email-safe CSS Animation (Supported in Apple Mail & some web clients, degrades gracefully in Gmail/Outlook) */
+    .cta-btn {
+      transition: all 0.2s ease-in-out !important;
+    }
+    .cta-btn:hover {
+      transform: translateY(-2px) !important;
+      filter: brightness(1.1) !important;
+    }
+    .cta-btn:active {
+      transform: translateY(2px) !important;
+      border-bottom-width: 0px !important;
+      margin-top: 5px !important;
+    }
+    
+    @keyframes subtlePulse {
+      0% { box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); }
+      50% { box-shadow: 0 15px 35px rgba(235, 215, 63, 0.6); }
+      100% { box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); }
+    }
+    @keyframes subtlePulseSilver {
+      0% { box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15); }
+      50% { box-shadow: 0 15px 35px rgba(255, 255, 255, 0.3); }
+      100% { box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15); }
+    }
+    
+    .animate-pulse-gold {
+      animation: subtlePulse 2.5s infinite ease-in-out !important;
+    }
+    .animate-pulse-silver {
+      animation: subtlePulseSilver 2.5s infinite ease-in-out !important;
+    }
   </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
@@ -95,7 +127,7 @@ export async function sendWelcomeEmail(email, name, nature) {
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">${p1}</p>
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 40px;">${p2}</p>
       <div style="text-align: center;">
-        <a href="${btnLink}" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
+        <a href="${btnLink}" class="cta-btn animate-pulse-gold" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
           ${btnText}
         </a>
       </div>
@@ -131,7 +163,7 @@ export async function sendHighScoreEmail(email, score) {
         The competition is fierce. Hop back in to defend your position and aim even higher!
       </p>
       <div style="text-align: center;">
-        <a href="https://drippmedia.com/arcade" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
+        <a href="https://drippmedia.com/arcade" class="cta-btn animate-pulse-gold" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
           Defend Your Score
         </a>
       </div>
@@ -164,7 +196,7 @@ export async function sendReminderEmail(email, name) {
         We thought you might want to jump back in and show them how it's done.
       </p>
       <div style="text-align: center;">
-        <a href="https://drippmedia.com/arcade" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
+        <a href="https://drippmedia.com/arcade" class="cta-btn animate-pulse-gold" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
           Return to Arcade
         </a>
       </div>
@@ -194,15 +226,17 @@ export async function sendCustomAdminEmail(to, subject, title, body, templateTyp
   let btnBorderBottom = '5px solid #a69420';
   let btnColor = '#000000';
   let shadowColor = 'rgba(235, 215, 63, 0.3)';
+  let pulseClass = 'animate-pulse-gold';
 
   if (templateType === 'promo') {
-    accentColor = '#ebd73f'; // Force gold for promo as requested
+    accentColor = '#ebd73f';
   } else if (templateType === 'newsletter') {
     accentColor = '#ffffff'; 
     btnBg = '#ffffff';
     btnBorderBottom = '5px solid #a1a1aa';
     btnColor = '#000000';
     shadowColor = 'rgba(255, 255, 255, 0.15)';
+    pulseClass = 'animate-pulse-silver';
   }
 
   try {
@@ -215,12 +249,12 @@ export async function sendCustomAdminEmail(to, subject, title, body, templateTyp
       </p>
       ${
         templateType === 'promo' 
-        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" style="display: inline-block; background: ${btnBg}; border-bottom: ${btnBorderBottom}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px ${shadowColor}; font-family: 'Panchang', sans-serif;">Claim Offer</a></div>`
+        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" class="cta-btn ${pulseClass}" style="display: inline-block; background: ${btnBg}; border-bottom: ${btnBorderBottom}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px ${shadowColor}; font-family: 'Panchang', sans-serif;">Claim Offer</a></div>`
         : ''
       }
       ${
         templateType === 'announcement'
-        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" style="display: inline-block; background: ${btnBg}; border-bottom: ${btnBorderBottom}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px ${shadowColor}; font-family: 'Panchang', sans-serif;">View Details</a></div>`
+        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" class="cta-btn ${pulseClass}" style="display: inline-block; background: ${btnBg}; border-bottom: ${btnBorderBottom}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px ${shadowColor}; font-family: 'Panchang', sans-serif;">View Details</a></div>`
         : ''
       }
     `);
