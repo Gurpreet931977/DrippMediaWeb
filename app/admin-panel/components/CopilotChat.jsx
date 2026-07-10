@@ -267,42 +267,44 @@ export default function CopilotChat() {
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                 <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}>
                   <defs>
-                    <filter id="bokeh" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="1.5" />
-                    </filter>
                     <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                       <stop offset="0%" stopColor="#4facfe" />
                       <stop offset="100%" stopColor="#00f2fe" />
                     </linearGradient>
-                    <linearGradient id="seaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#0288d1" />
-                      <stop offset="100%" stopColor="#26c6da" />
+                    <linearGradient id="mountBack" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#039be5" />
+                      <stop offset="100%" stopColor="#0277bd" />
                     </linearGradient>
-                    <linearGradient id="sandGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#ffe259" />
-                      <stop offset="100%" stopColor="#ffa751" />
+                    <linearGradient id="mountMid" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#43a047" />
+                      <stop offset="100%" stopColor="#2e7d32" />
+                    </linearGradient>
+                    <linearGradient id="mountFront" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#7cb342" />
+                      <stop offset="100%" stopColor="#558b2f" />
                     </linearGradient>
                   </defs>
                   
-                  {/* Blurred Background Environment */}
-                  <g filter="url(#bokeh)">
-                    {/* Sky */}
-                    <rect width="100" height="55" fill="url(#skyGrad)" />
-                    {/* Sun */}
-                    <circle cx="80" cy="20" r="12" fill="#fff9c4" />
-                    <circle cx="80" cy="20" r="20" fill="#fff9c4" opacity="0.3" />
-                    {/* Clouds */}
-                    <path d="M 10 30 Q 20 20 30 30 Q 40 25 45 35 L 10 35 Z" fill="#fff" opacity="0.7" />
-                    {/* Sea */}
-                    <rect y="50" width="100" height="25" fill="url(#seaGrad)" />
-                  </g>
+                  {/* Sky */}
+                  <rect width="100" height="100" fill="url(#skyGrad)" />
                   
-                  {/* Sharp Foreground Sand */}
-                  <path d="M 0 70 Q 50 65 100 75 L 100 100 L 0 100 Z" fill="url(#sandGrad)" />
-                  <path d="M 0 70 Q 50 65 100 75 L 100 78 Q 50 68 0 73 Z" fill="rgba(255,255,255,0.3)" />
+                  {/* Sun */}
+                  <circle cx="75" cy="30" r="14" fill="#fff9c4" opacity="0.9" />
+                  
+                  {/* Fluffy Clouds */}
+                  <path d="M 10 35 Q 20 25 30 35 Q 40 30 45 40 L 10 40 Z" fill="#fff" opacity="0.7" />
+                  
+                  {/* Distant Blue Mountains */}
+                  <path d="M -20 100 L 25 50 L 65 85 L 95 60 L 120 100 Z" fill="url(#mountBack)" />
+                  
+                  {/* Mid Green Mountains */}
+                  <path d="M -10 100 L 40 65 L 85 100 Z" fill="url(#mountMid)" />
+                  
+                  {/* Foreground Lush Hill */}
+                  <path d="M 20 100 Q 60 75 110 100 Z" fill="url(#mountFront)" />
 
                   {/* Orlo's Drop Shadow */}
-                  <ellipse cx="50" cy="94" rx="14" ry="3" fill="rgba(200,100,0,0.4)" />
+                  <ellipse cx="50" cy="94" rx="14" ry="3" fill="rgba(0,50,0,0.4)" />
                 </svg>
                 <div style={{ zIndex: 1, paddingBottom: '2px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.25))' }}>
                   <OrloIcon size={24} color="#FFFFFF" emotion="still" />
