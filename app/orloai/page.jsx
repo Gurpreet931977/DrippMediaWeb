@@ -1,11 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import './wiki.css';
 import OrloIcon from '../admin-panel/components/OrloIcon'; // Use the same OrloIcon
 
 export default function OrloWikiPage() {
+    useEffect(() => {
+        document.body.classList.add('loaded');
+    }, []);
+
     return (
         <div className="wiki-container">
             {/* Sidebar Navigation */}
