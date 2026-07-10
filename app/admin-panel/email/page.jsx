@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Mail, Send, Users, AlertCircle, CheckCircle2, Info, Sparkles, LayoutTemplate, PenTool, RefreshCw, Clock } from 'lucide-react';
 import DrippDatePicker from '../components/DrippDatePicker';
 import OrloIcon from '../components/OrloIcon';
+import RefreshIcon from '../components/RefreshIcon';
 import styles from '../admin.module.css';
 import gsap from 'gsap';
 
@@ -274,7 +275,7 @@ export default function EmailCampaignsPage() {
                     }}
                   >
                   <div style={{ position: 'relative', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <OrloIcon size={16} className={generating ? "animate-spin" : ""} />
+                    <RefreshIcon size={16} className={generating ? "animate-spin" : ""} />
                   </div>
                     {generating ? 'Generating...' : 'Magic Generate'}
                   </button>
@@ -304,7 +305,7 @@ export default function EmailCampaignsPage() {
                       style={{ paddingRight: '3rem' }}
                     />
                     <button type="button" onClick={() => handleAiGenerate('subject')} disabled={generating} title="Regenerate Subject" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ebd73f', cursor: generating ? 'not-allowed' : 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 0 10px rgba(235, 215, 63, 0.15)' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.25)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.3)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(235, 215, 63, 0.15)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}>
-                      <OrloIcon size={16} className={generatingMode === 'subject' ? "animate-spin" : ""} />
+                      <RefreshIcon size={16} className={generatingMode === 'subject' ? "animate-spin" : ""} />
                     </button>
                   </div>
                 </div>
@@ -322,7 +323,7 @@ export default function EmailCampaignsPage() {
                       style={{ paddingRight: '3rem' }}
                     />
                     <button type="button" onClick={() => handleAiGenerate('title')} disabled={generating} title="Regenerate Title" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ebd73f', cursor: generating ? 'not-allowed' : 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 0 10px rgba(235, 215, 63, 0.15)' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.25)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.3)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(235, 215, 63, 0.15)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}>
-                      <OrloIcon size={16} className={generatingMode === 'title' ? "animate-spin" : ""} />
+                      <RefreshIcon size={16} className={generatingMode === 'title' ? "animate-spin" : ""} />
                     </button>
                   </div>
                 </div>
@@ -340,7 +341,7 @@ export default function EmailCampaignsPage() {
                       style={{ resize: 'vertical', lineHeight: '1.6', paddingRight: '3rem' }}
                     />
                     <button type="button" onClick={() => handleAiGenerate('body')} disabled={generating} title="Regenerate Body" style={{ position: 'absolute', right: '12px', top: '12px', background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ebd73f', cursor: generating ? 'not-allowed' : 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 0 10px rgba(235, 215, 63, 0.15)' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.25)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.3)'; e.currentTarget.style.transform = 'scale(1.1)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(235, 215, 63, 0.15)'; e.currentTarget.style.transform = 'scale(1)'; }}>
-                      <OrloIcon size={16} className={generatingMode === 'body' ? "animate-spin" : ""} />
+                      <RefreshIcon size={16} className={generatingMode === 'body' ? "animate-spin" : ""} />
                     </button>
                   </div>
                 </div>
