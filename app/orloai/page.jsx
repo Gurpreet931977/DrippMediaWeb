@@ -20,12 +20,49 @@ const MagicCursor = () => {
         const xToAura = gsap.quickTo(auraRef.current, "x", { duration: 0.6, ease: "power3.out" });
         const yToAura = gsap.quickTo(auraRef.current, "y", { duration: 0.6, ease: "power3.out" });
 
+        let lastSpawnTime = 0;
+
         const handleMouseMove = (e) => {
             if (!isVisible) setIsVisible(true);
             xToCore(e.clientX);
             yToCore(e.clientY);
             xToAura(e.clientX);
             yToAura(e.clientY);
+
+            // Glitter trail logic
+            const now = Date.now();
+            if (now - lastSpawnTime > 35) { // Throttle spawn rate
+                lastSpawnTime = now;
+                createGlitter(e.clientX, e.clientY);
+            }
+        };
+
+        const createGlitter = (x, y) => {
+            const glitter = document.createElement('div');
+            glitter.className = 'glitter-particle';
+            
+            // Random offset so it spreads out slightly
+            const offsetX = (Math.random() - 0.5) * 15;
+            const offsetY = (Math.random() - 0.5) * 15;
+            glitter.style.left = `${x + offsetX}px`;
+            glitter.style.top = `${y + offsetY}px`;
+            
+            document.body.appendChild(glitter);
+
+            // Animate it falling and shrinking/fading
+            gsap.to(glitter, {
+                y: `+=${20 + Math.random() * 20}`, // fall down slightly
+                x: `+=${(Math.random() - 0.5) * 40}`, // drift sideways
+                scale: 0,
+                opacity: 0,
+                duration: 0.8 + Math.random() * 0.5,
+                ease: "power1.out",
+                onComplete: () => {
+                    if (glitter.parentNode) {
+                        glitter.remove();
+                    }
+                }
+            });
         };
         
         const handleMouseLeave = () => setIsVisible(false);
@@ -220,6 +257,7 @@ export default function OrloWikiPage() {
                             Orlo AI
                         </div>
                         <div className="wiki-infobox-image">
+                            <div className="orlo-glow-effect"></div>
                             {/* Render Orlo in 'idle' state for the wiki picture */}
                             <OrloIcon size={200} color="#ebd73f" emotion="idle" />
                         </div>

@@ -201,6 +201,25 @@
     justify-content: center;
     align-items: center;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.orlo-glow-effect {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    background: var(--brand-yellow, #ebd73f);
+    filter: blur(50px);
+    opacity: 0.3;
+    border-radius: 50%;
+    animation: pulseGlow 3s infinite alternate;
+    pointer-events: none;
+}
+
+@keyframes pulseGlow {
+    from { opacity: 0.2; transform: scale(1); }
+    to { opacity: 0.5; transform: scale(1.1); }
 }
 
 .wiki-infobox-table {
@@ -293,4 +312,17 @@
     z-index: 1;
     filter: blur(4px);
     mix-blend-mode: screen;
+}
+
+/* Glitter Trail */
+.glitter-particle {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    background-color: var(--brand-yellow, #ebd73f);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999997;
+    box-shadow: 0 0 8px var(--brand-yellow, #ebd73f), 0 0 2px #fff;
+    transform: translate(-50%, -50%);
 }
