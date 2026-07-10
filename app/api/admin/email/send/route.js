@@ -72,7 +72,7 @@ export async function POST(request) {
 
     recipients = users.map(u => u.email).filter(e => e.includes('@'));
   } else {
-    recipients = [specificEmail];
+    recipients = specificEmail.split(',').map(e => e.trim()).filter(e => e.includes('@'));
   }
 
   if (recipients.length === 0) {

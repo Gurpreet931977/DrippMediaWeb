@@ -6,7 +6,7 @@ import styles from '../admin.module.css';
 import gsap from 'gsap';
 
 export default function EmailCampaignsPage() {
-  const [isBroadcast, setIsBroadcast] = useState(false);
+  const [isBroadcast, setIsBroadcast] = useState(true);
   const [specificEmail, setSpecificEmail] = useState('');
   const [templateType, setTemplateType] = useState('announcement');
   const [subject, setSubject] = useState('');
@@ -85,61 +85,51 @@ export default function EmailCampaignsPage() {
     }
   };
 
-  const handleAiGenerate = () => {
+  const handleAiGenerate = async () => {
     if (generating) return;
     setGenerating(true);
+    setStatus({ type: '', msg: '' });
     gsap.to(aiBtnRef.current, { x: 0, y: 0, scale: 0.95, duration: 0.2 });
     
-    // Premium placeholder text to simulate AI generating copy
-    const aiDrafts = {
-      announcement: {
-        subject: "Big news from Dripp Media.",
-        title: "A Huge Update.",
-        body: "We have been working hard behind the scenes to bring you something completely new.\n\nThis is not just a small update. We have built a brand new way for you to grow your audience and get more attention online. It is easier, faster, and better than ever before. Come see what is new."
-      },
-      promo: {
-        subject: "A special offer just for you.",
-        title: "Grow Faster Today.",
-        body: "If you want to grow online, you need the right tools. Right now, we have a special offer that will help you grow faster than ever.\n\nWe are giving you access to our best tools at a huge discount. This is a rare chance to get top-level help for your brand. Grab this offer before it ends soon."
-      },
-      newsletter: {
-        subject: "How the best brands get so many views.",
-        title: "The Weekly Tips.",
-        body: "Do you ever wonder how top creators get so much attention? They do things differently.\n\nThis week, we are sharing the exact steps that big brands use to get millions of views and turn them into loyal fans. Read our tips below and start using them for your own videos today."
-      },
-      invitation: {
-        subject: "You are invited to our VIP group.",
-        title: "VIP Invite.",
-        body: "We noticed your hard work, and we want to reward you. You have been chosen to join our private group of top creators and business owners.\n\nThis email is your private invite to skip the waitlist and join right now. Come meet the team and start growing with the best."
-      },
-      alert: {
-        subject: "The game is ending soon!",
-        title: "Time is Running Out.",
-        body: "You have seen the leaderboard, and you know what the prize is.\n\nThe Dripp Drop Challenge is ending very soon. This is your last chance to get the top score and win the free prize.\n\nAre you really going to let someone else win? The game is still open, but time is almost up. Play now, get the high score, and claim your prize before it is too late."
-      }
-    };
+    try {
+      const res = await fetch('/api/admin/email/magic-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateType,
+          currentSubject: subject,
+          currentTitle: title,
+          currentBody: body
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate copy');
+      
+      setSubject('');
+      setTitle('');
+      setBody('');
+      
+      let charIndex = 0;
+      const fullText = data.body || '';
+      
+      setSubject(data.subject || '');
+      setTitle(data.title || '');
 
-    const draft = aiDrafts[templateType];
-    
-    setSubject('');
-    setTitle('');
-    setBody('');
-    
-    let charIndex = 0;
-    const fullText = draft.body;
-    
-    setSubject(draft.subject);
-    setTitle(draft.title);
-
-    const typeInterval = setInterval(() => {
-      setBody(prev => prev + fullText.charAt(charIndex));
-      charIndex++;
-      if (charIndex >= fullText.length) {
-        clearInterval(typeInterval);
-        setGenerating(false);
-        gsap.to(aiBtnRef.current, { scale: 1, duration: 0.4, ease: 'back.out(1.5)' });
-      }
-    }, 15);
+      const typeInterval = setInterval(() => {
+        setBody(prev => prev + fullText.charAt(charIndex));
+        charIndex++;
+        if (charIndex >= fullText.length) {
+          clearInterval(typeInterval);
+          setGenerating(false);
+          gsap.to(aiBtnRef.current, { scale: 1, duration: 0.4, ease: 'back.out(1.5)' });
+        }
+      }, 15);
+    } catch (err) {
+      setStatus({ type: 'error', msg: err.message });
+      setGenerating(false);
+      gsap.to(aiBtnRef.current, { scale: 1, duration: 0.4, ease: 'back.out(1.5)' });
+    }
   };
 
   return (
@@ -169,7 +159,7 @@ export default function EmailCampaignsPage() {
                   style={{ flex: 1, padding: '1.25rem' }}
                 >
                   <Mail size={18} />
-                  Specific User
+                  Specific Users
                 </button>
                 <button
                   type="button"
@@ -194,12 +184,13 @@ export default function EmailCampaignsPage() {
 
             {!isBroadcast && (
               <div className={styles.formGroup} style={{ marginBottom: 0 }}>
-                <label className={styles.label}>Recipient Email</label>
+                <label className={styles.label}>Recipient Emails (comma-separated)</label>
                 <input
                   type="email"
+                  multiple
                   required
                   className={styles.input}
-                  placeholder="user@example.com"
+                  placeholder="user@example.com, another@example.com"
                   value={specificEmail}
                   onChange={(e) => setSpecificEmail(e.target.value)}
                 />
