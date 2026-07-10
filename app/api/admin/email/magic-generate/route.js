@@ -58,7 +58,7 @@ Rules:
 2. If the user provided a body, rewrite it into our premium marketing format, and generate a matching subject and title.
 3. If they provided all, rewrite them to be better.
 4. If they provided none, generate completely new, fresh content based on the template type.
-5. NEVER use em dashes (-) anywhere in the copy. Use regular hyphens (-) instead.
+5. NEVER use em-dashes ("—") anywhere in the copy. Use standard punctuation like commas, parentheses, or single hyphens ("-") instead.
 6. ALWAYS use the exact string '{{name}}' (without quotes) as a placeholder to personally address the recipient.
 7. Do NOT output any conversational text or markdown code blocks. Output ONLY valid JSON in this exact structure:
 {
