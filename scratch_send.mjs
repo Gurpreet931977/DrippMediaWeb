@@ -61,38 +61,40 @@ const getHtmlLayout = (content) => `
 `;
 
 async function sendCustomAdminEmail(subject, title, body, templateType) {
-  const formattedBody = body.replace(/\\n/g, '<br/>');
+  const formattedBody = body.replace(/\n/g, '<br/>');
 
   let accentColor = '#ebd73f'; 
-  let btnGradient = 'linear-gradient(135deg, #ebd73f 0%, #c7b320 100%)';
+  let btnBg = '#ebd73f';
+  let btnBorderBottom = '5px solid #a69420';
   let btnColor = '#000000';
-  let shadowColor = 'rgba(235, 215, 63, 0.25)';
+  let shadowColor = 'rgba(235, 215, 63, 0.3)';
 
   if (templateType === 'promo') {
     accentColor = '#ebd73f'; // Force gold for promo as requested
   } else if (templateType === 'newsletter') {
     accentColor = '#ffffff'; 
-    btnGradient = 'linear-gradient(135deg, #ffffff 0%, #e4e4e7 100%)';
+    btnBg = '#ffffff';
+    btnBorderBottom = '5px solid #a1a1aa';
     btnColor = '#000000';
     shadowColor = 'rgba(255, 255, 255, 0.15)';
   }
 
   try {
     const html = getHtmlLayout(`
-      <div style="border-left: 4px solid \${accentColor}; padding-left: 20px; margin-bottom: 32px;">
-        <h2 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">\${title}</h2>
+      <div style="border-left: 4px solid ${accentColor}; padding-left: 20px; margin-bottom: 32px;">
+        <h2 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">${title}</h2>
       </div>
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">
-        \${formattedBody}
+        ${formattedBody}
       </p>
-      \${
+      ${
         templateType === 'promo' 
-        ? \`<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" style="display: inline-block; background: \${btnGradient}; color: \${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 24px \${shadowColor}; font-family: 'Panchang', sans-serif;">Claim Offer</a></div>\`
+        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" style="display: inline-block; background: ${btnBg}; border-bottom: ${btnBorderBottom}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px ${shadowColor}; font-family: 'Panchang', sans-serif;">Claim Offer</a></div>`
         : ''
       }
-      \${
+      ${
         templateType === 'announcement'
-        ? \`<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" style="display: inline-block; background: \${btnGradient}; color: \${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 24px \${shadowColor}; font-family: 'Panchang', sans-serif;">View Details</a></div>\`
+        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" style="display: inline-block; background: ${btnBg}; border-bottom: ${btnBorderBottom}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px ${shadowColor}; font-family: 'Panchang', sans-serif;">View Details</a></div>`
         : ''
       }
     `);
@@ -110,7 +112,7 @@ async function sendCustomAdminEmail(subject, title, body, templateType) {
 }
 
 async function run() {
-  console.log('Dispatching ELITE test emails to', TO);
+  console.log('Dispatching ELITE test emails with 3D buttons to', TO);
 
   await sendCustomAdminEmail(
     'The rules of the game just changed.',

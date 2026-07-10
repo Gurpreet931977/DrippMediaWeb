@@ -11,7 +11,6 @@ const getResend = () => {
 
 const SENDER = 'Dripp Media <hello@drippmedia.com>';
 
-// Premium Dark Mode Layout - Dripp Media Gold Theme & Panchang Font
 const getHtmlLayout = (content) => `
 <!DOCTYPE html>
 <html lang="en">
@@ -96,7 +95,7 @@ export async function sendWelcomeEmail(email, name, nature) {
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">${p1}</p>
       <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 40px;">${p2}</p>
       <div style="text-align: center;">
-        <a href="${btnLink}" style="display: inline-block; background: linear-gradient(135deg, #ebd73f 0%, #c7b320 100%); color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 16px rgba(235, 215, 63, 0.25); font-family: 'Panchang', sans-serif;">
+        <a href="${btnLink}" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
           ${btnText}
         </a>
       </div>
@@ -132,7 +131,7 @@ export async function sendHighScoreEmail(email, score) {
         The competition is fierce. Hop back in to defend your position and aim even higher!
       </p>
       <div style="text-align: center;">
-        <a href="https://drippmedia.com/arcade" style="display: inline-block; background: linear-gradient(135deg, #ebd73f 0%, #c7b320 100%); color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 24px rgba(235, 215, 63, 0.25); font-family: 'Panchang', sans-serif;">
+        <a href="https://drippmedia.com/arcade" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
           Defend Your Score
         </a>
       </div>
@@ -165,7 +164,7 @@ export async function sendReminderEmail(email, name) {
         We thought you might want to jump back in and show them how it's done.
       </p>
       <div style="text-align: center;">
-        <a href="https://drippmedia.com/arcade" style="display: inline-block; background: linear-gradient(135deg, #ebd73f 0%, #c7b320 100%); color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 24px rgba(235, 215, 63, 0.25); font-family: 'Panchang', sans-serif;">
+        <a href="https://drippmedia.com/arcade" style="display: inline-block; background: #ebd73f; border-bottom: 5px solid #a69420; color: #000000; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3); font-family: 'Panchang', sans-serif;">
           Return to Arcade
         </a>
       </div>
@@ -191,15 +190,17 @@ export async function sendCustomAdminEmail(to, subject, title, body, templateTyp
   const formattedBody = body.replace(/\n/g, '<br/>');
 
   let accentColor = '#ebd73f'; 
-  let btnGradient = 'linear-gradient(135deg, #ebd73f 0%, #c7b320 100%)';
+  let btnBg = '#ebd73f';
+  let btnBorderBottom = '5px solid #a69420';
   let btnColor = '#000000';
-  let shadowColor = 'rgba(235, 215, 63, 0.25)';
+  let shadowColor = 'rgba(235, 215, 63, 0.3)';
 
   if (templateType === 'promo') {
-    accentColor = '#ebd73f'; // Enforcing Dripp Gold everywhere
+    accentColor = '#ebd73f'; // Force gold for promo as requested
   } else if (templateType === 'newsletter') {
     accentColor = '#ffffff'; 
-    btnGradient = 'linear-gradient(135deg, #ffffff 0%, #e4e4e7 100%)';
+    btnBg = '#ffffff';
+    btnBorderBottom = '5px solid #a1a1aa';
     btnColor = '#000000';
     shadowColor = 'rgba(255, 255, 255, 0.15)';
   }
@@ -214,12 +215,12 @@ export async function sendCustomAdminEmail(to, subject, title, body, templateTyp
       </p>
       ${
         templateType === 'promo' 
-        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" style="display: inline-block; background: ${btnGradient}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 24px ${shadowColor}; font-family: 'Panchang', sans-serif;">Claim Offer</a></div>`
+        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" style="display: inline-block; background: ${btnBg}; border-bottom: ${btnBorderBottom}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px ${shadowColor}; font-family: 'Panchang', sans-serif;">Claim Offer</a></div>`
         : ''
       }
       ${
         templateType === 'announcement'
-        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" style="display: inline-block; background: ${btnGradient}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 24px ${shadowColor}; font-family: 'Panchang', sans-serif;">View Details</a></div>`
+        ? `<div style="text-align: center; margin-top: 48px;"><a href="https://drippmedia.com" style="display: inline-block; background: ${btnBg}; border-bottom: ${btnBorderBottom}; color: ${btnColor}; padding: 16px 36px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px ${shadowColor}; font-family: 'Panchang', sans-serif;">View Details</a></div>`
         : ''
       }
     `);
