@@ -605,7 +605,7 @@ export default function OrloChat() {
               <span style={{ color: '#aaa' }}>Dripp AI Copilot</span><br/>
               Crafting premium, high-converting emails. 🚀<br/>
               Ready to scale your media presence.<br/>
-              <a href="#" style={{ color: '#ebd73f', textDecoration: 'none', fontWeight: '500' }}>dripp.com/orlo</a>
+              <a href="https://drippmedia.com/orloai" target="_blank" rel="noopener noreferrer" style={{ color: '#ebd73f', textDecoration: 'none', fontWeight: '500' }}>drippmedia.com/orloai</a>
             </div>
 
             <div className="profile-actions">
