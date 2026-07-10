@@ -93,29 +93,29 @@ export default function EmailCampaignsPage() {
     // Premium placeholder text to simulate AI generating copy
     const aiDrafts = {
       announcement: {
-        subject: "The paradigm just shifted.",
-        title: "Welcome to the Next Era.",
-        body: "For the last six months, we have operated in stealth to build something that will fundamentally alter how you capture and convert attention.\n\nThis is not a feature update. It is a complete structural overhaul of the digital landscape. We stripped away the noise and engineered a vehicle designed purely for undeniable growth. The rules of the game have been rewritten. It is time to step into the future."
+        subject: "Big news from Dripp Media.",
+        title: "A Huge Update.",
+        body: "We have been working hard behind the scenes to bring you something completely new.\n\nThis is not just a small update. We have built a brand new way for you to grow your audience and get more attention online. It is easier, faster, and better than ever before. Come see what is new."
       },
       promo: {
-        subject: "An unfair advantage, exclusively for you.",
-        title: "Scale Without Limits.",
-        body: "In this industry, momentum dictates survival. Right now, you have a rare opportunity to seize an unfair advantage that your competitors will never see coming.\n\nWe are unlocking our most aggressive growth suite for you at a fraction of the standard investment. This is not a discount. It is a strategic alliance designed to accelerate your revenue. Claim your access before the window permanently closes."
+        subject: "A special offer just for you.",
+        title: "Grow Faster Today.",
+        body: "If you want to grow online, you need the right tools. Right now, we have a special offer that will help you grow faster than ever.\n\nWe are giving you access to our best tools at a huge discount. This is a rare chance to get top-level help for your brand. Grab this offer before it ends soon."
       },
       newsletter: {
-        subject: "The exact strategy behind the fastest growing brands.",
-        title: "The Weekly Edge.",
-        body: "Most brands fail because they follow the crowd. The ones that dominate are the ones that dictate the narrative.\n\nThis week, we are pulling back the curtain on the exact digital frameworks the top 1% are using to monopolize attention and convert passive scrollers into high-LTV clients. Dive into the breakdown below, absorb the mechanics, and execute ruthlessly."
+        subject: "How the best brands get so many views.",
+        title: "The Weekly Tips.",
+        body: "Do you ever wonder how top creators get so much attention? They do things differently.\n\nThis week, we are sharing the exact steps that big brands use to get millions of views and turn them into loyal fans. Read our tips below and start using them for your own videos today."
       },
       invitation: {
-        subject: "Your exclusive access is ready.",
-        title: "The Inner Circle.",
-        body: "You do not receive this email by accident. Based on your trajectory, you have been selected to join a highly curated network of elite creators and brand operators.\n\nThis is your private invitation to bypass the public waitlist and immediately access our premium tier. The inner circle is waiting. Step up and claim your seat."
+        subject: "You are invited to our VIP group.",
+        title: "VIP Invite.",
+        body: "We noticed your hard work, and we want to reward you. You have been chosen to join our private group of top creators and business owners.\n\nThis email is your private invite to skip the waitlist and join right now. Come meet the team and start growing with the best."
       },
       alert: {
-        subject: "The Dripp Drop Challenge is closing.",
-        title: "Your Spot is Slipping.",
-        body: "You have seen the leaderboard. You know exactly what is at stake.\n\nThe Dripp Drop Challenge is strictly a limited-time event, and the window to secure your position at the top is rapidly closing. This is not just about a high score. It is about the exclusive reward reserved entirely for those who refuse to lose.\n\nAre you really going to let someone else walk away with your prize? The arena is open, but time is bleeding out. Drop back in, set the record, and claim what is yours."
+        subject: "The game is ending soon!",
+        title: "Time is Running Out.",
+        body: "You have seen the leaderboard, and you know what the prize is.\n\nThe Dripp Drop Challenge is ending very soon. This is your last chance to get the top score and win the free prize.\n\nAre you really going to let someone else win? The game is still open, but time is almost up. Play now, get the high score, and claim your prize before it is too late."
       }
     };
 

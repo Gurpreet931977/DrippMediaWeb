@@ -128,21 +128,21 @@ export async function sendWelcomeEmail(email, name, nature) {
   const resend = getResend();
   if (!resend) return { success: false, error: 'Misconfigured' };
   
-  let title = 'The status quo just became obsolete.';
-  let p1 = `Welcome to the inside, ${name || 'friend'}. Most people settle for consuming content. You just took the first step toward controlling it.`;
-  let p2 = "Dripp Media is not just an agency or a platform. It is an ecosystem built for those who refuse to be ignored. From this moment on, the tools, the network, and the strategies used by the top tier are at your disposal. The only question left is what you will do with them.";
-  let btnText = 'Enter The Ecosystem';
+  let title = 'Welcome to Dripp Media.';
+  let p1 = `Welcome to the team, ${name || 'friend'}. Most people just watch videos. You just took the first step to creating them.`;
+  let p2 = "Dripp Media is the best place to grow your brand. We give you the same tools and secrets that top creators use to get millions of views. The only question is: what will you build with them?";
+  let btnText = 'Get Started Now';
   
   if (nature?.toLowerCase() === 'creator') {
-    title = 'Stop competing. Start dominating.';
-    p1 = `You are here because your ambition outgrew your current platform. Welcome to the creator hub, ${name || 'creator'}.`;
-    p2 = "The market is flooded with noise, but true attention is a highly guarded currency. We have engineered the exact frameworks required to break the algorithm, scale your audience unconditionally, and turn attention into equity. It is time to elevate your brand from a channel to an empire.";
-    btnText = 'Claim Your Advantage';
+    title = 'Ready to grow your audience?';
+    p1 = `You are here because you want more views, more fans, and more growth. Welcome to the creator hub, ${name || 'creator'}.`;
+    p2 = "It is hard to get noticed online today. That is why we built a clear, proven system to help you beat the algorithm and turn your viewers into loyal fans. It is time to take your channel to the next level.";
+    btnText = 'Grow Your Channel';
   } else if (nature?.toLowerCase() === 'business') {
-    title = 'Growth is not a metric. It is a mandate.';
-    p1 = `Welcome to your unfair advantage, ${name || 'partner'}.`;
-    p2 = "In a landscape where traditional marketing yields diminishing returns, standard playbooks lead to stagnation. Dripp Media is designed specifically to engineer velocity for your brand. We bypass the noise to deliver precision, authority, and relentless scale. Let us show you what happens when elite strategy meets flawless execution.";
-    btnText = 'Scale Your Revenue';
+    title = "Let's grow your business.";
+    p1 = `Welcome to your new growth partner, ${name || 'partner'}.`;
+    p2 = "Standard marketing does not work like it used to. At Dripp Media, we help you cut through the noise and reach the right customers. We bring you clear strategies that actually bring in sales. Let's start building your business together.";
+    btnText = 'Boost Your Sales';
   }
   
   try {
@@ -162,10 +162,10 @@ export async function sendHighScoreEmail(email, score) {
   if (!resend) return { success: false, error: 'Misconfigured' };
   try {
     const html = getHtmlLayout(`
-      <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">A new benchmark has been set.</h2>
-      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px; text-align: center;">Average players plateau. Elite players redefine the ceiling. You just set a new personal record of <strong style="color: #ebd73f; font-size: 18px;">${score} points</strong>.</p>
-      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px; text-align: center;">But in this arena, a record is just a target painted on your back. The competition is already analyzing your strategy and coming for your spot. You proved you can reach the top. Now, prove you can defend it.</p>
-      ${render3DButton('Defend Your Title', 'https://drippmedia.com')}
+      <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">You just set a new record.</h2>
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px; text-align: center;">Amazing job! You just set a brand new personal best of <strong style="color: #ebd73f; font-size: 18px;">${score} points</strong>.</p>
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px; text-align: center;">But watch out—the competition is close behind you. They are playing right now to beat your score. You proved you can reach the top spot. Now, prove you can keep it.</p>
+      ${render3DButton('Play Again', 'https://drippmedia.com')}
     `);
     const data = await resend.emails.send({ from: SENDER, to: email, subject: `New High Score: ${score}!`, html });
     return { success: true, data };
@@ -177,10 +177,10 @@ export async function sendReminderEmail(email, name) {
   if (!resend) return { success: false, error: 'Misconfigured' };
   try {
     const html = getHtmlLayout(`
-      <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 24px; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">Your position is vulnerable.</h2>
-      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">The leaderboard waits for no one. While you have been away, the hierarchy has shifted.</p>
-      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px;">Momentum is unforgiving. If you are not actively defending your rank, you are already losing it. Others are closing the gap and targeting your position. Do not let your previous victories become old news.</p>
-      ${render3DButton('Reclaim Your Rank', 'https://drippmedia.com')}
+      <h2 style="color: #ffffff; font-size: 28px; margin-top: 0; margin-bottom: 24px; font-weight: 700; letter-spacing: -0.5px; font-family: 'Panchang', sans-serif;">Someone might beat your score.</h2>
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">It has been a while since you played! The leaderboard has changed while you were away.</p>
+      <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px;">If you do not play, someone else will take your spot. Other players are getting closer to beating your high score right now. Do not let them win so easily.</p>
+      ${render3DButton('Return To Game', 'https://drippmedia.com')}
     `);
     const data = await resend.emails.send({ from: SENDER, to: email, subject: 'Ready to beat your high score?', html });
     return { success: true, data };

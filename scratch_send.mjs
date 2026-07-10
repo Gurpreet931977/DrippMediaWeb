@@ -3,11 +3,11 @@ import { sendCustomAdminEmail } from './app/lib/email.js';
 const TO = 'gs335860@gmail.com';
 
 async function run() {
-  console.log('Dispatching fixed challenge reminder email to', TO);
+  console.log('Dispatching simple challenge reminder email to', TO);
 
-  const subject = "The Dripp Drop Challenge is closing.";
-  const title = "The Window is Closing.";
-  const body = "Success is defined by the ability to act when the window is open. Right now, your window is closing fast.\n\nYou have less than 24 hours to secure your position before this offer is permanently removed from the table. Do not let hesitation cost you your edge. Act immediately.";
+  const subject = "The game is ending soon!";
+  const title = "Time is Running Out.";
+  const body = "You have seen the leaderboard, and you know what the prize is.\n\nThe Dripp Drop Challenge is ending very soon. This is your last chance to get the top score and win the free prize.\n\nAre you really going to let someone else win? The game is still open, but time is almost up. Play now, get the high score, and claim your prize before it is too late.";
   
   await sendCustomAdminEmail(TO, subject, title, body, 'alert');
 
