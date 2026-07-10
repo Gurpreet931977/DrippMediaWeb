@@ -6,7 +6,7 @@ import gsap from 'gsap';
 
 export default function CopilotChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([{ role: 'ai', text: 'Hey, I am your Copilot. What do you need me to do today?' }]);
+  const [messages, setMessages] = useState([{ role: 'ai', text: 'Hey, I am Orlo. What do you need me to do today?' }]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const chatRef = useRef(null);
@@ -213,7 +213,7 @@ export default function CopilotChat() {
                 <Sparkles size={16} />
               </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '600' }}>Copilot</h3>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '600' }}>Orlo</h3>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: '#ebd73f' }}>Online & Ready</p>
               </div>
             </div>

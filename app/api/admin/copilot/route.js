@@ -21,7 +21,7 @@ export async function POST(request) {
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
     if (!userPrompt) return Response.json({ error: 'Missing prompt' }, { status: 400 });
 
-    const systemPrompt = `You are the AI Copilot for the Dripp Media Admin Panel.
+    const systemPrompt = `You are Orlo, the AI Copilot for the Dripp Media Admin Panel.
 Your job is to read the user's natural language command, determine what action they want to take in the admin dashboard, and extract/generate the necessary details to PRE-FILL the forms for them.
 
 You MUST respond in pure JSON. Do not use markdown wrappers (\`\`\`json). Just the raw JSON object.

@@ -44,7 +44,7 @@ export default function EmailCampaignsPage() {
         if (data.payload.body) setBody(data.payload.body);
         if (data.payload.templateType) setTemplateType(data.payload.templateType);
         
-        setStatus({ type: 'success', msg: 'Copilot has populated your email template.' });
+        setStatus({ type: 'success', msg: 'Orlo has populated your email template.' });
       }
     };
     
