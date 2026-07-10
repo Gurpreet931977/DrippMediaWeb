@@ -18,6 +18,12 @@
         { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/reminders",
+      "schedule": "0 12 * * *"
+    }
   ]
 }
 
