@@ -19,6 +19,20 @@ export default function DrippDatePicker({ value, onChange }) {
     }
   }, []);
 
+  useEffect(() => {
+    if (value) {
+      const newD = new Date(value);
+      if (newD.getTime() !== currentDate.getTime()) {
+        setCurrentDate(newD);
+      }
+    }
+  }, [value, currentDate]);
+
+  const getLocalDatetimeString = (date) => {
+    const tzoffset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - tzoffset).toISOString().slice(0, 16);
+  };
+
   const next14Days = Array.from({ length: 14 }).map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
@@ -170,6 +184,36 @@ export default function DrippDatePicker({ value, onChange }) {
           ))}
         </div>
       </div>
+
+      <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '20px 0' }}></div>
+      
+      {/* Manual Entry */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#ebd73f', fontWeight: '600' }}>
+        Manual Typing
+      </div>
+      <input 
+        type="datetime-local"
+        value={getLocalDatetimeString(currentDate)}
+        onChange={(e) => {
+          if (e.target.value) {
+            const newDate = new Date(e.target.value);
+            setCurrentDate(newDate);
+            onChange(newDate.toISOString());
+          }
+        }}
+        style={{
+          background: 'rgba(0,0,0,0.5)',
+          border: '1px solid rgba(235,215,63,0.4)',
+          borderRadius: '8px',
+          color: '#fff',
+          padding: '12px',
+          fontSize: '1rem',
+          outline: 'none',
+          width: '100%',
+          fontFamily: 'inherit',
+          colorScheme: 'dark'
+        }}
+      />
     </div>
   );
 }
