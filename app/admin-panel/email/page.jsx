@@ -22,6 +22,7 @@ export default function EmailCampaignsPage() {
   const [generatingMode, setGeneratingMode] = useState('');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduleTime, setScheduleTime] = useState('');
+  const [showClearAfterSend, setShowClearAfterSend] = useState(false);
 
   const containerRef = useRef(null);
   const aiBtnRef = useRef(null);
@@ -45,14 +46,21 @@ export default function EmailCampaignsPage() {
         if (data.payload.title) setTitle(data.payload.title);
         if (data.payload.body) setBody(data.payload.body);
         if (data.payload.templateType) setTemplateType(data.payload.templateType);
+        if (typeof data.payload.isScheduled === 'boolean') setIsScheduled(data.payload.isScheduled);
+        if (data.payload.scheduleTime) setScheduleTime(data.payload.scheduleTime);
         
-        setStatus({ type: 'success', msg: 'Orlo has populated your email template.' });
+        setStatus({ type: 'success', msg: 'Orlo has updated your email template.' });
       }
     };
     
     window.addEventListener('copilot-action', handleCopilotAction);
     return () => window.removeEventListener('copilot-action', handleCopilotAction);
   }, []);
+
+  // Expose current context to Copilot
+  useEffect(() => {
+    window._drippEmailContext = { subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime };
+  }, [subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime]);
 
   // Magnetic hover effect for AI button
   const handleAiMouseMove = (e) => {
@@ -98,13 +106,7 @@ export default function EmailCampaignsPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to send');
 
       setStatus({ type: 'success', msg: data.message });
-      // Reset form if successful
-      if (!isBroadcast) setSpecificEmail('');
-      setSubject('');
-      setTitle('');
-      setBody('');
-      setIsScheduled(false);
-      setScheduleTime('');
+      setShowClearAfterSend(true);
     } catch (err) {
       setStatus({ type: 'error', msg: err.message });
     } finally {
@@ -421,26 +423,51 @@ export default function EmailCampaignsPage() {
               </div>
             )}
 
-            <button 
-              type="submit" 
-              disabled={loading || generating}
-              className={styles.btnPrimary} 
-              style={{ 
-                padding: '1.25rem', 
-                fontSize: '1.1rem',
-                marginTop: '1rem',
-                width: '100%'
-              }}
-            >
-              {loading ? (
-                'Dispatching...'
-              ) : (
-                <>
-                  <Send size={20} />
-                  {isBroadcast ? 'Launch Broadcast Sequence' : 'Dispatch Test Email'}
-                </>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <button 
+                type="submit" 
+                disabled={loading || generating}
+                className={styles.btnPrimary} 
+                style={{ 
+                  padding: '1.25rem', 
+                  fontSize: '1.1rem',
+                  flex: 1
+                }}
+              >
+                {loading ? (
+                  'Dispatching...'
+                ) : (
+                  <>
+                    <Send size={20} />
+                    {isBroadcast ? 'Launch Broadcast Sequence' : 'Dispatch Test Email'}
+                  </>
+                )}
+              </button>
+
+              {showClearAfterSend && (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    if (!isBroadcast) setSpecificEmail('');
+                    setSubject('');
+                    setTitle('');
+                    setBody('');
+                    setIsScheduled(false);
+                    setScheduleTime('');
+                    setShowClearAfterSend(false);
+                    setStatus({ type: '', msg: '' });
+                  }}
+                  className={styles.btn} 
+                  style={{ 
+                    padding: '1.25rem', 
+                    fontSize: '1.1rem',
+                    flex: '0 0 auto'
+                  }}
+                >
+                  Clear All
+                </button>
               )}
-            </button>
+            </div>
           </form>
         </div>
 

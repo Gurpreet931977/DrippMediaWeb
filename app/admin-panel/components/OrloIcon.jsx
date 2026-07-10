@@ -17,12 +17,15 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       gsap.set([leftEyeRef.current, rightEyeRef.current], { scaleY: 1, scaleX: 1, y: 0, x: 0, rotation: 0 });
       gsap.set(headRef.current, { y: 0, x: 0, scale: 1, scaleY: 1, scaleX: 1, rotation: 0 });
 
-      if (emotion === 'idle') {
+      if (emotion === 'still') {
+        // Do absolutely nothing, just remain static
+        return;
+      } else if (emotion === 'idle') {
         // Gentle blinking, more fluid breathing (premium lottie style)
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
           scaleY: 0.1,
           transformOrigin: "center center",
-          duration: 0.15,
+          duration: 0.05,
           repeat: -1,
           repeatDelay: 4.5,
           yoyo: true,
@@ -68,7 +71,7 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
           scaleY: 0.1,
           transformOrigin: "center center",
-          duration: 0.1,
+          duration: 0.05,
           repeat: -1,
           repeatDelay: 2.5,
           yoyo: true,

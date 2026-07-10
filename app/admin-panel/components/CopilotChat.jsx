@@ -67,10 +67,15 @@ export default function CopilotChat() {
     setEmotion('thinking');
 
     try {
+      const currentContext = window._drippEmailContext || {};
       const res = await fetch('/api/admin/copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userPrompt: userText })
+        body: JSON.stringify({ 
+          userPrompt: userText, 
+          context: currentContext, 
+          currentDate: new Date().toISOString() 
+        })
       });
       const data = await res.json();
       
@@ -258,8 +263,26 @@ export default function CopilotChat() {
         <div className="chat-container" ref={chatRef}>
           <div className="chat-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ebd73f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
-                <OrloIcon size={16} emotion={emotion} />
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}>
+                  <defs>
+                    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ebd73f" />
+                      <stop offset="100%" stopColor="#f9efb4" />
+                    </linearGradient>
+                    <linearGradient id="mountainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#444" />
+                      <stop offset="100%" stopColor="#000" />
+                    </linearGradient>
+                  </defs>
+                  <rect width="100" height="100" fill="url(#skyGrad)" />
+                  <circle cx="75" cy="25" r="12" fill="#fff" opacity="0.9" />
+                  <path d="M-20,100 L30,45 L85,100 Z" fill="url(#mountainGrad)" />
+                  <path d="M35,100 L75,60 L125,100 Z" fill="#111" />
+                </svg>
+                <div style={{ zIndex: 1, paddingBottom: '2px' }}>
+                  <OrloIcon size={20} color="#000" emotion="still" />
+                </div>
               </div>
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '600' }}>Orlo</h3>
