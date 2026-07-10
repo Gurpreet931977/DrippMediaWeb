@@ -20,6 +20,8 @@ const MagicCursor = () => {
         const xToAura = gsap.quickTo(auraRef.current, "x", { duration: 0.6, ease: "power3.out" });
         const yToAura = gsap.quickTo(auraRef.current, "y", { duration: 0.6, ease: "power3.out" });
 
+        let lastX = 0;
+        let lastY = 0;
         let lastSpawnTime = 0;
 
         const handleMouseMove = (e) => {
@@ -29,33 +31,71 @@ const MagicCursor = () => {
             xToAura(e.clientX);
             yToAura(e.clientY);
 
-            // Glitter trail logic
+            // Intensity-triggered Glitter trail logic
             const now = Date.now();
-            if (now - lastSpawnTime > 35) { // Throttle spawn rate
-                lastSpawnTime = now;
-                createGlitter(e.clientX, e.clientY);
+            
+            if (lastX === 0 && lastY === 0) {
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+            
+            const dx = e.clientX - lastX;
+            const dy = e.clientY - lastY;
+            const distance = Math.hypot(dx, dy);
+            const timeDiff = now - lastSpawnTime;
+            
+            if (timeDiff > 16) { // ~60fps throttle for calculations
+                const velocity = distance / timeDiff; // pixels per ms
+                
+                let numParticles = 0;
+                if (velocity > 1.5) {
+                    // High intensity: spawn lots of particles
+                    numParticles = Math.min(8, Math.floor(velocity * 2));
+                } else if (velocity > 0.5) {
+                    // Medium intensity
+                    numParticles = 2;
+                } else if (distance > 10) {
+                    // Slow movement
+                    numParticles = 1;
+                }
+                
+                if (numParticles > 0) {
+                    for (let i = 0; i < numParticles; i++) {
+                        createGlitter(e.clientX, e.clientY, velocity);
+                    }
+                    lastSpawnTime = now;
+                    lastX = e.clientX;
+                    lastY = e.clientY;
+                }
             }
         };
 
-        const createGlitter = (x, y) => {
+        const createGlitter = (x, y, velocity = 1) => {
             const glitter = document.createElement('div');
             glitter.className = 'glitter-particle';
             
-            // Random offset so it spreads out slightly
-            const offsetX = (Math.random() - 0.5) * 15;
-            const offsetY = (Math.random() - 0.5) * 15;
+            // Spread more if moving faster
+            const spread = 15 + (velocity * 5);
+            const offsetX = (Math.random() - 0.5) * spread;
+            const offsetY = (Math.random() - 0.5) * spread;
             glitter.style.left = `${x + offsetX}px`;
             glitter.style.top = `${y + offsetY}px`;
+            
+            // Randomize size slightly for intense bursts
+            if (Math.random() > 0.8) {
+                glitter.style.width = '6px';
+                glitter.style.height = '6px';
+            }
             
             document.body.appendChild(glitter);
 
             // Animate it falling and shrinking/fading
             gsap.to(glitter, {
-                y: `+=${20 + Math.random() * 20}`, // fall down slightly
-                x: `+=${(Math.random() - 0.5) * 40}`, // drift sideways
+                y: `+=${20 + Math.random() * 30 + (velocity * 5)}`, // fall down more if intense
+                x: `+=${(Math.random() - 0.5) * (40 + velocity * 10)}`, // drift sideways more
                 scale: 0,
                 opacity: 0,
-                duration: 0.8 + Math.random() * 0.5,
+                duration: 0.6 + Math.random() * 0.6,
                 ease: "power1.out",
                 onComplete: () => {
                     if (glitter.parentNode) {
