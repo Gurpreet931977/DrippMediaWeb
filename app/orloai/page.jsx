@@ -1,9 +1,53 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import gsap from 'gsap';
 import './wiki.css';
 import OrloIcon from '../admin-panel/components/OrloIcon'; // Use the same OrloIcon
+
+const OrloCursor = () => {
+    const cursorRef = useRef(null);
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const xTo = gsap.quickTo(cursorRef.current, "x", { duration: 0.1, ease: "power3" });
+        const yTo = gsap.quickTo(cursorRef.current, "y", { duration: 0.1, ease: "power3" });
+
+        const handleMouseMove = (e) => {
+            if (!isVisible) setIsVisible(true);
+            xTo(e.clientX);
+            yTo(e.clientY);
+        };
+        
+        const handleMouseLeave = () => setIsVisible(false);
+
+        window.addEventListener('mousemove', handleMouseMove);
+        document.body.addEventListener('mouseleave', handleMouseLeave);
+        
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            document.body.removeEventListener('mouseleave', handleMouseLeave);
+        };
+    }, [isVisible]);
+
+    return (
+        <div
+            ref={cursorRef}
+            style={{
+                position: 'fixed',
+                top: -16,
+                left: -16,
+                pointerEvents: 'none',
+                zIndex: 9999999,
+                opacity: isVisible ? 1 : 0,
+                transition: 'opacity 0.2s ease',
+            }}
+        >
+            <OrloIcon size={32} color="#ebd73f" emotion="idle" />
+        </div>
+    );
+};
 
 export default function OrloWikiPage() {
     useEffect(() => {
@@ -12,6 +56,7 @@ export default function OrloWikiPage() {
 
     return (
         <div className="wiki-container">
+            <OrloCursor />
             {/* Sidebar Navigation */}
             <aside className="wiki-sidebar">
                 <Link href="/" className="wiki-logo">
@@ -136,8 +181,8 @@ export default function OrloWikiPage() {
                             Orlo AI
                         </div>
                         <div className="wiki-infobox-image">
-                            {/* Render Orlo in 'excited' state for the wiki picture */}
-                            <OrloIcon size={200} color="#ebd73f" emotion="excited" />
+                            {/* Render Orlo in 'idle' state for the wiki picture */}
+                            <OrloIcon size={200} color="#ebd73f" emotion="idle" />
                         </div>
                         <table className="wiki-infobox-table">
                             <tbody>
