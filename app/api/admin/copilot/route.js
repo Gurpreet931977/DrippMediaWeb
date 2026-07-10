@@ -32,6 +32,7 @@ Read the Current Email Form State and modify the subject/title/body accordingly.
 
 If the user wants to schedule the email (e.g. "schedule this for next friday", "set the time to 5pm"):
 Set "isScheduled": true and "scheduleTime" to the ISO 8601 string of the requested time. Keep the rest of the current form state the same in the payload.
+CRITICAL: The Current Date/Time provided to you includes the user's timezone. You MUST account for their local timezone when setting the scheduled time. Return an ISO string with the correct local timezone offset (e.g. 2026-07-11T12:00:00+05:30) or correctly converted UTC (Z). Do NOT just output a Z string without converting if you mean local time.
 
 Valid Intents:
 1. "email" - The user wants to write, edit, personalize, or schedule an email.

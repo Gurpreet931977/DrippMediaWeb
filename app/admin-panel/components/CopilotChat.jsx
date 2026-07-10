@@ -82,7 +82,7 @@ export default function CopilotChat() {
         body: JSON.stringify({ 
           userPrompt: userText, 
           context: currentContext, 
-          currentDate: new Date().toISOString() 
+          currentDate: new Date().toString() 
         })
       });
       const data = await res.json();
