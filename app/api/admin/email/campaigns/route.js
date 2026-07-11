@@ -62,7 +62,7 @@ export async function POST(request) {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { title, subject, body, templateType, isBroadcast, specificEmail, scheduledAt, isRecurring, recurrenceIntervalDays } = payload;
+  const { title, subject, body, templateType, isBroadcast, specificEmail, scheduledAt, isRecurring, recurrenceIntervalDays, recurrenceEndDate } = payload;
 
   const supabase = getSupabase();
   if (!supabase) return Response.json({ error: 'Database misconfigured' }, { status: 500 });
@@ -80,6 +80,7 @@ export async function POST(request) {
         scheduled_at: scheduledAt,
         is_recurring: isRecurring || false,
         recurrence_interval_days: recurrenceIntervalDays || null,
+        recurrence_end_date: recurrenceEndDate || null,
         status: 'pending'
       }
     ])

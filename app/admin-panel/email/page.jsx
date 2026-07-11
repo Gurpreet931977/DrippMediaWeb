@@ -24,6 +24,8 @@ export default function EmailCampaignsPage() {
   const [scheduleTime, setScheduleTime] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceIntervalDays, setRecurrenceIntervalDays] = useState(1);
+  const [hasEndDate, setHasEndDate] = useState(false);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
   const [showClearAfterSend, setShowClearAfterSend] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState(null);
   const [hoveredScheduleId, setHoveredScheduleId] = useState(null);
@@ -52,7 +54,9 @@ export default function EmailCampaignsPage() {
           specificEmail: c.specific_email,
           scheduledAt: c.scheduled_at,
           isRecurring: c.is_recurring,
-          recurrenceIntervalDays: c.recurrence_interval_days
+          recurrenceIntervalDays: c.recurrence_interval_days,
+          hasEndDate: !!c.recurrence_end_date,
+          recurrenceEndDate: c.recurrence_end_date
         })));
       }
     } catch (err) {
@@ -90,6 +94,8 @@ export default function EmailCampaignsPage() {
         if (data.payload.scheduleTime) setScheduleTime(data.payload.scheduleTime);
         if (typeof data.payload.isRecurring === 'boolean') setIsRecurring(data.payload.isRecurring);
         if (data.payload.recurrenceIntervalDays) setRecurrenceIntervalDays(data.payload.recurrenceIntervalDays);
+        if (typeof data.payload.hasEndDate === 'boolean') setHasEndDate(data.payload.hasEndDate);
+        if (data.payload.recurrenceEndDate) setRecurrenceEndDate(data.payload.recurrenceEndDate);
         
         setStatus({ type: 'success', msg: 'Orlo has updated your email template.' });
       }
@@ -101,8 +107,8 @@ export default function EmailCampaignsPage() {
 
   // Expose current context to Copilot
   useEffect(() => {
-    window._drippEmailContext = { subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime, isRecurring, recurrenceIntervalDays };
-  }, [subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime, isRecurring, recurrenceIntervalDays]);
+    window._drippEmailContext = { subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime, isRecurring, recurrenceIntervalDays, hasEndDate, recurrenceEndDate };
+  }, [subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime, isRecurring, recurrenceIntervalDays, hasEndDate, recurrenceEndDate]);
 
   // Magnetic hover effect for AI button
   const handleAiMouseMove = (e) => {
@@ -144,7 +150,8 @@ export default function EmailCampaignsPage() {
             templateType,
             scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null,
             isRecurring,
-            recurrenceIntervalDays
+            recurrenceIntervalDays,
+            recurrenceEndDate: isRecurring && hasEndDate && recurrenceEndDate ? new Date(recurrenceEndDate).toISOString() : null
           })
         });
 
@@ -169,7 +176,8 @@ export default function EmailCampaignsPage() {
             templateType,
             scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null,
             isRecurring,
-            recurrenceIntervalDays
+            recurrenceIntervalDays,
+            recurrenceEndDate: isRecurring && hasEndDate && recurrenceEndDate ? new Date(recurrenceEndDate).toISOString() : null
           })
         });
 
@@ -528,6 +536,38 @@ export default function EmailCampaignsPage() {
                         <span style={{ color: '#888', fontSize: '0.9rem' }}>days</span>
                       </div>
                     )}
+
+                    {isRecurring && (
+                      <div style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: hasEndDate ? '1rem' : 0 }}>
+                          <span style={{ color: '#fff', fontSize: '1rem', cursor: 'pointer', fontWeight: '500' }} onClick={() => setHasEndDate(!hasEndDate)}>Set an end date</span>
+                          <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0 }}>
+                            <input 
+                              type="checkbox" 
+                              checked={hasEndDate} 
+                              onChange={(e) => setHasEndDate(e.target.checked)}
+                              style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }} 
+                            />
+                            <span style={{
+                              position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                              backgroundColor: hasEndDate ? '#ebd73f' : 'rgba(255,255,255,0.1)', transition: '.4s', borderRadius: '24px'
+                            }}>
+                              <span style={{
+                                position: 'absolute', height: '18px', width: '18px',
+                                left: hasEndDate ? '23px' : '3px', bottom: '3px', backgroundColor: hasEndDate ? '#000' : '#888',
+                                transition: '.4s', borderRadius: '50%'
+                              }} />
+                            </span>
+                          </label>
+                        </div>
+                        {hasEndDate && (
+                          <DrippDatePicker 
+                            value={recurrenceEndDate}
+                            onChange={(val) => setRecurrenceEndDate(val)}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -584,6 +624,8 @@ export default function EmailCampaignsPage() {
                     setScheduleTime('');
                     setIsRecurring(false);
                     setRecurrenceIntervalDays(1);
+                    setHasEndDate(false);
+                    setRecurrenceEndDate('');
                     setShowClearAfterSend(false);
                     setEditingScheduleId(null);
                     setStatus({ type: '', msg: '' });
@@ -759,7 +801,12 @@ export default function EmailCampaignsPage() {
                          <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Audience:</strong> <span>{item.isBroadcast ? 'All Users' : item.specificEmail}</span></div>
                          <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Subject:</strong> <span>{item.subject}</span></div>
                          {item.isRecurring && (
-                           <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Recurs:</strong> <span style={{ color: '#ebd73f' }}>Every {item.recurrenceIntervalDays} days</span></div>
+                           <>
+                             <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Recurs:</strong> <span style={{ color: '#ebd73f' }}>Every {item.recurrenceIntervalDays} days</span></div>
+                             {item.hasEndDate && (
+                               <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Until:</strong> <span style={{ color: '#ef4444' }}>{mounted ? new Date(item.recurrenceEndDate).toLocaleDateString() : ''}</span></div>
+                             )}
+                           </>
                          )}
                          <div style={{ marginTop: '1rem', color: '#ccc', fontStyle: 'italic', background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
                            &quot;{item.body.substring(0, 150)}{item.body.length > 150 ? '...' : ''}&quot;
@@ -785,6 +832,8 @@ export default function EmailCampaignsPage() {
                           setScheduleTime(new Date(item.scheduledAt).toISOString().slice(0, 16));
                           setIsRecurring(item.isRecurring || false);
                           setRecurrenceIntervalDays(item.recurrenceIntervalDays || 1);
+                          setHasEndDate(item.hasEndDate || false);
+                          setRecurrenceEndDate(item.recurrenceEndDate ? new Date(item.recurrenceEndDate).toISOString().slice(0, 16) : '');
                           setEditingScheduleId(item.id);
                           setShowClearAfterSend(true);
                         }}

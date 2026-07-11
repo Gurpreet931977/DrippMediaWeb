@@ -115,8 +115,13 @@ export async function GET(request) {
         if (campaign.is_recurring && campaign.recurrence_interval_days) {
           const nextRun = new Date();
           nextRun.setDate(nextRun.getDate() + campaign.recurrence_interval_days);
-          updateData.scheduled_at = nextRun.toISOString();
-          // Status stays 'pending'
+          
+          if (campaign.recurrence_end_date && nextRun > new Date(campaign.recurrence_end_date)) {
+            updateData.status = 'sent';
+          } else {
+            updateData.scheduled_at = nextRun.toISOString();
+            // Status stays 'pending'
+          }
         } else {
           updateData.status = 'sent';
         }
