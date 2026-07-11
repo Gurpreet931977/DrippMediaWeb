@@ -259,6 +259,14 @@ export default function OrloExport() {
 
   return (
     <div style={{ backgroundColor: bgColor, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+      <style dangerouslySetInnerHTML={{__html: `
+        body { opacity: 1 !important; }
+        ${!hideCursor ? `
+        body, body *, .orlo-export-page, .orlo-export-page * { 
+          cursor: auto; 
+        }
+        ` : ''}
+      `}} />
       
       {/* Green Screen Overlay for reliable cursor hiding */}
       {hideCursor && (
