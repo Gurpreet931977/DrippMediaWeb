@@ -69,27 +69,41 @@ const AdvancedColorPicker = ({ label, colorHex, onChangeHex }) => {
     onChangeHex(rgbToHex(newRgb.r, newRgb.g, newRgb.b));
   };
 
-  const inputStyle = { width: '45px', padding: '4px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#222', color: '#fff', fontSize: '12px', textAlign: 'center' };
-  const labelStyle = { fontSize: '10px', color: '#aaa', display: 'block', textAlign: 'center', marginTop: '2px' };
+  const inputStyle = { 
+    width: '45px', padding: '8px 4px', borderRadius: '8px', 
+    border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(0,0,0,0.3)', 
+    color: '#fff', fontSize: '13px', textAlign: 'center', fontFamily: 'sans-serif',
+    outline: 'none', transition: 'border-color 0.2s'
+  };
+  const labelStyle = { fontSize: '11px', color: '#888', display: 'block', textAlign: 'center', marginTop: '6px', fontWeight: '500' };
 
   return (
-    <div style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '10px', border: '1px solid #333', marginBottom: '15px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <strong style={{ color: '#fff', fontSize: '14px' }}>{label}</strong>
-        <input type="color" value={colorHex} onChange={(e) => onChangeHex(e.target.value)} style={{ cursor: 'pointer', background: 'none', border: 'none', width: '30px', height: '30px' }} />
+    <div style={{ 
+      backgroundColor: 'rgba(255, 255, 255, 0.02)', 
+      padding: '20px', 
+      borderRadius: '16px', 
+      border: '1px solid rgba(255, 255, 255, 0.05)', 
+      marginBottom: '15px',
+      boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.5)'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+        <strong style={{ color: '#fff', fontSize: '14px', letterSpacing: '0.5px' }}>{label}</strong>
+        <div style={{ position: 'relative', width: '34px', height: '34px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+          <input type="color" value={colorHex} onChange={(e) => onChangeHex(e.target.value)} style={{ cursor: 'pointer', background: 'none', border: 'none', width: '50px', height: '50px', position: 'absolute', top: '-8px', left: '-8px' }} />
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
         {/* HEX */}
         <div>
            <div style={{ display: 'flex', flexDirection: 'column' }}>
-             <input type="text" value={colorHex} onChange={handleHexChange} style={{ ...inputStyle, width: '70px', textAlign: 'left' }} />
+             <input type="text" value={colorHex} onChange={handleHexChange} style={{ ...inputStyle, width: '75px', textAlign: 'left', paddingLeft: '10px' }} />
              <span style={labelStyle}>HEX</span>
            </div>
         </div>
 
         {/* RGB */}
-        <div style={{ display: 'flex', gap: '5px' }}>
+        <div style={{ display: 'flex', gap: '6px' }}>
            <div>
              <input type="number" value={rgb.r} onChange={(e) => handleRgbChange('r', e.target.value)} style={inputStyle} />
              <span style={labelStyle}>R</span>
@@ -105,7 +119,7 @@ const AdvancedColorPicker = ({ label, colorHex, onChangeHex }) => {
         </div>
 
         {/* CMYK */}
-        <div style={{ display: 'flex', gap: '5px' }}>
+        <div style={{ display: 'flex', gap: '6px' }}>
            <div>
              <input type="number" value={cmyk.c} onChange={(e) => handleCmykChange('c', e.target.value)} style={inputStyle} />
              <span style={labelStyle}>C%</span>
@@ -130,9 +144,9 @@ const AdvancedColorPicker = ({ label, colorHex, onChangeHex }) => {
 
 // --- Toggle Switch Component ---
 const ToggleSwitch = ({ label, checked, onChange }) => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-    <span style={{ color: '#fff', fontSize: '14px', cursor: 'pointer' }} onClick={() => onChange(!checked)}>{label}</span>
-    <label style={{ position: 'relative', display: 'inline-block', width: '40px', height: '20px', flexShrink: 0 }}>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+    <span style={{ color: '#fff', fontSize: '13px', cursor: 'pointer', fontWeight: '500', letterSpacing: '0.5px' }} onClick={() => onChange(!checked)}>{label}</span>
+    <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0 }}>
       <input 
         type="checkbox" 
         checked={checked} 
@@ -141,11 +155,11 @@ const ToggleSwitch = ({ label, checked, onChange }) => (
       />
       <span style={{
         position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: checked ? '#ebd73f' : '#555', transition: '.4s', borderRadius: '20px'
+        backgroundColor: checked ? '#ebd73f' : 'rgba(255,255,255,0.1)', transition: '.4s', borderRadius: '24px'
       }}>
         <span style={{
-          position: 'absolute', content: '""', height: '16px', width: '16px',
-          left: checked ? '22px' : '2px', bottom: '2px', backgroundColor: 'white',
+          position: 'absolute', content: '""', height: '18px', width: '18px',
+          left: checked ? '23px' : '3px', bottom: '3px', backgroundColor: checked ? '#000' : '#888',
           transition: '.4s', borderRadius: '50%'
         }} />
       </span>
@@ -166,7 +180,8 @@ const Joypad = ({ onChange }) => {
     const rect = padRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    const maxDist = rect.width / 2;
+    // Restrict thumb completely inside the outer circle (80px outer, 28px inner)
+    const maxDist = (rect.width - 28) / 2; 
 
     let dx = e.clientX - centerX;
     let dy = e.clientY - centerY;
@@ -178,6 +193,7 @@ const Joypad = ({ onChange }) => {
     }
 
     setThumbPos({ x: dx, y: dy });
+    // Normalize to -1 to 1 based on the full allowed movement distance
     onChange({ x: (dx / maxDist) * intensity, y: (dy / maxDist) * intensity });
   };
 
@@ -201,30 +217,80 @@ const Joypad = ({ onChange }) => {
   }, [active, intensity, onChange]);
 
   return (
-    <div style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '10px', border: '1px solid #333', marginBottom: '15px' }}>
-      <strong style={{ color: '#fff', fontSize: '14px', display: 'block', marginBottom: '10px', textAlign: 'center' }}>Manual Eye Joypad</strong>
+    <div style={{ 
+      backgroundColor: 'rgba(255, 255, 255, 0.02)', 
+      padding: '20px', 
+      borderRadius: '16px', 
+      border: '1px solid rgba(255, 255, 255, 0.05)', 
+      marginBottom: '15px',
+      boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.5)'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+        <strong style={{ color: '#fff', fontSize: '13px', fontWeight: '500', letterSpacing: '0.5px' }}>Manual Eye Joypad</strong>
+        <span style={{ 
+          backgroundColor: active ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255,255,255,0.05)', 
+          color: active ? '#ebd73f' : '#888',
+          padding: '4px 10px', 
+          borderRadius: '20px', 
+          fontSize: '10px', 
+          textTransform: 'uppercase',
+          transition: 'all 0.3s ease'
+        }}>
+          {active ? 'Tracking' : 'Idle'}
+        </span>
+      </div>
+      
       <div 
         ref={padRef}
         onPointerDown={(e) => { setActive(true); updatePos(e); e.preventDefault(); }}
         style={{
-          width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#222', border: '2px solid #555', margin: '0 auto', position: 'relative', touchAction: 'none', cursor: 'grab'
+          width: '90px', height: '90px', 
+          borderRadius: '50%', 
+          backgroundColor: '#0a0a0a', 
+          border: '1px solid rgba(255,255,255,0.05)', 
+          margin: '10px auto 25px', 
+          position: 'relative', 
+          touchAction: 'none', 
+          cursor: active ? 'grabbing' : 'grab',
+          boxShadow: 'inset 0 10px 25px rgba(0,0,0,0.8), 0 2px 10px rgba(0,0,0,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
       >
+        {/* Center dot marker */}
+        <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.1)' }} />
+        
+        {/* The Thumb */}
         <div style={{
-          width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#ebd73f', position: 'absolute', top: '50%', left: '50%',
-          transform: `translate(calc(-50% + ${thumbPos.x}px), calc(-50% + ${thumbPos.y}px))`, transition: active ? 'none' : 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)', boxShadow: '0 0 10px rgba(0,0,0,0.5)'
-        }} />
+          width: '28px', height: '28px', 
+          borderRadius: '50%', 
+          background: 'linear-gradient(135deg, #ebd73f, #c4b01e)', 
+          position: 'absolute', 
+          top: '50%', left: '50%',
+          transform: `translate(calc(-50% + ${thumbPos.x}px), calc(-50% + ${thumbPos.y}px))`, 
+          transition: active ? 'none' : 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', 
+          boxShadow: active 
+            ? '0 0 20px rgba(235, 215, 63, 0.6), inset 0 2px 4px rgba(255,255,255,0.5)' 
+            : '0 4px 10px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          {/* Thumb grip dot */}
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.3)' }} />
+        </div>
       </div>
       
-      <div style={{ marginTop: '15px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#aaa', fontSize: '11px', marginBottom: '5px' }}>
-          <span>Intensity</span>
-          <span>{intensity.toFixed(1)}x</span>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#888', fontSize: '12px', marginBottom: '8px' }}>
+          <span>Eye Intensity</span>
+          <span style={{ color: '#ebd73f', fontWeight: '500' }}>{intensity.toFixed(1)}x</span>
         </div>
         <input 
           type="range" 
           min="0.5" 
-          max="3" 
+          max="10" 
           step="0.1" 
           value={intensity} 
           onChange={(e) => setIntensity(parseFloat(e.target.value))}
@@ -306,12 +372,20 @@ export default function OrloExport() {
         </div>
 
         {/* Settings Controls */}
-        <div style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '10px', border: '1px solid #333', marginBottom: '15px' }}>
+        <div style={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.02)', 
+          padding: '20px', 
+          borderRadius: '16px', 
+          border: '1px solid rgba(255, 255, 255, 0.05)', 
+          marginBottom: '15px',
+          boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.5)'
+        }}>
            <ToggleSwitch 
              label="Hide cursor over green screen" 
              checked={hideCursor} 
              onChange={setHideCursor} 
            />
+           <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.05)', margin: '12px 0' }} />
            <ToggleSwitch 
              label="Eyes follow cursor" 
              checked={eyesFollowCursor} 
@@ -327,23 +401,26 @@ export default function OrloExport() {
         <AdvancedColorPicker label="Background (Green Screen)" colorHex={bgColor} onChangeHex={setBgColor} />
 
         {/* Animations List */}
-        <h3 style={{ color: '#fff', fontSize: '14px', margin: '10px 0', fontFamily: 'sans-serif' }}>Animations (Idle = Breathing)</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', overflowY: 'auto', paddingRight: '5px' }}>
+        <h3 style={{ color: '#fff', fontSize: '14px', margin: '10px 0 15px 0', fontFamily: 'sans-serif', fontWeight: '600', letterSpacing: '0.5px' }}>
+          Animations <span style={{color: '#888', fontWeight: 'normal', fontSize: '12px'}}>(Idle = Breathing)</span>
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', flexShrink: 0, marginBottom: '25px' }}>
           {emotions.map(e => (
             <button 
               key={e} 
               onClick={() => setEmotion(e)}
               style={{ 
-                padding: '10px 12px', 
-                borderRadius: '8px', 
-                border: 'none', 
-                backgroundColor: emotion === e ? '#ebd73f' : '#2a2a2a', 
-                color: emotion === e ? '#000' : '#fff', 
+                padding: '12px', 
+                borderRadius: '10px', 
+                border: emotion === e ? '1px solid rgba(235, 215, 63, 0.5)' : '1px solid rgba(255,255,255,0.05)', 
+                backgroundColor: emotion === e ? 'rgba(235, 215, 63, 0.1)' : 'rgba(0,0,0,0.3)', 
+                color: emotion === e ? '#ebd73f' : '#aaa', 
                 cursor: 'pointer', 
-                fontWeight: 'bold',
+                fontWeight: emotion === e ? '600' : '500',
                 textAlign: 'center',
-                transition: 'all 0.2s',
-                fontSize: '13px'
+                transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                fontSize: '13px',
+                transform: emotion === e ? 'scale(1.02)' : 'scale(1)'
               }}
             >
               {e.charAt(0).toUpperCase() + e.slice(1)}
@@ -352,14 +429,14 @@ export default function OrloExport() {
         </div>
         
         {/* Action Buttons */}
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', marginTop: '20px', gap: '10px' }}>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }}>
           <button 
               onClick={() => setHideUI(true)}
-              style={{ padding: '15px 20px', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}
+              style={{ padding: '16px 20px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)', transition: 'all 0.2s', letterSpacing: '0.5px' }}
           >
               Hide Panel for Recording ➔
           </button>
-          <Link href="/orloai" style={{ padding: '12px 20px', borderRadius: '8px', border: '1px solid white', backgroundColor: 'transparent', color: '#fff', textDecoration: 'none', textAlign: 'center', fontFamily: 'sans-serif' }}>
+          <Link href="/orloai" style={{ padding: '16px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.02)', color: '#fff', textDecoration: 'none', textAlign: 'center', fontFamily: 'sans-serif', fontWeight: '500', transition: 'all 0.2s', letterSpacing: '0.5px' }}>
               Back to Wiki
           </Link>
         </div>
