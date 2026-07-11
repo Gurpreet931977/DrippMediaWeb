@@ -128,11 +128,38 @@ const AdvancedColorPicker = ({ label, colorHex, onChangeHex }) => {
   );
 };
 
+// --- Toggle Switch Component ---
+const ToggleSwitch = ({ label, checked, onChange }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+    <span style={{ color: '#fff', fontSize: '14px', cursor: 'pointer' }} onClick={() => onChange(!checked)}>{label}</span>
+    <label style={{ position: 'relative', display: 'inline-block', width: '40px', height: '20px', flexShrink: 0 }}>
+      <input 
+        type="checkbox" 
+        checked={checked} 
+        onChange={e => onChange(e.target.checked)} 
+        style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }} 
+      />
+      <span style={{
+        position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: checked ? '#ebd73f' : '#555', transition: '.4s', borderRadius: '20px'
+      }}>
+        <span style={{
+          position: 'absolute', content: '""', height: '16px', width: '16px',
+          left: checked ? '22px' : '2px', bottom: '2px', backgroundColor: 'white',
+          transition: '.4s', borderRadius: '50%'
+        }} />
+      </span>
+    </label>
+  </div>
+);
+
 // --- Joypad Component ---
 const Joypad = ({ onChange }) => {
   const padRef = useRef(null);
   const [active, setActive] = useState(false);
   const [thumbPos, setThumbPos] = useState({ x: 0, y: 0 });
+
+  const [intensity, setIntensity] = useState(1);
 
   const updatePos = (e) => {
     if (!padRef.current) return;
@@ -151,7 +178,7 @@ const Joypad = ({ onChange }) => {
     }
 
     setThumbPos({ x: dx, y: dy });
-    onChange({ x: dx / maxDist, y: dy / maxDist });
+    onChange({ x: (dx / maxDist) * intensity, y: (dy / maxDist) * intensity });
   };
 
   useEffect(() => {
@@ -171,7 +198,7 @@ const Joypad = ({ onChange }) => {
       window.removeEventListener('pointermove', handleMove);
       window.removeEventListener('pointerup', handleUp);
     };
-  }, [active, onChange]);
+  }, [active, intensity, onChange]);
 
   return (
     <div style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '10px', border: '1px solid #333', marginBottom: '15px' }}>
@@ -188,6 +215,22 @@ const Joypad = ({ onChange }) => {
           transform: `translate(calc(-50% + ${thumbPos.x}px), calc(-50% + ${thumbPos.y}px))`, transition: active ? 'none' : 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)', boxShadow: '0 0 10px rgba(0,0,0,0.5)'
         }} />
       </div>
+      
+      <div style={{ marginTop: '15px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#aaa', fontSize: '11px', marginBottom: '5px' }}>
+          <span>Intensity</span>
+          <span>{intensity.toFixed(1)}x</span>
+        </div>
+        <input 
+          type="range" 
+          min="0.5" 
+          max="3" 
+          step="0.1" 
+          value={intensity} 
+          onChange={(e) => setIntensity(parseFloat(e.target.value))}
+          style={{ width: '100%', cursor: 'pointer', accentColor: '#ebd73f' }}
+        />
+      </div>
     </div>
   );
 };
@@ -197,6 +240,7 @@ export default function OrloExport() {
   const [emotion, setEmotion] = useState('idle'); // idle is the breathing mode
   const [hideUI, setHideUI] = useState(false);
   const [hideCursor, setHideCursor] = useState(false);
+  const [eyesFollowCursor, setEyesFollowCursor] = useState(true);
   const [orloColor, setOrloColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#00FF00');
   const [lookOffset, setLookOffset] = useState(null);
@@ -214,11 +258,11 @@ export default function OrloExport() {
   }, [hideUI]);
 
   return (
-    <div style={{ backgroundColor: bgColor, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', cursor: hideCursor ? 'none' : 'auto' }}>
+    <div style={{ backgroundColor: bgColor, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', cursor: hideCursor ? 'none' : 'default' }}>
       
       {/* Orlo Container */}
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '600px', width: '600px', transition: 'all 0.5s ease', transform: hideUI ? 'scale(1.2)' : 'translateX(-150px) scale(1)' }}>
-        <OrloIcon size={500} emotion={emotion} color={orloColor} lookOffset={lookOffset} />
+        <OrloIcon size={500} emotion={emotion} color={orloColor} lookOffset={lookOffset} disableCursorFollow={!eyesFollowCursor} />
       </div>
 
       {/* Sliding Control Panel */}
@@ -238,7 +282,7 @@ export default function OrloExport() {
           zIndex: 10,
           transition: 'right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           overflowY: 'auto',
-          cursor: 'auto'
+          cursor: 'default'
         }}
       >
         <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px', fontFamily: 'sans-serif' }}>
@@ -248,12 +292,18 @@ export default function OrloExport() {
           </p>
         </div>
 
-        {/* Visibility Controls */}
+        {/* Settings Controls */}
         <div style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '10px', border: '1px solid #333', marginBottom: '15px' }}>
-           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', fontSize: '14px', cursor: 'pointer' }}>
-             <input type="checkbox" checked={hideCursor} onChange={e => setHideCursor(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
-             Hide cursor while over green screen
-           </label>
+           <ToggleSwitch 
+             label="Hide cursor over green screen" 
+             checked={hideCursor} 
+             onChange={setHideCursor} 
+           />
+           <ToggleSwitch 
+             label="Eyes follow cursor" 
+             checked={eyesFollowCursor} 
+             onChange={setEyesFollowCursor} 
+           />
         </div>
 
         {/* Joypad Control */}

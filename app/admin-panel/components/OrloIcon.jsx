@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 
-export default function OrloIcon({ size = 24, className = "", emotion = "idle", color = "currentColor", lookOffset = null }) {
+export default function OrloIcon({ size = 24, className = "", emotion = "idle", color = "currentColor", lookOffset = null, disableCursorFollow = false }) {
   const headRef = useRef(null);
   const leftEyeRef = useRef(null);
   const rightEyeRef = useRef(null);
@@ -375,7 +375,7 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
     }, svgRef);
 
     const handleMouseMove = (e) => {
-      if (lookOffset) return; // If manually controlled, ignore mouse
+      if (lookOffset || disableCursorFollow) return; // If manually controlled or disabled, ignore mouse
       if (emotion !== 'sad' && emotion !== 'idle') {
         if (quickToRefs.current.xTo) {
           quickToRefs.current.xTo(0); quickToRefs.current.yTo(0); quickToRefs.current.headRotTo(0); 
@@ -429,6 +429,17 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       quickToRefs.current.mouthYTo(moveY * 0.1);
     }
   }, [lookOffset]);
+
+  // Effect to handle disableCursorFollow
+  useEffect(() => {
+    if (disableCursorFollow && quickToRefs.current.xTo && !lookOffset) {
+      quickToRefs.current.xTo(0);
+      quickToRefs.current.yTo(0);
+      quickToRefs.current.headRotTo(0);
+      quickToRefs.current.mouthXTo(0);
+      quickToRefs.current.mouthYTo(0);
+    }
+  }, [disableCursorFollow, lookOffset]);
 
   
   return (
