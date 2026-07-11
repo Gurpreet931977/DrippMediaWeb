@@ -5,6 +5,150 @@ import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart,
 import OrloIcon from './OrloIcon';
 import gsap from 'gsap';
 
+const ProfileScene = ({ size = 84 }) => (
+  <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#000' }}>
+    <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}>
+      <defs>
+        <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#4facfe" />
+          <stop offset="100%" stopColor="#00f2fe" />
+        </linearGradient>
+        <linearGradient id="mountBack" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#039be5" />
+          <stop offset="100%" stopColor="#0277bd" />
+        </linearGradient>
+        <linearGradient id="mountFrontGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#7cb342" />
+          <stop offset="100%" stopColor="#558b2f" />
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" fill="url(#skyGrad)" />
+      <circle cx="20" cy="25" r="12" fill="#fff9c4" opacity="0.9" />
+      <circle cx="20" cy="25" r="18" fill="#fff9c4" opacity="0.3" />
+      <path d="M 45 35 Q 55 25 65 35 Q 75 30 80 40 L 45 40 Z" fill="#fff" opacity="0.7" />
+      <path d="M 5 45 Q 15 35 25 45 Q 35 40 40 50 L 5 50 Z" fill="#fff" opacity="0.5" />
+      <path d="M -20 100 L 30 45 L 70 85 L 100 55 L 130 100 Z" fill="url(#mountBack)" />
+    </svg>
+    <div style={{ position: 'absolute', bottom: '15%', left: '20%', zIndex: 1, width: '60%', height: '60%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <OrloIcon size={size * 0.55} color="#FFFFFF" emotion="success" />
+    </div>
+    <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 2, pointerEvents: 'none' }}>
+      <path d="M -10 100 Q 50 65 110 100 Z" fill="url(#mountFrontGrad)" />
+      <g transform="translate(60, 72)">
+        <path d="M 5 15 L 15 0 L 25 15 Z" fill="#ffb74d" />
+        <path d="M 15 0 L 25 15 L 15 15 Z" fill="#f57c00" />
+        <path d="M 12 15 L 15 8 L 18 15 Z" fill="#3e2723" />
+      </g>
+      <path d="M 10 100 Q 15 85 20 100 Z" fill="#33691e" opacity="0.4" />
+      <path d="M 85 100 Q 90 90 95 100 Z" fill="#33691e" opacity="0.4" />
+      <path d="M 45 100 Q 50 93 55 100 Z" fill="#33691e" opacity="0.4" />
+    </svg>
+  </div>
+);
+
+const PostScene = ({ id, size = 120 }) => {
+  const wrap = (children, bg) => (
+    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: bg, minHeight: '120px' }}>
+      {children}
+    </div>
+  );
+
+  switch (id) {
+    case 1: // Laptop / Deep Work
+      return wrap(
+        <>
+           <div style={{ position: 'absolute', bottom: '20%', left: '50%', transform: 'translateX(-50%)' }}>
+             <OrloIcon size={size * 0.8} emotion="thinking" color="#fff" />
+           </div>
+           <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '30%', background: '#5c4033' }} />
+           <div style={{ position: 'absolute', bottom: '25%', left: '50%', transform: 'translateX(-50%)', width: '60%', height: '40%', background: '#ccc', borderRadius: '5px 5px 0 0' }}>
+              <div style={{ position: 'absolute', inset: '4px', background: '#e0f7fa', borderRadius: '3px' }} />
+           </div>
+           <div style={{ position: 'absolute', bottom: '20%', left: '50%', width: '80%', height: '5%', background: '#999', borderRadius: '0 0 5px 5px', transform: 'translateX(-50%)' }} />
+        </>,
+        'linear-gradient(to bottom, #2b5876, #4e4376)'
+      );
+    case 2: // Vacation
+      return wrap(
+        <>
+           <div style={{ position: 'absolute', top: '10%', right: '10%', width: '30%', height: '30%', background: '#ffd700', borderRadius: '50%', boxShadow: '0 0 20px #ffd700' }} />
+           <div style={{ position: 'absolute', bottom: '30%', width: '100%', height: '20%', background: '#0288d1' }} />
+           <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '30%', background: '#fbc02d' }} />
+           <div style={{ position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)' }}>
+             <OrloIcon size={size * 0.8} emotion="laughing" color="#fff" />
+           </div>
+        </>,
+        'linear-gradient(to bottom, #4fc3f7, #e1f5fe)'
+      );
+    case 3: // Solo Trip / Mountains
+      return wrap(
+        <>
+           <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+             <path d="M -10 100 L 30 40 L 70 100 Z" fill="#607d8b" />
+             <path d="M 30 100 L 70 20 L 110 100 Z" fill="#455a64" />
+             <path d="M -10 100 L 30 40 L 35 48 L 5 100 Z" fill="#cfd8dc" opacity="0.3" />
+             <path d="M 30 100 L 70 20 L 75 30 L 40 100 Z" fill="#cfd8dc" opacity="0.3" />
+           </svg>
+           <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '20%', background: '#33691e' }} />
+           <div style={{ position: 'absolute', bottom: '10%', left: '50%', transform: 'translateX(-50%)' }}>
+             <OrloIcon size={size * 0.8} emotion="excited" color="#fff" />
+           </div>
+        </>,
+        'linear-gradient(to bottom, #81d4fa, #b3e5fc)'
+      );
+    case 4: // Coffee
+      return wrap(
+        <>
+           <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '35%', background: '#795548' }} />
+           <div style={{ position: 'absolute', bottom: '25%', left: '40%', transform: 'translateX(-50%)' }}>
+             <OrloIcon size={size * 0.9} emotion="success" color="#fff" />
+           </div>
+           <div style={{ position: 'absolute', bottom: '28%', right: '15%', width: '25%', height: '30%', background: '#fff', borderRadius: '4px 4px 15px 15px' }}>
+              <div style={{ position: 'absolute', top: '10%', right: '-30%', width: '40%', height: '50%', border: '4px solid #fff', borderRadius: '50%' }} />
+              <div style={{ position: 'absolute', top: '-30%', left: '30%', width: '10%', height: '30%', background: 'rgba(255,255,255,0.5)', borderRadius: '10px', filter: 'blur(2px)' }} />
+              <div style={{ position: 'absolute', top: '-40%', left: '60%', width: '10%', height: '30%', background: 'rgba(255,255,255,0.5)', borderRadius: '10px', filter: 'blur(2px)' }} />
+           </div>
+        </>,
+        'linear-gradient(to bottom, #d7ccc8, #a1887f)'
+      );
+    case 5: // Reading
+      return wrap(
+        <>
+           <div style={{ position: 'absolute', top: 0, width: '100%', height: '70%', background: '#4e342e', display: 'flex', flexWrap: 'wrap', gap: '2px', padding: '10px' }}>
+              {Array.from({length: 12}).map((_, i) => (
+                <div key={i} style={{ width: '18%', height: '30%', background: ['#c62828', '#1565c0', '#2e7d32', '#f9a825'][i%4] }} />
+              ))}
+           </div>
+           <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '30%', background: '#3e2723' }} />
+           <div style={{ position: 'absolute', bottom: '25%', left: '50%', transform: 'translateX(-50%)' }}>
+             <OrloIcon size={size * 0.8} emotion="idle" color="#fff" />
+           </div>
+           <div style={{ position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)', width: '50%', height: '15%', background: '#fff', borderRadius: '2px', display: 'flex', justifyContent: 'center' }}>
+             <div style={{ width: '2px', height: '100%', background: '#ccc' }} />
+           </div>
+        </>,
+        '#3e2723'
+      );
+    case 6: // Party
+      return wrap(
+        <>
+           <div style={{ position: 'absolute', top: '10%', left: '20%', width: '15%', height: '15%', background: '#f50057', borderRadius: '50%', filter: 'blur(10px)' }} />
+           <div style={{ position: 'absolute', top: '30%', right: '20%', width: '20%', height: '20%', background: '#00e5ff', borderRadius: '50%', filter: 'blur(10px)' }} />
+           <div style={{ position: 'absolute', bottom: '40%', left: '50%', width: '25%', height: '25%', background: '#651fff', borderRadius: '50%', filter: 'blur(15px)' }} />
+           {Array.from({length: 20}).map((_, i) => (
+             <div key={i} style={{ position: 'absolute', top: `${Math.random()*100}%`, left: `${Math.random()*100}%`, width: '4px', height: '8px', background: ['#ffea00', '#00e676', '#ff1744'][i%3], transform: `rotate(${Math.random()*360}deg)` }} />
+           ))}
+           <div style={{ position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)' }}>
+             <OrloIcon size={size * 0.9} emotion="laughing" color="#fff" />
+           </div>
+        </>,
+        '#121212'
+      );
+    default:
+      return null;
+  }
+};
+
 export default function OrloChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -21,12 +165,12 @@ export default function OrloChat() {
   const typingTimeoutRef = useRef(null);
 
   const postsData = [
-    { id: 1, img: '/orlo-insta/post_laptop.png', likes: '12.4k', comments: 142, caption: 'Deep work mode activated. Building the future of Dripp Media! 💻✨ #AI #Developer', date: '2 DAYS AGO' },
-    { id: 2, img: '/orlo-insta/post_vacation.png', likes: '15.1k', comments: 231, caption: 'Taking a well-deserved break with the team. Sun, sand, and good vibes! 🌴☀️', date: '1 WEEK AGO' },
-    { id: 3, img: '/orlo-insta/post_solotrip.png', likes: '18.9k', comments: 310, caption: 'Sometimes you just need to disconnect. Exploring the wilderness on a solo hike. 🏔️🎒', date: '2 WEEKS AGO' },
-    { id: 4, img: '/orlo-insta/post_coffee.png', likes: '11.2k', comments: 95, caption: 'Fueling up for a busy day of answering your queries. How do you take your coffee? ☕️🤖', date: '3 WEEKS AGO' },
-    { id: 5, img: '/orlo-insta/post_reading.png', likes: '9.8k', comments: 78, caption: 'Learning new skills! Upgrading my knowledge base so I can help you better. 📚🧠', date: '1 MONTH AGO' },
-    { id: 6, img: '/orlo-insta/post_party.png', likes: '22.3k', comments: 450, caption: 'Celebrating a successful launch! Neon lights and great times! 🎉✨', date: '2 MONTHS AGO' },
+    { id: 1, likes: '12.4k', comments: 142, caption: 'Deep work mode activated. Building the future of Dripp Media! 💻✨ #AI #Developer', date: '2 DAYS AGO' },
+    { id: 2, likes: '15.1k', comments: 231, caption: 'Taking a well-deserved break with the team. Sun, sand, and good vibes! 🌴☀️', date: '1 WEEK AGO' },
+    { id: 3, likes: '18.9k', comments: 310, caption: 'Sometimes you just need to disconnect. Exploring the wilderness on a solo hike. 🏔️🎒', date: '2 WEEKS AGO' },
+    { id: 4, likes: '11.2k', comments: 95, caption: 'Fueling up for a busy day of answering your queries. How do you take your coffee? ☕️🤖', date: '3 WEEKS AGO' },
+    { id: 5, likes: '9.8k', comments: 78, caption: 'Learning new skills! Upgrading my knowledge base so I can help you better. 📚🧠', date: '1 MONTH AGO' },
+    { id: 6, likes: '22.3k', comments: 450, caption: 'Celebrating a successful launch! Neon lights and great times! 🎉✨', date: '2 MONTHS AGO' },
   ];
 
   // Determine 'waiting' emotion
@@ -334,6 +478,7 @@ export default function OrloChat() {
           color: white;
           font-weight: bold;
           gap: 5px;
+          z-index: 10;
         }
 
         .chat-container {
@@ -466,7 +611,7 @@ export default function OrloChat() {
                 onClick={() => setShowProfile(true)}
                 title="View Orlo's Profile"
               >
-                <img src="/orlo-insta/profile.png" alt="Orlo Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <ProfileScene size={36} />
               </div>
               <div>
                 <h3 
@@ -559,7 +704,7 @@ export default function OrloChat() {
             <div className="profile-stats-row">
               <div style={{ width: '84px', height: '84px', borderRadius: '50%', position: 'relative', border: '2px solid #ebd73f', padding: '3px' }}>
                 <div style={{ width: '100%', height: '100%', borderRadius: '50%', position: 'relative', overflow: 'hidden', background: '#000' }}>
-                   <img src="/orlo-insta/profile.png" alt="Orlo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                   <ProfileScene size={84} />
                 </div>
               </div>
               
@@ -598,7 +743,7 @@ export default function OrloChat() {
             <div className="profile-grid">
               {postsData.map((post) => (
                 <div key={post.id} className="grid-item" onClick={() => setSelectedPost(post)}>
-                  <img src={post.img} alt={post.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <PostScene id={post.id} size={120} />
                   <div className="grid-item-overlay">
                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Heart size={16} fill="white" /> {post.likes}</div>
                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MessageCircle size={16} fill="white" /> {post.comments}</div>
@@ -624,16 +769,20 @@ export default function OrloChat() {
                     <ArrowLeft size={24} />
                   </button>
                   <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: '#fff' }}>Posts</h2>
-                  <div style={{ width: 24 }}></div> {/* spacer */}
+                  <div style={{ width: 24 }}></div>
                 </div>
                 
                 <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <img src="/orlo-insta/profile.png" alt="Orlo" style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #ebd73f' }} />
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #ebd73f', overflow: 'hidden' }}>
+                    <ProfileScene size={32} />
+                  </div>
                   <span style={{ color: '#fff', fontWeight: '600', fontSize: '0.9rem' }}>orlo.ai</span>
                   <MoreHorizontal size={20} color="#fff" style={{ marginLeft: 'auto' }} />
                 </div>
                 
-                <img src={selectedPost.img} alt="Post" style={{ width: '100%', height: 'auto', maxHeight: '400px', objectFit: 'cover' }} />
+                <div style={{ width: '100%', height: '380px' }}>
+                   <PostScene id={selectedPost.id} size={300} />
+                </div>
                 
                 <div style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', gap: '16px', marginBottom: '12px' }}>
