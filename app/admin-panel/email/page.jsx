@@ -31,10 +31,34 @@ export default function EmailCampaignsPage() {
     setMounted(true);
   }, []);
 
-  const [scheduledList, setScheduledList] = useState([
-    { id: 1, title: 'Black Friday VIP Invite', subject: 'Your Exclusive Access', body: 'The VIP access starts now...', templateType: 'invitation', isBroadcast: true, specificEmail: '', scheduledAt: new Date(Date.now() + 86400000).toISOString() },
-    { id: 2, title: 'New Creator Growth Guide', subject: '3 secrets to beat the algorithm', body: 'Here is how you grow...', templateType: 'newsletter', isBroadcast: true, specificEmail: '', scheduledAt: new Date(Date.now() + 172800000).toISOString() },
-  ]);
+  const [scheduledList, setScheduledList] = useState([]);
+
+  // Fetch campaigns from Supabase
+  const fetchCampaigns = async () => {
+    try {
+      const res = await fetch('/api/admin/email/campaigns');
+      const data = await res.json();
+      if (res.ok && data.campaigns) {
+        // Map database fields to frontend fields
+        setScheduledList(data.campaigns.map(c => ({
+          id: c.id,
+          title: c.title,
+          subject: c.subject,
+          body: c.body,
+          templateType: c.template_type,
+          isBroadcast: c.is_broadcast,
+          specificEmail: c.specific_email,
+          scheduledAt: c.scheduled_at
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to fetch campaigns', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
 
   const containerRef = useRef(null);
   const aiBtnRef = useRef(null);
@@ -101,17 +125,31 @@ export default function EmailCampaignsPage() {
 
     try {
       if (editingScheduleId) {
-        setScheduledList(prev => prev.map(item => 
-          item.id === editingScheduleId ? {
-            ...item, title, subject, body, templateType, isBroadcast, specificEmail,
+        const res = await fetch('/api/admin/email/campaigns', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingScheduleId,
+            isBroadcast,
+            specificEmail,
+            subject,
+            title,
+            body,
+            templateType,
             scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null
-          } : item
-        ));
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update campaign');
+
         setStatus({ type: 'success', msg: 'Scheduled campaign updated successfully!' });
         setEditingScheduleId(null);
         setShowClearAfterSend(true);
+        fetchCampaigns();
       } else {
-        const res = await fetch('/api/admin/email/send', {
+        const endpoint = isScheduled ? '/api/admin/email/campaigns' : '/api/admin/email/send';
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -128,15 +166,11 @@ export default function EmailCampaignsPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to send');
 
-        setStatus({ type: 'success', msg: data.message });
+        setStatus({ type: 'success', msg: isScheduled ? 'Campaign scheduled successfully!' : data.message });
         setShowClearAfterSend(true);
         
-        if (isScheduled && scheduleTime) {
-          setScheduledList(prev => [...prev, {
-            id: Date.now(),
-            title, subject, body, templateType, isBroadcast, specificEmail,
-            scheduledAt: new Date(scheduleTime).toISOString()
-          }]);
+        if (isScheduled) {
+          fetchCampaigns();
         }
       }
     } catch (err) {
@@ -692,7 +726,16 @@ export default function EmailCampaignsPage() {
                       </button>
                       <button 
                         type="button"
-                        onClick={() => setScheduledList(prev => prev.filter(i => i.id !== item.id))}
+                        onClick={async () => {
+                          if (confirm('Are you sure you want to cancel this scheduled campaign?')) {
+                            try {
+                              const res = await fetch(`/api/admin/email/campaigns?id=${item.id}`, { method: 'DELETE' });
+                              if (res.ok) fetchCampaigns();
+                            } catch (err) {
+                              console.error('Failed to delete campaign', err);
+                            }
+                          }
+                        }}
                         style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.4rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         title="Cancel Campaign"
                       >
