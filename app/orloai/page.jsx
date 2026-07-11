@@ -196,6 +196,7 @@ export default function OrloWikiPage() {
                     <ul className="wiki-nav-links">
                         <li><Link href="/">Main Page</Link></li>
                         <li><Link href="/admin-panel">Admin Panel</Link></li>
+                        <li><Link href="/orlo-export">Green Screen Export</Link></li>
                         <li><a href="#">Recent Changes</a></li>
                         <li><a href="#">Random Article</a></li>
                     </ul>
