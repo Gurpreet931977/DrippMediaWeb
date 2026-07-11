@@ -479,15 +479,27 @@ export default function EmailCampaignsPage() {
                   />
                   
                   <div style={{ padding: '1.25rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff', cursor: 'pointer', marginBottom: isRecurring ? '1rem' : 0 }}>
-                      <input 
-                        type="checkbox" 
-                        checked={isRecurring} 
-                        onChange={(e) => setIsRecurring(e.target.checked)}
-                        style={{ accentColor: '#ebd73f', width: '18px', height: '18px' }}
-                      />
-                      Make this a recurring campaign
-                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isRecurring ? '1rem' : 0 }}>
+                      <span style={{ color: '#fff', fontSize: '1rem', cursor: 'pointer', fontWeight: '500' }} onClick={() => setIsRecurring(!isRecurring)}>Make this a recurring campaign</span>
+                      <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0 }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isRecurring} 
+                          onChange={(e) => setIsRecurring(e.target.checked)}
+                          style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }} 
+                        />
+                        <span style={{
+                          position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                          backgroundColor: isRecurring ? '#ebd73f' : 'rgba(255,255,255,0.1)', transition: '.4s', borderRadius: '24px'
+                        }}>
+                          <span style={{
+                            position: 'absolute', height: '18px', width: '18px',
+                            left: isRecurring ? '23px' : '3px', bottom: '3px', backgroundColor: isRecurring ? '#000' : '#888',
+                            transition: '.4s', borderRadius: '50%'
+                          }} />
+                        </span>
+                      </label>
+                    </div>
                     {isRecurring && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <span style={{ color: '#888', fontSize: '0.9rem' }}>Repeat every</span>
@@ -496,7 +508,20 @@ export default function EmailCampaignsPage() {
                           min="1" 
                           max="365" 
                           value={recurrenceIntervalDays} 
-                          onChange={(e) => setRecurrenceIntervalDays(parseInt(e.target.value) || 1)}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '') {
+                              setRecurrenceIntervalDays('');
+                            } else {
+                              const parsed = parseInt(val, 10);
+                              if (!isNaN(parsed)) setRecurrenceIntervalDays(parsed);
+                            }
+                          }}
+                          onBlur={() => {
+                            if (recurrenceIntervalDays === '' || recurrenceIntervalDays < 1) {
+                              setRecurrenceIntervalDays(1);
+                            }
+                          }}
                           className={styles.input}
                           style={{ width: '80px', padding: '0.5rem', textAlign: 'center' }}
                         />
