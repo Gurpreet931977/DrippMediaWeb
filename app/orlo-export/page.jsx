@@ -258,10 +258,15 @@ export default function OrloExport() {
   }, [hideUI]);
 
   return (
-    <div style={{ backgroundColor: bgColor, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', cursor: hideCursor ? 'none' : 'default' }}>
+    <div style={{ backgroundColor: bgColor, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
       
+      {/* Green Screen Overlay for reliable cursor hiding */}
+      {hideCursor && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, cursor: 'none' }} />
+      )}
+
       {/* Orlo Container */}
-      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '600px', width: '600px', transition: 'all 0.5s ease', transform: hideUI ? 'scale(1.2)' : 'translateX(-150px) scale(1)' }}>
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '600px', width: '600px', transition: 'all 0.5s ease', transform: hideUI ? 'scale(1.2)' : 'translateX(-150px) scale(1)', zIndex: 1, pointerEvents: 'none' }}>
         <OrloIcon size={500} emotion={emotion} color={orloColor} lookOffset={lookOffset} disableCursorFollow={!eyesFollowCursor} />
       </div>
 

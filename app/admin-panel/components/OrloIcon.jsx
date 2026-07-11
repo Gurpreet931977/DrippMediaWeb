@@ -383,7 +383,7 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
     }, svgRef);
 
     const handleMouseMove = (e) => {
-      if (lookOffsetRef.current || disableCursorFollowRef.current) return; // If manually controlled or disabled, ignore mouse
+      if (lookOffset || disableCursorFollow) return; // If manually controlled or disabled, ignore mouse
       if (emotion !== 'sad' && emotion !== 'idle') {
         if (quickToRefs.current.xTo) {
           quickToRefs.current.xTo(0); quickToRefs.current.yTo(0); quickToRefs.current.headRotTo(0); 
@@ -421,7 +421,7 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       ctx.revert();
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [emotion]);
+  }, [emotion, disableCursorFollow, lookOffset]);
 
   // Effect to handle manual lookOffset
   useEffect(() => {
