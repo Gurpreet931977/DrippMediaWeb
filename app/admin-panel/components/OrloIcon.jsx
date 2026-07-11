@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 
-export default function OrloIcon({ size = 24, className = "", emotion = "idle", color = "currentColor" }) {
+export default function OrloIcon({ size = 24, className = "", emotion = "idle", color = "currentColor", lookOffset = null }) {
   const headRef = useRef(null);
   const leftEyeRef = useRef(null);
   const rightEyeRef = useRef(null);
@@ -10,7 +10,14 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
   const eyesGroupRef = useRef(null);
   const mouthGroupRef = useRef(null);
   const mouthRef = useRef(null);
+  const zzzGroupRef = useRef(null);
+  const z1Ref = useRef(null);
+  const z2Ref = useRef(null);
+  const z3Ref = useRef(null);
   const [maskId] = useState(() => 'mask-' + Math.random().toString(36).substr(2, 9));
+
+  // Expose GSAP quickTo functions so we can use them in lookOffset effect
+  const quickToRefs = useRef({});
 
   useEffect(() => {
     let xTo, yTo, headRotTo, mouthXTo, mouthYTo;
@@ -21,75 +28,98 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       headRotTo = gsap.quickTo(headRef.current, "rotation", { duration: 0.5, ease: "power2.out" });
       mouthXTo = gsap.quickTo(mouthGroupRef.current, "x", { duration: 0.3, ease: "power2.out" });
       mouthYTo = gsap.quickTo(mouthGroupRef.current, "y", { duration: 0.3, ease: "power2.out" });
+      
+      quickToRefs.current = { xTo, yTo, headRotTo, mouthXTo, mouthYTo };
 
       // Kill all active tweens
-      gsap.killTweensOf([headRef.current, leftEyeRef.current, rightEyeRef.current, mouthRef.current]);
+      gsap.killTweensOf([headRef.current, leftEyeRef.current, rightEyeRef.current, mouthRef.current, z1Ref.current, z2Ref.current, z3Ref.current]);
 
       // Reset to base state before applying new emotion
       gsap.set([leftEyeRef.current, rightEyeRef.current], { scaleY: 1, scaleX: 1, y: 0, x: 0, rotation: 0 });
       gsap.set(mouthRef.current, { scaleY: 1, scaleX: 1, y: 0, x: 0, rotation: 0, transformOrigin: "center center" });
       gsap.set(headRef.current, { y: 0, x: 0, scale: 1, scaleY: 1, scaleX: 1, rotation: 0, transformOrigin: "bottom center" });
+      gsap.set([z1Ref.current, z2Ref.current, z3Ref.current], { opacity: 0, y: 0, x: 0, scale: 0.5 });
 
       if (emotion === 'still') {
         return;
       } else if (emotion === 'excited') {
-        // Happy and excited (fast bouncy breathing)
         gsap.to(headRef.current, {
-          y: -15,
-          rotation: 3,
-          scaleY: 1.05,
-          scaleX: 0.95,
+          y: -5,
+          rotation: 2,
+          scaleY: 1.02,
+          scaleX: 0.98,
           transformOrigin: "bottom center",
-          duration: 0.3,
+          duration: 0.4,
           yoyo: true,
           repeat: -1,
-          ease: "back.out(2)"
+          ease: "sine.inOut"
         });
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          scaleY: 1.3,
-          scaleX: 1.3,
-          y: -10,
+          scaleY: 1.1,
+          scaleX: 1.1,
+          y: -5,
           transformOrigin: "center center",
-          duration: 0.25,
+          duration: 0.4,
           yoyo: true,
           repeat: -1,
           ease: "sine.inOut"
         });
         gsap.to(mouthRef.current, {
-          scaleY: 1.8,
-          scaleX: 1.2,
-          y: -5,
-          duration: 0.25,
+          scaleY: 1.2,
+          scaleX: 1.1,
+          y: -3,
+          duration: 0.4,
           yoyo: true,
           repeat: -1,
           ease: "sine.inOut"
         });
+        gsap.to([leftEyeRef.current, rightEyeRef.current], {
+          keyframes: [
+            { scaleY: 0.1, duration: 0.1, ease: "power2.inOut" },
+            { scaleY: 1.1, duration: 0.1, ease: "power2.inOut" }
+          ],
+          transformOrigin: "center center",
+          repeat: -1,
+          repeatDelay: 3
+        });
       } else if (emotion === 'sad') {
-        // Sad, asking for work (slouching, eyes tilted)
         gsap.to(headRef.current, { 
-          y: 8, 
+          y: 12, 
           scaleY: 0.95,
-          scaleX: 1.05,
+          scaleX: 1.02,
           transformOrigin: "bottom center",
-          duration: 2.5, 
+          duration: 2, 
           yoyo: true, 
           repeat: -1, 
           ease: "sine.inOut" 
         });
-        gsap.to([leftEyeRef.current, rightEyeRef.current], {
+        gsap.to(leftEyeRef.current, {
           scaleY: 0.7,
-          scaleX: 1.1,
-          rotation: -10, // tilted sad eyes
+          scaleX: 0.9,
+          rotation: 15, 
+          y: 8,
           transformOrigin: "center center",
-          duration: 2.5,
+          duration: 2,
+          yoyo: true,
+          repeat: -1,
+          ease: "sine.inOut"
+        });
+        gsap.to(rightEyeRef.current, {
+          scaleY: 0.7,
+          scaleX: 0.9,
+          rotation: -15, 
+          y: 8,
+          transformOrigin: "center center",
+          duration: 2,
           yoyo: true,
           repeat: -1,
           ease: "sine.inOut"
         });
         gsap.to(mouthRef.current, {
-          scaleY: 0.3,
-          y: 5,
-          duration: 2.5,
+          scaleY: -0.5, // Frown
+          scaleX: 0.8,
+          y: 20,
+          duration: 2,
           yoyo: true,
           repeat: -1,
           ease: "sine.inOut"
@@ -213,32 +243,35 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
           ease: "sine.inOut"
         });
       } else if (emotion === 'success') {
-        gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          scaleY: 0.7,
-          scaleX: 1.4,
-          y: -12,
-          rotation: -5,
-          transformOrigin: "center center",
-          duration: 0.5,
-          ease: "elastic.out(1, 0.5)"
-        });
-        gsap.to(mouthRef.current, {
-          scaleY: 1.5,
-          scaleX: 1.2,
-          y: -8,
-          duration: 0.5,
-          ease: "elastic.out(1, 0.5)"
-        });
         gsap.to(headRef.current, { 
-          y: -20,
-          rotation: 5,
-          scaleY: 1.1, 
-          scaleX: 0.9,
+          y: -8,
+          rotation: 0,
+          scaleY: 1.05, 
+          scaleX: 0.95,
           transformOrigin: "bottom center",
-          duration: 0.4, 
+          duration: 0.8, 
           yoyo: true, 
           repeat: -1, 
           ease: "sine.inOut" 
+        });
+        gsap.to([leftEyeRef.current, rightEyeRef.current], {
+          scaleY: 0.8,
+          scaleX: 1.1,
+          y: -5,
+          transformOrigin: "center center",
+          duration: 0.8,
+          yoyo: true,
+          repeat: -1,
+          ease: "sine.inOut"
+        });
+        gsap.to(mouthRef.current, {
+          scaleY: 1.2,
+          scaleX: 1.1,
+          y: -5,
+          duration: 0.8,
+          yoyo: true,
+          repeat: -1,
+          ease: "sine.inOut"
         });
       } else if (emotion === 'disappointed') {
         gsap.to([leftEyeRef.current, rightEyeRef.current], {
@@ -249,7 +282,7 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
           ease: "back.out(1.2)"
         });
         gsap.to(mouthRef.current, {
-          scaleY: 0.1,
+          scaleY: -0.2, // slight frown
           y: 12,
           duration: 0.8,
           ease: "back.out(1.2)"
@@ -311,13 +344,43 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
           repeat: -1, 
           ease: "sine.inOut" 
         });
+        // Zzz animation
+        const zArr = [z1Ref.current, z2Ref.current, z3Ref.current];
+        zArr.forEach((z, i) => {
+           gsap.fromTo(z, 
+             { opacity: 0, y: 10, x: -10, scale: 0.5 },
+             { opacity: 1, y: -40, x: 20, scale: 1.2, duration: 2, ease: "power1.out", delay: i * 0.8, repeat: -1 }
+           );
+           gsap.to(z, { opacity: 0, duration: 0.5, delay: i * 0.8 + 1.5, repeat: -1 });
+        });
+      } else if (emotion === 'wink') {
+        gsap.to(headRef.current, { y: -5, rotation: 5, duration: 0.5, ease: "back.out(1.5)" });
+        gsap.to(leftEyeRef.current, { scaleY: 0.1, duration: 0.3, ease: "power2.inOut" });
+        gsap.to(rightEyeRef.current, { scaleY: 1.2, scaleX: 1.1, duration: 0.5, ease: "back.out(1.5)" });
+        gsap.to(mouthRef.current, { scaleY: 1.2, x: 10, y: -5, rotation: -5, duration: 0.5, ease: "back.out(1.5)" });
+      } else if (emotion === 'surprised') {
+        gsap.to(headRef.current, { y: -15, scaleY: 1.1, scaleX: 0.9, duration: 0.4, ease: "elastic.out(1, 0.5)" });
+        gsap.to([leftEyeRef.current, rightEyeRef.current], { scaleY: 1.5, scaleX: 1.4, y: -10, duration: 0.4, ease: "elastic.out(1, 0.5)" });
+        gsap.to(mouthRef.current, { scaleY: 2.5, scaleX: 0.5, y: 15, duration: 0.4, ease: "elastic.out(1, 0.5)" });
+      } else if (emotion === 'laughing') {
+        gsap.to(headRef.current, { y: -10, rotation: -10, duration: 0.2, yoyo: true, repeat: -1, ease: "sine.inOut" });
+        gsap.to([leftEyeRef.current, rightEyeRef.current], { scaleY: 0.2, scaleX: 1.2, y: -5, rotation: 5, duration: 0.2, yoyo: true, repeat: -1, ease: "sine.inOut" });
+        gsap.to(mouthRef.current, { scaleY: 2, scaleX: 1.5, y: -10, duration: 0.2, yoyo: true, repeat: -1, ease: "sine.inOut" });
+      } else if (emotion === 'confused') {
+        gsap.to(headRef.current, { rotation: 15, x: 10, duration: 0.5, ease: "back.out(1.2)" });
+        gsap.to(leftEyeRef.current, { scaleY: 0.5, y: 5, duration: 0.5, ease: "back.out(1.2)" });
+        gsap.to(rightEyeRef.current, { scaleY: 1.2, y: -5, duration: 0.5, ease: "back.out(1.2)" });
+        gsap.to(mouthRef.current, { scaleX: 0.7, x: -5, rotation: -10, duration: 0.5, ease: "back.out(1.2)" });
       }
     }, svgRef);
 
     const handleMouseMove = (e) => {
-      // Only track if he is sad or idle
+      if (lookOffset) return; // If manually controlled, ignore mouse
       if (emotion !== 'sad' && emotion !== 'idle') {
-        xTo(0); yTo(0); headRotTo(0); if (mouthXTo) { mouthXTo(0); mouthYTo(0); }
+        if (quickToRefs.current.xTo) {
+          quickToRefs.current.xTo(0); quickToRefs.current.yTo(0); quickToRefs.current.headRotTo(0); 
+          quickToRefs.current.mouthXTo(0); quickToRefs.current.mouthYTo(0);
+        }
         return;
       }
       if (!svgRef.current) return;
@@ -335,12 +398,12 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       const moveX = Math.cos(angle) * (dist / 800) * 40;
       const moveY = Math.sin(angle) * (dist / 800) * 40;
       
-      xTo(moveX);
-      yTo(moveY);
-      headRotTo(moveX * 0.15);
-      if (mouthXTo && mouthYTo) {
-        mouthXTo(moveX * 0.1);
-        mouthYTo(moveY * 0.1);
+      if (quickToRefs.current.xTo) {
+        quickToRefs.current.xTo(moveX);
+        quickToRefs.current.yTo(moveY);
+        quickToRefs.current.headRotTo(moveX * 0.15);
+        quickToRefs.current.mouthXTo(moveX * 0.1);
+        quickToRefs.current.mouthYTo(moveY * 0.1);
       }
     };
 
@@ -350,7 +413,22 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       ctx.revert();
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [emotion]);
+  }, [emotion, lookOffset]);
+
+  // Effect to handle manual lookOffset
+  useEffect(() => {
+    if (lookOffset && quickToRefs.current.xTo) {
+      // lookOffset x and y are between -1 and 1
+      const moveX = lookOffset.x * 40;
+      const moveY = lookOffset.y * 40;
+      
+      quickToRefs.current.xTo(moveX);
+      quickToRefs.current.yTo(moveY);
+      quickToRefs.current.headRotTo(moveX * 0.15);
+      quickToRefs.current.mouthXTo(moveX * 0.1);
+      quickToRefs.current.mouthYTo(moveY * 0.1);
+    }
+  }, [lookOffset]);
 
   
   return (
@@ -376,6 +454,12 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
         <g ref={leftEyeRef} style={{ transformOrigin: '222px 254px' }}>
           <path d="M0 0 C3.29156962 2.69310241 5.84109876 5.43219752 7.75 9.25 C8.05024194 13.80663735 8.02820843 18.37214852 8.0625 22.9375 C8.09150391 24.20529297 8.12050781 25.47308594 8.15039062 26.77929688 C8.19815596 33.80080127 8.1812624 38.6501392 3.75 44.25 C0.04404579 47.9316794 -4.06032797 49.5795879 -9.25 49.875 C-14.43967203 49.5795879 -18.54404579 47.9316794 -22.25 44.25 C-27.33828982 37.74930233 -26.84910687 31.19450927 -26.75 23.1875 C-26.76546875 21.93388672 -26.7809375 20.68027344 -26.796875 19.38867188 C-26.74909443 8.15426616 -26.74909443 8.15426616 -22.25 3.25 C-21.651875 2.5075 -21.05375 1.765 -20.4375 1 C-14.18458954 -4.00232837 -6.70810585 -3.612057 0 0 Z " fill={color} transform="translate(222.25,253.75)"/>
         </g>
+      </g>
+      
+      <g ref={zzzGroupRef} style={{ pointerEvents: 'none' }}>
+        <text ref={z1Ref} x="360" y="220" fontSize="35" fill={color} fontWeight="bold" opacity="0" fontFamily="sans-serif">Z</text>
+        <text ref={z2Ref} x="390" y="180" fontSize="25" fill={color} fontWeight="bold" opacity="0" fontFamily="sans-serif">z</text>
+        <text ref={z3Ref} x="420" y="145" fontSize="18" fill={color} fontWeight="bold" opacity="0" fontFamily="sans-serif">z</text>
       </g>
     </svg>
   );

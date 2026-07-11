@@ -128,13 +128,80 @@ const AdvancedColorPicker = ({ label, colorHex, onChangeHex }) => {
   );
 };
 
+// --- Joypad Component ---
+const Joypad = ({ onChange }) => {
+  const padRef = useRef(null);
+  const [active, setActive] = useState(false);
+  const [thumbPos, setThumbPos] = useState({ x: 0, y: 0 });
+
+  const updatePos = (e) => {
+    if (!padRef.current) return;
+    const rect = padRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const maxDist = rect.width / 2;
+
+    let dx = e.clientX - centerX;
+    let dy = e.clientY - centerY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    
+    if (dist > maxDist) {
+      dx = (dx / dist) * maxDist;
+      dy = (dy / dist) * maxDist;
+    }
+
+    setThumbPos({ x: dx, y: dy });
+    onChange({ x: dx / maxDist, y: dy / maxDist });
+  };
+
+  useEffect(() => {
+    const handleMove = (e) => {
+      if (active) updatePos(e);
+    };
+    const handleUp = () => {
+      setActive(false);
+      setThumbPos({ x: 0, y: 0 });
+      onChange(null); // Reset offset
+    };
+    if (active) {
+      window.addEventListener('pointermove', handleMove);
+      window.addEventListener('pointerup', handleUp);
+    }
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+    };
+  }, [active, onChange]);
+
+  return (
+    <div style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '10px', border: '1px solid #333', marginBottom: '15px' }}>
+      <strong style={{ color: '#fff', fontSize: '14px', display: 'block', marginBottom: '10px', textAlign: 'center' }}>Manual Eye Joypad</strong>
+      <div 
+        ref={padRef}
+        onPointerDown={(e) => { setActive(true); updatePos(e); e.preventDefault(); }}
+        style={{
+          width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#222', border: '2px solid #555', margin: '0 auto', position: 'relative', touchAction: 'none', cursor: 'grab'
+        }}
+      >
+        <div style={{
+          width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#ebd73f', position: 'absolute', top: '50%', left: '50%',
+          transform: `translate(calc(-50% + ${thumbPos.x}px), calc(-50% + ${thumbPos.y}px))`, transition: active ? 'none' : 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)', boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+        }} />
+      </div>
+    </div>
+  );
+};
+
+
 export default function OrloExport() {
   const [emotion, setEmotion] = useState('idle'); // idle is the breathing mode
   const [hideUI, setHideUI] = useState(false);
+  const [hideCursor, setHideCursor] = useState(false);
   const [orloColor, setOrloColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#00FF00');
+  const [lookOffset, setLookOffset] = useState(null);
 
-  const emotions = ['idle', 'excited', 'sad', 'greeting', 'listening', 'thinking', 'success', 'disappointed', 'waiting', 'sleeping'];
+  const emotions = ['idle', 'wink', 'surprised', 'laughing', 'confused', 'excited', 'sad', 'greeting', 'listening', 'thinking', 'success', 'disappointed', 'waiting', 'sleeping'];
 
   // Prevent scroll when sliding list is present
   useEffect(() => {
@@ -147,21 +214,21 @@ export default function OrloExport() {
   }, [hideUI]);
 
   return (
-    <div style={{ backgroundColor: bgColor, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+    <div style={{ backgroundColor: bgColor, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', cursor: hideCursor ? 'none' : 'auto' }}>
       
       {/* Orlo Container */}
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '600px', width: '600px', transition: 'all 0.5s ease', transform: hideUI ? 'scale(1.2)' : 'translateX(-150px) scale(1)' }}>
-        <OrloIcon size={500} emotion={emotion} color={orloColor} />
+        <OrloIcon size={500} emotion={emotion} color={orloColor} lookOffset={lookOffset} />
       </div>
 
       {/* Sliding Control Panel */}
       <div 
         style={{ 
           position: 'absolute', 
-          right: hideUI ? '-400px' : '20px', 
+          right: hideUI ? '-420px' : '20px', 
           top: '20px', 
           bottom: '20px', 
-          width: '380px',
+          width: '400px',
           backgroundColor: 'rgba(0,0,0,0.85)', 
           padding: '20px', 
           borderRadius: '15px', 
@@ -170,7 +237,8 @@ export default function OrloExport() {
           boxShadow: '-10px 0 30px rgba(0,0,0,0.5)', 
           zIndex: 10,
           transition: 'right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          cursor: 'auto'
         }}
       >
         <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px', fontFamily: 'sans-serif' }}>
@@ -180,30 +248,42 @@ export default function OrloExport() {
           </p>
         </div>
 
+        {/* Visibility Controls */}
+        <div style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '10px', border: '1px solid #333', marginBottom: '15px' }}>
+           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', fontSize: '14px', cursor: 'pointer' }}>
+             <input type="checkbox" checked={hideCursor} onChange={e => setHideCursor(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
+             Hide cursor while over green screen
+           </label>
+        </div>
+
+        {/* Joypad Control */}
+        <Joypad onChange={setLookOffset} />
+
         {/* Color Pickers */}
         <AdvancedColorPicker label="Orlo Fill Color" colorHex={orloColor} onChangeHex={setOrloColor} />
         <AdvancedColorPicker label="Background (Green Screen)" colorHex={bgColor} onChangeHex={setBgColor} />
 
         {/* Animations List */}
-        <h3 style={{ color: '#fff', fontSize: '14px', margin: '10px 0', fontFamily: 'sans-serif' }}>Animations (Breathing is 'Idle')</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1, paddingRight: '10px' }}>
+        <h3 style={{ color: '#fff', fontSize: '14px', margin: '10px 0', fontFamily: 'sans-serif' }}>Animations (Idle = Breathing)</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', overflowY: 'auto', paddingRight: '5px' }}>
           {emotions.map(e => (
             <button 
               key={e} 
               onClick={() => setEmotion(e)}
               style={{ 
-                padding: '12px 15px', 
+                padding: '10px 12px', 
                 borderRadius: '8px', 
                 border: 'none', 
                 backgroundColor: emotion === e ? '#ebd73f' : '#2a2a2a', 
                 color: emotion === e ? '#000' : '#fff', 
                 cursor: 'pointer', 
                 fontWeight: 'bold',
-                textAlign: 'left',
-                transition: 'all 0.2s'
+                textAlign: 'center',
+                transition: 'all 0.2s',
+                fontSize: '13px'
               }}
             >
-              {e.charAt(0).toUpperCase() + e.slice(1)} {emotion === e && '●'}
+              {e.charAt(0).toUpperCase() + e.slice(1)}
             </button>
           ))}
         </div>
