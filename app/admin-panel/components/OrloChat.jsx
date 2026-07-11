@@ -47,106 +47,44 @@ const ProfileScene = ({ size = 84 }) => (
 );
 
 const PostScene = ({ id, size = 120 }) => {
-  const wrap = (children, bg) => (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: bg, minHeight: '120px' }}>
-      {children}
+  const getPostContent = () => {
+    switch (id) {
+      case 1:
+        return { img: '/posts/post1.png', emotion: 'still' };
+      case 2:
+        return { img: '/posts/post2.png', emotion: 'still' };
+      case 3:
+        return { img: '/posts/post3.png', emotion: 'still' };
+      case 4:
+        return { img: '/posts/post4.png', emotion: 'still' };
+      case 5:
+        return { img: '/posts/post5.png', emotion: 'still' };
+      case 6:
+        return { img: '/posts/post6.png', emotion: 'still' };
+      default:
+        return { img: '/posts/post1.png', emotion: 'still' };
+    }
+  };
+
+  const { img, emotion } = getPostContent();
+
+  return (
+    <div style={{ 
+      width: '100%', 
+      height: '100%', 
+      position: 'relative', 
+      overflow: 'hidden', 
+      backgroundImage: `url(${img})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      aspectRatio: '1 / 1'
+    }}>
+      {/* Placing a still OrloIcon subtly in the scene */}
+      <div style={{ position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)' }}>
+         <OrloIcon size={size * 0.4} emotion={emotion} color="#fff" disableCursorFollow={true} />
+      </div>
     </div>
   );
-
-  switch (id) {
-    case 1: // Laptop / Deep Work
-      return wrap(
-        <>
-           <div style={{ position: 'absolute', bottom: '20%', left: '50%', transform: 'translateX(-50%)' }}>
-             <OrloIcon size={size * 0.8} emotion="thinking" color="#fff" />
-           </div>
-           <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '30%', background: '#5c4033' }} />
-           <div style={{ position: 'absolute', bottom: '25%', left: '50%', transform: 'translateX(-50%)', width: '60%', height: '40%', background: '#ccc', borderRadius: '5px 5px 0 0' }}>
-              <div style={{ position: 'absolute', inset: '4px', background: '#e0f7fa', borderRadius: '3px' }} />
-           </div>
-           <div style={{ position: 'absolute', bottom: '20%', left: '50%', width: '80%', height: '5%', background: '#999', borderRadius: '0 0 5px 5px', transform: 'translateX(-50%)' }} />
-        </>,
-        'linear-gradient(to bottom, #2b5876, #4e4376)'
-      );
-    case 2: // Vacation
-      return wrap(
-        <>
-           <div style={{ position: 'absolute', top: '10%', right: '10%', width: '30%', height: '30%', background: '#ffd700', borderRadius: '50%', boxShadow: '0 0 20px #ffd700' }} />
-           <div style={{ position: 'absolute', bottom: '30%', width: '100%', height: '20%', background: '#0288d1' }} />
-           <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '30%', background: '#fbc02d' }} />
-           <div style={{ position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)' }}>
-             <OrloIcon size={size * 0.8} emotion="laughing" color="#fff" />
-           </div>
-        </>,
-        'linear-gradient(to bottom, #4fc3f7, #e1f5fe)'
-      );
-    case 3: // Solo Trip / Mountains
-      return wrap(
-        <>
-           <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-             <path d="M -10 100 L 30 40 L 70 100 Z" fill="#607d8b" />
-             <path d="M 30 100 L 70 20 L 110 100 Z" fill="#455a64" />
-             <path d="M -10 100 L 30 40 L 35 48 L 5 100 Z" fill="#cfd8dc" opacity="0.3" />
-             <path d="M 30 100 L 70 20 L 75 30 L 40 100 Z" fill="#cfd8dc" opacity="0.3" />
-           </svg>
-           <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '20%', background: '#33691e' }} />
-           <div style={{ position: 'absolute', bottom: '10%', left: '50%', transform: 'translateX(-50%)' }}>
-             <OrloIcon size={size * 0.8} emotion="excited" color="#fff" />
-           </div>
-        </>,
-        'linear-gradient(to bottom, #81d4fa, #b3e5fc)'
-      );
-    case 4: // Coffee
-      return wrap(
-        <>
-           <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '35%', background: '#795548' }} />
-           <div style={{ position: 'absolute', bottom: '25%', left: '40%', transform: 'translateX(-50%)' }}>
-             <OrloIcon size={size * 0.9} emotion="success" color="#fff" />
-           </div>
-           <div style={{ position: 'absolute', bottom: '28%', right: '15%', width: '25%', height: '30%', background: '#fff', borderRadius: '4px 4px 15px 15px' }}>
-              <div style={{ position: 'absolute', top: '10%', right: '-30%', width: '40%', height: '50%', border: '4px solid #fff', borderRadius: '50%' }} />
-              <div style={{ position: 'absolute', top: '-30%', left: '30%', width: '10%', height: '30%', background: 'rgba(255,255,255,0.5)', borderRadius: '10px', filter: 'blur(2px)' }} />
-              <div style={{ position: 'absolute', top: '-40%', left: '60%', width: '10%', height: '30%', background: 'rgba(255,255,255,0.5)', borderRadius: '10px', filter: 'blur(2px)' }} />
-           </div>
-        </>,
-        'linear-gradient(to bottom, #d7ccc8, #a1887f)'
-      );
-    case 5: // Reading
-      return wrap(
-        <>
-           <div style={{ position: 'absolute', top: 0, width: '100%', height: '70%', background: '#4e342e', display: 'flex', flexWrap: 'wrap', gap: '2px', padding: '10px' }}>
-              {Array.from({length: 12}).map((_, i) => (
-                <div key={i} style={{ width: '18%', height: '30%', background: ['#c62828', '#1565c0', '#2e7d32', '#f9a825'][i%4] }} />
-              ))}
-           </div>
-           <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '30%', background: '#3e2723' }} />
-           <div style={{ position: 'absolute', bottom: '25%', left: '50%', transform: 'translateX(-50%)' }}>
-             <OrloIcon size={size * 0.8} emotion="idle" color="#fff" />
-           </div>
-           <div style={{ position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)', width: '50%', height: '15%', background: '#fff', borderRadius: '2px', display: 'flex', justifyContent: 'center' }}>
-             <div style={{ width: '2px', height: '100%', background: '#ccc' }} />
-           </div>
-        </>,
-        '#3e2723'
-      );
-    case 6: // Party
-      return wrap(
-        <>
-           <div style={{ position: 'absolute', top: '10%', left: '20%', width: '15%', height: '15%', background: '#f50057', borderRadius: '50%', filter: 'blur(10px)' }} />
-           <div style={{ position: 'absolute', top: '30%', right: '20%', width: '20%', height: '20%', background: '#00e5ff', borderRadius: '50%', filter: 'blur(10px)' }} />
-           <div style={{ position: 'absolute', bottom: '40%', left: '50%', width: '25%', height: '25%', background: '#651fff', borderRadius: '50%', filter: 'blur(15px)' }} />
-           {Array.from({length: 20}).map((_, i) => (
-             <div key={i} style={{ position: 'absolute', top: `${Math.random()*100}%`, left: `${Math.random()*100}%`, width: '4px', height: '8px', background: ['#ffea00', '#00e676', '#ff1744'][i%3], transform: `rotate(${Math.random()*360}deg)` }} />
-           ))}
-           <div style={{ position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)' }}>
-             <OrloIcon size={size * 0.9} emotion="laughing" color="#fff" />
-           </div>
-        </>,
-        '#121212'
-      );
-    default:
-      return null;
-  }
 };
 
 export default function OrloChat() {
@@ -780,7 +718,7 @@ export default function OrloChat() {
                   <MoreHorizontal size={20} color="#fff" style={{ marginLeft: 'auto' }} />
                 </div>
                 
-                <div style={{ width: '100%', height: '380px' }}>
+                <div style={{ width: '100%', aspectRatio: '1 / 1', height: 'auto' }}>
                    <PostScene id={selectedPost.id} size={300} />
                 </div>
                 

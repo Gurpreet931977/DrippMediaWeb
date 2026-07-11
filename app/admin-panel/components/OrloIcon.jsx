@@ -19,6 +19,14 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
   // Expose GSAP quickTo functions so we can use them in lookOffset effect
   const quickToRefs = useRef({});
 
+  const lookOffsetRef = useRef(lookOffset);
+  const disableCursorFollowRef = useRef(disableCursorFollow);
+  
+  useEffect(() => {
+    lookOffsetRef.current = lookOffset;
+    disableCursorFollowRef.current = disableCursorFollow;
+  }, [lookOffset, disableCursorFollow]);
+
   useEffect(() => {
     let xTo, yTo, headRotTo, mouthXTo, mouthYTo;
 
@@ -375,7 +383,7 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
     }, svgRef);
 
     const handleMouseMove = (e) => {
-      if (lookOffset || disableCursorFollow) return; // If manually controlled or disabled, ignore mouse
+      if (lookOffsetRef.current || disableCursorFollowRef.current) return; // If manually controlled or disabled, ignore mouse
       if (emotion !== 'sad' && emotion !== 'idle') {
         if (quickToRefs.current.xTo) {
           quickToRefs.current.xTo(0); quickToRefs.current.yTo(0); quickToRefs.current.headRotTo(0); 
@@ -413,7 +421,7 @@ export default function OrloIcon({ size = 24, className = "", emotion = "idle", 
       ctx.revert();
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [emotion, lookOffset]);
+  }, [emotion]);
 
   // Effect to handle manual lookOffset
   useEffect(() => {
