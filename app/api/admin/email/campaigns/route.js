@@ -29,6 +29,7 @@ export async function GET(request) {
   const { data: campaigns, error } = await supabase
     .from('email_campaigns')
     .select('*')
+    .eq('status', 'pending')
     .order('scheduled_at', { ascending: true });
 
   if (error) {
@@ -61,7 +62,7 @@ export async function POST(request) {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { title, subject, body, templateType, isBroadcast, specificEmail, scheduledAt } = payload;
+  const { title, subject, body, templateType, isBroadcast, specificEmail, scheduledAt, isRecurring, recurrenceIntervalDays } = payload;
 
   const supabase = getSupabase();
   if (!supabase) return Response.json({ error: 'Database misconfigured' }, { status: 500 });
@@ -77,6 +78,8 @@ export async function POST(request) {
         is_broadcast: isBroadcast,
         specific_email: specificEmail,
         scheduled_at: scheduledAt,
+        is_recurring: isRecurring || false,
+        recurrence_interval_days: recurrenceIntervalDays || null,
         status: 'pending'
       }
     ])
@@ -113,7 +116,7 @@ export async function PUT(request) {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { id, title, subject, body, templateType, isBroadcast, specificEmail, scheduledAt } = payload;
+  const { id, title, subject, body, templateType, isBroadcast, specificEmail, scheduledAt, isRecurring, recurrenceIntervalDays } = payload;
 
   if (!id) return Response.json({ error: 'Missing campaign ID' }, { status: 400 });
 
@@ -130,6 +133,8 @@ export async function PUT(request) {
       is_broadcast: isBroadcast,
       specific_email: specificEmail,
       scheduled_at: scheduledAt,
+      is_recurring: isRecurring !== undefined ? isRecurring : false,
+      recurrence_interval_days: recurrenceIntervalDays || null,
       updated_at: new Date().toISOString()
     })
     .eq('id', id)

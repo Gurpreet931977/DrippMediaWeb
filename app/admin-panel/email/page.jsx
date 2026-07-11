@@ -22,6 +22,8 @@ export default function EmailCampaignsPage() {
   const [generatingMode, setGeneratingMode] = useState('');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduleTime, setScheduleTime] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceIntervalDays, setRecurrenceIntervalDays] = useState(1);
   const [showClearAfterSend, setShowClearAfterSend] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState(null);
   const [hoveredScheduleId, setHoveredScheduleId] = useState(null);
@@ -48,7 +50,9 @@ export default function EmailCampaignsPage() {
           templateType: c.template_type,
           isBroadcast: c.is_broadcast,
           specificEmail: c.specific_email,
-          scheduledAt: c.scheduled_at
+          scheduledAt: c.scheduled_at,
+          isRecurring: c.is_recurring,
+          recurrenceIntervalDays: c.recurrence_interval_days
         })));
       }
     } catch (err) {
@@ -84,6 +88,8 @@ export default function EmailCampaignsPage() {
         if (data.payload.templateType) setTemplateType(data.payload.templateType);
         if (typeof data.payload.isScheduled === 'boolean') setIsScheduled(data.payload.isScheduled);
         if (data.payload.scheduleTime) setScheduleTime(data.payload.scheduleTime);
+        if (typeof data.payload.isRecurring === 'boolean') setIsRecurring(data.payload.isRecurring);
+        if (data.payload.recurrenceIntervalDays) setRecurrenceIntervalDays(data.payload.recurrenceIntervalDays);
         
         setStatus({ type: 'success', msg: 'Orlo has updated your email template.' });
       }
@@ -95,8 +101,8 @@ export default function EmailCampaignsPage() {
 
   // Expose current context to Copilot
   useEffect(() => {
-    window._drippEmailContext = { subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime };
-  }, [subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime]);
+    window._drippEmailContext = { subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime, isRecurring, recurrenceIntervalDays };
+  }, [subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime, isRecurring, recurrenceIntervalDays]);
 
   // Magnetic hover effect for AI button
   const handleAiMouseMove = (e) => {
@@ -136,7 +142,9 @@ export default function EmailCampaignsPage() {
             title,
             body,
             templateType,
-            scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null
+            scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null,
+            isRecurring,
+            recurrenceIntervalDays
           })
         });
 
@@ -159,7 +167,9 @@ export default function EmailCampaignsPage() {
             title,
             body,
             templateType,
-            scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null
+            scheduledAt: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null,
+            isRecurring,
+            recurrenceIntervalDays
           })
         });
 
@@ -462,11 +472,38 @@ export default function EmailCampaignsPage() {
               </div>
 
               {isScheduled && (
-                <div style={{ marginTop: '1.5rem' }}>
+                <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   <DrippDatePicker 
                     value={scheduleTime}
                     onChange={(val) => setScheduleTime(val)}
                   />
+                  
+                  <div style={{ padding: '1.25rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff', cursor: 'pointer', marginBottom: isRecurring ? '1rem' : 0 }}>
+                      <input 
+                        type="checkbox" 
+                        checked={isRecurring} 
+                        onChange={(e) => setIsRecurring(e.target.checked)}
+                        style={{ accentColor: '#ebd73f', width: '18px', height: '18px' }}
+                      />
+                      Make this a recurring campaign
+                    </label>
+                    {isRecurring && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{ color: '#888', fontSize: '0.9rem' }}>Repeat every</span>
+                        <input 
+                          type="number" 
+                          min="1" 
+                          max="365" 
+                          value={recurrenceIntervalDays} 
+                          onChange={(e) => setRecurrenceIntervalDays(parseInt(e.target.value) || 1)}
+                          className={styles.input}
+                          style={{ width: '80px', padding: '0.5rem', textAlign: 'center' }}
+                        />
+                        <span style={{ color: '#888', fontSize: '0.9rem' }}>days</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -520,6 +557,8 @@ export default function EmailCampaignsPage() {
                     setBody('');
                     setIsScheduled(false);
                     setScheduleTime('');
+                    setIsRecurring(false);
+                    setRecurrenceIntervalDays(1);
                     setShowClearAfterSend(false);
                     setEditingScheduleId(null);
                     setStatus({ type: '', msg: '' });
@@ -694,6 +733,9 @@ export default function EmailCampaignsPage() {
                          <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Template:</strong> <span style={{textTransform: 'capitalize'}}>{item.templateType}</span></div>
                          <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Audience:</strong> <span>{item.isBroadcast ? 'All Users' : item.specificEmail}</span></div>
                          <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Subject:</strong> <span>{item.subject}</span></div>
+                         {item.isRecurring && (
+                           <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Recurs:</strong> <span style={{ color: '#ebd73f' }}>Every {item.recurrenceIntervalDays} days</span></div>
+                         )}
                          <div style={{ marginTop: '1rem', color: '#ccc', fontStyle: 'italic', background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
                            &quot;{item.body.substring(0, 150)}{item.body.length > 150 ? '...' : ''}&quot;
                          </div>
@@ -716,6 +758,8 @@ export default function EmailCampaignsPage() {
                           setSpecificEmail(item.specificEmail || '');
                           setIsScheduled(true);
                           setScheduleTime(new Date(item.scheduledAt).toISOString().slice(0, 16));
+                          setIsRecurring(item.isRecurring || false);
+                          setRecurrenceIntervalDays(item.recurrenceIntervalDays || 1);
                           setEditingScheduleId(item.id);
                           setShowClearAfterSend(true);
                         }}

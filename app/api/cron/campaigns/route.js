@@ -110,12 +110,20 @@ export async function GET(request) {
 
       // Update campaign status
       if (successCount > 0) {
+        const updateData = { updated_at: new Date().toISOString() };
+        
+        if (campaign.is_recurring && campaign.recurrence_interval_days) {
+          const nextRun = new Date();
+          nextRun.setDate(nextRun.getDate() + campaign.recurrence_interval_days);
+          updateData.scheduled_at = nextRun.toISOString();
+          // Status stays 'pending'
+        } else {
+          updateData.status = 'sent';
+        }
+
         await supabase
           .from('email_campaigns')
-          .update({ 
-            status: 'sent', 
-            updated_at: new Date().toISOString() 
-          })
+          .update(updateData)
           .eq('id', campaign.id);
         totalSent += successCount;
       } else {
