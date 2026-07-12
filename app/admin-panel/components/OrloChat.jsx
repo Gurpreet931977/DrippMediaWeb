@@ -97,10 +97,16 @@ export default function OrloChat() {
   const [isTyping, setIsTyping] = useState(false);
   const [emotion, setEmotion] = useState('idle');
   const [isHovered, setIsHovered] = useState(false);
+  const [speechBubble, setSpeechBubble] = useState('');
+  
   const chatRef = useRef(null);
   const btnRef = useRef(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const idleTimeoutRef = useRef(null);
+  const keypressCountRef = useRef(0);
+  const keypressTimeoutRef = useRef(null);
+  const speechBubbleTimeoutRef = useRef(null);
 
   const postsData = [
     { id: 1, likes: '12.4k', comments: 142, caption: 'Deep work mode activated. Building the future of Dripp Media! 💻✨ #AI #Developer', date: '2 DAYS AGO' },
@@ -149,6 +155,65 @@ export default function OrloChat() {
     window.addEventListener('copilot-reply', handleCopilotReply);
     return () => window.removeEventListener('copilot-reply', handleCopilotReply);
   }, []);
+
+  const showSpeechBubble = (text, duration = 4000) => {
+    if (isOpen) return; // Don't show if chat is open
+    setSpeechBubble(text);
+    setEmotion('excited');
+    clearTimeout(speechBubbleTimeoutRef.current);
+    
+    speechBubbleTimeoutRef.current = setTimeout(() => {
+      setSpeechBubble('');
+      setEmotion('idle');
+    }, duration);
+  };
+
+  useEffect(() => {
+    // Activity / Idle Tracker
+    const resetIdle = () => {
+      clearTimeout(idleTimeoutRef.current);
+      if (!isOpen && !speechBubble) {
+         setEmotion('idle');
+      }
+      idleTimeoutRef.current = setTimeout(() => {
+        if (!isOpen) {
+          showSpeechBubble("Hey, are you still there? Should I go to sleep? 😴", 5000);
+          setEmotion('sad');
+        }
+      }, 20000); // 20 seconds of idle
+    };
+
+    const handleKeyDown = (e) => {
+      resetIdle();
+      // Only trigger "don't type" if they are typing in an input/textarea
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+        keypressCountRef.current += 1;
+        
+        clearTimeout(keypressTimeoutRef.current);
+        keypressTimeoutRef.current = setTimeout(() => {
+          keypressCountRef.current = 0;
+        }, 3000);
+
+        if (keypressCountRef.current > 15 && !isOpen) {
+          showSpeechBubble("Don't waste time typing... Let me do the heavy lifting! ✨", 4000);
+          keypressCountRef.current = 0; // reset
+        }
+      }
+    };
+
+    window.addEventListener('mousemove', resetIdle);
+    window.addEventListener('keydown', handleKeyDown);
+    
+    resetIdle();
+    return () => {
+      window.removeEventListener('mousemove', resetIdle);
+      window.removeEventListener('keydown', handleKeyDown);
+      clearTimeout(idleTimeoutRef.current);
+      clearTimeout(keypressTimeoutRef.current);
+      clearTimeout(speechBubbleTimeoutRef.current);
+    };
+  }, [isOpen, speechBubble]);
+
 
   const toggleChat = () => {
     if (isOpen) {
@@ -246,6 +311,42 @@ export default function OrloChat() {
           transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
+        .copilot-wrapper {
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          z-index: 9999;
+          display: flex;
+          align-items: flex-end;
+          gap: 16px;
+        }
+
+        .speech-bubble {
+          background: rgba(15, 15, 15, 0.7);
+          backdrop-filter: blur(15px);
+          -webkit-backdrop-filter: blur(15px);
+          border: 1px solid rgba(235, 215, 63, 0.3);
+          color: #fff;
+          padding: 12px 20px;
+          border-radius: 24px;
+          border-bottom-right-radius: 4px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(235, 215, 63, 0.1);
+          max-width: 220px;
+          transform-origin: bottom right;
+          opacity: 0;
+          transform: scale(0.8) translateY(10px);
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          pointer-events: none;
+          margin-bottom: 15px;
+        }
+        
+        .speech-bubble.show {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+
         .copilot-orb {
           width: 64px;
           height: 64px;
@@ -775,16 +876,21 @@ export default function OrloChat() {
         </div>
       )}
 
-      <div 
-        className="copilot-orb" 
-        onClick={toggleChat} 
-        ref={btnRef}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
-      >
-        <div className="copilot-ring"></div>
-        <OrloIcon size={32} color="#000" className="orlo-icon-svg" emotion={isOpen ? emotion : (isHovered ? 'excited' : 'sad')} />
+      <div className="copilot-wrapper">
+        <div className={`speech-bubble ${speechBubble ? 'show' : ''}`}>
+          {speechBubble}
+        </div>
+        <div 
+          className="copilot-orb" 
+          onClick={toggleChat} 
+          ref={btnRef}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
+        >
+          <div className="copilot-ring"></div>
+          <OrloIcon size={32} color="#000" className="orlo-icon-svg" emotion={isOpen ? emotion : (speechBubble ? emotion : (isHovered ? 'excited' : 'idle'))} />
+        </div>
       </div>
     </>
   );
