@@ -137,6 +137,19 @@ export default function OrloChat() {
     }
   }, [messages, isTyping]);
 
+  useEffect(() => {
+    const handleCopilotReply = (e) => {
+      const data = e.detail;
+      if (data && data.replyMessage) {
+        setMessages(prev => [...prev, { role: 'ai', text: data.replyMessage }]);
+        setEmotion('success');
+        setTimeout(() => setEmotion('idle'), 3000);
+      }
+    };
+    window.addEventListener('copilot-reply', handleCopilotReply);
+    return () => window.removeEventListener('copilot-reply', handleCopilotReply);
+  }, []);
+
   const toggleChat = () => {
     if (isOpen) {
       gsap.to(chatRef.current, { opacity: 0, y: 20, scale: 0.95, duration: 0.3, ease: 'power2.in', onComplete: () => setIsOpen(false) });

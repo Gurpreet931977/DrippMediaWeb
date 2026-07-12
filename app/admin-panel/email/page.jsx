@@ -30,6 +30,7 @@ export default function EmailCampaignsPage() {
   const [editingScheduleId, setEditingScheduleId] = useState(null);
   const [hoveredScheduleId, setHoveredScheduleId] = useState(null);
   const [mounted, setMounted] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -206,19 +207,34 @@ export default function EmailCampaignsPage() {
     if (aiBtnRef.current) gsap.to(aiBtnRef.current, { x: 0, y: 0, scale: 0.95, duration: 0.2 });
     
     try {
-      const payload = { templateType };
+      let userPrompt = aiPrompt.trim() || 'Generate a fresh, highly creative campaign email for this template.';
+      
       if (mode === 'subject') {
-        payload.currentTitle = title;
-        payload.currentBody = body;
+        userPrompt = aiPrompt.trim() 
+          ? `Regenerate ONLY the subject line based on this instruction: ${aiPrompt.trim()}`
+          : 'Regenerate ONLY the subject line for this email to be highly creative.';
       } else if (mode === 'title') {
-        payload.currentSubject = subject;
-        payload.currentBody = body;
+        userPrompt = aiPrompt.trim()
+          ? `Regenerate ONLY the title based on this instruction: ${aiPrompt.trim()}`
+          : 'Regenerate ONLY the title for this email to be highly creative.';
       } else if (mode === 'body') {
-        payload.currentSubject = subject;
-        payload.currentTitle = title;
+        userPrompt = aiPrompt.trim()
+          ? `Regenerate ONLY the body based on this instruction: ${aiPrompt.trim()}`
+          : 'Regenerate ONLY the body of this email to be highly creative.';
       }
 
-      const res = await fetch('/api/admin/email/magic-generate', {
+      const payload = {
+        userPrompt,
+        context: {
+          subject,
+          title,
+          body,
+          templateType
+        },
+        currentDate: new Date().toISOString()
+      };
+
+      const res = await fetch('/api/admin/copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -227,15 +243,23 @@ export default function EmailCampaignsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate copy');
       
-      if (mode === 'all' || mode === 'subject') setSubject(data.subject || '');
-      if (mode === 'all' || mode === 'title') setTitle(data.title || '');
+      if (data.replyMessage) {
+        window.dispatchEvent(new CustomEvent('copilot-reply', { detail: data }));
+      }
+
+      const newSubject = data.payload?.subject || '';
+      const newTitle = data.payload?.title || '';
+      const newBody = data.payload?.body || '';
+
+      if (mode === 'all' || mode === 'subject') setSubject(newSubject);
+      if (mode === 'all' || mode === 'title') setTitle(newTitle);
       
       if (mode === 'all' || mode === 'body') {
         setBody('');
         
         let currentText = '';
         let charIndex = 0;
-        const fullText = data.body || '';
+        const fullText = newBody || '';
 
         const typeInterval = setInterval(() => {
           if (charIndex < fullText.length) {
@@ -255,6 +279,7 @@ export default function EmailCampaignsPage() {
         setGeneratingMode('');
         if (aiBtnRef.current) gsap.to(aiBtnRef.current, { scale: 1, duration: 0.4, ease: 'back.out(1.5)' });
       }
+
     } catch (err) {
       setStatus({ type: 'error', msg: err.message });
       setGenerating(false);
@@ -336,44 +361,76 @@ export default function EmailCampaignsPage() {
                 </label>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                  {/* AI Generate Button */}
-                  <button
-                    ref={aiBtnRef}
-                    type="button"
-                    onClick={() => handleAiGenerate('all')}
-                    onMouseMove={handleAiMouseMove}
-                    onMouseLeave={handleAiMouseLeave}
-                    disabled={generating}
-                    style={{
-                      background: 'linear-gradient(135deg, #ebd73f, #d4c235)',
-                      border: 'none',
-                      borderRadius: '2rem',
-                      padding: '0.6rem 1.25rem',
-                      color: '#000',
-                      fontWeight: '700',
-                      fontSize: '0.875rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      cursor: generating ? 'not-allowed' : 'pointer',
-                      opacity: generating ? 0.7 : 1,
-                      boxShadow: '0 4px 20px rgba(235, 215, 63, 0.4)'
-                    }}
-                  >
-                  <div style={{ position: 'relative', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <RefreshIcon size={16} className={generating ? "animate-spin" : ""} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <input
+                      type="text"
+                      placeholder="Orlo Prompt / Topic (Optional)..."
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      style={{
+                        background: 'rgba(0,0,0,0.5)',
+                        border: '1px solid rgba(235, 215, 63, 0.2)',
+                        borderRadius: '2rem',
+                        color: '#fff',
+                        padding: '0.6rem 1.25rem',
+                        fontSize: '0.825rem',
+                        outline: 'none',
+                        width: '280px',
+                        transition: 'all 0.3s ease',
+                        fontFamily: "'Clash Display', sans-serif"
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#ebd73f';
+                        e.target.style.boxShadow = '0 0 10px rgba(235, 215, 63, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(235, 215, 63, 0.2)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                    
+                    {/* AI Generate Button */}
+                    <button
+                      ref={aiBtnRef}
+                      type="button"
+                      onClick={() => handleAiGenerate('all')}
+                      onMouseMove={handleAiMouseMove}
+                      onMouseLeave={handleAiMouseLeave}
+                      disabled={generating}
+                      style={{
+                        background: 'linear-gradient(135deg, #ebd73f, #d4c235)',
+                        border: 'none',
+                        borderRadius: '2rem',
+                        padding: '0.6rem 1.25rem',
+                        color: '#000',
+                        fontWeight: '700',
+                        fontSize: '0.875rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        cursor: generating ? 'not-allowed' : 'pointer',
+                        opacity: generating ? 0.7 : 1,
+                        boxShadow: '0 4px 20px rgba(235, 215, 63, 0.4)'
+                      }}
+                    >
+                      <div style={{ position: 'relative', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <RefreshIcon size={16} className={generating ? "animate-spin" : ""} />
+                      </div>
+                      {generating ? 'Generating...' : 'Magic Generate'}
+                    </button>
                   </div>
-                    {generating ? 'Generating...' : 'Magic Generate'}
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => { setSubject(''); setTitle(''); setBody(''); }}
-                    style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.75rem', cursor: 'pointer', padding: '0 0.5rem', transition: 'color 0.2s' }}
-                    onMouseOver={(e) => e.target.style.color = '#ebd73f'}
-                    onMouseOut={(e) => e.target.style.color = '#888'}
-                  >
-                    Clear all content
-                  </button>
+                  
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '2px' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => { setSubject(''); setTitle(''); setBody(''); setAiPrompt(''); }}
+                      style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.75rem', cursor: 'pointer', padding: '0 0.5rem', transition: 'color 0.2s' }}
+                      onMouseOver={(e) => e.target.style.color = '#ebd73f'}
+                      onMouseOut={(e) => e.target.style.color = '#888'}
+                    >
+                      Clear all content
+                    </button>
+                  </div>
                 </div>
               </div>
 
