@@ -180,7 +180,7 @@ export default function SharedQuote() {
   const currency = details?.currency || '$';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: 'white', padding: 'clamp(20px, 5vw, 60px) clamp(15px, 4vw, 20px)', fontFamily: "'Inter', sans-serif", position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#050505', color: 'white', padding: 'clamp(20px, 5vw, 60px) clamp(15px, 4vw, 20px)', fontFamily: "'Clash Display', sans-serif", position: 'relative', overflow: 'hidden' }}>
       {/* Background Glows */}
       <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: 'clamp(400px, 80vw, 800px)', height: 'clamp(400px, 80vw, 800px)', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.08) 0%, rgba(5, 5, 5, 0) 60%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: 'clamp(300px, 60vw, 600px)', height: 'clamp(300px, 60vw, 600px)', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(5, 5, 5, 0) 60%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }} />

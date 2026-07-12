@@ -37,7 +37,7 @@ export const customAlert = (message, title = 'Notification', onConfirm = null) =
         boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
         transform: 'scale(0.95)',
         transition: 'transform 0.2s ease',
-        fontFamily: "'Inter', sans-serif"
+        fontFamily: "'Clash Display', sans-serif"
     });
 
     const titleEl = document.createElement('h3');
@@ -143,7 +143,7 @@ export const customConfirm = (message, onConfirm, title = 'Confirm Action') => {
         boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
         transform: 'scale(0.95)',
         transition: 'transform 0.2s ease',
-        fontFamily: "'Inter', sans-serif"
+        fontFamily: "'Clash Display', sans-serif"
     });
 
     const titleEl = document.createElement('h3');

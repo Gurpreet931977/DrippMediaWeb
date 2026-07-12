@@ -11,7 +11,7 @@ export default function QuoteLayout({ children }) {
           opacity: 1 !important;
           background-color: #0a0a0a !important;
           color: #ffffff !important;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+          font-family: 'Clash Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
           cursor: auto !important;
         }
         * {
