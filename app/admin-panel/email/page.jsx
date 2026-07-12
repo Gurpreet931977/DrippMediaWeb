@@ -30,7 +30,6 @@ export default function EmailCampaignsPage() {
   const [editingScheduleId, setEditingScheduleId] = useState(null);
   const [hoveredScheduleId, setHoveredScheduleId] = useState(null);
   const [mounted, setMounted] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -207,20 +206,14 @@ export default function EmailCampaignsPage() {
     if (aiBtnRef.current) gsap.to(aiBtnRef.current, { x: 0, y: 0, scale: 0.95, duration: 0.2 });
     
     try {
-      let userPrompt = aiPrompt.trim() || 'Generate a fresh, highly creative campaign email for this template.';
+      let userPrompt = 'Generate a fresh, highly creative campaign email for this template.';
       
       if (mode === 'subject') {
-        userPrompt = aiPrompt.trim() 
-          ? `Regenerate ONLY the subject line based on this instruction: ${aiPrompt.trim()}`
-          : 'Regenerate ONLY the subject line for this email to be highly creative.';
+        userPrompt = 'Regenerate ONLY the subject line for this email to be highly creative.';
       } else if (mode === 'title') {
-        userPrompt = aiPrompt.trim()
-          ? `Regenerate ONLY the title based on this instruction: ${aiPrompt.trim()}`
-          : 'Regenerate ONLY the title for this email to be highly creative.';
+        userPrompt = 'Regenerate ONLY the title for this email to be highly creative.';
       } else if (mode === 'body') {
-        userPrompt = aiPrompt.trim()
-          ? `Regenerate ONLY the body based on this instruction: ${aiPrompt.trim()}`
-          : 'Regenerate ONLY the body of this email to be highly creative.';
+        userPrompt = 'Regenerate ONLY the body of this email to be highly creative.';
       }
 
       const payload = {
@@ -362,32 +355,6 @@ export default function EmailCampaignsPage() {
                 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <input
-                      type="text"
-                      placeholder="Orlo Prompt / Topic (Optional)..."
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                      style={{
-                        background: 'rgba(0,0,0,0.5)',
-                        border: '1px solid rgba(235, 215, 63, 0.2)',
-                        borderRadius: '2rem',
-                        color: '#fff',
-                        padding: '0.6rem 1.25rem',
-                        fontSize: '0.825rem',
-                        outline: 'none',
-                        width: '280px',
-                        transition: 'all 0.3s ease',
-                        fontFamily: "'Clash Display', sans-serif"
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#ebd73f';
-                        e.target.style.boxShadow = '0 0 10px rgba(235, 215, 63, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = 'rgba(235, 215, 63, 0.2)';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    />
                     
                     {/* AI Generate Button */}
                     <button
@@ -423,7 +390,7 @@ export default function EmailCampaignsPage() {
                   <div style={{ display: 'flex', gap: '1rem', marginTop: '2px' }}>
                     <button 
                       type="button" 
-                      onClick={() => { setSubject(''); setTitle(''); setBody(''); setAiPrompt(''); }}
+                      onClick={() => { setSubject(''); setTitle(''); setBody(''); }}
                       style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.75rem', cursor: 'pointer', padding: '0 0.5rem', transition: 'color 0.2s' }}
                       onMouseOver={(e) => e.target.style.color = '#ebd73f'}
                       onMouseOut={(e) => e.target.style.color = '#888'}
