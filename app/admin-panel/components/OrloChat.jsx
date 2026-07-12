@@ -322,29 +322,51 @@ export default function OrloChat() {
         }
 
         .speech-bubble {
-          background: rgba(15, 15, 15, 0.7);
-          backdrop-filter: blur(15px);
-          -webkit-backdrop-filter: blur(15px);
+          position: relative;
+          background: rgba(20, 20, 20, 0.85);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(235, 215, 63, 0.3);
           color: #fff;
-          padding: 12px 20px;
-          border-radius: 24px;
-          border-bottom-right-radius: 4px;
-          font-size: 0.9rem;
+          padding: 14px 20px;
+          border-radius: 50%;
+          font-size: 0.95rem;
           font-weight: 500;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(235, 215, 63, 0.1);
-          max-width: 220px;
-          transform-origin: bottom right;
+          line-height: 1.4;
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(235, 215, 63, 0.05);
+          max-width: 250px;
+          transform-origin: 100% 100%;
           opacity: 0;
-          transform: scale(0.8) translateY(10px);
-          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          transform: scale(0.2) translate(40px, 30px);
+          transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
           pointer-events: none;
-          margin-bottom: 15px;
+          margin-bottom: 8px;
+        }
+
+        .speech-bubble::after {
+          content: '';
+          position: absolute;
+          bottom: 12px;
+          right: -9px;
+          width: 0;
+          height: 0;
+          border-style: solid;
+          border-width: 10px 0 10px 10px;
+          border-color: transparent transparent transparent rgba(20, 20, 20, 0.85);
+          filter: drop-shadow(1px 0px 0px rgba(235, 215, 63, 0.3));
+          opacity: 0;
+          transition: opacity 0.3s ease 0.2s;
         }
         
         .speech-bubble.show {
           opacity: 1;
-          transform: scale(1) translateY(0);
+          transform: scale(1) translate(0, 0);
+          border-radius: 24px;
+          border-bottom-right-radius: 6px;
+        }
+
+        .speech-bubble.show::after {
+          opacity: 1;
         }
 
         .copilot-orb {
