@@ -11,21 +11,26 @@ export function getAdminEmails() {
     .filter(Boolean);
 }
 
-export function signSession(email) {
+export function signSession(email, expiresAt) {
   if (!ADMIN_SECRET) throw new Error('ADMIN_SESSION_SECRET is not configured');
   return createHmac('sha256', ADMIN_SECRET)
-    .update(`admin:${email}:${Math.floor(Date.now() / (SESSION_MAX_AGE * 1000))}`)
+    .update(`admin:${email}:${expiresAt}`)
     .digest('hex');
 }
 
 export function verifyCookie(cookieValue) {
   if (!cookieValue || !ADMIN_SECRET) return null;
   try {
-    const lastPipe = cookieValue.lastIndexOf('|');
-    if (lastPipe === -1) return null;
-    const email = cookieValue.slice(0, lastPipe);
-    const receivedHmac = cookieValue.slice(lastPipe + 1);
-    const expectedHmac = signSession(email);
+    const parts = cookieValue.split('|');
+    if (parts.length !== 3) return null;
+    const [email, expiresAtStr, receivedHmac] = parts;
+    const expiresAt = parseInt(expiresAtStr, 10);
+
+    if (isNaN(expiresAt) || Date.now() > expiresAt) {
+      return null;
+    }
+
+    const expectedHmac = signSession(email, expiresAt);
 
     const a = Buffer.from(receivedHmac, 'hex');
     const b = Buffer.from(expectedHmac, 'hex');
@@ -40,8 +45,9 @@ export function verifyCookie(cookieValue) {
 }
 
 export function buildCookieHeader(email) {
-  const hmac = signSession(email);
-  const value = `${email}|${hmac}`;
+  const expiresAt = Date.now() + (SESSION_MAX_AGE * 1000);
+  const hmac = signSession(email, expiresAt);
+  const value = `${email}|${expiresAt}|${hmac}`;
   const flags = [
     `${COOKIE_NAME}=${value}`,
     `Max-Age=${SESSION_MAX_AGE}`,

@@ -16,7 +16,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createHmac, timingSafeEqual } from 'crypto';
+import { verifyCookie } from '@/app/lib/adminAuth';
 import {
   appendInvoiceRow,
   overwriteInvoiceRow,
@@ -24,43 +24,7 @@ import {
   ensureSheetSetup,
 } from '@/app/lib/googleSheets';
 
-const ADMIN_SECRET = process.env.ADMIN_SESSION_SECRET;
-const ADMIN_EMAILS_RAW = process.env.ADMIN_EMAILS || '';
 const COOKIE_NAME = 'dripp_admin_session';
-const SESSION_MAX_AGE = 8 * 60 * 60;
-
-function getAdminEmails() {
-  return ADMIN_EMAILS_RAW.split(',')
-    .map((e) => e.toLowerCase().trim())
-    .filter(Boolean);
-}
-
-function signSession(email) {
-  if (!ADMIN_SECRET) throw new Error('ADMIN_SESSION_SECRET is not configured');
-  return createHmac('sha256', ADMIN_SECRET)
-    .update(`admin:${email}:${Math.floor(Date.now() / (SESSION_MAX_AGE * 1000))}`)
-    .digest('hex');
-}
-
-function verifyCookie(cookieValue) {
-  if (!cookieValue || !ADMIN_SECRET) return null;
-  try {
-    const lastPipe = cookieValue.lastIndexOf('|');
-    if (lastPipe === -1) return null;
-    const email = cookieValue.slice(0, lastPipe);
-    const receivedHmac = cookieValue.slice(lastPipe + 1);
-    const expectedHmac = signSession(email);
-
-    const a = Buffer.from(receivedHmac, 'hex');
-    const b = Buffer.from(expectedHmac, 'hex');
-    if (a.length !== b.length) return null;
-    if (!timingSafeEqual(a, b)) return null;
-    if (!getAdminEmails().includes(email.toLowerCase())) return null;
-    return email;
-  } catch {
-    return null;
-  }
-}
 
 function isAdminAuthenticated(request) {
   const cookieHeader = request.headers.get('cookie') || '';
