@@ -22,7 +22,7 @@ export async function POST(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userPrompt, context, currentDate } = await request.json();
+    const { userPrompt, chatHistory, context, currentDate } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
@@ -36,6 +36,9 @@ export async function POST(request) {
         memoryContext = `\nYou have learned the following rules/preferences from the user. You MUST apply these rules when generating content or taking actions:\n` + memories.map(m => `- ${m.rule_text}`).join('\n');
       }
     }
+    const historyText = (chatHistory || [])
+      .map(msg => `${msg.role === 'ai' ? 'Orlo' : 'User'}: ${msg.text}`)
+      .join('\n');
 
     const systemPrompt = `You are Orlo, the AI Copilot for the Dripp Media Admin Panel.
 Current Date/Time: ${currentDate || new Date().toISOString()}
@@ -90,7 +93,7 @@ JSON Schema to return:
   }
 }
 
-Command: "${userPrompt}"`;
+${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${userPrompt}"`;
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
     

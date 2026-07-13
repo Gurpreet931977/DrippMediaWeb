@@ -252,7 +252,8 @@ export default function OrloChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          userPrompt: userText, 
+          userPrompt: userText,
+          chatHistory: messages,
           context: currentContext, 
           currentDate: new Date().toString() 
         })
