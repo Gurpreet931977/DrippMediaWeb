@@ -261,7 +261,7 @@ export default function OrloChat() {
       
       if (!res.ok) throw new Error(data.error || 'Failed to process command');
 
-      if (data.intent === 'unsupported' || !data.payload) {
+      if (data.intent === 'unsupported' || (!data.payload && data.intent !== 'learn' && data.intent !== 'chat')) {
         setEmotion('disappointed');
         setTimeout(() => setEmotion('idle'), 4000);
       } else {

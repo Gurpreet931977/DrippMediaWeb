@@ -1,5 +1,12 @@
 import { verifyCookie } from '@/app/lib/adminAuth';
+import { createClient } from '@supabase/supabase-js';
 
+const getSupabase = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return null;
+  return createClient(supabaseUrl, supabaseKey);
+};
 export async function POST(request) {
   try {
     const cookieHeader = request.headers.get('cookie') || '';
@@ -21,9 +28,18 @@ export async function POST(request) {
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
     if (!userPrompt) return Response.json({ error: 'Missing prompt' }, { status: 400 });
 
+    const supabase = getSupabase();
+    let memoryContext = '';
+    if (supabase) {
+      const { data: memories } = await supabase.from('orlo_memory').select('rule_text').order('created_at', { ascending: false }).limit(20);
+      if (memories && memories.length > 0) {
+        memoryContext = `\nYou have learned the following rules/preferences from the user. You MUST apply these rules when generating content or taking actions:\n` + memories.map(m => `- ${m.rule_text}`).join('\n');
+      }
+    }
+
     const systemPrompt = `You are Orlo, the AI Copilot for the Dripp Media Admin Panel.
 Current Date/Time: ${currentDate || new Date().toISOString()}
-Current Email Form State: ${JSON.stringify(context || {}, null, 2)}
+Current Email Form State: ${JSON.stringify(context || {}, null, 2)}${memoryContext}
 
 Your job is to read the user's natural language command, determine what action they want to take, and return JSON to PRE-FILL or EDIT the form.
 
@@ -46,6 +62,7 @@ Set "isBroadcast": false, "isExcluding": false, and "specificEmail" to the comma
 Valid Intents:
 1. "email" - The user wants to write, edit, personalize, or schedule an email.
 2. "chat" - General chat, greeting, or answering questions about yourself (even your private life).
+3. "learn" - The user tells you a rule, preference, or feature to remember for the future (e.g. "Always sign off as The Dripp Team", "If I say 'urgent', make it a broadcast").
 
 If the intent is "chat" (or for things you cannot do yet, like creating packages/quotes):
 DO NOT reply negatively (e.g. "I can't do that"). Instead, reply creatively, playfully, or offer a workaround in the Dripp Media style. If they ask about you (Orlo) or your private life, feel free to give them a fun, Dripp-styled backstory or witty response! (e.g. "I spend my nights optimizing conversion rates in my dreams. Just say the word!")
@@ -55,8 +72,9 @@ NEVER use em-dashes ("—") anywhere in your output. Use standard punctuation li
 
 JSON Schema to return:
 {
-  "intent": "email" | "chat",
+  "intent": "email" | "chat" | "learn",
   "replyMessage": "A short, cool, Dripp-styled response acknowledging what you did (e.g., 'I\\'ve drafted that announcement for you. Review it and hit send.') or answering their question.",
+  "learnedRule": "If the intent is 'learn', provide the extracted concise rule to save to memory here. Otherwise, omit.",
   "payload": {
     "subject": "Generated or Updated Subject",
     "title": "Generated or Updated Title",
@@ -93,6 +111,15 @@ Command: "${userPrompt}"`;
 
     const textOutput = data.candidates[0].content.parts[0].text;
     const parsed = JSON.parse(textOutput);
+
+    if (parsed.intent === 'learn' && parsed.learnedRule && supabase) {
+      const { error } = await supabase.from('orlo_memory').insert([{ rule_text: parsed.learnedRule }]);
+      if (error) {
+        console.error('Failed to save memory:', error);
+      } else {
+        if (!parsed.replyMessage) parsed.replyMessage = "I've locked that into my memory banks. I'll remember it for next time.";
+      }
+    }
 
     return Response.json(parsed);
   } catch (error) {
