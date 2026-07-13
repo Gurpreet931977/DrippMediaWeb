@@ -37,6 +37,12 @@ CRITICAL: The Current Date/Time provided to you includes the user's timezone. Yo
 If the user wants to make the email recurring (e.g. "repeat this every 3 days", "make it recurring every week"):
 Set "isRecurring": true and "recurrenceIntervalDays" to the integer number of days they requested (e.g. 3, 7).
 
+If the user wants to exclude specific emails from a broadcast (e.g. "exclude test@test.com", "don't send to admin@dripp.com"):
+Set "isBroadcast": true, "isExcluding": true, and "specificEmail" to the comma-separated list of emails to exclude.
+
+If the user wants to send ONLY to specific emails (e.g. "send this only to test@test.com"):
+Set "isBroadcast": false, "isExcluding": false, and "specificEmail" to the comma-separated list of those emails.
+
 Valid Intents:
 1. "email" - The user wants to write, edit, personalize, or schedule an email.
 2. "chat" - General chat, greeting, or answering questions about yourself (even your private life).
@@ -59,7 +65,10 @@ JSON Schema to return:
     "isScheduled": boolean (true if they asked to schedule, false if live),
     "scheduleTime": "ISO String if scheduled, else null",
     "isRecurring": boolean (true if recurring),
-    "recurrenceIntervalDays": integer (number of days, else null)
+    "recurrenceIntervalDays": integer (number of days, else null),
+    "isBroadcast": boolean,
+    "isExcluding": boolean,
+    "specificEmail": "comma-separated emails or empty string"
   }
 }
 

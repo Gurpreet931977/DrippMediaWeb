@@ -98,7 +98,11 @@ export default function EmailCampaignsPage() {
         if (typeof data.payload.hasEndDate === 'boolean') setHasEndDate(data.payload.hasEndDate);
         if (data.payload.recurrenceEndDate) setRecurrenceEndDate(data.payload.recurrenceEndDate);
         
-        setStatus({ type: 'success', msg: 'Orlo has updated your email template.' });
+        if (typeof data.payload.isBroadcast === 'boolean') setIsBroadcast(data.payload.isBroadcast);
+        if (typeof data.payload.isExcluding === 'boolean') setIsExcluding(data.payload.isExcluding);
+        if (data.payload.specificEmail !== undefined) setSpecificEmail(data.payload.specificEmail);
+        
+        setStatus({ type: 'success', msg: 'Orlo has updated your email settings.' });
       }
     };
     
@@ -108,8 +112,8 @@ export default function EmailCampaignsPage() {
 
   // Expose current context to Copilot
   useEffect(() => {
-    window._drippEmailContext = { subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime, isRecurring, recurrenceIntervalDays, hasEndDate, recurrenceEndDate };
-  }, [subject, title, body, templateType, isBroadcast, isScheduled, scheduleTime, isRecurring, recurrenceIntervalDays, hasEndDate, recurrenceEndDate]);
+    window._drippEmailContext = { subject, title, body, templateType, isBroadcast, isExcluding, specificEmail, isScheduled, scheduleTime, isRecurring, recurrenceIntervalDays, hasEndDate, recurrenceEndDate };
+  }, [subject, title, body, templateType, isBroadcast, isExcluding, specificEmail, isScheduled, scheduleTime, isRecurring, recurrenceIntervalDays, hasEndDate, recurrenceEndDate]);
 
   // Magnetic hover effect for AI button
   const handleAiMouseMove = (e) => {
