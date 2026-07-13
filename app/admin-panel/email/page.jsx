@@ -820,15 +820,15 @@ export default function EmailCampaignsPage() {
                          fontSize: '0.85rem'
                       }}>
                          <div style={{ fontWeight: '600', color: '#ebd73f', marginBottom: '1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Info size={16}/> Campaign Details</div>
-                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Scheduled:</strong> <span>{mounted ? new Date(item.scheduledAt).toLocaleString() : ''}</span></div>
-                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Template:</strong> <span style={{textTransform: 'capitalize'}}>{item.templateType}</span></div>
-                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Audience:</strong> <span>{item.isBroadcast ? 'All Users' : item.specificEmail}</span></div>
-                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Subject:</strong> <span>{item.subject}</span></div>
+                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', gap: '1rem' }}><strong style={{color: '#888', whiteSpace: 'nowrap'}}>Scheduled:</strong> <span style={{textAlign: 'right'}}>{mounted ? new Date(item.scheduledAt).toLocaleString() : ''}</span></div>
+                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', gap: '1rem' }}><strong style={{color: '#888', whiteSpace: 'nowrap'}}>Template:</strong> <span style={{textTransform: 'capitalize', textAlign: 'right'}}>{item.templateType}</span></div>
+                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', gap: '1rem' }}><strong style={{color: '#888', whiteSpace: 'nowrap'}}>Audience:</strong> <span style={{textAlign: 'right'}}>{item.isBroadcast ? 'All Users' : item.specificEmail}</span></div>
+                         <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', gap: '1rem' }}><strong style={{color: '#888', whiteSpace: 'nowrap'}}>Subject:</strong> <span style={{textAlign: 'right'}}>{item.subject}</span></div>
                          {item.isRecurring && (
                            <>
-                             <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Recurs:</strong> <span style={{ color: '#ebd73f' }}>Every {item.recurrenceIntervalDays} days</span></div>
+                             <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', gap: '1rem' }}><strong style={{color: '#888', whiteSpace: 'nowrap'}}>Recurs:</strong> <span style={{ color: '#ebd73f', textAlign: 'right' }}>Every {item.recurrenceIntervalDays} days</span></div>
                              {item.hasEndDate && (
-                               <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}><strong style={{color: '#888'}}>Until:</strong> <span style={{ color: '#ef4444' }}>{mounted ? new Date(item.recurrenceEndDate).toLocaleDateString() : ''}</span></div>
+                               <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', gap: '1rem' }}><strong style={{color: '#888', whiteSpace: 'nowrap'}}>Until:</strong> <span style={{ color: '#ef4444', textAlign: 'right' }}>{mounted ? new Date(item.recurrenceEndDate).toLocaleDateString() : ''}</span></div>
                              )}
                            </>
                          )}
