@@ -53,6 +53,12 @@ export async function GET(request) {
           
         if (!userError && users) {
           recipients = users.filter(u => u.email.includes('@'));
+          
+          // Exclude emails if specific_email has a comma-separated list of exclusions
+          if (campaign.specific_email) {
+            const exclusions = campaign.specific_email.toLowerCase().split(',').map(e => e.trim());
+            recipients = recipients.filter(u => !exclusions.includes(u.email.toLowerCase()));
+          }
         }
       } else if (campaign.specific_email) {
         const manualEmails = campaign.specific_email.split(',').map(e => e.trim()).filter(e => e.includes('@'));

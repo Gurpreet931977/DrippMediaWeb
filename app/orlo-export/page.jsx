@@ -72,7 +72,7 @@ const AdvancedColorPicker = ({ label, colorHex, onChangeHex }) => {
   const inputStyle = { 
     width: '45px', padding: '8px 4px', borderRadius: '8px', 
     border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(0,0,0,0.3)', 
-    color: '#fff', fontSize: '13px', textAlign: 'center', fontFamily: 'sans-serif',
+    color: '#fff', fontSize: '13px', textAlign: 'center', fontFamily: "'Clash Display', sans-serif",
     outline: 'none', transition: 'border-color 0.2s'
   };
   const labelStyle = { fontSize: '11px', color: '#888', display: 'block', textAlign: 'center', marginTop: '6px', fontWeight: '500' };
@@ -364,7 +364,7 @@ export default function OrloExport() {
           cursor: 'default'
         }}
       >
-        <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px', fontFamily: 'sans-serif' }}>
+        <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px', fontFamily: "'Clash Display', sans-serif" }}>
           <h2 style={{ color: '#ebd73f', margin: '0 0 5px 0' }}>Orlo Export Studio</h2>
           <p style={{ color: '#ccc', margin: '0', fontSize: '13px', lineHeight: '1.4' }}>
             Set colors, select an animation, and hide this panel to screen-record freely.
@@ -401,7 +401,7 @@ export default function OrloExport() {
         <AdvancedColorPicker label="Background (Green Screen)" colorHex={bgColor} onChangeHex={setBgColor} />
 
         {/* Animations List */}
-        <h3 style={{ color: '#fff', fontSize: '14px', margin: '10px 0 15px 0', fontFamily: 'sans-serif', fontWeight: '600', letterSpacing: '0.5px' }}>
+        <h3 style={{ color: '#fff', fontSize: '14px', margin: '10px 0 15px 0', fontFamily: "'Clash Display', sans-serif", fontWeight: '600', letterSpacing: '0.5px' }}>
           Animations <span style={{color: '#888', fontWeight: 'normal', fontSize: '12px'}}>(Idle = Breathing)</span>
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', flexShrink: 0, marginBottom: '25px' }}>
@@ -436,7 +436,7 @@ export default function OrloExport() {
           >
               Hide Panel for Recording ➔
           </button>
-          <Link href="/orloai" style={{ padding: '16px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.02)', color: '#fff', textDecoration: 'none', textAlign: 'center', fontFamily: 'sans-serif', fontWeight: '500', transition: 'all 0.2s', letterSpacing: '0.5px' }}>
+          <Link href="/orloai" style={{ padding: '16px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.02)', color: '#fff', textDecoration: 'none', textAlign: 'center', fontFamily: "'Clash Display', sans-serif", fontWeight: '500', transition: 'all 0.2s', letterSpacing: '0.5px' }}>
               Back to Wiki
           </Link>
         </div>
@@ -451,7 +451,7 @@ export default function OrloExport() {
               right: '20px', 
               backgroundColor: 'rgba(0,0,0,0.5)',
               color: 'white', 
-              fontFamily: 'sans-serif', 
+              fontFamily: "'Clash Display', sans-serif", 
               fontSize: '14px',
               padding: '10px 15px',
               borderRadius: '8px',

@@ -1,6 +1,6 @@
 import { verifyCookie } from '@/app/lib/adminAuth';
 import { createClient } from '@supabase/supabase-js';
-import { sendCustomAdminEmail } from '@/app/lib/email';
+import { sendCustomAdminEmailBatch, getCustomAdminEmailPayload } from '@/app/lib/email';
 import { rateLimit } from '@/app/lib/rateLimit';
 
 const limiter = rateLimit({ limit: 10, windowMs: 60_000 }); // 10 campaigns per minute
@@ -71,6 +71,12 @@ export async function POST(request) {
     }
 
     recipients = users.filter(u => u.email.includes('@'));
+    
+    // Exclude emails if specificEmail has a comma-separated list of exclusions
+    if (specificEmail) {
+      const exclusions = specificEmail.toLowerCase().split(',').map(e => e.trim());
+      recipients = recipients.filter(u => !exclusions.includes(u.email.toLowerCase()));
+    }
   } else {
     const manualEmails = specificEmail.split(',').map(e => e.trim()).filter(e => e.includes('@'));
     const { data: users } = await supabase
@@ -97,12 +103,12 @@ export async function POST(request) {
   let successCount = 0;
   let failCount = 0;
 
-  // Process in batches of 20 to avoid overwhelming Resend API rate limits
-  const BATCH_SIZE = 20;
+  // Process using Resend Bulk API (up to 100 per request)
+  const BATCH_SIZE = 100;
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const batch = recipients.slice(i, i + BATCH_SIZE);
     
-    await Promise.all(batch.map(async (recipient) => {
+    const payloads = batch.map(recipient => {
       // Personalize
       const firstName = recipient.name ? recipient.name.split(' ')[0] : 'friend';
       const capFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
@@ -112,14 +118,16 @@ export async function POST(request) {
       const pTitle = title.replace(/{{name}}/gi, capFirstName).replace(/—/g, '-');
       const pBody = body.replace(/{{name}}/gi, capFirstName).replace(/—/g, '-');
 
-      const result = await sendCustomAdminEmail(recipient.email, pSubject, pTitle, pBody, templateType, scheduledAt);
-      if (result.success) {
-        successCount++;
-      } else {
-        console.error(`[admin/email] Failed to send to ${recipient.email}`);
-        failCount++;
-      }
-    }));
+      return getCustomAdminEmailPayload(recipient.email, pSubject, pTitle, pBody, templateType, scheduledAt);
+    });
+
+    const result = await sendCustomAdminEmailBatch(payloads);
+    if (result.success) {
+      successCount += payloads.length;
+    } else {
+      console.error(`[admin/email] Failed to send bulk batch`);
+      failCount += payloads.length;
+    }
   }
 
   return Response.json({

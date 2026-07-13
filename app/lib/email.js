@@ -55,7 +55,7 @@ const getHtmlLayout = (content) => `
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: 'Clash Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 40px 20px;">
     <tr>
       <td align="center">
@@ -257,7 +257,7 @@ export function getCustomAdminEmailPayload(to, subject, title, body, templateTyp
   } else if (templateType === 'primary') {
     // 6. Primary Inbox: Minimal, personal plain-text feel
     innerContent = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 16px; color: #111111; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="font-family: 'Clash Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 16px; color: #111111; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
         ${title ? `<h3 style="font-size: 18px; margin-bottom: 20px; font-weight: 600;">${title}</h3>` : ''}
         ${body.split('\n\n').map(p => `<p style="margin-bottom: 16px;">${p.replace(/\n/g, '<br/>')}</p>`).join('')}
       </div>

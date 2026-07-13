@@ -23,9 +23,10 @@ export default function EmailCampaignsPage() {
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduleTime, setScheduleTime] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
-  const [recurrenceIntervalDays, setRecurrenceIntervalDays] = useState(1);
+  const [recurrenceIntervalDays, setRecurrenceIntervalDays] = useState(7);
   const [hasEndDate, setHasEndDate] = useState(false);
   const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
+  const [isExcluding, setIsExcluding] = useState(false);
   const [showClearAfterSend, setShowClearAfterSend] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState(null);
   const [hoveredScheduleId, setHoveredScheduleId] = useState(null);
@@ -143,7 +144,7 @@ export default function EmailCampaignsPage() {
           body: JSON.stringify({
             id: editingScheduleId,
             isBroadcast,
-            specificEmail,
+            specificEmail: isBroadcast ? (isExcluding ? specificEmail : null) : specificEmail,
             subject,
             title,
             body,
@@ -169,7 +170,7 @@ export default function EmailCampaignsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             isBroadcast,
-            specificEmail,
+            specificEmail: isBroadcast ? (isExcluding ? specificEmail : null) : specificEmail,
             subject,
             title,
             body,
@@ -321,11 +322,52 @@ export default function EmailCampaignsPage() {
                 </button>
               </div>
               {isBroadcast && (
-                <div style={{ marginTop: '1rem', padding: '1.25rem', backgroundColor: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', borderRadius: '0.75rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.875rem' }}>
-                  <AlertCircle size={20} style={{ flexShrink: 0 }} />
-                  <div>
-                    <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Proceed with caution</strong>
-                    This will dispatch the email to every registered user. Ensure your copy is perfect before sending.
+                <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ padding: '1.25rem', backgroundColor: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', borderRadius: '0.75rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.875rem' }}>
+                    <AlertCircle size={20} style={{ flexShrink: 0 }} />
+                    <div>
+                      <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Proceed with caution</strong>
+                      This will dispatch the email to every registered user. Ensure your copy is perfect before sending.
+                    </div>
+                  </div>
+
+                  {/* Exclusion Toggle */}
+                  <div style={{ padding: '1.25rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#fff', fontSize: '1rem', cursor: 'pointer', fontWeight: '500' }} onClick={() => setIsExcluding(!isExcluding)}>Exclude specific emails?</span>
+                      <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0 }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isExcluding} 
+                          onChange={(e) => setIsExcluding(e.target.checked)}
+                          style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }} 
+                        />
+                        <span style={{
+                          position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                          backgroundColor: isExcluding ? '#ebd73f' : 'rgba(255,255,255,0.1)', transition: '.4s', borderRadius: '24px'
+                        }}>
+                          <span style={{
+                            position: 'absolute', height: '18px', width: '18px',
+                            left: isExcluding ? '23px' : '3px', bottom: '3px', backgroundColor: isExcluding ? '#000' : '#888',
+                            transition: '.4s', borderRadius: '50%'
+                          }} />
+                        </span>
+                      </label>
+                    </div>
+
+                    {isExcluding && (
+                      <div style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.25rem' }}>
+                        <label className={styles.label} style={{ marginBottom: '0.5rem', display: 'block' }}>Emails to exclude (comma-separated)</label>
+                        <input
+                          type="email"
+                          multiple
+                          className={styles.input}
+                          placeholder="admin@example.com, test@example.com"
+                          value={specificEmail}
+                          onChange={(e) => setSpecificEmail(e.target.value)}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -647,9 +689,10 @@ export default function EmailCampaignsPage() {
                     setIsScheduled(false);
                     setScheduleTime('');
                     setIsRecurring(false);
-                    setRecurrenceIntervalDays(1);
+                    setRecurrenceIntervalDays(7);
                     setHasEndDate(false);
                     setRecurrenceEndDate('');
+                    setIsExcluding(false);
                     setShowClearAfterSend(false);
                     setEditingScheduleId(null);
                     setStatus({ type: '', msg: '' });
@@ -851,11 +894,12 @@ export default function EmailCampaignsPage() {
                           setBody(item.body);
                           setTemplateType(item.templateType);
                           setIsBroadcast(item.isBroadcast);
+                          setIsExcluding(item.isBroadcast && !!item.specificEmail);
                           setSpecificEmail(item.specificEmail || '');
                           setIsScheduled(true);
                           setScheduleTime(new Date(item.scheduledAt).toISOString().slice(0, 16));
                           setIsRecurring(item.isRecurring || false);
-                          setRecurrenceIntervalDays(item.recurrenceIntervalDays || 1);
+                          setRecurrenceIntervalDays(item.recurrenceIntervalDays || 7);
                           setHasEndDate(item.hasEndDate || false);
                           setRecurrenceEndDate(item.recurrenceEndDate ? new Date(item.recurrenceEndDate).toISOString().slice(0, 16) : '');
                           setEditingScheduleId(item.id);
