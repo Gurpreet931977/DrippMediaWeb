@@ -317,7 +317,7 @@ export default function OrloChat() {
           right: 30px;
           z-index: 9999;
           display: flex;
-          align-items: flex-end;
+          align-items: center;
           gap: 16px;
         }
 
@@ -346,7 +346,8 @@ export default function OrloChat() {
         .speech-bubble::after {
           content: '';
           position: absolute;
-          bottom: 12px;
+          top: 50%;
+          transform: translateY(-50%);
           right: -9px;
           width: 0;
           height: 0;
@@ -375,10 +376,7 @@ export default function OrloChat() {
           border-radius: 50%;
           background: linear-gradient(135deg, #ebd73f, #d4c235);
           box-shadow: 0 0 20px rgba(235, 215, 63, 0.4), inset 0 0 10px rgba(255,255,255,0.5);
-          position: fixed;
-          bottom: 30px;
-          right: 30px;
-          z-index: 9999;
+          position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
