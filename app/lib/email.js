@@ -188,10 +188,7 @@ export async function sendReminderEmail(email, name) {
 }
 
 // ── 5 DISTINCT PREMIUM GOLD LAYOUTS ───────────────────────────────────────────
-export async function sendCustomAdminEmail(to, subject, title, body, templateType = 'announcement', scheduledAt = null) {
-  const resend = getResend();
-  if (!resend) return { success: false, error: 'Misconfigured' };
-
+export function getCustomAdminEmailPayload(to, subject, title, body, templateType = 'announcement', scheduledAt = null) {
   const pBody = body.split('\n\n').map(p => `<p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin-bottom: 20px;">${p.replace(/\n/g, '<br/>')}</p>`).join('');
 
   let innerContent = '';
@@ -267,23 +264,51 @@ export async function sendCustomAdminEmail(to, subject, title, body, templateTyp
     `;
   }
 
+  const html = templateType === 'primary' ? innerContent : getHtmlLayout(innerContent);
+  const payload = {
+    from: SENDER,
+    to,
+    subject,
+    html,
+  };
+  
+  if (scheduledAt) {
+    payload.scheduled_at = scheduledAt;
+  }
+  return payload;
+}
+
+export async function sendCustomAdminEmail(to, subject, title, body, templateType = 'announcement', scheduledAt = null) {
+  const resend = getResend();
+  if (!resend) return { success: false, error: 'Misconfigured' };
+
   try {
-    const html = templateType === 'primary' ? innerContent : getHtmlLayout(innerContent);
-    const payload = {
-      from: SENDER,
-      to,
-      subject,
-      html,
-    };
-    
-    if (scheduledAt) {
-      payload.scheduled_at = scheduledAt;
-    }
-    
+    const payload = getCustomAdminEmailPayload(to, subject, title, body, templateType, scheduledAt);
     const data = await resend.emails.send(payload);
+    if (data.error) {
+      console.error('[email] Resend API Error:', data.error);
+      return { success: false, error: data.error };
+    }
     return { success: true, data };
   } catch (error) {
     console.error('[email] Custom admin email failed:', error);
+    return { success: false, error };
+  }
+}
+
+export async function sendCustomAdminEmailBatch(payloads) {
+  const resend = getResend();
+  if (!resend) return { success: false, error: 'Misconfigured' };
+
+  try {
+    const data = await resend.batch.send(payloads);
+    if (data.error) {
+      console.error('[email] Resend Batch API Error:', data.error);
+      return { success: false, error: data.error };
+    }
+    return { success: true, data };
+  } catch (error) {
+    console.error('[email] Custom admin bulk email failed:', error);
     return { success: false, error };
   }
 }

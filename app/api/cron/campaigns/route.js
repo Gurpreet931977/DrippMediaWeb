@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { sendCustomAdminEmail } from '@/app/lib/email';
+import { sendCustomAdminEmailBatch, getCustomAdminEmailPayload } from '@/app/lib/email';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -81,12 +81,15 @@ export async function GET(request) {
         continue;
       }
 
-      // Send emails in batches of 20
+      // Send emails using Resend Bulk API (up to 100 per request)
       let successCount = 0;
-      const BATCH_SIZE = 20;
+      let failedCount = 0;
+      const BATCH_SIZE = 100;
       for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
         const batch = recipients.slice(i, i + BATCH_SIZE);
-        await Promise.all(batch.map(async (recipient) => {
+        
+        // Build all payloads for this batch
+        const payloads = batch.map(recipient => {
           const firstName = recipient.name ? recipient.name.split(' ')[0] : 'friend';
           const capFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
           
@@ -94,18 +97,23 @@ export async function GET(request) {
           const pTitle = campaign.title.replace(/{{name}}/gi, capFirstName).replace(/—/g, '-');
           const pBody = campaign.body.replace(/{{name}}/gi, capFirstName).replace(/—/g, '-');
 
-          const result = await sendCustomAdminEmail(
+          return getCustomAdminEmailPayload(
             recipient.email, 
             pSubject, 
             pTitle, 
             pBody, 
             campaign.template_type
           );
-          
-          if (result.success) {
-            successCount++;
-          }
-        }));
+        });
+
+        // Send the batch
+        const result = await sendCustomAdminEmailBatch(payloads);
+        
+        if (result.success) {
+          successCount += payloads.length;
+        } else {
+          failedCount += payloads.length;
+        }
       }
 
       // Update campaign status
