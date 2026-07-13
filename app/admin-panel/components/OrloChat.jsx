@@ -323,47 +323,45 @@ export default function OrloChat() {
 
         .speech-bubble {
           position: relative;
-          background: rgba(20, 20, 20, 0.85);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(235, 215, 63, 0.3);
+          background: rgba(10, 10, 10, 0.65);
+          backdrop-filter: blur(30px);
+          -webkit-backdrop-filter: blur(30px);
+          border: 1px solid rgba(235, 215, 63, 0.25);
           color: #fff;
-          padding: 14px 20px;
-          border-radius: 50%;
+          padding: 14px 24px;
+          border-radius: 30px;
           font-size: 0.95rem;
           font-weight: 500;
           line-height: 1.4;
           box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(235, 215, 63, 0.05);
-          max-width: 250px;
-          transform-origin: 100% 100%;
+          max-width: 260px;
+          transform-origin: right center;
           opacity: 0;
-          transform: scale(0.2) translate(40px, 30px);
+          transform: scale(0.6) translateX(30px);
           transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
           pointer-events: none;
-          margin-bottom: 8px;
+          margin-bottom: 0;
         }
 
+        /* Small glowing dot connector instead of a crude triangle tail */
         .speech-bubble::after {
           content: '';
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
-          right: -9px;
-          width: 0;
-          height: 0;
-          border-style: solid;
-          border-width: 10px 0 10px 10px;
-          border-color: transparent transparent transparent rgba(20, 20, 20, 0.85);
-          filter: drop-shadow(1px 0px 0px rgba(235, 215, 63, 0.3));
+          right: -4px;
+          width: 8px;
+          height: 8px;
+          background: #ebd73f;
+          border-radius: 50%;
+          box-shadow: 0 0 10px rgba(235, 215, 63, 0.8), 0 0 20px rgba(235, 215, 63, 0.4);
           opacity: 0;
-          transition: opacity 0.3s ease 0.2s;
+          transition: opacity 0.4s ease 0.3s;
         }
         
         .speech-bubble.show {
           opacity: 1;
-          transform: scale(1) translate(0, 0);
-          border-radius: 24px;
-          border-bottom-right-radius: 6px;
+          transform: scale(1) translateX(0);
         }
 
         .speech-bubble.show::after {
@@ -374,15 +372,22 @@ export default function OrloChat() {
           width: 64px;
           height: 64px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #ebd73f, #d4c235);
-          box-shadow: 0 0 20px rgba(235, 215, 63, 0.4), inset 0 0 10px rgba(255,255,255,0.5);
+          background: rgba(10, 10, 10, 0.7);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(235, 215, 63, 0.4);
+          box-shadow: 0 0 25px rgba(235, 215, 63, 0.2), inset 0 0 15px rgba(235, 215, 63, 0.1);
           position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
           animation: pulseOrb 3s infinite alternate;
+        }
+        
+        .copilot-orb:hover {
+          box-shadow: 0 0 35px rgba(235, 215, 63, 0.4), inset 0 0 20px rgba(235, 215, 63, 0.2);
         }
         
         .copilot-ring {
@@ -909,7 +914,7 @@ export default function OrloChat() {
           style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
         >
           <div className="copilot-ring"></div>
-          <OrloIcon size={32} color="#000" className="orlo-icon-svg" emotion={isOpen ? emotion : (speechBubble ? emotion : (isHovered ? 'excited' : 'idle'))} />
+          <OrloIcon size={32} color="#ebd73f" className="orlo-icon-svg" emotion={isOpen ? emotion : (speechBubble ? emotion : (isHovered ? 'excited' : 'idle'))} />
         </div>
       </div>
     </>
