@@ -334,6 +334,7 @@ export default function OrloChat() {
           font-weight: 500;
           line-height: 1.4;
           box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(235, 215, 63, 0.05);
+          width: fit-content;
           max-width: 260px;
           transform-origin: right center;
           opacity: 0;
