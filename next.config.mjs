@@ -15,7 +15,7 @@ const csp = [
   `style-src 'self' 'unsafe-inline' https://api.fontshare.com https://unicons.iconscout.com`,
   `font-src 'self' https://api.fontshare.com https://cdn.fontshare.com https://*.fontshare.com https://unicons.iconscout.com data:`,
   `img-src 'self' data: blob: https://*.supabase.co https://*.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com`,
-  `connect-src 'self' https://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com https://*.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com blob:`,
+  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com https://*.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com blob:`,
   `media-src 'self' blob:`,
   `worker-src 'self' blob:`,
   `frame-src 'none'`,
