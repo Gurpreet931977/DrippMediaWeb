@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import WordDrop from './multiplayer/WordDrop';
 import DumbDoodles from './multiplayer/DumbDoodles';
+import UndercoverSpy from './multiplayer/UndercoverSpy';
 
 export default function MultiplayerEngine({ activeGame, onBack }) {
   const [roomCode, setRoomCode] = useState('');
@@ -122,6 +123,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
         return <WordDrop channel={channel} isHost={isHost} players={players} playerName={playerName} />;
       case 'dumbdoodles':
         return <DumbDoodles channel={channel} isHost={isHost} players={players} playerName={playerName} />;
+      case 'undercover':
+        return <UndercoverSpy channel={channel} isHost={isHost} players={players} playerName={playerName} />;
       default:
         return (
           <div style={{ color: 'white', textAlign: 'center', paddingTop: '100px' }}>
