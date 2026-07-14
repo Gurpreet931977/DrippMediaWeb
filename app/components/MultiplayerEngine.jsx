@@ -6,6 +6,7 @@ import WordDrop from './multiplayer/WordDrop';
 import DumbDoodles from './multiplayer/DumbDoodles';
 import UndercoverSpy from './multiplayer/UndercoverSpy';
 import BrokenBrief from './multiplayer/BrokenBrief';
+import PriceIsWhat from './multiplayer/PriceIsWhat';
 
 export default function MultiplayerEngine({ activeGame, onBack }) {
   const [roomCode, setRoomCode] = useState('');
@@ -135,6 +136,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
         return <UndercoverSpy channel={channel} isHost={isHost} players={players} playerName={playerName} />;
       case 'brokenbrief':
         return <BrokenBrief channel={channel} isHost={isHost} players={players} playerName={playerName} />;
+      case 'priceiswhat':
+        return <PriceIsWhat channel={channel} isHost={isHost} players={players} playerName={playerName} />;
       default:
         return (
           <div style={{ color: 'white', textAlign: 'center', paddingTop: '100px' }}>
