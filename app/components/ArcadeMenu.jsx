@@ -236,10 +236,10 @@ export default function ArcadeMenu({ onStartGame }) {
               className="mode-slider"
               style={{
                 position: 'absolute',
-                top: '8px', 
-                bottom: '8px',
-                width: 'calc(33.33% - 5px)',
-                left: activeMode === 'arcade' ? '8px' : (activeMode === 'creative' ? 'calc(33.33% + 4px)' : 'calc(66.66% + 0px)'),
+                top: '6px', 
+                bottom: '6px',
+                width: 'calc(33.33% - 4px)',
+                left: activeMode === 'arcade' ? '6px' : (activeMode === 'creative' ? 'calc(33.33% + 2px)' : 'calc(66.66% - 2px)'),
                 background: activeColor,
                 borderRadius: '100px',
                 transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)', // Extreme bounce / lottie feel
@@ -259,10 +259,10 @@ export default function ArcadeMenu({ onStartGame }) {
               onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
               style={{
                 fontFamily: "'Panchang', sans-serif",
-                fontSize: 'clamp(1.2rem, 2.5vw, 2rem)',
-                fontWeight: 800,
+                fontSize: '0.9rem',
+                fontWeight: 700,
                 margin: 0,
-                padding: '12px 30px',
+                padding: '10px 24px',
                 textTransform: 'uppercase',
                 letterSpacing: '2px',
                 lineHeight: 1,
@@ -292,10 +292,10 @@ export default function ArcadeMenu({ onStartGame }) {
               onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
               style={{
                 fontFamily: "'Panchang', sans-serif",
-                fontSize: 'clamp(1.2rem, 2.5vw, 2rem)',
-                fontWeight: 800,
+                fontSize: '0.9rem',
+                fontWeight: 700,
                 margin: 0,
-                padding: '12px 30px',
+                padding: '10px 24px',
                 textTransform: 'uppercase',
                 letterSpacing: '2px',
                 lineHeight: 1,
@@ -325,10 +325,10 @@ export default function ArcadeMenu({ onStartGame }) {
               onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
               style={{
                 fontFamily: "'Panchang', sans-serif",
-                fontSize: 'clamp(1.2rem, 2.5vw, 2rem)',
-                fontWeight: 800,
+                fontSize: '0.9rem',
+                fontWeight: 700,
                 margin: 0,
-                padding: '12px 30px',
+                padding: '10px 24px',
                 textTransform: 'uppercase',
                 letterSpacing: '2px',
                 lineHeight: 1,
@@ -410,7 +410,7 @@ export default function ArcadeMenu({ onStartGame }) {
         <div className="carousel-container" style={{
           position: 'relative',
           width: '100%',
-          height: '420px',
+          height: '460px',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
@@ -443,7 +443,7 @@ export default function ArcadeMenu({ onStartGame }) {
 
             // ultra smooth bouncy transition when not dragging
             const baseTransition = isDragging 
-              ? 'none' 
+              ? 'transform 0.1s ease-out, opacity 0.1s ease-out' 
               : 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
 
             return (
@@ -452,7 +452,7 @@ export default function ArcadeMenu({ onStartGame }) {
                 style={{
                   position: 'absolute',
                   width: '320px',
-                  height: '340px',
+                  height: '380px',
                   transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                   transition: baseTransition,
                   zIndex: zIndex,
@@ -594,8 +594,9 @@ export default function ArcadeMenu({ onStartGame }) {
                       e.stopPropagation();
                       if (isActive) {
                         if (activeMode === 'multiplayer') {
-                           if (!isPremium && !isDeveloper) {
-                              alert("PREMIUM REQUIRED: Multiplayer games are exclusively for Premium members. (Upgrade UI coming soon!)");
+                           if (!isDeveloper) {
+                              setPendingGameId(game.id);
+                              setShowPasswordModal(true);
                            } else {
                               onStartGame(game.id);
                            }
@@ -655,7 +656,7 @@ export default function ArcadeMenu({ onStartGame }) {
                     }}
                   >
                     {activeMode === 'multiplayer' 
-                      ? (isPremium || isDeveloper ? 'PLAY NOW' : 'LOCKED (PREMIUM)') 
+                      ? (isDeveloper ? 'PLAY NOW' : 'LOCKED (DEV)') 
                       : (!isDeveloper && game.id !== 'dripp' && game.id !== 'breaker' ? 'LOCKED (DEV)' : 'PLAY NOW')}
                   </button>
                 </div>

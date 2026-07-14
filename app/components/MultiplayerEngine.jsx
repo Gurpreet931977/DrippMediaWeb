@@ -92,13 +92,20 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
       .on('broadcast', { event: 'game_start' }, (payload) => {
         setGameState('playing');
       })
-      .subscribe(async (status) => {
+      .subscribe(async (status, err) => {
         if (status === 'SUBSCRIBED') {
-          await roomChannel.track({ name: playerName, isHost: host });
+          try {
+             await roomChannel.track({ name: playerName, isHost: host });
+          } catch(e) { console.error(e); }
           setGameState('lobby');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Channel error', err);
+          alert('Failed to connect to multiplayer server. Please try again.');
         }
       });
 
+    // Optimistic UI update to prevent button from feeling dead
+    setGameState('lobby');
     setChannel(roomChannel);
   };
 
@@ -142,28 +149,38 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
     return (
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', backgroundColor: '#111', color: '#fff', fontFamily: "'Panchang', sans-serif",
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100
+        height: '100vh', backgroundColor: '#050505', color: '#fff', fontFamily: "'Clash Display', sans-serif",
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
+        overflow: 'hidden'
       }}>
-        <h1 style={{ color: '#ebd73f', fontSize: '3rem', margin: '0 0 10px 0' }}>ROOM: {roomCode}</h1>
-        <p style={{ letterSpacing: '4px', opacity: 0.7, marginBottom: '40px' }}>WAITING FOR PLAYERS</p>
+        <div style={{
+          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          width: '80vw', height: '80vh', background: 'radial-gradient(circle at center, rgba(235, 215, 63, 0.15), transparent 70%)',
+          pointerEvents: 'none', filter: 'blur(60px)'
+        }} />
+        <h1 style={{ color: '#ebd73f', fontSize: '4rem', margin: '0 0 15px 0', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 30px rgba(235,215,63,0.5)' }}>ROOM: {roomCode}</h1>
+        <p style={{ letterSpacing: '6px', opacity: 0.8, marginBottom: '50px', fontSize: '1.2rem', textTransform: 'uppercase' }}>WAITING FOR AGENTS</p>
 
         <div style={{ 
-          background: 'rgba(255,255,255,0.05)', padding: '30px', borderRadius: '16px', 
-          width: '100%', maxWidth: '400px', border: '1px solid rgba(255,255,255,0.1)'
+          background: 'rgba(255,255,255,0.03)', padding: '40px', borderRadius: '24px', 
+          width: '100%', maxWidth: '500px', border: '1px solid rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          boxShadow: '0 30px 60px rgba(0,0,0,0.8)'
         }}>
-          <h3 style={{ margin: '0 0 20px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
-            PLAYERS ({players.length})
+          <h3 style={{ margin: '0 0 25px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '15px', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: '#fff' }}>
+            CONNECTED ({players.length})
           </h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, minHeight: '100px' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, minHeight: '150px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {players.map((p, i) => (
               <li key={i} style={{ 
-                padding: '10px', background: 'rgba(255,255,255,0.1)', marginBottom: '8px', 
-                borderRadius: '8px', display: 'flex', justifyContent: 'space-between' 
+                padding: '15px 20px', background: 'rgba(255,255,255,0.05)', 
+                borderRadius: '12px', display: 'flex', justifyContent: 'space-between',
+                alignItems: 'center', fontSize: '1.1rem', letterSpacing: '1px'
               }}>
-                {p} {isHost && p === playerName ? <span style={{color: '#3f3'}}>[HOST]</span> : ''}
+                {p} {isHost && p === playerName ? <span style={{color: '#ebd73f', fontSize: '0.9rem', fontFamily: "'Panchang', sans-serif"}}>HOST</span> : ''}
               </li>
             ))}
+            {players.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center', fontStyle: 'italic' }}>Connecting...</p>}
           </ul>
         </div>
 
@@ -171,14 +188,18 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           <button 
             onClick={startGame}
             style={{ 
-              marginTop: '40px', padding: '15px 40px', background: '#ebd73f', color: '#000', 
-              border: 'none', borderRadius: '30px', fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer' 
+              marginTop: '50px', padding: '20px 60px', background: '#ebd73f', color: '#000', 
+              border: 'none', borderRadius: '40px', fontSize: '1.3rem', fontWeight: 'bold', cursor: 'pointer',
+              fontFamily: "'Panchang', sans-serif", boxShadow: '0 10px 30px rgba(235, 215, 63, 0.4)',
+              transition: 'transform 0.2s, box-shadow 0.2s'
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 15px 40px rgba(235, 215, 63, 0.6)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(235, 215, 63, 0.4)'; }}
           >
-            START GAME
+            START PROTOCOL
           </button>
         ) : (
-          <p style={{ marginTop: '40px', opacity: 0.5 }}>Waiting for host to start...</p>
+          <p style={{ marginTop: '50px', opacity: 0.5, fontSize: '1.2rem', letterSpacing: '2px' }}>Awaiting host initialization...</p>
         )}
       </div>
     );
