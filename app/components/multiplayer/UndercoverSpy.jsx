@@ -60,11 +60,9 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
   // Listen for syncs
   useEffect(() => {
     if (!channel) return;
-    const sub = channel.on('broadcast', { event: 'sync_state' }, ({ payload }) => {
+    channel.on('broadcast', { event: 'sync_state' }, ({ payload }) => {
       setGameState(payload);
-    }).subscribe();
-
-    return () => { channel.removeChannel(sub); }
+    });
   }, [channel]);
 
   // Derived state

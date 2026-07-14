@@ -51,7 +51,7 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
 
   // Sync incoming state
   useEffect(() => {
-    const sub = channel.on('broadcast', { event: 'game_sync' }, ({ payload }) => {
+    channel.on('broadcast', { event: 'game_sync' }, ({ payload }) => {
       setGameState(prev => ({ ...prev, ...payload }));
       
       // Reset local inputs on new round
@@ -59,9 +59,7 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
         setMyGuess('');
         setLockedIn(false);
       }
-    }).subscribe();
-
-    return () => { channel.removeChannel(sub); };
+    });
   }, [channel, gameState.round]);
 
   const updateState = (newState) => {
@@ -101,7 +99,7 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
   useEffect(() => {
     if (!isHost) return;
     
-    const sub = channel.on('broadcast', { event: 'submit_guess' }, ({ payload }) => {
+    channel.on('broadcast', { event: 'submit_guess' }, ({ payload }) => {
       const { player, amount } = payload;
       setGameState(prev => {
         const newGuesses = { ...prev.guesses, [player]: amount };
@@ -118,9 +116,7 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
         }
         return nextState;
       });
-    }).subscribe();
-
-    return () => { channel.removeChannel(sub); };
+    });
   }, [isHost, channel, players]);
 
   // Game flow controllers (Host Only)

@@ -65,7 +65,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
   useEffect(() => {
     if (!channel) return;
 
-    const sub = channel
+    channel
       .on('broadcast', { event: 'sync_state' }, ({ payload }) => {
         setGameState(payload);
       })
@@ -95,9 +95,6 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
         const canvas = canvasRef.current;
         if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
       });
-      
-    sub.subscribe();
-    return () => { channel.removeChannel(sub); }
   }, [channel]);
 
   // Timer Logic (Host Only)
@@ -131,9 +128,17 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+      const initSize = () => {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+        }
+      };
+      initSize();
+      // Use a timeout to ensure layout completes if it was 0 initially
+      setTimeout(initSize, 100);
+      
       const ctx = canvas.getContext('2d');
       ctxRef.current = ctx;
     }
@@ -158,6 +163,10 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
 
   // Drawing Handlers
   const getMousePos = (e) => {
+    const nativeEvent = e.nativeEvent;
+    if (nativeEvent && nativeEvent.offsetX !== undefined) {
+      return { x: nativeEvent.offsetX, y: nativeEvent.offsetY };
+    }
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
