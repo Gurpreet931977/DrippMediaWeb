@@ -8,6 +8,7 @@ export const metadata = {
     default: 'Dripp Media | Digital Branding & Creative Agency',
     template: '%s | Dripp Media'
   },
+  description: 'Dripp Media is a digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
   keywords: [
     // Core Brand Identifiers
     'Dripp Media', 'drip media', 'dripmedia', 'drippmedia.com', 'Dripp Agency', 'The Dripp Agency',
