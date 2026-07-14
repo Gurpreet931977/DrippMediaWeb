@@ -1,12 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { Target, ShieldAlert, FileText, CheckCircle2 } from 'lucide-react';
 
 const LOCATIONS = [
   "HOSPITAL", "SUBMARINE", "SPACE STATION", "POLICE STATION", 
   "BANK", "SCHOOL", "AIRPORT", "PIRATE SHIP", "CASINO", "RESTAURANT",
   "SUPERMARKET", "ZOO", "MUSEUM", "LIBRARY", "GYM"
 ];
+
+// Emojis for avatars
+const AVATARS = ['🕵️', '🥷', '🕴️', '👩‍🎤', '🧑‍🚀', '👨‍✈️', '👮‍♀️', '🧛‍♂️', '🧟‍♀️', '🦸‍♂️'];
 
 export default function UndercoverSpy({ channel, isHost, players, playerName }) {
   const [gameState, setGameState] = useState({
@@ -17,7 +21,8 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
     wordsSubmitted: [], 
     votes: {}, // { 'Player1': 2 }
     voters: [], // ['Player2', 'Player3']
-    winner: '' // 'agents' or 'spy'
+    winner: '', // 'agents' or 'spy'
+    avatars: {}
   });
 
   const [inputWord, setInputWord] = useState('');
@@ -29,7 +34,11 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
       const loc = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
       
       const initialVotes = {};
-      players.forEach(p => initialVotes[p] = 0);
+      const initialAvatars = {};
+      players.forEach(p => {
+        initialVotes[p] = 0;
+        initialAvatars[p] = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+      });
 
       const initialState = {
         status: 'interrogation',
@@ -39,7 +48,8 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
         wordsSubmitted: [],
         votes: initialVotes,
         voters: [],
-        winner: ''
+        winner: '',
+        avatars: initialAvatars
       };
 
       channel.send({ type: 'broadcast', event: 'sync_state', payload: initialState });
@@ -50,9 +60,11 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
   // Listen for syncs
   useEffect(() => {
     if (!channel) return;
-    channel.on('broadcast', { event: 'sync_state' }, (payload) => {
-      setGameState(payload.payload);
-    });
+    const sub = channel.on('broadcast', { event: 'sync_state' }, ({ payload }) => {
+      setGameState(payload);
+    }).subscribe();
+
+    return () => { channel.removeChannel(sub); }
   }, [channel]);
 
   // Derived state
@@ -66,7 +78,6 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
     const newWords = [...gameState.wordsSubmitted, { player: playerName, word: inputWord.trim().toUpperCase() }];
     
     // Check if interrogation is over (everyone went twice)
-    // If not, pass turn to next player
     const isInterrogationOver = newWords.length >= players.length * 2;
     
     const newState = {
@@ -112,8 +123,7 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
 
       newState.status = 'gameover';
       if (isTie) {
-         // Tie goes to the spy
-         newState.winner = 'spy';
+         newState.winner = 'spy'; // Tie goes to the spy
       } else if (eliminatedPlayer === gameState.spyPlayer) {
          newState.winner = 'agents';
       } else {
@@ -126,157 +136,255 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
   };
 
   if (gameState.status === 'starting') {
-    return <div style={{ color: 'white', textAlign: 'center', marginTop: '100px' }}>Distributing Briefcases...</div>;
+    return <div style={{ color: 'white', textAlign: 'center', marginTop: '100px', fontFamily: "'Panchang', sans-serif" }}>DISTRIBUTING BRIEFCASES...</div>;
   }
 
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', 
-      height: '100vh', backgroundColor: '#050505', color: '#fff', fontFamily: "'Clash Display', sans-serif",
-      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
-      padding: '40px'
-    }}>
-      
-      {/* Top Banner: Role & Secret */}
-      <div style={{ 
-          background: amISpy ? 'rgba(255, 51, 51, 0.1)' : 'rgba(51, 204, 255, 0.1)',
-          border: `1px solid ${amISpy ? '#ff3333' : '#33ccff'}`,
-          padding: '20px 40px', borderRadius: '12px', textAlign: 'center',
-          boxShadow: `0 0 30px ${amISpy ? 'rgba(255,51,51,0.2)' : 'rgba(51,204,255,0.2)'}`,
-          marginBottom: '40px', width: '100%', maxWidth: '600px'
-      }}>
-        <h2 style={{ margin: '0 0 10px 0', opacity: 0.7, letterSpacing: '2px' }}>YOUR ROLE</h2>
-        <h1 style={{ margin: 0, color: amISpy ? '#ff3333' : '#33ccff', fontFamily: "'Panchang', sans-serif" }}>
-          {amISpy ? 'THE SPY' : 'AGENT'}
-        </h1>
-        <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(0,0,0,0.5)', borderRadius: '8px' }}>
-          {amISpy ? (
-             <p style={{ margin: 0, color: '#ffcc00' }}>You do not know the location. Blend in and don't get caught!</p>
-          ) : (
-             <p style={{ margin: 0 }}>Location: <strong style={{ color: '#ebd73f', fontSize: '1.2rem', letterSpacing: '2px' }}>{gameState.location}</strong></p>
-          )}
+    <div style={styles.background}>
+      <div style={styles.dashboard}>
+
+        {/* TOP BANNER: Role Reveal */}
+        <div style={{ ...styles.glassPanel, width: '100%', padding: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: `1px solid ${amISpy ? 'rgba(255, 51, 51, 0.5)' : 'rgba(51, 204, 255, 0.5)'}`, boxShadow: `0 0 40px ${amISpy ? 'rgba(255, 51, 51, 0.2)' : 'rgba(51, 204, 255, 0.1)'}` }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', opacity: 0.6, fontSize: '0.9rem', letterSpacing: '4px', textTransform: 'uppercase' }}>YOUR IDENTITY</h2>
+            <h1 style={{ margin: 0, fontSize: '2.5rem', fontFamily: "'Panchang', sans-serif", color: amISpy ? '#ff3333' : '#33ccff', textShadow: `0 0 20px ${amISpy ? 'rgba(255,51,51,0.5)' : 'rgba(51,204,255,0.5)'}` }}>
+              {amISpy ? 'THE SPY' : 'AGENT'}
+            </h1>
+          </div>
+          
+          <div style={{ padding: '20px', background: 'rgba(0,0,0,0.4)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            {amISpy ? <ShieldAlert size={40} color="#ff3333" /> : <Target size={40} color="#33ccff" />}
+            <div>
+              {amISpy ? (
+                <>
+                  <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>OBJECTIVE</p>
+                  <p style={{ margin: 0, color: '#ffcc00', fontWeight: 'bold' }}>Blend in. Do not get caught.</p>
+                </>
+              ) : (
+                <>
+                  <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>CURRENT LOCATION</p>
+                  <p style={{ margin: 0, color: '#fff', fontWeight: 'bold', fontSize: '1.2rem', letterSpacing: '2px' }}>{gameState.location}</p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* MAIN GAME AREA */}
+        <div style={{ display: 'flex', gap: '20px', flex: 1, marginTop: '20px' }}>
+          
+          {/* PLAYERS LIST (LEFT) */}
+          <div style={{ ...styles.glassPanel, width: '300px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <h3 style={{ margin: 0, fontFamily: "'Panchang', sans-serif", fontSize: '1.1rem', letterSpacing: '1px' }}>SUSPECTS</h3>
+            </div>
+            <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {players.map((p, i) => {
+                const isActive = gameState.status === 'interrogation' && i === gameState.currentTurnIndex;
+                const isMe = p === playerName;
+                return (
+                  <div key={i} style={{
+                    padding: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '15px',
+                    background: isActive ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
+                    border: isActive ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
+                    boxShadow: isActive ? '0 0 20px rgba(255,255,255,0.05)' : 'none',
+                    transition: 'all 0.3s'
+                  }}>
+                    <span style={{ fontSize: '1.5rem' }}>{gameState.avatars[p] || '👤'}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: isActive ? 'bold' : 'normal', color: '#fff' }}>
+                        {p} {isMe && <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>(You)</span>}
+                      </span>
+                      {isActive && <span style={{ fontSize: '0.7rem', color: '#ebd73f', letterSpacing: '1px' }}>SPEAKING...</span>}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* ACTION PANEL (RIGHT) */}
+          <div style={{ ...styles.glassPanel, flex: 1, display: 'flex', flexDirection: 'column' }}>
+            
+            {/* 1. INTERROGATION PHASE */}
+            {gameState.status === 'interrogation' && (
+              <>
+                <div style={{ padding: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                  <h2 style={{ margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", color: isMyTurn ? '#ebd73f' : '#fff' }}>
+                    {isMyTurn ? "IT'S YOUR TURN" : `WAITING FOR ${players[gameState.currentTurnIndex]}...`}
+                  </h2>
+                  <p style={{ margin: 0, opacity: 0.6 }}>Give a one-word clue about the location.</p>
+                </div>
+                
+                <div style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
+                    {gameState.wordsSubmitted.map((item, i) => (
+                      <div key={i} style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>{item.player} said:</span>
+                        <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: '#fff' }}>"{item.word}"</span>
+                      </div>
+                    ))}
+                    {gameState.wordsSubmitted.length === 0 && (
+                      <div style={{ gridColumn: '1 / -1', textAlign: 'center', opacity: 0.4, padding: '40px' }}>
+                        <FileText size={48} style={{ margin: '0 auto 20px auto' }} />
+                        <p>The dossier is empty. Awaiting first clue.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ padding: '30px', background: 'rgba(0,0,0,0.3)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <form onSubmit={submitWord} style={{ display: 'flex', gap: '15px' }}>
+                    <input 
+                      type="text" 
+                      value={inputWord}
+                      onChange={e => setInputWord(e.target.value)}
+                      disabled={!isMyTurn}
+                      placeholder={isMyTurn ? "Type your clue here..." : "Wait for your turn..."}
+                      maxLength={20}
+                      style={{
+                        flex: 1, padding: '20px', background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)', color: '#fff',
+                        borderRadius: '16px', fontSize: '1.2rem', outline: 'none', transition: 'all 0.3s',
+                        fontFamily: "'Clash Display', sans-serif"
+                      }}
+                    />
+                    <button 
+                      type="submit"
+                      disabled={!isMyTurn || !inputWord.trim()}
+                      style={{
+                        padding: '0 40px', background: isMyTurn ? '#ebd73f' : 'rgba(255,255,255,0.1)', color: isMyTurn ? '#000' : 'rgba(255,255,255,0.3)',
+                        border: 'none', borderRadius: '16px', fontFamily: "'Panchang', sans-serif", fontSize: '1rem', cursor: isMyTurn ? 'pointer' : 'default',
+                        transition: 'all 0.3s'
+                      }}
+                    >
+                      SUBMIT
+                    </button>
+                  </form>
+                </div>
+              </>
+            )}
+
+            {/* 2. VOTING PHASE */}
+            {gameState.status === 'voting' && (
+              <div style={{ padding: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, justifyContent: 'center' }}>
+                <h2 style={{ margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", color: '#ff3333', fontSize: '2.5rem' }}>VOTING PHASE</h2>
+                <p style={{ margin: '0 0 40px 0', opacity: 0.7, fontSize: '1.2rem' }}>Who is the Spy? Cast your vote.</p>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', width: '100%', maxWidth: '800px' }}>
+                  {players.map(p => {
+                    const hasVoted = gameState.voters.includes(playerName);
+                    return (
+                      <button 
+                        key={p}
+                        onClick={() => castVote(p)}
+                        disabled={hasVoted}
+                        style={{
+                          padding: '25px', background: hasVoted ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.08)',
+                          border: '1px solid rgba(255,255,255,0.1)', color: '#fff',
+                          borderRadius: '16px', cursor: hasVoted ? 'default' : 'pointer',
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px',
+                          transition: 'all 0.3s'
+                        }}
+                      >
+                        <span style={{ fontSize: '3rem' }}>{gameState.avatars[p] || '👤'}</span>
+                        <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem' }}>{p} {p === playerName ? '(YOU)' : ''}</span>
+                        
+                        {hasVoted ? (
+                           <div style={{ padding: '8px 16px', background: 'rgba(235, 215, 63, 0.1)', color: '#ebd73f', borderRadius: '30px', fontWeight: 'bold' }}>
+                             {gameState.votes[p] || 0} Votes
+                           </div>
+                        ) : (
+                           <div style={{ opacity: 0.5, fontSize: '0.9rem' }}>Click to Vote</div>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 3. GAMEOVER PHASE */}
+            {gameState.status === 'gameover' && (
+              <div style={{ padding: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, justifyContent: 'center' }}>
+                <h1 style={{ 
+                  margin: '0 0 20px 0', fontSize: '4rem', fontFamily: "'Panchang', sans-serif", 
+                  color: gameState.winner === 'spy' ? '#ff3333' : '#33ccff',
+                  textShadow: `0 0 40px ${gameState.winner === 'spy' ? 'rgba(255,51,51,0.5)' : 'rgba(51,204,255,0.5)'}`
+                }}>
+                  {gameState.winner === 'spy' ? 'THE SPY ESCAPED!' : 'THE SPY IS CAUGHT!'}
+                </h1>
+                
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '40px' }}>
+                  <div style={{ padding: '30px', background: 'rgba(255,255,255,0.05)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center', minWidth: '250px' }}>
+                    <p style={{ margin: '0 0 10px 0', opacity: 0.5, letterSpacing: '2px' }}>LOCATION WAS</p>
+                    <p style={{ margin: 0, fontFamily: "'Panchang', sans-serif", fontSize: '1.5rem', color: '#fff' }}>{gameState.location}</p>
+                  </div>
+                  <div style={{ padding: '30px', background: 'rgba(255,51,51,0.1)', borderRadius: '24px', border: '1px solid rgba(255,51,51,0.3)', textAlign: 'center', minWidth: '250px' }}>
+                    <p style={{ margin: '0 0 10px 0', opacity: 0.8, letterSpacing: '2px', color: '#ff3333' }}>THE SPY WAS</p>
+                    <p style={{ margin: 0, fontFamily: "'Panchang', sans-serif", fontSize: '1.5rem', color: '#fff' }}>{gameState.spyPlayer}</p>
+                  </div>
+                </div>
+
+                {isHost && (
+                  <button 
+                    onClick={() => {
+                      const spy = players[Math.floor(Math.random() * players.length)];
+                      const loc = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
+                      const initialVotes = {};
+                      players.forEach(p => initialVotes[p] = 0);
+                      const initialState = {
+                        status: 'interrogation', spyPlayer: spy, location: loc,
+                        currentTurnIndex: 0, wordsSubmitted: [], votes: initialVotes,
+                        voters: [], winner: '', avatars: gameState.avatars
+                      };
+                      channel.send({ type: 'broadcast', event: 'sync_state', payload: initialState });
+                      setGameState(initialState);
+                    }}
+                    style={{
+                      padding: '20px 60px', background: '#ebd73f', color: '#000',
+                      border: 'none', borderRadius: '40px', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', cursor: 'pointer',
+                      transition: 'transform 0.2s', boxShadow: '0 10px 30px rgba(235, 215, 63, 0.3)'
+                    }}
+                  >
+                    PLAY AGAIN
+                  </button>
+                )}
+              </div>
+            )}
+            
+          </div>
         </div>
       </div>
-
-      {/* Main Content Area */}
-      {gameState.status === 'interrogation' && (
-        <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-          
-          <h3 style={{ textAlign: 'center', color: '#ebd73f', fontFamily: "'Panchang', sans-serif", marginBottom: '20px' }}>
-            {isMyTurn ? "IT'S YOUR TURN" : `WAITING FOR ${players[gameState.currentTurnIndex]}...`}
-          </h3>
-
-          <div style={{ 
-             flex: 1, overflowY: 'auto', background: 'rgba(255,255,255,0.02)', 
-             borderRadius: '12px', padding: '20px', marginBottom: '20px',
-             border: '1px solid rgba(255,255,255,0.05)'
-          }}>
-            {gameState.wordsSubmitted.map((item, i) => (
-              <div key={i} style={{ 
-                  padding: '10px 15px', background: 'rgba(255,255,255,0.05)', 
-                  marginBottom: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between'
-              }}>
-                <span style={{ opacity: 0.7 }}>{item.player}</span>
-                <span style={{ fontWeight: 'bold', letterSpacing: '1px' }}>{item.word}</span>
-              </div>
-            ))}
-            {gameState.wordsSubmitted.length === 0 && (
-               <p style={{ textAlign: 'center', opacity: 0.5 }}>No words submitted yet.</p>
-            )}
-          </div>
-
-          <form onSubmit={submitWord} style={{ display: 'flex' }}>
-            <input 
-              type="text" 
-              value={inputWord}
-              onChange={e => setInputWord(e.target.value)}
-              disabled={!isMyTurn}
-              placeholder={isMyTurn ? "Type a descriptive word..." : "Waiting..."}
-              maxLength={20}
-              style={{
-                flex: 1, padding: '15px', background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.2)', color: '#fff',
-                borderRadius: '8px 0 0 8px', fontSize: '1.1rem', outline: 'none'
-              }}
-            />
-            <button 
-              type="submit"
-              disabled={!isMyTurn}
-              style={{
-                padding: '0 30px', background: isMyTurn ? '#ebd73f' : '#333', color: '#000',
-                border: 'none', borderRadius: '0 8px 8px 0', fontWeight: 'bold', cursor: isMyTurn ? 'pointer' : 'default'
-              }}
-            >
-              SUBMIT
-            </button>
-          </form>
-        </div>
-      )}
-
-      {gameState.status === 'voting' && (
-        <div style={{ width: '100%', maxWidth: '600px', textAlign: 'center' }}>
-          <h2 style={{ color: '#ff3333', fontFamily: "'Panchang', sans-serif" }}>VOTING PHASE</h2>
-          <p style={{ opacity: 0.7, marginBottom: '30px' }}>Who is the Spy? Cast your vote.</p>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {players.map(p => (
-               <button 
-                 key={p}
-                 onClick={() => castVote(p)}
-                 disabled={gameState.voters.includes(playerName)}
-                 style={{
-                    padding: '15px 20px', background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)', color: '#fff',
-                    borderRadius: '8px', fontSize: '1.1rem', cursor: gameState.voters.includes(playerName) ? 'default' : 'pointer',
-                    display: 'flex', justifyContent: 'space-between'
-                 }}
-               >
-                 <span>{p} {p === playerName ? '(You)' : ''}</span>
-                 {gameState.voters.includes(playerName) && (
-                    <span style={{ color: '#ebd73f' }}>{gameState.votes[p] || 0} Votes</span>
-                 )}
-               </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {gameState.status === 'gameover' && (
-        <div style={{ width: '100%', maxWidth: '600px', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '3rem', fontFamily: "'Panchang', sans-serif", color: gameState.winner === 'spy' ? '#ff3333' : '#33ccff' }}>
-            {gameState.winner === 'spy' ? 'THE SPY WINS!' : 'AGENTS WIN!'}
-          </h1>
-          <div style={{ margin: '30px 0', padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
-            <p style={{ fontSize: '1.2rem', marginBottom: '10px' }}>The location was: <strong style={{ color: '#ebd73f' }}>{gameState.location}</strong></p>
-            <p style={{ fontSize: '1.2rem' }}>The Spy was: <strong style={{ color: '#ff3333' }}>{gameState.spyPlayer}</strong></p>
-          </div>
-          
-          {isHost && (
-             <button 
-               onClick={() => {
-                  const spy = players[Math.floor(Math.random() * players.length)];
-                  const loc = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
-                  const initialVotes = {};
-                  players.forEach(p => initialVotes[p] = 0);
-                  const initialState = {
-                    status: 'interrogation', spyPlayer: spy, location: loc,
-                    currentTurnIndex: 0, wordsSubmitted: [], votes: initialVotes,
-                    voters: [], winner: ''
-                  };
-                  channel.send({ type: 'broadcast', event: 'sync_state', payload: initialState });
-                  setGameState(initialState);
-               }}
-               style={{
-                  padding: '15px 40px', background: '#ebd73f', color: '#000',
-                  border: 'none', borderRadius: '30px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer'
-               }}
-             >
-               PLAY AGAIN
-             </button>
-          )}
-        </div>
-      )}
-
     </div>
   );
 }
+
+const styles = {
+  background: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
+    backgroundColor: '#050505', 
+    backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(255, 51, 51, 0.1) 0%, transparent 50%), radial-gradient(circle at 0% 100%, rgba(51, 204, 255, 0.05) 0%, transparent 50%)',
+    fontFamily: "'Clash Display', sans-serif",
+    color: '#fff',
+    overflow: 'hidden'
+  },
+  dashboard: {
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '30px',
+    height: '100%',
+    boxSizing: 'border-box',
+    maxWidth: '1600px',
+    margin: '0 auto'
+  },
+  glassPanel: {
+    background: 'rgba(20, 20, 20, 0.65)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    borderRadius: '24px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+    overflow: 'hidden'
+  }
+};

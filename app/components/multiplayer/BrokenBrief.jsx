@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-
-// Phase 1: Write Initial Brief
-// Phase 2: Draw the Brief
-// Phase 3: Guess the Drawing (Write Brief)
-// Loop Phase 2 & 3 until chains reach original owners
-// Phase 4: Reveal Chains
+import { PenTool, Keyboard, Eye, ChevronRight, CheckCircle2 } from 'lucide-react';
 
 export default function BrokenBrief({ channel, isHost, players, playerName }) {
   const [gameState, setGameState] = useState({
@@ -15,7 +10,7 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
     timer: 0,
     chains: {}, // { 'player1': [{ author: 'p1', type: 'text', content: 'hello' }] }
     currentAssignments: {}, // { 'player2': 'player1' } -> p2 is working on p1's chain
-    readyPlayers: [], // who has submitted this round
+    readyPlayers: [], 
     revealIndex: 0
   });
 
@@ -54,14 +49,13 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
   // Sync state
   useEffect(() => {
     if (!channel) return;
-    channel.on('broadcast', { event: 'sync_state' }, (payload) => {
-      setGameState(payload.payload);
+    const sub = channel.on('broadcast', { event: 'sync_state' }, ({ payload }) => {
+      setGameState(payload);
     });
 
-    // Host listens for submissions
     if (isHost) {
-      channel.on('broadcast', { event: 'submit_page' }, (payload) => {
-         const { player, content, type, chainId } = payload.payload;
+      channel.on('broadcast', { event: 'submit_page' }, ({ payload }) => {
+         const { player, content, type, chainId } = payload;
          
          setGameState(prev => {
             const newChains = { ...prev.chains };
@@ -77,13 +71,13 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
                for (let i = 0; i < playerKeys.length; i++) {
                   const currentP = playerKeys[i];
                   const nextP = playerKeys[(i + 1) % playerKeys.length];
-                  newAssignments[nextP] = prev.currentAssignments[currentP]; // Pass chain to right
+                  newAssignments[nextP] = prev.currentAssignments[currentP];
                }
 
                const nextRound = prev.roundIndex + 1;
                let nextStatus = 'drawing';
-               if (nextRound % 2 === 0) nextStatus = 'guessing'; // even rounds (2, 4...) are guessing
-               if (nextRound >= players.length) nextStatus = 'reveal'; // everyone went
+               if (nextRound % 2 === 0) nextStatus = 'guessing';
+               if (nextRound >= players.length) nextStatus = 'reveal';
 
                const timer = nextStatus === 'drawing' ? 60 : (nextStatus === 'guessing' ? 30 : 0);
 
@@ -106,6 +100,8 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
          });
       });
     }
+
+    return () => { channel.removeChannel(sub); }
   }, [channel, isHost, players.length]);
 
   // Host Timer
@@ -115,12 +111,6 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
       interval = setInterval(() => {
         setGameState(prev => {
           if (prev.timer <= 1) {
-            // Force submit for those who haven't
-            const unready = players.filter(p => !prev.readyPlayers.includes(p));
-            unready.forEach(p => {
-               // In a real robust system, host forces them. Here, we'll let clients self-submit on 0.
-               // We just send a sync to 0 to trigger client auto-submit.
-            });
             const newState = { ...prev, timer: 0 };
             channel.send({ type: 'broadcast', event: 'sync_state', payload: newState });
             return newState;
@@ -154,7 +144,7 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
         canvas.width = rect.width;
         canvas.height = rect.height;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#111'; // background
+        ctx.fillStyle = '#0a0a0a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctxRef.current = ctx;
       }
@@ -172,17 +162,13 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
       type: 'broadcast', event: 'submit_page',
       payload: { player: playerName, content: text, type: 'text', chainId }
     });
-    
     setInputText('');
   };
 
   const submitDrawing = () => {
     if (gameState.readyPlayers.includes(playerName)) return;
-    
     const chainId = gameState.currentAssignments[playerName];
     const canvas = canvasRef.current;
-    
-    // Compress heavily to avoid Supabase limits
     const dataUrl = canvas ? canvas.toDataURL('image/jpeg', 0.5) : ''; 
 
     channel.send({
@@ -201,6 +187,7 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
   };
 
   const startDrawing = (e) => {
+    if (gameState.readyPlayers.includes(playerName)) return;
     isDrawingRef.current = true;
     lastPosRef.current = getMousePos(e);
   };
@@ -213,9 +200,12 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
       ctx.beginPath();
       ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
       ctx.lineTo(currentPos.x, currentPos.y);
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#33ccff';
+      ctx.lineWidth = 5;
       ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#33ccff';
       ctx.stroke();
     }
     lastPosRef.current = currentPos;
@@ -223,91 +213,144 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
 
   const stopDrawing = () => { isDrawingRef.current = false; };
 
-  // --- RENDERS ---
-
-  if (gameState.status === 'starting') return <div style={{color:'white', textAlign:'center', marginTop:'100px'}}>Binding the Briefs...</div>;
-
   const isReady = gameState.readyPlayers.includes(playerName);
   const myChainId = gameState.currentAssignments[playerName];
   const myChain = gameState.chains[myChainId];
   const previousPage = myChain ? myChain[myChain.length - 1] : null;
 
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', 
-      height: '100vh', backgroundColor: '#050505', color: '#fff', fontFamily: "'Clash Display', sans-serif",
-      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
-      padding: '20px'
-    }}>
-      
-      <div style={{ position: 'absolute', top: 20, right: 20, fontSize: '2rem', fontFamily: 'monospace' }}>
-        ⏳ {Math.max(0, gameState.timer)}
-      </div>
+  if (gameState.status === 'starting') {
+    return <div style={{ color: 'white', textAlign: 'center', marginTop: '100px', fontFamily: "'Panchang', sans-serif" }}>BINDING THE BRIEFS...</div>;
+  }
 
+  return (
+    <div style={styles.background}>
+      
+      {/* GLOBAL HEADER */}
+      {gameState.status !== 'reveal' && (
+        <div style={styles.header}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <h1 style={{ margin: 0, fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: '#33ccff', letterSpacing: '2px' }}>THE BROKEN BRIEF</h1>
+            <span style={{ opacity: 0.5 }}>ROUND {gameState.roundIndex + 1}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: gameState.timer <= 10 ? '#ff3333' : '#ebd73f', fontFamily: "'Panchang', sans-serif" }}>
+            <Eye size={20} />
+            <span style={{ fontSize: '1.2rem' }}>{Math.max(0, gameState.timer)}s</span>
+          </div>
+        </div>
+      )}
+
+      {/* WAITING SCREEN */}
       {isReady && gameState.status !== 'reveal' ? (
-        <div style={{ margin: 'auto', textAlign: 'center' }}>
-          <h2 style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif" }}>WAITING FOR OTHERS</h2>
-          <p>{gameState.readyPlayers.length} / {players.length} ready</p>
-        </div>
-      ) : gameState.status === 'writing' ? (
-        <div style={{ margin: 'auto', textAlign: 'center', width: '100%', maxWidth: '600px' }}>
-          <h2 style={{ color: '#33ccff', fontFamily: "'Panchang', sans-serif" }}>THE CLIENT BRIEF</h2>
-          <p style={{ opacity: 0.7, marginBottom: '30px' }}>Write a crazy prompt for the next player to draw.</p>
-          <form onSubmit={submitText} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <input 
-              type="text" value={inputText} onChange={e => setInputText(e.target.value)}
-              placeholder="e.g. A neon cat eating pizza in space..." autoFocus
-              style={{ padding: '20px', borderRadius: '12px', fontSize: '1.2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
-            />
-            <button type="submit" style={{ padding: '15px', borderRadius: '12px', background: '#ebd73f', color: '#000', fontWeight: 'bold', fontSize: '1.1rem' }}>SUBMIT</button>
-          </form>
-        </div>
-      ) : gameState.status === 'drawing' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%' }}>
-          <h2 style={{ margin: '10px 0', fontFamily: "'Panchang', sans-serif" }}>DRAW THIS:</h2>
-          <h1 style={{ color: '#ff33ff', marginBottom: '20px' }}>{previousPage?.content}</h1>
-          <div style={{ 
-            flex: 1, width: '100%', maxWidth: '800px', background: '#111', 
-            borderRadius: '12px', border: '2px solid rgba(255,255,255,0.1)' 
-          }}>
-            <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none', cursor: 'crosshair' }}
-              onPointerDown={startDrawing} onPointerMove={draw} onPointerUp={stopDrawing} onPointerLeave={stopDrawing}
-            />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <CheckCircle2 size={80} color="#33ff33" style={{ marginBottom: '20px' }} />
+          <h2 style={{ color: '#fff', fontFamily: "'Panchang', sans-serif", fontSize: '2rem' }}>LOCKED IN</h2>
+          <p style={{ opacity: 0.7, fontSize: '1.2rem', marginTop: '10px' }}>Waiting for {players.length - gameState.readyPlayers.length} agents...</p>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '30px' }}>
+            {players.map(p => (
+              <div key={p} style={{ width: '40px', height: '4px', background: gameState.readyPlayers.includes(p) ? '#33ff33' : 'rgba(255,255,255,0.1)', borderRadius: '2px' }} />
+            ))}
           </div>
-          <button onClick={submitDrawing} style={{ marginTop: '20px', padding: '15px 40px', background: '#ebd73f', color: '#000', borderRadius: '12px', fontWeight: 'bold' }}>DONE DRAWING</button>
         </div>
-      ) : gameState.status === 'guessing' ? (
-        <div style={{ margin: 'auto', textAlign: 'center', width: '100%', maxWidth: '800px' }}>
-          <h2 style={{ color: '#33ff33', fontFamily: "'Panchang', sans-serif" }}>WHAT IS THIS?!</h2>
-          <div style={{ margin: '20px auto', border: '2px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden', height: '400px' }}>
-             <img src={previousPage?.content} alt="Drawing" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#111' }} />
+      ) : 
+
+      /* WRITING PHASE */
+      gameState.status === 'writing' ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ ...styles.glassPanel, width: '100%', maxWidth: '700px', padding: '50px', textAlign: 'center' }}>
+            <Keyboard size={48} color="#33ccff" style={{ margin: '0 auto 20px auto' }} />
+            <h2 style={{ color: '#33ccff', fontFamily: "'Panchang', sans-serif", fontSize: '2rem', marginBottom: '10px' }}>THE CLIENT BRIEF</h2>
+            <p style={{ opacity: 0.7, marginBottom: '40px', fontSize: '1.2rem' }}>Write a crazy, detailed prompt for the next player to draw.</p>
+            
+            <form onSubmit={submitText} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <input 
+                type="text" value={inputText} onChange={e => setInputText(e.target.value)}
+                placeholder="e.g. A neon cat eating pizza in space..." autoFocus
+                style={{ padding: '25px', borderRadius: '16px', fontSize: '1.2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(51, 204, 255, 0.3)', color: '#fff', outline: 'none', textAlign: 'center', fontFamily: "'Clash Display', sans-serif" }}
+              />
+              <button type="submit" style={{ ...styles.btn, background: '#ebd73f', color: '#000' }}>SUBMIT BRIEF <ChevronRight size={20} /></button>
+            </form>
           </div>
-          <form onSubmit={submitText} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <input 
-              type="text" value={inputText} onChange={e => setInputText(e.target.value)}
-              placeholder="Describe what you see..." autoFocus
-              style={{ padding: '20px', borderRadius: '12px', fontSize: '1.2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
-            />
-            <button type="submit" style={{ padding: '15px', borderRadius: '12px', background: '#ebd73f', color: '#000', fontWeight: 'bold', fontSize: '1.1rem' }}>SUBMIT GUESS</button>
-          </form>
         </div>
-      ) : gameState.status === 'reveal' && (
-        <div style={{ width: '100%', maxWidth: '800px', margin: 'auto', textAlign: 'center' }}>
-          <h1 style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif", marginBottom: '40px' }}>THE REVEAL</h1>
+      ) : 
+
+      /* DRAWING PHASE */
+      gameState.status === 'drawing' ? (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', paddingTop: '100px' }}>
+          <div style={{ ...styles.glassPanel, width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+            
+            <div style={{ padding: '20px 30px', background: 'rgba(51, 204, 255, 0.1)', borderBottom: '1px solid rgba(51, 204, 255, 0.2)', display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <PenTool color="#33ccff" />
+              <div style={{ flex: 1 }}>
+                <span style={{ opacity: 0.7, fontSize: '0.9rem', letterSpacing: '2px' }}>DRAW THIS EXACTLY:</span>
+                <h2 style={{ margin: '5px 0 0 0', color: '#fff', fontSize: '1.5rem' }}>"{previousPage?.content}"</h2>
+              </div>
+            </div>
+            
+            <div style={{ flex: 1, position: 'relative', background: '#0a0a0a', cursor: 'crosshair' }}>
+              <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
+                onPointerDown={startDrawing} onPointerMove={draw} onPointerUp={stopDrawing} onPointerLeave={stopDrawing}
+              />
+            </div>
+            
+            <div style={{ padding: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={submitDrawing} style={{ ...styles.btn, background: '#33ccff', color: '#000' }}>DONE DRAWING</button>
+            </div>
+          </div>
+        </div>
+      ) : 
+
+      /* GUESSING PHASE */
+      gameState.status === 'guessing' ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingTop: '100px' }}>
+          <div style={{ ...styles.glassPanel, width: '100%', maxWidth: '800px', padding: '40px', textAlign: 'center' }}>
+            <h2 style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: '1.5rem', marginBottom: '20px' }}>WHAT IN THE WORLD IS THIS?!</h2>
+            
+            <div style={{ margin: '0 auto 30px auto', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', overflow: 'hidden', height: '400px', background: '#0a0a0a', boxShadow: '0 0 30px rgba(255,255,255,0.05)' }}>
+               <img src={previousPage?.content} alt="Drawing" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+            
+            <form onSubmit={submitText} style={{ display: 'flex', gap: '15px' }}>
+              <input 
+                type="text" value={inputText} onChange={e => setInputText(e.target.value)}
+                placeholder="Describe this masterpiece..." autoFocus
+                style={{ flex: 1, padding: '20px', borderRadius: '12px', fontSize: '1.2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#fff', outline: 'none' }}
+              />
+              <button type="submit" style={{ ...styles.btn, background: '#ebd73f', color: '#000' }}>SUBMIT GUESS</button>
+            </form>
+          </div>
+        </div>
+      ) : 
+
+      /* REVEAL PHASE */
+      gameState.status === 'reveal' && (
+        <div style={{ flex: 1, overflowY: 'auto', padding: '40px 20px', width: '100%' }}>
+          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+            <h1 style={{ color: '#33ccff', fontFamily: "'Panchang', sans-serif", fontSize: '3.5rem', textShadow: '0 0 40px rgba(51, 204, 255, 0.5)' }}>THE SHOWCASE</h1>
+            <p style={{ opacity: 0.7, fontSize: '1.2rem' }}>See how badly the briefs got broken.</p>
+          </div>
           
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
-             {/* Simple reveal UI: just list all chains for players to scroll through */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '60px', maxWidth: '1000px', margin: '0 auto' }}>
              {Object.keys(gameState.chains).map(owner => (
-                <div key={owner} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '16px', marginBottom: '40px' }}>
-                   <h3 style={{ color: '#33ccff' }}>{owner}'s Brief</h3>
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>
+                <div key={owner} style={{ ...styles.glassPanel, padding: '40px' }}>
+                   <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px', marginBottom: '30px' }}>
+                      <h3 style={{ color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif", fontSize: '1.5rem' }}>{owner}'s Original Brief</h3>
+                   </div>
+                   
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                       {gameState.chains[owner].map((page, idx) => (
-                         <div key={idx} style={{ background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '8px' }}>
-                            <p style={{ opacity: 0.5, margin: '0 0 10px 0' }}>{page.author} {page.type === 'text' ? 'wrote:' : 'drew:'}</p>
+                         <div key={idx} style={{ 
+                            background: page.type === 'text' ? 'rgba(51, 204, 255, 0.05)' : 'rgba(0,0,0,0.5)', 
+                            border: `1px solid ${page.type === 'text' ? 'rgba(51,204,255,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                            padding: '30px', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center'
+                         }}>
+                            <div style={{ background: 'rgba(255,255,255,0.1)', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', letterSpacing: '1px', marginBottom: '20px' }}>
+                              {page.author} {page.type === 'text' ? 'WROTE' : 'DREW'}
+                            </div>
+                            
                             {page.type === 'text' ? (
-                               <h2 style={{ margin: 0 }}>{page.content}</h2>
+                               <h2 style={{ margin: 0, fontSize: '1.8rem', textAlign: 'center', color: idx === 0 ? '#fff' : '#ff33ff' }}>"{page.content}"</h2>
                             ) : (
-                               <img src={page.content} alt="Drawing" style={{ width: '100%', maxHeight: '300px', objectFit: 'contain' }} />
+                               <img src={page.content} alt="Drawing" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '8px' }} />
                             )}
                          </div>
                       ))}
@@ -317,17 +360,54 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
           </div>
 
           {isHost && (
-             <button onClick={() => {
-                const initialChains = {}; const initialAssignments = {};
-                players.forEach(p => { initialChains[p] = []; initialAssignments[p] = p; });
-                const newState = { status: 'writing', roundIndex: 0, timer: 45, chains: initialChains, currentAssignments: initialAssignments, readyPlayers: [], revealIndex: 0 };
-                channel.send({ type: 'broadcast', event: 'sync_state', payload: newState });
-                setGameState(newState);
-             }} style={{ padding: '15px 40px', background: '#ebd73f', color: '#000', borderRadius: '30px', fontWeight: 'bold', fontSize: '1.2rem', marginTop: '40px' }}>PLAY AGAIN</button>
+             <div style={{ textAlign: 'center', marginTop: '60px' }}>
+               <button onClick={() => {
+                  const initialChains = {}; const initialAssignments = {};
+                  players.forEach(p => { initialChains[p] = []; initialAssignments[p] = p; });
+                  const newState = { status: 'writing', roundIndex: 0, timer: 45, chains: initialChains, currentAssignments: initialAssignments, readyPlayers: [], revealIndex: 0 };
+                  channel.send({ type: 'broadcast', event: 'sync_state', payload: newState });
+                  setGameState(newState);
+               }} style={{ ...styles.btn, background: '#33ccff', color: '#000', padding: '20px 60px', fontSize: '1.2rem' }}>
+                 PLAY AGAIN
+               </button>
+             </div>
           )}
         </div>
       )}
-
     </div>
   );
 }
+
+const styles = {
+  background: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
+    backgroundColor: '#050505', 
+    backgroundImage: 'radial-gradient(circle at 0% 0%, rgba(51, 204, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(235, 215, 63, 0.08) 0%, transparent 50%)',
+    fontFamily: "'Clash Display', sans-serif",
+    color: '#fff',
+    overflow: 'hidden',
+    display: 'flex', flexDirection: 'column'
+  },
+  header: {
+    position: 'absolute', top: 30, left: '50%', transform: 'translateX(-50%)',
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    width: '90%', maxWidth: '1200px', background: 'rgba(20,20,20,0.8)', padding: '15px 30px',
+    borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)',
+    backdropFilter: 'blur(10px)', zIndex: 10
+  },
+  glassPanel: {
+    background: 'rgba(20, 20, 20, 0.65)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    borderRadius: '24px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+    overflow: 'hidden'
+  },
+  btn: {
+    padding: '15px 30px', border: 'none', borderRadius: '12px', 
+    fontFamily: "'Panchang', sans-serif", fontSize: '1rem', fontWeight: 'bold', 
+    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+    transition: 'all 0.3s', boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
+  }
+};

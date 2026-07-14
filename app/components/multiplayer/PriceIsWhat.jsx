@@ -402,7 +402,8 @@ const styles = {
     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
     height: '100vh', backgroundColor: '#050505', color: '#fff', fontFamily: "'Clash Display', sans-serif",
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
-    backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(51, 255, 51, 0.05) 0%, transparent 60%)'
+    backgroundImage: 'radial-gradient(circle at 0% 100%, rgba(51, 255, 51, 0.1) 0%, transparent 50%), radial-gradient(circle at 100% 0%, rgba(235, 215, 63, 0.05) 0%, transparent 50%)',
+    overflow: 'hidden'
   },
   glassPanel: {
     background: 'rgba(20,20,20,0.6)', padding: '50px', borderRadius: '24px', 

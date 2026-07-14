@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { Send, Eraser, Users, Clock, Trophy } from 'lucide-react';
 
 const WORDS = [
   "ALIEN", "SPACESHIP", "PIZZA", "PIRATE", "GHOST", "GUITAR", 
@@ -8,13 +9,17 @@ const WORDS = [
   "AGENCY", "BRANDING", "DESIGN", "CODE", "NEON", "CYBERPUNK"
 ];
 
+// Emojis for avatars
+const AVATARS = ['👽', '👻', '👾', '🤖', '🤡', '🤠', '🦊', '🐯', '🦄', '🦖'];
+
 export default function DumbDoodles({ channel, isHost, players, playerName }) {
   const [gameState, setGameState] = useState({
     status: 'starting', // starting, playing, gameover
     currentTurnIndex: 0,
     currentWord: '',
     timer: 60,
-    scores: {}
+    scores: {},
+    avatars: {}
   });
 
   const [chat, setChat] = useState([]);
@@ -25,12 +30,22 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
   const ctxRef = useRef(null);
   const lastPosRef = useRef({ x: 0, y: 0 });
   const pendingDrawEventsRef = useRef([]);
+  const chatEndRef = useRef(null);
+
+  // Auto-scroll chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chat]);
 
   // Initialize Game
   useEffect(() => {
     if (isHost && gameState.status === 'starting') {
       const initialScores = {};
-      players.forEach(p => initialScores[p] = 0);
+      const initialAvatars = {};
+      players.forEach(p => {
+        initialScores[p] = 0;
+        initialAvatars[p] = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+      });
       
       const initialState = {
         status: 'playing',
@@ -38,6 +53,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
         currentWord: WORDS[Math.floor(Math.random() * WORDS.length)],
         timer: 60,
         scores: initialScores,
+        avatars: initialAvatars
       };
 
       channel.send({ type: 'broadcast', event: 'sync_state', payload: initialState });
@@ -49,25 +65,29 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
   useEffect(() => {
     if (!channel) return;
 
-    channel
-      .on('broadcast', { event: 'sync_state' }, (payload) => {
-        setGameState(payload.payload);
+    const sub = channel
+      .on('broadcast', { event: 'sync_state' }, ({ payload }) => {
+        setGameState(payload);
       })
-      .on('broadcast', { event: 'chat_msg' }, (payload) => {
-        setChat(prev => [...prev, payload.payload].slice(-20)); // Keep last 20 msgs
+      .on('broadcast', { event: 'chat_msg' }, ({ payload }) => {
+        setChat(prev => [...prev, payload].slice(-30));
       })
-      .on('broadcast', { event: 'draw_batch' }, (payload) => {
-        // Draw the points from other players
+      .on('broadcast', { event: 'draw_batch' }, ({ payload }) => {
         const ctx = ctxRef.current;
         if (!ctx) return;
-        payload.payload.forEach(line => {
+        payload.forEach(line => {
           ctx.beginPath();
           ctx.moveTo(line.x0, line.y0);
           ctx.lineTo(line.x1, line.y1);
           ctx.strokeStyle = line.color || '#ff33ff';
-          ctx.lineWidth = line.size || 5;
+          ctx.lineWidth = line.size || 6;
           ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
           ctx.stroke();
+          
+          // Add a subtle glow to the drawn lines for premium feel
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#ff33ff';
         });
       })
       .on('broadcast', { event: 'clear_canvas' }, () => {
@@ -75,6 +95,9 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
         const canvas = canvasRef.current;
         if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
       });
+      
+    sub.subscribe();
+    return () => { channel.removeChannel(sub); }
   }, [channel]);
 
   // Timer Logic (Host Only)
@@ -84,7 +107,6 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
       interval = setInterval(() => {
         setGameState(prev => {
           if (prev.timer <= 1) {
-            // Turn over
             const nextIndex = (prev.currentTurnIndex + 1) % players.length;
             const newState = {
               ...prev,
@@ -92,11 +114,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
               currentWord: WORDS[Math.floor(Math.random() * WORDS.length)],
               timer: 60
             };
-            
-            // Clear canvas for everyone
             channel.send({ type: 'broadcast', event: 'clear_canvas', payload: {} });
             channel.send({ type: 'broadcast', event: 'sync_state', payload: newState });
-            
             return newState;
           }
           const newState = { ...prev, timer: prev.timer - 1 };
@@ -112,15 +131,13 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      // Set actual size in memory (scaled to account for CSS sizing)
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width;
       canvas.height = rect.height;
-      
       const ctx = canvas.getContext('2d');
       ctxRef.current = ctx;
     }
-  }, []);
+  }, [gameState.status]); // re-init when status changes from starting to playing
 
   // Broadcast Draw Batching Loop (throttled)
   useEffect(() => {
@@ -133,7 +150,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
         });
         pendingDrawEventsRef.current = [];
       }
-    }, 50); // Send 20 times a second
+    }, 40); // 25fps for smoother drawing
     return () => clearInterval(interval);
   }, [channel]);
 
@@ -145,10 +162,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
     const rect = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
-    };
+    return { x: clientX - rect.left, y: clientY - rect.top };
   };
 
   const startDrawing = (e) => {
@@ -168,24 +182,23 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
       ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
       ctx.lineTo(currentPos.x, currentPos.y);
       ctx.strokeStyle = '#ff33ff';
-      ctx.lineWidth = 5;
+      ctx.lineWidth = 6;
       ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#ff33ff';
       ctx.stroke();
       
-      // Queue for broadcast
       pendingDrawEventsRef.current.push({
         x0: lastPosRef.current.x, y0: lastPosRef.current.y,
         x1: currentPos.x, y1: currentPos.y,
-        color: '#ff33ff', size: 5
+        color: '#ff33ff', size: 6
       });
     }
-    
     lastPosRef.current = currentPos;
   };
 
-  const stopDrawing = () => {
-    isDrawingRef.current = false;
-  };
+  const stopDrawing = () => { isDrawingRef.current = false; };
 
   const clearCanvas = () => {
     if (!isMyTurn) return;
@@ -201,22 +214,18 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
   const handleGuess = (e) => {
     e.preventDefault();
     if (!guess.trim()) return;
-
     const msg = guess.toUpperCase();
     
-    // Check if correct
     if (!isMyTurn && msg === gameState.currentWord) {
-      const sysMsg = { sender: 'SYSTEM', text: `${playerName} guessed the word!`, color: '#33ff33' };
+      const sysMsg = { sender: 'SYSTEM', text: `${playerName} guessed the word!`, type: 'success' };
       channel.send({ type: 'broadcast', event: 'chat_msg', payload: sysMsg });
-      setChat(prev => [...prev, sysMsg].slice(-20));
+      setChat(prev => [...prev, sysMsg].slice(-30));
       
-      // Add points
       if (isHost) {
          setGameState(prev => {
             const newScores = { ...prev.scores };
-            newScores[playerName] += 100; // Guesser points
-            newScores[players[prev.currentTurnIndex]] += 50; // Drawer points
-            
+            newScores[playerName] = (newScores[playerName] || 0) + 100;
+            newScores[players[prev.currentTurnIndex]] = (newScores[players[prev.currentTurnIndex]] || 0) + 50;
             const nextIndex = (prev.currentTurnIndex + 1) % players.length;
             const newState = {
               ...prev,
@@ -229,125 +238,224 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
             channel.send({ type: 'broadcast', event: 'sync_state', payload: newState });
             return newState;
          });
-      } else {
-         // Tell host someone guessed it (in a real robust app, host handles verification, 
-         // but for peer-to-peer trust model here, anyone can trigger the next round)
       }
     } else {
-      const chatMsg = { sender: playerName, text: guess, color: '#fff' };
+      const chatMsg = { sender: playerName, text: guess, type: 'normal' };
       channel.send({ type: 'broadcast', event: 'chat_msg', payload: chatMsg });
-      setChat(prev => [...prev, chatMsg].slice(-20));
+      setChat(prev => [...prev, chatMsg].slice(-30));
     }
     setGuess('');
   };
 
   if (gameState.status === 'starting') {
-    return <div style={{ color: 'white', textAlign: 'center', marginTop: '100px' }}>Initializing Canvas...</div>;
+    return <div style={{ color: 'white', textAlign: 'center', marginTop: '100px', fontFamily: "'Panchang', sans-serif" }}>INITIALIZING CANVAS...</div>;
   }
 
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'row', height: '100vh', 
-      backgroundColor: '#050505', color: '#fff', fontFamily: "'Clash Display', sans-serif",
-      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100
-    }}>
-      
-      {/* Left Sidebar: Players & Scores */}
-      <div style={{ width: '250px', borderRight: '1px solid rgba(255,255,255,0.1)', padding: '20px', background: 'rgba(255,255,255,0.02)' }}>
-        <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: '#ff33ff' }}>DUMB DOODLES</h2>
-        <div style={{ margin: '20px 0', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', fontFamily: 'monospace' }}>{Math.max(0, gameState.timer)}s</div>
-        </div>
+    <div style={styles.background}>
+      <div style={styles.dashboard}>
         
-        <h3 style={{ opacity: 0.5, fontSize: '0.9rem', marginTop: '30px' }}>PLAYERS</h3>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {players.map((p, i) => (
-            <li key={i} style={{ 
-              padding: '10px', background: i === gameState.currentTurnIndex ? 'rgba(255,51,255,0.2)' : 'transparent',
-              borderRadius: '8px', marginBottom: '5px', display: 'flex', justifyContent: 'space-between',
-              border: i === gameState.currentTurnIndex ? '1px solid #ff33ff' : 'none'
-            }}>
-              <span>{p === playerName ? '> ' : ''}{p} {i === gameState.currentTurnIndex ? '✏️' : ''}</span>
-              <span style={{ fontWeight: 'bold' }}>{gameState.scores[p] || 0}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Center: Canvas Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}>
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ letterSpacing: '2px' }}>
-            {isMyTurn ? (
-               <span>DRAW THIS: <span style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif" }}>{gameState.currentWord}</span></span>
-            ) : (
-               <span>GUESS THE WORD! ({gameState.currentWord.length} letters)</span>
-            )}
-          </h2>
-          {isMyTurn && (
-             <button onClick={clearCanvas} style={{ padding: '8px 16px', background: '#ff3333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>CLEAR</button>
-          )}
-        </div>
-        
-        <div style={{ 
-            flex: 1, width: '100%', maxWidth: '800px', 
-            background: '#111', borderRadius: '16px', overflow: 'hidden',
-            border: '2px solid rgba(255,51,255,0.3)', boxShadow: '0 0 30px rgba(255,51,255,0.1)',
-            cursor: isMyTurn ? 'crosshair' : 'default'
-        }}>
-          <canvas 
-            ref={canvasRef}
-            style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
-            onPointerDown={startDrawing}
-            onPointerMove={draw}
-            onPointerUp={stopDrawing}
-            onPointerLeave={stopDrawing}
-          />
-        </div>
-      </div>
-
-      {/* Right Sidebar: Chat & Guessing */}
-      <div style={{ width: '300px', borderLeft: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)' }}>
-        <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <h3 style={{ margin: 0, opacity: 0.5 }}>CHAT / GUESS</h3>
-        </div>
-        
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {chat.map((msg, i) => (
-            <div key={i} style={{ color: msg.color || '#fff' }}>
-              <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>{msg.sender}: </span>
-              <span style={{ fontWeight: msg.sender === 'SYSTEM' ? 'bold' : 'normal' }}>{msg.text}</span>
+        {/* LEFT PANEL: Game State & Players */}
+        <div style={{ ...styles.glassPanel, width: '280px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '30px 20px', background: 'linear-gradient(180deg, rgba(255,51,255,0.1) 0%, transparent 100%)', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+            <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.5rem', color: '#ff33ff', margin: '0 0 10px 0', textShadow: '0 0 20px rgba(255,51,255,0.5)' }}>DUMB DOODLES</h1>
+            
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.5)', padding: '10px 20px', borderRadius: '30px', border: gameState.timer <= 10 ? '1px solid #ff3333' : '1px solid rgba(255,255,255,0.1)' }}>
+              <Clock size={18} color={gameState.timer <= 10 ? '#ff3333' : '#ebd73f'} />
+              <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: gameState.timer <= 10 ? '#ff3333' : '#fff' }}>
+                {Math.max(0, gameState.timer)}s
+              </span>
             </div>
-          ))}
+          </div>
+          
+          <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px', opacity: 0.6 }}>
+              <Users size={14} />
+              <span style={{ fontSize: '0.8rem', letterSpacing: '2px', fontWeight: '600' }}>PLAYERS</span>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {players.map((p, i) => {
+                const isActive = i === gameState.currentTurnIndex;
+                const isMe = p === playerName;
+                return (
+                  <div key={i} style={{ 
+                    ...styles.playerCard, 
+                    background: isActive ? 'rgba(255,51,255,0.15)' : 'rgba(255,255,255,0.03)',
+                    borderColor: isActive ? 'rgba(255,51,255,0.5)' : 'transparent',
+                    boxShadow: isActive ? '0 0 15px rgba(255,51,255,0.2)' : 'none'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ fontSize: '1.5rem' }}>{gameState.avatars[p] || '👤'}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontWeight: isActive ? 'bold' : 'normal', color: isActive ? '#ff33ff' : '#fff' }}>
+                          {p} {isMe && <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>(You)</span>}
+                        </span>
+                        {isActive && <span style={{ fontSize: '0.7rem', color: '#ff33ff', letterSpacing: '1px' }}>DRAWING...</span>}
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1rem', color: '#ebd73f' }}>
+                      {gameState.scores[p] || 0}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-        
-        <div style={{ padding: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <form onSubmit={handleGuess} style={{ display: 'flex' }}>
-            <input 
-              type="text" 
-              value={guess}
-              onChange={(e) => setGuess(e.target.value)}
-              disabled={isMyTurn}
-              placeholder={isMyTurn ? "You are drawing!" : "Type guess..."}
-              style={{
-                flex: 1, padding: '12px', background: 'rgba(255,255,255,0.05)', 
-                border: '1px solid rgba(255,255,255,0.2)', color: '#fff', 
-                borderRadius: '8px 0 0 8px', outline: 'none'
-              }}
+
+        {/* CENTER PANEL: Canvas */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          <div style={{ ...styles.glassPanel, padding: '20px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px', letterSpacing: '1px' }}>
+              {isMyTurn ? (
+                <>DRAW THIS: <span style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: '1.5rem', background: 'rgba(235, 215, 63, 0.1)', padding: '5px 15px', borderRadius: '8px' }}>{gameState.currentWord}</span></>
+              ) : (
+                <>
+                  <span style={{ color: '#ff33ff' }}>{players[gameState.currentTurnIndex]}</span> is drawing! 
+                  <span style={{ opacity: 0.5, marginLeft: '10px' }}>({gameState.currentWord.length} letters)</span>
+                </>
+              )}
+            </h2>
+            
+            {isMyTurn && (
+               <button onClick={clearCanvas} style={styles.iconBtn}>
+                 <Eraser size={18} /> CLEAR
+               </button>
+            )}
+          </div>
+          
+          <div style={{ 
+              ...styles.glassPanel, 
+              flex: 1, 
+              position: 'relative',
+              background: '#0a0a0a',
+              cursor: isMyTurn ? 'crosshair' : 'default',
+              boxShadow: isMyTurn ? '0 0 40px rgba(255,51,255,0.1) inset' : 'none'
+          }}>
+            {!isMyTurn && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }} />} {/* Block clicks if not turn */}
+            <canvas 
+              ref={canvasRef}
+              style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
+              onPointerDown={startDrawing}
+              onPointerMove={draw}
+              onPointerUp={stopDrawing}
+              onPointerLeave={stopDrawing}
             />
-            <button 
-              type="submit"
-              disabled={isMyTurn}
-              style={{
-                padding: '0 15px', background: isMyTurn ? '#333' : '#ebd73f', color: '#000',
-                border: 'none', borderRadius: '0 8px 8px 0', fontWeight: 'bold', cursor: isMyTurn ? 'default' : 'pointer'
-              }}
-            >
-              SEND
-            </button>
-          </form>
+          </div>
         </div>
+
+        {/* RIGHT PANEL: Chat */}
+        <div style={{ ...styles.glassPanel, width: '320px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', letterSpacing: '1px', fontFamily: "'Panchang', sans-serif" }}>LIVE CHAT</h3>
+          </div>
+          
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {chat.map((msg, i) => {
+              if (msg.type === 'success') {
+                return (
+                  <div key={i} style={{ padding: '10px 15px', background: 'rgba(51, 255, 51, 0.1)', borderLeft: '3px solid #33ff33', borderRadius: '4px', color: '#33ff33', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                    🎉 {msg.text}
+                  </div>
+                );
+              }
+              
+              const isMyMessage = msg.sender === playerName;
+              return (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isMyMessage ? 'flex-end' : 'flex-start' }}>
+                  <span style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px', marginLeft: '5px' }}>{msg.sender}</span>
+                  <div style={{ 
+                    padding: '10px 15px', 
+                    background: isMyMessage ? '#ff33ff' : 'rgba(255,255,255,0.1)', 
+                    color: isMyMessage ? '#000' : '#fff',
+                    borderRadius: isMyMessage ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                    fontSize: '0.95rem'
+                  }}>
+                    {msg.text}
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={chatEndRef} />
+          </div>
+          
+          <div style={{ padding: '20px', background: 'rgba(0,0,0,0.3)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <form onSubmit={handleGuess} style={{ display: 'flex', gap: '10px', position: 'relative' }}>
+              <input 
+                type="text" 
+                value={guess}
+                onChange={(e) => setGuess(e.target.value)}
+                disabled={isMyTurn}
+                placeholder={isMyTurn ? "You are drawing..." : "Guess here..."}
+                style={{
+                  flex: 1, padding: '15px 20px', background: 'rgba(255,255,255,0.05)', 
+                  border: '1px solid rgba(255,255,255,0.1)', color: '#fff', 
+                  borderRadius: '12px', outline: 'none', transition: 'all 0.3s',
+                  fontFamily: "'Clash Display', sans-serif"
+                }}
+              />
+              <button 
+                type="submit"
+                disabled={isMyTurn || !guess.trim()}
+                style={{
+                  padding: '0 20px', background: isMyTurn ? 'rgba(255,255,255,0.1)' : '#ff33ff', color: isMyTurn ? 'rgba(255,255,255,0.3)' : '#000',
+                  border: 'none', borderRadius: '12px', cursor: isMyTurn ? 'default' : 'pointer',
+                  transition: 'all 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+              >
+                <Send size={18} />
+              </button>
+            </form>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
+
+const styles = {
+  background: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
+    backgroundColor: '#050505', 
+    backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(255, 51, 255, 0.1) 0%, transparent 70%), radial-gradient(circle at 100% 100%, rgba(235, 215, 63, 0.05) 0%, transparent 50%)',
+    fontFamily: "'Clash Display', sans-serif",
+    color: '#fff',
+    overflow: 'hidden'
+  },
+  dashboard: {
+    display: 'flex',
+    gap: '20px',
+    padding: '20px',
+    height: '100%',
+    boxSizing: 'border-box',
+    maxWidth: '1600px',
+    margin: '0 auto'
+  },
+  glassPanel: {
+    background: 'rgba(20, 20, 20, 0.65)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    borderRadius: '24px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+    overflow: 'hidden'
+  },
+  playerCard: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '12px 15px',
+    borderRadius: '16px',
+    border: '1px solid transparent',
+    transition: 'all 0.3s ease'
+  },
+  iconBtn: {
+    display: 'flex', alignItems: 'center', gap: '8px',
+    padding: '10px 20px', background: 'rgba(255, 51, 51, 0.1)', color: '#ff3333',
+    border: '1px solid rgba(255, 51, 51, 0.3)', borderRadius: '12px', cursor: 'pointer',
+    fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem', transition: 'all 0.2s'
+  }
+};
