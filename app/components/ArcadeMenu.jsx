@@ -521,7 +521,7 @@ export default function ArcadeMenu({ onStartGame }) {
                   }}
                 >
                 {/* Top of Card */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'auto' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ 
                     fontSize: '11px', 
                     letterSpacing: '2px', 
@@ -541,11 +541,11 @@ export default function ArcadeMenu({ onStartGame }) {
                 </div>
 
                 {/* Center of Card */}
-                <div style={{ textAlign: 'center', margin: 'auto 0', transform: isActive ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.5s ease' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', transform: isActive ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.5s ease' }}>
                   <div style={{
-                    width: '80px',
-                    height: '80px',
-                    margin: '0 auto 25px auto',
+                    width: '70px',
+                    height: '70px',
+                    margin: '0 auto 15px auto',
                     borderRadius: '50%',
                     background: `radial-gradient(circle at center, ${game.color}30 0%, transparent 70%)`,
                     border: `1px solid ${game.color}50`,
@@ -555,23 +555,24 @@ export default function ArcadeMenu({ onStartGame }) {
                     boxShadow: isActive ? `0 0 30px ${game.color}30` : 'none',
                     transition: 'all 0.5s ease'
                   }}>
-                    <Play size={32} color={game.color} fill={isActive ? game.color : 'none'} style={{ marginLeft: '4px', opacity: isActive ? 1 : 0.6, transition: 'all 0.5s ease' }} />
+                    <Play size={28} color={game.color} fill={isActive ? game.color : 'none'} style={{ marginLeft: '4px', opacity: isActive ? 1 : 0.6, transition: 'all 0.5s ease' }} />
                   </div>
                   <h2 style={{
                     fontFamily: "'Panchang', sans-serif",
-                    fontSize: '1.8rem',
-                    margin: '0 0 15px 0',
+                    fontSize: '1.5rem',
+                    margin: '0 0 10px 0',
                     color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
                     textTransform: 'uppercase',
                     letterSpacing: '1px',
-                    transition: 'color 0.5s ease'
+                    transition: 'color 0.5s ease',
+                    lineHeight: 1.2
                   }}>
                     {game.title}
                   </h2>
                   <p style={{
-                    fontSize: '0.95rem',
+                    fontSize: '0.85rem',
                     color: 'rgba(255,255,255,0.6)',
-                    lineHeight: 1.6,
+                    lineHeight: 1.5,
                     margin: 0,
                     opacity: isActive ? 1 : 0,
                     transition: 'opacity 0.4s ease',
@@ -584,7 +585,6 @@ export default function ArcadeMenu({ onStartGame }) {
 
                 {/* Bottom of Card */}
                 <div style={{
-                  marginTop: 'auto',
                   opacity: isActive ? 1 : 0,
                   transform: isActive ? 'translateY(0)' : 'translateY(10px)',
                   transition: 'all 0.5s ease'
