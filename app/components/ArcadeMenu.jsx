@@ -25,9 +25,19 @@ const CREATIVE_GAMES = [
   { id: 'beats', title: 'NEON BEATS', color: '#33ff66', desc: '16-step visual drum machine and synth maker.', category: 'MUSIC' },
 ];
 
+const MULTIPLAYER_GAMES = [
+  { id: 'brokenbrief', title: 'THE BROKEN BRIEF', color: '#ff0055', desc: 'A game of creative telephone. Sketch, guess, and ruin the client brief.', category: 'PARTY' },
+  { id: 'worddrop', title: 'TICK TOCK WORD DROP', color: '#ff9900', desc: 'Type a word with the given letters before the bomb explodes.', category: 'WORDS' },
+  { id: 'undercover', title: 'THE UNDERCOVER SPY', color: '#33ccff', desc: 'Find the spy before they figure out the secret location.', category: 'SOCIAL' },
+  { id: 'neonskribbl', title: 'NEON SKRIBBL', color: '#ff33ff', desc: 'Draw the prompt on a neon canvas. Guess fast for more points.', category: 'DRAWING' },
+  { id: 'priceiswhat', title: 'THE PRICE IS WHAT?!', color: '#33ff33', desc: 'Guess the insane price of bizarre and luxury items.', category: 'TRIVIA' },
+  { id: 'coopescape', title: 'CO-OP ESCAPE', color: '#00d2ff', desc: 'Communicate with your team to escape the digital room.', category: 'PUZZLE' },
+  { id: 'neonbusiness', title: 'NEON BUSINESS', color: '#ebd73f', desc: 'A fast-paced, cutthroat property trading game.', category: 'BOARD' },
+];
+
 export default function ArcadeMenu({ onStartGame }) {
-  const [activeMode, setActiveMode] = useState('arcade'); // 'arcade' or 'creative'
-  const activeGameList = activeMode === 'arcade' ? ARCADE_GAMES : CREATIVE_GAMES;
+  const [activeMode, setActiveMode] = useState('arcade'); // 'arcade', 'creative', or 'multiplayer'
+  const activeGameList = activeMode === 'arcade' ? ARCADE_GAMES : (activeMode === 'creative' ? CREATIVE_GAMES : MULTIPLAYER_GAMES);
   
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredGameId, setHoveredGameId] = useState(null);
@@ -59,6 +69,7 @@ export default function ArcadeMenu({ onStartGame }) {
 
   // Developer Access State
   const [isDeveloper, setIsDeveloper] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState(false);
@@ -211,7 +222,7 @@ export default function ArcadeMenu({ onStartGame }) {
           </div>
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: '1fr 1fr 1fr',
             background: 'rgba(255,255,255,0.03)',
             borderRadius: '100px',
             padding: '8px',
@@ -227,8 +238,8 @@ export default function ArcadeMenu({ onStartGame }) {
                 position: 'absolute',
                 top: '8px', 
                 bottom: '8px',
-                width: 'calc(50% - 8px)',
-                left: activeMode === 'arcade' ? '8px' : '50%',
+                width: 'calc(33.33% - 5px)',
+                left: activeMode === 'arcade' ? '8px' : (activeMode === 'creative' ? 'calc(33.33% + 4px)' : 'calc(66.66% + 0px)'),
                 background: activeColor,
                 borderRadius: '100px',
                 transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)', // Extreme bounce / lottie feel
@@ -301,6 +312,39 @@ export default function ArcadeMenu({ onStartGame }) {
                 alignItems: 'center'
               }}>
               ZEN
+            </h1>
+            
+            <h1 
+              onClick={() => {
+                if (activeMode !== 'multiplayer') {
+                   setActiveMode('multiplayer');
+                   gsap.fromTo('.mode-slider', { scaleX: 1.5 }, { scaleX: 1, duration: 0.8, ease: "elastic.out(1, 0.4)" });
+                }
+              }}
+              onMouseEnter={(e) => { if (activeMode === 'multiplayer') gsap.to(e.currentTarget, { scale: 1.05, y: -2, rotate: 2, duration: 0.4, ease: "back.out(2)" }); }}
+              onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
+              style={{
+                fontFamily: "'Panchang', sans-serif",
+                fontSize: 'clamp(1.2rem, 2.5vw, 2rem)',
+                fontWeight: 800,
+                margin: 0,
+                padding: '12px 30px',
+                textTransform: 'uppercase',
+                letterSpacing: '2px',
+                lineHeight: 1,
+                cursor: 'none',
+                color: activeMode === 'multiplayer' ? '#000' : 'rgba(255,255,255,0.4)',
+                textShadow: 'none',
+                position: 'relative',
+                zIndex: 2,
+                transition: 'color 0.4s ease',
+                width: '100%',
+                textAlign: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+              MULTIPLAYER
             </h1>
           </div>
         </div>
@@ -549,12 +593,20 @@ export default function ArcadeMenu({ onStartGame }) {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (isActive) {
-                        const isOriginalGame = game.id === 'dripp' || game.id === 'breaker';
-                        if (!isOriginalGame && !isDeveloper) {
-                           setPendingGameId(game.id);
-                           setShowPasswordModal(true);
+                        if (activeMode === 'multiplayer') {
+                           if (!isPremium && !isDeveloper) {
+                              alert("PREMIUM REQUIRED: Multiplayer games are exclusively for Premium members. (Upgrade UI coming soon!)");
+                           } else {
+                              onStartGame(game.id);
+                           }
                         } else {
-                           onStartGame(game.id);
+                           const isOriginalGame = game.id === 'dripp' || game.id === 'breaker';
+                           if (!isOriginalGame && !isDeveloper) {
+                              setPendingGameId(game.id);
+                              setShowPasswordModal(true);
+                           } else {
+                              onStartGame(game.id);
+                           }
                         }
                       }
                     }}
@@ -602,7 +654,9 @@ export default function ArcadeMenu({ onStartGame }) {
                       }
                     }}
                   >
-                    {(!isDeveloper && game.id !== 'dripp' && game.id !== 'breaker') ? 'LOCKED (DEV)' : 'PLAY NOW'}
+                    {activeMode === 'multiplayer' 
+                      ? (isPremium || isDeveloper ? 'PLAY NOW' : 'LOCKED (PREMIUM)') 
+                      : (!isDeveloper && game.id !== 'dripp' && game.id !== 'breaker' ? 'LOCKED (DEV)' : 'PLAY NOW')}
                   </button>
                 </div>
                 </div>

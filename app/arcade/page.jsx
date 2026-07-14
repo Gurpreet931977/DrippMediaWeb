@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import ArcadeMenu from '../components/ArcadeMenu';
 import ArcadeEngine from '../components/ArcadeEngine';
+import MultiplayerEngine from '../components/MultiplayerEngine';
 
 export default function ArcadePage() {
   const [activeGame, setActiveGame] = useState("none");
@@ -16,6 +17,13 @@ export default function ArcadePage() {
       {activeGame === "none" ? (
         <div key="menu3d" style={{ width: '100%', height: '100%' }}>
           <ArcadeMenu onStartGame={(gameId) => setActiveGame(gameId)} />
+        </div>
+      ) : ['brokenbrief', 'worddrop', 'undercover', 'neonskribbl', 'priceiswhat', 'coopescape', 'neonbusiness'].includes(activeGame) ? (
+        <div key="multiplayer" style={{ width: '100%', height: '100%' }}>
+          <MultiplayerEngine 
+            activeGame={activeGame} 
+            onBack={() => setActiveGame("none")} 
+          />
         </div>
       ) : (
         <div key="engine2d" style={{ width: '100%', height: '100%' }}>
