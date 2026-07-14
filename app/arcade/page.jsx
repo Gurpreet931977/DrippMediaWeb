@@ -18,7 +18,7 @@ export default function ArcadePage() {
         <div key="menu3d" style={{ width: '100%', height: '100%' }}>
           <ArcadeMenu onStartGame={(gameId) => setActiveGame(gameId)} />
         </div>
-      ) : ['brokenbrief', 'worddrop', 'undercover', 'neonskribbl', 'priceiswhat', 'coopescape', 'neonbusiness'].includes(activeGame) ? (
+      ) : ['brokenbrief', 'worddrop', 'undercover', 'dumbdoodles', 'priceiswhat', 'coopescape', 'neonbusiness'].includes(activeGame) ? (
         <div key="multiplayer" style={{ width: '100%', height: '100%' }}>
           <MultiplayerEngine 
             activeGame={activeGame} 

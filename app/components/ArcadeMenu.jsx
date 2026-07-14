@@ -29,7 +29,7 @@ const MULTIPLAYER_GAMES = [
   { id: 'brokenbrief', title: 'THE BROKEN BRIEF', color: '#ff0055', desc: 'A game of creative telephone. Sketch, guess, and ruin the client brief.', category: 'PARTY' },
   { id: 'worddrop', title: 'TICK TOCK WORD DROP', color: '#ff9900', desc: 'Type a word with the given letters before the bomb explodes.', category: 'WORDS' },
   { id: 'undercover', title: 'THE UNDERCOVER SPY', color: '#33ccff', desc: 'Find the spy before they figure out the secret location.', category: 'SOCIAL' },
-  { id: 'neonskribbl', title: 'NEON SKRIBBL', color: '#ff33ff', desc: 'Draw the prompt on a neon canvas. Guess fast for more points.', category: 'DRAWING' },
+  { id: 'dumbdoodles', title: 'DUMB DOODLES', color: '#ff33ff', desc: 'Draw the prompt on a neon canvas. Guess fast for more points.', category: 'DRAWING' },
   { id: 'priceiswhat', title: 'THE PRICE IS WHAT?!', color: '#33ff33', desc: 'Guess the insane price of bizarre and luxury items.', category: 'TRIVIA' },
   { id: 'coopescape', title: 'CO-OP ESCAPE', color: '#00d2ff', desc: 'Communicate with your team to escape the digital room.', category: 'PUZZLE' },
   { id: 'neonbusiness', title: 'NEON BUSINESS', color: '#ebd73f', desc: 'A fast-paced, cutthroat property trading game.', category: 'BOARD' },
