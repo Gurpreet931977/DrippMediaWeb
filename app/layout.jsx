@@ -5,10 +5,10 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata = {
   metadataBase: new URL('https://drippmedia.com'),
   title: {
-    default: 'Dripp Media | Digital Branding & Creative Agency',
+    default: 'Dripp Media (Drip Media) | Digital Branding & Creative Agency',
     template: '%s | Dripp Media'
   },
-  description: 'Dripp Media is a digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
+  description: 'Dripp Media (often searched as Drip Media) is a digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
   keywords: [
     // Core Brand Identifiers
     'Dripp Media', 'drip media', 'dripmedia', 'drippmedia.com', 'Dripp Agency', 'The Dripp Agency',
@@ -122,8 +122,8 @@ export const metadata = {
   creator: 'Dripp Media',
   publisher: 'Dripp Media',
   openGraph: {
-    title: 'Dripp Media | Digital Branding & Creative Agency',
-    description: 'Dripp Media is a digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
+    title: 'Dripp Media (Drip Media) | Digital Branding & Creative Agency',
+    description: 'Dripp Media (often searched as Drip Media) is a digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
     url: 'https://drippmedia.com',
     siteName: 'Dripp Media',
     locale: 'en_US',
@@ -142,8 +142,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Dripp Media | Digital Branding & Creative Agency',
-    description: 'Digital branding and creative agency specializing in immersive digital experiences, web development, video production, and cutting-edge design.',
+    title: 'Dripp Media (Drip Media) | Digital Branding & Creative Agency',
+    description: 'Dripp Media (often searched as Drip Media) is a digital branding and creative agency specializing in immersive digital experiences, web development, video production, and cutting-edge design.',
     creator: '@drippmedia_',
   },
   alternates: {

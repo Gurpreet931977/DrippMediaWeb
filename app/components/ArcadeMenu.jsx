@@ -443,7 +443,7 @@ export default function ArcadeMenu({ onStartGame }) {
             const isActive = index === activeIndex;
             
             // Apply drag offset to the base offset for fluid dragging
-            const activeOffsetRaw = offset - (isDragging ? dragOffset / 300 : 0);
+            const activeOffsetRaw = offset + (isDragging ? dragOffset / 300 : 0);
             
             let translateX = activeOffsetRaw * 280;
             let translateZ = Math.abs(activeOffsetRaw) * -150;
