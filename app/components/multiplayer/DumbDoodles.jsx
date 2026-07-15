@@ -789,13 +789,13 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   if (gameState.status === 'lobby') {
     return (
       <div style={styles.background}>
-        <div style={{...styles.glassPanel, maxWidth: '600px', margin: isMobile ? '20px 10px' : '60px auto', padding: isMobile ? '20px 15px' : '40px'}}>
-          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: isMobile ? '1.5rem' : '2rem', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '20px' : '30px' }}>
+        <div style={{...styles.glassPanel, maxWidth: isMobile ? '600px' : '850px', margin: isMobile ? '20px 10px' : '4vh auto', padding: isMobile ? '20px 15px' : '40px'}}>
+          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: isMobile ? '1.5rem' : '2rem', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '15px' : '30px' }}>
             DUMB DOODLES
           </h1>
           
           {isHost ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '15px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '15px' }}>
               
               <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
                 <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}><Users size={16}/> Players</label>
@@ -862,7 +862,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: isMobile ? '10px 12px' : '15px 20px', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: isMobile ? '10px 12px' : '15px 20px', borderRadius: '12px', gridColumn: '1 / -1' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Custom words</label>
                   <label style={{ fontSize: isMobile ? '0.8rem' : '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -881,8 +881,9 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               <button 
                 onClick={() => startRound()}
                 style={{
+                  gridColumn: '1 / -1',
                   padding: isMobile ? '15px' : '20px', background: '#ff33ff', color: '#000', border: 'none', borderRadius: '12px',
-                  fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1rem' : '1.2rem', cursor: 'pointer', marginTop: '10px',
+                  fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1rem' : '1.2rem', cursor: 'pointer', marginTop: isMobile ? '5px' : '10px',
                   boxShadow: '0 0 20px rgba(255,51,255,0.3)'
                 }}
               >
