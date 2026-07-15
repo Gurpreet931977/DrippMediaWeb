@@ -393,16 +393,6 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      const initSize = () => {
-        const rect = canvas.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          canvas.width = rect.width;
-          canvas.height = rect.height;
-        }
-      };
-      initSize();
-      setTimeout(initSize, 100);
-      
       const ctx = canvas.getContext('2d');
       ctxRef.current = ctx;
     }
@@ -443,15 +433,26 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
 
   // Drawing Handlers
   const getMousePos = (e) => {
-    const nativeEvent = e.nativeEvent;
-    if (nativeEvent && nativeEvent.offsetX !== undefined) {
-      return { x: nativeEvent.offsetX, y: nativeEvent.offsetY };
-    }
     const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x: clientX - rect.left, y: clientY - rect.top };
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    let clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
   };
 
   const startDrawing = (e) => {
@@ -1000,11 +1001,11 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   };
 
   return (
-    <div style={styles.background}>
+    <div className="no-global-scale" style={styles.background}>
       <div style={dashboardStyle}>
         
         {/* LEFT PANEL: Game State & Players */}
-        <div style={{ ...styles.glassPanel, width: isMobile ? '100%' : '280px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ ...styles.glassPanel, order: isMobile ? 2 : 1, width: isMobile ? '100%' : '280px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: isMobile ? '15px' : '30px 20px', background: 'linear-gradient(180deg, rgba(255,51,255,0.1) 0%, transparent 100%)', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', display: isMobile ? 'flex' : 'block', justifyContent: 'space-between', alignItems: 'center' }}>
             <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1rem' : '1.5rem', color: '#ff33ff', margin: isMobile ? '0' : '0 0 10px 0', textShadow: '0 0 20px rgba(255,51,255,0.5)' }}>
               DUMB DOODLES
@@ -1074,7 +1075,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
         </div>
 
         {/* CENTER PANEL: Canvas / Overlays */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minHeight: isMobile ? '400px' : 'auto' }}>
+        <div style={{ flex: 1, order: isMobile ? 1 : 2, display: 'flex', flexDirection: 'column', gap: '20px', minHeight: isMobile ? 'auto' : 'auto' }}>
           
           <div style={{ ...styles.glassPanel, padding: isMobile ? '15px' : '20px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
             <h2 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', letterSpacing: '1px' }}>
@@ -1096,7 +1097,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
             
             {isMyTurn && gameState.status === 'playing' && (
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.4)', padding: '8px', borderRadius: '20px', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '8px', borderRadius: '20px', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
                   {['#ff33ff', '#33ff33', '#33ccff', '#ebd73f', '#ff3333', '#ff8c00', '#8a2be2', '#00ff7f', '#ffffff', '#0a0a0a'].map(c => (
                     <button key={c} onClick={() => setBrushColor(c)} style={{
                       width: '28px', height: '28px', borderRadius: '50%', background: c,
@@ -1113,7 +1114,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                     </button>
                   ))}
                 </div>
-                <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.4)', padding: '8px', borderRadius: '20px', alignItems: 'center', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '8px', borderRadius: '20px', alignItems: 'center', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
                    {[2, 6, 12, 24].map(s => (
                      <button key={s} onClick={() => setBrushSize(s)} style={{
                        width: '28px', height: '28px', borderRadius: '50%', background: brushSize === s ? 'rgba(255,255,255,0.15)' : 'transparent',
@@ -1129,7 +1130,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                      </button>
                    ))}
                 </div>
-                <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.4)', padding: '8px', borderRadius: '20px', alignItems: 'center', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '8px', borderRadius: '20px', alignItems: 'center', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
                    {['Solid', 'Neon', 'Glow', 'Marker', 'Crayon'].map(style => (
                      <button key={style} onClick={() => setBrushStyle(style)} style={{
                        padding: '6px 12px', borderRadius: '14px', 
@@ -1225,7 +1226,9 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
             
             <canvas 
               ref={canvasRef}
-              style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
+              width={800}
+              height={600}
+              style={{ width: '100%', height: isMobile ? 'auto' : '100%', aspectRatio: isMobile ? '4/3' : 'auto', display: 'block', touchAction: 'none' }}
               onPointerDown={startDrawing}
               onPointerMove={draw}
               onPointerUp={stopDrawing}
@@ -1235,7 +1238,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
         </div>
 
         {/* RIGHT PANEL: Chat */}
-        <div style={{ ...styles.glassPanel, width: isMobile ? '100%' : '320px', display: 'flex', flexDirection: 'column', height: isMobile ? '300px' : 'auto' }}>
+        <div style={{ ...styles.glassPanel, order: 3, width: isMobile ? '100%' : '320px', display: 'flex', flexDirection: 'column', height: isMobile ? '300px' : 'auto' }}>
           <div style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
             <h3 style={{ margin: 0, fontSize: '1rem', letterSpacing: '1px', fontFamily: "'Panchang', sans-serif" }}>LIVE CHAT</h3>
           </div>
