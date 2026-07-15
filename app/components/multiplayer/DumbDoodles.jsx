@@ -3,6 +3,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Eraser, Users, Clock, Trophy, PartyPopper, Settings, Bot, Undo2, Redo2, Trash2, Flame, MessageSquare, X } from 'lucide-react';
 import CustomAvatar from './CustomAvatar';
+import dynamic from 'next/dynamic';
+import confettiData from '../../../public/lottie/confetti.json';
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
+
+const BRUSH_COLORS = [
+  '#ff3333', '#ff9933', '#ebd73f', '#33ff33', '#33ffff', '#3333ff', '#ff33ff',
+  '#ffb3ba', '#ffdba4', '#ffffba', '#baffc9', '#bae1ff', '#e8baff', '#ffb3e6',
+  '#8b4513', '#a0522d', '#cd853f', '#ffffff', '#aaaaaa', '#555555', '#0a0a0a'
+];
 
 const DEFAULT_WORDS = [
   "SUN", "MOON", "STAR", "TREE", "CAR", "HOUSE", "APPLE", "BALL", "BOOK", "SHOE",
@@ -72,7 +81,16 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
   const [isMobileLeaderboardOpen, setIsMobileLeaderboardOpen] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [latestMobileMessage, setLatestMobileMessage] = useState(null);
+
+  useEffect(() => {
+    if (gameState.guessedPlayers?.includes(playerName) && gameState.status === 'playing') {
+      setShowConfetti(true);
+      const timer = setTimeout(() => setShowConfetti(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.guessedPlayers, playerName, gameState.status]);
 
   const canvasRef = useRef(null);
   const isDrawingRef = useRef(false);
@@ -404,6 +422,16 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     if (canvas) {
       const ctx = canvas.getContext('2d');
       ctxRef.current = ctx;
+    }
+  }, [gameState.status]);
+
+  // Clear canvas on new round
+  useEffect(() => {
+    if (gameState.status === 'choosing_word') {
+      const ctx = ctxRef.current;
+      const canvas = canvasRef.current;
+      if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      allLinesRef.current = [];
     }
   }, [gameState.status]);
 
@@ -799,7 +827,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   if (gameState.status === 'lobby') {
     return (
       <div className="no-global-scale" style={{...styles.background, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-        <div style={{...styles.glassPanel, maxWidth: isMobile ? '95%' : '900px', width: '100%', maxHeight: '95vh', display: 'flex', flexDirection: 'column', padding: isMobile ? '20px 15px' : '40px', boxSizing: 'border-box', boxShadow: '0 0 50px rgba(255,51,255,0.1), inset 0 0 20px rgba(255,255,255,0.05)' }}>
+        <div style={{...styles.glassPanel, maxWidth: isMobile ? '100vw' : '900px', width: '100%', maxHeight: '100vh', display: 'flex', flexDirection: 'column', padding: isMobile ? '20px 15px' : '40px', boxSizing: 'border-box', boxShadow: '0 0 50px rgba(255,51,255,0.1), inset 0 0 20px rgba(255,255,255,0.05)', margin: 0, borderRadius: isMobile ? 0 : '24px' }}>
           <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '15px' : '25px', wordBreak: 'break-word', overflowWrap: 'break-word', flexShrink: 0 }}>
             DUMB DOODLES
           </h1>
@@ -1154,10 +1182,10 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               <div style={styles.overlay}>
                 {isMyTurn ? (
                   <>
-                    <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '2rem', marginBottom: '30px' }}>CHOOSE A WORD</h2>
-                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1.2rem' : '2rem', marginBottom: isMobile ? '15px' : '30px' }}>CHOOSE A WORD</h2>
+                    <div style={{ display: 'flex', gap: isMobile ? '10px' : '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                       {gameState.wordChoices.map(w => (
-                        <button key={w} onClick={() => handleSelectWord(w)} style={styles.wordChoiceBtn}>
+                        <button key={w} onClick={() => handleSelectWord(w)} style={{ ...styles.wordChoiceBtn, padding: isMobile ? '12px 20px' : '20px 40px', fontSize: isMobile ? '1rem' : '1.5rem' }}>
                           {w}
                         </button>
                       ))}
@@ -1179,7 +1207,12 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
 
             {(!isMyTurn || gameState.status !== 'playing') && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }} />} {/* Block clicks */}
             
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', position: 'relative' }}>
+              {showConfetti && (
+                <div style={{ position: 'absolute', inset: 0, zIndex: 100, pointerEvents: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <Lottie animationData={confettiData} loop={false} style={{ width: '100%', height: '100%' }} />
+                </div>
+              )}
               <canvas 
                 ref={canvasRef}
                 width={800}
@@ -1195,65 +1228,117 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           
           {/* BRUSH CONTROLS */}
           {isMyTurn && gameState.status === 'playing' && (
-            <div style={{ ...styles.glassPanel, padding: isMobile ? '10px' : '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ 
+              ...styles.glassPanel, 
+              padding: isMobile ? '12px' : '20px', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '15px',
+              borderTop: '1px solid rgba(255,255,255,0.15)',
+              background: 'linear-gradient(180deg, rgba(30,30,30,0.8) 0%, rgba(10,10,10,0.95) 100%)',
+              boxShadow: '0 -10px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
+            }}>
               
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                  {['#ebd73f', '#ff33ff', '#33ffff', '#ff3333', '#33ff33', '#ffffff', '#0a0a0a'].map(c => (
-                    <button 
-                      key={c}
-                      onClick={() => setBrushColor(c)}
-                      style={{
-                        width: '30px', height: '30px', borderRadius: '50%', background: c,
-                        border: brushColor === c ? '3px solid #fff' : '1px solid rgba(255,255,255,0.2)',
-                        cursor: 'pointer', flexShrink: 0,
-                        boxShadow: c !== '#0a0a0a' && brushColor === c ? `0 0 15px ${c}` : 'none'
-                      }}
-                      title={c === '#0a0a0a' ? 'Eraser' : 'Color'}
-                    />
-                  ))}
+              {/* Top Row: Tools & Brush Styles */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+                
+                {/* Brush Styles */}
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                  {['Neon', 'Solid', 'Marker', 'Glow', 'Crayon'].map(st => {
+                    const isActive = brushStyle === st;
+                    return (
+                      <button 
+                        key={st} onClick={() => setBrushStyle(st)}
+                        style={{
+                          padding: '8px 16px', borderRadius: '30px', fontSize: '0.8rem', fontWeight: isActive ? 'bold' : 'normal',
+                          background: isActive ? 'linear-gradient(135deg, #ff33ff 0%, #ebd73f 100%)' : 'rgba(255,255,255,0.05)',
+                          border: isActive ? 'none' : '1px solid rgba(255,255,255,0.1)', 
+                          cursor: 'pointer', color: isActive ? '#000' : '#fff',
+                          boxShadow: isActive ? '0 0 20px rgba(255,51,255,0.4)' : 'none',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transform: isActive ? 'scale(1.05)' : 'scale(1)'
+                        }}
+                        onMouseEnter={e => { if(!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'translateY(-2px)'; } }}
+                        onMouseLeave={e => { if(!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'scale(1)'; } }}
+                      >
+                        {st}
+                      </button>
+                    )
+                  })}
                 </div>
 
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  {[2, 6, 12, 24].map(s => (
-                    <button 
-                      key={s} onClick={() => setBrushSize(s)}
-                      style={{
-                        width: '30px', height: '30px', borderRadius: '50%', 
-                        background: brushSize === s ? 'rgba(255,255,255,0.2)' : 'transparent',
-                        border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
-                        display: 'flex', justifyContent: 'center', alignItems: 'center'
-                      }}
-                    >
-                      <div style={{ width: s, height: s, background: '#fff', borderRadius: '50%' }} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  {['Neon', 'Solid', 'Marker', 'Glow', 'Crayon'].map(st => (
-                    <button 
-                      key={st} onClick={() => setBrushStyle(st)}
-                      style={{
-                        padding: '6px 12px', borderRadius: '20px', fontSize: '0.75rem',
-                        background: brushStyle === st ? 'rgba(255,255,255,0.2)' : 'transparent',
-                        border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: '#fff'
-                      }}
-                    >
-                      {st}
-                    </button>
-                  ))}
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={undo} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}><Undo2 size={18} /></button>
-                  <button onClick={redo} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}><Redo2 size={18} /></button>
-                  <button onClick={clearCanvas} style={{ background: 'transparent', border: 'none', color: '#ff3333', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                {/* Actions (Undo, Redo, Clear) */}
+                <div style={{ display: 'flex', gap: isMobile ? '20px' : '12px', background: 'rgba(0,0,0,0.3)', padding: '6px 16px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <button onClick={undo} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.7, transition: 'all 0.2s' }} onMouseEnter={e => {e.currentTarget.style.opacity = 1; e.currentTarget.style.transform = 'scale(1.1)'}} onMouseLeave={e => {e.currentTarget.style.opacity = 0.7; e.currentTarget.style.transform = 'scale(1)'}}><Undo2 size={24} /></button>
+                  <button onClick={redo} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.7, transition: 'all 0.2s' }} onMouseEnter={e => {e.currentTarget.style.opacity = 1; e.currentTarget.style.transform = 'scale(1.1)'}} onMouseLeave={e => {e.currentTarget.style.opacity = 0.7; e.currentTarget.style.transform = 'scale(1)'}}><Redo2 size={24} /></button>
+                  <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)', margin: '0 4px' }} />
+                  <button onClick={clearCanvas} style={{ background: 'transparent', border: 'none', color: '#ff3333', cursor: 'pointer', opacity: 0.8, transition: 'all 0.2s' }} onMouseEnter={e => {e.currentTarget.style.opacity = 1; e.currentTarget.style.transform = 'scale(1.1); filter: drop-shadow(0 0 8px #ff3333)'}} onMouseLeave={e => {e.currentTarget.style.opacity = 0.8; e.currentTarget.style.transform = 'scale(1); filter: none'}}><Trash2 size={24} /></button>
                 </div>
               </div>
 
+              {/* Bottom Row: Colors & Sizes */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+                
+                {/* Color Ribbon */}
+                <div style={{ 
+                  display: 'flex', gap: '12px', overflowX: 'auto', padding: '15px 10px', margin: '-10px 0',
+                  scrollbarWidth: 'none', flex: 1, maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' 
+                }}>
+                  <div style={{ width: '5px', flexShrink: 0 }} /> {/* spacer */}
+                  {BRUSH_COLORS.map(c => {
+                    const isActive = brushColor === c;
+                    const isEraser = c === '#0a0a0a';
+                    return (
+                      <button 
+                        key={c}
+                        onClick={() => setBrushColor(c)}
+                        style={{
+                          width: isActive ? '36px' : '30px', height: isActive ? '36px' : '30px', 
+                          borderRadius: '50%', background: c,
+                          border: isActive ? '3px solid #fff' : (isEraser ? '1px solid rgba(255,255,255,0.5)' : '1px solid rgba(0,0,0,0.2)'),
+                          cursor: 'pointer', flexShrink: 0,
+                          boxShadow: !isEraser && isActive ? `0 0 20px ${c}` : (isEraser ? 'inset 0 0 10px rgba(255,255,255,0.2)' : '0 4px 6px rgba(0,0,0,0.3)'),
+                          transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                          transform: isActive ? 'translateY(-4px)' : 'translateY(0)',
+                          display: 'flex', justifyContent: 'center', alignItems: 'center'
+                        }}
+                        title={isEraser ? 'Eraser' : 'Color'}
+                        onMouseEnter={e => { if(!isActive) e.currentTarget.style.transform = 'translateY(-2px)' }}
+                        onMouseLeave={e => { if(!isActive) e.currentTarget.style.transform = 'translateY(0)' }}
+                      >
+                        {isEraser && <Eraser size={14} color="#fff" opacity={0.7} />}
+                      </button>
+                    )
+                  })}
+                  <div style={{ width: '5px', flexShrink: 0 }} /> {/* spacer */}
+                </div>
+
+                {/* Brush Sizes */}
+                <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px 10px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  {[2, 6, 12, 24].map(s => {
+                    const isActive = brushSize === s;
+                    return (
+                      <button 
+                        key={s} onClick={() => setBrushSize(s)}
+                        style={{
+                          width: '32px', height: '32px', borderRadius: '50%', 
+                          background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
+                          border: isActive ? '1px solid rgba(255,255,255,0.3)' : '1px solid transparent', cursor: 'pointer',
+                          display: 'flex', justifyContent: 'center', alignItems: 'center',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => { if(!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+                        onMouseLeave={e => { if(!isActive) e.currentTarget.style.background = 'transparent' }}
+                      >
+                        <div style={{ 
+                          width: s, height: s, background: isActive ? '#fff' : 'rgba(255,255,255,0.5)', 
+                          borderRadius: '50%', transition: 'all 0.2s', boxShadow: isActive ? '0 0 10px rgba(255,255,255,0.5)' : 'none' 
+                        }} />
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           )}
         </div>
