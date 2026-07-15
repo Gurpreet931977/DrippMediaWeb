@@ -37,7 +37,7 @@ export default function ArcadePage() {
   }
 
   return (
-    <div className="arcade-body-marker" style={{ position: 'fixed', inset: 0, width: '100vw', height: '100svh', backgroundColor: '#050505', overflow: 'hidden', touchAction: 'none' }}>
+    <div className="arcade-body-marker" style={{ position: 'fixed', inset: 0, width: '100vw', height: '100svh', backgroundColor: '#050505', overflow: activeGame === 'none' ? 'hidden' : 'auto', touchAction: activeGame === 'none' ? 'none' : 'auto' }}>
       
       {/* Global Exit Button for all active games */}
       {activeGame !== "none" && (

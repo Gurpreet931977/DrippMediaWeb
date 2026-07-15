@@ -1139,12 +1139,14 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           
           <div style={{ 
               ...styles.glassPanel, 
-              flex: 1, 
+              flex: isMobile ? 'none' : 1, 
+              width: '100%',
+              aspectRatio: isMobile ? '4/3' : 'auto',
               position: 'relative',
               background: '#0a0a0a',
               cursor: isMyTurn && gameState.status === 'playing' ? 'crosshair' : 'default',
               boxShadow: isMyTurn && gameState.status === 'playing' ? '0 0 40px rgba(255,51,255,0.1) inset' : 'none',
-              minHeight: isMobile ? '300px' : 'auto'
+              minHeight: isMobile ? 'auto' : 'auto'
           }}>
             
             {/* OVERLAYS */}
@@ -1261,12 +1263,12 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           <div style={{ 
             ...styles.glassPanel, 
             ...(isMobile ? {
-              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000,
-              borderRadius: 0, overflowY: 'auto'
+              position: 'fixed', top: 'auto', left: 0, right: 0, bottom: 0, height: '60vh', zIndex: 1000,
+              borderRadius: '24px 24px 0 0', overflow: 'hidden', boxShadow: '0 -10px 40px rgba(255,51,255,0.2)', border: '1px solid rgba(255,51,255,0.4)', background: 'rgba(10,10,10,0.95)', borderBottom: 'none'
             } : {
               order: 3, width: '320px'
             }),
-            display: 'flex', flexDirection: 'column', height: isMobile ? '100%' : 'auto', minHeight: isMobile ? '100%' : 'auto' 
+            display: 'flex', flexDirection: 'column', minHeight: isMobile ? '60vh' : 'auto' 
           }}>
             {isMobile && (
                <button onClick={() => setIsMobileChatOpen(false)} style={{position: 'absolute', top: 15, right: 15, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', zIndex: 10, borderRadius: '50%', width: 36, height: 36, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
