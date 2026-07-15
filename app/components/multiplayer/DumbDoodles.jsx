@@ -139,23 +139,11 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           ctx.stroke();
           ctx.globalAlpha = 1; // reset
         });
-      })
       .on('broadcast', { event: 'clear_canvas' }, () => {
-                <button onClick={() => {
-                    const ctx = ctxRef.current;
-                    const canvas = canvasRef.current;
-                    if (ctx && canvas) {
-                      ctx.clearRect(0, 0, canvas.width, canvas.height);
-                      channel.send({ type: 'broadcast', event: 'clear_canvas', payload: {} });
-                    }
-                  }} style={{
-                    padding: '8px 16px', borderRadius: '16px', background: 'rgba(255,51,51,0.1)', border: '1px solid rgba(255,51,51,0.3)',
-                    color: '#ff3333', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', fontWeight: 'bold',
-                    transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,51,51,0.2)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,51,51,0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
-                  >});
+        const ctx = ctxRef.current;
+        const canvas = canvasRef.current;
+        if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      });
   }, [channel]);
 
   // Host Initial Setup (Scores & Avatars)
@@ -1045,7 +1033,21 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                      </button>
                    ))}
                 </div>
-                <button onClick={clearCanvas} style={styles.iconBtn}>
+                <button onClick={() => {
+                    const ctx = ctxRef.current;
+                    const canvas = canvasRef.current;
+                    if (ctx && canvas) {
+                      ctx.clearRect(0, 0, canvas.width, canvas.height);
+                      channel.send({ type: 'broadcast', event: 'clear_canvas', payload: {} });
+                    }
+                  }} style={{
+                    padding: '8px 16px', borderRadius: '16px', background: 'rgba(255,51,51,0.1)', border: '1px solid rgba(255,51,51,0.3)',
+                    color: '#ff3333', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', fontWeight: 'bold',
+                    transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,51,51,0.2)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,51,51,0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                  >
                   <Eraser size={16} /> CLEAR
                 </button>
               </div>

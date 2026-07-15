@@ -10,6 +10,7 @@ import UndercoverSpy from './multiplayer/UndercoverSpy';
 import BrokenBrief from './multiplayer/BrokenBrief';
 import PriceIsWhat from './multiplayer/PriceIsWhat';
 import CoopEscape from './multiplayer/CoopEscape';
+import NeonBusiness from './multiplayer/NeonBusiness';
 
 export default function MultiplayerEngine({ activeGame, onBack }) {
   const [roomCode, setRoomCode] = useState('');
@@ -151,10 +152,13 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
         gameComponent = <BrokenBrief channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
         break;
       case 'priceiswhat':
-        gameComponent = <PriceIsWhat channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <PriceIsWhat roomCode={roomCode} playerName={playerName} players={players} isHost={isHost} channel={channel} playerAvatars={playerAvatars} />;
         break;
       case 'coopescape':
-        gameComponent = <CoopEscape channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <CoopEscape roomCode={roomCode} playerName={playerName} players={players} isHost={isHost} channel={channel} playerAvatars={playerAvatars} />;
+        break;
+      case 'neonbusiness':
+        gameComponent = <NeonBusiness roomCode={roomCode} playerName={playerName} players={players} isHost={isHost} channel={channel} playerAvatars={playerAvatars} />;
         break;
       default:
         gameComponent = (
