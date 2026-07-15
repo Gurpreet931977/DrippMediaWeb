@@ -1059,6 +1059,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontWeight: isActive ? 'bold' : 'normal', color: hasGuessed ? '#33ff33' : (isActive ? '#ff33ff' : '#fff'), fontSize: '0.9rem' }}>
                           {p} {isMe && <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>(You)</span>}
+                        </span>
                       </div>
                     </div>
                     <div style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', color: '#ebd73f' }}>
@@ -1072,6 +1073,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
         </div>
 
         {/* CENTER PANEL: Canvas / Overlays */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', order: isMobile ? 1 : 2, minWidth: 0 }}>
           <div style={{ ...styles.glassPanel, padding: isMobile ? '10px 15px' : '20px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: isMobile ? '5px' : '10px' }}>
             <h2 style={{ margin: 0, fontSize: isMobile ? '0.8rem' : '1rem', display: 'flex', alignItems: 'center', gap: isMobile ? '5px' : '10px', letterSpacing: '1px', flexWrap: 'wrap' }}>
               {gameState.status === 'choosing_word' ? (
