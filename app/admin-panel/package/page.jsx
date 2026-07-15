@@ -1,19 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Package, Copy, CheckCircle2, RefreshCw, Share2, Layers, DollarSign, Calendar, Edit3, Trash2, Plus } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Package, Copy, CheckCircle2, RefreshCw, Share2, Layers, DollarSign, Calendar, Edit3, Trash2, Plus, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import styles from '../admin.module.css';
 
 export default function PackageMaker() {
   const [isClient, setIsClient] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const pdfRef = useRef(null);
   
   const [brandName, setBrandName] = useState('');
   const [packageType, setPackageType] = useState('monthly');
   const [totalBudget, setTotalBudget] = useState('0');
+  const [pmpStrategy, setPmpStrategy] = useState('');
   const [services, setServices] = useState([
     { name: 'Custom Strategy', qty: 1, rate: 0 }
   ]);
+  
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState('');
 
   useEffect(() => {
     setIsClient(true);
@@ -25,6 +32,7 @@ export default function PackageMaker() {
         if (data.brandName) setBrandName(data.brandName);
         if (data.packageType) setPackageType(data.packageType.toLowerCase());
         if (data.totalBudget) setTotalBudget(data.totalBudget.toString());
+        if (data.pmpStrategy) setPmpStrategy(data.pmpStrategy);
         if (data.services && data.services.length > 0) {
           setServices(data.services);
         }
@@ -50,11 +58,67 @@ export default function PackageMaker() {
     setServices(services.filter((_, i) => i !== index));
   };
 
-  const generateShareLink = () => {
-    // Placeholder logic for sharing
-    navigator.clipboard.writeText(`https://drippmedia.com/pmp/${Math.random().toString(36).substr(2, 9)}`);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+  const generatePDF = async () => {
+    const pdf = new jsPDF('l', 'px', [1920, 1080]);
+    const elements = document.querySelectorAll('.standalone-pdf-slide');
+    
+    for (let i = 0; i < elements.length; i++) {
+        const slide = elements[i];
+        slide.style.display = 'flex';
+        try {
+            const canvas = await html2canvas(slide, { scale: 2, backgroundColor: '#050505' });
+            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+            if (i > 0) pdf.addPage([1920, 1080], 'l');
+            pdf.addImage(imgData, 'JPEG', 0, 0, 1920, 1080);
+        } catch (err) {
+            console.error(`Error rendering slide ${i}`, err);
+        }
+        slide.style.display = 'none';
+    }
+    
+    const brandNameStr = brandName ? `_${brandName.replace(/\s+/g, '_')}` : '';
+    pdf.save(`Dripp_Media_PMP${brandNameStr}.pdf`);
+  };
+
+  const generateShareLink = async () => {
+    setIsGeneratingLink(true);
+    const pass = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    try {
+        // We post to /api/quote but pass type as standalone_pmp
+        const payload = {
+            type: 'standalone_pmp',
+            clientDetails: { brandName },
+            packageType,
+            total: parseFloat(totalBudget || 0),
+            pmpStrategy,
+            items: services.map(s => ({ desc: s.name, qty: s.qty, rate: s.rate })),
+            password: pass
+        };
+        
+        const response = await fetch('/api/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const link = `${window.location.origin}/quote/${data.id}`;
+            setGeneratedLink(link);
+            const msg = `Hey!\n\nHere is your custom Marketing Package & Strategy Outline from Dripp Media.\n\n🔗 Link: ${link}\n🔑 PIN: ${pass}`;
+            navigator.clipboard.writeText(msg);
+            setCopiedLink(true);
+            setTimeout(() => setCopiedLink(false), 3000);
+        } else {
+            alert("Failed to save package securely.");
+        }
+    } catch(err) {
+        console.error(err);
+        alert("API error while generating secure link.");
+    } finally {
+        setIsGeneratingLink(false);
+    }
   };
 
   if (!isClient) return <div style={{ padding: '50px', color: 'white' }}>Loading PMP Maker...</div>;
@@ -177,12 +241,12 @@ export default function PackageMaker() {
           <p style={{ color: '#888', marginTop: '8px' }}>Design a personalized PMP for your clients</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn-secondary" onClick={() => window.location.reload()}>
-            <RefreshCw size={18} /> Reset
+          <button className="btn-secondary" onClick={generatePDF}>
+            <Download size={18} /> Export PDF
           </button>
-          <button className="btn-primary" onClick={generateShareLink}>
+          <button className="btn-primary" onClick={generateShareLink} disabled={isGeneratingLink}>
             {copiedLink ? <CheckCircle2 size={18} /> : <Share2 size={18} />}
-            {copiedLink ? 'LINK COPIED' : 'SHARE PACKAGE'}
+            {copiedLink ? 'LINK & PIN COPIED' : (isGeneratingLink ? 'GENERATING...' : 'SHARE PACKAGE')}
           </button>
         </div>
       </div>
@@ -220,6 +284,19 @@ export default function PackageMaker() {
                 </select>
               </div>
             </div>
+          </div>
+
+          <div className="pmp-card">
+            <h3 style={{ margin: '0 0 24px 0', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Edit3 size={20} color="#ebd73f" /> Strategy / Concept Pitch
+            </h3>
+            <textarea 
+              className="pmp-input" 
+              style={{ minHeight: '120px', resize: 'vertical' }}
+              placeholder="e.g. A storytelling UGC campaign targeting high-income demographics..."
+              value={pmpStrategy}
+              onChange={(e) => setPmpStrategy(e.target.value)}
+            />
           </div>
 
           <div className="pmp-card">
@@ -316,9 +393,71 @@ export default function PackageMaker() {
                 This is a {packageType === 'monthly' ? 'recurring monthly' : packageType === 'hourly' ? 'hourly billed' : 'one-time'} package.
               </p>
             </div>
+            
+            {generatedLink && (
+              <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.1)', border: '1px dashed #ebd73f', borderRadius: '12px' }}>
+                 <p style={{ margin: '0 0 5px 0', fontSize: '0.85rem', color: '#ebd73f' }}>Client Link:</p>
+                 <a href={generatedLink} target="_blank" rel="noreferrer" style={{ color: 'white', wordBreak: 'break-all', fontSize: '0.9rem' }}>{generatedLink}</a>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* HIDDEN PDF TEMPLATES */}
+      <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
+        
+        {/* SLIDE 1: Cover */}
+        <div className="standalone-pdf-slide" style={{ width: '1920px', height: '1080px', background: '#050505', color: 'white', padding: '100px', boxSizing: 'border-box', position: 'relative', overflow: 'hidden', display: 'none', flexDirection: 'column', justifyContent: 'space-between' }}>
+           <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(235,215,63,0.15) 0%, transparent 70%)', filter: 'blur(60px)', zIndex: 0 }} />
+           
+           <div style={{ zIndex: 1 }}>
+              <h1 style={{ fontSize: '120px', color: '#ebd73f', margin: 0, letterSpacing: '-4px', fontWeight: '900', fontFamily: "'Panchang', sans-serif" }}>DRIPP MEDIA</h1>
+              <p style={{ fontSize: '32px', color: '#888', margin: '10px 0 0 0', fontWeight: '300' }}>Premium Marketing Proposal</p>
+           </div>
+           
+           <div style={{ zIndex: 1, flex: 1.5, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <p style={{ fontSize: '24px', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px' }}>PREPARED FOR</p>
+              <h2 style={{ fontSize: '100px', color: '#fff', margin: '0 0 10px 0', lineHeight: 1.1, fontFamily: "'Panchang', sans-serif" }}>{brandName || 'Client Name'}</h2>
+           </div>
+        </div>
+
+        {/* SLIDE 2: Strategy */}
+        {pmpStrategy && (
+          <div className="standalone-pdf-slide" style={{ width: '1920px', height: '1080px', background: '#050505', color: 'white', padding: '100px', boxSizing: 'border-box', position: 'relative', display: 'none', flexDirection: 'column' }}>
+             <h2 style={{ fontSize: '50px', color: '#ebd73f', margin: '0 0 60px 0', fontFamily: "'Panchang', sans-serif" }}>Marketing Strategy</h2>
+             <div style={{ background: 'rgba(255, 255, 255, 0.02)', borderLeft: '8px solid #ebd73f', padding: '60px', borderRadius: '16px', flex: 1 }}>
+                 <p style={{ fontSize: '36px', color: '#fff', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>
+                     {pmpStrategy}
+                 </p>
+             </div>
+          </div>
+        )}
+
+        {/* SLIDE 3: Scope & Pricing */}
+        <div className="standalone-pdf-slide" style={{ width: '1920px', height: '1080px', background: '#050505', color: 'white', padding: '100px', boxSizing: 'border-box', position: 'relative', display: 'none', flexDirection: 'column' }}>
+           <h2 style={{ fontSize: '50px', color: '#ebd73f', margin: '0 0 60px 0', fontFamily: "'Panchang', sans-serif" }}>Scope of Work & Budget</h2>
+           
+           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {services.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', padding: '40px' }}>
+                      <div style={{ flex: 1 }}>
+                          <h3 style={{ fontSize: '40px', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif" }}>{item.name || 'Service Item'}</h3>
+                          <p style={{ fontSize: '28px', color: '#888', margin: 0 }}>Qty: {item.qty} {item.rate > 0 ? `| Rate: ₹${item.rate}` : ''}</p>
+                      </div>
+                  </div>
+              ))}
+           </div>
+           
+           <div style={{ marginTop: '60px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '24px', padding: '50px', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '20px' }}>
+               <p style={{ fontSize: '40px', color: '#888', textTransform: 'uppercase', letterSpacing: '4px', margin: 0 }}>Total Budget Quoted:</p>
+               <span style={{ fontSize: '60px', color: '#ebd73f', fontWeight: '500' }}>₹</span>
+               <span style={{ fontSize: '120px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-3px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{parseFloat(totalBudget || 0).toLocaleString()}</span>
+           </div>
+        </div>
+
+      </div>
+
     </div>
   );
 }

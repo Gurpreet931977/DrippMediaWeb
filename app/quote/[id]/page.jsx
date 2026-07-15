@@ -175,9 +175,10 @@ export default function SharedQuote() {
 
   // Calculate Subtotals
   const isInvoice = quoteData.type === 'invoice';
-  const details = isInvoice ? quoteData.invoiceDetails : quoteData.quoteDetails;
+  const isStandalone = quoteData.type === 'standalone_pmp';
+  const details = isInvoice ? quoteData.invoiceDetails : (quoteData.quoteDetails || {});
   const items = quoteData.items || [];
-  const currency = details?.currency || '$';
+  const currency = details?.currency || '₹';
 
   return (
     <div style={{ minHeight: '100vh', background: '#050505', color: 'white', padding: 'clamp(20px, 5vw, 60px) clamp(15px, 4vw, 20px)', fontFamily: "'Clash Display', sans-serif", position: 'relative', overflow: 'hidden' }}>
@@ -233,7 +234,7 @@ export default function SharedQuote() {
         {/* Cover Header Section */}
         <div className="quote-header">
           <h1 style={{ fontSize: 'clamp(2.5rem, 10vw, 4rem)', color: '#ebd73f', margin: '0 0 10px 0', letterSpacing: '-2px', fontWeight: '900', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 20px rgba(235, 215, 63, 0.3)', wordBreak: 'break-word' }}>DRIPP MEDIA</h1>
-          <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', color: '#888', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{isInvoice ? 'TAX INVOICE' : 'Proposal & Investment Overview'}</p>
+          <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', color: '#888', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{isInvoice ? 'TAX INVOICE' : (isStandalone ? 'Premium Marketing Proposal' : 'Proposal & Investment Overview')}</p>
         </div>
 
         {/* LEFT PANEL */}
@@ -272,14 +273,18 @@ export default function SharedQuote() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '20px' }}>
-                 <div style={{ flex: '1 1 auto' }}>
-                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>Date</p>
-                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{details?.date || quoteData.clientDetails?.date}</p>
-                 </div>
-                 <div style={{ textAlign: 'right', flex: '1 1 auto' }}>
-                    <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>{isInvoice ? 'Invoice #' : 'Proposal #'}</p>
-                    <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{details?.number}</p>
-                 </div>
+                 {!isStandalone && (
+                   <>
+                     <div style={{ flex: '1 1 auto' }}>
+                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>Date</p>
+                        <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{details?.date || quoteData.clientDetails?.date}</p>
+                     </div>
+                     <div style={{ textAlign: 'right', flex: '1 1 auto' }}>
+                        <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.8rem)', color: '#666', margin: '0 0 5px 0' }}>{isInvoice ? 'Invoice #' : 'Proposal #'}</p>
+                        <p style={{ fontSize: 'clamp(0.85rem, 4vw, 1rem)', color: '#ddd', margin: 0 }}>{details?.number}</p>
+                     </div>
+                   </>
+                 )}
               </div>
             </div>
           </div>
@@ -357,7 +362,7 @@ export default function SharedQuote() {
         {/* RIGHT PANEL */}
         <div className="quote-right">
           {/* PMP Strategy Section */}
-          {quoteData.includePMP && quoteData.pmpStrategy && !isInvoice && (
+          {((quoteData.includePMP || isStandalone) && quoteData.pmpStrategy && !isInvoice) && (
             <div style={{ marginBottom: '30px' }}>
               <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 15px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'left' }}>Marketing Strategy & Concept</h3>
               <div style={{ background: 'rgba(255, 255, 255, 0.02)', borderLeft: '4px solid #ebd73f', borderRadius: '12px', padding: 'clamp(20px, 4vw, 30px)', borderTop: '1px solid rgba(255, 255, 255, 0.05)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
