@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { PenTool, Keyboard, Eye, ChevronRight, CheckCircle2 } from 'lucide-react';
+import CustomAvatar from './CustomAvatar';
 
-export default function BrokenBrief({ channel, isHost, players, playerName }) {
+export default function BrokenBrief({ channel, isHost, players, playerName, playerAvatars }) {
   const [gameState, setGameState] = useState({
     status: 'starting', // starting, writing, drawing, guessing, reveal, gameover
     roundIndex: 0,
@@ -247,7 +248,10 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
           <p style={{ opacity: 0.7, fontSize: '1.2rem', marginTop: '10px' }}>Waiting for {players.length - gameState.readyPlayers.length} agents...</p>
           <div style={{ display: 'flex', gap: '10px', marginTop: '30px' }}>
             {players.map(p => (
-              <div key={p} style={{ width: '40px', height: '4px', background: gameState.readyPlayers.includes(p) ? '#33ff33' : 'rgba(255,255,255,0.1)', borderRadius: '2px' }} />
+              <div key={p} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                <CustomAvatar config={playerAvatars && playerAvatars[p]} size={32} />
+                <div style={{ width: '40px', height: '4px', background: gameState.readyPlayers.includes(p) ? '#33ff33' : 'rgba(255,255,255,0.1)', borderRadius: '2px' }} />
+              </div>
             ))}
           </div>
         </div>
@@ -343,7 +347,8 @@ export default function BrokenBrief({ channel, isHost, players, playerName }) {
                             border: `1px solid ${page.type === 'text' ? 'rgba(51,204,255,0.2)' : 'rgba(255,255,255,0.05)'}`,
                             padding: '30px', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center'
                          }}>
-                            <div style={{ background: 'rgba(255,255,255,0.1)', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', letterSpacing: '1px', marginBottom: '20px' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.1)', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', letterSpacing: '1px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <CustomAvatar config={playerAvatars && playerAvatars[page.author]} size={24} />
                               {page.author} {page.type === 'text' ? 'WROTE' : 'DREW'}
                             </div>
                             

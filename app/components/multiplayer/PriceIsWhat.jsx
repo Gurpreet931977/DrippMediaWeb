@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { Trophy, Clock, DollarSign, ArrowRight, Gavel, Play, Car, Music, Gem, Monitor, Fish, Book, Apple, MapPin, Rocket, Cake, Diamond, Globe, Bone, Bird, Lock, HelpCircle } from 'lucide-react';
+import CustomAvatar from './CustomAvatar';
 
 const ITEMS = [
   { name: '1962 Ferrari 250 GTO', price: 48400000, icon: 'Car', hint: 'The holy grail of classic cars.' },
@@ -45,7 +46,7 @@ const renderIcon = (name, props = {}) => {
 const MAX_ROUNDS = 5;
 const BID_TIME = 20;
 
-export default function PriceIsWhat({ channel, isHost, players, playerName }) {
+export default function PriceIsWhat({ channel, isHost, players, playerName, playerAvatars }) {
   const [gameState, setGameState] = useState({
     phase: 'lobby', // lobby, bidding, reveal, leaderboard
     round: 1,
@@ -247,7 +248,10 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
           
           <div style={styles.playerList}>
             {players.map((p, i) => (
-              <div key={i} style={styles.playerTag}>{p}</div>
+              <div key={i} style={{...styles.playerTag, display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <CustomAvatar config={playerAvatars && playerAvatars[p]} size={20} />
+                {p}
+              </div>
             ))}
           </div>
           
@@ -307,6 +311,7 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
           {players.map(p => (
             <div key={p} style={{ ...styles.playerTag, opacity: gameState.guesses[p] !== undefined ? 1 : 0.4, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CustomAvatar config={playerAvatars && playerAvatars[p]} size={20} />
               <span>{p}</span> {gameState.guesses[p] !== undefined ? <Lock size={16} /> : <HelpCircle size={16} />}
             </div>
           ))}
@@ -352,8 +357,11 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
                   const diff = guess - actualPrice;
                   const isWin = gameState.roundWinners.includes(p);
                   return (
-                    <div key={p} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '300px', padding: '10px', background: isWin ? 'rgba(51, 255, 51, 0.1)' : 'transparent', borderRadius: '8px' }}>
-                      <span style={{ fontWeight: isWin ? 'bold' : 'normal', color: isWin ? '#33ff33' : '#fff' }}>{p}</span>
+                    <div key={p} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '300px', padding: '10px', background: isWin ? 'rgba(51, 255, 51, 0.1)' : 'transparent', borderRadius: '8px', alignItems: 'center' }}>
+                      <span style={{ fontWeight: isWin ? 'bold' : 'normal', color: isWin ? '#33ff33' : '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <CustomAvatar config={playerAvatars && playerAvatars[p]} size={24} />
+                        {p}
+                      </span>
                       <span style={{ opacity: 0.8 }}>
                         {formatCurrency(guess)}
                         <span style={{ fontSize: '0.8rem', opacity: 0.5, marginLeft: '10px', color: diff > 0 ? '#ff3366' : (diff < 0 ? '#33ccff' : '#33ff33') }}>
@@ -395,6 +403,7 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: i === 0 ? '#ebd73f' : 'rgba(255,255,255,0.5)' }}>#{i+1}</span>
+                  <CustomAvatar config={playerAvatars && playerAvatars[p]} size={32} />
                   <span style={{ fontSize: '1.2rem', fontFamily: "'Panchang', sans-serif" }}>{p}</span>
                 </div>
                 <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{gameState.scores[p] || 0} pts</span>

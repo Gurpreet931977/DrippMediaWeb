@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Skull } from 'lucide-react';
+import CustomAvatar from './CustomAvatar';
 
 // Common words simple dictionary for validation (in a real app this would be a large JSON or API call)
 const DICTIONARY = ['APPLE', 'BANANA', 'CHEESE', 'DOG', 'CAT', 'STAR', 'TABLE', 'CHAIR', 'HOUSE', 'CAR', 'COMPUTER', 'MOUSE', 'KEYBOARD', 'SCREEN'];
 
-export default function WordDrop({ channel, isHost, players, playerName }) {
+export default function WordDrop({ channel, isHost, players, playerName, playerAvatars }) {
   const [gameState, setGameState] = useState({
     status: 'starting', // starting, playing, gameover
     currentTurnIndex: 0,
@@ -178,7 +179,13 @@ export default function WordDrop({ channel, isHost, players, playerName }) {
               alignItems: 'center',
               gap: '8px'
             }}>
-              <span>{p === playerName ? '> ' : ''}{p}</span>
+              <span>
+                {p === playerName ? '> ' : ''}
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <CustomAvatar config={playerAvatars && playerAvatars[p]} size={24} />
+                  {p}
+                </div>
+              </span>
               <div style={{ display: 'flex', gap: '2px' }}>
                 {Array.from({ length: gameState.lives[p] || 0 }).map((_, idx) => <Heart key={`h-${idx}`} size={16} color="#ff3333" fill="#ff3333" />)}
                 {Array.from({ length: 3 - (gameState.lives[p] || 0) }).map((_, idx) => <Skull key={`s-${idx}`} size={16} color="#555" />)}

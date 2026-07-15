@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Target, ShieldAlert, FileText, CheckCircle2, User, Ghost, Bot, Smile, Star, Heart, Zap, Flame, Music, Sun, Moon, Cloud, Coffee } from 'lucide-react';
+import CustomAvatar from './CustomAvatar';
 
 const LOCATIONS = [
   "HOSPITAL", "SUBMARINE", "SPACE STATION", "POLICE STATION", 
@@ -9,28 +10,7 @@ const LOCATIONS = [
   "SUPERMARKET", "ZOO", "MUSEUM", "LIBRARY", "GYM"
 ];
 
-// Icons for avatars
-const AVATARS = ['Smile', 'Star', 'Heart', 'Zap', 'Flame', 'Music', 'Sun', 'Moon', 'Cloud', 'Coffee', 'Ghost', 'Bot'];
-
-const renderAvatar = (name, props = { size: 24 }) => {
-  switch (name) {
-    case 'Ghost': return <Ghost {...props} color="#ebd73f" />;
-    case 'Bot': return <Bot {...props} color="#33ccff" />;
-    case 'Smile': return <Smile {...props} color="#ff33ff" />;
-    case 'Star': return <Star {...props} color="#33ff33" />;
-    case 'Heart': return <Heart {...props} color="#ff9900" />;
-    case 'Zap': return <Zap {...props} color="#ff0055" />;
-    case 'Flame': return <Flame {...props} color="#ff3333" />;
-    case 'Music': return <Music {...props} color="#ebd73f" />;
-    case 'Sun': return <Sun {...props} color="#00d2ff" />;
-    case 'Moon': return <Moon {...props} color="#b366ff" />;
-    case 'Cloud': return <Cloud {...props} color="#33ffcc" />;
-    case 'Coffee': return <Coffee {...props} color="#ff9933" />;
-    default: return <User {...props} color="#fff" />;
-  }
-};
-
-export default function UndercoverSpy({ channel, isHost, players, playerName }) {
+export default function UndercoverSpy({ channel, isHost, players, playerName, playerAvatars }) {
   const [gameState, setGameState] = useState({
     status: 'starting', // starting, interrogation, voting, gameover
     spyPlayer: '',
@@ -39,8 +19,7 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
     wordsSubmitted: [], 
     votes: {}, // { 'Player1': 2 }
     voters: [], // ['Player2', 'Player3']
-    winner: '', // 'agents' or 'spy'
-    avatars: {}
+    winner: '' // 'agents' or 'spy'
   });
 
   const [inputWord, setInputWord] = useState('');
@@ -52,10 +31,8 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
       const loc = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
       
       const initialVotes = {};
-      const initialAvatars = {};
       players.forEach(p => {
         initialVotes[p] = 0;
-        initialAvatars[p] = AVATARS[Math.floor(Math.random() * AVATARS.length)];
       });
 
       const initialState = {
@@ -66,8 +43,7 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
         wordsSubmitted: [],
         votes: initialVotes,
         voters: [],
-        winner: '',
-        avatars: initialAvatars
+        winner: ''
       };
 
       channel.send({ type: 'broadcast', event: 'sync_state', payload: initialState });
@@ -206,7 +182,7 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
                     boxShadow: isActive ? '0 0 20px rgba(255,255,255,0.05)' : 'none',
                     transition: 'all 0.3s'
                   }}>
-                    <span style={{ display: 'flex', alignItems: 'center' }}>{renderAvatar(gameState.avatars[p], { size: 24 })}</span>
+                    <span style={{ display: 'flex', alignItems: 'center' }}><CustomAvatar config={playerAvatars && playerAvatars[p]} size={24} /></span>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontWeight: isActive ? 'bold' : 'normal', color: '#fff' }}>
                         {p} {isMe && <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>(You)</span>}
@@ -303,7 +279,7 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
                           transition: 'all 0.3s'
                         }}
                       >
-                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{renderAvatar(gameState.avatars[p], { size: 48 })}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CustomAvatar config={playerAvatars && playerAvatars[p]} size={48} /></span>
                         <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem' }}>{p} {p === playerName ? '(YOU)' : ''}</span>
                         
                         {hasVoted ? (
@@ -352,7 +328,7 @@ export default function UndercoverSpy({ channel, isHost, players, playerName }) 
                       const initialState = {
                         status: 'interrogation', spyPlayer: spy, location: loc,
                         currentTurnIndex: 0, wordsSubmitted: [], votes: initialVotes,
-                        voters: [], winner: '', avatars: gameState.avatars
+                        voters: [], winner: ''
                       };
                       channel.send({ type: 'broadcast', event: 'sync_state', payload: initialState });
                       setGameState(initialState);
