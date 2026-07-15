@@ -143,7 +143,6 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           ctx.globalAlpha = 1; // reset
         });
       })
-      })
       .on('broadcast', { event: 'sync_history' }, ({ payload }) => {
          allLinesRef.current = payload;
          const ctx = ctxRef.current;
