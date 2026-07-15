@@ -280,7 +280,7 @@ export default function OrloChat() {
         
         if (data.intent === 'package') {
           sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
-          router.push('/admin-panel/package');
+          router.push('/admin-panel/quote');
         }
       }
 

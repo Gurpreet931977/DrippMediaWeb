@@ -60,12 +60,44 @@ export default function QuoteMaker() {
     message: "At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality. While our rates reflect this premium standard, our results ensure you never have to second-guess the investment."
   });
 
-  // Fix timezone issue on mount
+  const [includePmp, setIncludePmp] = useState(false);
+  const [pmpPitch, setPmpPitch] = useState('');
+
+  // Fix timezone issue on mount and check for Orlo package data
   useEffect(() => {
+    setIsClient(true);
     const tzOffsetMs = new Date().getTimezoneOffset() * 60000;
     const localDate = new Date(Date.now() - tzOffsetMs).toISOString().split('T')[0];
     setQuoteDetails(prev => ({ ...prev, date: localDate }));
     setClientDetails(prev => ({ ...prev, date: localDate }));
+
+    const pendingDataStr = sessionStorage.getItem('pendingPackageData');
+    if (pendingDataStr) {
+      try {
+        const data = JSON.parse(pendingDataStr);
+        if (data.brandName) setClientDetails(prev => ({ ...prev, brandName: data.brandName }));
+        if (data.packageType) setPackageType(data.packageType.toLowerCase() === 'project' ? 'project' : 'monthly');
+        
+        if (data.services && data.services.length > 0) {
+          setItems(data.services.map(s => ({
+            desc: s.name,
+            details: '',
+            qty: s.qty || 1,
+            rate: s.rate || 0
+          })));
+        } else if (data.totalBudget) {
+          setItems([{ desc: 'Custom Package', details: '', qty: 1, rate: parseFloat(data.totalBudget) }]);
+        }
+        
+        if (data.pmpPitch) {
+          setPmpPitch(data.pmpPitch);
+          setIncludePmp(true);
+        }
+        sessionStorage.removeItem('pendingPackageData');
+      } catch (err) {
+        console.error('Failed to parse package data', err);
+      }
+    }
   }, []);
 
   // Services
@@ -597,8 +629,13 @@ export default function QuoteMaker() {
     // We will generate the PDF using the hidden DOM elements via html2canvas
     const pdf = new jsPDF('l', 'px', [1920, 1080]);
     
-    for (let i = 0; i < pdfPages.length; i++) {
-        const pageId = pdfPages[i].id;
+    const pagesToRender = [...pdfPages];
+    if (includePmp && pmpPitch) {
+        pagesToRender.splice(1, 0, { id: 'pmp_pitch_auto', type: 'pmp_pitch', title: 'Premium Marketing Pitch', hideHeading: false });
+    }
+
+    for (let i = 0; i < pagesToRender.length; i++) {
+        const pageId = pagesToRender[i].id;
         const slide = document.getElementById(`pdf-slide-${pageId}`);
         if (slide) {
             slide.style.display = 'flex'; // Ensure it's rendered for canvas
@@ -643,6 +680,8 @@ export default function QuoteMaker() {
             items,
             packageType,
             total,
+            includePmp,
+            pmpPitch,
             password: pass
         };
         
@@ -929,9 +968,34 @@ export default function QuoteMaker() {
               </div>
             )}
 
-            <div>
+            <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Creative Message / Quality Promise</label>
               <textarea value={quoteDetails.message} onChange={e => handleQuoteChange('message', e.target.value)} className={styles.inputField} rows={4} style={{ resize: 'vertical' }} />
+            </div>
+
+            <div style={{ padding: '20px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.2)' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '1rem', color: '#fff', fontWeight: '500' }}>
+                <input 
+                  type="checkbox" 
+                  checked={includePmp} 
+                  onChange={(e) => setIncludePmp(e.target.checked)} 
+                  style={{ width: '18px', height: '18px', accentColor: '#ebd73f', cursor: 'pointer' }}
+                />
+                Include Premium Marketing Proposal (PMP Pitch)
+              </label>
+              {includePmp && (
+                <div style={{ marginTop: '15px' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>PMP Pitch / Storytelling Copy</label>
+                  <textarea 
+                    value={pmpPitch} 
+                    onChange={e => setPmpPitch(e.target.value)} 
+                    className={styles.inputField} 
+                    rows={6} 
+                    style={{ resize: 'vertical' }} 
+                    placeholder="Enter the storytelling pitch here..."
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -1312,6 +1376,18 @@ export default function QuoteMaker() {
 
       {/* HIDDEN PDF TEMPLATE - ONLY VISIBLE DURING EXPORT */}
       <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
+          {includePmp && pmpPitch && (
+              <div id="pdf-slide-pmp_pitch_auto" className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column', justifyContent: 'flex-start' }}>
+                  <div className={styles.pdfGlowOrb1} />
+                  <div className={styles.pdfGlowOrb2} />
+                  <div style={{ marginBottom: '60px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                      <h1 className={styles.pdfTitle} style={{ margin: 0, fontFamily: "'Panchang', sans-serif" }}>Premium Marketing Pitch</h1>
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+                      <p style={{ fontSize: '32px', color: '#ccc', lineHeight: '1.8', whiteSpace: 'pre-wrap', fontStyle: 'italic', textAlign: 'center' }}>"{pmpPitch}"</p>
+                  </div>
+              </div>
+          )}
           {pdfPages.map((page, index) => (
               <div key={page.id} id={`pdf-slide-${page.id}`} className={styles.pdfSlide} style={{ display: 'none', flexDirection: 'column', justifyContent: page.type === 'cover' || page.type === 'next_steps' || page.type === 'custom_text' ? 'space-between' : 'flex-start' }}>
                   <div className={styles.pdfGlowOrb1} />

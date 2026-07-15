@@ -356,6 +356,16 @@ export default function SharedQuote() {
 
         {/* RIGHT PANEL */}
         <div className="quote-right">
+          {/* PMP Pitch Section */}
+          {quoteData.includePmp && quoteData.pmpPitch && (
+            <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', backdropFilter: 'blur(10px)', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 15px 0', fontFamily: "'Panchang', sans-serif" }}>Premium Marketing Proposal</h3>
+                <p style={{ fontSize: 'clamp(0.95rem, 4vw, 1.1rem)', color: '#ddd', lineHeight: '1.8', whiteSpace: 'pre-wrap', fontStyle: 'italic', margin: 0 }}>
+                    "{quoteData.pmpPitch}"
+                </p>
+            </div>
+          )}
+
           {/* Services Section */}
           <div>
             <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'left' }}>{isInvoice ? 'Billed Items' : 'Proposed Services'}</h3>
