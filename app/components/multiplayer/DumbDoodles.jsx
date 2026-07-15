@@ -789,83 +789,83 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   if (gameState.status === 'lobby') {
     return (
       <div style={styles.background}>
-        <div style={{...styles.glassPanel, maxWidth: '600px', margin: '60px auto', padding: '40px'}}>
-          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: '2rem', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: '30px' }}>
+        <div style={{...styles.glassPanel, maxWidth: '600px', margin: isMobile ? '20px 10px' : '60px auto', padding: isMobile ? '20px 15px' : '40px'}}>
+          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: isMobile ? '1.5rem' : '2rem', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '20px' : '30px' }}>
             DUMB DOODLES
           </h1>
           
           {isHost ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '15px' }}>
               
-              <div style={styles.configRow}>
-                <label style={styles.configLabel}><Users size={16}/> Players</label>
-                <select value={gameState.config.maxPlayers} onChange={(e) => updateConfig('maxPlayers', parseInt(e.target.value))} style={styles.configInput}>
+              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
+                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}><Users size={16}/> Players</label>
+                <select value={gameState.config.maxPlayers} onChange={(e) => updateConfig('maxPlayers', parseInt(e.target.value))} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
                   {[2, 3, 4, 5, 6, 7, 8, 10, 12, 16].map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
               </div>
 
-              <div style={styles.configRow}>
-                <label style={styles.configLabel}>Language</label>
-                <select value={gameState.config.language} onChange={(e) => updateConfig('language', e.target.value)} style={styles.configInput}>
+              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
+                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Language</label>
+                <select value={gameState.config.language} onChange={(e) => updateConfig('language', e.target.value)} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
                   {['English'].map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
               </div>
 
-              <div style={styles.configRow}>
-                <label style={styles.configLabel}><Clock size={16}/> Drawtime</label>
-                <select value={gameState.config.drawTime} onChange={(e) => updateConfig('drawTime', parseInt(e.target.value))} style={styles.configInput}>
+              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
+                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}><Clock size={16}/> Drawtime</label>
+                <select value={gameState.config.drawTime} onChange={(e) => updateConfig('drawTime', parseInt(e.target.value))} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
                   {[30, 45, 60, 80, 100, 120].map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               
-              <div style={styles.configRow}>
-                <label style={styles.configLabel}><Settings size={16}/> Rounds</label>
-                <select value={gameState.config.rounds} onChange={(e) => updateConfig('rounds', parseInt(e.target.value))} style={styles.configInput}>
+              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
+                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}><Settings size={16}/> Rounds</label>
+                <select value={gameState.config.rounds} onChange={(e) => updateConfig('rounds', parseInt(e.target.value))} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
                   {[1, 2, 3, 4, 5, 10].map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
 
-              <div style={styles.configRow}>
-                <label style={styles.configLabel}>Game Mode</label>
-                <select value={gameState.config.gameMode} onChange={(e) => updateConfig('gameMode', e.target.value)} style={styles.configInput}>
+              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
+                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Game Mode</label>
+                <select value={gameState.config.gameMode} onChange={(e) => updateConfig('gameMode', e.target.value)} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
                   {['Normal', 'No Mercy'].map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
               </div>
 
-              <div style={styles.configRow}>
-                <label style={styles.configLabel}>Word Count</label>
-                <select value={gameState.config.wordCount} onChange={(e) => updateConfig('wordCount', parseInt(e.target.value))} style={styles.configInput}>
+              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
+                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Word Count</label>
+                <select value={gameState.config.wordCount} onChange={(e) => updateConfig('wordCount', parseInt(e.target.value))} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
                   {[2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
               </div>
 
-              <div style={styles.configRow}>
-                <label style={styles.configLabel}>Hints</label>
-                <select value={gameState.config.hints} onChange={(e) => updateConfig('hints', parseInt(e.target.value))} style={styles.configInput}>
+              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
+                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Hints</label>
+                <select value={gameState.config.hints} onChange={(e) => updateConfig('hints', parseInt(e.target.value))} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
                   {[0, 1, 2, 3].map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
               </div>
 
-              <div style={styles.configRow}>
-                <label style={styles.configLabel}>Word Template</label>
-                <select value={gameState.config.wordPack} onChange={(e) => updateConfig('wordPack', e.target.value)} style={styles.configInput}>
+              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
+                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Word Template</label>
+                <select value={gameState.config.wordPack} onChange={(e) => updateConfig('wordPack', e.target.value)} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem', maxWidth: isMobile ? '120px' : 'auto'}}>
                   {Object.keys(WORD_PACKS).map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '15px 20px', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: isMobile ? '10px 12px' : '15px 20px', borderRadius: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label style={styles.configLabel}>Fading Ink</label>
+                  <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Fading Ink</label>
                   <label style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                     <input type="checkbox" checked={gameState.config.fadingInk} onChange={(e) => updateConfig('fadingInk', e.target.checked)} style={{ transform: 'scale(1.2)' }} />
                   </label>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '15px 20px', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: isMobile ? '10px 12px' : '15px 20px', borderRadius: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label style={styles.configLabel}>Custom words</label>
-                  <label style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Custom words</label>
+                  <label style={{ fontSize: isMobile ? '0.8rem' : '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                     Use custom words only
                     <input type="checkbox" checked={gameState.config.customWordsOnly} onChange={(e) => updateConfig('customWordsOnly', e.target.checked)} style={{ transform: 'scale(1.2)' }} />
                   </label>
@@ -873,7 +873,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 <textarea 
                   value={gameState.config.customWords}
                   onChange={(e) => updateConfig('customWords', e.target.value)}
-                  style={{...styles.configInput, height: '80px', resize: 'none', width: '100%', boxSizing: 'border-box'}}
+                  style={{...styles.configInput, height: '80px', resize: 'none', width: '100%', boxSizing: 'border-box', padding: isMobile ? '6px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}
                   placeholder="e.g. GEMINI, ANTIGRAVITY, REACT"
                 />
               </div>
@@ -881,8 +881,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               <button 
                 onClick={() => startRound()}
                 style={{
-                  padding: '20px', background: '#ff33ff', color: '#000', border: 'none', borderRadius: '12px',
-                  fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', cursor: 'pointer', marginTop: '10px',
+                  padding: isMobile ? '15px' : '20px', background: '#ff33ff', color: '#000', border: 'none', borderRadius: '12px',
+                  fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1rem' : '1.2rem', cursor: 'pointer', marginTop: '10px',
                   boxShadow: '0 0 20px rgba(255,51,255,0.3)'
                 }}
               >
@@ -910,45 +910,45 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     
     return (
       <div style={styles.background}>
-        <div style={{...styles.glassPanel, maxWidth: '800px', margin: '60px auto', padding: '40px', textAlign: 'center'}}>
-          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#fff', fontSize: '2.5rem', marginBottom: '40px', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>LEADERBOARD</h1>
+        <div style={{...styles.glassPanel, maxWidth: '800px', margin: isMobile ? '20px 10px' : '60px auto', padding: isMobile ? '20px' : '40px', textAlign: 'center'}}>
+          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#fff', fontSize: isMobile ? '1.8rem' : '2.5rem', marginBottom: isMobile ? '20px' : '40px', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>LEADERBOARD</h1>
           
           {/* PODIUM */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '15px', height: '250px', marginBottom: '40px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: isMobile ? '5px' : '15px', height: isMobile ? '200px' : '250px', marginBottom: isMobile ? '20px' : '40px' }}>
             
             {/* 2nd Place */}
             {top3[1] && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '120px' }}>
-                <div style={{ marginBottom: '10px' }}><CustomAvatar config={playerAvatars[top3[1]]} size={64} /></div>
-                <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '5px', color: '#c0c0c0' }}>{top3[1]}</div>
-                <div style={{ fontSize: '0.8rem', color: '#c0c0c0', marginBottom: '10px' }}>{gameState.scores[top3[1]] || 0} pts</div>
-                <div style={{ width: '100%', height: '120px', background: 'linear-gradient(180deg, #c0c0c0 0%, rgba(192,192,192,0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px' }}>
-                  <span style={{ fontSize: '2rem', fontWeight: 'bold', color: '#fff' }}>2</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: isMobile ? '80px' : '120px' }}>
+                <div style={{ marginBottom: '10px' }}><CustomAvatar config={playerAvatars[top3[1]]} size={isMobile ? 40 : 64} /></div>
+                <div style={{ fontSize: isMobile ? '0.7rem' : '0.9rem', fontWeight: 'bold', marginBottom: '5px', color: '#c0c0c0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{top3[1]}</div>
+                <div style={{ fontSize: isMobile ? '0.7rem' : '0.8rem', color: '#c0c0c0', marginBottom: '10px' }}>{gameState.scores[top3[1]] || 0} pts</div>
+                <div style={{ width: '100%', height: isMobile ? '90px' : '120px', background: 'linear-gradient(180deg, #c0c0c0 0%, rgba(192,192,192,0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px' }}>
+                  <span style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: 'bold', color: '#fff' }}>2</span>
                 </div>
               </div>
             )}
 
             {/* 1st Place */}
             {top3[0] && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '140px' }}>
-                <Trophy size={40} color="#ebd73f" style={{ marginBottom: '10px', filter: 'drop-shadow(0 0 10px #ebd73f)' }} />
-                <div style={{ marginBottom: '10px' }}><CustomAvatar config={playerAvatars[top3[0]]} size={80} /></div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '5px', color: '#ebd73f' }}>{top3[0]}</div>
-                <div style={{ fontSize: '0.9rem', color: '#ebd73f', marginBottom: '10px' }}>{gameState.scores[top3[0]] || 0} pts</div>
-                <div style={{ width: '100%', height: '160px', background: 'linear-gradient(180deg, #ebd73f 0%, rgba(235, 215, 63, 0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px', boxShadow: '0 0 30px rgba(235, 215, 63, 0.3)' }}>
-                  <span style={{ fontSize: '3rem', fontWeight: 'bold', color: '#000' }}>1</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: isMobile ? '100px' : '140px' }}>
+                <Trophy size={isMobile ? 24 : 40} color="#ebd73f" style={{ marginBottom: '10px', filter: 'drop-shadow(0 0 10px #ebd73f)' }} />
+                <div style={{ marginBottom: '10px' }}><CustomAvatar config={playerAvatars[top3[0]]} size={isMobile ? 50 : 80} /></div>
+                <div style={{ fontSize: isMobile ? '0.8rem' : '1.1rem', fontWeight: 'bold', marginBottom: '5px', color: '#ebd73f', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{top3[0]}</div>
+                <div style={{ fontSize: isMobile ? '0.7rem' : '0.9rem', color: '#ebd73f', marginBottom: '10px' }}>{gameState.scores[top3[0]] || 0} pts</div>
+                <div style={{ width: '100%', height: isMobile ? '120px' : '160px', background: 'linear-gradient(180deg, #ebd73f 0%, rgba(235, 215, 63, 0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px', boxShadow: '0 0 30px rgba(235, 215, 63, 0.3)' }}>
+                  <span style={{ fontSize: isMobile ? '2rem' : '3rem', fontWeight: 'bold', color: '#000' }}>1</span>
                 </div>
               </div>
             )}
 
             {/* 3rd Place */}
             {top3[2] && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '120px' }}>
-                <div style={{ marginBottom: '10px' }}><CustomAvatar config={playerAvatars[top3[2]]} size={64} /></div>
-                <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '5px', color: '#cd7f32' }}>{top3[2]}</div>
-                <div style={{ fontSize: '0.8rem', color: '#cd7f32', marginBottom: '10px' }}>{gameState.scores[top3[2]] || 0} pts</div>
-                <div style={{ width: '100%', height: '90px', background: 'linear-gradient(180deg, #cd7f32 0%, rgba(205, 127, 50, 0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px' }}>
-                  <span style={{ fontSize: '2rem', fontWeight: 'bold', color: '#fff' }}>3</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: isMobile ? '80px' : '120px' }}>
+                <div style={{ marginBottom: '10px' }}><CustomAvatar config={playerAvatars[top3[2]]} size={isMobile ? 40 : 64} /></div>
+                <div style={{ fontSize: isMobile ? '0.7rem' : '0.9rem', fontWeight: 'bold', marginBottom: '5px', color: '#cd7f32', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{top3[2]}</div>
+                <div style={{ fontSize: isMobile ? '0.7rem' : '0.8rem', color: '#cd7f32', marginBottom: '10px' }}>{gameState.scores[top3[2]] || 0} pts</div>
+                <div style={{ width: '100%', height: isMobile ? '70px' : '90px', background: 'linear-gradient(180deg, #cd7f32 0%, rgba(205, 127, 50, 0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px' }}>
+                  <span style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: 'bold', color: '#fff' }}>3</span>
                 </div>
               </div>
             )}
@@ -957,17 +957,17 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           
           {/* Others */}
           {others.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: isMobile ? '10px' : '20px' }}>
               {others.map((p, i) => (
                 <div key={p} style={{ 
-                  display: 'flex', justifyContent: 'space-between', padding: '15px 20px', 
+                  display: 'flex', justifyContent: 'space-between', padding: isMobile ? '10px 15px' : '15px 20px', 
                   background: 'rgba(255,255,255,0.05)', borderRadius: '12px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.3)' }}>#{i+4}</span>
-                    <span style={{ fontSize: '1rem', fontFamily: "'Panchang', sans-serif" }}>{p}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '15px' }}>
+                    <span style={{ fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.3)' }}>#{i+4}</span>
+                    <span style={{ fontSize: isMobile ? '0.9rem' : '1rem', fontFamily: "'Panchang', sans-serif" }}>{p}</span>
                   </div>
-                  <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{gameState.scores[p] || 0} pts</span>
+                  <span style={{ fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: 'bold' }}>{gameState.scores[p] || 0} pts</span>
                 </div>
               ))}
             </div>
@@ -981,8 +981,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 setGameState(newState);
               }}
               style={{
-                padding: '20px', background: '#ebd73f', color: '#000', border: 'none', borderRadius: '12px',
-                fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', cursor: 'pointer', marginTop: '40px', width: '100%'
+                padding: isMobile ? '15px' : '20px', background: '#ebd73f', color: '#000', border: 'none', borderRadius: '12px',
+                fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1rem' : '1.2rem', cursor: 'pointer', marginTop: isMobile ? '20px' : '40px', width: '100%'
               }}
             >
               BACK TO LOBBY
@@ -1038,7 +1038,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               </div>
             )}
             
-            <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '10px', minWidth: isMobile ? 'max-content' : 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '10px', minWidth: 'max-content', paddingBottom: isMobile ? '5px' : '0' }}>
               {players.map((p, i) => {
                 const isActive = i === gameState.currentTurnIndex;
                 const isMe = p === playerName;
@@ -1058,9 +1058,6 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontWeight: isActive ? 'bold' : 'normal', color: hasGuessed ? '#33ff33' : (isActive ? '#ff33ff' : '#fff'), fontSize: '0.9rem' }}>
                           {p} {isMe && <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>(You)</span>}
-                        </span>
-                        {isActive && <span style={{ fontSize: '0.6rem', color: '#ff33ff', letterSpacing: '1px' }}>DRAWING</span>}
-                        {hasGuessed && <span style={{ fontSize: '0.6rem', color: '#33ff33', letterSpacing: '1px' }}>GUESSED</span>}
                       </div>
                     </div>
                     <div style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', color: '#ebd73f' }}>
@@ -1074,114 +1071,24 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
         </div>
 
         {/* CENTER PANEL: Canvas / Overlays */}
-        <div style={{ flex: 1, order: isMobile ? 1 : 2, display: 'flex', flexDirection: 'column', gap: '20px', minHeight: isMobile ? 'auto' : 'auto' }}>
-          
-          <div style={{ ...styles.glassPanel, padding: isMobile ? '15px' : '20px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-            <h2 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', letterSpacing: '1px' }}>
+          <div style={{ ...styles.glassPanel, padding: isMobile ? '10px 15px' : '20px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: isMobile ? '5px' : '10px' }}>
+            <h2 style={{ margin: 0, fontSize: isMobile ? '0.8rem' : '1rem', display: 'flex', alignItems: 'center', gap: isMobile ? '5px' : '10px', letterSpacing: '1px', flexWrap: 'wrap' }}>
               {gameState.status === 'choosing_word' ? (
                 <>WAITING FOR <span style={{ color: '#ff33ff' }}>{players[gameState.currentTurnIndex]}</span> TO CHOOSE...</>
               ) : gameState.status === 'round_over' ? (
-                <>ROUND OVER! THE WORD WAS: <span style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem' }}>{gameState.currentWord}</span></>
+                <>ROUND OVER! THE WORD WAS: <span style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1rem' : '1.2rem' }}>{gameState.currentWord}</span></>
               ) : isMyTurn ? (
-                <>DRAW THIS: <span style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', background: 'rgba(235, 215, 63, 0.1)', padding: '5px 10px', borderRadius: '8px' }}>{gameState.currentWord}</span></>
+                <>DRAW THIS: <span style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1rem' : '1.2rem', background: 'rgba(235, 215, 63, 0.1)', padding: isMobile ? '2px 8px' : '5px 10px', borderRadius: '8px' }}>{gameState.currentWord}</span></>
               ) : (
                 <>
                   <span style={{ color: '#ff33ff' }}>{players[gameState.currentTurnIndex]}</span> is drawing! 
-                  <span style={{ fontFamily: 'monospace', fontSize: '1.2rem', letterSpacing: '2px', marginLeft: '10px', background: 'rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '8px' }}>
+                  <span style={{ fontFamily: 'monospace', fontSize: isMobile ? '1rem' : '1.2rem', letterSpacing: isMobile ? '1px' : '2px', marginLeft: isMobile ? '5px' : '10px', background: 'rgba(255,255,255,0.1)', padding: isMobile ? '2px 8px' : '5px 10px', borderRadius: '8px' }}>
                     {getMaskedWord(gameState.currentWord, gameState.revealedIndices)}
                   </span>
                 </>
               )}
             </h2>
             
-            {isMyTurn && gameState.status === 'playing' && (
-              <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '8px', borderRadius: '20px', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
-                  {['#ff33ff', '#33ff33', '#33ccff', '#ebd73f', '#ff3333', '#ff8c00', '#8a2be2', '#00ff7f', '#ffffff', '#0a0a0a'].map(c => (
-                    <button key={c} onClick={() => setBrushColor(c)} style={{
-                      width: '28px', height: '28px', borderRadius: '50%', background: c,
-                      border: brushColor === c ? '3px solid white' : '2px solid rgba(255,255,255,0.1)',
-                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: brushColor === c ? `0 0 15px ${c}` : 'none',
-                      transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s, border 0.2s',
-                      transform: brushColor === c ? 'scale(1.2)' : 'scale(1)'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = brushColor === c ? 'scale(1.2)' : 'scale(1)'}
-                    >
-                      {c === '#0a0a0a' && <Eraser size={14} color="rgba(255,255,255,0.5)" />}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '8px', borderRadius: '20px', alignItems: 'center', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
-                   {[2, 6, 12, 24].map(s => (
-                     <button key={s} onClick={() => setBrushSize(s)} style={{
-                       width: '28px', height: '28px', borderRadius: '50%', background: brushSize === s ? 'rgba(255,255,255,0.15)' : 'transparent',
-                       border: brushSize === s ? '2px solid rgba(255,255,255,0.4)' : '1px solid transparent',
-                       cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                       transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                       transform: brushSize === s ? 'scale(1.15)' : 'scale(1)'
-                     }}
-                     onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'scale(1.1)'; }}
-                     onMouseLeave={e => { e.currentTarget.style.background = brushSize === s ? 'rgba(255,255,255,0.15)' : 'transparent'; e.currentTarget.style.transform = brushSize === s ? 'scale(1.15)' : 'scale(1)'; }}
-                     >
-                       <div style={{ width: s, height: s, borderRadius: '50%', background: brushColor === '#0a0a0a' ? '#555' : (brushColor || '#fff'), boxShadow: brushColor !== '#0a0a0a' ? `0 0 5px ${brushColor}` : 'none', transition: 'all 0.2s' }} />
-                     </button>
-                   ))}
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '8px', borderRadius: '20px', alignItems: 'center', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
-                   {['Solid', 'Neon', 'Glow', 'Marker', 'Crayon'].map(style => (
-                     <button key={style} onClick={() => setBrushStyle(style)} style={{
-                       padding: '6px 12px', borderRadius: '14px', 
-                       background: brushStyle === style ? 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%)' : 'transparent',
-                       border: brushStyle === style ? '1px solid rgba(255,255,255,0.5)' : '1px solid transparent',
-                       color: brushStyle === style ? '#fff' : 'rgba(255,255,255,0.4)',
-                       cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px',
-                       transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                       boxShadow: brushStyle === style ? '0 5px 15px rgba(0,0,0,0.5)' : 'none',
-                       transform: brushStyle === style ? 'scale(1.05)' : 'scale(1)'
-                     }}
-                     onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.color = '#fff'; }}
-                     onMouseLeave={e => { e.currentTarget.style.transform = brushStyle === style ? 'scale(1.05)' : 'scale(1)'; e.currentTarget.style.color = brushStyle === style ? '#fff' : 'rgba(255,255,255,0.4)'; }}
-                     >
-                       {style.toUpperCase()}
-                     </button>
-                   ))}
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={undo} title="Undo" style={{
-                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-                      color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.transform = 'scale(1.1)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
-                  >
-                    <Undo2 size={16} />
-                  </button>
-                  <button onClick={redo} title="Redo" style={{
-                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-                      color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.transform = 'scale(1.1)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
-                  >
-                    <Redo2 size={16} />
-                  </button>
-                  <button onClick={clearCanvas} title="Clear Canvas" style={{
-                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,51,51,0.1)', border: '1px solid rgba(255,51,51,0.3)',
-                      color: '#ff3333', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,51,51,0.2)'; e.currentTarget.style.transform = 'scale(1.1)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,51,51,0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
           
           <div style={{ 
@@ -1190,7 +1097,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               position: 'relative',
               background: '#0a0a0a',
               cursor: isMyTurn && gameState.status === 'playing' ? 'crosshair' : 'default',
-              boxShadow: isMyTurn && gameState.status === 'playing' ? '0 0 40px rgba(255,51,255,0.1) inset' : 'none'
+              boxShadow: isMyTurn && gameState.status === 'playing' ? '0 0 40px rgba(255,51,255,0.1) inset' : 'none',
+              minHeight: isMobile ? '300px' : 'auto'
           }}>
             
             {/* OVERLAYS */}
@@ -1237,7 +1145,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
         </div>
 
         {/* RIGHT PANEL: Chat */}
-        <div style={{ ...styles.glassPanel, order: 3, width: isMobile ? '100%' : '320px', display: 'flex', flexDirection: 'column', height: isMobile ? '300px' : 'auto' }}>
+        <div style={{ ...styles.glassPanel, order: 3, width: isMobile ? '100%' : '320px', display: 'flex', flexDirection: 'column', height: isMobile ? '350px' : 'auto', minHeight: isMobile ? '350px' : 'auto' }}>
           <div style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
             <h3 style={{ margin: 0, fontSize: '1rem', letterSpacing: '1px', fontFamily: "'Panchang', sans-serif" }}>LIVE CHAT</h3>
           </div>
@@ -1326,13 +1234,14 @@ const styles = {
   },
   dashboard: {
     display: 'flex',
-    gap: '20px',
-    padding: '20px',
+    gap: '15px',
+    padding: '10px',
     height: '100%',
     minHeight: '100vh',
     boxSizing: 'border-box',
     maxWidth: '1600px',
-    margin: '0 auto'
+    margin: '0 auto',
+    paddingTop: '60px' // Leave room for mobile back button at top left
   },
   glassPanel: {
     background: 'rgba(20, 20, 20, 0.65)',

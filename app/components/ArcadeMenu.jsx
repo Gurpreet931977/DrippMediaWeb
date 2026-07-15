@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, ChevronLeft, ChevronRight, Gamepad2 } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -41,6 +41,14 @@ export default function ArcadeMenu({ onStartGame }) {
   
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredGameId, setHoveredGameId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Custom cursor state
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
@@ -66,6 +74,7 @@ export default function ArcadeMenu({ onStartGame }) {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
+  const wasDraggedRef = useRef(false);
 
   // Developer Access State
   const [isDeveloper, setIsDeveloper] = useState(false);
@@ -121,7 +130,11 @@ export default function ArcadeMenu({ onStartGame }) {
   const handlePointerMove = (e) => {
     if (!isDragging) return;
     const currentX = e.clientX || e.touches?.[0]?.clientX || 0;
-    setDragOffset(currentX - startX);
+    const offset = currentX - startX;
+    setDragOffset(offset);
+    if (Math.abs(offset) > 10) {
+      wasDraggedRef.current = true;
+    }
   };
 
   const handlePointerUp = () => {
@@ -129,12 +142,18 @@ export default function ArcadeMenu({ onStartGame }) {
     setIsDragging(false);
     
     // Swipe threshold
-    if (dragOffset > 100) {
+    if (dragOffset > 50) {
       handlePrev();
-    } else if (dragOffset < -100) {
+    } else if (dragOffset < -50) {
       handleNext();
     }
+    
+    // Reset drag offset purely for visuals, but we rely on wasDraggedRef for click blocking
     setDragOffset(0);
+    // Let the click event capture the ref state, then reset it shortly after
+    setTimeout(() => {
+      wasDraggedRef.current = false;
+    }, 50);
   };
 
   return (
@@ -210,12 +229,14 @@ export default function ArcadeMenu({ onStartGame }) {
       <div style={{
         position: 'relative',
         zIndex: 10,
-        padding: '30px 60px 10px 60px',
+        padding: isMobile ? '20px 20px 10px 20px' : '30px 60px 10px 60px',
         display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
         justifyContent: 'space-between',
-        alignItems: 'flex-start'
+        alignItems: isMobile ? 'center' : 'flex-start',
+        gap: isMobile ? '15px' : '0'
       }}>
-        <div>
+        <div style={{ width: isMobile ? '100%' : 'auto', display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'center' : 'flex-start' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
             <Gamepad2 size={24} color={activeColor} style={{ filter: `drop-shadow(0 0 10px ${activeColor})`, transition: 'all 0.5s ease' }} />
             <span style={{ fontSize: '13px', letterSpacing: '4px', color: activeColor, fontWeight: 600, transition: 'all 0.5s ease' }}>SYSTEM.ONLINE</span>
@@ -229,7 +250,7 @@ export default function ArcadeMenu({ onStartGame }) {
             position: 'relative',
             border: '1px solid rgba(255,255,255,0.08)',
             boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.5)',
-            width: 'fit-content'
+            width: isMobile ? '100%' : 'fit-content'
           }}>
             {/* Sliding Pill Background */}
             <div 
@@ -259,12 +280,12 @@ export default function ArcadeMenu({ onStartGame }) {
               onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
               style={{
                 fontFamily: "'Panchang', sans-serif",
-                fontSize: '0.9rem',
+                fontSize: isMobile ? '0.7rem' : '0.9rem',
                 fontWeight: 700,
                 margin: 0,
-                padding: '10px 24px',
+                padding: isMobile ? '8px 5px' : '10px 24px',
                 textTransform: 'uppercase',
-                letterSpacing: '2px',
+                letterSpacing: isMobile ? '0px' : '2px',
                 lineHeight: 1,
                 cursor: 'none',
                 color: activeMode === 'arcade' ? '#000' : 'rgba(255,255,255,0.4)',
@@ -292,12 +313,12 @@ export default function ArcadeMenu({ onStartGame }) {
               onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
               style={{
                 fontFamily: "'Panchang', sans-serif",
-                fontSize: '0.9rem',
+                fontSize: isMobile ? '0.7rem' : '0.9rem',
                 fontWeight: 700,
                 margin: 0,
-                padding: '10px 24px',
+                padding: isMobile ? '8px 5px' : '10px 24px',
                 textTransform: 'uppercase',
-                letterSpacing: '2px',
+                letterSpacing: isMobile ? '0px' : '2px',
                 lineHeight: 1,
                 cursor: 'none',
                 color: activeMode === 'creative' ? '#000' : 'rgba(255,255,255,0.4)',
@@ -325,12 +346,12 @@ export default function ArcadeMenu({ onStartGame }) {
               onMouseLeave={(e) => { gsap.to(e.currentTarget, { scale: 1, y: 0, rotate: 0, duration: 0.4, ease: "back.out(2)" }); }}
               style={{
                 fontFamily: "'Panchang', sans-serif",
-                fontSize: '0.9rem',
+                fontSize: isMobile ? '0.65rem' : '0.9rem',
                 fontWeight: 700,
                 margin: 0,
-                padding: '10px 24px',
+                padding: isMobile ? '8px 2px' : '10px 24px',
                 textTransform: 'uppercase',
-                letterSpacing: '2px',
+                letterSpacing: isMobile ? '0px' : '2px',
                 lineHeight: 1,
                 cursor: 'none',
                 color: activeMode === 'multiplayer' ? '#000' : 'rgba(255,255,255,0.4)',
@@ -350,13 +371,13 @@ export default function ArcadeMenu({ onStartGame }) {
         </div>
         
         <div style={{
-          textAlign: 'right',
+          textAlign: isMobile ? 'center' : 'right',
           fontFamily: 'monospace',
-          fontSize: '13px',
+          fontSize: '11px',
           color: 'rgba(255,255,255,0.3)',
           letterSpacing: '1px',
           lineHeight: '1.8',
-          display: 'flex',
+          display: isMobile ? 'none' : 'flex',
           flexDirection: 'column',
           alignItems: 'flex-end',
           gap: '8px'
@@ -463,7 +484,7 @@ export default function ArcadeMenu({ onStartGame }) {
                 <div
                   className={`card-visual card-${index}`}
                   onClick={(e) => {
-                    if (Math.abs(dragOffset) > 10) { e.preventDefault(); e.stopPropagation(); return; }
+                    if (wasDraggedRef.current) { e.preventDefault(); e.stopPropagation(); return; }
                     
                     if (isActive) {
                       const isOriginalGame = game.id === 'dripp' || game.id === 'breaker';
