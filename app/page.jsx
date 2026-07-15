@@ -99,6 +99,13 @@ export default function ComingSoon() {
               setDisplayHighScore(val);
           }
       }
+      // Check URL for login prompt (e.g. redirected from protected /arcade route)
+      if (typeof window !== 'undefined' && window.location.search.includes('login=true')) {
+         setShowSignupModal(true);
+         setAuthModalInitialTab('login');
+         window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
     } catch(e) {}
   }, []);
 
