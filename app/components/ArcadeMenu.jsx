@@ -141,11 +141,27 @@ export default function ArcadeMenu({ onStartGame }) {
     if (!isDragging) return;
     setIsDragging(false);
     
-    // Swipe threshold
-    if (dragOffset > 50) {
-      handlePrev();
-    } else if (dragOffset < -50) {
-      handleNext();
+    // Swipe threshold for multiple cards
+    let shiftCards = Math.round(dragOffset / 200);
+    
+    if (shiftCards === 0) {
+      if (dragOffset > 40) shiftCards = 1;
+      else if (dragOffset < -40) shiftCards = -1;
+    }
+
+    if (shiftCards !== 0) {
+      let newIndex = (activeIndex - shiftCards) % activeGameList.length;
+      if (newIndex < 0) newIndex += activeGameList.length;
+      
+      if (activeMode === 'arcade') {
+        const dir = shiftCards > 0 ? 50 : -50;
+        const rot = shiftCards > 0 ? 10 : -10;
+        gsap.fromTo('.carousel-container', 
+          { x: dir, rotationY: rot, scale: 0.95 }, 
+          { x: 0, rotationY: 0, scale: 1, duration: 0.8, ease: "elastic.out(1, 0.4)" }
+        );
+      }
+      setActiveIndex(newIndex);
     }
     
     // Reset drag offset purely for visuals, but we rely on wasDraggedRef for click blocking
