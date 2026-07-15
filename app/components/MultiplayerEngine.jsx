@@ -206,7 +206,23 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           width: '80vw', height: '80vh', background: 'radial-gradient(circle at center, rgba(235, 215, 63, 0.15), transparent 70%)',
           pointerEvents: 'none', filter: 'blur(60px)'
         }} />
-        <h1 style={{ color: '#ebd73f', fontSize: 'clamp(1.2rem, 6vw, 4rem)', margin: '0 0 15px 0', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 30px rgba(235,215,63,0.5)', textAlign: 'center', width: '100%', overflowWrap: 'break-word', wordBreak: 'break-word' }}>ROOM: {roomCode}</h1>
+        <h1 style={{ 
+          fontSize: 'clamp(1rem, 5vw, 4rem)', 
+          margin: '0 0 15px 0', 
+          fontFamily: "'Panchang', sans-serif", 
+          textAlign: 'center', 
+          width: '100%', 
+          whiteSpace: 'nowrap',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <span style={{ color: 'rgba(255,255,255,0.4)' }}>ROOM:</span>
+          <span style={{ color: '#000', background: '#ebd73f', padding: '5px 15px', borderRadius: '8px', boxShadow: '0 0 30px rgba(235,215,63,0.4)' }}>
+            {roomCode}
+          </span>
+        </h1>
         <p style={{ letterSpacing: isMobile ? '3px' : '6px', opacity: 0.8, marginBottom: isMobile ? '30px' : '50px', fontSize: isMobile ? '0.9rem' : '1.2rem', textTransform: 'uppercase', textAlign: 'center' }}>WAITING FOR AGENTS</p>
 
         <div style={{ 
@@ -380,7 +396,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
             type="text" 
             placeholder="ROOM NAME" 
             value={joinInput}
-            onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
+            onChange={(e) => setJoinInput(e.target.value.toUpperCase().replace(/\s/g, '-'))}
             style={{ 
               flex: 1, padding: isMobile ? '12px 15px' : '15px 20px', background: 'rgba(0,0,0,0.4)', 
               border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '16px', 

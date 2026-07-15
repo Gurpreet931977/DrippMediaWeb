@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Eraser, Users, Clock, Trophy, PartyPopper, Settings, Bot, Undo2, Redo2, Trash2 } from 'lucide-react';
+import { Send, Eraser, Users, Clock, Trophy, PartyPopper, Settings, Bot, Undo2, Redo2, Trash2, Flame, MessageSquare, X } from 'lucide-react';
 import CustomAvatar from './CustomAvatar';
 
 const DEFAULT_WORDS = [
@@ -70,6 +70,9 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   const [brushStyle, setBrushStyle] = useState('Neon');
   
   const [isMobile, setIsMobile] = useState(false);
+  const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+  const [isMobileLeaderboardOpen, setIsMobileLeaderboardOpen] = useState(false);
+  const [latestMobileMessage, setLatestMobileMessage] = useState(null);
 
   const canvasRef = useRef(null);
   const isDrawingRef = useRef(false);
@@ -105,6 +108,13 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       })
       .on('broadcast', { event: 'chat_msg' }, ({ payload }) => {
         setChat(prev => [...prev, payload].slice(-30));
+        if (isMobile && !isMobileChatOpen) {
+          setLatestMobileMessage(payload);
+          if (timerRef.current) clearTimeout(timerRef.current);
+          timerRef.current = setTimeout(() => {
+            setLatestMobileMessage(null);
+          }, 3000);
+        }
       })
       .on('broadcast', { event: 'draw_batch' }, ({ payload }) => {
         const ctx = ctxRef.current;
@@ -788,107 +798,109 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   // -------------------------
   if (gameState.status === 'lobby') {
     return (
-      <div style={styles.background}>
-        <div style={{...styles.glassPanel, maxWidth: isMobile ? '600px' : '850px', margin: isMobile ? '20px 10px' : '4vh auto', padding: isMobile ? '20px 15px' : '40px', boxSizing: 'border-box' }}>
-          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '15px' : '30px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+      <div style={{...styles.background, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+        <div style={{...styles.glassPanel, maxWidth: isMobile ? '95%' : '900px', width: '100%', maxHeight: '95vh', display: 'flex', flexDirection: 'column', padding: isMobile ? '20px 15px' : '40px', boxSizing: 'border-box', boxShadow: '0 0 50px rgba(255,51,255,0.1), inset 0 0 20px rgba(255,255,255,0.05)' }}>
+          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '15px' : '25px', wordBreak: 'break-word', overflowWrap: 'break-word', flexShrink: 0 }}>
             DUMB DOODLES
           </h1>
           
           {isHost ? (
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '15px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '10px' : '15px', overflowY: 'auto', flex: 1, paddingRight: '5px' }}>
               
-              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
-                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}><Users size={16}/> Players</label>
-                <select value={gameState.config.maxPlayers} onChange={(e) => updateConfig('maxPlayers', parseInt(e.target.value))} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
-                  {[2, 3, 4, 5, 6, 7, 8, 10, 12, 16].map(v => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: isMobile ? '8px' : '12px' }}>
+                <div style={{...styles.configRow, flexDirection: 'column', alignItems: 'flex-start', padding: '10px 15px', gap: '8px'}}>
+                  <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}><Users size={14}/> Players</label>
+                  <select value={gameState.config.maxPlayers} onChange={(e) => updateConfig('maxPlayers', parseInt(e.target.value))} style={{...styles.configInput, width: '100%', padding: '6px', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'}}>
+                    {[2, 3, 4, 5, 6, 7, 8, 10, 12, 16].map(v => <option key={v} value={v} style={{background:'#000'}}>{v}</option>)}
+                  </select>
+                </div>
 
-              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
-                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Language</label>
-                <select value={gameState.config.language} onChange={(e) => updateConfig('language', e.target.value)} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
-                  {['English'].map(v => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
+                <div style={{...styles.configRow, flexDirection: 'column', alignItems: 'flex-start', padding: '10px 15px', gap: '8px'}}>
+                  <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}>Language</label>
+                  <select value={gameState.config.language} onChange={(e) => updateConfig('language', e.target.value)} style={{...styles.configInput, width: '100%', padding: '6px', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'}}>
+                    {['English'].map(v => <option key={v} value={v} style={{background:'#000'}}>{v}</option>)}
+                  </select>
+                </div>
 
-              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
-                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}><Clock size={16}/> Drawtime</label>
-                <select value={gameState.config.drawTime} onChange={(e) => updateConfig('drawTime', parseInt(e.target.value))} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
-                  {[30, 45, 60, 80, 100, 120].map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              
-              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
-                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}><Settings size={16}/> Rounds</label>
-                <select value={gameState.config.rounds} onChange={(e) => updateConfig('rounds', parseInt(e.target.value))} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
-                  {[1, 2, 3, 4, 5, 10].map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
+                <div style={{...styles.configRow, flexDirection: 'column', alignItems: 'flex-start', padding: '10px 15px', gap: '8px'}}>
+                  <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}><Clock size={14}/> Drawtime</label>
+                  <select value={gameState.config.drawTime} onChange={(e) => updateConfig('drawTime', parseInt(e.target.value))} style={{...styles.configInput, width: '100%', padding: '6px', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'}}>
+                    {[30, 45, 60, 80, 100, 120].map(t => <option key={t} value={t} style={{background:'#000'}}>{t}s</option>)}
+                  </select>
+                </div>
+                
+                <div style={{...styles.configRow, flexDirection: 'column', alignItems: 'flex-start', padding: '10px 15px', gap: '8px'}}>
+                  <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}><Settings size={14}/> Rounds</label>
+                  <select value={gameState.config.rounds} onChange={(e) => updateConfig('rounds', parseInt(e.target.value))} style={{...styles.configInput, width: '100%', padding: '6px', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'}}>
+                    {[1, 2, 3, 4, 5, 10].map(r => <option key={r} value={r} style={{background:'#000'}}>{r}</option>)}
+                  </select>
+                </div>
 
-              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
-                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Game Mode</label>
-                <select value={gameState.config.gameMode} onChange={(e) => updateConfig('gameMode', e.target.value)} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
-                  {['Normal', 'No Mercy'].map(v => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
+                <div style={{...styles.configRow, flexDirection: 'column', alignItems: 'flex-start', padding: '10px 15px', gap: '8px'}}>
+                  <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}>Game Mode</label>
+                  <select value={gameState.config.gameMode} onChange={(e) => updateConfig('gameMode', e.target.value)} style={{...styles.configInput, width: '100%', padding: '6px', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'}}>
+                    {['Normal', 'No Mercy'].map(v => <option key={v} value={v} style={{background:'#000'}}>{v}</option>)}
+                  </select>
+                </div>
 
-              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
-                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Word Count</label>
-                <select value={gameState.config.wordCount} onChange={(e) => updateConfig('wordCount', parseInt(e.target.value))} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
-                  {[2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
+                <div style={{...styles.configRow, flexDirection: 'column', alignItems: 'flex-start', padding: '10px 15px', gap: '8px'}}>
+                  <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}>Word Count</label>
+                  <select value={gameState.config.wordCount} onChange={(e) => updateConfig('wordCount', parseInt(e.target.value))} style={{...styles.configInput, width: '100%', padding: '6px', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'}}>
+                    {[2, 3, 4, 5].map(v => <option key={v} value={v} style={{background:'#000'}}>{v}</option>)}
+                  </select>
+                </div>
 
-              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
-                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Hints</label>
-                <select value={gameState.config.hints} onChange={(e) => updateConfig('hints', parseInt(e.target.value))} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}>
-                  {[0, 1, 2, 3].map(v => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
+                <div style={{...styles.configRow, flexDirection: 'column', alignItems: 'flex-start', padding: '10px 15px', gap: '8px'}}>
+                  <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}>Hints</label>
+                  <select value={gameState.config.hints} onChange={(e) => updateConfig('hints', parseInt(e.target.value))} style={{...styles.configInput, width: '100%', padding: '6px', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'}}>
+                    {[0, 1, 2, 3].map(v => <option key={v} value={v} style={{background:'#000'}}>{v}</option>)}
+                  </select>
+                </div>
 
-              <div style={{...styles.configRow, padding: isMobile ? '8px 12px' : '12px 20px'}}>
-                <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Word Template</label>
-                <select value={gameState.config.wordPack} onChange={(e) => updateConfig('wordPack', e.target.value)} style={{...styles.configInput, padding: isMobile ? '4px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem', maxWidth: isMobile ? '120px' : 'auto'}}>
-                  {Object.keys(WORD_PACKS).map(v => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
+                <div style={{...styles.configRow, flexDirection: 'column', alignItems: 'flex-start', padding: '10px 15px', gap: '8px'}}>
+                  <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}>Word Pack</label>
+                  <select value={gameState.config.wordPack} onChange={(e) => updateConfig('wordPack', e.target.value)} style={{...styles.configInput, width: '100%', padding: '6px', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'}}>
+                    {Object.keys(WORD_PACKS).map(v => <option key={v} value={v} style={{background:'#000'}}>{v}</option>)}
+                  </select>
+                </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: isMobile ? '10px 12px' : '15px 20px', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Fading Ink</label>
-                  <label style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={gameState.config.fadingInk} onChange={(e) => updateConfig('fadingInk', e.target.checked)} style={{ transform: 'scale(1.2)' }} />
-                  </label>
+                <div style={{...styles.configRow, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '10px 15px', gap: '8px'}}>
+                  <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}>Fading Ink</label>
+                  <input type="checkbox" checked={gameState.config.fadingInk} onChange={(e) => updateConfig('fadingInk', e.target.checked)} style={{ transform: 'scale(1.2)', accentColor: '#ff33ff', cursor: 'pointer' }} />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: isMobile ? '10px 12px' : '15px 20px', borderRadius: '12px', gridColumn: '1 / -1' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginTop: '5px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label style={{...styles.configLabel, fontSize: isMobile ? '0.9rem' : '1rem'}}>Custom words</label>
-                  <label style={{ fontSize: isMobile ? '0.8rem' : '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    Use custom words only
-                    <input type="checkbox" checked={gameState.config.customWordsOnly} onChange={(e) => updateConfig('customWordsOnly', e.target.checked)} style={{ transform: 'scale(1.2)' }} />
+                  <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}>Custom words</label>
+                  <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'rgba(255,255,255,0.6)' }}>
+                    Only custom words
+                    <input type="checkbox" checked={gameState.config.customWordsOnly} onChange={(e) => updateConfig('customWordsOnly', e.target.checked)} style={{ transform: 'scale(1.1)', accentColor: '#ff33ff' }} />
                   </label>
                 </div>
                 <textarea 
                   value={gameState.config.customWords}
                   onChange={(e) => updateConfig('customWords', e.target.value)}
-                  style={{...styles.configInput, height: '80px', resize: 'none', width: '100%', boxSizing: 'border-box', padding: isMobile ? '6px 8px' : '8px 12px', fontSize: isMobile ? '0.9rem' : '1rem'}}
+                  style={{...styles.configInput, height: '60px', resize: 'none', width: '100%', boxSizing: 'border-box', padding: '8px 12px', fontSize: '0.9rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)'}}
                   placeholder="e.g. GEMINI, ANTIGRAVITY, REACT"
                 />
               </div>
 
               <button 
                 onClick={() => startRound()}
+                className="lobby-start-btn"
                 style={{
-                  gridColumn: '1 / -1',
-                  padding: isMobile ? '10px' : '20px', background: '#ff33ff', color: '#000', border: 'none', borderRadius: '12px',
-                  fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1rem' : '1.2rem', cursor: 'pointer', marginTop: isMobile ? '5px' : '10px',
-                  boxShadow: '0 0 20px rgba(255,51,255,0.3)'
+                  padding: '16px', background: 'linear-gradient(90deg, #ff33ff 0%, #ff66ff 100%)', color: '#000', border: 'none', borderRadius: '12px',
+                  fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', cursor: 'pointer', marginTop: '10px', flexShrink: 0,
+                  boxShadow: '0 0 30px rgba(255,51,255,0.4)', transition: 'all 0.3s ease', letterSpacing: '2px', fontWeight: 'bold'
                 }}
               >
                 START GAME
               </button>
+              <style>{`
+                .lobby-start-btn:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(255,51,255,0.6) !important; }
+                .lobby-start-btn:active { transform: translateY(1px); }
+              `}</style>
             </div>
           ) : (
             <div style={{ textAlign: 'center', opacity: 0.7 }}>
@@ -1005,11 +1017,26 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       <div style={dashboardStyle}>
         
         {/* LEFT PANEL: Game State & Players */}
-        <div style={{ ...styles.glassPanel, order: isMobile ? 2 : 1, width: isMobile ? '100%' : '280px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: isMobile ? '15px' : '30px 20px', background: 'linear-gradient(180deg, rgba(255,51,255,0.1) 0%, transparent 100%)', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', display: isMobile ? 'flex' : 'block', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1rem' : '1.5rem', color: '#ff33ff', margin: isMobile ? '0' : '0 0 10px 0', textShadow: '0 0 20px rgba(255,51,255,0.5)' }}>
-              DUMB DOODLES
-            </h1>
+        {(!isMobile || isMobileLeaderboardOpen) && (
+          <div style={{ 
+            ...styles.glassPanel, 
+            ...(isMobile ? {
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000,
+              borderRadius: 0, overflowY: 'auto'
+            } : {
+              order: 1, width: '280px'
+            }),
+            display: 'flex', flexDirection: 'column' 
+          }}>
+            {isMobile && (
+               <button onClick={() => setIsMobileLeaderboardOpen(false)} style={{position: 'absolute', top: 15, right: 15, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', zIndex: 10, borderRadius: '50%', width: 36, height: 36, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                 <X size={20} />
+               </button>
+            )}
+            <div style={{ padding: isMobile ? '40px 20px 20px 20px' : '30px 20px', background: 'linear-gradient(180deg, rgba(255,51,255,0.1) 0%, transparent 100%)', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+              <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1.2rem' : '1.5rem', color: '#ff33ff', margin: 0, textShadow: '0 0 20px rgba(255,51,255,0.5)' }}>
+                DUMB DOODLES
+              </h1>
             
             <div style={{ display: 'flex', gap: '10px' }}>
               {gameState.config.gameMode === 'No Mercy' && (
@@ -1071,6 +1098,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
             </div>
           </div>
         </div>
+        )}
 
         {/* CENTER PANEL: Canvas / Overlays */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', order: isMobile ? 1 : 2, minWidth: 0 }}>
@@ -1091,7 +1119,22 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 </>
               )}
             </h2>
+            {isMobile && (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'rgba(0,0,0,0.5)', padding: '3px 8px', borderRadius: '30px' }}>
+                  <span style={{ fontSize: '0.6rem', opacity: 0.7 }}>RND</span>
+                  <span style={{ fontFamily: "'Panchang', sans-serif", color: '#fff', fontSize: '0.7rem' }}>{gameState.currentRound}/{gameState.config.rounds}</span>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.5)', padding: '3px 8px', borderRadius: '30px', border: gameState.timer <= 10 ? '1px solid #ff3333' : '1px solid rgba(255,255,255,0.1)' }}>
+                  <Clock size={12} color={gameState.timer <= 10 ? '#ff3333' : '#ebd73f'} />
+                  <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.7rem', color: gameState.timer <= 10 ? '#ff3333' : '#fff' }}>
+                    {Math.max(0, gameState.timer)}s
+                  </span>
+                </div>
+              </div>
+            )}
             
+
           </div>
           
           <div style={{ 
@@ -1134,24 +1177,105 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
 
             {(!isMyTurn || gameState.status !== 'playing') && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }} />} {/* Block clicks */}
             
-            <canvas 
-              ref={canvasRef}
-              width={800}
-              height={600}
-              style={{ width: '100%', height: isMobile ? 'auto' : '100%', aspectRatio: isMobile ? '4/3' : 'auto', display: 'block', touchAction: 'none' }}
-              onPointerDown={startDrawing}
-              onPointerMove={draw}
-              onPointerUp={stopDrawing}
-              onPointerLeave={stopDrawing}
-            />
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+              <canvas 
+                ref={canvasRef}
+                width={800}
+                height={600}
+                style={{ maxWidth: '100%', maxHeight: '100%', aspectRatio: '4/3', display: 'block', touchAction: 'none' }}
+                onPointerDown={startDrawing}
+                onPointerMove={draw}
+                onPointerUp={stopDrawing}
+                onPointerLeave={stopDrawing}
+              />
+            </div>
           </div>
+          
+          {/* BRUSH CONTROLS */}
+          {isMyTurn && gameState.status === 'playing' && (
+            <div style={{ ...styles.glassPanel, padding: isMobile ? '10px' : '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+                  {['#ebd73f', '#ff33ff', '#33ffff', '#ff3333', '#33ff33', '#ffffff', '#0a0a0a'].map(c => (
+                    <button 
+                      key={c}
+                      onClick={() => setBrushColor(c)}
+                      style={{
+                        width: '30px', height: '30px', borderRadius: '50%', background: c,
+                        border: brushColor === c ? '3px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                        cursor: 'pointer', flexShrink: 0,
+                        boxShadow: c !== '#0a0a0a' && brushColor === c ? `0 0 15px ${c}` : 'none'
+                      }}
+                      title={c === '#0a0a0a' ? 'Eraser' : 'Color'}
+                    />
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  {[2, 6, 12, 24].map(s => (
+                    <button 
+                      key={s} onClick={() => setBrushSize(s)}
+                      style={{
+                        width: '30px', height: '30px', borderRadius: '50%', 
+                        background: brushSize === s ? 'rgba(255,255,255,0.2)' : 'transparent',
+                        border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center'
+                      }}
+                    >
+                      <div style={{ width: s, height: s, background: '#fff', borderRadius: '50%' }} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  {['Neon', 'Solid', 'Marker', 'Glow', 'Crayon'].map(st => (
+                    <button 
+                      key={st} onClick={() => setBrushStyle(st)}
+                      style={{
+                        padding: '6px 12px', borderRadius: '20px', fontSize: '0.75rem',
+                        background: brushStyle === st ? 'rgba(255,255,255,0.2)' : 'transparent',
+                        border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: '#fff'
+                      }}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={undo} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}><Undo2 size={18} /></button>
+                  <button onClick={redo} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}><Redo2 size={18} /></button>
+                  <button onClick={clearCanvas} style={{ background: 'transparent', border: 'none', color: '#ff3333', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                </div>
+              </div>
+
+            </div>
+          )}
         </div>
 
         {/* RIGHT PANEL: Chat */}
-        <div style={{ ...styles.glassPanel, order: 3, width: isMobile ? '100%' : '320px', display: 'flex', flexDirection: 'column', height: isMobile ? '350px' : 'auto', minHeight: isMobile ? '350px' : 'auto' }}>
-          <div style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem', letterSpacing: '1px', fontFamily: "'Panchang', sans-serif" }}>LIVE CHAT</h3>
-          </div>
+        {(!isMobile || isMobileChatOpen) && (
+          <div style={{ 
+            ...styles.glassPanel, 
+            ...(isMobile ? {
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000,
+              borderRadius: 0, overflowY: 'auto'
+            } : {
+              order: 3, width: '320px'
+            }),
+            display: 'flex', flexDirection: 'column', height: isMobile ? '100%' : 'auto', minHeight: isMobile ? '100%' : 'auto' 
+          }}>
+            {isMobile && (
+               <button onClick={() => setIsMobileChatOpen(false)} style={{position: 'absolute', top: 15, right: 15, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', zIndex: 10, borderRadius: '50%', width: 36, height: 36, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                 <X size={20} />
+               </button>
+            )}
+            <div style={{ padding: isMobile ? '25px 20px 15px 20px' : '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', letterSpacing: '1px', fontFamily: "'Panchang', sans-serif", textAlign: isMobile ? 'center' : 'left' }}>LIVE CHAT</h3>
+            </div>
           
           <div style={{ flex: 1, overflowY: 'auto', padding: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {chat.map((msg, i) => {
@@ -1219,6 +1343,37 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
             </form>
           </div>
         </div>
+        )}
+
+        {/* MOBILE OVERLAYS & FABs */}
+        {isMobile && (
+          <>
+            <button 
+              onClick={() => setIsMobileLeaderboardOpen(true)}
+              style={{ position: 'fixed', top: '15px', right: '15px', zIndex: 90, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#ebd73f', backdropFilter: 'blur(10px)' }}
+            >
+              <Trophy size={20} />
+            </button>
+
+            <div style={{ position: 'fixed', bottom: '15px', right: '15px', zIndex: 90, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+              {latestMobileMessage && !isMobileChatOpen && (
+                <div style={{ background: 'rgba(255,51,255,0.9)', color: '#000', padding: '10px 15px', borderRadius: '15px 15px 0 15px', maxWidth: '200px', fontSize: '0.85rem', fontWeight: 'bold', boxShadow: '0 5px 15px rgba(255,51,255,0.4)', animation: 'fadeInUp 0.3s ease-out', wordBreak: 'break-word' }}>
+                  <span style={{opacity: 0.6, fontSize: '0.6rem', display: 'block'}}>{latestMobileMessage.sender}</span>
+                  {latestMobileMessage.text}
+                </div>
+              )}
+              <button 
+                onClick={() => setIsMobileChatOpen(true)}
+                style={{ background: '#ff33ff', border: 'none', borderRadius: '50%', width: '55px', height: '55px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#000', boxShadow: '0 5px 20px rgba(255,51,255,0.4)' }}
+              >
+                <MessageSquare size={24} />
+              </button>
+            </div>
+            <style>{`
+              @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            `}</style>
+          </>
+        )}
 
       </div>
     </div>
