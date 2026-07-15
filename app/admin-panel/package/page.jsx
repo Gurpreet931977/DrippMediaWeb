@@ -44,6 +44,24 @@ export default function PackageMaker() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleCopilotAction = (e) => {
+      const data = e.detail;
+      if (data && (data.intent === 'package' || data.intent === 'quote') && data.payload) {
+        const payload = data.payload;
+        if (payload.brandName) setBrandName(payload.brandName);
+        if (payload.packageType) setPackageType(payload.packageType.toLowerCase());
+        if (payload.totalBudget) setTotalBudget(payload.totalBudget.toString());
+        if (payload.pmpStrategy) setPmpStrategy(payload.pmpStrategy);
+        if (payload.services && payload.services.length > 0) {
+          setServices(payload.services);
+        }
+      }
+    };
+    window.addEventListener('copilot-action', handleCopilotAction);
+    return () => window.removeEventListener('copilot-action', handleCopilotAction);
+  }, []);
+
   const handleServiceChange = (index, field, value) => {
     const newServices = [...services];
     newServices[index][field] = value;

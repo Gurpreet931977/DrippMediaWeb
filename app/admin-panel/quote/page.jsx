@@ -594,6 +594,34 @@ export default function QuoteMaker() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleCopilotAction = (e) => {
+      const data = e.detail;
+      if (data && (data.intent === 'package' || data.intent === 'quote') && data.payload) {
+        const payload = data.payload;
+        if (payload.brandName) setClientDetails(prev => ({ ...prev, brandName: payload.brandName }));
+        if (payload.packageType) setPackageType(payload.packageType.toLowerCase());
+        if (payload.pmpStrategy) {
+          setIncludePMP(true);
+          setPmpStrategy(payload.pmpStrategy);
+          setPdfPages(prev => {
+            if (!prev.find(p => p.type === 'pmp')) {
+              const newPages = [...prev];
+              newPages.splice(1, 0, { id: 'pmp_1', type: 'pmp', title: 'Marketing Strategy & Concept', hideHeading: false });
+              return newPages;
+            }
+            return prev;
+          });
+        }
+        if (payload.services && payload.services.length > 0) {
+          setItems(payload.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0 })));
+        }
+      }
+    };
+    window.addEventListener('copilot-action', handleCopilotAction);
+    return () => window.removeEventListener('copilot-action', handleCopilotAction);
+  }, []);
+
   const handleClientChange = (field, value) => setClientDetails(prev => ({ ...prev, [field]: value }));
   const handleQuoteChange = (field, value) => setQuoteDetails(prev => ({ ...prev, [field]: value }));
   

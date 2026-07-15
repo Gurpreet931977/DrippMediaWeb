@@ -277,12 +277,18 @@ export default function OrloChat() {
       // Dispatch event to window so forms can pick it up
       if (data.intent && data.payload) {
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
-        if (data.intent === 'quote') {
-          sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
-          router.push('/admin-panel/quote');
-        } else if (data.intent === 'package') {
-          sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
-          router.push('/admin-panel/package');
+        
+        const currentPath = window.location.pathname;
+        const isAlreadyOnRelevantPage = currentPath === '/admin-panel/quote' || currentPath === '/admin-panel/package';
+        
+        if (!isAlreadyOnRelevantPage) {
+          if (data.intent === 'quote') {
+            sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
+            router.push('/admin-panel/quote');
+          } else if (data.intent === 'package') {
+            sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
+            router.push('/admin-panel/package');
+          }
         }
       }
 
