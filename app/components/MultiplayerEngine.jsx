@@ -43,12 +43,11 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
   }, [channel]);
 
   const generateRoomCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 4; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
+    const adjs = ['DANK', 'SIGMA', 'BASED', 'CHAD', 'SUS', 'CRINGE', 'SWAG', 'GOATED', 'BUSSIN', 'SALTY', 'SNEAKY', 'SPICY'];
+    const nouns = ['DOGE', 'PEPE', 'CHUNGUS', 'MONKE', 'RIZZ', 'GIGACHAD', 'BOOMER', 'ZOOMER', 'WOJAK', 'GLIZZY', 'GOBLIN', 'CHEF'];
+    const adj = adjs[Math.floor(Math.random() * adjs.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    return `${adj}-${noun}`;
   };
 
   const createRoom = () => {
@@ -60,8 +59,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
 
   const joinRoom = (e) => {
     e.preventDefault();
-    if (!joinInput || joinInput.length !== 4) {
-      alert('Please enter a valid 4-character room code.');
+    if (!joinInput || joinInput.length < 3) {
+      alert('Please enter a valid room name.');
       return;
     }
     const code = joinInput.toUpperCase();
@@ -242,8 +241,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
         <form onSubmit={joinRoom} style={{ display: 'flex', gap: '10px' }}>
           <input 
             type="text" 
-            placeholder="4-DIGIT CODE" 
-            maxLength={4}
+            placeholder="ROOM NAME (e.g. DANK-DOGE)" 
             value={joinInput}
             onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
             style={{ 
