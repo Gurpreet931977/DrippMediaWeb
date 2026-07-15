@@ -176,7 +176,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           background: 'rgba(255,255,255,0.03)', padding: '40px', borderRadius: '24px', 
           width: '100%', maxWidth: '500px', border: '1px solid rgba(255,255,255,0.1)',
           backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 30px 60px rgba(0,0,0,0.8)'
+          boxShadow: '0 30px 60px rgba(0,0,0,0.8)', filter: 'url(#scribble)'
         }}>
           <h3 style={{ margin: '0 0 25px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '15px', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: '#fff' }}>
             CONNECTED ({players.length})
@@ -206,7 +206,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
               marginTop: '50px', padding: '20px 60px', background: '#ebd73f', color: '#000', 
               border: 'none', borderRadius: '40px', fontSize: '1.3rem', fontWeight: 'bold', cursor: 'pointer',
               fontFamily: "'Panchang', sans-serif", boxShadow: '0 10px 30px rgba(235, 215, 63, 0.4)',
-              transition: 'transform 0.2s, box-shadow 0.2s'
+              transition: 'transform 0.2s, box-shadow 0.2s', filter: 'url(#scribble)'
             }}
             onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 15px 40px rgba(235, 215, 63, 0.6)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(235, 215, 63, 0.4)'; }}
@@ -233,6 +233,16 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
       {/* Animated Grid Background */}
       <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.03\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")', opacity: 0.7, animation: 'panBackground 60s linear infinite', pointerEvents: 'none' }} />
 
+      {/* Global Scribble SVG Filter */}
+      <svg width="0" height="0" style={{ position: 'absolute' }}>
+        <filter id="scribble">
+          <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" seed="1">
+            <animate attributeName="seed" values="1;2;3;4;5" calcMode="discrete" dur="0.4s" repeatCount="indefinite" />
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" />
+        </filter>
+      </svg>
+
       <style>{`
         @keyframes panBackground {
           0% { transform: translate(0, 0); }
@@ -250,15 +260,16 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
         border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center',
         backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
         boxShadow: '0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)',
-        width: '420px', position: 'relative', zIndex: 2,
-        animation: 'floatModal 6s ease-in-out infinite'
+        width: '420px', boxSizing: 'border-box', position: 'relative', zIndex: 2,
+        animation: 'floatModal 6s ease-in-out infinite',
+        filter: 'url(#scribble)'
       }}>
         <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '2.5rem', margin: '0 0 5px 0', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>MULTIPLAYER</h1>
         <p style={{ opacity: 0.6, marginBottom: '25px', fontSize: '0.9rem', letterSpacing: '1px' }}>Customize your agent and deploy.</p>
 
         {/* Avatar Customizer */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)', padding: '25px 20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
-          <div style={{ position: 'relative', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.4))' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)', padding: '25px 20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)', filter: 'url(#scribble)' }}>
+          <div style={{ position: 'relative', width: '110px', height: '110px', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.4))' }}>
             <CustomAvatar config={avatarConfig} size={110} />
             <button onClick={() => {
               setAvatarConfig({
@@ -303,7 +314,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
             border: 'none', borderRadius: '16px', fontSize: '1.2rem', fontWeight: 'bold', 
             marginBottom: '25px', cursor: 'pointer', fontFamily: "'Panchang', sans-serif",
             boxShadow: '0 10px 25px rgba(51, 204, 255, 0.4), inset 0 2px 0 rgba(255,255,255,0.3)',
-            transition: 'transform 0.2s, box-shadow 0.2s'
+            transition: 'transform 0.2s, box-shadow 0.2s',
+            filter: 'url(#scribble)'
           }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 15px 35px rgba(51, 204, 255, 0.5), inset 0 2px 0 rgba(255,255,255,0.3)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(51, 204, 255, 0.4), inset 0 2px 0 rgba(255,255,255,0.3)'; }}
@@ -327,7 +339,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
               flex: 1, padding: '15px 20px', background: 'rgba(0,0,0,0.4)', 
               border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '16px', 
               fontSize: '1.1rem', textAlign: 'center', textTransform: 'uppercase', fontFamily: "'Clash Display', sans-serif",
-              outline: 'none', transition: 'border-color 0.2s'
+              outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box', minWidth: 0,
+              filter: 'url(#scribble)'
             }}
             onFocus={e => e.currentTarget.style.borderColor = '#ebd73f'}
             onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
@@ -338,7 +351,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
               padding: '0 30px', background: 'linear-gradient(135deg, #ebd73f 0%, #d4a017 100%)', color: '#000', border: 'none', 
               borderRadius: '16px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer',
               fontFamily: "'Panchang', sans-serif", boxShadow: '0 8px 20px rgba(235, 215, 63, 0.3)',
-              transition: 'transform 0.2s'
+              transition: 'transform 0.2s', boxSizing: 'border-box',
+              filter: 'url(#scribble)'
             }}
             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
