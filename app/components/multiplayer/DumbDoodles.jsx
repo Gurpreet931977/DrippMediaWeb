@@ -798,7 +798,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   // -------------------------
   if (gameState.status === 'lobby') {
     return (
-      <div style={{...styles.background, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+      <div className="no-global-scale" style={{...styles.background, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
         <div style={{...styles.glassPanel, maxWidth: isMobile ? '95%' : '900px', width: '100%', maxHeight: '95vh', display: 'flex', flexDirection: 'column', padding: isMobile ? '20px 15px' : '40px', boxSizing: 'border-box', boxShadow: '0 0 50px rgba(255,51,255,0.1), inset 0 0 20px rgba(255,255,255,0.05)' }}>
           <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '15px' : '25px', wordBreak: 'break-word', overflowWrap: 'break-word', flexShrink: 0 }}>
             DUMB DOODLES
