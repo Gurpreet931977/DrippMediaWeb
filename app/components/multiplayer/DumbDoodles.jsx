@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Eraser, Users, Clock, Trophy, PartyPopper, Settings } from 'lucide-react';
+import { Send, Eraser, Users, Clock, Trophy, PartyPopper, Settings, Bot } from 'lucide-react';
 import CustomAvatar from './CustomAvatar';
 
 const DEFAULT_WORDS = [
@@ -503,6 +503,41 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     
     // Check if player already guessed correctly
     if (gameState.guessedPlayers.includes(playerName)) {
+      setGuess('');
+      return;
+    }
+
+    const isDrawerCheat = isMyTurn && msg.includes(gameState.currentWord);
+    const isBegging = !isMyTurn && (msg.includes('WHAT IS') || msg.includes("WHAT'S") || msg.includes('TELL ME') || msg.includes('WHATS THE WORD') || msg.includes('PLZ TELL'));
+
+    if (isDrawerCheat) {
+      const drawerMessages = [
+        "Nice try, drawer! Draw it, don't say it!",
+        "Caught in 4K trying to type the word.",
+        "Don't cheat you dumb drawer!",
+        "Silence! A true artist speaks only in lines.",
+        "Bro really thought they could just type the answer 💀"
+      ];
+      const randomMsg = drawerMessages[Math.floor(Math.random() * drawerMessages.length)];
+      const botMsg = { sender: 'Orlo', text: randomMsg, type: 'error' };
+      channel.send({ type: 'broadcast', event: 'chat_msg', payload: botMsg });
+      setChat(prev => [...prev, botMsg].slice(-30));
+      setGuess('');
+      return;
+    }
+
+    if (isBegging) {
+      const beggingMessages = [
+        "No begging allowed! Figure it out yourself.",
+        "Begging for the word? That's a yikes from me.",
+        "Use your brain, not your keyboard!",
+        "Stop asking and start guessing!",
+        "I'm not telling you the word, try actually looking at the drawing."
+      ];
+      const randomMsg = beggingMessages[Math.floor(Math.random() * beggingMessages.length)];
+      const botMsg = { sender: 'Orlo', text: randomMsg, type: 'error' };
+      channel.send({ type: 'broadcast', event: 'chat_msg', payload: botMsg });
+      setChat(prev => [...prev, botMsg].slice(-30));
       setGuess('');
       return;
     }
@@ -1033,6 +1068,14 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 return (
                   <div key={i} style={{ padding: '8px 12px', background: 'rgba(51, 255, 51, 0.1)', borderLeft: '3px solid #33ff33', borderRadius: '4px', color: '#33ff33', fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <PartyPopper size={14} /> {msg.text}
+                  </div>
+                );
+              }
+              
+              if (msg.type === 'error' && msg.sender === 'Orlo') {
+                return (
+                  <div key={i} style={{ padding: '8px 12px', background: 'rgba(255, 51, 51, 0.1)', borderLeft: '3px solid #ff3333', borderRadius: '4px', color: '#ff3333', fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Bot size={14} /> {msg.sender}: {msg.text}
                   </div>
                 );
               }
