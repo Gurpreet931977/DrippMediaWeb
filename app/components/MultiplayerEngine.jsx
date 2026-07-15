@@ -310,7 +310,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           animation: 'floatModal 6s ease-in-out infinite',
           display: 'flex', flexDirection: 'column', alignItems: 'center'
         }}>
-          <h1 style={{ width: '100%', fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1.6rem' : '2.2rem', margin: '0 auto 10px auto', textAlign: 'center', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>MULTIPLAYER</h1>
+          <h1 style={{ width: '100%', fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1.4rem' : '1.8rem', margin: '0 auto 10px auto', textAlign: 'center', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>MULTIPLAYER</h1>
           <p style={{ opacity: 0.6, marginBottom: '20px', fontSize: '0.9rem', letterSpacing: '1px', textAlign: 'center' }}>Customize your agent and deploy.</p>
 
         {/* Avatar Customizer */}
