@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
+import { ChevronLeft, ChevronRight, Dices } from 'lucide-react';
+import CustomAvatar, { AVATAR_COLORS, AVATAR_EYES, AVATAR_MOUTHS, AVATAR_HEADGEAR } from './multiplayer/CustomAvatar';
 import WordDrop from './multiplayer/WordDrop';
 import DumbDoodles from './multiplayer/DumbDoodles';
 import UndercoverSpy from './multiplayer/UndercoverSpy';
@@ -17,6 +19,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
   const [channel, setChannel] = useState(null);
   
   const [playerName, setPlayerName] = useState('');
+  const [avatarConfig, setAvatarConfig] = useState({ color: 0, eyes: 0, mouth: 0, headgear: 0 });
+  const [playerAvatars, setPlayerAvatars] = useState({});
 
   useEffect(() => {
     // Try to get user name from local storage
@@ -84,10 +88,15 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
       .on('presence', { event: 'sync' }, () => {
         const state = roomChannel.presenceState();
         const playerList = [];
+        const avatars = {};
         for (const [key, presences] of Object.entries(state)) {
             playerList.push(key);
+            if (presences.length > 0 && presences[0].avatar) {
+              avatars[key] = presences[0].avatar;
+            }
         }
         setPlayers(playerList);
+        setPlayerAvatars(avatars);
       })
       .on('broadcast', { event: 'game_start' }, (payload) => {
         setGameState('playing');
@@ -95,7 +104,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
       .subscribe(async (status, err) => {
         if (status === 'SUBSCRIBED') {
           try {
-             await roomChannel.track({ name: playerName, isHost: host });
+             await roomChannel.track({ name: playerName, isHost: host, avatar: avatarConfig });
           } catch(e) { console.error(e); }
           setGameState('lobby');
         } else if (status === 'CHANNEL_ERROR') {
@@ -128,15 +137,15 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
     // Render the selected game
     switch (activeGame) {
       case 'worddrop':
-        return <WordDrop channel={channel} isHost={isHost} players={players} playerName={playerName} />;
+        return <WordDrop channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
       case 'dumbdoodles':
-        return <DumbDoodles channel={channel} isHost={isHost} players={players} playerName={playerName} />;
+        return <DumbDoodles channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
       case 'undercover':
-        return <UndercoverSpy channel={channel} isHost={isHost} players={players} playerName={playerName} />;
+        return <UndercoverSpy channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
       case 'brokenbrief':
-        return <BrokenBrief channel={channel} isHost={isHost} players={players} playerName={playerName} />;
+        return <BrokenBrief channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
       case 'priceiswhat':
-        return <PriceIsWhat channel={channel} isHost={isHost} players={players} playerName={playerName} />;
+        return <PriceIsWhat channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
       default:
         return (
           <div style={{ color: 'white', textAlign: 'center', paddingTop: '100px' }}>
@@ -179,7 +188,11 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
                 borderRadius: '12px', display: 'flex', justifyContent: 'space-between',
                 alignItems: 'center', fontSize: '1.1rem', letterSpacing: '1px'
               }}>
-                {p} {isHost && p === playerName ? <span style={{color: '#ebd73f', fontSize: '0.9rem', fontFamily: "'Panchang', sans-serif"}}>HOST</span> : ''}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <CustomAvatar config={playerAvatars[p]} size={32} />
+                  {p}
+                </div>
+                {isHost && p === playerName ? <span style={{color: '#ebd73f', fontSize: '0.9rem', fontFamily: "'Panchang', sans-serif"}}>HOST</span> : ''}
               </li>
             ))}
             {players.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center', fontStyle: 'italic' }}>Connecting...</p>}
@@ -216,10 +229,46 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
       <div style={{ 
         background: 'rgba(20,20,20,0.8)', padding: '50px', borderRadius: '24px', 
         border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+        boxShadow: '0 20px 50px rgba(0,0,0,0.5)', width: '400px'
       }}>
         <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '2.5rem', marginBottom: '10px' }}>MULTIPLAYER</h1>
-        <p style={{ opacity: 0.7, marginBottom: '40px' }}>Join a friend's room or create your own.</p>
+        <p style={{ opacity: 0.7, marginBottom: '20px' }}>Customize your agent and join a room.</p>
+
+        {/* Avatar Customizer */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '16px' }}>
+          <div style={{ position: 'relative' }}>
+            <CustomAvatar config={avatarConfig} size={100} />
+            <button onClick={() => {
+              setAvatarConfig({
+                color: Math.floor(Math.random() * AVATAR_COLORS.length),
+                eyes: Math.floor(Math.random() * AVATAR_EYES.length),
+                mouth: Math.floor(Math.random() * AVATAR_MOUTHS.length),
+                headgear: Math.floor(Math.random() * AVATAR_HEADGEAR.length)
+              });
+            }} style={{ position: 'absolute', top: -10, right: -10, background: '#33ccff', color: '#000', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 0 10px rgba(51, 204, 255, 0.5)' }}>
+              <Dices size={18} />
+            </button>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: '20px' }}>
+            {[
+              { label: 'COLOR', key: 'color', max: AVATAR_COLORS.length },
+              { label: 'EYES', key: 'eyes', max: AVATAR_EYES.length },
+              { label: 'MOUTH', key: 'mouth', max: AVATAR_MOUTHS.length },
+              { label: 'GEAR', key: 'headgear', max: AVATAR_HEADGEAR.length }
+            ].map(setting => (
+              <div key={setting.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button type="button" onClick={() => setAvatarConfig(p => ({ ...p, [setting.key]: (p[setting.key] - 1 + setting.max) % setting.max }))} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.7 }}>
+                  <ChevronLeft size={24} />
+                </button>
+                <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem', letterSpacing: '1px' }}>{setting.label}</span>
+                <button type="button" onClick={() => setAvatarConfig(p => ({ ...p, [setting.key]: (p[setting.key] + 1) % setting.max }))} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.7 }}>
+                  <ChevronRight size={24} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <button 
           onClick={createRoom}

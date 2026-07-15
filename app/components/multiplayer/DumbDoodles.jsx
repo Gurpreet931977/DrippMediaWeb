@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Eraser, Users, Clock, Trophy, PartyPopper, User, Ghost, Bot, Smile, Star, Heart, Zap, Flame, Music, Sun, Moon, Cloud, Coffee, Settings } from 'lucide-react';
+import { Send, Eraser, Users, Clock, Trophy, PartyPopper, Settings } from 'lucide-react';
+import CustomAvatar from './CustomAvatar';
 
 const DEFAULT_WORDS = [
   "SUN", "MOON", "STAR", "TREE", "CAR", "HOUSE", "APPLE", "BALL", "BOOK", "SHOE",
@@ -36,27 +37,7 @@ const WORD_PACKS = {
   'Food': FOOD_WORDS
 };
 
-const AVATARS = ['Smile', 'Star', 'Heart', 'Zap', 'Flame', 'Music', 'Sun', 'Moon', 'Cloud', 'Coffee', 'Ghost', 'Bot'];
-
-const renderAvatar = (name) => {
-  switch (name) {
-    case 'Ghost': return <Ghost size={24} color="#ebd73f" />;
-    case 'Bot': return <Bot size={24} color="#33ccff" />;
-    case 'Smile': return <Smile size={24} color="#ff33ff" />;
-    case 'Star': return <Star size={24} color="#33ff33" />;
-    case 'Heart': return <Heart size={24} color="#ff9900" />;
-    case 'Zap': return <Zap size={24} color="#ff0055" />;
-    case 'Flame': return <Flame size={24} color="#ff3333" />;
-    case 'Music': return <Music size={24} color="#ebd73f" />;
-    case 'Sun': return <Sun size={24} color="#00d2ff" />;
-    case 'Moon': return <Moon size={24} color="#b366ff" />;
-    case 'Cloud': return <Cloud size={24} color="#33ffcc" />;
-    case 'Coffee': return <Coffee size={24} color="#ff9933" />;
-    default: return <User size={24} color="#fff" />;
-  }
-};
-
-export default function DumbDoodles({ channel, isHost, players, playerName }) {
+export default function DumbDoodles({ channel, isHost, players, playerName, playerAvatars = {} }) {
   const [gameState, setGameState] = useState({
     status: 'lobby', // lobby, choosing_word, playing, round_over, gameover
     currentTurnIndex: 0,
@@ -65,7 +46,6 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
     wordChoices: [],
     timer: 60,
     scores: {},
-    avatars: {},
     config: { 
       maxPlayers: 8,
       language: 'English',
@@ -160,18 +140,15 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
 
   // Host Initial Setup (Scores & Avatars)
   useEffect(() => {
-    if (isHost && gameState.status === 'lobby' && Object.keys(gameState.avatars).length === 0) {
+    if (isHost && gameState.status === 'lobby' && Object.keys(gameState.scores).length === 0) {
       const initialScores = {};
-      const initialAvatars = {};
       players.forEach(p => {
         initialScores[p] = 0;
-        initialAvatars[p] = AVATARS[Math.floor(Math.random() * AVATARS.length)];
       });
       
       const initialState = {
         ...gameState,
-        scores: initialScores,
-        avatars: initialAvatars
+        scores: initialScores
       };
 
       channel.send({ type: 'broadcast', event: 'sync_state', payload: initialState });
@@ -775,7 +752,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
             {/* 2nd Place */}
             {top3[1] && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '120px' }}>
-                <div style={{ marginBottom: '10px' }}>{renderAvatar(gameState.avatars[top3[1]])}</div>
+                <div style={{ marginBottom: '10px' }}><CustomAvatar config={playerAvatars[top3[1]]} size={64} /></div>
                 <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '5px', color: '#c0c0c0' }}>{top3[1]}</div>
                 <div style={{ fontSize: '0.8rem', color: '#c0c0c0', marginBottom: '10px' }}>{gameState.scores[top3[1]] || 0} pts</div>
                 <div style={{ width: '100%', height: '120px', background: 'linear-gradient(180deg, #c0c0c0 0%, rgba(192,192,192,0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px' }}>
@@ -788,7 +765,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
             {top3[0] && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '140px' }}>
                 <Trophy size={40} color="#ebd73f" style={{ marginBottom: '10px', filter: 'drop-shadow(0 0 10px #ebd73f)' }} />
-                <div style={{ marginBottom: '10px' }}>{renderAvatar(gameState.avatars[top3[0]])}</div>
+                <div style={{ marginBottom: '10px' }}><CustomAvatar config={playerAvatars[top3[0]]} size={80} /></div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '5px', color: '#ebd73f' }}>{top3[0]}</div>
                 <div style={{ fontSize: '0.9rem', color: '#ebd73f', marginBottom: '10px' }}>{gameState.scores[top3[0]] || 0} pts</div>
                 <div style={{ width: '100%', height: '160px', background: 'linear-gradient(180deg, #ebd73f 0%, rgba(235, 215, 63, 0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px', boxShadow: '0 0 30px rgba(235, 215, 63, 0.3)' }}>
@@ -800,7 +777,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
             {/* 3rd Place */}
             {top3[2] && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '120px' }}>
-                <div style={{ marginBottom: '10px' }}>{renderAvatar(gameState.avatars[top3[2]])}</div>
+                <div style={{ marginBottom: '10px' }}><CustomAvatar config={playerAvatars[top3[2]]} size={64} /></div>
                 <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '5px', color: '#cd7f32' }}>{top3[2]}</div>
                 <div style={{ fontSize: '0.8rem', color: '#cd7f32', marginBottom: '10px' }}>{gameState.scores[top3[2]] || 0} pts</div>
                 <div style={{ width: '100%', height: '90px', background: 'linear-gradient(180deg, #cd7f32 0%, rgba(205, 127, 50, 0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px' }}>
@@ -909,7 +886,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {renderAvatar(gameState.avatars[p])}
+                        <CustomAvatar config={playerAvatars[p]} size={40} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontWeight: isActive ? 'bold' : 'normal', color: hasGuessed ? '#33ff33' : (isActive ? '#ff33ff' : '#fff'), fontSize: '0.9rem' }}>
