@@ -69,7 +69,7 @@ Valid Intents:
 4. "package" - The user wants to create a package, quote, or proposal (PMP) for a client (e.g., "make a package for habivana stays...", "quote them 30k").
 
 If the intent is "package":
-Extract the "brandName", the overall "totalBudget" (e.g. 30000), "packageType" (e.g. "monthly" or "project"), and a list of "services" requested (e.g. "5 Reels", "Social Media Management", "Ads Boosting"). Also, generate a "pmpPitch": a short, storytelling-styled Premium Marketing Proposal / Pitch text (about 1-2 paragraphs) based on the user's request, designed to impress the client. Include these in the payload. If you only see a price, still return intent "package" and put the price in totalBudget.
+Extract the "brandName", the overall "totalBudget" (e.g. 30000), "packageType" (e.g. "monthly" or "project"), a list of "services" requested (e.g. "5 Reels", "Social Media Management", "Ads Boosting"), and the overall "pmpStrategy" which should be a beautifully worded paragraph summarizing their strategy/concept needs (e.g., "Storytelling styled UGC content combined with aggressive ads boosting to maximize reach..."). Include these in the payload. If you only see a price, still return intent "package" and put the price in totalBudget.
 
 If the intent is "chat":
 Reply creatively, playfully, or offer a workaround in the Dripp Media style. If they ask about you (Orlo) or your private life, feel free to give them a fun, Dripp-styled backstory or witty response!
@@ -97,7 +97,7 @@ JSON Schema to return:
     "brandName": "Brand name for the package",
     "totalBudget": "Numeric value or string, e.g., 30000",
     "packageType": "monthly or project",
-    "pmpPitch": "A compelling marketing pitch generated based on the user's instructions",
+    "pmpStrategy": "Beautifully worded string summarizing their strategy/concept needs",
     "services": [
       { "name": "Service name", "qty": 1, "rate": 0 }
     ]

@@ -356,13 +356,15 @@ export default function SharedQuote() {
 
         {/* RIGHT PANEL */}
         <div className="quote-right">
-          {/* PMP Pitch Section */}
-          {quoteData.includePmp && quoteData.pmpPitch && (
-            <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', backdropFilter: 'blur(10px)', marginBottom: '20px' }}>
-                <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 15px 0', fontFamily: "'Panchang', sans-serif" }}>Premium Marketing Proposal</h3>
-                <p style={{ fontSize: 'clamp(0.95rem, 4vw, 1.1rem)', color: '#ddd', lineHeight: '1.8', whiteSpace: 'pre-wrap', fontStyle: 'italic', margin: 0 }}>
-                    "{quoteData.pmpPitch}"
-                </p>
+          {/* PMP Strategy Section */}
+          {quoteData.includePMP && quoteData.pmpStrategy && !isInvoice && (
+            <div style={{ marginBottom: '30px' }}>
+              <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 15px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'left' }}>Marketing Strategy & Concept</h3>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', borderLeft: '4px solid #ebd73f', borderRadius: '12px', padding: 'clamp(20px, 4vw, 30px)', borderTop: '1px solid rgba(255, 255, 255, 0.05)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+                  <p style={{ fontSize: 'clamp(1rem, 3.5vw, 1.1rem)', color: '#fff', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>
+                      {quoteData.pmpStrategy}
+                  </p>
+              </div>
             </div>
           )}
 
