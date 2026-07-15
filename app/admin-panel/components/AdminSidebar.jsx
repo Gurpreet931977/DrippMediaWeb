@@ -11,7 +11,8 @@ export default function AdminSidebar() {
   const navItems = [
     { name: 'Dashboard', path: '/admin-panel', icon: LayoutDashboard },
     { name: 'Invoice Maker', path: '/admin-panel/invoice', icon: FileText },
-    { name: 'Quotes & Packages', path: '/admin-panel/quote', icon: PackagePlus },
+    { name: 'Quotes', path: '/admin-panel/quote', icon: FileText },
+    { name: 'PMP Maker', path: '/admin-panel/package', icon: PackagePlus },
     { name: 'Email Campaigns', path: '/admin-panel/email', icon: Mail },
   ];
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon } from 'lucide-react';
 import OrloIcon from './OrloIcon';
 import gsap from 'gsap';
@@ -88,6 +89,7 @@ const PostScene = ({ id, size = 120 }) => {
 };
 
 export default function OrloChat() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -275,6 +277,11 @@ export default function OrloChat() {
       // Dispatch event to window so forms can pick it up
       if (data.intent && data.payload) {
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
+        
+        if (data.intent === 'package') {
+          sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
+          router.push('/admin-panel/package');
+        }
       }
 
     } catch (error) {
