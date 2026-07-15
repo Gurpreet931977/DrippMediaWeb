@@ -12,6 +12,7 @@ export default function AdminSidebar() {
     { name: 'Dashboard', path: '/admin-panel', icon: LayoutDashboard },
     { name: 'Invoice Maker', path: '/admin-panel/invoice', icon: FileText },
     { name: 'Quotes & Packages', path: '/admin-panel/quote', icon: PackagePlus },
+    { name: 'PMP Maker', path: '/admin-panel/package', icon: PackagePlus },
     { name: 'Email Campaigns', path: '/admin-panel/email', icon: Mail },
   ];
 
