@@ -2,25 +2,45 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { Trophy, Clock, DollarSign, ArrowRight, Gavel, Play } from 'lucide-react';
+import { Trophy, Clock, DollarSign, ArrowRight, Gavel, Play, Car, Music, Gem, Monitor, Fish, Book, Apple, MapPin, Rocket, Cake, Diamond, Globe, Bone, Bird, Lock, HelpCircle } from 'lucide-react';
 
 const ITEMS = [
-  { name: '1962 Ferrari 250 GTO', price: 48400000, emoji: '🏎️', hint: 'The holy grail of classic cars.' },
-  { name: 'A Single Strand of Elvis\' Hair', price: 115000, emoji: '🎸', hint: 'Sold at auction in 2002.' },
-  { name: 'Solid Gold Toilet', price: 1250000, emoji: '🚽', hint: '18-karat gold, fully functional.' },
-  { name: 'First Apple Computer (Apple I)', price: 905000, emoji: '💻', hint: 'Built by Wozniak in 1976.' },
-  { name: 'Bluefin Tuna (278kg)', price: 3100000, emoji: '🐟', hint: 'Sold in Tokyo, 2019.' },
-  { name: 'Action Comics #1 (Superman Debut)', price: 3250000, emoji: '🦸‍♂️', hint: 'A pristine copy sold in 2021.' },
-  { name: 'A Perfect Watermelon (Densuke)', price: 6100, emoji: '🍉', hint: 'A rare black watermelon from Japan.' },
-  { name: 'Parking Spot in Manhattan', price: 1000000, emoji: '🅿️', hint: 'A single spot in a luxury condo.' },
-  { name: 'Crystal Piano (Heintzman)', price: 3200000, emoji: '🎹', hint: 'Played at the Beijing Olympics.' },
-  { name: '5-Min Trip to Space (Blue Origin)', price: 28000000, emoji: '🚀', hint: 'The first auctioned passenger seat.' },
-  { name: 'Charles & Diana\'s Wedding Cake Slice', price: 2565, emoji: '🍰', hint: '40 years old.' },
-  { name: 'Diamond Panther Bracelet', price: 7000000, emoji: '🐆', hint: 'Owned by Wallis Simpson.' },
-  { name: 'Domain Name: Business.com', price: 34500000, emoji: '🌐', hint: 'Sold in 2007.' },
-  { name: 'T-Rex Skeleton (Stan)', price: 31800000, emoji: '🦖', hint: 'Sold at Christie\'s in 2020.' },
-  { name: 'Pigeon (New Kim)', price: 1900000, emoji: '🕊️', hint: 'A Belgian racing pigeon.' },
+  { name: '1962 Ferrari 250 GTO', price: 48400000, icon: 'Car', hint: 'The holy grail of classic cars.' },
+  { name: 'A Single Strand of Elvis\\' Hair', price: 115000, icon: 'Music', hint: 'Sold at auction in 2002.' },
+  { name: 'Solid Gold Toilet', price: 1250000, icon: 'Gem', hint: '18-karat gold, fully functional.' },
+  { name: 'First Apple Computer (Apple I)', price: 905000, icon: 'Monitor', hint: 'Built by Wozniak in 1976.' },
+  { name: 'Bluefin Tuna (278kg)', price: 3100000, icon: 'Fish', hint: 'Sold in Tokyo, 2019.' },
+  { name: 'Action Comics #1 (Superman Debut)', price: 3250000, icon: 'Book', hint: 'A pristine copy sold in 2021.' },
+  { name: 'A Perfect Watermelon (Densuke)', price: 6100, icon: 'Apple', hint: 'A rare black watermelon from Japan.' },
+  { name: 'Parking Spot in Manhattan', price: 1000000, icon: 'MapPin', hint: 'A single spot in a luxury condo.' },
+  { name: 'Crystal Piano (Heintzman)', price: 3200000, icon: 'Music', hint: 'Played at the Beijing Olympics.' },
+  { name: '5-Min Trip to Space (Blue Origin)', price: 28000000, icon: 'Rocket', hint: 'The first auctioned passenger seat.' },
+  { name: 'Charles & Diana\\'s Wedding Cake Slice', price: 2565, icon: 'Cake', hint: '40 years old.' },
+  { name: 'Diamond Panther Bracelet', price: 7000000, icon: 'Diamond', hint: 'Owned by Wallis Simpson.' },
+  { name: 'Domain Name: Business.com', price: 34500000, icon: 'Globe', hint: 'Sold in 2007.' },
+  { name: 'T-Rex Skeleton (Stan)', price: 31800000, icon: 'Bone', hint: 'Sold at Christie\\'s in 2020.' },
+  { name: 'Pigeon (New Kim)', price: 1900000, icon: 'Bird', hint: 'A Belgian racing pigeon.' },
 ];
+
+const renderIcon = (name, props = {}) => {
+  switch (name) {
+    case 'Car': return <Car {...props} />;
+    case 'Music': return <Music {...props} />;
+    case 'Gem': return <Gem {...props} />;
+    case 'Monitor': return <Monitor {...props} />;
+    case 'Fish': return <Fish {...props} />;
+    case 'Book': return <Book {...props} />;
+    case 'Apple': return <Apple {...props} />;
+    case 'MapPin': return <MapPin {...props} />;
+    case 'Rocket': return <Rocket {...props} />;
+    case 'Cake': return <Cake {...props} />;
+    case 'Diamond': return <Diamond {...props} />;
+    case 'Globe': return <Globe {...props} />;
+    case 'Bone': return <Bone {...props} />;
+    case 'Bird': return <Bird {...props} />;
+    default: return <DollarSign {...props} />;
+  }
+};
 
 const MAX_ROUNDS = 5;
 const BID_TIME = 20;
@@ -257,7 +277,7 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
         </div>
 
         <div style={{ ...styles.glassPanel, padding: '50px 30px' }}>
-          <div style={{ fontSize: '5rem', marginBottom: '10px' }}>{gameState.currentItem?.emoji}</div>
+          <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>{gameState.currentItem?.icon && renderIcon(gameState.currentItem.icon, { size: 80, color: '#33ff33' })}</div>
           <h2 style={{ ...styles.title, fontSize: '2rem' }}>{gameState.currentItem?.name}</h2>
           <p style={{ opacity: 0.6, fontStyle: 'italic', marginBottom: '40px' }}>"{gameState.currentItem?.hint}"</p>
 
@@ -286,8 +306,8 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
         
         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
           {players.map(p => (
-            <div key={p} style={{ ...styles.playerTag, opacity: gameState.guesses[p] !== undefined ? 1 : 0.4 }}>
-              {p} {gameState.guesses[p] !== undefined ? '🔒' : '🤔'}
+            <div key={p} style={{ ...styles.playerTag, opacity: gameState.guesses[p] !== undefined ? 1 : 0.4, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>{p}</span> {gameState.guesses[p] !== undefined ? <Lock size={16} /> : <HelpCircle size={16} />}
             </div>
           ))}
         </div>
@@ -317,7 +337,9 @@ export default function PriceIsWhat({ channel, isHost, players, playerName }) {
             {formatCurrency(actualPrice)}
           </div>
           
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '30px' }}>{gameState.currentItem?.name} {gameState.currentItem?.emoji}</h3>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+            {gameState.currentItem?.name} {gameState.currentItem?.icon && renderIcon(gameState.currentItem.icon, { size: 28, color: '#33ff33' })}
+          </h3>
 
           <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '20px 0' }} />
 
