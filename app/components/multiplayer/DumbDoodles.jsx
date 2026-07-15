@@ -87,6 +87,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
   const [guess, setGuess] = useState('');
   const [brushColor, setBrushColor] = useState('#ff33ff');
   const [brushSize, setBrushSize] = useState(6);
+  const [brushStyle, setBrushStyle] = useState('Neon');
   
   const [isMobile, setIsMobile] = useState(false);
 
@@ -131,11 +132,23 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
           ctx.lineTo(line.x1, line.y1);
           ctx.strokeStyle = line.color || '#ff33ff';
           ctx.lineWidth = line.size || 6;
-          ctx.lineCap = 'round';
+          ctx.lineCap = line.style === 'Marker' ? 'square' : 'round';
           ctx.lineJoin = 'round';
-          ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 10;
+          
+          if (line.style === 'Solid') {
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+          } else if (line.style === 'Marker') {
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 0.5;
+          } else { // Neon
+            ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 10;
+            ctx.globalAlpha = 1;
+          }
           ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
+          
           ctx.stroke();
+          ctx.globalAlpha = 1; // reset
         });
       })
       .on('broadcast', { event: 'clear_canvas' }, () => {
@@ -427,16 +440,28 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
       ctx.lineTo(currentPos.x, currentPos.y);
       ctx.strokeStyle = brushColor;
       ctx.lineWidth = brushSize;
-      ctx.lineCap = 'round';
+      ctx.lineCap = brushStyle === 'Marker' ? 'square' : 'round';
       ctx.lineJoin = 'round';
-      ctx.shadowBlur = brushColor === '#0a0a0a' ? 0 : 10;
+      
+      if (brushStyle === 'Solid') {
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+      } else if (brushStyle === 'Marker') {
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 0.5;
+      } else { // Neon
+        ctx.shadowBlur = brushColor === '#0a0a0a' ? 0 : 10;
+        ctx.globalAlpha = 1;
+      }
       ctx.shadowColor = brushColor === '#0a0a0a' ? 'transparent' : brushColor;
+      
       ctx.stroke();
+      ctx.globalAlpha = 1; // reset
       
       pendingDrawEventsRef.current.push({
         x0: lastPosRef.current.x, y0: lastPosRef.current.y,
         x1: currentPos.x, y1: currentPos.y,
-        color: brushColor, size: brushSize
+        color: brushColor, size: brushSize, style: brushStyle
       });
     }
     lastPosRef.current = currentPos;
@@ -736,28 +761,73 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
   // -------------------------
   if (gameState.status === 'gameover') {
     const sortedPlayers = [...players].sort((a, b) => (gameState.scores[b] || 0) - (gameState.scores[a] || 0));
+    const top3 = sortedPlayers.slice(0, 3);
+    const others = sortedPlayers.slice(3);
     
     return (
       <div style={styles.background}>
-        <div style={{...styles.glassPanel, maxWidth: '600px', margin: '100px auto', padding: '40px', textAlign: 'center'}}>
-          <Trophy size={64} color="#ebd73f" style={{ margin: '0 auto 20px auto' }} />
-          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ebd73f', fontSize: '2.5rem', marginBottom: '40px' }}>FINAL SCORES</h1>
+        <div style={{...styles.glassPanel, maxWidth: '800px', margin: '60px auto', padding: '40px', textAlign: 'center'}}>
+          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#fff', fontSize: '2.5rem', marginBottom: '40px', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>LEADERBOARD</h1>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {sortedPlayers.map((p, i) => (
-              <div key={p} style={{ 
-                display: 'flex', justifyContent: 'space-between', padding: '20px', 
-                background: i === 0 ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.05)', 
-                borderRadius: '16px', border: i === 0 ? '1px solid rgba(235, 215, 63, 0.3)' : '1px solid transparent'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: i === 0 ? '#ebd73f' : 'rgba(255,255,255,0.5)' }}>#{i+1}</span>
-                  <span style={{ fontSize: '1.2rem', fontFamily: "'Panchang', sans-serif" }}>{p}</span>
+          {/* PODIUM */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '15px', height: '250px', marginBottom: '40px' }}>
+            
+            {/* 2nd Place */}
+            {top3[1] && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '120px' }}>
+                <div style={{ marginBottom: '10px' }}>{renderAvatar(gameState.avatars[top3[1]])}</div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '5px', color: '#c0c0c0' }}>{top3[1]}</div>
+                <div style={{ fontSize: '0.8rem', color: '#c0c0c0', marginBottom: '10px' }}>{gameState.scores[top3[1]] || 0} pts</div>
+                <div style={{ width: '100%', height: '120px', background: 'linear-gradient(180deg, #c0c0c0 0%, rgba(192,192,192,0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px' }}>
+                  <span style={{ fontSize: '2rem', fontWeight: 'bold', color: '#fff' }}>2</span>
                 </div>
-                <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{gameState.scores[p] || 0} pts</span>
               </div>
-            ))}
+            )}
+
+            {/* 1st Place */}
+            {top3[0] && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '140px' }}>
+                <Trophy size={40} color="#ebd73f" style={{ marginBottom: '10px', filter: 'drop-shadow(0 0 10px #ebd73f)' }} />
+                <div style={{ marginBottom: '10px' }}>{renderAvatar(gameState.avatars[top3[0]])}</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '5px', color: '#ebd73f' }}>{top3[0]}</div>
+                <div style={{ fontSize: '0.9rem', color: '#ebd73f', marginBottom: '10px' }}>{gameState.scores[top3[0]] || 0} pts</div>
+                <div style={{ width: '100%', height: '160px', background: 'linear-gradient(180deg, #ebd73f 0%, rgba(235, 215, 63, 0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px', boxShadow: '0 0 30px rgba(235, 215, 63, 0.3)' }}>
+                  <span style={{ fontSize: '3rem', fontWeight: 'bold', color: '#000' }}>1</span>
+                </div>
+              </div>
+            )}
+
+            {/* 3rd Place */}
+            {top3[2] && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '120px' }}>
+                <div style={{ marginBottom: '10px' }}>{renderAvatar(gameState.avatars[top3[2]])}</div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '5px', color: '#cd7f32' }}>{top3[2]}</div>
+                <div style={{ fontSize: '0.8rem', color: '#cd7f32', marginBottom: '10px' }}>{gameState.scores[top3[2]] || 0} pts</div>
+                <div style={{ width: '100%', height: '90px', background: 'linear-gradient(180deg, #cd7f32 0%, rgba(205, 127, 50, 0.2) 100%)', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', paddingTop: '15px' }}>
+                  <span style={{ fontSize: '2rem', fontWeight: 'bold', color: '#fff' }}>3</span>
+                </div>
+              </div>
+            )}
+            
           </div>
+          
+          {/* Others */}
+          {others.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
+              {others.map((p, i) => (
+                <div key={p} style={{ 
+                  display: 'flex', justifyContent: 'space-between', padding: '15px 20px', 
+                  background: 'rgba(255,255,255,0.05)', borderRadius: '12px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.3)' }}>#{i+4}</span>
+                    <span style={{ fontSize: '1rem', fontFamily: "'Panchang', sans-serif" }}>{p}</span>
+                  </div>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{gameState.scores[p] || 0} pts</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {isHost && (
             <button 
@@ -902,6 +972,18 @@ export default function DumbDoodles({ channel, isHost, players, playerName }) {
                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
                      }}>
                        <div style={{ width: s, height: s, borderRadius: '50%', background: '#fff' }} />
+                     </button>
+                   ))}
+                </div>
+                <div style={{ display: 'flex', gap: '5px', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '16px', alignItems: 'center' }}>
+                   {['Solid', 'Neon', 'Marker'].map(style => (
+                     <button key={style} onClick={() => setBrushStyle(style)} style={{
+                       padding: '4px 10px', borderRadius: '12px', background: brushStyle === style ? 'rgba(255,255,255,0.1)' : 'transparent',
+                       border: brushStyle === style ? '1px solid rgba(255,255,255,0.3)' : '1px solid transparent',
+                       color: brushStyle === style ? '#fff' : 'rgba(255,255,255,0.5)',
+                       cursor: 'pointer', fontSize: '0.7rem', fontWeight: 'bold', transition: 'all 0.2s'
+                     }}>
+                       {style.toUpperCase()}
                      </button>
                    ))}
                 </div>
