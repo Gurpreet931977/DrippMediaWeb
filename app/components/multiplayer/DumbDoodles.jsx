@@ -789,8 +789,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   if (gameState.status === 'lobby') {
     return (
       <div style={styles.background}>
-        <div style={{...styles.glassPanel, maxWidth: isMobile ? '600px' : '850px', margin: isMobile ? '20px 10px' : '4vh auto', padding: isMobile ? '20px 15px' : '40px'}}>
-          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: isMobile ? '1.5rem' : '2rem', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '15px' : '30px' }}>
+        <div style={{...styles.glassPanel, maxWidth: isMobile ? '600px' : '850px', margin: isMobile ? '20px 10px' : '4vh auto', padding: isMobile ? '20px 15px' : '40px', boxSizing: 'border-box' }}>
+          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '15px' : '30px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
             DUMB DOODLES
           </h1>
           
@@ -882,7 +882,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 onClick={() => startRound()}
                 style={{
                   gridColumn: '1 / -1',
-                  padding: isMobile ? '15px' : '20px', background: '#ff33ff', color: '#000', border: 'none', borderRadius: '12px',
+                  padding: isMobile ? '10px' : '20px', background: '#ff33ff', color: '#000', border: 'none', borderRadius: '12px',
                   fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1rem' : '1.2rem', cursor: 'pointer', marginTop: isMobile ? '5px' : '10px',
                   boxShadow: '0 0 20px rgba(255,51,255,0.3)'
                 }}

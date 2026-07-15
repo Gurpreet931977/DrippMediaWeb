@@ -206,7 +206,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           width: '80vw', height: '80vh', background: 'radial-gradient(circle at center, rgba(235, 215, 63, 0.15), transparent 70%)',
           pointerEvents: 'none', filter: 'blur(60px)'
         }} />
-        <h1 style={{ color: '#ebd73f', fontSize: isMobile ? '2rem' : '4rem', margin: '0 0 15px 0', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 30px rgba(235,215,63,0.5)', textAlign: 'center', width: '100%', wordBreak: 'break-word' }}>ROOM: {roomCode}</h1>
+        <h1 style={{ color: '#ebd73f', fontSize: 'clamp(1.2rem, 6vw, 4rem)', margin: '0 0 15px 0', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 30px rgba(235,215,63,0.5)', textAlign: 'center', width: '100%', overflowWrap: 'break-word', wordBreak: 'break-word' }}>ROOM: {roomCode}</h1>
         <p style={{ letterSpacing: isMobile ? '3px' : '6px', opacity: 0.8, marginBottom: isMobile ? '30px' : '50px', fontSize: isMobile ? '0.9rem' : '1.2rem', textTransform: 'uppercase', textAlign: 'center' }}>WAITING FOR AGENTS</p>
 
         <div style={{ 
@@ -240,8 +240,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           <button 
             onClick={startGame}
             style={{ 
-              marginTop: '50px', padding: '20px 60px', background: '#ebd73f', color: '#000', 
-              border: 'none', borderRadius: '40px', fontSize: '1.3rem', fontWeight: 'bold', cursor: 'pointer',
+              marginTop: '50px', padding: isMobile ? '16px 30px' : '20px 60px', background: '#ebd73f', color: '#000', 
+              border: 'none', borderRadius: '40px', fontSize: isMobile ? '1.1rem' : '1.3rem', fontWeight: 'bold', cursor: 'pointer',
               fontFamily: "'Panchang', sans-serif", boxShadow: '0 10px 30px rgba(235, 215, 63, 0.4)',
               transition: 'transform 0.2s, box-shadow 0.2s', filter: 'url(#scribble)'
             }}
@@ -356,8 +356,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
         <button 
           onClick={createRoom}
           style={{ 
-            width: '100%', padding: '18px', background: 'linear-gradient(90deg, #33ccff 0%, #0099cc 100%)', color: '#fff', 
-            border: 'none', borderRadius: '16px', fontSize: '1.2rem', fontWeight: 'bold', 
+            width: '100%', padding: isMobile ? '14px' : '18px', background: 'linear-gradient(90deg, #33ccff 0%, #0099cc 100%)', color: '#fff', 
+            border: 'none', borderRadius: '16px', fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: 'bold', 
             marginBottom: '15px', cursor: 'pointer', fontFamily: "'Panchang', sans-serif",
             boxShadow: '0 10px 25px rgba(51, 204, 255, 0.4), inset 0 2px 0 rgba(255,255,255,0.3)',
             transition: 'transform 0.2s, box-shadow 0.2s',
@@ -382,9 +382,9 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
             value={joinInput}
             onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
             style={{ 
-              flex: 1, padding: '15px 20px', background: 'rgba(0,0,0,0.4)', 
+              flex: 1, padding: isMobile ? '12px 15px' : '15px 20px', background: 'rgba(0,0,0,0.4)', 
               border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '16px', 
-              fontSize: '1.1rem', textAlign: 'center', textTransform: 'uppercase', fontFamily: "'Clash Display', sans-serif",
+              fontSize: isMobile ? '0.9rem' : '1.1rem', textAlign: 'center', textTransform: 'uppercase', fontFamily: "'Clash Display', sans-serif",
               outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box', minWidth: 0,
               filter: 'url(#scribble)'
             }}
@@ -394,8 +394,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           <button 
             type="submit"
             style={{ 
-              padding: '0 30px', background: 'linear-gradient(135deg, #ebd73f 0%, #d4a017 100%)', color: '#000', border: 'none', 
-              borderRadius: '16px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer',
+              padding: isMobile ? '0 15px' : '0 30px', background: 'linear-gradient(135deg, #ebd73f 0%, #d4a017 100%)', color: '#000', border: 'none', 
+              borderRadius: '16px', fontSize: isMobile ? '0.9rem' : '1.1rem', fontWeight: 'bold', cursor: 'pointer',
               fontFamily: "'Panchang', sans-serif", boxShadow: '0 8px 20px rgba(235, 215, 63, 0.3)',
               transition: 'transform 0.2s', boxSizing: 'border-box',
               filter: 'url(#scribble)'

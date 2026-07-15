@@ -464,7 +464,7 @@ export default function ArcadeMenu({ onStartGame }) {
 
             // ultra smooth bouncy transition when not dragging
             const baseTransition = isDragging 
-              ? 'transform 0.1s ease-out, opacity 0.1s ease-out' 
+              ? 'none' 
               : 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
 
             return (
