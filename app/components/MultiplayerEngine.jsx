@@ -9,6 +9,7 @@ import DumbDoodles from './multiplayer/DumbDoodles';
 import UndercoverSpy from './multiplayer/UndercoverSpy';
 import BrokenBrief from './multiplayer/BrokenBrief';
 import PriceIsWhat from './multiplayer/PriceIsWhat';
+import CoopEscape from './multiplayer/CoopEscape';
 
 export default function MultiplayerEngine({ activeGame, onBack }) {
   const [roomCode, setRoomCode] = useState('');
@@ -135,34 +136,58 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
 
   if (gameState === 'playing') {
     // Render the selected game
+    let gameComponent = null;
     switch (activeGame) {
       case 'worddrop':
-        return <WordDrop channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <WordDrop channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        break;
       case 'dumbdoodles':
-        return <DumbDoodles channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <DumbDoodles channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        break;
       case 'undercover':
-        return <UndercoverSpy channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <UndercoverSpy channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        break;
       case 'brokenbrief':
-        return <BrokenBrief channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <BrokenBrief channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        break;
       case 'priceiswhat':
-        return <PriceIsWhat channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <PriceIsWhat channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        break;
+      case 'coopescape':
+        gameComponent = <CoopEscape channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        break;
       default:
-        return (
+        gameComponent = (
           <div style={{ color: 'white', textAlign: 'center', paddingTop: '100px' }}>
             <h1>{activeGame} is under construction.</h1>
             <button onClick={() => setGameState('menu')}>Back</button>
           </div>
         );
     }
+    return (
+      <div className="multiplayer-game-wrapper">
+        <style>{`
+          @media (max-width: 768px) {
+            .multiplayer-game-wrapper > div {
+              transform: scale(0.65);
+              transform-origin: top center;
+              width: 153% !important; /* 100 / 0.65 to fill width */
+              height: 153% !important;
+            }
+          }
+        `}</style>
+        {gameComponent}
+      </div>
+    );
   }
 
   if (gameState === 'lobby') {
     return (
       <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', backgroundColor: '#050505', color: '#fff', fontFamily: "'Clash Display', sans-serif",
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
+        minHeight: '100vh', backgroundColor: '#050505', color: '#fff', fontFamily: "'Clash Display', sans-serif",
         position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
-        overflow: 'hidden'
+        overflowY: 'auto', overflowX: 'hidden', padding: '40px 20px', boxSizing: 'border-box'
       }}>
         <div style={{
           position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
@@ -173,7 +198,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
         <p style={{ letterSpacing: '6px', opacity: 0.8, marginBottom: '50px', fontSize: '1.2rem', textTransform: 'uppercase' }}>WAITING FOR AGENTS</p>
 
         <div style={{ 
-          background: 'rgba(255,255,255,0.03)', padding: '40px', borderRadius: '24px', 
+          background: 'rgba(255,255,255,0.03)', padding: '30px', borderRadius: '24px', 
           width: '100%', maxWidth: '500px', border: '1px solid rgba(255,255,255,0.1)',
           backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
           boxShadow: '0 30px 60px rgba(0,0,0,0.8)', filter: 'url(#scribble)'
@@ -222,13 +247,13 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
 
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      height: '100vh', width: '100vw',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
+      minHeight: '100vh', width: '100vw',
       backgroundColor: '#050505',
       backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(51, 204, 255, 0.15), transparent 60%), radial-gradient(circle at 50% 100%, rgba(235, 215, 63, 0.1), transparent 60%)',
       color: '#fff', fontFamily: "'Clash Display', sans-serif",
       position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
-      overflow: 'hidden'
+      overflowY: 'auto', overflowX: 'hidden', padding: '40px 20px', boxSizing: 'border-box'
     }}>
       {/* Animated Grid Background */}
       <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.03\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")', opacity: 0.7, animation: 'panBackground 60s linear infinite', pointerEvents: 'none' }} />
@@ -256,12 +281,12 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
       `}</style>
 
       <div style={{ 
-        background: 'rgba(15, 15, 20, 0.65)', padding: '30px 40px', borderRadius: '32px', 
+        background: 'rgba(15, 15, 20, 0.65)', padding: '25px 30px', borderRadius: '32px', 
         border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center',
         backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
         boxShadow: '0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)',
-        width: '420px', boxSizing: 'border-box', position: 'relative', zIndex: 2,
-        animation: 'floatModal 6s ease-in-out infinite'
+        width: '100%', maxWidth: '420px', boxSizing: 'border-box', position: 'relative', zIndex: 2,
+        margin: 'auto 0'
       }}>
         <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '2.2rem', margin: '0 0 5px 0', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>MULTIPLAYER</h1>
         <p style={{ opacity: 0.6, marginBottom: '20px', fontSize: '0.9rem', letterSpacing: '1px' }}>Customize your agent and deploy.</p>
@@ -360,7 +385,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           </button>
         </form>
       </div>
-      <button onClick={onBack} style={{ marginTop: '30px', background: 'transparent', border: 'none', color: '#fff', opacity: 0.4, cursor: 'pointer', fontSize: '1rem', transition: 'opacity 0.2s', zIndex: 2 }} onMouseEnter={e => e.currentTarget.style.opacity = 0.8} onMouseLeave={e => e.currentTarget.style.opacity = 0.4}>
+      <button onClick={onBack} style={{ margin: '30px 0', background: 'transparent', border: 'none', color: '#fff', opacity: 0.4, cursor: 'pointer', fontSize: '1rem', transition: 'opacity 0.2s', zIndex: 2 }} onMouseEnter={e => e.currentTarget.style.opacity = 0.8} onMouseLeave={e => e.currentTarget.style.opacity = 0.4}>
         Return to Arcade
       </button>
     </div>

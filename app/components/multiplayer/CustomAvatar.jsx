@@ -54,9 +54,9 @@ export default function CustomAvatar({ config, size = 64 }) {
       
       <defs>
         <radialGradient id={`bodyGrad-${idSuffix}`} cx="30%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
-          <stop offset="30%" stopColor={baseColor} stopOpacity="1" />
-          <stop offset="100%" stopColor={baseColor} stopOpacity="1" />
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="15%" stopColor={baseColor} />
+          <stop offset="100%" stopColor={baseColor} />
         </radialGradient>
         <linearGradient id={`shadeGrad-${idSuffix}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="50%" stopColor="transparent" />
