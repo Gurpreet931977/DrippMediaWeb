@@ -914,7 +914,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#fff', fontSize: isMobile ? '1.8rem' : '2.5rem', marginBottom: isMobile ? '20px' : '40px', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>LEADERBOARD</h1>
           
           {/* PODIUM */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: isMobile ? '5px' : '15px', height: isMobile ? '200px' : '250px', marginBottom: isMobile ? '20px' : '40px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: isMobile ? '5px' : '15px', height: isMobile ? '200px' : '320px', marginBottom: isMobile ? '20px' : '40px' }}>
             
             {/* 2nd Place */}
             {top3[1] && (

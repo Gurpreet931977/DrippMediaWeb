@@ -23,6 +23,14 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
   const [playerName, setPlayerName] = useState('');
   const [avatarConfig, setAvatarConfig] = useState({ color: 0, eyes: 0, mouth: 0, headgear: 0 });
   const [playerAvatars, setPlayerAvatars] = useState({});
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // Try to get user name from local storage
@@ -198,8 +206,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           width: '80vw', height: '80vh', background: 'radial-gradient(circle at center, rgba(235, 215, 63, 0.15), transparent 70%)',
           pointerEvents: 'none', filter: 'blur(60px)'
         }} />
-        <h1 style={{ color: '#ebd73f', fontSize: '4rem', margin: '0 0 15px 0', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 30px rgba(235,215,63,0.5)' }}>ROOM: {roomCode}</h1>
-        <p style={{ letterSpacing: '6px', opacity: 0.8, marginBottom: '50px', fontSize: '1.2rem', textTransform: 'uppercase' }}>WAITING FOR AGENTS</p>
+        <h1 style={{ color: '#ebd73f', fontSize: isMobile ? '2rem' : '4rem', margin: '0 0 15px 0', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 30px rgba(235,215,63,0.5)', textAlign: 'center', width: '100%', wordBreak: 'break-word' }}>ROOM: {roomCode}</h1>
+        <p style={{ letterSpacing: isMobile ? '3px' : '6px', opacity: 0.8, marginBottom: isMobile ? '30px' : '50px', fontSize: isMobile ? '0.9rem' : '1.2rem', textTransform: 'uppercase', textAlign: 'center' }}>WAITING FOR AGENTS</p>
 
         <div style={{ 
           background: 'rgba(255,255,255,0.03)', padding: '30px', borderRadius: '24px', 
@@ -292,16 +300,17 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
         }
       `}</style>
 
-      <div className="menu-scaler">
+      <div className="menu-scaler" style={{ padding: isMobile ? '0 20px' : '0', boxSizing: 'border-box' }}>
         <div style={{ 
-          background: 'rgba(15, 15, 20, 0.65)', padding: '30px 40px', borderRadius: '32px', 
+          background: 'rgba(15, 15, 20, 0.65)', padding: isMobile ? '25px 20px' : '30px 40px', borderRadius: '32px', 
           border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center',
           backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
           boxShadow: '0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)',
           width: '100%', maxWidth: '420px', boxSizing: 'border-box', position: 'relative', zIndex: 2,
-          animation: 'floatModal 6s ease-in-out infinite'
+          animation: 'floatModal 6s ease-in-out infinite',
+          display: 'flex', flexDirection: 'column', alignItems: 'center'
         }}>
-          <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '2.2rem', margin: '0 auto 10px auto', textAlign: 'center', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>MULTIPLAYER</h1>
+          <h1 style={{ width: '100%', fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1.6rem' : '2.2rem', margin: '0 auto 10px auto', textAlign: 'center', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>MULTIPLAYER</h1>
           <p style={{ opacity: 0.6, marginBottom: '20px', fontSize: '0.9rem', letterSpacing: '1px', textAlign: 'center' }}>Customize your agent and deploy.</p>
 
         {/* Avatar Customizer */}
