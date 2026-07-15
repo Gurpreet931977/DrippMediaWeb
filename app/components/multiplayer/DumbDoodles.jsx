@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Eraser, Users, Clock, Trophy, PartyPopper, Settings, Bot } from 'lucide-react';
+import { Send, Eraser, Users, Clock, Trophy, PartyPopper, Settings, Bot, Undo2, Redo2, Trash2 } from 'lucide-react';
 import CustomAvatar from './CustomAvatar';
 
 const DEFAULT_WORDS = [
@@ -76,6 +76,9 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   const ctxRef = useRef(null);
   const lastPosRef = useRef({ x: 0, y: 0 });
   const pendingDrawEventsRef = useRef([]);
+  const allLinesRef = useRef([]);
+  const redoStackRef = useRef([]);
+  const currentStrokeRef = useRef([]);
   const chatEndRef = useRef(null);
   const timerRef = useRef(null);
 
@@ -139,10 +142,54 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           ctx.stroke();
           ctx.globalAlpha = 1; // reset
         });
+      })
+      })
+      .on('broadcast', { event: 'sync_history' }, ({ payload }) => {
+         allLinesRef.current = payload;
+         const ctx = ctxRef.current;
+         const canvas = canvasRef.current;
+         if (!ctx || !canvas) return;
+         ctx.clearRect(0, 0, canvas.width, canvas.height);
+         payload.forEach(stroke => {
+           stroke.forEach(line => {
+             ctx.beginPath();
+             ctx.moveTo(line.x0, line.y0);
+             ctx.lineTo(line.x1, line.y1);
+             ctx.strokeStyle = line.color || '#ff33ff';
+             ctx.lineWidth = line.size || 6;
+             ctx.lineCap = line.style === 'Marker' ? 'square' : 'round';
+             ctx.lineJoin = 'round';
+             
+             if (line.style === 'Solid') {
+               ctx.shadowBlur = 0;
+               ctx.globalAlpha = 1;
+             } else if (line.style === 'Marker') {
+               ctx.shadowBlur = 0;
+               ctx.globalAlpha = 0.5;
+             } else if (line.style === 'Crayon') {
+               ctx.shadowBlur = 2;
+               ctx.shadowColor = 'rgba(0,0,0,0.5)';
+               ctx.globalAlpha = 0.8;
+             } else if (line.style === 'Glow') {
+               ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 25;
+               ctx.globalAlpha = 1;
+             } else {
+               ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 10;
+               ctx.globalAlpha = 1;
+             }
+             if (line.style !== 'Crayon') {
+                ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
+             }
+             ctx.stroke();
+             ctx.globalAlpha = 1;
+           });
+         });
+      })
       .on('broadcast', { event: 'clear_canvas' }, () => {
         const ctx = ctxRef.current;
         const canvas = canvasRef.current;
         if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        allLinesRef.current = [];
       });
   }, [channel]);
 
@@ -411,6 +458,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     if (!isMyTurn || gameState.status !== 'playing') return;
     isDrawingRef.current = true;
     lastPosRef.current = getMousePos(e);
+    currentStrokeRef.current = [];
+    redoStackRef.current = [];
   };
 
   const draw = (e) => {
@@ -452,19 +501,85 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       ctx.stroke();
       ctx.globalAlpha = 1; // reset
       
-      pendingDrawEventsRef.current.push({
+      const lineEvent = {
         x0: lastPosRef.current.x, y0: lastPosRef.current.y,
         x1: currentPos.x, y1: currentPos.y,
         color: brushColor, size: brushSize, style: brushStyle
-      });
+      };
+      pendingDrawEventsRef.current.push(lineEvent);
+      currentStrokeRef.current.push(lineEvent);
     }
     lastPosRef.current = currentPos;
   };
 
-  const stopDrawing = () => { isDrawingRef.current = false; };
+  const stopDrawing = () => { 
+    isDrawingRef.current = false; 
+    if (currentStrokeRef.current.length > 0) {
+      allLinesRef.current.push([...currentStrokeRef.current]);
+      currentStrokeRef.current = [];
+    }
+  };
+
+  const redrawCanvas = () => {
+    const ctx = ctxRef.current;
+    const canvas = canvasRef.current;
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    allLinesRef.current.forEach(stroke => {
+      stroke.forEach(line => {
+          ctx.beginPath();
+          ctx.moveTo(line.x0, line.y0);
+          ctx.lineTo(line.x1, line.y1);
+          ctx.strokeStyle = line.color || '#ff33ff';
+          ctx.lineWidth = line.size || 6;
+          ctx.lineCap = line.style === 'Marker' ? 'square' : 'round';
+          ctx.lineJoin = 'round';
+          
+          if (line.style === 'Solid') {
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+          } else if (line.style === 'Marker') {
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 0.5;
+          } else if (line.style === 'Crayon') {
+            ctx.shadowBlur = 2;
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.globalAlpha = 0.8;
+          } else if (line.style === 'Glow') {
+            ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 25;
+            ctx.globalAlpha = 1;
+          } else {
+            ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 10;
+            ctx.globalAlpha = 1;
+          }
+          if (line.style !== 'Crayon') {
+             ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+      });
+    });
+  };
+
+  const undo = () => {
+    if (!isMyTurn || allLinesRef.current.length === 0) return;
+    redoStackRef.current.push(allLinesRef.current.pop());
+    redrawCanvas();
+    channel.send({ type: 'broadcast', event: 'sync_history', payload: allLinesRef.current });
+  };
+
+  const redo = () => {
+    if (!isMyTurn || redoStackRef.current.length === 0) return;
+    allLinesRef.current.push(redoStackRef.current.pop());
+    redrawCanvas();
+    channel.send({ type: 'broadcast', event: 'sync_history', payload: allLinesRef.current });
+  };
 
   const clearCanvas = () => {
     if (!isMyTurn) return;
+    allLinesRef.current = [];
+    redoStackRef.current = [];
     const ctx = ctxRef.current;
     const canvas = canvasRef.current;
     if (ctx && canvas) {
@@ -1033,23 +1148,38 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                      </button>
                    ))}
                 </div>
-                <button onClick={() => {
-                    const ctx = ctxRef.current;
-                    const canvas = canvasRef.current;
-                    if (ctx && canvas) {
-                      ctx.clearRect(0, 0, canvas.width, canvas.height);
-                      channel.send({ type: 'broadcast', event: 'clear_canvas', payload: {} });
-                    }
-                  }} style={{
-                    padding: '8px 16px', borderRadius: '16px', background: 'rgba(255,51,51,0.1)', border: '1px solid rgba(255,51,51,0.3)',
-                    color: '#ff3333', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', fontWeight: 'bold',
-                    transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,51,51,0.2)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,51,51,0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={undo} title="Undo" style={{
+                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                      color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.transform = 'scale(1.1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
                   >
-                  <Eraser size={16} /> CLEAR
-                </button>
+                    <Undo2 size={16} />
+                  </button>
+                  <button onClick={redo} title="Redo" style={{
+                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                      color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.transform = 'scale(1.1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                  >
+                    <Redo2 size={16} />
+                  </button>
+                  <button onClick={clearCanvas} title="Clear Canvas" style={{
+                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,51,51,0.1)', border: '1px solid rgba(255,51,51,0.3)',
+                      color: '#ff3333', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,51,51,0.2)'; e.currentTarget.style.transform = 'scale(1.1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,51,51,0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             )}
           </div>
