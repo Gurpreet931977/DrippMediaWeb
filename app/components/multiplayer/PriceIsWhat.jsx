@@ -6,7 +6,7 @@ import { Trophy, Clock, DollarSign, ArrowRight, Gavel, Play, Car, Music, Gem, Mo
 
 const ITEMS = [
   { name: '1962 Ferrari 250 GTO', price: 48400000, icon: 'Car', hint: 'The holy grail of classic cars.' },
-  { name: 'A Single Strand of Elvis\\' Hair', price: 115000, icon: 'Music', hint: 'Sold at auction in 2002.' },
+  { name: "A Single Strand of Elvis' Hair", price: 115000, icon: 'Music', hint: 'Sold at auction in 2002.' },
   { name: 'Solid Gold Toilet', price: 1250000, icon: 'Gem', hint: '18-karat gold, fully functional.' },
   { name: 'First Apple Computer (Apple I)', price: 905000, icon: 'Monitor', hint: 'Built by Wozniak in 1976.' },
   { name: 'Bluefin Tuna (278kg)', price: 3100000, icon: 'Fish', hint: 'Sold in Tokyo, 2019.' },
@@ -15,10 +15,10 @@ const ITEMS = [
   { name: 'Parking Spot in Manhattan', price: 1000000, icon: 'MapPin', hint: 'A single spot in a luxury condo.' },
   { name: 'Crystal Piano (Heintzman)', price: 3200000, icon: 'Music', hint: 'Played at the Beijing Olympics.' },
   { name: '5-Min Trip to Space (Blue Origin)', price: 28000000, icon: 'Rocket', hint: 'The first auctioned passenger seat.' },
-  { name: 'Charles & Diana\\'s Wedding Cake Slice', price: 2565, icon: 'Cake', hint: '40 years old.' },
+  { name: "Charles & Diana's Wedding Cake Slice", price: 2565, icon: 'Cake', hint: '40 years old.' },
   { name: 'Diamond Panther Bracelet', price: 7000000, icon: 'Diamond', hint: 'Owned by Wallis Simpson.' },
   { name: 'Domain Name: Business.com', price: 34500000, icon: 'Globe', hint: 'Sold in 2007.' },
-  { name: 'T-Rex Skeleton (Stan)', price: 31800000, icon: 'Bone', hint: 'Sold at Christie\\'s in 2020.' },
+  { name: 'T-Rex Skeleton (Stan)', price: 31800000, icon: 'Bone', hint: "Sold at Christie's in 2020." },
   { name: 'Pigeon (New Kim)', price: 1900000, icon: 'Bird', hint: 'A Belgian racing pigeon.' },
 ];
 

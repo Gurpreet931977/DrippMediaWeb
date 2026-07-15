@@ -223,21 +223,43 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      height: '100vh', backgroundColor: '#0a0a0a', color: '#fff', fontFamily: "'Clash Display', sans-serif",
-      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100
+      height: '100vh', width: '100vw',
+      backgroundColor: '#050505',
+      backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(51, 204, 255, 0.15), transparent 60%), radial-gradient(circle at 50% 100%, rgba(235, 215, 63, 0.1), transparent 60%)',
+      color: '#fff', fontFamily: "'Clash Display', sans-serif",
+      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
+      overflow: 'hidden'
     }}>
+      {/* Animated Grid Background */}
+      <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.03\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")', opacity: 0.7, animation: 'panBackground 60s linear infinite', pointerEvents: 'none' }} />
+
+      <style>{`
+        @keyframes panBackground {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(-25%, -25%); }
+        }
+        @keyframes floatModal {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0px); }
+        }
+      `}</style>
+
       <div style={{ 
-        background: 'rgba(20,20,20,0.8)', padding: '50px', borderRadius: '24px', 
-        border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.5)', width: '400px'
+        background: 'rgba(15, 15, 20, 0.65)', padding: '50px', borderRadius: '32px', 
+        border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center',
+        backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
+        boxShadow: '0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)',
+        width: '420px', position: 'relative', zIndex: 2,
+        animation: 'floatModal 6s ease-in-out infinite'
       }}>
-        <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '2.5rem', marginBottom: '10px' }}>MULTIPLAYER</h1>
-        <p style={{ opacity: 0.7, marginBottom: '20px' }}>Customize your agent and join a room.</p>
+        <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '2.5rem', margin: '0 0 5px 0', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>MULTIPLAYER</h1>
+        <p style={{ opacity: 0.6, marginBottom: '25px', fontSize: '0.9rem', letterSpacing: '1px' }}>Customize your agent and deploy.</p>
 
         {/* Avatar Customizer */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '16px' }}>
-          <div style={{ position: 'relative' }}>
-            <CustomAvatar config={avatarConfig} size={100} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)', padding: '25px 20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
+          <div style={{ position: 'relative', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.4))' }}>
+            <CustomAvatar config={avatarConfig} size={110} />
             <button onClick={() => {
               setAvatarConfig({
                 color: Math.floor(Math.random() * AVATAR_COLORS.length),
@@ -245,25 +267,29 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
                 mouth: Math.floor(Math.random() * AVATAR_MOUTHS.length),
                 headgear: Math.floor(Math.random() * AVATAR_HEADGEAR.length)
               });
-            }} style={{ position: 'absolute', top: -10, right: -10, background: '#33ccff', color: '#000', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 0 10px rgba(51, 204, 255, 0.5)' }}>
+            }} 
+            style={{ position: 'absolute', top: -5, right: -15, background: 'linear-gradient(135deg, #33ccff 0%, #0099cc 100%)', color: '#fff', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 5px 15px rgba(51, 204, 255, 0.4), inset 0 2px 0 rgba(255,255,255,0.4)', transition: 'transform 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1) rotate(15deg)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
+            >
               <Dices size={18} />
             </button>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginTop: '25px' }}>
             {[
               { label: 'COLOR', key: 'color', max: AVATAR_COLORS.length },
               { label: 'EYES', key: 'eyes', max: AVATAR_EYES.length },
               { label: 'MOUTH', key: 'mouth', max: AVATAR_MOUTHS.length },
               { label: 'GEAR', key: 'headgear', max: AVATAR_HEADGEAR.length }
             ].map(setting => (
-              <div key={setting.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <button type="button" onClick={() => setAvatarConfig(p => ({ ...p, [setting.key]: (p[setting.key] - 1 + setting.max) % setting.max }))} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.7 }}>
-                  <ChevronLeft size={24} />
+              <div key={setting.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '5px 15px', borderRadius: '12px' }}>
+                <button type="button" onClick={() => setAvatarConfig(p => ({ ...p, [setting.key]: (p[setting.key] - 1 + setting.max) % setting.max }))} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.5, transition: 'opacity 0.2s', padding: '5px' }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0.5}>
+                  <ChevronLeft size={20} />
                 </button>
-                <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem', letterSpacing: '1px' }}>{setting.label}</span>
-                <button type="button" onClick={() => setAvatarConfig(p => ({ ...p, [setting.key]: (p[setting.key] + 1) % setting.max }))} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.7 }}>
-                  <ChevronRight size={24} />
+                <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.75rem', letterSpacing: '2px', color: '#ccc' }}>{setting.label}</span>
+                <button type="button" onClick={() => setAvatarConfig(p => ({ ...p, [setting.key]: (p[setting.key] + 1) % setting.max }))} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.5, transition: 'opacity 0.2s', padding: '5px' }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0.5}>
+                  <ChevronRight size={20} />
                 </button>
               </div>
             ))}
@@ -273,44 +299,57 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
         <button 
           onClick={createRoom}
           style={{ 
-            width: '100%', padding: '15px', background: '#33ccff', color: '#000', 
-            border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', 
-            marginBottom: '20px', cursor: 'pointer', fontFamily: "'Panchang', sans-serif"
+            width: '100%', padding: '18px', background: 'linear-gradient(90deg, #33ccff 0%, #0099cc 100%)', color: '#fff', 
+            border: 'none', borderRadius: '16px', fontSize: '1.2rem', fontWeight: 'bold', 
+            marginBottom: '25px', cursor: 'pointer', fontFamily: "'Panchang', sans-serif",
+            boxShadow: '0 10px 25px rgba(51, 204, 255, 0.4), inset 0 2px 0 rgba(255,255,255,0.3)',
+            transition: 'transform 0.2s, box-shadow 0.2s'
           }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 15px 35px rgba(51, 204, 255, 0.5), inset 0 2px 0 rgba(255,255,255,0.3)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(51, 204, 255, 0.4), inset 0 2px 0 rgba(255,255,255,0.3)'; }}
         >
           CREATE ROOM
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', opacity: 0.5 }}>
+        <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', opacity: 0.3 }}>
           <div style={{ flex: 1, height: '1px', background: '#fff' }}></div>
-          <span style={{ padding: '0 10px', fontSize: '0.9rem' }}>OR</span>
+          <span style={{ padding: '0 15px', fontSize: '0.8rem', letterSpacing: '2px' }}>OR</span>
           <div style={{ flex: 1, height: '1px', background: '#fff' }}></div>
         </div>
 
-        <form onSubmit={joinRoom} style={{ display: 'flex', gap: '10px' }}>
+        <form onSubmit={joinRoom} style={{ display: 'flex', gap: '12px' }}>
           <input 
             type="text" 
-            placeholder="ROOM NAME (e.g. DANK-DOGE)" 
+            placeholder="ROOM NAME" 
             value={joinInput}
             onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
             style={{ 
-              flex: 1, padding: '15px', background: 'rgba(255,255,255,0.05)', 
-              border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '12px', 
-              fontSize: '1.2rem', textAlign: 'center', textTransform: 'uppercase', fontFamily: 'monospace'
+              flex: 1, padding: '15px 20px', background: 'rgba(0,0,0,0.4)', 
+              border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '16px', 
+              fontSize: '1.1rem', textAlign: 'center', textTransform: 'uppercase', fontFamily: "'Clash Display', sans-serif",
+              outline: 'none', transition: 'border-color 0.2s'
             }}
+            onFocus={e => e.currentTarget.style.borderColor = '#ebd73f'}
+            onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
           />
           <button 
             type="submit"
             style={{ 
-              padding: '0 25px', background: '#ebd73f', color: '#000', border: 'none', 
-              borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer'
+              padding: '0 30px', background: 'linear-gradient(135deg, #ebd73f 0%, #d4a017 100%)', color: '#000', border: 'none', 
+              borderRadius: '16px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer',
+              fontFamily: "'Panchang', sans-serif", boxShadow: '0 8px 20px rgba(235, 215, 63, 0.3)',
+              transition: 'transform 0.2s'
             }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           >
             JOIN
           </button>
         </form>
       </div>
-      <button onClick={onBack} style={{ marginTop: '20px', background: 'transparent', border: 'none', color: '#fff', opacity: 0.5, cursor: 'pointer' }}>Cancel</button>
+      <button onClick={onBack} style={{ marginTop: '30px', background: 'transparent', border: 'none', color: '#fff', opacity: 0.4, cursor: 'pointer', fontSize: '1rem', transition: 'opacity 0.2s', zIndex: 2 }} onMouseEnter={e => e.currentTarget.style.opacity = 0.8} onMouseLeave={e => e.currentTarget.style.opacity = 0.4}>
+        Return to Arcade
+      </button>
     </div>
   );
 }
