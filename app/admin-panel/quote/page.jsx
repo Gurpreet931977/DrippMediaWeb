@@ -711,6 +711,68 @@ export default function QuoteMaker() {
 
   return (
     <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .premium-card {
+          background: rgba(20, 20, 20, 0.6) !important;
+          backdrop-filter: blur(20px) !important;
+          -webkit-backdrop-filter: blur(20px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          border-radius: 24px !important;
+          padding: 32px !important;
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+          margin-bottom: 24px !important;
+          transition: all 0.3s ease !important;
+        }
+        .premium-card:hover {
+          border-color: rgba(235, 215, 63, 0.3) !important;
+          box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 40px rgba(235, 215, 63, 0.05) !important;
+          transform: translateY(-5px) !important;
+        }
+        .premium-input {
+          width: 100% !important;
+          padding: 14px 16px !important;
+          background: rgba(0, 0, 0, 0.4) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          border-radius: 12px !important;
+          color: white !important;
+          font-size: 0.95rem !important;
+          outline: none !important;
+          box-sizing: border-box !important;
+          transition: all 0.3s ease !important;
+        }
+        .premium-input:focus {
+          border-color: rgba(235, 215, 63, 0.5) !important;
+          background: rgba(0, 0, 0, 0.6) !important;
+          box-shadow: 0 0 0 4px rgba(235, 215, 63, 0.1) !important;
+        }
+        .premium-label {
+          display: block !important;
+          font-size: 0.75rem !important;
+          color: #888 !important;
+          margin-bottom: 8px !important;
+          letter-spacing: 1px !important;
+          text-transform: uppercase !important;
+          font-weight: 600 !important;
+        }
+        .premium-header-title {
+          font-family: 'Panchang', sans-serif !important;
+          font-size: 2.5rem !important;
+          margin: 0 0 0.5rem 0 !important;
+          background: linear-gradient(135deg, #fff 0%, #aaa 100%) !important;
+          -webkit-background-clip: text !important;
+          -webkit-text-fill-color: transparent !important;
+          letter-spacing: -1px !important;
+        }
+        .premium-header-subtitle {
+          color: #888 !important;
+          font-size: 1.1rem !important;
+          margin: 0 !important;
+        }
+      `}} />
 
       {/* CUSTOM DIALOG (ALERT / CONFIRM) */}
       {customDialog.isOpen && createPortal(
@@ -785,10 +847,10 @@ export default function QuoteMaker() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {conflicts[currentConflictIdx].type.startsWith('scalar') && (
                     <>
-                        <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                        <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className="premium-btn" style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
                             Overwrite Current Value
                         </button>
-                        <button onClick={() => handleConflictResolution('append')} className={styles.btn}>
+                        <button onClick={() => handleConflictResolution('append')} className="premium-btn">
                             Append / Keep Both
                         </button>
                     </>
@@ -796,10 +858,10 @@ export default function QuoteMaker() {
                 
                 {conflicts[currentConflictIdx].type === 'item_match_rate' && (
                     <>
-                        <button onClick={() => handleConflictResolution('merge')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                        <button onClick={() => handleConflictResolution('merge')} className="premium-btn" style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
                             Merge (Add +{conflicts[currentConflictIdx].item.qty} Quantity)
                         </button>
-                        <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
+                        <button onClick={() => handleConflictResolution('add_new')} className="premium-btn">
                             Add as Separate Line Item
                         </button>
                     </>
@@ -807,19 +869,19 @@ export default function QuoteMaker() {
                 
                 {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
                     <>
-                        <button onClick={() => handleConflictResolution('merge', 'new')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                        <button onClick={() => handleConflictResolution('merge', 'new')} className="premium-btn" style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
                             Update Rate & Add Quantity
                         </button>
-                        <button onClick={() => handleConflictResolution('merge', 'old')} className={styles.btn}>
+                        <button onClick={() => handleConflictResolution('merge', 'old')} className="premium-btn">
                             Keep Old Rate & Add Quantity
                         </button>
-                        <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
+                        <button onClick={() => handleConflictResolution('add_new')} className="premium-btn">
                             Add as Separate Line Item
                         </button>
                     </>
                 )}
 
-                <button onClick={() => handleConflictResolution('skip')} className={styles.btn} style={{ marginTop: '10px', borderColor: '#ff4d4d', color: '#ff4d4d' }}>
+                <button onClick={() => handleConflictResolution('skip')} className="premium-btn" style={{ marginTop: '10px', borderColor: '#ff4d4d', color: '#ff4d4d' }}>
                     Skip / Ignore Pasted Value
                 </button>
             </div>
@@ -845,9 +907,9 @@ export default function QuoteMaker() {
            </div>
         </div>
       )}
-      <div className={styles.header}>
-        <h1 className={styles.title}>Package Maker Pro</h1>
-        <p className={styles.subtitle}>Build customized, premium quotes and packages.</p>
+      <div className="premium-header">
+        <h1 className="premium-header-title">Package Maker Pro</h1>
+        <p className="premium-header-subtitle">Build customized, premium quotes and packages.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
@@ -856,7 +918,7 @@ export default function QuoteMaker() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Smart Paste Section */}
-          <div className={styles.card} style={{ border: '1px dashed #ebd73f', background: 'rgba(235, 215, 63, 0.05)' }}>
+          <div className="premium-card" style={{ border: '1px dashed #ebd73f', background: 'rgba(235, 215, 63, 0.05)' }}>
             <h3 style={{ marginBottom: '10px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Search size={20} /> AI Smart Paste
             </h3>
@@ -868,7 +930,7 @@ export default function QuoteMaker() {
               value={smartText} 
               onChange={(e) => setSmartText(e.target.value)} 
               placeholder="e.g. Client: John Doe. Phone: 555-1234. Email: john@doe.com. We need a Website Redesign for $1500 and Monthly SEO for $500."
-              className={styles.inputField} 
+              className="premium-input" 
               rows={4} 
               style={{ resize: 'vertical', marginBottom: '15px' }} 
             />
@@ -896,81 +958,81 @@ export default function QuoteMaker() {
           </div>
 
           {/* Section 1: Client Details */}
-          <div className={styles.card}>
+          <div className="premium-card">
             <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <FileText size={20} /> Client Information
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Client Name</label>
-                 <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="John Doe" className={styles.inputField}  />
+                 <label className="premium-label">Client Name</label>
+                 <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="John Doe" className="premium-input"  />
               </div>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Brand Name</label>
-                 <input type="text" value={clientDetails.brandName} onChange={e => handleClientChange('brandName', e.target.value)} placeholder="Acme Corp" className={styles.inputField}  />
+                 <label className="premium-label">Brand Name</label>
+                 <input type="text" value={clientDetails.brandName} onChange={e => handleClientChange('brandName', e.target.value)} placeholder="Acme Corp" className="premium-input"  />
               </div>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Email Address</label>
-                 <input type="email" value={clientDetails.email} onChange={e => handleClientChange('email', e.target.value)} placeholder="john@acme.com" className={styles.inputField}  />
+                 <label className="premium-label">Email Address</label>
+                 <input type="email" value={clientDetails.email} onChange={e => handleClientChange('email', e.target.value)} placeholder="john@acme.com" className="premium-input"  />
               </div>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Mobile Number</label>
-                 <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="+1 555-0199" className={styles.inputField}  />
+                 <label className="premium-label">Mobile Number</label>
+                 <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="+1 555-0199" className="premium-input"  />
               </div>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>GST Number (Optional)</label>
-                 <input type="text" value={clientDetails.gst} onChange={e => handleClientChange('gst', e.target.value)} placeholder="22AAAAA0000A1Z5" className={styles.inputField}  />
+                 <label className="premium-label">GST Number (Optional)</label>
+                 <input type="text" value={clientDetails.gst} onChange={e => handleClientChange('gst', e.target.value)} placeholder="22AAAAA0000A1Z5" className="premium-input"  />
               </div>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Date</label>
-                 <input type="date" value={clientDetails.date} onChange={e => handleClientChange('date', e.target.value)} className={styles.inputField}  />
+                 <label className="premium-label">Date</label>
+                 <input type="date" value={clientDetails.date} onChange={e => handleClientChange('date', e.target.value)} className="premium-input"  />
               </div>
             </div>
           </div>
 
           {/* Section 2: Package Settings */}
-          <div className={styles.card}>
+          <div className="premium-card">
             <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Package size={20} /> Package Configuration
             </h3>
             
             <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
               <div style={{ flex: 1 }}>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Quotation Number</label>
-                 <input type="text" value={quoteDetails.number} onChange={e => handleQuoteChange('number', e.target.value)} className={styles.inputField}  />
+                 <label className="premium-label">Quotation Number</label>
+                 <input type="text" value={quoteDetails.number} onChange={e => handleQuoteChange('number', e.target.value)} className="premium-input"  />
               </div>
               <div style={{ flex: 1 }}>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Currency</label>
-                 <select value={quoteDetails.currency} onChange={e => handleQuoteChange('currency', e.target.value)} className={styles.inputField} >
+                 <label className="premium-label">Currency</label>
+                 <select value={quoteDetails.currency} onChange={e => handleQuoteChange('currency', e.target.value)} className="premium-input" >
                     {allCurrencies.map(c => <option key={c.code} value={c.symbol}>{c.code} ({c.symbol})</option>)}
                  </select>
               </div>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <label className={styles.label}>Modality</label>
+              <label className="premium-label">Modality</label>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => setPackageType('project')} className={styles.btn} style={{ flex: 1, borderColor: packageType === 'project' ? '#ebd73f' : 'rgba(255,255,255,0.1)', background: packageType === 'project' ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.05)', color: packageType === 'project' ? '#ebd73f' : 'white' }}>Project Basis</button>
-                <button onClick={() => setPackageType('monthly')} className={styles.btn} style={{ flex: 1, borderColor: packageType === 'monthly' ? '#ebd73f' : 'rgba(255,255,255,0.1)', background: packageType === 'monthly' ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.05)', color: packageType === 'monthly' ? '#ebd73f' : 'white' }}>Monthly / Retainer Basis</button>
+                <button onClick={() => setPackageType('project')} className="premium-btn" style={{ flex: 1, borderColor: packageType === 'project' ? '#ebd73f' : 'rgba(255,255,255,0.1)', background: packageType === 'project' ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.05)', color: packageType === 'project' ? '#ebd73f' : 'white' }}>Project Basis</button>
+                <button onClick={() => setPackageType('monthly')} className="premium-btn" style={{ flex: 1, borderColor: packageType === 'monthly' ? '#ebd73f' : 'rgba(255,255,255,0.1)', background: packageType === 'monthly' ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.05)', color: packageType === 'monthly' ? '#ebd73f' : 'white' }}>Monthly / Retainer Basis</button>
               </div>
             </div>
 
             {packageType === 'project' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
                 <div>
-                   <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Project Duration (e.g. 4 Weeks)</label>
-                   <input type="text" value={quoteDetails.projectDuration} onChange={e => handleQuoteChange('projectDuration', e.target.value)} className={styles.inputField}  />
+                   <label className="premium-label">Project Duration (e.g. 4 Weeks)</label>
+                   <input type="text" value={quoteDetails.projectDuration} onChange={e => handleQuoteChange('projectDuration', e.target.value)} className="premium-input"  />
                 </div>
                 <div>
-                   <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Expected Delivery Date</label>
-                   <input type="date" value={quoteDetails.expectedDelivery} onChange={e => handleQuoteChange('expectedDelivery', e.target.value)} className={styles.inputField}  />
+                   <label className="premium-label">Expected Delivery Date</label>
+                   <input type="date" value={quoteDetails.expectedDelivery} onChange={e => handleQuoteChange('expectedDelivery', e.target.value)} className="premium-input"  />
                 </div>
               </div>
             )}
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Creative Message / Quality Promise</label>
-              <textarea value={quoteDetails.message} onChange={e => handleQuoteChange('message', e.target.value)} className={styles.inputField} rows={4} style={{ resize: 'vertical' }} />
+              <label className="premium-label">Creative Message / Quality Promise</label>
+              <textarea value={quoteDetails.message} onChange={e => handleQuoteChange('message', e.target.value)} className="premium-input" rows={4} style={{ resize: 'vertical' }} />
             </div>
 
             <div style={{ padding: '20px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.2)' }}>
@@ -985,11 +1047,11 @@ export default function QuoteMaker() {
               </label>
               {includePmp && (
                 <div style={{ marginTop: '15px' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>PMP Pitch / Storytelling Copy</label>
+                  <label className="premium-label">PMP Pitch / Storytelling Copy</label>
                   <textarea 
                     value={pmpPitch} 
                     onChange={e => setPmpPitch(e.target.value)} 
-                    className={styles.inputField} 
+                    className="premium-input" 
                     rows={6} 
                     style={{ resize: 'vertical' }} 
                     placeholder="Enter the storytelling pitch here..."
@@ -1000,7 +1062,7 @@ export default function QuoteMaker() {
           </div>
 
           {/* Section 3: Services & Rates */}
-          <div className={styles.card}>
+          <div className="premium-card">
             <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Services List</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
@@ -1013,7 +1075,7 @@ export default function QuoteMaker() {
                        value={item.desc} 
                        onChange={(e) => handleItemChange(index, 'desc', e.target.value)}
                        placeholder="e.g. Website Development or Social Media Management"
-                       className={styles.inputField}
+                       className="premium-input"
                        style={{ padding: '8px 12px' }}
                     />
                     <datalist id="services-list">
@@ -1027,7 +1089,7 @@ export default function QuoteMaker() {
                       value={item.qty} 
                       onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
                       placeholder="1"
-                      className={styles.inputField}
+                      className="premium-input"
                       style={{ padding: '8px 12px' }}
                     />
                   </div>
@@ -1038,7 +1100,7 @@ export default function QuoteMaker() {
                       value={item.rate} 
                       onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
                       placeholder="0"
-                      className={styles.inputField}
+                      className="premium-input"
                       style={{ padding: '8px 12px' }}
                     />
                   </div>
@@ -1053,7 +1115,7 @@ export default function QuoteMaker() {
                        value={item.details || ''} 
                        onChange={(e) => handleItemChange(index, 'details', e.target.value)}
                        placeholder="e.g. Includes 5 custom pages, responsive design, and 1 year of hosting..."
-                       className={styles.inputField}
+                       className="premium-input"
                        style={{ padding: '8px 12px', fontSize: '0.9rem', width: '100%', minHeight: '60px' }}
                      />
                   </div>
@@ -1061,7 +1123,7 @@ export default function QuoteMaker() {
               ))}
             </div>
 
-            <button onClick={addItem} className={styles.btn}>
+            <button onClick={addItem} className="premium-btn">
               <Plus size={16} /> Add Another Service
             </button>
             
@@ -1079,12 +1141,12 @@ export default function QuoteMaker() {
            <CurrencyConverter />
 
            {/* Actions */}
-           <div className={styles.card}>
+           <div className="premium-card">
              <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Export & Share</h3>
              <button onClick={generatePDF} className={styles.btnPrimary} style={{ width: '100%', padding: '12px', justifyContent: 'center', marginBottom: '15px' }}>
                <Download size={18} /> Download as PDF
              </button>
-             <button onClick={generateSecureLink} className={styles.btn} style={{ width: '100%', padding: '12px', justifyContent: 'center' }}>
+             <button onClick={generateSecureLink} className="premium-btn" style={{ width: '100%', padding: '12px', justifyContent: 'center' }}>
                <Lock size={18} /> Generate Secure Link
              </button>
              
@@ -1092,15 +1154,15 @@ export default function QuoteMaker() {
                 <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '0.75rem' }}>
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
                    <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                      <input type="text" readOnly value={shareLink} onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} className={styles.inputField} style={{ padding: '8px', flex: 1, cursor: 'pointer' }} title="Click to open link directly" />
-                      <button onClick={() => copyToClipboard(shareLink, 'link')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link">
+                      <input type="text" readOnly value={shareLink} onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} className="premium-input" style={{ padding: '8px', flex: 1, cursor: 'pointer' }} title="Click to open link directly" />
+                      <button onClick={() => copyToClipboard(shareLink, 'link')} className="premium-btn" style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link">
                         {copiedItem === 'link' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
                       </button>
                    </div>
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client PIN:</p>
                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
-                      <button onClick={() => copyToClipboard(sharePassword, 'password')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy PIN">
+                      <input type="text" readOnly value={sharePassword} className="premium-input" style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
+                      <button onClick={() => copyToClipboard(sharePassword, 'password')} className="premium-btn" style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy PIN">
                         {copiedItem === 'password' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
                       </button>
                    </div>
@@ -1116,14 +1178,14 @@ export default function QuoteMaker() {
            </div>
 
            {/* Templates Manager */}
-           <div className={styles.card}>
+           <div className="premium-card">
              <h3 style={{ marginBottom: '15px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
                Templates
-               <button onClick={saveCurrentAsPackage} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.75rem' }}>Save Current</button>
+               <button onClick={saveCurrentAsPackage} className="premium-btn" style={{ padding: '5px 10px', fontSize: '0.75rem' }}>Save Current</button>
              </h3>
              <div style={{ position: 'relative', marginBottom: '15px' }}>
                <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
-               <input type="text" placeholder="Search templates..." value={searchTemplate} onChange={e => setSearchTemplate(e.target.value)} className={styles.inputField} style={{ paddingLeft: '40px' }} />
+               <input type="text" placeholder="Search templates..." value={searchTemplate} onChange={e => setSearchTemplate(e.target.value)} className="premium-input" style={{ paddingLeft: '40px' }} />
              </div>
              
              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
@@ -1136,7 +1198,7 @@ export default function QuoteMaker() {
                        <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{pkg.name}</div>
                        <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '3px' }}>{pkg.type === 'project' ? 'Project' : 'Monthly'} • {pkg.items.length} items</div>
                      </div>
-                     <button onClick={() => loadPackage(pkg)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: 'rgba(235, 215, 63, 0.3)', color: '#ebd73f' }}>Load</button>
+                     <button onClick={() => loadPackage(pkg)} className="premium-btn" style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: 'rgba(235, 215, 63, 0.3)', color: '#ebd73f' }}>Load</button>
                    </div>
                  ))
                )}
@@ -1149,7 +1211,7 @@ export default function QuoteMaker() {
       {/* PDF PAGE BUILDER - FULL WIDTH */}
       <div style={{ marginTop: "40px" }}>
           {/* PDF PAGE BUILDER */}
-          <div className={styles.card}>
+          <div className="premium-card">
             <h3 style={{ marginBottom: '30px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', borderBottom: '1px solid rgba(235, 215, 63, 0.2)', paddingBottom: '15px' }}>
               <Layers size={20} /> PDF Pages & Layout
             </h3>
@@ -1194,8 +1256,8 @@ export default function QuoteMaker() {
                   ))}
                   
                   <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                      <button onClick={() => addPage('custom_text')} className={styles.btn} style={{ flex: 1, fontSize: '0.8rem', padding: '8px' }}>+ Text Page</button>
-                      <button onClick={() => addPage('infographic')} className={styles.btn} style={{ flex: 1, fontSize: '0.8rem', padding: '8px' }}>+ Infographic</button>
+                      <button onClick={() => addPage('custom_text')} className="premium-btn" style={{ flex: 1, fontSize: '0.8rem', padding: '8px' }}>+ Text Page</button>
+                      <button onClick={() => addPage('infographic')} className="premium-btn" style={{ flex: 1, fontSize: '0.8rem', padding: '8px' }}>+ Infographic</button>
                   </div>
                </div>
 
@@ -1217,35 +1279,35 @@ export default function QuoteMaker() {
                          
                          {(pdfPages[selectedPageIndex].type === 'cover' || pdfPages[selectedPageIndex].type === 'services' || pdfPages[selectedPageIndex].type === 'investment' || pdfPages[selectedPageIndex].type === 'next_steps' || pdfPages[selectedPageIndex].type === 'custom_text' || pdfPages[selectedPageIndex].type === 'infographic') && (
                              <div>
-                                <label className={styles.label}>Heading Text</label>
+                                <label className="premium-label">Heading Text</label>
                                 <input 
                                   type="text" 
                                   value={pdfPages[selectedPageIndex].title || ''} 
                                   onChange={e => updatePage(selectedPageIndex, 'title', e.target.value)} 
-                                  className={styles.inputField} 
+                                  className="premium-input" 
                                 />
                              </div>
                          )}
 
                          {pdfPages[selectedPageIndex].type === 'cover' && (
                              <div>
-                                <label className={styles.label}>Subtitle / Prepared For Label</label>
+                                <label className="premium-label">Subtitle / Prepared For Label</label>
                                 <input 
                                   type="text" 
                                   value={pdfPages[selectedPageIndex].subtitle || ''} 
                                   onChange={e => updatePage(selectedPageIndex, 'subtitle', e.target.value)} 
-                                  className={styles.inputField} 
+                                  className="premium-input" 
                                 />
                              </div>
                          )}
                          
                          {pdfPages[selectedPageIndex].type === 'custom_text' && (
                              <div>
-                                <label className={styles.label}>Page Content</label>
+                                <label className="premium-label">Page Content</label>
                                 <textarea 
                                   value={pdfPages[selectedPageIndex].content || ''} 
                                   onChange={e => updatePage(selectedPageIndex, 'content', e.target.value)} 
-                                  className={styles.inputField} 
+                                  className="premium-input" 
                                   style={{ minHeight: '200px', resize: 'vertical' }}
                                 />
                              </div>
@@ -1253,7 +1315,7 @@ export default function QuoteMaker() {
 
                          {pdfPages[selectedPageIndex].type === 'infographic' && (
                              <div>
-                                <label className={styles.label} style={{ marginBottom: '15px', display: 'block' }}>Design Cards</label>
+                                <label className="premium-label" style={{ marginBottom: '15px', display: 'block' }}>Design Cards</label>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                     {pdfPages[selectedPageIndex].cards?.map((card, cIdx) => (
                                         <div key={cIdx} style={{ background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid #222' }}>
@@ -1261,13 +1323,13 @@ export default function QuoteMaker() {
                                                 <span style={{ fontSize: '0.8rem', color: '#888' }}>Card {cIdx + 1}</span>
                                                 <button onClick={() => removeCard(selectedPageIndex, cIdx)} style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer' }}><Trash2 size={12} /></button>
                                             </div>
-                                            <input type="text" value={card.title} onChange={e => updateCard(selectedPageIndex, cIdx, 'title', e.target.value)} className={styles.inputField} style={{ padding: '8px', marginBottom: '10px', fontSize: '0.9rem' }} placeholder="Card Title" />
-                                            <textarea value={card.desc} onChange={e => updateCard(selectedPageIndex, cIdx, 'desc', e.target.value)} className={styles.inputField} style={{ padding: '8px', fontSize: '0.8rem', minHeight: '60px', resize: 'vertical' }} placeholder="Card Description" />
+                                            <input type="text" value={card.title} onChange={e => updateCard(selectedPageIndex, cIdx, 'title', e.target.value)} className="premium-input" style={{ padding: '8px', marginBottom: '10px', fontSize: '0.9rem' }} placeholder="Card Title" />
+                                            <textarea value={card.desc} onChange={e => updateCard(selectedPageIndex, cIdx, 'desc', e.target.value)} className="premium-input" style={{ padding: '8px', fontSize: '0.8rem', minHeight: '60px', resize: 'vertical' }} placeholder="Card Description" />
                                         </div>
                                     ))}
                                 </div>
                                 {pdfPages[selectedPageIndex].cards?.length < 4 && (
-                                    <button onClick={() => addCard(selectedPageIndex)} className={styles.btn} style={{ marginTop: '15px', padding: '8px 15px', fontSize: '0.85rem' }}>+ Add Card</button>
+                                    <button onClick={() => addCard(selectedPageIndex)} className="premium-btn" style={{ marginTop: '15px', padding: '8px 15px', fontSize: '0.85rem' }}>+ Add Card</button>
                                 )}
                              </div>
                          )}
