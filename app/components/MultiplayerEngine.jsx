@@ -256,19 +256,18 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
       `}</style>
 
       <div style={{ 
-        background: 'rgba(15, 15, 20, 0.65)', padding: '50px', borderRadius: '32px', 
+        background: 'rgba(15, 15, 20, 0.65)', padding: '30px 40px', borderRadius: '32px', 
         border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center',
         backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
         boxShadow: '0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)',
         width: '420px', boxSizing: 'border-box', position: 'relative', zIndex: 2,
-        animation: 'floatModal 6s ease-in-out infinite',
-        filter: 'url(#scribble)'
+        animation: 'floatModal 6s ease-in-out infinite'
       }}>
-        <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '2.5rem', margin: '0 0 5px 0', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>MULTIPLAYER</h1>
-        <p style={{ opacity: 0.6, marginBottom: '25px', fontSize: '0.9rem', letterSpacing: '1px' }}>Customize your agent and deploy.</p>
+        <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '2.2rem', margin: '0 0 5px 0', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>MULTIPLAYER</h1>
+        <p style={{ opacity: 0.6, marginBottom: '20px', fontSize: '0.9rem', letterSpacing: '1px' }}>Customize your agent and deploy.</p>
 
         {/* Avatar Customizer */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)', padding: '25px 20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)', filter: 'url(#scribble)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)', filter: 'url(#scribble)' }}>
           <div style={{ position: 'relative', width: '110px', height: '110px', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.4))' }}>
             <CustomAvatar config={avatarConfig} size={110} />
             <button onClick={() => {
@@ -287,7 +286,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
             </button>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginTop: '25px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: '20px' }}>
             {[
               { label: 'COLOR', key: 'color', max: AVATAR_COLORS.length },
               { label: 'EYES', key: 'eyes', max: AVATAR_EYES.length },
@@ -312,7 +311,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           style={{ 
             width: '100%', padding: '18px', background: 'linear-gradient(90deg, #33ccff 0%, #0099cc 100%)', color: '#fff', 
             border: 'none', borderRadius: '16px', fontSize: '1.2rem', fontWeight: 'bold', 
-            marginBottom: '25px', cursor: 'pointer', fontFamily: "'Panchang', sans-serif",
+            marginBottom: '15px', cursor: 'pointer', fontFamily: "'Panchang', sans-serif",
             boxShadow: '0 10px 25px rgba(51, 204, 255, 0.4), inset 0 2px 0 rgba(255,255,255,0.3)',
             transition: 'transform 0.2s, box-shadow 0.2s',
             filter: 'url(#scribble)'
@@ -323,7 +322,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           CREATE ROOM
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', opacity: 0.3 }}>
+        <div style={{ display: 'flex', alignItems: 'center', margin: '15px 0', opacity: 0.3 }}>
           <div style={{ flex: 1, height: '1px', background: '#fff' }}></div>
           <span style={{ padding: '0 15px', fontSize: '0.8rem', letterSpacing: '2px' }}>OR</span>
           <div style={{ flex: 1, height: '1px', background: '#fff' }}></div>
