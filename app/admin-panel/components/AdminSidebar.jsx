@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail } from 'lucide-react';
+import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings } from 'lucide-react';
 import styles from '../admin.module.css';
 
 export default function AdminSidebar() {
@@ -14,6 +14,7 @@ export default function AdminSidebar() {
     { name: 'Quotes & Packages', path: '/admin-panel/quote', icon: PackagePlus },
     { name: 'PMP Maker', path: '/admin-panel/package', icon: PackagePlus },
     { name: 'Email Campaigns', path: '/admin-panel/email', icon: Mail },
+    { name: 'System', path: '/admin-panel/system', icon: Settings },
   ];
 
   return (
