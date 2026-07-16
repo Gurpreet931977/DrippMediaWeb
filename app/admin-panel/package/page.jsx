@@ -124,7 +124,7 @@ export default function PackageMaker() {
             const data = await response.json();
             const link = `${window.location.origin}/quote/${data.id}`;
             setGeneratedLink(link);
-            const msg = `Hey!\n\nHere is your custom Marketing Package & Strategy Outline from Dripp Media.\n\n🔗 Link: ${link}\n🔑 PIN: ${pass}`;
+            const msg = `Hey!\n\nHere is your custom Personal Marketing Plan from Dripp Media.\n\n🔗 Link: ${link}\n🔑 PIN: ${pass}`;
             navigator.clipboard.writeText(msg);
             setCopiedLink(true);
             setTimeout(() => setCopiedLink(false), 3000);
