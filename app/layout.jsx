@@ -10,15 +10,16 @@ export const viewport = {
 };
 
 export const metadata = {
-  metadataBase: new URL('https://drippmedia.com'),
+  metadataBase: new URL('https://www.drippmedia.com'),
   title: {
     default: 'Dripp Media | Digital Branding & Creative Agency',
     template: '%s | Dripp Media'
   },
-  description: 'Dripp Media (often searched as Drip Media) is a digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
+  description: 'Dripp Media (often searched as Drip Media, Dripp Media, DrippMedia, or DripMedia) is a premium digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
   keywords: [
-    // Core Brand Identifiers
-    'Dripp Media', 'drip media', 'dripmedia', 'drippmedia.com', 'Dripp Agency', 'The Dripp Agency',
+    // Core Brand Identifiers — all spelling variants for brand recognition
+    'Dripp Media', 'drip media', 'dripmedia', 'drippmedia', 'drippmedia.com', 'drip media agency',
+    'Dripp Agency', 'The Dripp Agency', 'dripp', 'drippmedia agency', 'drip media india',
     
     // Premium & Luxury Services (High-End Clientele)
     'premium website development', 'premium video editing', 'premium creative agency', 
@@ -130,11 +131,19 @@ export const metadata = {
   publisher: 'Dripp Media',
   openGraph: {
     title: 'Dripp Media | Digital Branding & Creative Agency',
-    description: 'Dripp Media (often searched as Drip Media) is a digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
-    url: 'https://drippmedia.com',
+    description: 'Dripp Media (often searched as Drip Media, DrippMedia, or DripMedia) is a premium digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
+    url: 'https://www.drippmedia.com',
     siteName: 'Dripp Media',
     locale: 'en_US',
     type: 'website',
+    images: [
+      {
+        url: 'https://www.drippmedia.com/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Dripp Media - Digital Branding & Creative Agency',
+      }
+    ],
   },
   robots: {
     index: true,
@@ -150,21 +159,26 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Dripp Media | Digital Branding & Creative Agency',
-    description: 'Dripp Media (often searched as Drip Media) is a digital branding and creative agency specializing in immersive digital experiences, web development, video production, and cutting-edge design.',
+    description: 'Dripp Media (also known as Drip Media or DrippMedia) — premium digital branding & creative agency for web development, video production, and cutting-edge design.',
     creator: '@drippmedia_',
+    images: ['https://www.drippmedia.com/twitter-image.png'],
   },
   alternates: {
-    canonical: 'https://drippmedia.com',
+    canonical: 'https://www.drippmedia.com',
   },
   applicationName: 'Dripp Media',
   category: 'technology',
+  verification: {
+    // Add your Google Search Console verification token here when available
+    // google: 'your-verification-code',
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Structured Data for SEO (Prevents Google Autocorrecting to Dreammedia) */}
+        {/* Structured Data — Organization Schema (brand name disambiguation) */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -172,19 +186,35 @@ export default function RootLayout({ children }) {
               "@context": "https://schema.org",
               "@type": "Organization",
               "name": "Dripp Media",
-              "alternateName": ["Drip Media", "DrippMedia", "Dripmedia"],
-              "url": "https://drippmedia.com",
-              "logo": "https://drippmedia.com/favicon.ico",
-              "description": "Dripp Media is a premium digital branding and creative agency specializing in immersive digital experiences, web development, video production, and cutting-edge design.",
+              "alternateName": ["Drip Media", "DrippMedia", "Dripmedia", "drippmedia", "drip media agency", "DripMedia"],
+              "url": "https://www.drippmedia.com",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://www.drippmedia.com/icon.png",
+                "width": 512,
+                "height": 512
+              },
+              "image": "https://www.drippmedia.com/opengraph-image.png",
+              "description": "Dripp Media (also found as Drip Media or DrippMedia) is a premium digital branding and creative agency specializing in immersive digital experiences, web development, video production, and cutting-edge design.",
+              "foundingDate": "2023",
               "contactPoint": {
                 "@type": "ContactPoint",
                 "telephone": "+91-78189-95147",
-                "contactType": "customer service"
+                "contactType": "customer service",
+                "areaServed": "IN",
+                "availableLanguage": "English"
+              },
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Dehradun",
+                "addressRegion": "Uttarakhand",
+                "addressCountry": "IN"
               },
               "sameAs": [
-                "https://www.instagram.com/drippmedia_"
+                "https://www.instagram.com/drippmedia_",
+                "https://drippmedia.com"
               ],
-              "knowsAbout": ["Digital Branding", "Creative Agency", "Web Development", "Video Production", "Interactive Design"],
+              "knowsAbout": ["Digital Branding", "Creative Agency", "Web Development", "Video Production", "Interactive Design", "UI/UX Design", "Motion Graphics", "Performance Marketing"],
               "areaServed": [
                 { "@type": "City", "name": "Dehradun" },
                 { "@type": "City", "name": "Delhi" },
@@ -207,6 +237,65 @@ export default function RootLayout({ children }) {
                 { "@type": "Country", "name": "Denmark" },
                 { "@type": "Country", "name": "Netherlands" },
                 { "@type": "Country", "name": "New Zealand" }
+              ]
+            })
+          }}
+        />
+        {/* Structured Data — WebSite Schema (enables Google Sitelinks Search & brand name anchoring) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Dripp Media",
+              "alternateName": ["Drip Media", "DrippMedia", "Dripmedia", "DripMedia"],
+              "url": "https://www.drippmedia.com",
+              "description": "Dripp Media is a premium digital branding and creative agency.",
+              "inLanguage": "en-US",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://www.drippmedia.com/?q={search_term_string}"
+                },
+                "query-input": "required name=search_term_string"
+              }
+            })
+          }}
+        />
+        {/* Structured Data — FAQ Schema (brand name clarification for knowledge panel) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "What is Dripp Media?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Dripp Media (also searched as Drip Media, DrippMedia, or DripMedia) is a premium digital branding and creative agency based in Dehradun, India. We specialize in web development, video production, UI/UX design, motion graphics, and performance marketing."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Is Dripp Media the same as Drip Media?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes. Dripp Media, Drip Media, DrippMedia, drippmedia, and DripMedia all refer to the same company — Dripp Media, a creative agency at drippmedia.com. The brand name is spelled with two P's: Dripp Media."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What services does Dripp Media offer?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Dripp Media offers premium web development, video production, UI/UX design, brand identity, motion graphics, and performance marketing services for startups, enterprises, and global brands."
+                  }
+                }
               ]
             })
           }}
