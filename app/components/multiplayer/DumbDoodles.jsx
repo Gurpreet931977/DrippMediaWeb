@@ -1285,7 +1285,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
 
             {(!isMyTurn || gameState.status !== 'playing') && <div style={{ position: 'absolute', inset: 0, zIndex: 10 }} />} {/* Block clicks */}
             
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', position: 'relative', minHeight: 0, padding: isMobile ? '0' : '10px', boxSizing: 'border-box' }}>
               {showConfetti && (
                 <div style={{ position: 'absolute', inset: 0, zIndex: 100, pointerEvents: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Lottie animationData={confettiData} loop={false} style={{ width: '100%', height: '100%' }} />
@@ -1295,7 +1295,17 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 ref={canvasRef}
                 width={800}
                 height={600}
-                style={{ maxWidth: '100%', maxHeight: '100%', aspectRatio: '4/3', display: 'block', touchAction: 'none' }}
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '100%', 
+                  aspectRatio: '4/3', 
+                  display: 'block', 
+                  touchAction: 'none',
+                  background: '#0a0a0a',
+                  border: '2px solid rgba(255,255,255,0.1)',
+                  borderRadius: isMobile ? '0' : '12px',
+                  boxShadow: '0 0 30px rgba(0,0,0,0.8)'
+                }}
                 onPointerDown={startDrawing}
                 onPointerMove={draw}
                 onPointerUp={stopDrawing}
