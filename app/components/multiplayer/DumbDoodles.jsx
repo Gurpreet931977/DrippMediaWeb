@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Eraser, Users, Clock, Trophy, PartyPopper, Settings, Bot, Undo2, Redo2, Trash2, Flame, MessageSquare, X } from 'lucide-react';
+import { Send, Eraser, Users, Clock, Trophy, PartyPopper, Settings, Bot, Undo2, Redo2, Trash2, Flame, MessageSquare, X, PaintBucket, Pen } from 'lucide-react';
 import CustomAvatar from './CustomAvatar';
 import dynamic from 'next/dynamic';
 import confettiData from '../../../public/lottie/confetti.json';
@@ -119,6 +119,161 @@ const WORD_PACKS = {
   'Hardcore': HARDCORE_WORDS
 };
 
+const hexToRgba = (hex) => {
+  let c = hex.substring(1).split('');
+  if (c.length === 3) c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+  c = '0x' + c.join('');
+  return [(c>>16)&255, (c>>8)&255, c&255, 255];
+};
+
+const colorMatch = (data, pos, targetR, targetG, targetB, targetA, tolerance) => {
+  const r = data[pos], g = data[pos+1], b = data[pos+2], a = data[pos+3];
+  return Math.abs(r - targetR) <= tolerance &&
+         Math.abs(g - targetG) <= tolerance &&
+         Math.abs(b - targetB) <= tolerance &&
+         Math.abs(a - targetA) <= tolerance;
+};
+
+const executeFloodFill = (ctx, startX, startY, fillColorHex) => {
+  const canvas = ctx.canvas;
+  const width = canvas.width;
+  const height = canvas.height;
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+
+  startX = Math.floor(startX);
+  startY = Math.floor(startY);
+  if (startX < 0 || startX >= width || startY < 0 || startY >= height) return;
+
+  const startPos = (startY * width + startX) * 4;
+  const startR = data[startPos];
+  const startG = data[startPos + 1];
+  const startB = data[startPos + 2];
+  const startA = data[startPos + 3];
+
+  const [fillR, fillG, fillB, fillA] = hexToRgba(fillColorHex);
+
+  if (Math.abs(startR - fillR) <= 5 && Math.abs(startG - fillG) <= 5 && Math.abs(startB - fillB) <= 5) {
+     return; // Already filled
+  }
+
+  const pixelStack = [[startX, startY]];
+  const tolerance = 60; // Fairly high tolerance for anti-aliased brushes
+  
+  while(pixelStack.length) {
+    let newPos, x, y, pixelPos, reachLeft, reachRight;
+    newPos = pixelStack.pop();
+    x = newPos[0];
+    y = newPos[1];
+    
+    pixelPos = (y * width + x) * 4;
+    
+    // Go up as long as color matches
+    while(y-- >= 0 && colorMatch(data, pixelPos, startR, startG, startB, startA, tolerance)) {
+      pixelPos -= width * 4;
+    }
+    pixelPos += width * 4;
+    ++y;
+    
+    reachLeft = false;
+    reachRight = false;
+    
+    while(y++ < height - 1 && colorMatch(data, pixelPos, startR, startG, startB, startA, tolerance)) {
+      // Color the pixel
+      data[pixelPos] = fillR;
+      data[pixelPos + 1] = fillG;
+      data[pixelPos + 2] = fillB;
+      data[pixelPos + 3] = fillA;
+      
+      if (x > 0) {
+        if (colorMatch(data, pixelPos - 4, startR, startG, startB, startA, tolerance)) {
+          if (!reachLeft) {
+            pixelStack.push([x - 1, y]);
+            reachLeft = true;
+          }
+        } else if (reachLeft) {
+          reachLeft = false;
+        }
+      }
+      
+      if (x < width - 1) {
+        if (colorMatch(data, pixelPos + 4, startR, startG, startB, startA, tolerance)) {
+          if (!reachRight) {
+            pixelStack.push([x + 1, y]);
+            reachRight = true;
+          }
+        } else if (reachRight) {
+          reachRight = false;
+        }
+      }
+      
+      pixelPos += width * 4;
+    }
+  }
+  
+  ctx.putImageData(imgData, 0, 0);
+};
+
+const renderLineEvent = (ctx, line) => {
+  if (line.isFill) {
+    executeFloodFill(ctx, line.x, line.y, line.color);
+    return;
+  }
+  
+  ctx.beginPath();
+  ctx.moveTo(line.x0, line.y0);
+  ctx.lineTo(line.x1, line.y1);
+  ctx.strokeStyle = line.color || '#ff33ff';
+  ctx.lineWidth = line.size || 6;
+  ctx.lineCap = line.style === 'Marker' ? 'square' : 'round';
+  ctx.lineJoin = 'round';
+  
+  if (line.style === 'Dotted') {
+      ctx.setLineDash([ctx.lineWidth * 1.5, ctx.lineWidth * 2]);
+  } else {
+      ctx.setLineDash([]);
+  }
+  
+  if (line.style === 'Solid' || line.style === 'Dotted' || line.style === 'Rainbow') {
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  } else if (line.style === 'Marker') {
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 0.5;
+  } else if (line.style === 'Crayon') {
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 0.3;
+  } else if (line.style === 'Airbrush') {
+    ctx.shadowBlur = ctx.lineWidth * 2;
+    ctx.globalAlpha = 0.15;
+    ctx.lineWidth = ctx.lineWidth * 2;
+  } else if (line.style === 'Glow') {
+    ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 25;
+    ctx.globalAlpha = 1;
+  } else {
+    ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 10;
+    ctx.globalAlpha = 1;
+  }
+  
+  if (line.style !== 'Crayon' && line.style !== 'Airbrush') {
+     ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
+     ctx.stroke();
+  } else if (line.style === 'Airbrush') {
+     ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
+     ctx.stroke();
+     ctx.stroke();
+  } else {
+     ctx.shadowColor = 'transparent';
+     const origWidth = ctx.lineWidth;
+     ctx.lineWidth = origWidth * 1.5; ctx.stroke();
+     ctx.lineWidth = origWidth * 0.9; ctx.stroke();
+     ctx.lineWidth = origWidth * 0.4; ctx.stroke();
+     ctx.lineWidth = origWidth;
+  }
+  ctx.globalAlpha = 1;
+  ctx.setLineDash([]);
+};
+
 export default function DumbDoodles({ channel, isHost, players, playerName, playerAvatars = {} }) {
   const [gameState, setGameState] = useState({
     status: 'lobby', // lobby, choosing_word, playing, round_over, gameover
@@ -148,6 +303,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   const [chat, setChat] = useState([]);
   const [guess, setGuess] = useState('');
   const [brushColor, setBrushColor] = useState('#ffffff');
+  const [activeTool, setActiveTool] = useState('Brush');
   const [brushSize, setBrushSize] = useState(6);
   const [brushStyle, setBrushStyle] = useState('Solid');
   
@@ -211,43 +367,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
         const ctx = ctxRef.current;
         if (!ctx) return;
         payload.forEach(line => {
-          ctx.beginPath();
-          ctx.moveTo(line.x0, line.y0);
-          ctx.lineTo(line.x1, line.y1);
-          ctx.strokeStyle = line.color || '#ff33ff';
-          ctx.lineWidth = line.size || 6;
-          ctx.lineCap = line.style === 'Marker' ? 'square' : 'round';
-          ctx.lineJoin = 'round';
-          
-          if (line.style === 'Solid') {
-            ctx.shadowBlur = 0;
-            ctx.globalAlpha = 1;
-          } else if (line.style === 'Marker') {
-            ctx.shadowBlur = 0;
-            ctx.globalAlpha = 0.5;
-          } else if (line.style === 'Crayon') {
-            ctx.shadowBlur = 0;
-            ctx.globalAlpha = 0.3;
-          } else if (line.style === 'Glow') {
-            ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 25;
-            ctx.globalAlpha = 1;
-          } else { // Neon
-            ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 10;
-            ctx.globalAlpha = 1;
-          }
-          if (line.style !== 'Crayon') {
-             ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
-             ctx.stroke();
-          } else {
-             ctx.shadowColor = 'transparent';
-             const origWidth = ctx.lineWidth;
-             ctx.lineWidth = origWidth * 1.5; ctx.stroke();
-             ctx.lineWidth = origWidth * 0.9; ctx.stroke();
-             ctx.lineWidth = origWidth * 0.4; ctx.stroke();
-             ctx.lineWidth = origWidth;
-          }
-          
-          ctx.globalAlpha = 1; // reset
+          renderLineEvent(ctx, line);
         });
       })
       .on('broadcast', { event: 'sync_history' }, ({ payload }) => {
@@ -258,42 +378,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
          ctx.clearRect(0, 0, canvas.width, canvas.height);
          payload.forEach(stroke => {
            stroke.forEach(line => {
-             ctx.beginPath();
-             ctx.moveTo(line.x0, line.y0);
-             ctx.lineTo(line.x1, line.y1);
-             ctx.strokeStyle = line.color || '#ff33ff';
-             ctx.lineWidth = line.size || 6;
-             ctx.lineCap = line.style === 'Marker' ? 'square' : 'round';
-             ctx.lineJoin = 'round';
-             
-             if (line.style === 'Solid') {
-               ctx.shadowBlur = 0;
-               ctx.globalAlpha = 1;
-             } else if (line.style === 'Marker') {
-               ctx.shadowBlur = 0;
-               ctx.globalAlpha = 0.5;
-             } else if (line.style === 'Crayon') {
-               ctx.shadowBlur = 0;
-               ctx.globalAlpha = 0.3;
-             } else if (line.style === 'Glow') {
-               ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 25;
-               ctx.globalAlpha = 1;
-             } else {
-               ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 10;
-               ctx.globalAlpha = 1;
-             }
-             if (line.style !== 'Crayon') {
-                ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
-                ctx.stroke();
-             } else {
-                ctx.shadowColor = 'transparent';
-                const origWidth = ctx.lineWidth;
-                ctx.lineWidth = origWidth * 1.5; ctx.stroke();
-                ctx.lineWidth = origWidth * 0.9; ctx.stroke();
-                ctx.lineWidth = origWidth * 0.4; ctx.stroke();
-                ctx.lineWidth = origWidth;
-             }
-             ctx.globalAlpha = 1;
+             renderLineEvent(ctx, line);
            });
          });
       })
@@ -579,8 +664,29 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
 
   const startDrawing = (e) => {
     if (!isMyTurn || gameState.status !== 'playing') return;
+    
+    const pos = getMousePos(e);
+    
+    if (activeTool === 'Fill') {
+       const fillEvent = {
+          isFill: true,
+          x: pos.x,
+          y: pos.y,
+          color: brushColor
+       };
+       const ctx = ctxRef.current;
+       if (ctx) renderLineEvent(ctx, fillEvent);
+       
+       currentStrokeRef.current = [fillEvent];
+       allLinesRef.current.push([...currentStrokeRef.current]);
+       pendingDrawEventsRef.current.push(fillEvent);
+       currentStrokeRef.current = [];
+       redoStackRef.current = [];
+       return;
+    }
+    
     isDrawingRef.current = true;
-    lastPosRef.current = getMousePos(e);
+    lastPosRef.current = pos;
     lastPosRef.current.x -= 0.1; // Offset slightly so a dot is drawn even on tap
     currentStrokeRef.current = [];
     redoStackRef.current = [];
@@ -599,48 +705,25 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     const ctx = ctxRef.current;
     
     if (ctx) {
-      ctx.beginPath();
-      ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
-      ctx.lineTo(currentPos.x, currentPos.y);
-      ctx.strokeStyle = brushColor;
-      ctx.lineWidth = brushSize;
-      ctx.lineCap = brushStyle === 'Marker' ? 'square' : 'round';
-      ctx.lineJoin = 'round';
+      let effectiveColor = brushColor;
+      let effectiveSize = brushSize;
       
-      if (brushStyle === 'Solid') {
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1;
-      } else if (brushStyle === 'Marker') {
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 0.5;
-      } else if (brushStyle === 'Crayon') {
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 0.3;
-      } else if (brushStyle === 'Glow') {
-        ctx.shadowBlur = brushColor === '#0a0a0a' ? 0 : 25;
-        ctx.globalAlpha = 1;
-      } else { // Neon
-        ctx.shadowBlur = brushColor === '#0a0a0a' ? 0 : 10;
-        ctx.globalAlpha = 1;
+      if (brushStyle === 'Rainbow') {
+         effectiveColor = `hsl(${(Date.now() / 5) % 360}, 100%, 50%)`;
       }
-      if (brushStyle !== 'Crayon') {
-         ctx.shadowColor = brushColor === '#0a0a0a' ? 'transparent' : brushColor;
-         ctx.stroke();
-      } else {
-         ctx.shadowColor = 'transparent';
-         const origWidth = ctx.lineWidth;
-         ctx.lineWidth = origWidth * 1.5; ctx.stroke();
-         ctx.lineWidth = origWidth * 0.9; ctx.stroke();
-         ctx.lineWidth = origWidth * 0.4; ctx.stroke();
-         ctx.lineWidth = origWidth;
-      }
-      
-      ctx.globalAlpha = 1; // reset
       
       const lineEvent = {
         x0: lastPosRef.current.x, y0: lastPosRef.current.y,
         x1: currentPos.x, y1: currentPos.y,
-        color: brushColor, size: brushSize, style: brushStyle
+        color: effectiveColor, size: effectiveSize, style: brushStyle
+      };
+      
+      renderLineEvent(ctx, lineEvent);
+      
+      const lineEvent = {
+        x0: lastPosRef.current.x, y0: lastPosRef.current.y,
+        x1: currentPos.x, y1: currentPos.y,
+        color: effectiveColor, size: effectiveSize, style: brushStyle
       };
       pendingDrawEventsRef.current.push(lineEvent);
       currentStrokeRef.current.push(lineEvent);
@@ -664,42 +747,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     
     allLinesRef.current.forEach(stroke => {
       stroke.forEach(line => {
-          ctx.beginPath();
-          ctx.moveTo(line.x0, line.y0);
-          ctx.lineTo(line.x1, line.y1);
-          ctx.strokeStyle = line.color || '#ff33ff';
-          ctx.lineWidth = line.size || 6;
-          ctx.lineCap = line.style === 'Marker' ? 'square' : 'round';
-          ctx.lineJoin = 'round';
-          
-          if (line.style === 'Solid') {
-            ctx.shadowBlur = 0;
-            ctx.globalAlpha = 1;
-          } else if (line.style === 'Marker') {
-            ctx.shadowBlur = 0;
-            ctx.globalAlpha = 0.5;
-          } else if (line.style === 'Crayon') {
-            ctx.shadowBlur = 0;
-            ctx.globalAlpha = 0.3;
-          } else if (line.style === 'Glow') {
-            ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 25;
-            ctx.globalAlpha = 1;
-          } else {
-            ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 10;
-            ctx.globalAlpha = 1;
-          }
-          if (line.style !== 'Crayon') {
-             ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
-             ctx.stroke();
-          } else {
-             ctx.shadowColor = 'transparent';
-             const origWidth = ctx.lineWidth;
-             ctx.lineWidth = origWidth * 1.5; ctx.stroke();
-             ctx.lineWidth = origWidth * 0.9; ctx.stroke();
-             ctx.lineWidth = origWidth * 0.4; ctx.stroke();
-             ctx.lineWidth = origWidth;
-          }
-          ctx.globalAlpha = 1;
+          renderLineEvent(ctx, line);
       });
     });
   };
@@ -1361,9 +1409,33 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               {/* Top Row: Tools & Brush Styles */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                 
+                {/* Tools (Brush / Fill) */}
+                <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <button
+                    onClick={() => setActiveTool('Brush')}
+                    style={{
+                      width: '40px', height: '40px', borderRadius: '50%',
+                      background: activeTool === 'Brush' ? 'linear-gradient(135deg, #ff33ff 0%, #ebd73f 100%)' : 'transparent',
+                      border: 'none', color: activeTool === 'Brush' ? '#000' : '#fff', cursor: 'pointer',
+                      display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'all 0.2s',
+                      boxShadow: activeTool === 'Brush' ? '0 0 15px rgba(255,51,255,0.4)' : 'none'
+                    }}
+                  ><Pen size={20} /></button>
+                  <button
+                    onClick={() => setActiveTool('Fill')}
+                    style={{
+                      width: '40px', height: '40px', borderRadius: '50%',
+                      background: activeTool === 'Fill' ? 'linear-gradient(135deg, #ff33ff 0%, #ebd73f 100%)' : 'transparent',
+                      border: 'none', color: activeTool === 'Fill' ? '#000' : '#fff', cursor: 'pointer',
+                      display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'all 0.2s',
+                      boxShadow: activeTool === 'Fill' ? '0 0 15px rgba(255,51,255,0.4)' : 'none'
+                    }}
+                  ><PaintBucket size={20} /></button>
+                </div>
+
                 {/* Brush Styles */}
                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '10px', margin: '-10px', scrollbarWidth: 'none' }}>
-                  {['Neon', 'Solid', 'Marker', 'Glow', 'Crayon'].map(st => {
+                  {['Neon', 'Solid', 'Marker', 'Glow', 'Crayon', 'Airbrush', 'Rainbow', 'Dotted'].map(st => {
                     const isActive = brushStyle === st;
                     return (
                       <button 
