@@ -101,22 +101,10 @@ export default function ArcadeMenu({ onStartGame }) {
   }, [activeIndex, activeColor, activeMode]);
 
   const handleNext = () => {
-    if (activeMode === 'arcade') {
-      gsap.fromTo('.carousel-container', 
-        { x: 50, rotationY: -10, scale: 0.95 }, 
-        { x: 0, rotationY: 0, scale: 1, duration: 0.8, ease: "elastic.out(1, 0.4)" }
-      );
-    }
     setActiveIndex((prev) => (prev + 1) % activeGameList.length);
   };
 
   const handlePrev = () => {
-    if (activeMode === 'arcade') {
-      gsap.fromTo('.carousel-container', 
-        { x: -50, rotationY: 10, scale: 0.95 }, 
-        { x: 0, rotationY: 0, scale: 1, duration: 0.8, ease: "elastic.out(1, 0.4)" }
-      );
-    }
     setActiveIndex((prev) => (prev - 1 + activeGameList.length) % activeGameList.length);
   };
 
@@ -154,12 +142,7 @@ export default function ArcadeMenu({ onStartGame }) {
       if (newIndex < 0) newIndex += activeGameList.length;
       
       if (activeMode === 'arcade') {
-        const dir = shiftCards > 0 ? 50 : -50;
-        const rot = shiftCards > 0 ? 10 : -10;
-        gsap.fromTo('.carousel-container', 
-          { x: dir, rotationY: rot, scale: 0.95 }, 
-          { x: 0, rotationY: 0, scale: 1, duration: 0.8, ease: "elastic.out(1, 0.4)" }
-        );
+        // Removed laggy gsap container animation for buttery smooth CSS transitions
       }
       setActiveIndex(newIndex);
     }
@@ -174,8 +157,8 @@ export default function ArcadeMenu({ onStartGame }) {
 
   return (
     <div className="arcade-menu-wrapper" style={{
-      width: '100vw',
-      height: '100vh',
+      width: '100%',
+      height: '100%',
       backgroundColor: '#030303',
       color: '#fff',
       display: 'flex',
@@ -478,10 +461,10 @@ export default function ArcadeMenu({ onStartGame }) {
               opacity = 0;
             }
 
-            // ultra smooth bouncy transition when not dragging
+            // buttery smooth transition
             const baseTransition = isDragging 
               ? 'none' 
-              : 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+              : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease, z-index 0.5s';
 
             return (
               <div
@@ -512,7 +495,7 @@ export default function ArcadeMenu({ onStartGame }) {
                       }
                     } else {
                       if (activeMode === 'arcade' && !isActive) {
-                        gsap.fromTo(`.card-${index}`, { scale: 0.8, rotationY: 180 }, { scale: 1, rotationY: 0, duration: 1, ease: "elastic.out(1, 0.4)" });
+                        // Removed 180 deg gsap flip, let css handle smooth slide
                       }
                       setActiveIndex(index);
                     }
@@ -548,9 +531,9 @@ export default function ArcadeMenu({ onStartGame }) {
                     background: isActive ? 'rgba(15,15,15,0.85)' : 'rgba(20,20,20,0.4)',
                     border: `1px solid ${isActive ? game.color : 'rgba(255,255,255,0.05)'}`,
                     boxShadow: isActive ? `0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px ${game.color}20` : '0 10px 30px rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(25px)',
-                    WebkitBackdropFilter: 'blur(25px)',
-                    transition: `background 0.5s ease, border 0.5s ease, box-shadow 0.5s ease`,
+                    backdropFilter: isActive ? 'blur(25px)' : 'blur(5px)',
+                    WebkitBackdropFilter: isActive ? 'blur(25px)' : 'blur(5px)',
+                    transition: `background 0.5s ease, border 0.5s ease, box-shadow 0.5s ease, backdrop-filter 0.5s ease`,
                     display: 'flex',
                     flexDirection: 'column',
                     padding: '30px',
@@ -706,7 +689,7 @@ export default function ArcadeMenu({ onStartGame }) {
 
       {/* Carousel Controls (Moved below carousel with standard flow layout) */}
       <div style={{
-        padding: '0px 0 60px 0',
+        padding: isMobile ? '0px 0 20px 0' : '0px 0 60px 0',
         display: 'flex',
         gap: '24px',
         alignItems: 'center',
