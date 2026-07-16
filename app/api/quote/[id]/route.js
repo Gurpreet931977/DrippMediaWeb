@@ -36,3 +36,49 @@ export async function POST(request, context) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function PATCH(request, context) {
+  try {
+    const { signatureImage, signedBy, signedAt } = await request.json();
+    const { id } = await context.params;
+
+    if (!signatureImage || !signedBy) {
+       return NextResponse.json({ error: 'Signature data missing' }, { status: 400 });
+    }
+
+    // 1. Fetch current quote
+    const { data: existingData, error: fetchError } = await supabase
+      .from('shared_quotes')
+      .select('quote_data')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingData) {
+      return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
+    }
+
+    // 2. Append signature data
+    const updatedQuoteData = {
+      ...existingData.quote_data,
+      signature: signatureImage,
+      signedBy: signedBy,
+      signedAt: signedAt || new Date().toISOString()
+    };
+
+    // 3. Save back
+    const { error: updateError } = await supabase
+      .from('shared_quotes')
+      .update({ quote_data: updatedQuoteData })
+      .eq('id', id);
+
+    if (updateError) {
+       return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, quote: updatedQuoteData }, { status: 200 });
+
+  } catch (err) {
+    console.error('API Error:', err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

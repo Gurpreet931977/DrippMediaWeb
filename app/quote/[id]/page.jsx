@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Lock, FileText, CheckCircle2, Globe, Mail, AtSign } from 'lucide-react';
+import { Lock, FileText, CheckCircle2, Globe, Mail, AtSign, PenTool } from 'lucide-react';
 
 export default function SharedQuote() {
   const params = useParams();
@@ -415,6 +415,9 @@ export default function SharedQuote() {
           </div>
         </div>
 
+          {/* Signature Section */}
+          <SignatureBlock quoteId={params?.id} quoteData={quoteData} setQuoteData={setQuoteData} />
+          
         {/* Footer Section */}
         <div style={{ gridColumn: '1 / -1', marginTop: '40px', paddingTop: '40px', paddingBottom: '30px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '35px', alignItems: 'center' }}>
             
@@ -438,6 +441,206 @@ export default function SharedQuote() {
             <p style={{ fontSize: '0.75rem', color: '#444', margin: 0, letterSpacing: '2px' }}>© {new Date().getFullYear()} DRIPP MEDIA. ALL RIGHTS RESERVED.</p>
         </div>
 
+      </div>
+    </div>
+  );
+}
+
+function SignatureBlock({ quoteId, quoteData, setQuoteData }) {
+  const canvasRef = useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [name, setName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  // 1. If already signed, show the signed badge
+  if (quoteData?.signature) {
+    return (
+      <div style={{ marginTop: '40px', gridColumn: '1 / -1', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '20px', padding: 'clamp(30px, 5vw, 50px)', textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}>
+        <div style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', marginBottom: '15px' }}>
+          <CheckCircle2 size={30} color="#ebd73f" />
+        </div>
+        <h3 style={{ fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>Proposal Accepted</h3>
+        
+        <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', display: 'inline-block', marginBottom: '20px' }}>
+          <img src={quoteData.signature} alt="Client Signature" style={{ height: '80px', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+        </div>
+        
+        <p style={{ color: '#fff', fontSize: '1.1rem', margin: '0 0 5px 0' }}>Signed by: <strong>{quoteData.signedBy}</strong></p>
+        <p style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>Date: {new Date(quoteData.signedAt).toLocaleString()}</p>
+      </div>
+    );
+  }
+
+  // 2. Drawing Logic
+  const getCoordinates = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches && e.touches.length > 0) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+    }
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  };
+
+  const startDrawing = (e) => {
+    setIsDrawing(true);
+    const coords = getCoordinates(e);
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(coords.x, coords.y);
+    // Prevent scrolling on touch
+    if (e.touches) e.preventDefault();
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+    const coords = getCoordinates(e);
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.lineTo(coords.x, coords.y);
+    ctx.stroke();
+    if (e.touches) e.preventDefault();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+    const ctx = canvasRef.current?.getContext('2d');
+    if (ctx) ctx.closePath();
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  };
+
+  const handleSign = async () => {
+    if (!name.trim()) {
+      setError('Please print your name.');
+      return;
+    }
+    
+    // Check if canvas is empty (simplified check)
+    const canvas = canvasRef.current;
+    const blank = document.createElement('canvas');
+    blank.width = canvas.width;
+    blank.height = canvas.height;
+    if (canvas.toDataURL() === blank.toDataURL()) {
+      setError('Please draw your signature in the box.');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+
+    try {
+      const signatureImage = canvas.toDataURL('image/png');
+      
+      const res = await fetch(`/api/quote/${quoteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          signatureImage,
+          signedBy: name.trim(),
+          signedAt: new Date().toISOString()
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setQuoteData(data.quote);
+      } else {
+        const err = await res.json();
+        setError(err.error || 'Failed to save signature.');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Initialize Canvas context
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      // Fill with white background initially
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  }, []);
+
+  return (
+    <div style={{ marginTop: '40px', gridColumn: '1 / -1', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: 'clamp(20px, 4vw, 40px)', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <PenTool size={24} color="#ebd73f" />
+        <h3 style={{ fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif" }}>Sign & Accept Proposal</h3>
+      </div>
+      
+      <p style={{ color: '#aaa', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)', marginBottom: '20px', lineHeight: '1.6' }}>
+        By signing below, you agree to the terms and services outlined in this proposal.
+      </p>
+
+      {error && (
+        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '10px 15px', borderRadius: '8px', marginBottom: '20px', fontSize: '0.9rem' }}>
+          {error}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '500px' }}>
+        <div>
+          <label style={{ display: 'block', color: '#888', marginBottom: '8px', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Print Name</label>
+          <input 
+            type="text" 
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="John Doe"
+            style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 15px', borderRadius: '8px', color: '#fff', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <label style={{ color: '#888', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Signature</label>
+            <button onClick={clearCanvas} style={{ background: 'transparent', border: 'none', color: '#ebd73f', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}>Clear</button>
+          </div>
+          <div style={{ border: '2px dashed rgba(255,255,255,0.2)', borderRadius: '12px', overflow: 'hidden', background: '#fff', touchAction: 'none' }}>
+            <canvas
+              ref={canvasRef}
+              width={500}
+              height={200}
+              style={{ width: '100%', height: '200px', display: 'block', touchAction: 'none' }}
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+            />
+          </div>
+        </div>
+
+        <button 
+          onClick={handleSign}
+          disabled={saving}
+          style={{ width: '100%', background: '#ebd73f', color: '#000', border: 'none', padding: '15px', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, transition: 'all 0.3s ease', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}
+        >
+          {saving ? 'Saving...' : 'Sign & Accept'}
+        </button>
       </div>
     </div>
   );

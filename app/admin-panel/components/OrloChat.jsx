@@ -282,7 +282,7 @@ export default function OrloChat() {
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
         
         const currentPath = window.location.pathname;
-        const isAlreadyOnRelevantPage = currentPath === '/admin-panel/quote' || currentPath === '/admin-panel/package';
+        const isAlreadyOnRelevantPage = currentPath === '/admin-panel/quote' || currentPath === '/admin-panel/package' || currentPath === '/admin-panel/invoice';
         
         if (!isAlreadyOnRelevantPage) {
           if (data.intent === 'quote') {
@@ -291,6 +291,9 @@ export default function OrloChat() {
           } else if (data.intent === 'package') {
             sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
             router.push('/admin-panel/package');
+          } else if (data.intent === 'invoice') {
+            sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
+            router.push('/admin-panel/invoice');
           }
         }
       }

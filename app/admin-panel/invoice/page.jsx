@@ -201,6 +201,38 @@ export default function InvoiceMaker() {
      generateQR();
   }, [selectedBankId, bankAccounts, myDetails.companyName]);
 
+  // -- ORLO COPILOT INTEGRATION --
+  useEffect(() => {
+    const pendingDataStr = sessionStorage.getItem('pendingPackageData');
+    if (pendingDataStr) {
+      try {
+        const data = JSON.parse(pendingDataStr);
+        if (data.brandName) setClientDetails(prev => ({ ...prev, name: data.brandName }));
+        if (data.services && data.services.length > 0) {
+          setItems(data.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0 })));
+        }
+        sessionStorage.removeItem('pendingPackageData');
+      } catch (err) {
+        console.error('Failed to parse pending invoice data', err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleCopilotAction = (e) => {
+      const data = e.detail;
+      if (data && data.intent === 'invoice' && data.payload) {
+        const payload = data.payload;
+        if (payload.brandName) setClientDetails(prev => ({ ...prev, name: payload.brandName }));
+        if (payload.services && payload.services.length > 0) {
+          setItems(payload.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0 })));
+        }
+      }
+    };
+    window.addEventListener('copilot-action', handleCopilotAction);
+    return () => window.removeEventListener('copilot-action', handleCopilotAction);
+  }, []);
+
 
   // -- HANDLERS --
   const saveMyDetails = async () => {
