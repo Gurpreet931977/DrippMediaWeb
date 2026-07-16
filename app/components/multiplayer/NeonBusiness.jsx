@@ -3,36 +3,44 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Users, Coins, Map, Dice1, Play, AlertTriangle } from 'lucide-react';
 import CustomAvatar from './CustomAvatar';
+import { 
+  FaSnapchat, FaPinterest, FaSpotify, FaMeta, 
+  FaTiktok, FaUber, FaAirbnb, FaAmazon, FaShopify, 
+  FaMicrosoft, FaGoogle, FaApple 
+} from 'react-icons/fa6';
+import { 
+  SiNetflix, SiSpacex, SiTesla, SiNvidia 
+} from 'react-icons/si';
 
 const BOARD_SIZE = 24;
 const STARTING_CASH = 1500;
 const PASS_GO_MONEY = 200;
 
 const TILES = [
-  { id: 0, type: 'corner', name: 'GO', desc: 'Collect $200', color: '#fff' },
-  { id: 1, type: 'property', name: 'Neon Alley', group: 'brown', price: 60, rent: 2, color: '#8b4513' },
-  { id: 2, type: 'property', name: 'Cyber Lane', group: 'brown', price: 60, rent: 4, color: '#8b4513' },
-  { id: 3, type: 'chance', name: 'CHANCE', color: '#ebd73f' },
-  { id: 4, type: 'property', name: 'Data Stream', group: 'lightblue', price: 100, rent: 6, color: '#87ceeb' },
-  { id: 5, type: 'property', name: 'Synthwave St', group: 'lightblue', price: 120, rent: 8, color: '#87ceeb' },
-  { id: 6, type: 'corner', name: 'JAIL', desc: 'Just Visiting', color: '#ff3333' },
-  { id: 7, type: 'property', name: 'Grid Plaza', group: 'pink', price: 140, rent: 10, color: '#ff1493' },
-  { id: 8, type: 'property', name: 'Chrome Ave', group: 'pink', price: 160, rent: 12, color: '#ff1493' },
-  { id: 9, type: 'chance', name: 'CHANCE', color: '#ebd73f' },
-  { id: 10, type: 'property', name: 'Neon Strip', group: 'orange', price: 180, rent: 14, color: '#ffa500' },
-  { id: 11, type: 'property', name: 'Hologram Blvd', group: 'orange', price: 200, rent: 16, color: '#ffa500' },
-  { id: 12, type: 'corner', name: 'FREE PARKING', desc: 'Rest up', color: '#33ff33' },
-  { id: 13, type: 'property', name: 'Silicon Valley', group: 'red', price: 220, rent: 18, color: '#ff0000' },
-  { id: 14, type: 'property', name: 'Quantum Drive', group: 'red', price: 240, rent: 20, color: '#ff0000' },
-  { id: 15, type: 'chance', name: 'CHANCE', color: '#ebd73f' },
-  { id: 16, type: 'property', name: 'Crypto Exchange', group: 'yellow', price: 260, rent: 22, color: '#ffff00' },
-  { id: 17, type: 'property', name: 'Blockchain Way', group: 'yellow', price: 280, rent: 24, color: '#ffff00' },
-  { id: 18, type: 'corner', name: 'GO TO JAIL', desc: 'Busted', color: '#ff3333' },
-  { id: 19, type: 'property', name: 'Orbit Ring', group: 'green', price: 300, rent: 26, color: '#008000' },
-  { id: 20, type: 'property', name: 'Satellite Row', group: 'green', price: 320, rent: 28, color: '#008000' },
-  { id: 21, type: 'chance', name: 'CHANCE', color: '#ebd73f' },
-  { id: 22, type: 'property', name: 'Hyperloop', group: 'darkblue', price: 350, rent: 35, color: '#00008b' },
-  { id: 23, type: 'property', name: 'The Core', group: 'darkblue', price: 400, rent: 50, color: '#00008b' }
+  { id: 0, type: 'corner', name: 'START', desc: 'Seed Round ($200)', color: '#fff' },
+  { id: 1, type: 'property', name: 'Snapchat', group: 'brown', price: 60, rent: 2, color: '#8b4513', Icon: FaSnapchat },
+  { id: 2, type: 'property', name: 'Pinterest', group: 'brown', price: 60, rent: 4, color: '#8b4513', Icon: FaPinterest },
+  { id: 3, type: 'chance', name: 'VENTURE', color: '#ebd73f' },
+  { id: 4, type: 'property', name: 'Spotify', group: 'lightblue', price: 100, rent: 6, color: '#87ceeb', Icon: FaSpotify },
+  { id: 5, type: 'property', name: 'Netflix', group: 'lightblue', price: 120, rent: 8, color: '#87ceeb', Icon: SiNetflix },
+  { id: 6, type: 'corner', name: 'AUDIT', desc: 'Just Visiting', color: '#ff3333' },
+  { id: 7, type: 'property', name: 'TikTok', group: 'pink', price: 140, rent: 10, color: '#ff1493', Icon: FaTiktok },
+  { id: 8, type: 'property', name: 'Meta', group: 'pink', price: 160, rent: 12, color: '#ff1493', Icon: FaMeta },
+  { id: 9, type: 'chance', name: 'VENTURE', color: '#ebd73f' },
+  { id: 10, type: 'property', name: 'Uber', group: 'orange', price: 180, rent: 14, color: '#ffa500', Icon: FaUber },
+  { id: 11, type: 'property', name: 'Airbnb', group: 'orange', price: 200, rent: 16, color: '#ffa500', Icon: FaAirbnb },
+  { id: 12, type: 'corner', name: 'FREE PARKING', desc: 'Take a break', color: '#33ff33' },
+  { id: 13, type: 'property', name: 'Shopify', group: 'red', price: 220, rent: 18, color: '#ff0000', Icon: FaShopify },
+  { id: 14, type: 'property', name: 'Amazon', group: 'red', price: 240, rent: 20, color: '#ff0000', Icon: FaAmazon },
+  { id: 15, type: 'chance', name: 'VENTURE', color: '#ebd73f' },
+  { id: 16, type: 'property', name: 'Microsoft', group: 'yellow', price: 260, rent: 22, color: '#ffff00', Icon: FaMicrosoft },
+  { id: 17, type: 'property', name: 'Google', group: 'yellow', price: 280, rent: 24, color: '#ffff00', Icon: FaGoogle },
+  { id: 18, type: 'corner', name: 'SEC RAID', desc: 'Busted', color: '#ff3333' },
+  { id: 19, type: 'property', name: 'Tesla', group: 'green', price: 300, rent: 26, color: '#008000', Icon: SiTesla },
+  { id: 20, type: 'property', name: 'SpaceX', group: 'green', price: 320, rent: 28, color: '#008000', Icon: SiSpacex },
+  { id: 21, type: 'chance', name: 'VENTURE', color: '#ebd73f' },
+  { id: 22, type: 'property', name: 'Nvidia', group: 'darkblue', price: 350, rent: 35, color: '#00008b', Icon: SiNvidia },
+  { id: 23, type: 'property', name: 'Apple', group: 'darkblue', price: 400, rent: 50, color: '#00008b', Icon: FaApple }
 ];
 
 export default function NeonBusiness({ roomCode, playerName, players, isHost, channel, playerAvatars }) {
@@ -380,58 +388,80 @@ export default function NeonBusiness({ roomCode, playerName, players, isHost, ch
             display: 'grid', 
             gridTemplateColumns: 'repeat(7, 1fr)', 
             gridTemplateRows: 'repeat(7, 1fr)', 
-            gap: '5px',
-            width: 'min(70vh, 70vw)',
-            height: 'min(70vh, 70vw)',
-            padding: '10px',
-            background: 'rgba(0,0,0,0.5)',
-            borderRadius: '16px',
-            boxShadow: '0 0 50px rgba(0,0,0,0.8)'
+            gap: '8px',
+            width: 'min(75vh, 75vw)',
+            height: 'min(75vh, 75vw)',
+            padding: '12px',
+            background: 'linear-gradient(135deg, rgba(20,20,20,0.95) 0%, rgba(5,5,5,0.98) 100%)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: '24px',
+            boxShadow: '0 30px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)'
           }}>
-             {TILES.map(tile => (
-               <div key={tile.id} style={{
-                 gridArea: getGridArea(tile.id),
-                 background: 'rgba(255,255,255,0.03)',
-                 border: `2px solid ${tile.color}`,
-                 borderRadius: '8px',
-                 display: 'flex',
-                 flexDirection: 'column',
-                 alignItems: 'center',
-                 justifyContent: 'center',
-                 padding: '5px',
-                 position: 'relative',
-                 textAlign: 'center',
-                 boxShadow: `inset 0 0 10px ${tile.color}40`,
-                 opacity: gameState.properties[tile.id] ? 1 : 0.7
-               }}>
-                 {tile.type === 'property' && (
-                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '10px', background: tile.color, opacity: 0.5 }} />
-                 )}
-                 <div style={{ fontSize: '0.5rem', color: '#fff', fontWeight: 'bold', zIndex: 2 }}>{tile.name}</div>
-                 {tile.price && <div style={{ fontSize: '0.6rem', color: '#ebd73f', zIndex: 2 }}>${tile.price}</div>}
-                 
-                 {/* Players on this tile */}
-                 <div style={{ position: 'absolute', bottom: '2px', display: 'flex', gap: '2px', zIndex: 5 }}>
-                   {players.map(p => {
-                     if (gameState.playerStates[p] && gameState.playerStates[p].position === tile.id && !gameState.playerStates[p].bankrupt) {
-                       return <div key={p} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#fff', boxShadow: '0 0 5px #fff' }} title={p} />;
-                     }
-                     return null;
-                   })}
-                 </div>
-                 
-                 {/* Ownership indicator */}
-                 {gameState.properties[tile.id] && (
-                   <div style={{ position: 'absolute', top: '2px', right: '2px', fontSize: '0.4rem', background: '#33ff33', padding: '1px 3px', borderRadius: '4px', color: '#000', fontWeight: 'bold', zIndex: 5 }}>
-                     {gameState.properties[tile.id].substring(0, 3)}
+             {TILES.map(tile => {
+               const Icon = tile.Icon;
+               const isOwned = gameState.properties[tile.id];
+               return (
+                 <div key={tile.id} style={{
+                   gridArea: getGridArea(tile.id),
+                   background: isOwned ? `${tile.color}15` : 'rgba(255,255,255,0.02)',
+                   border: `1px solid ${isOwned ? tile.color : 'rgba(255,255,255,0.08)'}`,
+                   borderRadius: '12px',
+                   display: 'flex',
+                   flexDirection: 'column',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   padding: '4px',
+                   position: 'relative',
+                   textAlign: 'center',
+                   boxShadow: isOwned ? `0 0 15px ${tile.color}40, inset 0 0 10px ${tile.color}20` : '0 4px 6px rgba(0,0,0,0.3)',
+                   transition: 'all 0.3s ease',
+                   overflow: 'hidden'
+                 }}>
+                   {tile.type === 'property' && (
+                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: tile.color, boxShadow: `0 2px 10px ${tile.color}` }} />
+                   )}
+                   
+                   {Icon ? (
+                     <div style={{ marginTop: tile.type === 'property' ? '6px' : '0', color: isOwned ? '#fff' : tile.color, opacity: isOwned ? 1 : 0.8, filter: isOwned ? `drop-shadow(0 0 5px ${tile.color})` : 'none', marginBottom: '2px' }}>
+                       <Icon size={tile.type === 'property' ? 16 : 24} />
+                     </div>
+                   ) : (
+                     tile.type === 'chance' && <AlertTriangle size={20} color={tile.color} style={{ opacity: 0.8, marginBottom: '2px' }} />
+                   )}
+
+                   <div style={{ fontSize: '0.45rem', color: '#fff', fontWeight: '800', zIndex: 2, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{tile.name}</div>
+                   {tile.price && <div style={{ fontSize: '0.55rem', color: '#ebd73f', zIndex: 2, fontWeight: 'bold' }}>${tile.price}</div>}
+                   
+                   {/* Players on this tile */}
+                   <div style={{ position: 'absolute', bottom: isOwned ? '10px' : '4px', display: 'flex', gap: '3px', zIndex: 5 }}>
+                     {players.map(p => {
+                       if (gameState.playerStates[p] && gameState.playerStates[p].position === tile.id && !gameState.playerStates[p].bankrupt) {
+                         const avatar = playerAvatars[p];
+                         return (
+                           <div key={p} style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#fff', boxShadow: '0 0 8px #fff, 0 0 12px #fff', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }} title={p}>
+                             {avatar && <CustomAvatar config={avatar} size={10} />}
+                           </div>
+                         );
+                       }
+                       return null;
+                     })}
                    </div>
-                 )}
-               </div>
-             ))}
+                   
+                   {/* Ownership indicator */}
+                   {isOwned && (
+                     <div style={{ position: 'absolute', bottom: '0', left: '0', right: '0', fontSize: '0.35rem', background: tile.color, color: '#000', fontWeight: 'bold', zIndex: 4, padding: '2px 0', letterSpacing: '1px' }}>
+                       {gameState.properties[tile.id].substring(0, 4).toUpperCase()}
+                     </div>
+                   )}
+                 </div>
+               );
+             })}
 
              {/* Center Panel (Info & Actions) */}
              <div style={{ gridArea: '2 / 2 / 7 / 7', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                <h2 style={{ fontFamily: "'Panchang', sans-serif", color: '#ebd73f', fontSize: '2rem', letterSpacing: '2px', margin: '0 0 20px 0', textShadow: '0 0 10px rgba(235,215,63,0.5)' }}>NEON BUSINESS</h2>
+                <h2 style={{ fontFamily: "'Panchang', sans-serif", color: '#fff', fontSize: '2.5rem', letterSpacing: '4px', margin: '0 0 5px 0', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>TECH</h2>
+                <h2 style={{ fontFamily: "'Panchang', sans-serif", color: '#ebd73f', fontSize: '2.5rem', letterSpacing: '4px', margin: '0 0 30px 0', textShadow: '0 0 20px rgba(235,215,63,0.5)' }}>MONOPOLY</h2>
                 
                 {gameState.status === 'game_over' ? (
                   <div style={{ textAlign: 'center', color: '#33ff33', fontSize: '1.5rem', fontWeight: 'bold' }}>

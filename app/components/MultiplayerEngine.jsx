@@ -18,6 +18,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
   const [isHost, setIsHost] = useState(false);
   const [gameState, setGameState] = useState('menu'); // 'menu', 'lobby', 'playing'
   const [players, setPlayers] = useState([]);
+  const [activePlayers, setActivePlayers] = useState([]); // players who are actively in the game
+  const [joinRequests, setJoinRequests] = useState([]); // host tracks requests
   const [channel, setChannel] = useState(null);
   
   const [playerName, setPlayerName] = useState('');
@@ -107,16 +109,52 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
         }
         setPlayers(playerList);
         setPlayerAvatars(avatars);
+        setPlayerAvatars(avatars);
       })
-      .on('broadcast', { event: 'game_start' }, (payload) => {
+      .on('broadcast', { event: 'game_start' }, ({ payload }) => {
+        if (payload && payload.activePlayers) {
+           setActivePlayers(payload.activePlayers);
+        }
         setGameState('playing');
+      })
+      .on('broadcast', { event: 'request_join_status' }, ({ payload }) => {
+        // We can't access current `gameState` easily inside this callback without stale closures,
+        // so we just update a state variable and let a useEffect handle the response.
+        setJoinRequests(prev => {
+          if (!prev.find(r => r.name === payload.name)) {
+            return [...prev, payload];
+          }
+          return prev;
+        });
+      })
+      .on('broadcast', { event: 'join_status_response' }, ({ payload }) => {
+        if (payload.target === playerName) {
+           setGameState(payload.status);
+        }
+      })
+      .on('broadcast', { event: 'late_join_accepted' }, ({ payload }) => {
+        if (payload.target === playerName) {
+           setActivePlayers(payload.activePlayers);
+           setGameState('playing');
+        }
+      })
+      .on('broadcast', { event: 'late_join_denied' }, ({ payload }) => {
+        if (payload.target === playerName) {
+           alert("The host denied your request to join the game.");
+           setGameState('menu');
+           setChannel(null);
+        }
       })
       .subscribe(async (status, err) => {
         if (status === 'SUBSCRIBED') {
           try {
              await roomChannel.track({ name: playerName, isHost: host, avatar: avatarConfig });
+             if (!host) {
+                 roomChannel.send({ type: 'broadcast', event: 'request_join_status', payload: { name: playerName, avatar: avatarConfig } });
+             }
           } catch(e) { console.error(e); }
           setGameState('lobby');
+
         } else if (status === 'CHANNEL_ERROR') {
           console.error('Channel error', err);
           alert('Failed to connect to multiplayer server. Please try again.');
@@ -128,13 +166,42 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
     setChannel(roomChannel);
   };
 
+  // Handle incoming join requests dynamically using useEffect to access latest state
+  useEffect(() => {
+    if (!isHost || !channel || joinRequests.length === 0) return;
+    
+    // Process pending requests that we haven't responded to
+    const pending = joinRequests.filter(req => !req.processed);
+    if (pending.length > 0) {
+       pending.forEach(req => {
+         if (gameState === 'playing') {
+           channel.send({ type: 'broadcast', event: 'join_status_response', payload: { target: req.name, status: 'waiting_for_host' } });
+         } else {
+           channel.send({ type: 'broadcast', event: 'join_status_response', payload: { target: req.name, status: 'lobby' } });
+         }
+         req.processed = true;
+       });
+       setJoinRequests([...joinRequests]);
+    }
+  }, [joinRequests, isHost, channel, gameState]);
+
+  const handleJoinDecision = (reqName, allow) => {
+    if (allow) {
+      channel.send({ type: 'broadcast', event: 'late_join_accepted', payload: { target: reqName, activePlayers } });
+    } else {
+      channel.send({ type: 'broadcast', event: 'late_join_denied', payload: { target: reqName } });
+    }
+    setJoinRequests(prev => prev.filter(r => r.name !== reqName));
+  };
+
   const startGame = () => {
     if (isHost && channel) {
       channel.send({
         type: 'broadcast',
         event: 'game_start',
-        payload: { startedAt: Date.now() },
+        payload: { startedAt: Date.now(), activePlayers: players },
       });
+      setActivePlayers(players);
       setGameState('playing');
     }
   };
@@ -146,27 +213,29 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
   if (gameState === 'playing') {
     // Render the selected game
     let gameComponent = null;
+    const gamePlayers = activePlayers.length > 0 ? activePlayers : players; // ensure mid-game joins don't break turn arrays
+
     switch (activeGame) {
       case 'worddrop':
-        gameComponent = <WordDrop channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <WordDrop channel={channel} isHost={isHost} players={gamePlayers} playerName={playerName} playerAvatars={playerAvatars} />;
         break;
       case 'dumbdoodles':
-        gameComponent = <DumbDoodles channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <DumbDoodles channel={channel} isHost={isHost} players={gamePlayers} playerName={playerName} playerAvatars={playerAvatars} />;
         break;
       case 'undercover':
-        gameComponent = <UndercoverSpy channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <UndercoverSpy channel={channel} isHost={isHost} players={gamePlayers} playerName={playerName} playerAvatars={playerAvatars} />;
         break;
       case 'brokenbrief':
-        gameComponent = <BrokenBrief channel={channel} isHost={isHost} players={players} playerName={playerName} playerAvatars={playerAvatars} />;
+        gameComponent = <BrokenBrief channel={channel} isHost={isHost} players={gamePlayers} playerName={playerName} playerAvatars={playerAvatars} />;
         break;
       case 'priceiswhat':
-        gameComponent = <PriceIsWhat roomCode={roomCode} playerName={playerName} players={players} isHost={isHost} channel={channel} playerAvatars={playerAvatars} />;
+        gameComponent = <PriceIsWhat roomCode={roomCode} playerName={playerName} players={gamePlayers} isHost={isHost} channel={channel} playerAvatars={playerAvatars} />;
         break;
       case 'coopescape':
-        gameComponent = <CoopEscape roomCode={roomCode} playerName={playerName} players={players} isHost={isHost} channel={channel} playerAvatars={playerAvatars} />;
+        gameComponent = <CoopEscape roomCode={roomCode} playerName={playerName} players={gamePlayers} isHost={isHost} channel={channel} playerAvatars={playerAvatars} />;
         break;
       case 'neonbusiness':
-        gameComponent = <NeonBusiness roomCode={roomCode} playerName={playerName} players={players} isHost={isHost} channel={channel} playerAvatars={playerAvatars} />;
+        gameComponent = <NeonBusiness roomCode={roomCode} playerName={playerName} players={gamePlayers} isHost={isHost} channel={channel} playerAvatars={playerAvatars} />;
         break;
       default:
         gameComponent = (
@@ -189,6 +258,31 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
           }
         `}</style>
         {gameComponent}
+        
+        {/* Host Join Request Popup Overlay during active game */}
+        {isHost && joinRequests.filter(r => r.processed).length > 0 && (
+          <div style={{ position: 'fixed', top: '80px', right: '20px', zIndex: 999999, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {joinRequests.filter(r => r.processed).map(req => (
+              <div key={req.name} style={{ background: 'rgba(20,20,20,0.9)', backdropFilter: 'blur(10px)', border: '1px solid #ebd73f', padding: '15px 20px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.8)', color: '#fff' }}>
+                 <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem' }}><b>{req.name}</b> wants to join.</p>
+                 <div style={{ display: 'flex', gap: '10px' }}>
+                   <button onClick={() => handleJoinDecision(req.name, true)} style={{ flex: 1, padding: '8px', background: '#33ff33', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>ALLOW</button>
+                   <button onClick={() => handleJoinDecision(req.name, false)} style={{ flex: 1, padding: '8px', background: '#ff3333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>DENY</button>
+                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+  
+  if (gameState === 'waiting_for_host') {
+    return (
+      <div style={{ width: '100vw', height: '100vh', backgroundColor: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', letterSpacing: '2px', animation: 'pulse 1.5s infinite' }}>
+          WAITING FOR HOST APPROVAL...
+        </span>
       </div>
     );
   }
