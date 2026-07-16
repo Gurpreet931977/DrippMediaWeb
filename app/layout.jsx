@@ -12,7 +12,7 @@ export const viewport = {
 export const metadata = {
   metadataBase: new URL('https://drippmedia.com'),
   title: {
-    default: 'Dripp Media (Drip Media) | Digital Branding & Creative Agency',
+    default: 'Dripp Media | Digital Branding & Creative Agency',
     template: '%s | Dripp Media'
   },
   description: 'Dripp Media (often searched as Drip Media) is a digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
@@ -129,7 +129,7 @@ export const metadata = {
   creator: 'Dripp Media',
   publisher: 'Dripp Media',
   openGraph: {
-    title: 'Dripp Media (Drip Media) | Digital Branding & Creative Agency',
+    title: 'Dripp Media | Digital Branding & Creative Agency',
     description: 'Dripp Media (often searched as Drip Media) is a digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
     url: 'https://drippmedia.com',
     siteName: 'Dripp Media',
@@ -149,7 +149,7 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Dripp Media (Drip Media) | Digital Branding & Creative Agency',
+    title: 'Dripp Media | Digital Branding & Creative Agency',
     description: 'Dripp Media (often searched as Drip Media) is a digital branding and creative agency specializing in immersive digital experiences, web development, video production, and cutting-edge design.',
     creator: '@drippmedia_',
   },
