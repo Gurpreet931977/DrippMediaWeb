@@ -147,9 +147,9 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
 
   const [chat, setChat] = useState([]);
   const [guess, setGuess] = useState('');
-  const [brushColor, setBrushColor] = useState('#ff33ff');
+  const [brushColor, setBrushColor] = useState('#ffffff');
   const [brushSize, setBrushSize] = useState(6);
-  const [brushStyle, setBrushStyle] = useState('Neon');
+  const [brushStyle, setBrushStyle] = useState('Solid');
   
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
@@ -226,9 +226,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 0.5;
           } else if (line.style === 'Crayon') {
-            ctx.shadowBlur = 2;
-            ctx.shadowColor = 'rgba(0,0,0,0.5)';
-            ctx.globalAlpha = 0.8;
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 0.3;
           } else if (line.style === 'Glow') {
             ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 25;
             ctx.globalAlpha = 1;
@@ -238,9 +237,16 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           }
           if (line.style !== 'Crayon') {
              ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
+             ctx.stroke();
+          } else {
+             ctx.shadowColor = 'transparent';
+             const origWidth = ctx.lineWidth;
+             ctx.lineWidth = origWidth * 1.5; ctx.stroke();
+             ctx.lineWidth = origWidth * 0.9; ctx.stroke();
+             ctx.lineWidth = origWidth * 0.4; ctx.stroke();
+             ctx.lineWidth = origWidth;
           }
           
-          ctx.stroke();
           ctx.globalAlpha = 1; // reset
         });
       })
@@ -267,9 +273,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                ctx.shadowBlur = 0;
                ctx.globalAlpha = 0.5;
              } else if (line.style === 'Crayon') {
-               ctx.shadowBlur = 2;
-               ctx.shadowColor = 'rgba(0,0,0,0.5)';
-               ctx.globalAlpha = 0.8;
+               ctx.shadowBlur = 0;
+               ctx.globalAlpha = 0.3;
              } else if (line.style === 'Glow') {
                ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 25;
                ctx.globalAlpha = 1;
@@ -279,8 +284,15 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
              }
              if (line.style !== 'Crayon') {
                 ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
+                ctx.stroke();
+             } else {
+                ctx.shadowColor = 'transparent';
+                const origWidth = ctx.lineWidth;
+                ctx.lineWidth = origWidth * 1.5; ctx.stroke();
+                ctx.lineWidth = origWidth * 0.9; ctx.stroke();
+                ctx.lineWidth = origWidth * 0.4; ctx.stroke();
+                ctx.lineWidth = origWidth;
              }
-             ctx.stroke();
              ctx.globalAlpha = 1;
            });
          });
@@ -600,9 +612,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 0.5;
       } else if (brushStyle === 'Crayon') {
-        ctx.shadowBlur = 2;
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.globalAlpha = 0.8;
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 0.3;
       } else if (brushStyle === 'Glow') {
         ctx.shadowBlur = brushColor === '#0a0a0a' ? 0 : 25;
         ctx.globalAlpha = 1;
@@ -612,9 +623,16 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       }
       if (brushStyle !== 'Crayon') {
          ctx.shadowColor = brushColor === '#0a0a0a' ? 'transparent' : brushColor;
+         ctx.stroke();
+      } else {
+         ctx.shadowColor = 'transparent';
+         const origWidth = ctx.lineWidth;
+         ctx.lineWidth = origWidth * 1.5; ctx.stroke();
+         ctx.lineWidth = origWidth * 0.9; ctx.stroke();
+         ctx.lineWidth = origWidth * 0.4; ctx.stroke();
+         ctx.lineWidth = origWidth;
       }
       
-      ctx.stroke();
       ctx.globalAlpha = 1; // reset
       
       const lineEvent = {
@@ -659,9 +677,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 0.5;
           } else if (line.style === 'Crayon') {
-            ctx.shadowBlur = 2;
-            ctx.shadowColor = 'rgba(0,0,0,0.5)';
-            ctx.globalAlpha = 0.8;
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 0.3;
           } else if (line.style === 'Glow') {
             ctx.shadowBlur = line.color === '#0a0a0a' ? 0 : 25;
             ctx.globalAlpha = 1;
@@ -671,8 +688,15 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           }
           if (line.style !== 'Crayon') {
              ctx.shadowColor = line.color === '#0a0a0a' ? 'transparent' : (line.color || '#ff33ff');
+             ctx.stroke();
+          } else {
+             ctx.shadowColor = 'transparent';
+             const origWidth = ctx.lineWidth;
+             ctx.lineWidth = origWidth * 1.5; ctx.stroke();
+             ctx.lineWidth = origWidth * 0.9; ctx.stroke();
+             ctx.lineWidth = origWidth * 0.4; ctx.stroke();
+             ctx.lineWidth = origWidth;
           }
-          ctx.stroke();
           ctx.globalAlpha = 1;
       });
     });
@@ -724,23 +748,26 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   };
 
   useEffect(() => {
-    if (isHost) {
+    if (isHost && channel) {
       channel.on('broadcast', { event: 'select_word' }, ({ payload }) => {
-        if (gameState.status === 'choosing_word') {
-          const actualDrawTime = gameState.config.gameMode === 'No Mercy' ? Math.min(30, gameState.config.drawTime) : gameState.config.drawTime;
-          const newState = {
-            ...gameState,
-            status: 'playing',
-            currentWord: payload,
-            timer: actualDrawTime,
-            revealedIndices: []
-          };
-          channel.send({ type: 'broadcast', event: 'sync_state', payload: newState });
-          setGameState(newState);
-        }
+        setGameState(prev => {
+          if (prev.status === 'choosing_word') {
+            const actualDrawTime = prev.config.gameMode === 'No Mercy' ? Math.min(30, prev.config.drawTime) : prev.config.drawTime;
+            const newState = {
+              ...prev,
+              status: 'playing',
+              currentWord: payload,
+              timer: actualDrawTime,
+              revealedIndices: []
+            };
+            channel.send({ type: 'broadcast', event: 'sync_state', payload: newState });
+            return newState;
+          }
+          return prev;
+        });
       });
     }
-  }, [isHost, channel, gameState]);
+  }, [isHost, channel]);
 
 
   // Chat Handlers
@@ -905,8 +932,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   if (gameState.status === 'lobby') {
     return (
       <div className="no-global-scale" style={{...styles.background, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-        <div style={{...styles.glassPanel, maxWidth: isMobile ? '100vw' : '900px', width: '100%', maxHeight: '100vh', display: 'flex', flexDirection: 'column', padding: isMobile ? '20px 15px' : '40px', boxSizing: 'border-box', boxShadow: '0 0 50px rgba(255,51,255,0.1), inset 0 0 20px rgba(255,255,255,0.05)', margin: 0, borderRadius: isMobile ? 0 : '24px' }}>
-          <h1 style={{ fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '15px' : '25px', wordBreak: 'break-word', overflowWrap: 'break-word', flexShrink: 0 }}>
+        <div style={{...styles.glassPanel, maxWidth: isMobile ? '100vw' : '900px', width: '100%', maxHeight: '100vh', display: 'flex', flexDirection: 'column', padding: isMobile ? '35px 15px 20px' : '50px 40px 40px', boxSizing: 'border-box', boxShadow: '0 0 50px rgba(255,51,255,0.1), inset 0 0 20px rgba(255,255,255,0.05)', margin: 0, borderRadius: isMobile ? 0 : '24px' }}>
+          <h1 style={{ marginTop: '10px', fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '15px' : '25px', wordBreak: 'break-word', overflowWrap: 'break-word', flexShrink: 0 }}>
             DUMB DOODLES
           </h1>
           
@@ -1185,17 +1212,17 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                     boxShadow: isActive ? '0 0 15px rgba(255,51,255,0.2)' : 'none',
                     minWidth: isMobile ? '150px' : 'auto'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <CustomAvatar config={playerAvatars[p]} size={40} />
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontWeight: isActive ? 'bold' : 'normal', color: hasGuessed ? '#33ff33' : (isActive ? '#ff33ff' : '#fff'), fontSize: '0.9rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                        <span style={{ fontWeight: isActive ? 'bold' : 'normal', color: hasGuessed ? '#33ff33' : (isActive ? '#ff33ff' : '#fff'), fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {p} {isMe && <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>(You)</span>}
                         </span>
                       </div>
                     </div>
-                    <div style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', color: '#ebd73f' }}>
+                    <div style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', color: '#ebd73f', flexShrink: 0, marginLeft: '10px' }}>
                       {gameState.scores[p] || 0}
                     </div>
                   </div>
@@ -1246,13 +1273,15 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           <div style={{ 
               ...styles.glassPanel, 
               flex: isMobile ? 'none' : 1, 
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
               width: '100%',
               aspectRatio: isMobile ? '4/3' : 'auto',
               position: 'relative',
               background: '#0a0a0a',
               cursor: isMyTurn && gameState.status === 'playing' ? 'crosshair' : 'default',
               boxShadow: isMyTurn && gameState.status === 'playing' ? '0 0 40px rgba(255,51,255,0.1) inset' : 'none',
-              minHeight: isMobile ? 'auto' : 'auto'
           }}>
             
             {/* OVERLAYS */}
@@ -1331,7 +1360,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                 
                 {/* Brush Styles */}
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '10px', margin: '-10px', scrollbarWidth: 'none' }}>
                   {['Neon', 'Solid', 'Marker', 'Glow', 'Crayon'].map(st => {
                     const isActive = brushStyle === st;
                     return (
@@ -1441,7 +1470,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
             } : {
               order: 3, width: '320px'
             }),
-            display: 'flex', flexDirection: 'column', minHeight: isMobile ? '60vh' : 'auto' 
+            display: 'flex', flexDirection: 'column', minHeight: 0
           }}>
             {isMobile && (
                <button onClick={() => setIsMobileChatOpen(false)} style={{position: 'absolute', top: 15, right: 15, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', zIndex: 10, borderRadius: '50%', width: 36, height: 36, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
@@ -1495,8 +1524,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 type="text" 
                 value={guess}
                 onChange={(e) => setGuess(e.target.value)}
-                disabled={isMyTurn || gameState.status !== 'playing' || gameState.guessedPlayers.includes(playerName)}
-                placeholder={isMyTurn ? "You are drawing..." : (gameState.status !== 'playing' ? "Waiting..." : (gameState.guessedPlayers.includes(playerName) ? "You Guessed It!" : "Guess here..."))}
+                disabled={gameState.status !== 'playing' || gameState.guessedPlayers.includes(playerName)}
+                placeholder={gameState.status !== 'playing' ? "Waiting..." : (gameState.guessedPlayers.includes(playerName) ? "You Guessed It!" : (isMyTurn ? "Chat (don't cheat!)..." : "Guess here..."))}
                 style={{
                   flex: 1, padding: '12px 15px', background: 'rgba(255,255,255,0.05)', 
                   border: '1px solid rgba(255,255,255,0.1)', color: '#fff', 
@@ -1506,10 +1535,10 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               />
               <button 
                 type="submit"
-                disabled={isMyTurn || !guess.trim() || gameState.status !== 'playing' || gameState.guessedPlayers.includes(playerName)}
+                disabled={!guess.trim() || gameState.status !== 'playing' || gameState.guessedPlayers.includes(playerName)}
                 style={{
-                  padding: '0 15px', background: isMyTurn ? 'rgba(255,255,255,0.1)' : '#ff33ff', color: isMyTurn ? 'rgba(255,255,255,0.3)' : '#000',
-                  border: 'none', borderRadius: '12px', cursor: isMyTurn ? 'default' : 'pointer',
+                  padding: '0 15px', background: '#ff33ff', color: '#000',
+                  border: 'none', borderRadius: '12px', cursor: 'pointer',
                   transition: 'all 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}
               >
