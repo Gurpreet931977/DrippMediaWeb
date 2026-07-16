@@ -989,7 +989,7 @@ export default function QuoteMaker() {
             <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: includePMP ? '15px' : '0' }}>
                 <div>
-                  <h4 style={{ margin: '0 0 5px 0', color: '#ebd73f', fontSize: '0.95rem' }}>Premium Marketing Proposal (PMP)</h4>
+                  <h4 style={{ margin: '0 0 5px 0', color: '#ebd73f', fontSize: '0.95rem' }}>Personal Marketing Plan (PMP)</h4>
                   <p style={{ margin: 0, fontSize: '0.75rem', color: '#888' }}>Attach a beautiful strategy pitch to your quote.</p>
                 </div>
                 <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
@@ -1050,7 +1050,7 @@ export default function QuoteMaker() {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {items.map((item, index) => (
-                <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div key={index} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <div style={{ flex: 2 }}>
                     <input 
                        list="services-list"

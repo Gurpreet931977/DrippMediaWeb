@@ -234,7 +234,7 @@ export default function SharedQuote() {
         {/* Cover Header Section */}
         <div className="quote-header">
           <h1 style={{ fontSize: 'clamp(2.5rem, 10vw, 4rem)', color: '#ebd73f', margin: '0 0 10px 0', letterSpacing: '-2px', fontWeight: '900', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 20px rgba(235, 215, 63, 0.3)', wordBreak: 'break-word' }}>DRIPP MEDIA</h1>
-          <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', color: '#888', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{isInvoice ? 'TAX INVOICE' : (isStandalone ? 'Premium Marketing Proposal' : 'Proposal & Investment Overview')}</p>
+          <p style={{ fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', color: '#888', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{isInvoice ? 'TAX INVOICE' : (isStandalone ? 'Personal Marketing Plan' : 'Proposal & Investment Overview')}</p>
         </div>
 
         {/* LEFT PANEL */}
