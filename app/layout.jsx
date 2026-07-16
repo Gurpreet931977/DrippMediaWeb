@@ -12,126 +12,131 @@ export const viewport = {
 export const metadata = {
   metadataBase: new URL('https://www.drippmedia.com'),
   title: {
-    default: 'Dripp Media | Digital Branding & Creative Agency',
+    default: 'Dripp Media | Creative & Digital Branding Agency',
     template: '%s | Dripp Media'
   },
-  description: 'Dripp Media (often searched as Drip Media, Dripp Media, DrippMedia, or DripMedia) is a premium digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
+  description: 'Dripp Media is a global creative & digital branding agency offering web development, video editing, videography, photography, social media management, and graphic design. Serving clients worldwide from India.',
   keywords: [
-    // Core Brand Identifiers — all spelling variants for brand recognition
-    'Dripp Media', 'drip media', 'dripmedia', 'drippmedia', 'drippmedia.com', 'drip media agency',
-    'Dripp Agency', 'The Dripp Agency', 'dripp', 'drippmedia agency', 'drip media india',
-    
-    // Premium & Luxury Services (High-End Clientele)
-    'premium website development', 'premium video editing', 'premium creative agency', 
-    'luxury digital agency', 'luxury brand marketing', 'high-end web design', 
-    'premium motion graphics', 'boutique digital agency', 'bespoke web development',
-    'premium UI UX design', 'elite video production', 'high-end digital marketing',
-    
-    // High-Ticket Web Development & Tech (Core USP)
-    'website development', 'custom web app development', 'e-commerce website development', 'Shopify experts India',
-    'Next.js developers', 'React JS agency', 'startup website development', 'SaaS landing page design',
-    'high conversion web design', 'interactive 3D websites', 'WebGL developers', 'mobile app development',
-    'frontend development agency', 'backend web development', 'full stack development company', 'custom CMS development',
-    'Webflow development agency', 'WordPress development services', 'headless commerce development',
-    'enterprise web application development', 'B2B corporate website design', 'real estate website development',
-    'hospitality website design', 'portfolio website development', 'fintech web development', 'edtech website developers',
-    'fast SEO optimized websites', 'progressive web apps PWA', 'custom API integration', 'web portal development',
-    
-    // Video Production & Editing Services (High Demand)
-    'video editing', 'youtube video editing', 'instagram reel editing', 'viral reel editing',
-    'commercial video production', 'ad film makers', 'corporate event shoots', 'brand documentary production',
-    'cinematic event coverage', 'music video directors', 'product videography', 'podcast editing services',
-    'videoshoots', 'events coverage', 'event photography', 'commercial videography', 'social media reels',
-    
-    // Design, UI/UX & Branding
-    'brand identity design', 'logo design agency', 'premium branding agency', 'luxury digital agency',
-    'UI/UX design for startups', 'motion designing services', '3D product animation', 'graphic designing',
-    'poster designing', 'packaging design agency', 'rebranding services', 'typography design',
-    
-    // Performance Marketing & Growth (Sales Driving)
-    'performance marketing agency', 'ROI driven digital marketing', 'lead generation services',
-    'D2C brand growth agency', 'Facebook ads management', 'Google ads expert agency', 'SEO services',
-    'social media management', 'influencer marketing agency', 'B2B digital marketing',
-    
-    // Industry-Specific Niche Keywords
-    'real estate digital marketing', 'fashion brand videography', 'tech startup branding',
-    'hospitality marketing agency', 'restaurant social media management', 'e-commerce growth agency',
-    
-    // High-Intent Search Phrases (What clients actually type into Google)
-    'best creative agency', 'best website agency', 'top digital agency', 'award winning web design',
-    'hire video editor for youtube', 'hire UI UX designer', 'best marketing agency for startups',
-    'creative studio near me', 'best web development company', 'top video production company',
-    'hire top web developers', 'best web design agency near me', 'award-winning digital agency',
-    'top rated website designers', 'affordable web development agency', 'custom software development company',
-    'top B2B marketing agency', 'hire professional video editors', 'best creative agency for startups',
-    'top ecommerce development agency', 'web design services for small business', 'top notch digital branding',
-    'hire dedicated developers offshore', 'find the best creative agency', 'award winning video production',
-    
-    // Geo-Targeted: Dehradun (HQ/Focus)
-    'creative agency Dehradun', 'web development Dehradun', 'digital marketing Dehradun', 
-    'best agency in Dehradun', 'web design Dehradun', 'video production Dehradun', 'SEO Dehradun',
-    'event photographer Dehradun', 'ad shoot Dehradun',
-    
-    // Geo-Targeted: Delhi / NCR
-    'web development Delhi', 'creative agency Delhi', 'digital marketing Delhi NCR', 
-    'branding agency Delhi', 'top web design Delhi', 'video production Delhi', 'best digital agency New Delhi',
-    'corporate filmmaker Delhi', 'ecommerce photography Delhi',
-    
-    // Geo-Targeted: Mumbai
-    'digital marketing Mumbai', 'creative agency Mumbai', 'web development Mumbai', 
-    'branding agency Mumbai', 'top creative studio Mumbai', 'video production Mumbai',
-    'ad film production Mumbai', 'influencer marketing Mumbai',
-    
-    // Geo-Targeted: Bangalore / Bengaluru
-    'branding agency Bangalore', 'web development Bangalore', 'creative agency Bengaluru', 
-    'UI/UX design Bangalore', 'digital marketing Bangalore', 'top tech agency Bangalore',
-    'startup branding Bangalore',
-    
-    // Geo-Targeted: Jaipur & Others
-    'creative agency Jaipur', 'digital marketing Jaipur', 'web development Jaipur', 
-    'branding Jaipur', 'web design Jaipur', 'web development Pune', 'creative agency Hyderabad', 
-    'digital marketing Chennai', 'digital agency Ahmedabad', 
-    
-    // National / Global & Offshore Outsourcing (High Ticket)
-    'top agency India', 'best creative agency in India', 'best web development company India', 
-    'Indian digital marketing agency', 'creative agency for USA clients', 'offshore web development India',
-    'hire remote web developers India', 'outsource video editing India', 'offshore digital marketing agency',
-    'best agency for international clients', 'web development outsourcing to India', 'hire UI UX designer offshore',
-    'creative agency Dubai', 'web development agency USA', 'digital marketing agency UK', 'branding agency Australia',
-    'remote video editing team', 'offshore 3D design studio', 'B2B offshore agency India', 'top Indian agency for global clients',
-    
-    // Emerging/High-Budget Global Markets (Low Competition, High Ticket)
-    'outsource web development Scandinavia', 'creative agency Norway', 'branding agency Sweden', 'digital marketing Denmark',
-    'enterprise web development Germany', 'Swiss offshore digital agency', 'video production outsourcing DACH',
-    'creative agency Singapore', 'web development Singapore offshore', 'digital agency Netherlands',
-    'branding agency Saudi Arabia', 'digital transformation agency Qatar', 'Middle east digital marketing outsourcing',
-    'offshore digital agency New Zealand',
-    
-    // US & Canada (1st, 2nd & Tech-Hub Cities)
-    'web development New York', 'creative agency NYC', 'digital marketing San Francisco', 'startup branding Silicon Valley',
-    'video production Los Angeles', 'web design Austin', 'tech agency Seattle', 'branding agency Miami',
-    'digital marketing Chicago', 'creative studio Denver', 'app development Atlanta', 'marketing agency Dallas',
-    'web development Toronto', 'creative agency Vancouver', 'branding studio Montreal', 'digital agency Calgary',
-    
-    // UK & Europe (1st & 2nd Tier)
-    'digital marketing London', 'creative agency Manchester', 'web development Birmingham', 'video production Edinburgh',
-    'branding agency Bristol', 'tech agency Dublin', 'web design Berlin', 'digital marketing Munich', 
-    'startup branding Frankfurt', 'creative agency Hamburg', 'web development Amsterdam', 'creative studio Paris',
-    
-    // Australia & APAC
-    'web development Sydney', 'creative agency Melbourne', 'digital marketing Brisbane', 'branding agency Perth',
-    'video production Auckland', 'digital agency Wellington',
-    
-    // Middle East (Specific Hubs)
-    'creative agency Dubai', 'web development Abu Dhabi', 'branding agency Riyadh', 'digital marketing Doha',
-    'video production Jeddah', 'tech agency Manama Bahrain'
+    // ── Brand Name Variants (all spellings) ──────────────────────────────────
+    'Dripp Media', 'drip media', 'dripmedia', 'drippmedia', 'drippmedia.com',
+    'drip media agency', 'Dripp Agency', 'The Dripp Agency', 'dripp',
+    'drippmedia agency', 'drip media india', 'DripMedia', 'DrippMedia',
+
+    // ── Core Service: Web Development ─────────────────────────────────────────
+    'web development agency', 'website development company', 'custom website development',
+    'web design agency', 'web development India', 'best web development company',
+    'Next.js development agency', 'React JS development company', 'full stack development agency',
+    'e-commerce website development', 'Shopify development agency', 'SaaS website design',
+    'startup website development', 'corporate website design', 'high conversion landing pages',
+    'custom web application development', 'mobile responsive web design', 'UI UX web design',
+    'WordPress development agency', 'Webflow development', 'headless CMS development',
+    'interactive website design', '3D website development', 'WebGL website',
+    'web development for small business', 'web development for startups', 'web agency near me',
+    'affordable web development', 'premium website development', 'bespoke web development',
+
+    // ── Core Service: Video Editing ───────────────────────────────────────────
+    'video editing agency', 'professional video editing', 'video editing services',
+    'YouTube video editing', 'Instagram reel editing', 'short form video editing',
+    'long form video editing', 'viral reel editing', 'social media video editing',
+    'brand video editing', 'cinematic video editing', 'motion graphics video',
+    'podcast video editing', 'product video editing', 'promotional video editing',
+    'video post production services', 'color grading services', 'video editing outsourcing',
+    'hire video editor online', 'remote video editing team', 'video editor for hire',
+
+    // ── Core Service: Videography ─────────────────────────────────────────────
+    'videography services', 'commercial videography', 'brand videography',
+    'corporate video production', 'product videography', 'event videography',
+    'wedding videography', 'music video production', 'ad film production',
+    'documentary video production', 'cinematic videography', 'drone videography',
+    'video production company', 'video production agency India', 'corporate filmmaker',
+
+    // ── Core Service: Photography ─────────────────────────────────────────────
+    'photography services', 'commercial photography', 'brand photography',
+    'product photography', 'event photography', 'corporate photography',
+    'e-commerce product photography', 'lifestyle photography', 'portrait photography',
+    'food photography agency', 'real estate photography', 'fashion photography',
+    'professional photographer hire', 'photographer for brand', 'photography agency India',
+
+    // ── Core Service: Social Media Management ────────────────────────────────
+    'social media management agency', 'social media marketing agency',
+    'Instagram management agency', 'social media content creation',
+    'social media strategy agency', 'Facebook page management',
+    'LinkedIn social media management', 'social media growth agency',
+    'social media manager for hire', 'brand social media management',
+    'social media marketing India', 'social media agency for startups',
+    'influencer marketing agency', 'content marketing agency',
+    'community management services', 'social media advertising agency',
+
+    // ── Core Service: Graphic Design ──────────────────────────────────────────
+    'graphic design agency', 'graphic design services', 'logo design agency',
+    'brand identity design', 'branding agency', 'creative agency',
+    'poster design agency', 'packaging design', 'motion graphic design',
+    'UI UX design agency', 'print design services', 'typography design',
+    'illustration services', 'infographic design', 'pitch deck design',
+    'rebranding agency', 'visual identity design', 'brand guidelines design',
+
+    // ── Premium & Luxury Positioning ─────────────────────────────────────────
+    'premium creative agency', 'luxury digital agency', 'luxury branding agency',
+    'boutique creative agency', 'high-end digital agency', 'award winning creative agency',
+    'top rated digital agency', 'best creative agency in India',
+
+    // ── High-Intent Buyer Searches ────────────────────────────────────────────
+    'hire web developer India', 'hire video editor India', 'hire graphic designer India',
+    'hire photographer India', 'hire social media manager', 'outsource creative services India',
+    'creative agency for brands', 'digital agency for startups', 'agency for D2C brands',
+    'agency for ecommerce brands', 'agency for tech startups', 'agency for real estate',
+    'agency for hospitality', 'agency for fashion brands', 'agency for restaurants',
+
+    // ── Geo: Dehradun (HQ) ────────────────────────────────────────────────────
+    'creative agency Dehradun', 'web development Dehradun', 'digital marketing Dehradun',
+    'best agency Dehradun', 'video production Dehradun', 'photographer Dehradun',
+    'graphic designer Dehradun', 'social media agency Dehradun', 'branding Dehradun',
+
+    // ── Geo: Delhi NCR ────────────────────────────────────────────────────────
+    'web development Delhi', 'creative agency Delhi', 'digital marketing Delhi NCR',
+    'branding agency Delhi', 'video production Delhi', 'graphic design Delhi',
+    'photography agency Delhi', 'social media management Delhi',
+
+    // ── Geo: Mumbai ───────────────────────────────────────────────────────────
+    'digital marketing Mumbai', 'creative agency Mumbai', 'web development Mumbai',
+    'branding agency Mumbai', 'video production Mumbai', 'photography Mumbai',
+    'graphic design agency Mumbai', 'social media agency Mumbai',
+
+    // ── Geo: Bangalore ────────────────────────────────────────────────────────
+    'branding agency Bangalore', 'web development Bangalore', 'creative agency Bengaluru',
+    'digital marketing Bangalore', 'graphic design Bangalore', 'video editing Bangalore',
+
+    // ── Geo: Other Indian Cities ──────────────────────────────────────────────
+    'creative agency Jaipur', 'web development Pune', 'creative agency Hyderabad',
+    'digital marketing Chennai', 'digital agency Ahmedabad', 'creative agency Kolkata',
+    'web development Chandigarh', 'branding agency Lucknow',
+
+    // ── Geo: Global — US & Canada ─────────────────────────────────────────────
+    'web development agency USA', 'creative agency NYC', 'digital marketing San Francisco',
+    'video production Los Angeles', 'web design Austin', 'branding agency Miami',
+    'digital marketing Chicago', 'web development Toronto', 'creative agency Vancouver',
+
+    // ── Geo: Global — UK & Europe ─────────────────────────────────────────────
+    'digital marketing London', 'creative agency Manchester', 'web development Berlin',
+    'branding agency Amsterdam', 'digital agency Paris', 'creative studio Dublin',
+
+    // ── Geo: Global — Middle East & Asia ─────────────────────────────────────
+    'creative agency Dubai', 'web development Abu Dhabi', 'branding agency Riyadh',
+    'digital marketing Doha', 'creative agency Singapore', 'web development agency Australia',
+    'creative agency Melbourne', 'digital marketing Sydney',
+
+    // ── Offshore / Outsourcing ────────────────────────────────────────────────
+    'offshore creative agency India', 'outsource web development India',
+    'outsource video editing India', 'outsource graphic design India',
+    'offshore digital agency', 'hire remote creative team India',
+    'best Indian agency for international clients',
   ],
-  authors: [{ name: 'Dripp Media' }],
+  authors: [{ name: 'Dripp Media', url: 'https://www.drippmedia.com' }],
   creator: 'Dripp Media',
   publisher: 'Dripp Media',
   openGraph: {
-    title: 'Dripp Media | Digital Branding & Creative Agency',
-    description: 'Dripp Media (often searched as Drip Media, DrippMedia, or DripMedia) is a premium digital branding and creative agency specializing in immersive digital experiences, web development, and video production.',
+    title: 'Dripp Media | Creative & Digital Branding Agency',
+    description: 'Dripp Media is a global creative & digital branding agency offering web development, video editing, videography, photography, social media management, and graphic design.',
     url: 'https://www.drippmedia.com',
     siteName: 'Dripp Media',
     locale: 'en_US',
@@ -141,7 +146,7 @@ export const metadata = {
         url: 'https://www.drippmedia.com/opengraph-image.png',
         width: 1200,
         height: 630,
-        alt: 'Dripp Media - Digital Branding & Creative Agency',
+        alt: 'Dripp Media - Creative & Digital Branding Agency',
       }
     ],
   },
@@ -158,156 +163,391 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Dripp Media | Digital Branding & Creative Agency',
-    description: 'Dripp Media (also known as Drip Media or DrippMedia) — premium digital branding & creative agency for web development, video production, and cutting-edge design.',
+    title: 'Dripp Media | Creative & Digital Branding Agency',
+    description: 'Web development, video editing, videography, photography, social media management & graphic design — all under one roof. Global creative agency.',
     creator: '@drippmedia_',
+    site: '@drippmedia_',
     images: ['https://www.drippmedia.com/twitter-image.png'],
   },
   alternates: {
     canonical: 'https://www.drippmedia.com',
+    languages: {
+      'en': 'https://www.drippmedia.com',
+      'x-default': 'https://www.drippmedia.com',
+    },
   },
   applicationName: 'Dripp Media',
-  category: 'technology',
-  verification: {
-    // Add your Google Search Console verification token here when available
-    // google: 'your-verification-code',
+  category: 'Creative Agency, Digital Branding, Web Development',
+  classification: 'Business',
+  referrer: 'origin-when-cross-origin',
+  other: {
+    'geo.region': 'IN-UK',
+    'geo.placename': 'Dehradun, Uttarakhand, India',
+    'geo.position': '30.3165;78.0322',
+    'ICBM': '30.3165, 78.0322',
+    'rating': 'general',
+    'revisit-after': '7 days',
+    'language': 'English',
+    'target': 'all',
+    'HandheldFriendly': 'True',
+    'MobileOptimized': '320',
   },
+};
+
+// ─── Structured Data ─────────────────────────────────────────────────────────
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": ["Organization", "ProfessionalService"],
+  "@id": "https://www.drippmedia.com/#organization",
+  "name": "Dripp Media",
+  "alternateName": ["Drip Media", "DrippMedia", "Dripmedia", "drippmedia", "DripMedia"],
+  "url": "https://www.drippmedia.com",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://www.drippmedia.com/icon.png",
+    "width": 512,
+    "height": 512
+  },
+  "image": "https://www.drippmedia.com/opengraph-image.png",
+  "description": "Dripp Media (also known as Drip Media or DrippMedia) is a premium global creative & digital branding agency offering web development, video editing, videography, photography, social media management, and graphic design.",
+  "foundingDate": "2023",
+  "priceRange": "$$",
+  "telephone": "+91-78189-95147",
+  "contactPoint": [
+    {
+      "@type": "ContactPoint",
+      "telephone": "+91-78189-95147",
+      "contactType": "customer service",
+      "availableLanguage": ["English", "Hindi"],
+      "areaServed": "Worldwide"
+    },
+    {
+      "@type": "ContactPoint",
+      "telephone": "+91-78189-95147",
+      "contactType": "sales",
+      "availableLanguage": ["English", "Hindi"],
+      "areaServed": "Worldwide"
+    }
+  ],
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Dehradun",
+    "addressRegion": "Uttarakhand",
+    "postalCode": "248001",
+    "addressCountry": "IN"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 30.3165,
+    "longitude": 78.0322
+  },
+  "sameAs": [
+    "https://www.instagram.com/drippmedia_",
+    "https://drippmedia.com"
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Dripp Media Services",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Web Development",
+          "description": "Custom website development, e-commerce, Next.js, React, SaaS, and web applications."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Video Editing",
+          "description": "Professional video editing for YouTube, Instagram reels, brand videos, and commercial content."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Videography",
+          "description": "Commercial, corporate, product, and event videography with cinematic production quality."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Photography",
+          "description": "Brand, product, event, corporate, and commercial photography services."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Social Media Management",
+          "description": "Full-service social media management, content creation, strategy, and growth for brands."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Graphic Design",
+          "description": "Logo design, brand identity, motion graphics, UI/UX design, poster, and packaging design."
+        }
+      }
+    ]
+  },
+  "areaServed": [
+    { "@type": "Country", "name": "India" },
+    { "@type": "Country", "name": "United States" },
+    { "@type": "Country", "name": "United Kingdom" },
+    { "@type": "Country", "name": "United Arab Emirates" },
+    { "@type": "Country", "name": "Australia" },
+    { "@type": "Country", "name": "Canada" },
+    { "@type": "Country", "name": "Germany" },
+    { "@type": "Country", "name": "Singapore" },
+    { "@type": "Country", "name": "Saudi Arabia" },
+    { "@type": "Country", "name": "Netherlands" },
+    { "@type": "AdministrativeArea", "name": "Dehradun, Uttarakhand" },
+    { "@type": "AdministrativeArea", "name": "Delhi NCR" },
+    { "@type": "AdministrativeArea", "name": "Mumbai" },
+    { "@type": "AdministrativeArea", "name": "Bangalore" }
+  ],
+  "knowsAbout": [
+    "Web Development", "Video Editing", "Videography", "Photography",
+    "Social Media Management", "Graphic Design", "Brand Identity",
+    "UI/UX Design", "Motion Graphics", "Digital Branding", "Performance Marketing"
+  ]
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://www.drippmedia.com/#website",
+  "name": "Dripp Media",
+  "alternateName": ["Drip Media", "DrippMedia", "Dripmedia", "DripMedia"],
+  "url": "https://www.drippmedia.com",
+  "description": "Dripp Media — global creative & digital branding agency.",
+  "inLanguage": "en-US",
+  "publisher": { "@id": "https://www.drippmedia.com/#organization" },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://www.drippmedia.com/?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+};
+
+const servicesSchema = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Web Development",
+    "alternateName": ["website development", "web design", "custom web development"],
+    "provider": { "@id": "https://www.drippmedia.com/#organization" },
+    "description": "Dripp Media builds premium custom websites, web applications, e-commerce stores (Shopify, WooCommerce), SaaS platforms, and interactive digital experiences using Next.js and React.",
+    "url": "https://www.drippmedia.com/web-portfolio",
+    "serviceType": "Web Development",
+    "areaServed": "Worldwide",
+    "availableChannel": {
+      "@type": "ServiceChannel",
+      "serviceUrl": "https://www.drippmedia.com/quote"
+    },
+    "keywords": "web development, website design, Next.js, React, e-commerce, Shopify, SaaS, full stack"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Video Editing",
+    "alternateName": ["video post production", "video editing services"],
+    "provider": { "@id": "https://www.drippmedia.com/#organization" },
+    "description": "Professional video editing services including YouTube long-form, Instagram short-form reels, brand films, commercial ads, color grading, and motion graphics for brands worldwide.",
+    "url": "https://www.drippmedia.com/video-portfolio",
+    "serviceType": "Video Editing",
+    "areaServed": "Worldwide",
+    "availableChannel": {
+      "@type": "ServiceChannel",
+      "serviceUrl": "https://www.drippmedia.com/quote"
+    },
+    "keywords": "video editing, YouTube video editor, Instagram reel editing, short form video, long form video, brand video, commercial video"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Videography",
+    "alternateName": ["video production", "commercial videography"],
+    "provider": { "@id": "https://www.drippmedia.com/#organization" },
+    "description": "Cinematic videography services: corporate video production, brand films, product videos, event coverage, music videos, and ad film production.",
+    "url": "https://www.drippmedia.com/video-portfolio",
+    "serviceType": "Videography",
+    "areaServed": "Worldwide",
+    "keywords": "videography, video production, commercial videography, corporate video, event videography, ad film production"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Photography",
+    "alternateName": ["commercial photography", "brand photography"],
+    "provider": { "@id": "https://www.drippmedia.com/#organization" },
+    "description": "Professional photography services including brand photography, product photography, e-commerce photography, event photography, corporate headshots, and lifestyle photography.",
+    "url": "https://www.drippmedia.com/graphic-portfolio",
+    "serviceType": "Photography",
+    "areaServed": "Worldwide",
+    "keywords": "photography, brand photography, product photography, event photography, commercial photography, e-commerce photography"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Social Media Management",
+    "alternateName": ["social media marketing", "social media agency"],
+    "provider": { "@id": "https://www.drippmedia.com/#organization" },
+    "description": "End-to-end social media management: content creation, scheduling, community management, paid campaigns, growth strategy, and analytics for Instagram, LinkedIn, Facebook, and more.",
+    "url": "https://www.drippmedia.com",
+    "serviceType": "Social Media Management",
+    "areaServed": "Worldwide",
+    "keywords": "social media management, Instagram management, social media marketing, content creation, social media strategy, community management"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Graphic Design",
+    "alternateName": ["brand identity design", "logo design", "branding"],
+    "provider": { "@id": "https://www.drippmedia.com/#organization" },
+    "description": "Creative graphic design services: logo design, brand identity systems, motion graphics, UI/UX design, poster design, packaging design, and complete rebranding solutions.",
+    "url": "https://www.drippmedia.com/graphic-portfolio",
+    "serviceType": "Graphic Design",
+    "areaServed": "Worldwide",
+    "keywords": "graphic design, logo design, brand identity, motion graphics, UI UX design, poster design, packaging design, rebranding"
+  }
+];
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Dripp Media?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Dripp Media (also searched as Drip Media, DrippMedia, or DripMedia) is a premium global creative & digital branding agency based in Dehradun, India. We offer web development, video editing, videography, photography, social media management, and graphic design for brands worldwide."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Dripp Media the same as Drip Media?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Dripp Media, Drip Media, DrippMedia, and DripMedia all refer to the same agency — Dripp Media at www.drippmedia.com. The correct spelling is Dripp (with two P's)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What web development services does Dripp Media offer?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Dripp Media builds custom websites, e-commerce stores, SaaS platforms, web applications, and interactive digital experiences using Next.js, React, Shopify, and Webflow. We serve startups, enterprises, and global brands."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Dripp Media offer video editing services?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Dripp Media offers professional video editing for YouTube, Instagram reels, brand films, commercial ads, short-form and long-form content, including color grading and motion graphics."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Dripp Media provide photography and videography services?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Dripp Media provides cinematic videography and professional photography for brands, products, events, corporate clients, and commercial shoots."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Dripp Media manage my social media?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Dripp Media offers full social media management including content creation, scheduling, community management, paid advertising, growth strategy, and performance analytics for Instagram, LinkedIn, Facebook, and more."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What graphic design services does Dripp Media offer?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Dripp Media offers logo design, brand identity design, motion graphics, UI/UX design, poster design, packaging design, pitch deck design, and complete rebranding services."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Dripp Media work with international clients?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Dripp Media serves clients globally including in the USA, UK, UAE, Australia, Canada, Singapore, and across Europe — in addition to clients across all major Indian cities."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where is Dripp Media located?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Dripp Media is headquartered in Dehradun, Uttarakhand, India, and serves clients worldwide remotely."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How can I hire Dripp Media?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You can reach Dripp Media at www.drippmedia.com/quote to get a custom quote for web development, video editing, photography, social media management, or graphic design services."
+      }
+    }
+  ]
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Structured Data — Organization Schema (brand name disambiguation) */}
+        {/* ── Organization Schema ──────────────────────────────────────── */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": "Dripp Media",
-              "alternateName": ["Drip Media", "DrippMedia", "Dripmedia", "drippmedia", "drip media agency", "DripMedia"],
-              "url": "https://www.drippmedia.com",
-              "logo": {
-                "@type": "ImageObject",
-                "url": "https://www.drippmedia.com/icon.png",
-                "width": 512,
-                "height": 512
-              },
-              "image": "https://www.drippmedia.com/opengraph-image.png",
-              "description": "Dripp Media (also found as Drip Media or DrippMedia) is a premium digital branding and creative agency specializing in immersive digital experiences, web development, video production, and cutting-edge design.",
-              "foundingDate": "2023",
-              "contactPoint": {
-                "@type": "ContactPoint",
-                "telephone": "+91-78189-95147",
-                "contactType": "customer service",
-                "areaServed": "IN",
-                "availableLanguage": "English"
-              },
-              "address": {
-                "@type": "PostalAddress",
-                "addressLocality": "Dehradun",
-                "addressRegion": "Uttarakhand",
-                "addressCountry": "IN"
-              },
-              "sameAs": [
-                "https://www.instagram.com/drippmedia_",
-                "https://drippmedia.com"
-              ],
-              "knowsAbout": ["Digital Branding", "Creative Agency", "Web Development", "Video Production", "Interactive Design", "UI/UX Design", "Motion Graphics", "Performance Marketing"],
-              "areaServed": [
-                { "@type": "City", "name": "Dehradun" },
-                { "@type": "City", "name": "Delhi" },
-                { "@type": "City", "name": "Mumbai" },
-                { "@type": "City", "name": "Bangalore" },
-                { "@type": "City", "name": "Jaipur" },
-                { "@type": "Country", "name": "India" },
-                { "@type": "Country", "name": "United States" },
-                { "@type": "Country", "name": "United Kingdom" },
-                { "@type": "Country", "name": "United Arab Emirates" },
-                { "@type": "Country", "name": "Australia" },
-                { "@type": "Country", "name": "Canada" },
-                { "@type": "Country", "name": "Germany" },
-                { "@type": "Country", "name": "Switzerland" },
-                { "@type": "Country", "name": "Singapore" },
-                { "@type": "Country", "name": "Saudi Arabia" },
-                { "@type": "Country", "name": "Qatar" },
-                { "@type": "Country", "name": "Norway" },
-                { "@type": "Country", "name": "Sweden" },
-                { "@type": "Country", "name": "Denmark" },
-                { "@type": "Country", "name": "Netherlands" },
-                { "@type": "Country", "name": "New Zealand" }
-              ]
-            })
-          }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
-        {/* Structured Data — WebSite Schema (enables Google Sitelinks Search & brand name anchoring) */}
+        {/* ── WebSite Schema (Sitelinks Search + brand anchoring) ──────── */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              "name": "Dripp Media",
-              "alternateName": ["Drip Media", "DrippMedia", "Dripmedia", "DripMedia"],
-              "url": "https://www.drippmedia.com",
-              "description": "Dripp Media is a premium digital branding and creative agency.",
-              "inLanguage": "en-US",
-              "potentialAction": {
-                "@type": "SearchAction",
-                "target": {
-                  "@type": "EntryPoint",
-                  "urlTemplate": "https://www.drippmedia.com/?q={search_term_string}"
-                },
-                "query-input": "required name=search_term_string"
-              }
-            })
-          }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
-        {/* Structured Data — FAQ Schema (brand name clarification for knowledge panel) */}
+        {/* ── Service Schemas (one per service) ────────────────────────── */}
+        {servicesSchema.map((service, i) => (
+          <script
+            key={i}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(service) }}
+          />
+        ))}
+        {/* ── FAQ Schema (rich results + knowledge panel) ──────────────── */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "FAQPage",
-              "mainEntity": [
-                {
-                  "@type": "Question",
-                  "name": "What is Dripp Media?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Dripp Media (also searched as Drip Media, DrippMedia, or DripMedia) is a premium digital branding and creative agency based in Dehradun, India. We specialize in web development, video production, UI/UX design, motion graphics, and performance marketing."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "Is Dripp Media the same as Drip Media?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Yes. Dripp Media, Drip Media, DrippMedia, drippmedia, and DripMedia all refer to the same company — Dripp Media, a creative agency at drippmedia.com. The brand name is spelled with two P's: Dripp Media."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "What services does Dripp Media offer?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Dripp Media offers premium web development, video production, UI/UX design, brand identity, motion graphics, and performance marketing services for startups, enterprises, and global brands."
-                  }
-                }
-              ]
-            })
-          }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
-        {/* Fonts */}
+        {/* ── Fonts ─────────────────────────────────────────────────────── */}
         <link rel="preconnect" href="https://api.fontshare.com" />
         <link rel="preconnect" href="https://cdn.fontshare.com" />
         <link
           href="https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&f[]=clash-display@200,300,400,500,600,700&display=swap"
           rel="stylesheet"
         />
-        {/* Unicons */}
+        {/* ── Unicons ───────────────────────────────────────────────────── */}
         <link rel="preconnect" href="https://unicons.iconscout.com" />
         <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css" />
       </head>
