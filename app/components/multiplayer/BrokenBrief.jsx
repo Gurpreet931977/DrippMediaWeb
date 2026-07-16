@@ -101,8 +101,6 @@ export default function BrokenBrief({ channel, isHost, players, playerName, play
          });
       });
     }
-
-    return () => { channel.removeChannel(sub); }
   }, [channel, isHost, players.length]);
 
   // Host Timer

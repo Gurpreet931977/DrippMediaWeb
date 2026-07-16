@@ -48,7 +48,6 @@ export default function CoopEscape({ channel, isHost, players, playerName, playe
     const sub = channel.on('broadcast', { event: 'sync_state' }, ({ payload }) => {
       setGameState(payload);
     });
-    return () => channel.removeChannel(sub);
   }, [channel]);
 
   // Host Timer Logic
@@ -150,7 +149,6 @@ export default function CoopEscape({ channel, isHost, players, playerName, playe
          });
        } catch(e) { console.error(e); }
     });
-    return () => channel.removeChannel(sub);
   }, [isHost, channel]);
 
   const handleKeypadPress = (num) => {
