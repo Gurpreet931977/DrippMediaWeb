@@ -49,6 +49,7 @@ export default function NeonBusiness({ roomCode, playerName, players, isHost, ch
 
   const [chat, setChat] = useState([]);
   const [guess, setGuess] = useState(''); // using for chat
+  const [showPlayerAlert, setShowPlayerAlert] = useState(false);
 
   useEffect(() => {
     if (!channel) return;
@@ -85,7 +86,7 @@ export default function NeonBusiness({ roomCode, playerName, players, isHost, ch
   const startGame = () => {
     if (!isHost) return;
     if (players.length < 2) {
-      alert("At least 2 players are required to play this game!");
+      setShowPlayerAlert(true);
       return;
     }
     const newState = {
@@ -321,6 +322,24 @@ export default function NeonBusiness({ roomCode, playerName, players, isHost, ch
             </div>
           )}
         </div>
+        
+        {showPlayerAlert && (
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(10px)' }}>
+            <div style={{ ...styles.glassPanel, padding: '30px', textAlign: 'center', maxWidth: '400px', border: '1px solid #ff3333', boxShadow: '0 0 50px rgba(255,51,51,0.2)' }}>
+              <AlertTriangle size={48} color="#ff3333" style={{ marginBottom: '15px' }} />
+              <h2 style={{ fontFamily: "'Panchang', sans-serif", color: '#fff', fontSize: '1.2rem', marginBottom: '10px' }}>NOT ENOUGH PLAYERS</h2>
+              <p style={{ color: '#ccc', marginBottom: '25px', lineHeight: '1.5' }}>At least 2 players are required to start the game.</p>
+              <button 
+                onClick={() => setShowPlayerAlert(false)} 
+                style={{ padding: '12px 30px', background: 'linear-gradient(135deg, #ff3333 0%, #aa0000 100%)', color: '#fff', border: 'none', borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer', transition: 'transform 0.2s', boxShadow: '0 10px 20px rgba(255,51,51,0.3)' }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                GOT IT
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
