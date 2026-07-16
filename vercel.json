@@ -3,7 +3,7 @@
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "has": [
         {
           "type": "host",
