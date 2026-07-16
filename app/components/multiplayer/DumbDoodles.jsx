@@ -1139,7 +1139,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                  <X size={20} />
                </button>
             )}
-            <div style={{ padding: isMobile ? '40px 20px 20px 20px' : '30px 20px', background: 'linear-gradient(180deg, rgba(255,51,255,0.1) 0%, transparent 100%)', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+            <div style={{ padding: isMobile ? '70px 20px 20px 20px' : '30px 20px', background: 'linear-gradient(180deg, rgba(255,51,255,0.1) 0%, transparent 100%)', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
               <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: isMobile ? '1.2rem' : '1.5rem', color: '#ff33ff', margin: 0, textShadow: '0 0 20px rgba(255,51,255,0.5)' }}>
                 DUMB DOODLES
               </h1>

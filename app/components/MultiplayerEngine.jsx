@@ -248,6 +248,20 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
     return (
       <div className="multiplayer-game-wrapper">
         <style>{`
+          .multiplayer-game-wrapper {
+            position: absolute;
+            top: 70px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            background: transparent;
+          }
+          .multiplayer-game-wrapper > div {
+            height: 100% !important;
+            min-height: 100% !important;
+            max-height: 100% !important;
+          }
           @media (max-width: 768px) {
             .multiplayer-game-wrapper > div:not(.no-global-scale) {
               transform: scale(0.65);

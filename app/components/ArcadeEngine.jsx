@@ -1649,7 +1649,7 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
       <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
 
       {/* Top Left: Pause & Help Buttons */}
-      <div style={{ position: "absolute", top: "30px", left: "30px", display: "flex", gap: "10px", zIndex: 100 }}>
+      <div style={{ position: "absolute", top: "80px", left: "30px", display: "flex", gap: "10px", zIndex: 100 }}>
         <button onClick={() => setIsPaused(p => !p)} style={{ width: "40px", height: "40px", borderRadius: "50%", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "14px", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
           {isPaused ? "▶" : "||"}
         </button>
