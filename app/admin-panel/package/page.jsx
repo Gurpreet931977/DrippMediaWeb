@@ -52,7 +52,12 @@ export default function PackageMaker() {
         if (payload.brandName) setBrandName(payload.brandName);
         if (payload.packageType) setPackageType(payload.packageType.toLowerCase());
         if (payload.totalBudget) setTotalBudget(payload.totalBudget.toString());
-        if (payload.pmpStrategy) setPmpStrategy(payload.pmpStrategy);
+        if (payload.pmpStrategy) {
+          const strategyString = typeof payload.pmpStrategy === 'object' ? 
+            `Overview:\n${payload.pmpStrategy.overview || ''}\n\nTarget Audience:\n${payload.pmpStrategy.targetAudience || ''}\n\nPhases:\n${(payload.pmpStrategy.phases || []).map(p => `- ${p.title}: ${p.description}`).join('\n')}` : 
+            payload.pmpStrategy;
+          setPmpStrategy(strategyString);
+        }
         if (payload.services && payload.services.length > 0) {
           setServices(payload.services);
         }
@@ -61,6 +66,11 @@ export default function PackageMaker() {
     window.addEventListener('copilot-action', handleCopilotAction);
     return () => window.removeEventListener('copilot-action', handleCopilotAction);
   }, []);
+
+  useEffect(() => {
+    window._drippFormContext = { brandName, packageType, totalBudget, pmpStrategy, services };
+    return () => { window._drippFormContext = null; };
+  }, [brandName, packageType, totalBudget, pmpStrategy, services]);
 
   const handleServiceChange = (index, field, value) => {
     const newServices = [...services];

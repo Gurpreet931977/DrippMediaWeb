@@ -207,7 +207,14 @@ export default function InvoiceMaker() {
     if (pendingDataStr) {
       try {
         const data = JSON.parse(pendingDataStr);
-        if (data.brandName) setClientDetails(prev => ({ ...prev, name: data.brandName }));
+        if (data.clientName) setClientDetails(prev => ({ ...prev, name: data.clientName }));
+        else if (data.brandName) setClientDetails(prev => ({ ...prev, name: data.brandName }));
+        if (data.brandName) setClientDetails(prev => ({ ...prev, brandName: data.brandName }));
+        if (data.clientEmail) setClientDetails(prev => ({ ...prev, email: data.clientEmail }));
+        if (data.clientMobile) setClientDetails(prev => ({ ...prev, mobile: data.clientMobile }));
+        if (data.clientAddress) setClientDetails(prev => ({ ...prev, address: data.clientAddress }));
+        if (data.gstNumber) setClientDetails(prev => ({ ...prev, gst: data.gstNumber }));
+        
         if (data.services && data.services.length > 0) {
           setItems(data.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0 })));
         }
@@ -223,7 +230,14 @@ export default function InvoiceMaker() {
       const data = e.detail;
       if (data && data.intent === 'invoice' && data.payload) {
         const payload = data.payload;
-        if (payload.brandName) setClientDetails(prev => ({ ...prev, name: payload.brandName }));
+        if (payload.clientName) setClientDetails(prev => ({ ...prev, name: payload.clientName }));
+        else if (payload.brandName) setClientDetails(prev => ({ ...prev, name: payload.brandName }));
+        if (payload.brandName) setClientDetails(prev => ({ ...prev, brandName: payload.brandName }));
+        if (payload.clientEmail) setClientDetails(prev => ({ ...prev, email: payload.clientEmail }));
+        if (payload.clientMobile) setClientDetails(prev => ({ ...prev, mobile: payload.clientMobile }));
+        if (payload.clientAddress) setClientDetails(prev => ({ ...prev, address: payload.clientAddress }));
+        if (payload.gstNumber) setClientDetails(prev => ({ ...prev, gst: payload.gstNumber }));
+        
         if (payload.services && payload.services.length > 0) {
           setItems(payload.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0 })));
         }
@@ -231,7 +245,12 @@ export default function InvoiceMaker() {
     };
     window.addEventListener('copilot-action', handleCopilotAction);
     return () => window.removeEventListener('copilot-action', handleCopilotAction);
-  }, []);
+  }, [items]); // ensure we capture latest items to append if needed
+
+  useEffect(() => {
+    window._drippFormContext = { clientDetails, services: items, invoiceDetails };
+    return () => { window._drippFormContext = null; };
+  }, [clientDetails, items, invoiceDetails]);
 
 
   // -- HANDLERS --

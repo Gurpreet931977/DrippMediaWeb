@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon } from 'lucide-react';
+import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon, Mic, MicOff } from 'lucide-react';
 import OrloIcon from './OrloIcon';
 import gsap from 'gsap';
 
@@ -109,6 +109,52 @@ export default function OrloChat() {
   const keypressCountRef = useRef(0);
   const keypressTimeoutRef = useRef(null);
   const speechBubbleTimeoutRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        
+        recognitionRef.current.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          setInput(prev => prev ? prev + ' ' + transcript : transcript);
+          setIsListening(false);
+        };
+        
+        recognitionRef.current.onerror = (event) => {
+          console.error('Speech recognition error', event.error);
+          setIsListening(false);
+        };
+        
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+        };
+      }
+    }
+  }, []);
+
+  const toggleListen = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      try {
+        if (recognitionRef.current) {
+          recognitionRef.current.start();
+          setIsListening(true);
+        } else {
+          alert('Voice commands are not supported on this browser.');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
 
   const postsData = [
     { id: 1, likes: '12.4k', comments: 142, caption: 'Deep work mode activated. Building the future of Dripp Media! 💻✨ #AI #Developer', date: '2 DAYS AGO' },
@@ -251,6 +297,7 @@ export default function OrloChat() {
     try {
       const currentContext = window._drippEmailContext || {};
       const systemContext = window._drippSystemContext || {};
+      const formContext = window._drippFormContext || {};
       
       const res = await fetch('/api/admin/copilot', {
         method: 'POST',
@@ -260,6 +307,7 @@ export default function OrloChat() {
           chatHistory: messages,
           context: currentContext, 
           systemContext: systemContext,
+          formContext: formContext,
           currentDate: new Date().toString() 
         })
       });
@@ -743,7 +791,24 @@ export default function OrloChat() {
           </div>
 
           <form className="chat-input-area" onSubmit={handleSubmit}>
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={toggleListen}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: isListening ? '#ef4444' : '#888',
+                  cursor: 'pointer',
+                  padding: '12px 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  transition: 'color 0.3s'
+                }}
+                title="Voice Command"
+              >
+                {isListening ? <Mic size={20} /> : <MicOff size={20} />}
+              </button>
               <input 
                 type="text" 
                 value={input}

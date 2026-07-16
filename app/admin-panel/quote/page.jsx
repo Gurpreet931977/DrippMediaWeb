@@ -563,7 +563,13 @@ export default function QuoteMaker() {
     if (pendingDataStr) {
       try {
         const data = JSON.parse(pendingDataStr);
+        if (data.clientName) setClientDetails(prev => ({ ...prev, name: data.clientName }));
         if (data.brandName) setClientDetails(prev => ({ ...prev, brandName: data.brandName }));
+        if (data.clientEmail) setClientDetails(prev => ({ ...prev, email: data.clientEmail }));
+        if (data.clientMobile) setClientDetails(prev => ({ ...prev, mobile: data.clientMobile }));
+        if (data.clientAddress) setClientDetails(prev => ({ ...prev, address: data.clientAddress }));
+        if (data.gstNumber) setClientDetails(prev => ({ ...prev, gst: data.gstNumber }));
+        
         if (data.packageType) setPackageType(data.packageType.toLowerCase());
         
         // Setup PMP Strategy
@@ -599,11 +605,20 @@ export default function QuoteMaker() {
       const data = e.detail;
       if (data && (data.intent === 'package' || data.intent === 'quote') && data.payload) {
         const payload = data.payload;
+        if (payload.clientName) setClientDetails(prev => ({ ...prev, name: payload.clientName }));
         if (payload.brandName) setClientDetails(prev => ({ ...prev, brandName: payload.brandName }));
+        if (payload.clientEmail) setClientDetails(prev => ({ ...prev, email: payload.clientEmail }));
+        if (payload.clientMobile) setClientDetails(prev => ({ ...prev, mobile: payload.clientMobile }));
+        if (payload.clientAddress) setClientDetails(prev => ({ ...prev, address: payload.clientAddress }));
+        if (payload.gstNumber) setClientDetails(prev => ({ ...prev, gst: payload.gstNumber }));
+        
         if (payload.packageType) setPackageType(payload.packageType.toLowerCase());
         if (payload.pmpStrategy) {
           setIncludePMP(true);
-          setPmpStrategy(payload.pmpStrategy);
+          const strategyString = typeof payload.pmpStrategy === 'object' ? 
+            `Overview:\n${payload.pmpStrategy.overview || ''}\n\nTarget Audience:\n${payload.pmpStrategy.targetAudience || ''}\n\nPhases:\n${(payload.pmpStrategy.phases || []).map(p => `- ${p.title}: ${p.description}`).join('\n')}` : 
+            payload.pmpStrategy;
+          setPmpStrategy(strategyString);
           setPdfPages(prev => {
             if (!prev.find(p => p.type === 'pmp')) {
               const newPages = [...prev];
@@ -621,6 +636,11 @@ export default function QuoteMaker() {
     window.addEventListener('copilot-action', handleCopilotAction);
     return () => window.removeEventListener('copilot-action', handleCopilotAction);
   }, []);
+
+  useEffect(() => {
+    window._drippFormContext = { clientDetails, services: items, quoteDetails, packageType, pmpStrategy };
+    return () => { window._drippFormContext = null; };
+  }, [clientDetails, items, quoteDetails, packageType, pmpStrategy]);
 
   const handleClientChange = (field, value) => setClientDetails(prev => ({ ...prev, [field]: value }));
   const handleQuoteChange = (field, value) => setQuoteDetails(prev => ({ ...prev, [field]: value }));

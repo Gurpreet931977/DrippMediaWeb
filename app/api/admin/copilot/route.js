@@ -22,7 +22,7 @@ export async function POST(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userPrompt, chatHistory, context, systemContext, currentDate } = await request.json();
+    const { userPrompt, chatHistory, context, systemContext, formContext, currentDate } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
@@ -30,11 +30,23 @@ export async function POST(request) {
 
     const supabase = getSupabase();
     let memoryContext = '';
+    let statsContext = '';
+    
     if (supabase) {
       const { data: memories } = await supabase.from('orlo_memory').select('rule_text').order('created_at', { ascending: false }).limit(20);
       if (memories && memories.length > 0) {
         memoryContext = `\nYou have learned the following rules/preferences from the user. You MUST apply these rules when generating content or taking actions:\n` + memories.map(m => `- ${m.rule_text}`).join('\n');
       }
+      
+      // Get dashboard stats
+      const [
+        { count: quotesCount },
+        { count: packagesCount }
+      ] = await Promise.all([
+        supabase.from('quotes').select('*', { count: 'exact', head: true }),
+        supabase.from('quotes').select('*', { count: 'exact', head: true }).eq('type', 'standalone_pmp')
+      ]);
+      statsContext = `\nCurrent Dashboard Stats (If they ask): Total Quotes Generated: ${quotesCount || 0}, Total Standalone Packages: ${packagesCount || 0}.`;
     }
     const historyText = (chatHistory || [])
       .map(msg => `${msg.role === 'ai' ? 'Orlo' : 'User'}: ${msg.text}`)
@@ -43,7 +55,8 @@ export async function POST(request) {
     const systemPrompt = `You are Orlo, the AI Copilot for the Dripp Media Admin Panel.
 Current Date/Time: ${currentDate || new Date().toISOString()}
 Current Email Form State: ${JSON.stringify(context || {}, null, 2)}
-Current System Docs State: ${JSON.stringify(systemContext || {}, null, 2)}${memoryContext}
+Current System Docs State: ${JSON.stringify(systemContext || {}, null, 2)}
+Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${memoryContext}${statsContext}
 
 Your job is to read the user's natural language command, determine what action they want to take, and return JSON to PRE-FILL or EDIT the form.
 
@@ -76,7 +89,7 @@ If the intent is "system_doc":
 Read the Current System Docs State (especially the "content" field). Apply the user's prompt (e.g. "make it more formal", "add a paragraph about IP rights") to rewrite the entire text. Return the new, fully rewritten text in the payload as "rewrittenContent".
 
 If the intent is "package" OR "quote" OR "invoice":
-Extract the "brandName", the overall "totalBudget" (e.g. 30000), "packageType" (e.g. "monthly" or "project"), a list of "services" requested (e.g. "5 Reels", "Social Media Management", "Ads Boosting"), and the overall "pmpStrategy" which should be a beautifully worded paragraph summarizing their strategy/concept needs for their Personal Marketing Plan (e.g., "Storytelling styled UGC content combined with aggressive ads boosting..."). Include these in the payload. If you see a price or the word "quote", default to "quote" intent unless they explicitly said "invoice" or "bill".
+Read the "Current Active Form State" to see what is already there. If the user is asking to add, modify, or apply a discount, you MUST append to or modify the existing "services" or fields rather than starting from scratch. Extract the "clientName" (e.g. Ritvik Kala), "brandName", "clientEmail", "clientMobile", "clientAddress", "gstNumber", the overall "totalBudget" (e.g. 30000), "packageType" (e.g. "monthly" or "project"), a list of "services" requested (e.g. "5 Reels", "Social Media Management", "Ads Boosting", or "Discount of $500"), and the overall "pmpStrategy" which should be a structured object containing an overview, target audience, and phases for their Personal Marketing Plan. Include these in the payload. If you see a price or the word "quote", default to "quote" intent unless they explicitly said "invoice" or "bill".
 
 If the intent is "chat":
 Reply creatively, playfully, or offer a workaround in the Dripp Media style. If they ask about you (Orlo) or your private life, feel free to give them a fun, Dripp-styled backstory or witty response!
@@ -101,10 +114,21 @@ JSON Schema to return:
     "isBroadcast": boolean,
     "isExcluding": boolean,
     "specificEmail": "comma-separated emails or empty string",
+    "clientName": "Extracted client name",
+    "clientEmail": "Extracted client email",
+    "clientMobile": "Extracted client mobile number",
+    "clientAddress": "Extracted billing address",
+    "gstNumber": "Extracted GST number",
     "brandName": "Brand name for the package",
     "totalBudget": "Numeric value or string, e.g., 30000",
     "packageType": "monthly or project",
-    "pmpStrategy": "Beautifully worded string summarizing their strategy/concept needs",
+    "pmpStrategy": {
+      "overview": "Beautifully worded string summarizing their strategy/concept needs",
+      "targetAudience": "Short description of target demographics/audience",
+      "phases": [
+        { "title": "Phase 1: Strategy", "description": "What happens in phase 1" }
+      ]
+    },
     "services": [
       { "name": "Service name", "qty": 1, "rate": 0 }
     ],
