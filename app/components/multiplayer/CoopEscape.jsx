@@ -218,7 +218,7 @@ export default function CoopEscape({ channel, isHost, players, playerName, playe
   }
 
   return (
-    <div style={styles.fullscreen}>
+    <div className="no-global-scale" style={styles.fullscreen}>
        
        {/* HEADER BAR */}
        <div style={styles.header}>
@@ -254,7 +254,7 @@ export default function CoopEscape({ channel, isHost, players, playerName, playe
        </div>
 
        {/* MAIN CONTENT */}
-       <div style={{ display: 'flex', flex: 1, padding: '30px', gap: '30px', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+       <div style={{ display: 'flex', flex: 1, padding: '15px 30px', gap: '30px', maxWidth: '1400px', margin: '0 auto', width: '100%', minHeight: 0 }}>
           
           {/* LEFT: PLAYERS LIST */}
           <div style={{ ...styles.glassPanel, width: '300px', padding: '20px' }}>
@@ -273,7 +273,7 @@ export default function CoopEscape({ channel, isHost, players, playerName, playe
           </div>
 
           {/* RIGHT: PUZZLE AREA */}
-          <div style={{ ...styles.glassPanel, flex: 1, padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ ...styles.glassPanel, flex: 1, padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflowY: 'auto' }}>
              
              {gameState.status === 'gameover' && (
                 <div style={{ textAlign: 'center' }}>
@@ -297,9 +297,9 @@ export default function CoopEscape({ channel, isHost, players, playerName, playe
                 <>
                    {/* DEDICATED HINT BOX */}
                    <div style={{ 
-                      width: '100%', padding: '20px', background: 'rgba(51, 204, 255, 0.1)', 
-                      border: '1px solid rgba(51, 204, 255, 0.3)', borderRadius: '16px', marginBottom: '40px',
-                      display: 'flex', alignItems: 'center', gap: '20px'
+                      width: '100%', padding: '15px', background: 'rgba(51, 204, 255, 0.1)', 
+                      border: '1px solid rgba(51, 204, 255, 0.3)', borderRadius: '16px', marginBottom: '20px',
+                      display: 'flex', alignItems: 'center', gap: '15px'
                    }}>
                       <div style={{ background: 'rgba(51, 204, 255, 0.2)', padding: '15px', borderRadius: '50%' }}>
                          <KeyRound color="#33ccff" size={24} />
@@ -321,7 +321,7 @@ export default function CoopEscape({ channel, isHost, players, playerName, playe
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                          <div style={{ 
                             background: '#0a0a0a', border: '2px solid rgba(255,255,255,0.1)', borderRadius: '16px', 
-                            padding: '20px', width: '300px', marginBottom: '30px', textAlign: 'center',
+                            padding: '15px', width: '300px', marginBottom: '20px', textAlign: 'center',
                             boxShadow: 'inset 0 10px 20px rgba(0,0,0,0.5)'
                          }}>
                             <span style={{ fontSize: '3rem', fontFamily: 'monospace', letterSpacing: '15px', color: '#33ff33' }}>
@@ -329,7 +329,7 @@ export default function CoopEscape({ channel, isHost, players, playerName, playe
                             </span>
                          </div>
 
-                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 'CLR', 0, 'ENT'].map(btn => (
                                <button 
                                   key={btn}
@@ -339,7 +339,7 @@ export default function CoopEscape({ channel, isHost, players, playerName, playe
                                      else handleKeypadPress(btn);
                                   }}
                                   style={{
-                                     padding: '20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                     padding: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
                                      borderRadius: '12px', fontSize: '1.5rem', fontFamily: "'Panchang', sans-serif", color: '#fff',
                                      cursor: 'pointer', transition: 'all 0.2s',
                                      ...(btn === 'ENT' ? { background: '#33ccff', color: '#000' } : {}),

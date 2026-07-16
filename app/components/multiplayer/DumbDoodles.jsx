@@ -581,8 +581,10 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     if (!isMyTurn || gameState.status !== 'playing') return;
     isDrawingRef.current = true;
     lastPosRef.current = getMousePos(e);
+    lastPosRef.current.x -= 0.1; // Offset slightly so a dot is drawn even on tap
     currentStrokeRef.current = [];
     redoStackRef.current = [];
+    draw(e);
   };
 
   const draw = (e) => {
@@ -931,8 +933,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   // -------------------------
   if (gameState.status === 'lobby') {
     return (
-      <div className="no-global-scale" style={{...styles.background, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-        <div style={{...styles.glassPanel, maxWidth: isMobile ? '100vw' : '900px', width: '100%', maxHeight: '100vh', display: 'flex', flexDirection: 'column', padding: isMobile ? '35px 15px 20px' : '50px 40px 40px', boxSizing: 'border-box', boxShadow: '0 0 50px rgba(255,51,255,0.1), inset 0 0 20px rgba(255,255,255,0.05)', margin: 0, borderRadius: isMobile ? 0 : '24px' }}>
+      <div className="no-global-scale" style={{...styles.background, display: 'flex', justifyContent: 'center', alignItems: isMobile ? 'flex-start' : 'center', overflow: 'hidden' }}>
+        <div style={{...styles.glassPanel, maxWidth: isMobile ? '100vw' : '900px', width: '100%', height: isMobile ? '100dvh' : 'auto', maxHeight: isMobile ? 'none' : '100vh', display: 'flex', flexDirection: 'column', padding: isMobile ? '35px 15px 20px' : '50px 40px 40px', boxSizing: 'border-box', boxShadow: '0 0 50px rgba(255,51,255,0.1), inset 0 0 20px rgba(255,255,255,0.05)', margin: 0, borderRadius: isMobile ? 0 : '24px' }}>
           <h1 style={{ marginTop: '10px', fontFamily: "'Panchang', sans-serif", color: '#ff33ff', textAlign: 'center', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', textShadow: '0 0 20px rgba(255,51,255,0.5)', marginBottom: isMobile ? '15px' : '25px', wordBreak: 'break-word', overflowWrap: 'break-word', flexShrink: 0 }}>
             DUMB DOODLES
           </h1>
@@ -1559,7 +1561,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               <Trophy size={20} />
             </button>
 
-            <div style={{ position: 'fixed', bottom: '15px', right: '15px', zIndex: 90, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+            <div style={{ position: 'fixed', bottom: (isMyTurn && gameState.status === 'playing') ? '140px' : '15px', right: '15px', zIndex: 90, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px', transition: 'bottom 0.3s' }}>
               {latestMobileMessage && !isMobileChatOpen && (
                 <div style={{ background: 'rgba(255,51,255,0.9)', color: '#000', padding: '10px 15px', borderRadius: '15px 15px 0 15px', maxWidth: '200px', fontSize: '0.85rem', fontWeight: 'bold', boxShadow: '0 5px 15px rgba(255,51,255,0.4)', animation: 'fadeInUp 0.3s ease-out', wordBreak: 'break-word' }}>
                   <span style={{opacity: 0.6, fontSize: '0.6rem', display: 'block'}}>{latestMobileMessage.sender}</span>

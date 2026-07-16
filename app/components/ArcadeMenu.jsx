@@ -800,24 +800,29 @@ export default function ArcadeMenu({ onStartGame }) {
       </div>
       
       {/* Footer / Instructions */}
-      <div style={{
-        position: 'absolute',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 20,
-        pointerEvents: 'none'
-      }}>
-         <p style={{ 
-          color: "rgba(255,255,255,0.2)", 
-          fontFamily: "'Clash Display', sans-serif", 
-          letterSpacing: "4px",
-          fontSize: '0.75rem',
-          textTransform: 'uppercase'
+      {!isMobile && (
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 20,
+          pointerEvents: 'none',
+          width: '100%',
+          textAlign: 'center'
         }}>
-          Use arrows or drag to navigate • Select to initialize
-        </p>
-      </div>
+           <p style={{ 
+            color: "rgba(255,255,255,0.2)", 
+            fontFamily: "'Clash Display', sans-serif", 
+            letterSpacing: "4px",
+            fontSize: '0.75rem',
+            textTransform: 'uppercase',
+            margin: 0
+          }}>
+            Use arrows or drag to navigate • Select to initialize
+          </p>
+        </div>
+      )}
       {/* Password Modal */}
       {showPasswordModal && (
         <div style={{
