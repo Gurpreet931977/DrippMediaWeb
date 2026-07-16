@@ -84,6 +84,10 @@ export default function NeonBusiness({ roomCode, playerName, players, isHost, ch
 
   const startGame = () => {
     if (!isHost) return;
+    if (players.length < 2) {
+      alert("At least 2 players are required to play this game!");
+      return;
+    }
     const newState = {
       ...gameState,
       status: 'playing',
@@ -308,7 +312,7 @@ export default function NeonBusiness({ roomCode, playerName, players, isHost, ch
             NEON BUSINESS
           </h1>
           {isHost ? (
-            <button onClick={startGame} style={styles.startBtn} disabled={players.length < 2}>
+            <button onClick={startGame} style={styles.startBtn}>
               <Play size={20} /> START GAME
             </button>
           ) : (
