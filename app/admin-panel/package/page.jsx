@@ -398,6 +398,10 @@ export default function PackageMaker() {
 
             <div style={{ marginBottom: '20px' }}>
               <p style={{ color: '#888', fontSize: '0.9rem', marginBottom: '16px' }}>Included Services</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.95rem', color: '#ebd73f', fontWeight: '500' }}>
+                <span>✓ Personal Marketing Plan</span>
+                <span style={{ color: '#888', fontWeight: 'normal', fontSize: '0.85rem' }}>INCLUDED</span>
+              </div>
               {services.map((s, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.95rem' }}>
                   <span style={{ color: '#ddd' }}>{s.qty}x {s.name || 'Unnamed Service'}</span>

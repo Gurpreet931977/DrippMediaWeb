@@ -17,13 +17,6 @@ const SERVICE_TYPES = [
 export default function SystemPage() {
   const [activeTab, setActiveTab] = useState('onboarding');
 
-  const tabs = [
-    { id: 'onboarding', label: 'Onboarding Doc Maker', icon: FileText },
-    { id: 'feedback', label: 'Feedback Form Maker', icon: MessageSquare },
-    { id: 'delivery', label: 'Delivery Doc Maker', icon: Send },
-    { id: 'agreement', label: 'Agreement Maker', icon: FileSignature },
-  ];
-
   return (
     <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '1200px', margin: '0 auto' }}>
       <div className={styles.header}>
@@ -32,7 +25,12 @@ export default function SystemPage() {
       </div>
 
       <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px', overflowX: 'auto' }}>
-        {tabs.map(tab => {
+        {[
+          { id: 'onboarding', label: 'Onboarding Doc Maker', icon: FileText },
+          { id: 'feedback', label: 'Feedback Form Maker', icon: MessageSquare },
+          { id: 'delivery', label: 'Delivery Doc Maker', icon: Send },
+          { id: 'agreement', label: 'Agreement Maker', icon: FileSignature },
+        ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
@@ -66,6 +64,27 @@ export default function SystemPage() {
   );
 }
 
+// --- HOOK FOR ORLO SYNC ---
+function useOrloCopilot(tabName, content, setContent) {
+  useEffect(() => {
+    window._drippSystemContext = {
+      systemTab: tabName,
+      documentContent: content
+    };
+  }, [tabName, content]);
+
+  useEffect(() => {
+    const handleCopilot = (e) => {
+      const data = e.detail;
+      if (data && data.intent === 'system_doc' && data.payload?.rewrittenContent) {
+        setContent(data.payload.rewrittenContent);
+      }
+    };
+    window.addEventListener('copilot-action', handleCopilot);
+    return () => window.removeEventListener('copilot-action', handleCopilot);
+  }, [setContent]);
+}
+
 // --- SUB-COMPONENTS ---
 
 function OnboardingDocMaker() {
@@ -76,6 +95,8 @@ function OnboardingDocMaker() {
   const [timeline, setTimeline] = useState('Kickoff: Today\nFirst Draft: 7 Days');
   const [generatedMsg, setGeneratedMsg] = useState('');
   const [copied, setCopied] = useState(false);
+
+  useOrloCopilot('Onboarding Doc Maker', generatedMsg, setGeneratedMsg);
 
   useEffect(() => {
     handleServiceChange(serviceType);
@@ -138,25 +159,27 @@ function OnboardingDocMaker() {
         </div>
 
         <button onClick={handleGenerate} className={styles.btnPrimary} style={{ width: '100%', justifyContent: 'center' }}>
-          Generate Onboarding Message
+          Generate Draft
         </button>
       </div>
 
       <div className={styles.card} style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.05) 0%, rgba(20, 20, 20, 0.8) 100%)' }}>
-         <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: '#ebd73f' }}>Generated Output</h3>
+         <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: '#ebd73f' }}>Document Editor</h3>
          {generatedMsg ? (
            <>
-             <div style={{ background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '12px', whiteSpace: 'pre-wrap', color: '#ddd', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-               {generatedMsg}
-             </div>
+             <textarea 
+               value={generatedMsg} 
+               onChange={e => setGeneratedMsg(e.target.value)}
+               style={{ width: '100%', minHeight: '350px', background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '12px', color: '#ddd', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)', resize: 'vertical', fontFamily: 'inherit' }} 
+             />
              <button onClick={copyToClipboard} className={styles.btn} style={{ width: '100%', justifyContent: 'center' }}>
                 {copied ? <CheckCircle2 size={18} color="#ebd73f" /> : <Copy size={18} />}
-                {copied ? 'Copied to Clipboard' : 'Copy Message'}
+                {copied ? 'Copied to Clipboard' : 'Copy Final Content'}
              </button>
            </>
          ) : (
            <div style={{ textAlign: 'center', color: '#666', padding: '40px 0' }}>
-             Fill out the details on the left to generate the client message.
+             Fill out the details on the left to generate the initial draft, then you can edit it here or ask Orlo to rewrite it!
            </div>
          )}
       </div>
@@ -172,6 +195,8 @@ function FeedbackFormMaker() {
   const [link, setLink] = useState('');
   const [generatedMsg, setGeneratedMsg] = useState('');
   const [copied, setCopied] = useState(false);
+
+  useOrloCopilot('Feedback Form Maker', generatedMsg, setGeneratedMsg);
 
   const handleGenerate = () => {
     let focusArea = "overall direction and layout";
@@ -229,25 +254,27 @@ function FeedbackFormMaker() {
         </div>
 
         <button onClick={handleGenerate} className={styles.btnPrimary} style={{ width: '100%', justifyContent: 'center' }}>
-          Generate Feedback Request
+          Generate Draft
         </button>
       </div>
 
       <div className={styles.card} style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.05) 0%, rgba(20, 20, 20, 0.8) 100%)' }}>
-         <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: '#ebd73f' }}>Generated Output</h3>
+         <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: '#ebd73f' }}>Document Editor</h3>
          {generatedMsg ? (
            <>
-             <div style={{ background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '12px', whiteSpace: 'pre-wrap', color: '#ddd', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-               {generatedMsg}
-             </div>
+             <textarea 
+               value={generatedMsg} 
+               onChange={e => setGeneratedMsg(e.target.value)}
+               style={{ width: '100%', minHeight: '350px', background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '12px', color: '#ddd', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)', resize: 'vertical', fontFamily: 'inherit' }} 
+             />
              <button onClick={copyToClipboard} className={styles.btn} style={{ width: '100%', justifyContent: 'center' }}>
                 {copied ? <CheckCircle2 size={18} color="#ebd73f" /> : <Copy size={18} />}
-                {copied ? 'Copied to Clipboard' : 'Copy Message'}
+                {copied ? 'Copied to Clipboard' : 'Copy Final Content'}
              </button>
            </>
          ) : (
            <div style={{ textAlign: 'center', color: '#666', padding: '40px 0' }}>
-             Fill out the details on the left to generate the client message.
+             Fill out the details on the left to generate the initial draft, then you can edit it here or ask Orlo to rewrite it!
            </div>
          )}
       </div>
@@ -264,6 +291,8 @@ function DeliveryDocMaker() {
   const [nextSteps, setNextSteps] = useState('');
   const [generatedMsg, setGeneratedMsg] = useState('');
   const [copied, setCopied] = useState(false);
+
+  useOrloCopilot('Delivery Doc Maker', generatedMsg, setGeneratedMsg);
 
   useEffect(() => {
     handleServiceChange(serviceType);
@@ -330,25 +359,27 @@ function DeliveryDocMaker() {
         </div>
 
         <button onClick={handleGenerate} className={styles.btnPrimary} style={{ width: '100%', justifyContent: 'center' }}>
-          Generate Delivery Message
+          Generate Draft
         </button>
       </div>
 
       <div className={styles.card} style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.05) 0%, rgba(20, 20, 20, 0.8) 100%)' }}>
-         <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: '#ebd73f' }}>Generated Output</h3>
+         <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: '#ebd73f' }}>Document Editor</h3>
          {generatedMsg ? (
            <>
-             <div style={{ background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '12px', whiteSpace: 'pre-wrap', color: '#ddd', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-               {generatedMsg}
-             </div>
+             <textarea 
+               value={generatedMsg} 
+               onChange={e => setGeneratedMsg(e.target.value)}
+               style={{ width: '100%', minHeight: '350px', background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '12px', color: '#ddd', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)', resize: 'vertical', fontFamily: 'inherit' }} 
+             />
              <button onClick={copyToClipboard} className={styles.btn} style={{ width: '100%', justifyContent: 'center' }}>
                 {copied ? <CheckCircle2 size={18} color="#ebd73f" /> : <Copy size={18} />}
-                {copied ? 'Copied to Clipboard' : 'Copy Message'}
+                {copied ? 'Copied to Clipboard' : 'Copy Final Content'}
              </button>
            </>
          ) : (
            <div style={{ textAlign: 'center', color: '#666', padding: '40px 0' }}>
-             Fill out the details on the left to generate the client message.
+             Fill out the details on the left to generate the initial draft, then you can edit it here or ask Orlo to rewrite it!
            </div>
          )}
       </div>
@@ -364,6 +395,8 @@ function AgreementMaker() {
   const [contractLink, setContractLink] = useState('');
   const [generatedMsg, setGeneratedMsg] = useState('');
   const [copied, setCopied] = useState(false);
+
+  useOrloCopilot('Agreement Maker', generatedMsg, setGeneratedMsg);
 
   const handleGenerate = () => {
     let serviceSpecificTerms = "As discussed, standard payment and intellectual property terms apply.";
@@ -417,25 +450,27 @@ function AgreementMaker() {
         </div>
 
         <button onClick={handleGenerate} className={styles.btnPrimary} style={{ width: '100%', justifyContent: 'center' }}>
-          Generate Agreement Message
+          Generate Draft
         </button>
       </div>
 
       <div className={styles.card} style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.05) 0%, rgba(20, 20, 20, 0.8) 100%)' }}>
-         <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: '#ebd73f' }}>Generated Output</h3>
+         <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: '#ebd73f' }}>Document Editor</h3>
          {generatedMsg ? (
            <>
-             <div style={{ background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '12px', whiteSpace: 'pre-wrap', color: '#ddd', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-               {generatedMsg}
-             </div>
+             <textarea 
+               value={generatedMsg} 
+               onChange={e => setGeneratedMsg(e.target.value)}
+               style={{ width: '100%', minHeight: '350px', background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '12px', color: '#ddd', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)', resize: 'vertical', fontFamily: 'inherit' }} 
+             />
              <button onClick={copyToClipboard} className={styles.btn} style={{ width: '100%', justifyContent: 'center' }}>
                 {copied ? <CheckCircle2 size={18} color="#ebd73f" /> : <Copy size={18} />}
-                {copied ? 'Copied to Clipboard' : 'Copy Message'}
+                {copied ? 'Copied to Clipboard' : 'Copy Final Content'}
              </button>
            </>
          ) : (
            <div style={{ textAlign: 'center', color: '#666', padding: '40px 0' }}>
-             Fill out the details on the left to generate the client message.
+             Fill out the details on the left to generate the initial draft, then you can edit it here or ask Orlo to rewrite it!
            </div>
          )}
       </div>
