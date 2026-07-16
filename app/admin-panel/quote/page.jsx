@@ -1121,6 +1121,42 @@ export default function QuoteMaker() {
         {/* RIGHT COLUMN: TEMPLATES & ACTIONS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
            
+          {/* PACKAGE SUMMARY */}
+          <div className={styles.card} style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.05) 0%, rgba(20, 20, 20, 0.8) 100%)', borderColor: 'rgba(235, 215, 63, 0.2)' }}>
+            <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: '#ebd73f' }}>Package Summary</h3>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <p className={styles.label} style={{ marginBottom: '8px' }}>Target Client</p>
+              <div style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{quoteDetails.client || 'Unnamed Client'}</div>
+            </div>
+
+            <div style={{ marginBottom: '24px', padding: '20px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <p className={styles.label} style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileText size={16} /> Total Budget Quoted
+              </p>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ebd73f' }}>
+                {quoteDetails.currency}{total.toLocaleString()}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <p className={styles.label} style={{ marginBottom: '16px' }}>Included Services</p>
+              {items.length === 0 && <span style={{ color: '#666', fontSize: '0.9rem' }}>No services added yet.</span>}
+              {items.map((s, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.95rem' }}>
+                  <span style={{ color: '#ddd' }}>{s.qty}x {s.desc || 'Unnamed Service'}</span>
+                  <span style={{ color: '#888' }}>{s.rate > 0 ? `${quoteDetails.currency}${s.rate}` : ''}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              <p style={{ fontSize: '0.85rem', color: '#888', textAlign: 'center', margin: 0 }}>
+                This is a {packageType === 'monthly' ? 'recurring monthly' : 'project / one-time'} package.
+              </p>
+            </div>
+          </div>
+
            <CurrencyConverter />
 
            {/* Actions */}

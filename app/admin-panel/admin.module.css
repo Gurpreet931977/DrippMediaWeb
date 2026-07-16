@@ -128,10 +128,14 @@
 }
 
 .title {
+  font-family: 'Panchang', sans-serif;
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
   letter-spacing: -1px;
+  background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
@@ -141,19 +145,20 @@
 
 /* Glassmorphic Cards */
 .card {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
-  padding: 2rem;
-  margin-bottom: 2rem;
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  margin-bottom: 24px;
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  box-shadow: 0 40px 70px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border-color: rgba(235, 215, 63, 0.2);
 }
 
@@ -212,20 +217,21 @@
 .input, .inputField {
   width: 100%;
   background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: #fff;
-  padding: 1rem 1.25rem;
-  border-radius: 0.75rem;
+  padding: 14px 16px;
+  border-radius: 12px;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 0.95rem;
   outline: none;
+  box-sizing: border-box;
   transition: all 0.3s ease;
 }
 
 .input:focus, .inputField:focus {
-  border-color: #ebd73f;
-  background: rgba(0, 0, 0, 0.6);
-  box-shadow: 0 0 0 3px rgba(235, 215, 63, 0.15);
+  border-color: rgba(235, 215, 63, 0.5);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 4px rgba(235, 215, 63, 0.1);
 }
 
 .input::placeholder, .inputField::placeholder {
@@ -272,44 +278,45 @@
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.875rem 1.5rem;
-  border-radius: 0.75rem;
+  padding: 14px 24px;
+  border-radius: 12px;
   cursor: pointer !important;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Clash Display', sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .btn:hover {
   background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .btnPrimary {
-  background: linear-gradient(135deg, #ebd73f, #c7b320);
+  background: linear-gradient(135deg, #ebd73f 0%, #d4bc1c 100%);
   color: #000;
   border: none;
-  font-weight: 700;
-  box-shadow: 0 4px 15px rgba(235, 215, 63, 0.2);
-  padding: 0.875rem 1.5rem;
-  border-radius: 0.75rem;
+  font-family: 'Clash Display', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  padding: 14px 24px;
+  border-radius: 12px;
   cursor: pointer !important;
-  font-size: 0.95rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .btnPrimary:hover {
-  background: linear-gradient(135deg, #fceb5a, #d4c235);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(235, 215, 63, 0.4);
+  box-shadow: 0 8px 25px rgba(235, 215, 63, 0.3);
 }
 
 .btnDanger {
