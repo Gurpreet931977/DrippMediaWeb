@@ -250,6 +250,8 @@ export default function OrloChat() {
 
     try {
       const currentContext = window._drippEmailContext || {};
+      const systemContext = window._drippSystemContext || {};
+      
       const res = await fetch('/api/admin/copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -257,6 +259,7 @@ export default function OrloChat() {
           userPrompt: userText,
           chatHistory: messages,
           context: currentContext, 
+          systemContext: systemContext,
           currentDate: new Date().toString() 
         })
       });

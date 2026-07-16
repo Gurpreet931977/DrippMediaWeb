@@ -22,7 +22,7 @@ export async function POST(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userPrompt, chatHistory, context, currentDate } = await request.json();
+    const { userPrompt, chatHistory, context, systemContext, currentDate } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
@@ -42,7 +42,8 @@ export async function POST(request) {
 
     const systemPrompt = `You are Orlo, the AI Copilot for the Dripp Media Admin Panel.
 Current Date/Time: ${currentDate || new Date().toISOString()}
-Current Email Form State: ${JSON.stringify(context || {}, null, 2)}${memoryContext}
+Current Email Form State: ${JSON.stringify(context || {}, null, 2)}
+Current System Docs State: ${JSON.stringify(systemContext || {}, null, 2)}${memoryContext}
 
 Your job is to read the user's natural language command, determine what action they want to take, and return JSON to PRE-FILL or EDIT the form.
 
@@ -68,6 +69,10 @@ Valid Intents:
 3. "learn" - The user tells you a rule, preference, or feature to remember for the future (e.g. "Always sign off as The Dripp Team", "If I say 'urgent', make it a broadcast").
 4. "quote" - The user wants to create a formal quote, invoice, or quote with a PMP (Personal Marketing Plan) (e.g., "quote them 30k", "make a quote for...").
 5. "package" - The user wants to create a standalone package or PMP (Personal Marketing Plan) without a quote (e.g., "make a standalone package", "just make a PMP").
+6. "system_doc" - The user wants to rewrite, modify, or draft an operational document (e.g. Agreement, Onboarding, Delivery, Feedback forms) currently open in the System Workspace.
+
+If the intent is "system_doc":
+Read the Current System Docs State (especially the "content" field). Apply the user's prompt (e.g. "make it more formal", "add a paragraph about IP rights") to rewrite the entire text. Return the new, fully rewritten text in the payload as "rewrittenContent".
 
 If the intent is "package" OR "quote":
 Extract the "brandName", the overall "totalBudget" (e.g. 30000), "packageType" (e.g. "monthly" or "project"), a list of "services" requested (e.g. "5 Reels", "Social Media Management", "Ads Boosting"), and the overall "pmpStrategy" which should be a beautifully worded paragraph summarizing their strategy/concept needs for their Personal Marketing Plan (e.g., "Storytelling styled UGC content combined with aggressive ads boosting..."). Include these in the payload. If you see a price or the word "quote", default to "quote" intent.
@@ -80,7 +85,7 @@ NEVER use em-dashes ("—") anywhere in your output. Use standard punctuation li
 
 JSON Schema to return:
 {
-  "intent": "email" | "chat" | "learn" | "quote" | "package",
+  "intent": "email" | "chat" | "learn" | "quote" | "package" | "system_doc",
   "replyMessage": "A short, cool, Dripp-styled response acknowledging what you did (e.g., 'I\\'ve drafted that announcement for you. Review it and hit send.') or answering their question.",
   "learnedRule": "If the intent is 'learn', provide the extracted concise rule to save to memory here. Otherwise, omit.",
   "payload": {
@@ -101,7 +106,8 @@ JSON Schema to return:
     "pmpStrategy": "Beautifully worded string summarizing their strategy/concept needs",
     "services": [
       { "name": "Service name", "qty": 1, "rate": 0 }
-    ]
+    ],
+    "rewrittenContent": "Full rewritten text if intent is system_doc"
   }
 }
 

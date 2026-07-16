@@ -1141,7 +1141,13 @@ export default function QuoteMaker() {
 
             <div style={{ marginBottom: '20px' }}>
               <p className={styles.label} style={{ marginBottom: '16px' }}>Included Services</p>
-              {items.length === 0 && <span style={{ color: '#666', fontSize: '0.9rem' }}>No services added yet.</span>}
+              {items.length === 0 && !includePMP && <span style={{ color: '#666', fontSize: '0.9rem' }}>No services added yet.</span>}
+              {includePMP && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.95rem', color: '#ebd73f', fontWeight: '500' }}>
+                  <span>✓ Personal Marketing Plan</span>
+                  <span style={{ color: '#888', fontWeight: 'normal', fontSize: '0.85rem' }}>INCLUDED</span>
+                </div>
+              )}
               {items.map((s, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.95rem' }}>
                   <span style={{ color: '#ddd' }}>{s.qty}x {s.desc || 'Unnamed Service'}</span>
