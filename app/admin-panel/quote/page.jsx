@@ -629,7 +629,7 @@ export default function QuoteMaker() {
           });
         }
         if (payload.services && payload.services.length > 0) {
-          setItems(payload.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0 })));
+          setItems(payload.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0, details: s.details || '' })));
         }
       }
     };

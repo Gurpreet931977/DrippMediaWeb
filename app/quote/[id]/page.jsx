@@ -229,7 +229,7 @@ export default function SharedQuote() {
         }
       `}</style>
 
-      <div className="quote-grid">
+      <div className="quote-grid" id="quote-document">
         
         {/* Cover Header Section */}
         <div className="quote-header">
@@ -477,15 +477,18 @@ function SignatureBlock({ quoteId, quoteData, setQuoteData }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
     if (e.touches && e.touches.length > 0) {
       return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY
       };
     }
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
     };
   };
 
@@ -557,12 +560,59 @@ function SignatureBlock({ quoteId, quoteData, setQuoteData }) {
       if (res.ok) {
         const data = await res.json();
         setQuoteData(data.quote);
+
+        // Wait for the UI to render the 'Proposal Accepted' state before capturing PDF
+        setTimeout(() => {
+           generateAndSendPDF(data.quote);
+        }, 1500);
       } else {
         const err = await res.json();
         setError(err.error || 'Failed to save signature.');
+        setSaving(false);
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
+      setSaving(false);
+    }
+  };
+
+  const generateAndSendPDF = async (updatedQuote) => {
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+
+      const element = document.getElementById('quote-document');
+      if (!element) return;
+
+      const canvas = await html2canvas(element, { 
+          scale: 1.5, 
+          backgroundColor: '#050505',
+          useCORS: true
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.8);
+      
+      const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'px',
+          format: [canvas.width / 1.5, canvas.height / 1.5]
+      });
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width / 1.5, canvas.height / 1.5);
+      const pdfBase64 = pdf.output('datauristring').split(',')[1];
+
+      await fetch(`/api/quote/send-pdf`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              quoteId,
+              pdfBase64,
+              clientName: updatedQuote.clientDetails?.name || updatedQuote.clientDetails?.brandName || 'Client',
+              clientEmail: updatedQuote.clientDetails?.email,
+              type: updatedQuote.type === 'invoice' ? 'Invoice' : 'Proposal'
+          })
+      });
+    } catch (err) {
+      console.error("Error generating/sending PDF:", err);
     } finally {
       setSaving(false);
     }
@@ -573,56 +623,66 @@ function SignatureBlock({ quoteId, quoteData, setQuoteData }) {
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext('2d');
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#0a0a0a';
+      ctx.lineWidth = 6;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      // Fill with white background initially
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Leaving it transparent so CSS grid background is visible
     }
   }, []);
 
   return (
-    <div style={{ marginTop: '40px', gridColumn: '1 / -1', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: 'clamp(20px, 4vw, 40px)', width: '100%', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-        <PenTool size={24} color="#ebd73f" />
-        <h3 style={{ fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', color: '#ebd73f', margin: 0, fontFamily: "'Panchang', sans-serif" }}>Sign & Accept Proposal</h3>
+    <div style={{ marginTop: '40px', gridColumn: '1 / -1', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: 'clamp(30px, 5vw, 50px)', width: '100%', boxSizing: 'border-box', backdropFilter: 'blur(10px)', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}>
+        <div style={{ background: 'rgba(235, 215, 63, 0.1)', padding: '12px', borderRadius: '12px', boxShadow: '0 0 20px rgba(235, 215, 63, 0.15)' }}>
+          <PenTool size={28} color="#ebd73f" />
+        </div>
+        <div>
+          <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 5px 0', fontFamily: "'Panchang', sans-serif" }}>Sign & Accept</h3>
+          <p style={{ color: '#aaa', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)', margin: 0 }}>Review the terms and provide your signature below to proceed.</p>
+        </div>
       </div>
-      
-      <p style={{ color: '#aaa', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)', marginBottom: '20px', lineHeight: '1.6' }}>
-        By signing below, you agree to the terms and services outlined in this proposal.
-      </p>
 
       {error && (
-        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '10px 15px', borderRadius: '8px', marginBottom: '20px', fontSize: '0.9rem' }}>
-          {error}
+        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ff6b6b', padding: '12px 15px', borderRadius: '12px', marginBottom: '25px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span>⚠️</span> {error}
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '500px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', maxWidth: '600px' }}>
         <div>
-          <label style={{ display: 'block', color: '#888', marginBottom: '8px', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Print Name</label>
+          <label style={{ display: 'block', color: '#ebd73f', marginBottom: '10px', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Full Name</label>
           <input 
             type="text" 
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="John Doe"
-            style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 15px', borderRadius: '8px', color: '#fff', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
+            placeholder="e.g. John Doe"
+            style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '15px 20px', borderRadius: '12px', color: '#fff', fontSize: '1.05rem', outline: 'none', boxSizing: 'border-box', transition: 'all 0.3s ease', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}
+            onFocus={(e) => { e.target.style.border = '1px solid #ebd73f'; e.target.style.boxShadow = 'inset 0 2px 10px rgba(0,0,0,0.2), 0 0 15px rgba(235,215,63,0.1)'; }}
+            onBlur={(e) => { e.target.style.border = '1px solid rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'inset 0 2px 10px rgba(0,0,0,0.2)'; }}
           />
         </div>
 
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <label style={{ color: '#888', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Signature</label>
-            <button onClick={clearCanvas} style={{ background: 'transparent', border: 'none', color: '#ebd73f', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}>Clear</button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <label style={{ color: '#ebd73f', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Your Signature</label>
+            <button onClick={clearCanvas} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#ccc', fontSize: '0.8rem', cursor: 'pointer', padding: '6px 12px', borderRadius: '6px', transition: 'all 0.2s', textTransform: 'uppercase', letterSpacing: '1px' }} onMouseEnter={e => { e.target.style.background = 'rgba(255,255,255,0.1)'; e.target.style.color = '#fff'; }} onMouseLeave={e => { e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.color = '#ccc'; }}>Clear Pad</button>
           </div>
-          <div style={{ border: '2px dashed rgba(255,255,255,0.2)', borderRadius: '12px', overflow: 'hidden', background: '#fff', touchAction: 'none' }}>
+          <div style={{ 
+            border: '1px solid rgba(255,255,255,0.15)', 
+            borderRadius: '16px', 
+            overflow: 'hidden', 
+            background: '#ffffff',
+            backgroundImage: 'radial-gradient(#e0e0e0 2px, transparent 2px)',
+            backgroundSize: '20px 20px',
+            touchAction: 'none',
+            boxShadow: 'inset 0 4px 15px rgba(0,0,0,0.05)'
+          }}>
             <canvas
               ref={canvasRef}
-              width={500}
-              height={200}
-              style={{ width: '100%', height: '200px', display: 'block', touchAction: 'none' }}
+              width={1000}
+              height={400}
+              style={{ width: '100%', height: '200px', display: 'block', touchAction: 'none', cursor: 'crosshair' }}
               onMouseDown={startDrawing}
               onMouseMove={draw}
               onMouseUp={stopDrawing}
@@ -637,9 +697,11 @@ function SignatureBlock({ quoteId, quoteData, setQuoteData }) {
         <button 
           onClick={handleSign}
           disabled={saving}
-          style={{ width: '100%', background: '#ebd73f', color: '#000', border: 'none', padding: '15px', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, transition: 'all 0.3s ease', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}
+          style={{ width: '100%', background: saving ? '#c0b030' : '#ebd73f', color: '#000', border: 'none', padding: '18px', borderRadius: '12px', fontSize: '1.15rem', fontWeight: '800', cursor: saving ? 'not-allowed' : 'pointer', transition: 'all 0.3s ease', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', textTransform: 'uppercase', letterSpacing: '1px', boxShadow: saving ? 'none' : '0 10px 30px rgba(235, 215, 63, 0.3)', transform: saving ? 'scale(0.98)' : 'scale(1)' }}
+          onMouseEnter={e => { if(!saving) { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 15px 35px rgba(235, 215, 63, 0.4)'; } }}
+          onMouseLeave={e => { if(!saving) { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 10px 30px rgba(235, 215, 63, 0.3)'; } }}
         >
-          {saving ? 'Saving...' : 'Sign & Accept'}
+          {saving ? 'Processing & Securing...' : 'Submit Signature'}
         </button>
       </div>
     </div>

@@ -130,7 +130,7 @@ JSON Schema to return:
       ]
     },
     "services": [
-      { "name": "Service name", "qty": 1, "rate": 0 }
+      { "name": "Service name", "qty": 1, "rate": 0, "details": "Optional detailed description of what this service includes" }
     ],
     "rewrittenContent": "Full rewritten text if intent is system_doc"
   }

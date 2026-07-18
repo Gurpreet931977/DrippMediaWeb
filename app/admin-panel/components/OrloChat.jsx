@@ -109,8 +109,40 @@ export default function OrloChat() {
   const keypressCountRef = useRef(0);
   const keypressTimeoutRef = useRef(null);
   const speechBubbleTimeoutRef = useRef(null);
+
+  // Load chat history from local storage
+  useEffect(() => {
+    const savedChat = localStorage.getItem('orlo_chat_history');
+    if (savedChat) {
+      try {
+        const { messages: savedMessages, timestamp } = JSON.parse(savedChat);
+        const now = new Date().getTime();
+        const fifteenDays = 15 * 24 * 60 * 60 * 1000;
+        
+        if (now - timestamp < fifteenDays) {
+          setMessages(savedMessages);
+        } else {
+          localStorage.removeItem('orlo_chat_history');
+        }
+      } catch (e) {
+        console.error('Failed to load Orlo chat history', e);
+      }
+    }
+  }, []);
+
+  // Save chat history to local storage whenever it changes
+  useEffect(() => {
+    if (messages.length > 1) {
+      localStorage.setItem('orlo_chat_history', JSON.stringify({
+        messages,
+        timestamp: new Date().getTime()
+      }));
+    }
+  }, [messages]);
   const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
+
+  const originalInputRef = useRef('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -118,12 +150,16 @@ export default function OrloChat() {
       if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition();
         recognitionRef.current.continuous = false;
-        recognitionRef.current.interimResults = false;
+        recognitionRef.current.interimResults = true;
         
         recognitionRef.current.onresult = (event) => {
-          const transcript = event.results[0][0].transcript;
-          setInput(prev => prev ? prev + ' ' + transcript : transcript);
-          setIsListening(false);
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+             transcript += event.results[i][0].transcript;
+          }
+          
+          const prefix = originalInputRef.current ? originalInputRef.current + ' ' : '';
+          setInput(prefix + transcript);
         };
         
         recognitionRef.current.onerror = (event) => {
@@ -145,13 +181,15 @@ export default function OrloChat() {
     } else {
       try {
         if (recognitionRef.current) {
+          originalInputRef.current = input; // store what we had
           recognitionRef.current.start();
           setIsListening(true);
         } else {
           alert('Voice commands are not supported on this browser.');
         }
       } catch (e) {
-        console.error(e);
+        console.error('Error starting speech recognition:', e);
+        setIsListening(true);
       }
     }
   };
