@@ -823,9 +823,17 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   // Chat Handlers
   const handleGuess = (e) => {
     e.preventDefault();
-    if (!guess.trim() || gameState.status !== 'playing') return;
+    if (!guess.trim()) return;
     const msg = guess.toUpperCase().trim();
     
+    if (gameState.status !== 'playing') {
+      const chatMsg = { sender: playerName, text: guess, type: 'normal' };
+      channel.send({ type: 'broadcast', event: 'chat_msg', payload: chatMsg });
+      setChat(prev => [...prev, chatMsg].slice(-30));
+      setGuess('');
+      return;
+    }
+
     const hasGuessed = gameState.guessedPlayers.includes(playerName);
 
     if (hasGuessed && msg === gameState.currentWord) {
@@ -1606,8 +1614,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 type="text" 
                 value={guess}
                 onChange={(e) => setGuess(e.target.value)}
-                disabled={gameState.status !== 'playing'}
-                placeholder={gameState.status !== 'playing' ? "Waiting..." : (gameState.guessedPlayers.includes(playerName) ? "Chat (You guessed it!)..." : (isMyTurn ? "Chat (don't cheat!)..." : "Guess here..."))}
+                placeholder={gameState.status !== 'playing' ? "Chat..." : (gameState.guessedPlayers.includes(playerName) ? "Chat (You guessed it!)..." : (isMyTurn ? "Chat (don't cheat!)..." : "Guess here..."))}
                 style={{
                   flex: 1, padding: '12px 15px', background: 'rgba(255,255,255,0.05)', 
                   border: '1px solid rgba(255,255,255,0.1)', color: '#fff', 
@@ -1617,7 +1624,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               />
               <button 
                 type="submit"
-                disabled={!guess.trim() || gameState.status !== 'playing' || gameState.guessedPlayers.includes(playerName)}
+                disabled={!guess.trim()}
                 style={{
                   padding: '0 15px', background: '#ff33ff', color: '#000',
                   border: 'none', borderRadius: '12px', cursor: 'pointer',
