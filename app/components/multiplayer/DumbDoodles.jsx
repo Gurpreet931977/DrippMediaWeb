@@ -720,11 +720,6 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       
       renderLineEvent(ctx, lineEvent);
       
-      const lineEvent = {
-        x0: lastPosRef.current.x, y0: lastPosRef.current.y,
-        x1: currentPos.x, y1: currentPos.y,
-        color: effectiveColor, size: effectiveSize, style: brushStyle
-      };
       pendingDrawEventsRef.current.push(lineEvent);
       currentStrokeRef.current.push(lineEvent);
     }
@@ -835,8 +830,10 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     }
 
     const hasGuessed = gameState.guessedPlayers.includes(playerName);
+    const normalizedMsg = msg.replace(/[^A-Z0-9]/g, '');
+    const normalizedWord = (gameState.currentWord || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
-    if (hasGuessed && msg === gameState.currentWord) {
+    if (hasGuessed && normalizedMsg === normalizedWord) {
       setGuess('');
       return;
     }
@@ -876,7 +873,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       return;
     }
 
-    if (!isMyTurn && msg === gameState.currentWord && !hasGuessed) {
+    if (!isMyTurn && normalizedMsg === normalizedWord && !hasGuessed) {
       if (isHost) {
          const sysMsg = { sender: 'SYSTEM', text: `${playerName} guessed the word!`, type: 'success' };
          channel.send({ type: 'broadcast', event: 'chat_msg', payload: sysMsg });
