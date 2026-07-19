@@ -824,10 +824,11 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   const handleGuess = (e) => {
     e.preventDefault();
     if (!guess.trim() || gameState.status !== 'playing') return;
-    const msg = guess.toUpperCase();
+    const msg = guess.toUpperCase().trim();
     
-    // Check if player already guessed correctly
-    if (gameState.guessedPlayers.includes(playerName)) {
+    const hasGuessed = gameState.guessedPlayers.includes(playerName);
+
+    if (hasGuessed && msg === gameState.currentWord) {
       setGuess('');
       return;
     }
@@ -867,12 +868,12 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       return;
     }
 
-    if (!isMyTurn && msg === gameState.currentWord) {
-      const sysMsg = { sender: 'SYSTEM', text: `${playerName} guessed the word!`, type: 'success' };
-      channel.send({ type: 'broadcast', event: 'chat_msg', payload: sysMsg });
-      setChat(prev => [...prev, sysMsg].slice(-30));
-      
+    if (!isMyTurn && msg === gameState.currentWord && !hasGuessed) {
       if (isHost) {
+         const sysMsg = { sender: 'SYSTEM', text: `${playerName} guessed the word!`, type: 'success' };
+         channel.send({ type: 'broadcast', event: 'chat_msg', payload: sysMsg });
+         setChat(prev => [...prev, sysMsg].slice(-30));
+         
          setGameState(prev => {
             const newScores = { ...prev.scores };
             // Score based on how fast they guessed
@@ -898,12 +899,12 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
         channel.send({ type: 'broadcast', event: 'correct_guess', payload: playerName });
       }
     } else {
-      const chatMsg = { sender: playerName, text: guess, type: 'normal' };
+      const chatMsg = { sender: playerName, text: guess, type: hasGuessed ? 'success' : 'normal' };
       channel.send({ type: 'broadcast', event: 'chat_msg', payload: chatMsg });
       setChat(prev => [...prev, chatMsg].slice(-30));
       
       // No Mercy penalty
-      if (gameState.config.gameMode === 'No Mercy' && !isMyTurn) {
+      if (gameState.config.gameMode === 'No Mercy' && !isMyTurn && !hasGuessed) {
          if (isHost) {
            setGameState(prev => {
               const newScores = { ...prev.scores };
@@ -922,10 +923,14 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
 
   // Handle client correct guesses
   useEffect(() => {
-    if (isHost) {
+    if (isHost && channel) {
       channel.on('broadcast', { event: 'correct_guess' }, ({ payload: playerWhoGuessed }) => {
         setGameState(prev => {
           if (prev.guessedPlayers.includes(playerWhoGuessed)) return prev;
+
+          const sysMsg = { sender: 'SYSTEM', text: `${playerWhoGuessed} guessed the word!`, type: 'success' };
+          channel.send({ type: 'broadcast', event: 'chat_msg', payload: sysMsg });
+          setChat(chatPrev => [...chatPrev, sysMsg].slice(-30));
 
           const newScores = { ...prev.scores };
           const actualDrawTime = prev.config.gameMode === 'No Mercy' ? Math.min(30, prev.config.drawTime) : prev.config.drawTime;
@@ -1394,7 +1399,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           </div>
           
           {/* BRUSH CONTROLS */}
-          {isMyTurn && gameState.status === 'playing' && (
+          {(
             <div style={{ 
               ...styles.glassPanel, 
               padding: isMobile ? '12px' : '20px', 
@@ -1403,7 +1408,10 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               gap: '15px',
               borderTop: '1px solid rgba(255,255,255,0.15)',
               background: 'linear-gradient(180deg, rgba(30,30,30,0.8) 0%, rgba(10,10,10,0.95) 100%)',
-              boxShadow: '0 -10px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
+              boxShadow: '0 -10px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
+              position: 'relative',
+              opacity: (isMyTurn && gameState.status === 'playing') ? 1 : 0.4,
+              pointerEvents: (isMyTurn && gameState.status === 'playing') ? 'auto' : 'none'
             }}>
               
               {/* Top Row: Tools & Brush Styles */}
@@ -1598,8 +1606,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 type="text" 
                 value={guess}
                 onChange={(e) => setGuess(e.target.value)}
-                disabled={gameState.status !== 'playing' || gameState.guessedPlayers.includes(playerName)}
-                placeholder={gameState.status !== 'playing' ? "Waiting..." : (gameState.guessedPlayers.includes(playerName) ? "You Guessed It!" : (isMyTurn ? "Chat (don't cheat!)..." : "Guess here..."))}
+                disabled={gameState.status !== 'playing'}
+                placeholder={gameState.status !== 'playing' ? "Waiting..." : (gameState.guessedPlayers.includes(playerName) ? "Chat (You guessed it!)..." : (isMyTurn ? "Chat (don't cheat!)..." : "Guess here..."))}
                 style={{
                   flex: 1, padding: '12px 15px', background: 'rgba(255,255,255,0.05)', 
                   border: '1px solid rgba(255,255,255,0.1)', color: '#fff', 
