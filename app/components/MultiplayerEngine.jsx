@@ -26,6 +26,8 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
   const [avatarConfig, setAvatarConfig] = useState({ color: 0, eyes: 0, mouth: 0, headgear: 0 });
   const [playerAvatars, setPlayerAvatars] = useState({});
   const [isMobile, setIsMobile] = useState(false);
+  const [avatarChangesLeft, setAvatarChangesLeft] = useState(1);
+  const [showInGameAvatarMenu, setShowInGameAvatarMenu] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -145,6 +147,13 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
            setChannel(null);
         }
       })
+      .on('broadcast', { event: 'kick_player' }, ({ payload }) => {
+        if (payload.target === playerName) {
+           alert("You have been kicked by the host.");
+           setGameState('menu');
+           setChannel(null);
+        }
+      })
       .subscribe(async (status, err) => {
         if (status === 'SUBSCRIBED') {
           try {
@@ -192,6 +201,12 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
       channel.send({ type: 'broadcast', event: 'late_join_denied', payload: { target: reqName } });
     }
     setJoinRequests(prev => prev.filter(r => r.name !== reqName));
+  };
+
+  const kickPlayer = (targetName) => {
+    if (isHost && channel) {
+      channel.send({ type: 'broadcast', event: 'kick_player', payload: { target: targetName } });
+    }
   };
 
   const startGame = () => {
@@ -287,6 +302,71 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
             ))}
           </div>
         )}
+
+        {avatarChangesLeft > 0 && (
+          <button 
+            onClick={() => setShowInGameAvatarMenu(true)}
+            style={{ position: 'fixed', bottom: '20px', left: '20px', zIndex: 99999, background: 'rgba(0,0,0,0.6)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', padding: '8px 16px', cursor: 'pointer', backdropFilter: 'blur(10px)', fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem' }}
+          >
+            CHANGE AVATAR (1 LEFT)
+          </button>
+        )}
+
+        {showInGameAvatarMenu && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ background: '#111', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '90vw' }}>
+              <h3 style={{ fontFamily: "'Panchang', sans-serif", margin: '0 0 20px 0', color: '#fff', textAlign: 'center' }}>CHANGE AVATAR</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ position: 'relative', width: '110px', height: '110px', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.4))' }}>
+                    <CustomAvatar config={avatarConfig} size={110} />
+                    <button onClick={() => {
+                      setAvatarConfig({
+                        color: Math.floor(Math.random() * AVATAR_COLORS.length),
+                        eyes: Math.floor(Math.random() * AVATAR_EYES.length),
+                        mouth: Math.floor(Math.random() * AVATAR_MOUTHS.length),
+                        headgear: Math.floor(Math.random() * AVATAR_HEADGEAR.length)
+                      });
+                    }} 
+                    style={{ position: 'absolute', top: -5, right: -15, background: 'linear-gradient(135deg, #33ccff 0%, #0099cc 100%)', color: '#fff', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                    >
+                      <Dices size={18} />
+                    </button>
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: '20px' }}>
+                    {[
+                      { label: 'COLOR', key: 'color', max: AVATAR_COLORS.length },
+                      { label: 'EYES', key: 'eyes', max: AVATAR_EYES.length },
+                      { label: 'MOUTH', key: 'mouth', max: AVATAR_MOUTHS.length },
+                      { label: 'GEAR', key: 'headgear', max: AVATAR_HEADGEAR.length }
+                    ].map(setting => (
+                      <div key={setting.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '5px 15px', borderRadius: '12px' }}>
+                        <button type="button" onClick={() => setAvatarConfig(p => ({ ...p, [setting.key]: (p[setting.key] - 1 + setting.max) % setting.max }))} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '5px' }}>
+                          <ChevronLeft size={20} />
+                        </button>
+                        <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.75rem', letterSpacing: '2px', color: '#ccc' }}>{setting.label}</span>
+                        <button type="button" onClick={() => setAvatarConfig(p => ({ ...p, [setting.key]: (p[setting.key] + 1) % setting.max }))} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '5px' }}>
+                          <ChevronRight size={20} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                   <button onClick={() => setShowInGameAvatarMenu(false)} style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '12px', cursor: 'pointer', fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem' }}>CANCEL</button>
+                   <button onClick={async () => {
+                     if (channel) {
+                       try {
+                         await channel.track({ name: playerName, isHost, avatar: avatarConfig });
+                         setAvatarChangesLeft(0);
+                         setShowInGameAvatarMenu(false);
+                       } catch(e) { console.error(e); }
+                     }
+                   }} style={{ flex: 1, padding: '12px', background: '#ebd73f', border: 'none', color: '#000', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem' }}>CONFIRM</button>
+                </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -353,7 +433,14 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
                   <CustomAvatar config={playerAvatars[p]} size={32} />
                   {p}
                 </div>
-                {isHost && p === playerName ? <span style={{color: '#ebd73f', fontSize: '0.9rem', fontFamily: "'Panchang', sans-serif"}}>HOST</span> : ''}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {isHost && p === playerName ? <span style={{color: '#ebd73f', fontSize: '0.9rem', fontFamily: "'Panchang', sans-serif"}}>HOST</span> : ''}
+                  {isHost && p !== playerName && (
+                    <button onClick={() => kickPlayer(p)} style={{ background: 'rgba(255, 51, 51, 0.2)', color: '#ff3333', border: '1px solid #ff3333', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold', fontFamily: "'Panchang', sans-serif", transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.background = '#ff3333'; e.currentTarget.style.color = '#fff'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 51, 51, 0.2)'; e.currentTarget.style.color = '#ff3333'; }}>
+                      KICK
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
             {players.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center', fontStyle: 'italic' }}>Connecting...</p>}
