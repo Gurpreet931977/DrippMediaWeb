@@ -1222,7 +1222,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
             } : {
               order: 1, width: '280px'
             }),
-            display: 'flex', flexDirection: 'column' 
+            display: 'flex', flexDirection: 'column', minHeight: 0 
           }}>
             {isMobile && (
                <button onClick={() => setIsMobileLeaderboardOpen(false)} style={{position: 'absolute', top: 15, right: 15, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', zIndex: 10, borderRadius: '50%', width: 36, height: 36, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
@@ -1254,7 +1254,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
             </div>
           </div>
           
-          <div style={{ padding: '20px', flex: isMobile ? 'none' : 1, overflowY: isMobile ? 'hidden' : 'auto', display: isMobile ? 'flex' : 'block', gap: '10px', overflowX: isMobile ? 'auto' : 'hidden' }}>
+          <div style={{ padding: '20px', flex: isMobile ? 'none' : 1, overflowY: isMobile ? 'hidden' : 'auto', display: isMobile ? 'flex' : 'block', gap: '10px', overflowX: isMobile ? 'auto' : 'hidden', minHeight: 0 }}>
             {!isMobile && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px', opacity: 0.6 }}>
                 <Users size={14} />
@@ -1297,7 +1297,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
         )}
 
         {/* CENTER PANEL: Canvas / Overlays */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', order: isMobile ? 1 : 2, minWidth: 0 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', order: isMobile ? 1 : 2, minWidth: 0, minHeight: 0 }}>
           <div style={{ ...styles.glassPanel, padding: isMobile ? '10px 15px' : '20px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: isMobile ? '5px' : '10px' }}>
             <h2 style={{ margin: 0, fontSize: isMobile ? '0.8rem' : '1rem', display: 'flex', alignItems: 'center', gap: isMobile ? '5px' : '10px', letterSpacing: '1px', flexWrap: 'wrap' }}>
               {gameState.status === 'choosing_word' ? (
@@ -1342,6 +1342,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               width: '100%',
               aspectRatio: isMobile ? '4/3' : 'auto',
               position: 'relative',
+              overflow: 'hidden',
               background: '#0a0a0a',
               cursor: isMyTurn && gameState.status === 'playing' ? 'crosshair' : 'default',
               boxShadow: isMyTurn && gameState.status === 'playing' ? '0 0 40px rgba(255,51,255,0.1) inset' : 'none',
@@ -1571,7 +1572,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               <h3 style={{ margin: 0, fontSize: '1rem', letterSpacing: '1px', fontFamily: "'Panchang', sans-serif", textAlign: isMobile ? 'center' : 'left' }}>LIVE CHAT</h3>
             </div>
           
-          <div style={{ flex: 1, overflowY: 'auto', padding: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '15px', display: 'flex', flexDirection: 'column', gap: '10px', minHeight: 0 }}>
             {chat.map((msg, i) => {
               if (msg.type === 'success') {
                 return (

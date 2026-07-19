@@ -162,7 +162,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
                  roomChannel.send({ type: 'broadcast', event: 'request_join_status', payload: { name: playerName, avatar: avatarConfig } });
              }
           } catch(e) { console.error(e); }
-          setGameState('lobby');
+          setGameState(prev => (prev === 'menu' ? 'lobby' : prev));
 
         } else if (status === 'CHANNEL_ERROR') {
           console.error('Channel error', err);
@@ -184,7 +184,11 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
     if (pending.length > 0) {
        pending.forEach(req => {
          if (gameState === 'playing') {
-           channel.send({ type: 'broadcast', event: 'join_status_response', payload: { target: req.name, status: 'waiting_for_host' } });
+           if (activePlayers.includes(req.name)) {
+             channel.send({ type: 'broadcast', event: 'join_status_response', payload: { target: req.name, status: 'playing' } });
+           } else {
+             channel.send({ type: 'broadcast', event: 'join_status_response', payload: { target: req.name, status: 'waiting_for_host' } });
+           }
          } else {
            channel.send({ type: 'broadcast', event: 'join_status_response', payload: { target: req.name, status: 'lobby' } });
          }
@@ -192,7 +196,7 @@ export default function MultiplayerEngine({ activeGame, onBack }) {
        });
        setJoinRequests([...joinRequests]);
     }
-  }, [joinRequests, isHost, channel, gameState]);
+  }, [joinRequests, isHost, channel, gameState, activePlayers]);
 
   const handleJoinDecision = (reqName, allow) => {
     if (allow) {
