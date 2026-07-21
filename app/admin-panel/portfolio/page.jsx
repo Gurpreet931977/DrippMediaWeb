@@ -643,6 +643,45 @@ export default function PortfolioManager() {
             0% { transform: translateY(80px) scale(0.9); opacity: 0; }
             100% { transform: translateY(0) scale(1); opacity: 1; }
         }
+        .custom-file-input {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 12px 16px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .custom-file-input:hover {
+            border-color: rgba(235, 215, 63, 0.5);
+            background: rgba(10, 10, 10, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(235, 215, 63, 0.1), inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .file-icon-wrapper {
+            background: rgba(235, 215, 63, 0.1);
+            border-radius: 10px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .browse-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .custom-file-input:hover .browse-btn {
+            background: #ebd73f;
+            color: #000;
+        }
       `}</style>
 
       {notification && (
@@ -713,9 +752,22 @@ export default function PortfolioManager() {
                     </div>
                 </div>
                 {/* Optional Custom Thumbnail for Long form */}
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={{ fontSize: '0.9rem', color: '#aaa', display: 'block', marginBottom: '8px' }}>Custom Thumbnail (Optional - defaults to YouTube)</label>
-                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" style={{ color: 'white' }} />
+                <div style={{ marginBottom: '25px' }}>
+                    <label style={{ fontSize: '0.9rem', color: '#aaa', display: 'block', marginBottom: '10px', fontWeight: '500', letterSpacing: '0.5px' }}>
+                        Custom Thumbnail (Optional - defaults to YouTube)
+                    </label>
+                    <div className="custom-file-input" onClick={() => fileInputRef.current?.click()}>
+                        <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" style={{ display: 'none' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                            <div className="file-icon-wrapper">
+                                <ImageIcon size={20} color="#ebd73f" />
+                            </div>
+                            <span style={{ color: selectedFile ? '#ebd73f' : '#888', fontWeight: selectedFile ? '600' : '400', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {selectedFile ? selectedFile.name : 'Choose a custom thumbnail...'}
+                            </span>
+                        </div>
+                        <div className="browse-btn">Browse</div>
+                    </div>
                 </div>
                 </>
             )}
