@@ -24,9 +24,9 @@ export default function PortfolioManager() {
     title: '',
     description: '',
     musicText: '',
-    channel: '',
     duration: '',
-    video_id: ''
+    video_id: '',
+    thumbnail_url: ''
   });
 
   const [notification, setNotification] = useState(null);
@@ -53,8 +53,43 @@ export default function PortfolioManager() {
   useEffect(() => {
     fetchItems();
     setSelectedFile(null);
-    setFormData({ title: '', description: '', musicText: '', channel: '', duration: '', video_id: '' });
+    setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '' });
   }, [activeTab]);
+
+  const handleYoutubeBlur = async () => {
+    let url = formData.video_id;
+    if (!url) return;
+    
+    // Check if it's a valid link or ID
+    if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+        if (url.length === 11) {
+            url = `https://www.youtube.com/watch?v=${url}`;
+        } else {
+            return; // Not a valid youtube string
+        }
+    }
+
+    showNotification('success', 'Extracting YouTube details...');
+    try {
+        const res = await fetch(`/api/admin/portfolio/youtube-info?url=${encodeURIComponent(url)}`);
+        if (res.ok) {
+            const data = await res.json();
+            setFormData(prev => ({
+                ...prev,
+                title: prev.title || data.title,
+                description: prev.description || data.description,
+                duration: data.duration !== '0:00' ? data.duration : prev.duration,
+                thumbnail_url: data.thumbnail || prev.thumbnail_url
+            }));
+            showNotification('success', 'YouTube details extracted!');
+        } else {
+            showNotification('error', 'Failed to extract YouTube info');
+        }
+    } catch (err) {
+        console.error(err);
+        showNotification('error', 'Failed to fetch YouTube info');
+    }
+  };
 
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -158,9 +193,9 @@ export default function PortfolioManager() {
         payload = {
           video_id: finalVideoId,
           title: formData.title,
-          channel: formData.channel || 'Dripp Media',
-          duration: formData.duration || '10:00',
-          thumbnail_url: publicUrl || `https://img.youtube.com/vi/${finalVideoId}/maxresdefault.jpg`,
+          description: formData.description || '',
+          duration: formData.duration || '0:00',
+          thumbnail_url: publicUrl || formData.thumbnail_url || `https://img.youtube.com/vi/${finalVideoId}/maxresdefault.jpg`,
           sort_order: items.length > 0 ? items[0].sort_order + 1 : 1
         };
       }
@@ -179,7 +214,7 @@ export default function PortfolioManager() {
       // Reset Form
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      setFormData({ title: '', description: '', musicText: '', channel: '', duration: '', video_id: '' });
+      setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '' });
       
       // Refresh list
       fetchItems();
@@ -735,20 +770,20 @@ export default function PortfolioManager() {
                 <>
                 <div className="form-grid">
                     <div className="input-group">
-                        <label>YouTube Link or Video ID</label>
-                        <input type="text" placeholder="e.g. https://youtu.be/..." value={formData.video_id} onChange={(e) => setFormData({...formData, video_id: e.target.value})} required />
+                        <label>YouTube Link or Video ID (Paste & Click Outside to Auto-Fetch)</label>
+                        <input type="text" placeholder="e.g. https://youtu.be/..." value={formData.video_id} onChange={(e) => setFormData({...formData, video_id: e.target.value})} onBlur={handleYoutubeBlur} required />
                     </div>
                     <div className="input-group">
                         <label>Title</label>
                         <input type="text" placeholder="Video Title" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                     </div>
-                    <div className="input-group">
-                        <label>Channel Name</label>
-                        <input type="text" placeholder="Dripp Media Original" value={formData.channel} onChange={(e) => setFormData({...formData, channel: e.target.value})} />
+                    <div className="input-group" style={{ gridColumn: 'span 2' }}>
+                        <label>Description</label>
+                        <textarea placeholder="Video Description..." rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}></textarea>
                     </div>
-                    <div className="input-group">
-                        <label>Duration (Optional)</label>
-                        <input type="text" placeholder="10:00" value={formData.duration} onChange={(e) => setFormData({...formData, duration: e.target.value})} />
+                    <div className="input-group" style={{ gridColumn: 'span 2' }}>
+                        <label>Duration (Auto-Detected)</label>
+                        <input type="text" placeholder="Auto-detected" value={formData.duration} onChange={(e) => setFormData({...formData, duration: e.target.value})} />
                     </div>
                 </div>
                 {/* Optional Custom Thumbnail for Long form */}
