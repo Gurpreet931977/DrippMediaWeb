@@ -101,17 +101,34 @@ export default function PortfolioManager() {
 
         setUploadProgress(50);
 
-        // Upload to Cloudflare R2
-        const uploadRes = await fetch(presignedUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': selectedFile.type,
-          },
-          body: selectedFile
+        // Upload to Cloudflare R2 using XHR for accurate, real-time progress tracking
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', presignedUrl, true);
+          xhr.setRequestHeader('Content-Type', selectedFile.type);
+          
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              // We map the 0-100% file upload to the 10-90% range of the overall visual progress bar
+              const percentComplete = 10 + Math.round((e.loaded / e.total) * 80);
+              setUploadProgress(percentComplete);
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+            } else {
+              reject(new Error('Upload to R2 failed'));
+            }
+          };
+
+          xhr.onerror = () => reject(new Error('Network error during upload'));
+          
+          xhr.send(selectedFile);
         });
 
-        if (!uploadRes.ok) throw new Error('Upload to R2 failed');
-        setUploadProgress(80);
+        setUploadProgress(90);
       }
 
       // Step 2: Save to Supabase
