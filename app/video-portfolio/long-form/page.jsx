@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -171,6 +171,47 @@ export default function Page() {
     return () => {
       ScrollTrigger.getAll().forEach(t => t.kill());
     };
+  }, []);
+
+  const [videos, setVideos] = useState([
+    {
+      video_id: "dQw4w9WgXcQ",
+      thumbnail_url: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1450&auto=format&fit=crop",
+      duration: "14:03",
+      title: "The Art of Storytelling | Full Documentary [4K]",
+      channel: "Dripp Media Original"
+    },
+    {
+      video_id: "dQw4w9WgXcQ",
+      thumbnail_url: "https://images.unsplash.com/photo-1540656006096-7b8de6dbb899?q=80&w=1471&auto=format&fit=crop",
+      duration: "8:45",
+      title: "Behind The Scenes: Shooting in Zero Gravity",
+      channel: "Dripp Media"
+    },
+    {
+      video_id: "dQw4w9WgXcQ",
+      thumbnail_url: "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=1374&auto=format&fit=crop",
+      duration: "22:10",
+      title: "Cybernetic Visuals: A Masterclass in VFX",
+      channel: "Dripp Media Academy"
+    }
+  ]);
+
+  useEffect(() => {
+    async function fetchVideos() {
+      try {
+        const res = await fetch('/api/long-form');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setVideos(data);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching long-form videos", err);
+      }
+    }
+    fetchVideos();
   }, []);
 
   return (
@@ -679,150 +720,31 @@ export default function Page() {
     <div className="filter-btn">Music Videos</div>
   </div>
   <div className="grid-container">
-    {/* Video Card 1 */}
-    <div className="video-card" data-video-id="dQw4w9WgXcQ">
-      <div className="thumbnail-container">
-        <div className="thumbnail-img" style={{background: 'url("https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1450&auto=format&fit=crop") center/cover'}}>
+    {videos.map((video, index) => (
+      <div className="video-card" data-video-id={video.video_id} key={index}>
+        <div className="thumbnail-container">
+          <div className="thumbnail-img" style={{background: `url("${video.thumbnail_url}") center/cover`}}>
+          </div>
+          <div className="duration-badge">{video.duration || "0:00"}</div>
+          <div className="play-overlay">
+            <div className="play-btn">
+              <svg viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <div className="duration-badge">14:03</div>
-        <div className="play-overlay">
-          <div className="play-btn">
-            <svg viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+        <div className="meta-container">
+          <div className="avatar"><span>D</span></div>
+          <div className="text-info">
+            <div className="video-title">{video.title}</div>
+            <div className="channel-name">{video.channel} <svg className="verified-badge" viewBox="0 0 24 24">
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
+              </svg></div>
           </div>
         </div>
       </div>
-      <div className="meta-container">
-        <div className="avatar"><span>D</span></div>
-        <div className="text-info">
-          <div className="video-title">The Art of Storytelling | Full Documentary [4K]</div>
-          <div className="channel-name">Dripp Media Original <svg className="verified-badge" viewBox="0 0 24 24">
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
-            </svg></div>
-        </div>
-      </div>
-    </div>
-    {/* Video Card 2 */}
-    <div className="video-card" data-video-id="dQw4w9WgXcQ">
-      <div className="thumbnail-container">
-        <div className="thumbnail-img" style={{background: 'url("https://images.unsplash.com/photo-1540656006096-7b8de6dbb899?q=80&w=1471&auto=format&fit=crop") center/cover'}}>
-        </div>
-        <div className="duration-badge">8:45</div>
-        <div className="play-overlay">
-          <div className="play-btn">
-            <svg viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div className="meta-container">
-        <div className="avatar"><span>D</span></div>
-        <div className="text-info">
-          <div className="video-title">Behind The Scenes: Shooting in Zero Gravity</div>
-          <div className="channel-name">Dripp Media <svg className="verified-badge" viewBox="0 0 24 24">
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
-            </svg></div>
-        </div>
-      </div>
-    </div>
-    {/* Video Card 3 */}
-    <div className="video-card" data-video-id="dQw4w9WgXcQ">
-      <div className="thumbnail-container">
-        <div className="thumbnail-img" style={{background: 'url("https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=1374&auto=format&fit=crop") center/cover'}}>
-        </div>
-        <div className="duration-badge">22:10</div>
-        <div className="play-overlay">
-          <div className="play-btn">
-            <svg viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div className="meta-container">
-        <div className="avatar"><span>D</span></div>
-        <div className="text-info">
-          <div className="video-title">Cybernetic Visuals: A Masterclass in VFX</div>
-          <div className="channel-name">Dripp Media Academy <svg className="verified-badge" viewBox="0 0 24 24">
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
-            </svg></div>
-        </div>
-      </div>
-    </div>
-    {/* Video Card 4 */}
-    <div className="video-card" data-video-id="dQw4w9WgXcQ">
-      <div className="thumbnail-container">
-        <div className="thumbnail-img" style={{background: 'url("https://images.unsplash.com/photo-1601506521937-0130a0d4bde9?q=80&w=1470&auto=format&fit=crop") center/cover'}}>
-        </div>
-        <div className="duration-badge">10:30</div>
-        <div className="play-overlay">
-          <div className="play-btn">
-            <svg viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div className="meta-container">
-        <div className="avatar"><span>D</span></div>
-        <div className="text-info">
-          <div className="video-title">High Speed Car Chase Commercial Breakdown</div>
-          <div className="channel-name">Dripp Media Original <svg className="verified-badge" viewBox="0 0 24 24">
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
-            </svg></div>
-        </div>
-      </div>
-    </div>
-    {/* Video Card 5 */}
-    <div className="video-card" data-video-id="dQw4w9WgXcQ">
-      <div className="thumbnail-container">
-        <div className="thumbnail-img" style={{background: 'url("https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1471&auto=format&fit=crop") center/cover'}}>
-        </div>
-        <div className="duration-badge">18:05</div>
-        <div className="play-overlay">
-          <div className="play-btn">
-            <svg viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div className="meta-container">
-        <div className="avatar"><span>D</span></div>
-        <div className="text-info">
-          <div className="video-title">The Evolution of Cinematic Lighting Styles</div>
-          <div className="channel-name">Dripp Media <svg className="verified-badge" viewBox="0 0 24 24">
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
-            </svg></div>
-        </div>
-      </div>
-    </div>
-    {/* Video Card 6 */}
-    <div className="video-card" data-video-id="dQw4w9WgXcQ">
-      <div className="thumbnail-container">
-        <div className="thumbnail-img" style={{background: 'url("https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=1632&auto=format&fit=crop") center/cover'}}>
-        </div>
-        <div className="duration-badge">11:55</div>
-        <div className="play-overlay">
-          <div className="play-btn">
-            <svg viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div className="meta-container">
-        <div className="avatar"><span>D</span></div>
-        <div className="text-info">
-          <div className="video-title">Sound Design That Makes You Feel The Visuals</div>
-          <div className="channel-name">Dripp Media Original <svg className="verified-badge" viewBox="0 0 24 24">
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z" />
-            </svg></div>
-        </div>
-      </div>
-    </div>
+    ))}
   </div>
   {/* Custom Video Modal */}
   <div className="video-modal" id="videoModal">

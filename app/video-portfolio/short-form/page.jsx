@@ -268,33 +268,7 @@ export default function Page() {
 
         // This is your mock "database" of your portfolio reels.
         // It iterates sequentially through the array, looping back to 0 at the end.
-        const portfolioVideosList = [
-            {
-                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
-                musicText: "Original Audio - Dripp Media Mix • Trending",
-                description: "High-energy teaser for the latest urban lifestyle collection. Shot in 4K, 120fps with custom speed ramps."
-            },
-            {
-                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
-                musicText: "Synthwave Beats - Cyber City • Viral",
-                description: "Cyberpunk inspired promotional reel for an upcoming tech launch. Emphasizing dynamic lighting."
-            },
-            {
-                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
-                musicText: "EDM Anthem - Soundscape • Top 50",
-                description: "Recap montage capturing the raw energy of summer music festivals. Dynamic handheld shots."
-            },
-            {
-                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
-                musicText: "Cinematic Score - Dripp Original",
-                description: "Exclusive drop preview. Striking contrast, vibrant highlights, and unparalleled visual fidelity."
-            },
-            {
-                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
-                musicText: "Hip Hop Instrumental - LoFi Chills",
-                description: "A slow-paced, mood-setting sequence designed to highlight individual product textures."
-            }
-        ];
+        let portfolioVideosList = [];
 
         let currentVideoIndex = 0; // The tracker
 
@@ -405,17 +379,31 @@ export default function Page() {
         }
 
         // --- Initial Load Setup ---
-        // Load the first 2 reels so there's one to see and one to scroll to immediately
-        function initializeFeed() {
+        // Fetch from Supabase and load the first 2 reels
+        async function fetchAndInitializeFeed() {
+            try {
+                const res = await fetch('/api/reels');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        portfolioVideosList = data;
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch reels from Supabase. Falling back to local data.', err);
+            }
+
             for (let i = 0; i < 2; i++) {
-                createReelHTML(portfolioVideosList[currentVideoIndex]);
-                currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length; // Loop around to 0 sequentially
+                if (portfolioVideosList.length > 0) {
+                    createReelHTML(portfolioVideosList[currentVideoIndex]);
+                    currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length; // Loop around to 0 sequentially
+                }
             }
             updateVolumeUI();
         }
 
         // Initialize early volume state & setup reels
-        initializeFeed();
+        fetchAndInitializeFeed();
 
         reelsContainer.addEventListener('scroll', () => {
             // Append exactly 1 entry effortlessly right before bottom hit.

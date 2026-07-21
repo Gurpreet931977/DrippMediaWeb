@@ -42,10 +42,13 @@ export default function Page() {
         class InfiniteCanvas {
             constructor(containerId, options = {}) {
                 this.container = document.getElementById(containerId);
-                this.imageSize = parseFloat(options.imageSize) || 20; // vw
-                this.gap = parseFloat(options.gap) || 8; // vw
-                this.numberOfImages = options.numberOfImages || 20;
-                this.imageRootPath = options.imageRootPath || 'images/custom';
+                if (!this.container) return;
+
+                this.imageSize = parseFloat(options.imageSize) || 20;
+                this.numberOfImages = options.numberOfImages || 32;
+                this.imageRootPath = options.imageRootPath || 'graphics/posters';
+                this.gap = parseFloat(options.gap) || 0.5;
+                this.customUrls = options.customUrls || [];
 
                 this.items = [];
 
@@ -108,8 +111,13 @@ export default function Page() {
                         img.classList.add('loaded');
                     };
 
-                    // Map to sequentially numbered images as requested
-                    img.src = `${this.imageRootPath}/img${i + 1}.jpg`;
+                    // Map to custom URLs from database if available, looping if there are fewer URLs than total grid items
+                    if (this.customUrls && this.customUrls.length > 0) {
+                        img.src = this.customUrls[i % this.customUrls.length];
+                    } else {
+                        // Map to sequentially numbered images as requested
+                        img.src = `${this.imageRootPath}/img${i + 1}.jpg`;
+                    }
 
                     // Smart Fallback placeholder while user organizes their local photos
                     img.onerror = () => {
@@ -442,12 +450,30 @@ export default function Page() {
         }
 
         // --- DEPLOY INSTANCE ---
-        const graphicCanvas = new InfiniteCanvas('canvas-container', {
-            imageSize: '20',       // 20vw sizing base
-            numberOfImages: 400,   // Massive grid of 400 elements to cover all empty bounds
-            imageRootPath: 'images/custom', // Exact path matching the user request
-            gap: '0.5'             // Minimal 0.5vw gap so images are nearly touching
-        });
+        async function fetchGraphicsAndInit() {
+            let fetchedUrls = [];
+            try {
+                const res = await fetch('/api/graphics');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        fetchedUrls = data.map(item => item.image_url);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch graphics from Supabase", err);
+            }
+
+            const graphicCanvas = new InfiniteCanvas('canvas-container', {
+                imageSize: '20',       // 20vw sizing base
+                numberOfImages: 400,   // Massive grid of 400 elements to cover all empty bounds
+                imageRootPath: 'images/custom', // Exact path matching the user request
+                gap: '0.5',            // Minimal 0.5vw gap so images are nearly touching
+                customUrls: fetchedUrls // Dynamically loaded from Supabase
+            });
+        }
+        
+        fetchGraphicsAndInit();
 
         // --- SPACE MODE 3D ENGINE ---
         let spaceModeActive = false;
