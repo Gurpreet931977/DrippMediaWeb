@@ -116,7 +116,30 @@ const WORD_PACKS = {
   'Sports': SPORTS_WORDS,
   'Fantasy': FANTASY_WORDS,
   'Actions': ACTION_WORDS,
-  'Hardcore': HARDCORE_WORDS
+  'Hardcore': HARDCORE_WORDS,
+  '18+ No Mercy': [
+    "EGGPLANT", "PEACH", "SAUSAGE", "ROOSTER", "WOODPECKER", "BEAVER", "MELONS", "TACO", 
+    "JOYSTICK", "BACKDOOR", "WALNUTS", "PLUMBING", "CUCUMBER", "BANANA", "GARDEN HOSE", 
+    "HAMBURGER BUNS", "DONUT", "HOLE IN ONE", "CLAM", "HANDCUFFS", "WHIP", "BLOWFISH", 
+    "OIL CAN", "PAINT STRIPPER", "DOG BONE", "PITCHING A TENT", "SUGAR DADDY", "PITCHER", 
+    "SNAKE", "MOUSE HOLE", "HOT DOG", "STRIPPER POLE", "WALK OF SHAME", "SUGAR MOMMA", 
+    "FRENCH KISS", "BOOTY CALL", "THIRD BASE", "TRAMP STAMP", "HAPPY ENDING", "SKINNY DIPPING", 
+    "FRENCH MAID", "HICKEY", "ONE NIGHT STAND", "FRIENDS WITH BENEFITS", "DRUNK TEXT", 
+    "BEER GOGGLES", "CHASTITY BELT", "LAP DANCE", "DIRTY TALK", "CENSORED", "69", "SPOONING", 
+    "MISSIONARY", "BLUE BALLS", "PREGNANT", "JUICY", "HUMP DAY", "NETFLIX AND CHILL", "LOVE BITE", 
+    "QUICKIE", "HORN DOG", "DADDY ISSUES", "THIRST TRAP", "COUGAR", "SUGAR BABY", 
+    "WET DREAM", "MORNING AFTER PILL", "BALL GAG", "SAFE WORD", "MILE HIGH CLUB", "PLAYBOY BUNNY", 
+    "RED LIGHT DISTRICT", "GOLD DIGGER", "ONLYFANS", "POWER BOTTOM", "SWALLOW", "SPIT", 
+    "PANTIES", "THONG", "JOCKSTRAP", "MISTRESS", "WINGMAN", "COCK BLOCK", "VIRGINITY", 
+    "HOOTERS", "BAREBACK", "FOREPLAY", "CLIMAX", "STRIP CLUB", "PEEP SHOW", "TWERKING", 
+    "NAKED", "NUDIST COLONY", "FLASHING", "STREAKING", "LOVE TRIANGLE", "BODY SHOTS", 
+    "SEX TOY", "EDGING", "TEABAGGING", "CAMEL TOE", "MOOSE KNUCKLE", "BIMBO", "HIMBO", 
+    "GIGOLO", "ESCORT", "CHERRY POPPER", "DRY HUMP", "HEAVY PETTING", "TONGUE WRESTLING", 
+    "MATING CALL", "BIRDS AND THE BEES", "SIZE MATTERS", "GAG REFLEX", "SWINGER PARTY", 
+    "KINKY", "VANILLA", "DOMINATRIX", "SUBMISSIVE", "SAFE SEX", "CONDOM", "LUBRICANT", 
+    "SPERM BANK", "MORNING WOOD", "POLE DANCER", "BIKINI WAX", "CLEAVAGE", "HEADLIGHTS", 
+    "MOTORBOATING", "THIGH GAP"
+  ]
 };
 
 const hexToRgba = (hex) => {
@@ -780,7 +803,10 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       return;
     }
     // Host selection logic
-    const actualDrawTime = gameState.config.gameMode === 'No Mercy' ? Math.min(30, gameState.config.drawTime) : gameState.config.drawTime;
+    let actualDrawTime = gameState.config.gameMode === 'No Mercy' ? Math.min(30, gameState.config.drawTime) : gameState.config.drawTime;
+    if (gameState.config.wordPack === '18+ No Mercy') {
+      actualDrawTime = Math.min(80, actualDrawTime); // Max 80 seconds
+    }
     const newState = {
       ...gameState,
       status: 'playing',
@@ -797,7 +823,10 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       channel.on('broadcast', { event: 'select_word' }, ({ payload }) => {
         setGameState(prev => {
           if (prev.status === 'choosing_word') {
-            const actualDrawTime = prev.config.gameMode === 'No Mercy' ? Math.min(30, prev.config.drawTime) : prev.config.drawTime;
+            let actualDrawTime = prev.config.gameMode === 'No Mercy' ? Math.min(30, prev.config.drawTime) : prev.config.drawTime;
+            if (prev.config.wordPack === '18+ No Mercy') {
+              actualDrawTime = Math.min(80, actualDrawTime); // Max 80 seconds
+            }
             const newState = {
               ...prev,
               status: 'playing',
