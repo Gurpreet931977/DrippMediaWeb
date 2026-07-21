@@ -258,53 +258,70 @@ export default function PortfolioManager() {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
         .tabs {
             display: flex;
-            gap: 10px;
-            background: rgba(255,255,255,0.05);
-            padding: 5px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1);
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
         }
         .tab-btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             background: transparent;
             border: none;
             color: #888;
-            border-radius: 8px;
+            border-radius: 12px;
             font-family: 'Clash Display', sans-serif;
             font-weight: 500;
+            font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .tab-btn:hover {
+            color: #ccc;
         }
         .tab-btn.active {
-            background: var(--brand-yellow, #ebd73f);
-            color: #000;
+            background: rgba(235, 215, 63, 0.1);
+            color: var(--brand-yellow, #ebd73f);
             font-weight: 600;
+            box-shadow: 0 4px 15px rgba(235, 215, 63, 0.15);
+            border: 1px solid rgba(235, 215, 63, 0.2);
         }
         .upload-card {
-            background: rgba(20, 20, 20, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 40px;
+            background: linear-gradient(145deg, rgba(30, 30, 30, 0.6) 0%, rgba(15, 15, 15, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 50px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .upload-card:hover {
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         }
         .file-drop-area {
-            border: 2px dashed rgba(255,255,255,0.2);
-            border-radius: 12px;
-            padding: 40px 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 50px 20px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 20px;
-            background: rgba(0,0,0,0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 25px;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
         }
         .file-drop-area:hover {
             border-color: #ebd73f;
-            background: rgba(235, 215, 63, 0.05);
+            background: rgba(235, 215, 63, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(235, 215, 63, 0.1);
         }
         .file-drop-area input[type="file"] {
             display: none;
@@ -312,150 +329,204 @@ export default function PortfolioManager() {
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 24px;
+            margin-bottom: 25px;
         }
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
         .input-group label {
             font-size: 0.9rem;
             color: #aaa;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
         .input-group input, .input-group textarea {
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 12px 15px;
-            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 15px 18px;
+            border-radius: 12px;
             color: white;
             outline: none;
             font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
         .input-group input:focus, .input-group textarea:focus {
-            border-color: #ebd73f;
+            border-color: rgba(235, 215, 63, 0.6);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 4px rgba(235, 215, 63, 0.1), inset 0 2px 4px rgba(0,0,0,0.2);
+            transform: translateY(-1px);
         }
         .submit-btn {
-            background: #ebd73f;
+            background: linear-gradient(135deg, #ebd73f 0%, #d4bc1c 100%);
             color: #000;
             border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-weight: 600;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 700;
             cursor: pointer;
             width: 100%;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            transition: all 0.3s;
+            gap: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 20px rgba(235, 215, 63, 0.2);
+        }
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 15px 30px rgba(235, 215, 63, 0.3);
+            filter: brightness(1.1);
+        }
+        .submit-btn:active:not(:disabled) {
+            transform: translateY(1px) scale(0.98);
+            box-shadow: 0 5px 10px rgba(235, 215, 63, 0.2);
         }
         .submit-btn:disabled {
-            background: #333;
-            color: #666;
+            background: #2a2a2a;
+            color: #555;
+            box-shadow: none;
             cursor: not-allowed;
+            transform: none;
         }
         .progress-bar-container {
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-            margin-top: 20px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            margin-top: 25px;
             overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
         }
         .progress-bar {
             height: 100%;
-            background: #ebd73f;
-            transition: width 0.3s ease;
+            background: linear-gradient(90deg, #ebd73f, #fff7a1);
+            box-shadow: 0 0 10px rgba(235, 215, 63, 0.5);
+            transition: width 0.1s linear;
         }
         .item-list {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
         }
         .item-row {
             display: flex;
             align-items: center;
-            background: rgba(20, 20, 20, 0.6);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 15px;
-            border-radius: 12px;
-            gap: 20px;
+            background: rgba(25, 25, 25, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 16px;
+            border-radius: 16px;
+            gap: 24px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .item-row:hover {
-            border-color: rgba(255,255,255,0.3);
+            border-color: rgba(235, 215, 63, 0.3);
+            background: rgba(35, 35, 35, 0.8);
+            transform: translateX(5px) scale(1.01);
+            box-shadow: -5px 10px 20px rgba(0,0,0,0.3);
         }
         .item-thumbnail {
-            width: 100px;
-            height: 60px;
-            background: #000;
-            border-radius: 6px;
+            width: 110px;
+            height: 65px;
+            background: #0a0a0a;
+            border-radius: 8px;
             object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.4s ease;
+        }
+        .item-row:hover .item-thumbnail {
+            transform: scale(1.05);
+            border-color: rgba(235, 215, 63, 0.5);
         }
         .item-info {
             flex: 1;
         }
         .item-title {
             font-weight: 600;
-            font-size: 1.1rem;
-            margin-bottom: 5px;
+            font-size: 1.15rem;
+            margin-bottom: 6px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 300px;
+            max-width: 320px;
+            color: #fff;
+            transition: color 0.3s ease;
+        }
+        .item-row:hover .item-title {
+            color: #ebd73f;
         }
         .item-meta {
             font-size: 0.85rem;
             color: #888;
+            font-weight: 400;
         }
         .item-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
         }
         .action-btn {
-            background: rgba(255,255,255,0.1);
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
-            width: 35px;
-            height: 35px;
-            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .action-btn:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px) rotate(5deg);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .action-btn:active {
+            transform: scale(0.9) rotate(-5deg);
         }
         .action-btn.delete:hover {
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
             color: #ef4444;
+            transform: translateY(-2px) scale(1.1);
         }
         .action-btn.move {
             cursor: ns-resize;
         }
+        .action-btn.move:hover {
+            background: rgba(235, 215, 63, 0.15);
+            border-color: rgba(235, 215, 63, 0.4);
+            color: #ebd73f;
+            transform: translateY(-2px);
+        }
         .notification {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            padding: 15px 25px;
-            border-radius: 10px;
+            bottom: 40px;
+            right: 40px;
+            padding: 18px 30px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             color: white;
-            font-weight: 500;
+            font-weight: 600;
             z-index: 9999;
-            animation: slideUp 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .notification.success { background: #22c55e; color: black; }
-        .notification.error { background: #ef4444; }
+        .notification.success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+        .notification.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
         @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            0% { transform: translateY(50px) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
         }
       `}</style>
 
