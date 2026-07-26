@@ -350,7 +350,7 @@ export default function Page() {
                 <video class="reel-ambient-bg" src="${src}" muted loop playsinline preload="metadata" oncontextmenu="return false;"></video>
                 <div class="reel-ambient-blur"></div>
                 <div class="reel-content">
-                    <video class="reel-video" src="${src}" muted loop playsinline preload="auto" autoplay oncontextmenu="return false;"></video>
+                    <video class="reel-video" src="${src}" muted loop playsinline preload="auto" autoplay oncontextmenu="return false;" onerror="alert('Video Error: ' + (this.error ? this.error.message || this.error.code : 'Unknown'))"></video>
                     <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
                     <button class="exit-fullscreen-btn" onclick="toggleFullscreen(this.closest('.reel-content'))" title="Exit Fullscreen"><i class="uil uil-compress-arrows"></i></button>
                     <div class="reel-overlay-top"></div>
