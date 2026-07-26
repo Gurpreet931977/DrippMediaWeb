@@ -788,24 +788,28 @@ export default function PortfolioManager() {
         .upload-popup-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(15px);
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10000;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.4s ease;
         }
         .upload-popup {
-            background: linear-gradient(145deg, rgba(20,20,20,0.95), rgba(10,10,10,0.98));
-            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(15, 15, 15, 0.6);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
             padding: 50px 40px;
-            border-radius: 28px;
+            border-radius: 32px;
             text-align: center;
             max-width: 440px;
             width: 90%;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 2px 20px rgba(255,255,255,0.03);
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.02);
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             font-family: 'Clash Display', sans-serif;
             position: relative;
             overflow: hidden;
@@ -813,19 +817,15 @@ export default function PortfolioManager() {
         .upload-popup::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; height: 4px;
-        }
-        .upload-popup.success::before {
-            background: linear-gradient(90deg, #22c55e, #4ade80);
-        }
-        .upload-popup.error::before {
-            background: linear-gradient(90deg, #ef4444, #f87171);
+            top: 0; left: 0; right: 0; height: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+            pointer-events: none;
         }
         .upload-popup.success {
-            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 20px 50px rgba(34,197,94,0.03);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 0 40px rgba(34,197,94,0.05);
         }
         .upload-popup.error {
-            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 20px 50px rgba(239,68,68,0.03);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 0 40px rgba(239,68,68,0.05);
         }
         .upload-popup .popup-icon {
             display: inline-flex;
@@ -859,9 +859,9 @@ export default function PortfolioManager() {
             margin-bottom: 30px;
         }
         .upload-popup .popup-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #fff;
+            background: rgba(235, 215, 63, 0.1);
+            border: 1px solid rgba(235, 215, 63, 0.3);
+            color: #ebd73f;
             padding: 14px 30px;
             border-radius: 14px;
             font-family: 'Clash Display', sans-serif;
@@ -870,22 +870,24 @@ export default function PortfolioManager() {
             cursor: pointer;
             transition: all 0.3s ease;
             width: 100%;
+            position: relative;
+            z-index: 1;
         }
         .upload-popup.success .popup-btn {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            color: #000;
-            border: none;
-            box-shadow: 0 10px 25px rgba(34,197,94,0.25);
+            background: rgba(34,197,94,0.1);
+            color: #4ade80;
+            border-color: rgba(34,197,94,0.3);
         }
         .upload-popup.error .popup-btn {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: #fff;
-            border: none;
-            box-shadow: 0 10px 25px rgba(239,68,68,0.25);
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+            border-color: rgba(239,68,68,0.3);
         }
         .upload-popup .popup-btn:hover {
             transform: translateY(-2px);
-            filter: brightness(1.1);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
         }
         @keyframes popIn {
             0% { transform: scale(0.8) translateY(20px); opacity: 0; }
