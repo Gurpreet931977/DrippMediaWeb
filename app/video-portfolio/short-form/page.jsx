@@ -31,11 +31,14 @@ export default function Page() {
 
         // Custom Cursor Logic
         const cursor = document.getElementById('cursor');
-        window.addEventListener('mousemove', (e) => {
-            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
-        });
+        if (cursor) {
+            window.addEventListener('mousemove', (e) => {
+                gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+            });
+        }
 
         function attachCursorEvents(element) {
+            if (!cursor) return;
             const clickables = element.querySelectorAll('button, a, .video-interact-layer, .sound-toggle, .comment-text-placeholder');
             clickables.forEach(el => {
                 el.addEventListener('mouseenter', () => cursor.classList.add('active'));
@@ -84,8 +87,9 @@ export default function Page() {
         };
 
         // Intersection Observer to Auto-play videos when in view
+        const reelsContainer = document.getElementById('reelsContainer');
         const observerOptions = {
-            root: document.getElementById('reelsContainer'),
+            root: reelsContainer,
             rootMargin: '0px',
             threshold: 0.6 // Video needs to be 60% visible to play
         };
@@ -96,18 +100,20 @@ export default function Page() {
                 const ambVid = entry.target.querySelector('.reel-ambient-bg');
 
                 if (entry.isIntersecting) {
-                    mainVid.currentTime = 0;
-                    ambVid.currentTime = 0;
+                    if (mainVid) mainVid.currentTime = 0;
+                    if (ambVid) ambVid.currentTime = 0;
 
-                    const playPromise = mainVid.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => { console.log('Autoplay prevented', error); });
+                    if (mainVid) {
+                        const playPromise = mainVid.play();
+                        if (playPromise !== undefined) {
+                            playPromise.catch(error => { console.log('Autoplay prevented', error); });
+                        }
                     }
-                    ambVid.play().catch(e => { });
+                    if (ambVid) ambVid.play().catch(e => { });
 
                 } else {
-                    mainVid.pause();
-                    ambVid.pause();
+                    if (mainVid) mainVid.pause();
+                    if (ambVid) ambVid.pause();
 
                     const sheet = entry.target.querySelector('.comments-sheet');
                     if (sheet && sheet.classList.contains('open')) {
@@ -144,11 +150,11 @@ export default function Page() {
 
                     if (vid.paused) {
                         vid.play();
-                        ambVid.play();
+                        if (ambVid) ambVid.play();
                         icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
                     } else {
                         vid.pause();
-                        ambVid.pause();
+                        if (ambVid) ambVid.pause();
                         icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
                     }
 
@@ -258,22 +264,47 @@ export default function Page() {
 
         // Fullscreen Functionality
         window.toggleFullscreen = function (btn) {
-            const container = btn.closest('.reel-content');
-            container.classList.toggle('clean-mode');
+            const container = btn.closest ? btn.closest('.reel-content') : btn;
+            if (container) container.classList.toggle('clean-mode');
         };
 
         // --- Truly Infinite Scroll Logic - Sequential Array Loop ---
-        const reelsContainer = document.getElementById('reelsContainer');
         let isAppending = false;
 
-        // This is your mock "database" of your portfolio reels.
-        // It iterates sequentially through the array, looping back to 0 at the end.
-        let portfolioVideosList = [];
+        const DEFAULT_REELS = [
+            {
+                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                musicText: "Original Audio - Dripp Media Mix • Trending",
+                description: "High-energy teaser for the latest urban lifestyle collection. Shot in 4K, 120fps with custom speed ramps."
+            },
+            {
+                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                musicText: "Synthwave Beats - Cyber City • Viral",
+                description: "Cyberpunk inspired promotional reel for an upcoming tech launch. Emphasizing dynamic lighting."
+            },
+            {
+                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                musicText: "EDM Anthem - Soundscape • Top 50",
+                description: "Recap montage capturing the raw energy of summer music festivals. Dynamic handheld shots."
+            },
+            {
+                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                musicText: "Cinematic Score - Dripp Original",
+                description: "Exclusive drop preview. Striking contrast, vibrant highlights, and unparalleled visual fidelity."
+            },
+            {
+                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                musicText: "Hip Hop Instrumental - LoFi Chills",
+                description: "A slow-paced, mood-setting sequence designed to highlight individual product textures."
+            }
+        ];
 
+        let portfolioVideosList = [...DEFAULT_REELS];
         let currentVideoIndex = 0; // The tracker
 
         // Create HTML for a single reel instance
         function createReelHTML(videoData) {
+            if (!reelsContainer || !videoData) return;
             const newReel = document.createElement('div');
             newReel.className = 'reel-item';
 
@@ -281,12 +312,12 @@ export default function Page() {
                 <video class="reel-ambient-bg" src="${videoData.videoSrc}" muted loop oncontextmenu="return false;"></video>
                 <div class="reel-content">
                     <video class="reel-video" src="${videoData.videoSrc}" loop playsinline oncontextmenu="return false;"></video>
-                    <div class="video-interact-layer" onclick=""></div>
-                    <button class="exit-fullscreen-btn" onclick="" title="Exit Fullscreen"><i class="uil uil-compress-arrows"></i></button>
+                    <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
+                    <button class="exit-fullscreen-btn" onclick="toggleFullscreen(this.closest('.reel-content'))" title="Exit Fullscreen"><i class="uil uil-compress-arrows"></i></button>
                     <div class="reel-overlay-top"></div>
                     <div class="reel-overlay"></div>
                     
-                    <div class="sound-toggle" onclick="">
+                    <div class="sound-toggle" onclick="toggleMuteGlobal(this)">
                         ${isGlobalMuted ? muteIconSVG : unmuteIconSVG}
                     </div>
                     
@@ -295,28 +326,28 @@ export default function Page() {
                     
                     <div class="reel-info">
                         <h3 class="reel-username">@drippmedia</h3>
-                        <p class="reel-desc">${videoData.description}</p>
+                        <p class="reel-desc">${videoData.description || ''}</p>
                         <div class="reel-music">
                             <svg class="music-icon action-icon" width="16" height="16" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M9 18V5l12-2v13"></path><circle fill="none" stroke="currentColor" stroke-width="2" cx="6" cy="18" r="3"></circle><circle fill="none" stroke="currentColor" stroke-width="2" cx="18" cy="16" r="3"></circle></svg>
-                            <div class="music-text"><span class="music-marquee">Original Audio - Dripp Media</span></div>
+                            <div class="music-text"><span class="music-marquee">${videoData.musicText || 'Original Audio - Dripp Media'}</span></div>
                         </div>
                     </div>
                     
                     <div class="reel-actions">
                         <!-- Soft Heart Icon -->
-                        <button class="action-btn" onclick="">
+                        <button class="action-btn" onclick="toggleLike(this)">
                             <div class="action-icon-bg"><svg class="action-icon icon-heart" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></div>
                         </button>
                         <!-- Soft Comment Icon -->
-                        <button class="action-btn" onclick="">
+                        <button class="action-btn" onclick="openComments(this)">
                             <div class="action-icon-bg"><svg class="action-icon icon-comment" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></div>
                         </button>
                         <!-- Soft Share Icon -->
-                        <button class="action-btn" onclick="">
+                        <button class="action-btn" onclick="openShare(this)">
                             <div class="action-icon-bg"><svg class="action-icon icon-share" viewBox="0 0 24 24"><polyline points="15 17 20 12 15 7"></polyline><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg></div>
                         </button>
                         <!-- Full Screen Button -->
-                        <button class="action-btn" onclick="">
+                        <button class="action-btn" onclick="toggleFullscreen(this)">
                             <div class="action-icon-bg"><svg class="action-icon icon-expand" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg></div>
                         </button>
                     </div>
@@ -324,7 +355,7 @@ export default function Page() {
                     <div class="comments-sheet">
                         <div class="comments-header">
                             <h3>Comments</h3>
-                            <button class="close-comments" onclick="">
+                            <button class="close-comments" onclick="closeComments(this)">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                             </button>
                         </div>
@@ -339,24 +370,24 @@ export default function Page() {
                     <div class="share-sheet">
                         <div class="comments-header">
                             <h3>Share</h3>
-                            <button class="close-comments" onclick="">
+                            <button class="close-comments" onclick="closeShare(this)">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                             </button>
                         </div>
                         <div class="share-link-box">
                             <div class="share-link-text" data-link="">Generating link...</div>
-                            <button class="copy-link-btn" onclick="">Copy</button>
+                            <button class="copy-link-btn" onclick="copyShareLink(this)">Copy</button>
                         </div>
                         <div class="share-options">
-                            <a href="#" class="share-option-btn" onclick="">
+                            <a href="#" class="share-option-btn" onclick="event.preventDefault(); window.open('https://wa.me/?text=Check out this awesome Dripp Media video! ' + encodeURIComponent(this.closest('.share-sheet').querySelector('.share-link-text').dataset.link));">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
                                 WhatsApp
                             </a>
-                            <a href="#" class="share-option-btn" onclick="">
+                            <a href="#" class="share-option-btn" onclick="event.preventDefault(); alert('Instagram sharing is native. Use the app or copy link!');">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                                 Instagram
                             </a>
-                            <a href="#" class="share-option-btn" onclick="">
+                            <a href="#" class="share-option-btn" onclick="event.preventDefault(); window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(this.closest('.share-sheet').querySelector('.share-link-text').dataset.link) + '&text=Check out this reel from Dripp Media');">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg>
                                 X / Twitter
                             </a>
@@ -372,10 +403,13 @@ export default function Page() {
 
             if (!isGlobalMuted) {
                 const toggle = newReel.querySelector('.sound-toggle');
-                toggle.style.borderColor = 'var(--brand-yellow)';
-                toggle.style.color = 'var(--brand-yellow)';
+                if (toggle) {
+                    toggle.style.borderColor = 'var(--brand-yellow)';
+                    toggle.style.color = 'var(--brand-yellow)';
+                }
             }
-            newReel.querySelector('.reel-video').muted = isGlobalMuted;
+            const vid = newReel.querySelector('.reel-video');
+            if (vid) vid.muted = isGlobalMuted;
         }
 
         // --- Initial Load Setup ---
@@ -385,7 +419,7 @@ export default function Page() {
                 const res = await fetch('/api/reels');
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.length > 0) {
+                    if (Array.isArray(data) && data.length > 0) {
                         portfolioVideosList = data;
                     }
                 }
@@ -393,10 +427,16 @@ export default function Page() {
                 console.error('Failed to fetch reels from Supabase. Falling back to local data.', err);
             }
 
-            for (let i = 0; i < 2; i++) {
+            if (reelsContainer) {
+                reelsContainer.innerHTML = '';
+            }
+            currentVideoIndex = 0;
+
+            const initialCount = Math.min(2, portfolioVideosList.length);
+            for (let i = 0; i < initialCount; i++) {
                 if (portfolioVideosList.length > 0) {
                     createReelHTML(portfolioVideosList[currentVideoIndex]);
-                    currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length; // Loop around to 0 sequentially
+                    currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length;
                 }
             }
             updateVolumeUI();
@@ -405,27 +445,29 @@ export default function Page() {
         // Initialize early volume state & setup reels
         fetchAndInitializeFeed();
 
-        reelsContainer.addEventListener('scroll', () => {
-            // Append exactly 1 entry effortlessly right before bottom hit.
-            if (reelsContainer.scrollTop + reelsContainer.clientHeight >= reelsContainer.scrollHeight - 10) {
-                if (!isAppending) {
-                    isAppending = true;
+        if (reelsContainer) {
+            reelsContainer.addEventListener('scroll', () => {
+                // Append exactly 1 entry effortlessly right before bottom hit.
+                if (reelsContainer.scrollTop + reelsContainer.clientHeight >= reelsContainer.scrollHeight - 10) {
+                    if (!isAppending && portfolioVideosList.length > 0) {
+                        isAppending = true;
 
-                    // Fetch next sequential video from array
-                    const nextVideoData = portfolioVideosList[currentVideoIndex];
+                        // Fetch next sequential video from array
+                        const nextVideoData = portfolioVideosList[currentVideoIndex];
 
-                    // Increment and Loop sequentially
-                    currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length;
+                        // Increment and Loop sequentially
+                        currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length;
 
-                    // Add it
-                    createReelHTML(nextVideoData);
+                        // Add it
+                        createReelHTML(nextVideoData);
 
-                    setTimeout(() => {
-                        isAppending = false;
-                    }, 100);
+                        setTimeout(() => {
+                            isAppending = false;
+                        }, 100);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         setTimeout(() => {
             const firstVid = document.querySelector('.reel-video');
