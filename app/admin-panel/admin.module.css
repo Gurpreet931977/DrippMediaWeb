@@ -18,7 +18,8 @@
 
 .adminContainer {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   /* Deep radial gradient for a premium background */
   background: radial-gradient(circle at top right, #1a1a1a, #000000 70%);
   color: #fff;
@@ -114,9 +115,9 @@
 
 .mainContent {
   flex: 1;
-  padding: 3rem 4rem;
-  overflow-y: auto;
-  height: 100vh;
+  padding: 2rem;
+  padding-top: calc(2rem + 60px);
+  overflow: auto;
   animation: fadeIn 0.6s ease-out forwards;
 }
 

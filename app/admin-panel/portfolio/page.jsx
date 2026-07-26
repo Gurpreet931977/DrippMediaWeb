@@ -482,6 +482,9 @@ export default function PortfolioManager() {
             padding: 45px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 20px rgba(255,255,255,0.02), 0 0 100px rgba(235, 215, 63, 0.12);
             transition: transform 0.4s ease, box-shadow 0.4s ease;
+            transform: translateZ(0); /* Fixes blocky backdrop-filter clipping bug in Chromium */
+            will-change: transform;
+            overflow: visible;
         }
         .upload-card:hover {
             box-shadow: 0 40px 80px rgba(0,0,0,0.7), inset 0 1px 20px rgba(255,255,255,0.03);
