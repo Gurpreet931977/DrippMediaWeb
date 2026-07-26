@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown } from 'lucide-react';
+import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
 import styles from '../admin.module.css';
 
 const TABS = {
@@ -880,8 +880,33 @@ export default function PortfolioManager() {
                             if (window.dispatchEvent) {
                                 window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { detail: 'Please analyze the uploaded video and write a catchy title and description.' }));
                             }
-                        }} style={{ background: 'linear-gradient(135deg, #ebd73f 0%, #d4bc1c 100%)', border: 'none', borderRadius: '20px', padding: '4px 12px', fontSize: '0.8rem', fontWeight: 'bold', color: '#000', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            ✨ Ask Orlo
+                        }} style={{ 
+                            background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', 
+                            border: '1px solid rgba(235, 215, 63, 0.4)', 
+                            borderRadius: '24px', 
+                            padding: '6px 14px', 
+                            fontSize: '0.85rem', 
+                            fontWeight: '600', 
+                            color: '#ebd73f', 
+                            cursor: 'pointer', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '8px',
+                            boxShadow: '0 4px 15px rgba(235, 215, 63, 0.15)',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                        onMouseOver={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(235, 215, 63, 0.25)';
+                            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(235, 215, 63, 0.25) 0%, rgba(212, 188, 28, 0.1) 100%)';
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(235, 215, 63, 0.15)';
+                            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)';
+                        }}
+                        >
+                            <Sparkles size={16} /> Ask Orlo
                         </button>
                      </div>
                      <input type="text" placeholder="Video Title..." value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required={activeTab === TABS.LONG_FORM} />

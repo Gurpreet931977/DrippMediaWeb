@@ -189,7 +189,7 @@ export default function OrloChat() {
         }
       } catch (e) {
         console.error('Error starting speech recognition:', e);
-        setIsListening(true);
+        setIsListening(false);
       }
     }
   };
@@ -856,6 +856,15 @@ export default function OrloChat() {
           40% { transform: scale(1); }
         }
         
+        .pulsing-mic {
+          animation: pulseMic 1.5s infinite;
+        }
+        @keyframes pulseMic {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.2); opacity: 0.7; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        
         .toast-msg {
           position: absolute;
           top: 50px;
@@ -937,7 +946,7 @@ export default function OrloChat() {
                 }}
                 title="Voice Command"
               >
-                {isListening ? <Mic size={20} /> : <MicOff size={20} />}
+                <Mic size={20} className={isListening ? 'pulsing-mic' : ''} />
               </button>
               <input 
                 type="text" 
