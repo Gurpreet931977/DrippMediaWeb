@@ -16,7 +16,8 @@ const tableMap = {
 };
 
 export async function GET(request, { params }) {
-  const type = params.type.toLowerCase();
+  const resolvedParams = await params;
+  const type = resolvedParams.type.toLowerCase();
   const tableName = tableMap[type];
   
   if (!tableName) return Response.json({ error: 'Invalid portfolio type' }, { status: 400 });
@@ -36,7 +37,8 @@ export async function GET(request, { params }) {
 }
 
 export async function POST(request, { params }) {
-  const type = params.type.toLowerCase();
+  const resolvedParams = await params;
+  const type = resolvedParams.type.toLowerCase();
   const tableName = tableMap[type];
   if (!tableName) return Response.json({ error: 'Invalid portfolio type' }, { status: 400 });
 
@@ -60,7 +62,8 @@ export async function POST(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
-  const type = params.type.toLowerCase();
+  const resolvedParams = await params;
+  const type = resolvedParams.type.toLowerCase();
   const tableName = tableMap[type];
   if (!tableName) return Response.json({ error: 'Invalid portfolio type' }, { status: 400 });
 
@@ -83,7 +86,8 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const type = params.type.toLowerCase();
+  const resolvedParams = await params;
+  const type = resolvedParams.type.toLowerCase();
   const tableName = tableMap[type];
   if (!tableName) return Response.json({ error: 'Invalid portfolio type' }, { status: 400 });
 
