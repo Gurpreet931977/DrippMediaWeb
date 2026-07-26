@@ -364,8 +364,8 @@ export default function OrloChat() {
          const inputName = 'input_analyze.mp4';
          await ffmpeg.writeFile(inputName, await fetchFile(file));
          
-         // Extract 4 screenshots evenly spread
-         await ffmpeg.exec(['-i', inputName, '-vf', 'fps=1/3', 'frame-%03d.jpg']);
+         // Extract up to 6 screenshots evenly spread, scaled down to 480p to prevent payload too large errors
+         await ffmpeg.exec(['-i', inputName, '-vf', 'fps=1/3,scale=-1:480', 'frame-%03d.jpg']);
          
          const frames = [];
          for (let i = 1; i <= 6; i++) {
@@ -391,7 +391,7 @@ export default function OrloChat() {
          });
          
          const data = await res.json();
-         if (!res.ok) throw new Error(data.error);
+         if (!res.ok) throw new Error(data.error || data.message || 'Unknown API Error');
          
          window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data }));
          setMessages(prev => [...prev, { role: 'ai', text: "Done! I've automatically written the perfect title and description for you." }]);
