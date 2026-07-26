@@ -266,7 +266,7 @@ export default function PortfolioManager() {
       if (activeTab === TABS.REELS) {
         payload = {
           videoSrc: publicUrl,
-          description: formData.description,
+          description: formData.title,
           musicText: formData.musicText || 'Original Audio - Dripp Media',
           category: formData.category,
           sort_order: items.length > 0 ? items[0].sort_order + 1 : 1

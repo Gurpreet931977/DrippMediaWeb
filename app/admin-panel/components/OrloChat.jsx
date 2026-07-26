@@ -400,15 +400,20 @@ export default function OrloChat() {
          
          setMessages(prev => [...prev, { role: 'ai', text: `Extracted ${frames.length} frames instantly! Writing premium captions...` }]);
          
+         const currentCategory = window.portfolioFormData?.category || 'Both';
          const superPrompt = `
 You are the Lead Copywriter for Dripp Media, a premium creative agency. 
 Analyze these 4 sequential frames from a video we just produced or edited. 
-Write a strong, literal 'title' and a detailed 'description' (caption) for this video to showcase it in our agency portfolio. 
-- Look closely at what is literally happening in the video (e.g., Mountain Biking, Cycling, Real Estate, Fashion, etc.) and state it clearly. Do not use overly abstract, generic, or artsy jargon (like "Where raw grit meets cinema").
-- Write from our perspective (the creators at Dripp Media). Tell a mini-story (3-4 sentences) about the creative process, how we captured this specific subject matter, or the editing techniques we used to elevate this piece.
+The user has categorized this video as: "${currentCategory}".
+Write a strong, literal 'title' (which acts as a short caption) for this video to showcase it in our agency portfolio. 
+- If the category is "Videography", focus heavily on the camera work, filming style, and visual composition.
+- If the category is "Editing", focus heavily on the cuts, pacing, color grading, and post-production techniques.
+- If the category is "Both (Everything)", focus on the end-to-end production value.
+- Do NOT write a long paragraph. Just write a punchy, 1-2 sentence title/caption.
+- Look closely at what is literally happening in the video and state it clearly. Do not use overly abstract or artsy jargon.
 - NO EMOJIS. None. 
-- Include 3-5 highly relevant hashtags based precisely on the visual subject matter.
-Return ONLY raw JSON with 'title' and 'description' keys. Do not include markdown formatting or backticks around the JSON.
+- Include 3-4 highly relevant hashtags at the end.
+Return ONLY raw JSON with a single 'title' key. Do not include markdown formatting or backticks around the JSON.
          `.trim();
 
          const res = await fetch('/api/admin/copilot/video-analyze', {
