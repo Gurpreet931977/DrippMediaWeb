@@ -273,27 +273,27 @@ export default function Page() {
 
         const DEFAULT_REELS = [
             {
-                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
                 musicText: "Original Audio - Dripp Media Mix • Trending",
                 description: "High-energy teaser for the latest urban lifestyle collection. Shot in 4K, 120fps with custom speed ramps."
             },
             {
-                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
                 musicText: "Synthwave Beats - Cyber City • Viral",
                 description: "Cyberpunk inspired promotional reel for an upcoming tech launch. Emphasizing dynamic lighting."
             },
             {
-                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
                 musicText: "EDM Anthem - Soundscape • Top 50",
                 description: "Recap montage capturing the raw energy of summer music festivals. Dynamic handheld shots."
             },
             {
-                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
                 musicText: "Cinematic Score - Dripp Original",
                 description: "Exclusive drop preview. Striking contrast, vibrant highlights, and unparalleled visual fidelity."
             },
             {
-                videoSrc: "https://www.w3schools.com/html/mov_bbb.mp4",
+                videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
                 musicText: "Hip Hop Instrumental - LoFi Chills",
                 description: "A slow-paced, mood-setting sequence designed to highlight individual product textures."
             }
@@ -316,7 +316,7 @@ export default function Page() {
             newReel.innerHTML = `
                 <video class="reel-ambient-bg" src="${src}" muted loop oncontextmenu="return false;"></video>
                 <div class="reel-content">
-                    <video class="reel-video" src="${src}" loop playsinline oncontextmenu="return false;"></video>
+                    <video class="reel-video" src="${src}" muted loop playsinline oncontextmenu="return false;"></video>
                     <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
                     <button class="exit-fullscreen-btn" onclick="toggleFullscreen(this.closest('.reel-content'))" title="Exit Fullscreen"><i class="uil uil-compress-arrows"></i></button>
                     <div class="reel-overlay-top"></div>
