@@ -401,15 +401,13 @@ export default function OrloChat() {
          setMessages(prev => [...prev, { role: 'ai', text: `Extracted ${frames.length} frames instantly! Writing premium captions...` }]);
          
          const superPrompt = `
-You are the elite Social Media Strategist and Lead Copywriter for Dripp Media, a premium creative agency. 
+You are the Lead Copywriter for Dripp Media, a premium creative agency. 
 Analyze these 4 sequential frames from a video we just produced or edited. 
-Write a highly engaging, viral, and premium 'title' and a detailed 'description' (caption) for this video to showcase it in our high-end portfolio. 
-- Do NOT be basic, generic, or boring.
-- Write from the perspective of Dripp Media (using "we", "our team", etc. sparingly but effectively to establish authority).
-- The description MUST be detailed and comprehensive (at least 3-4 impactful sentences or a short paragraph). It should tell a mini-story about the creative direction, the vibe, or the high-end quality of the work we delivered.
-- Use trending structures, psychological hooks, and impactful vocabulary.
-- Include 3-5 highly relevant, high-traffic hashtags and tasteful emojis.
-- The title should be punchy and make people want to click immediately.
+Write a strong, literal 'title' and a detailed 'description' (caption) for this video to showcase it in our agency portfolio. 
+- Look closely at what is literally happening in the video (e.g., Mountain Biking, Cycling, Real Estate, Fashion, etc.) and state it clearly. Do not use overly abstract, generic, or artsy jargon (like "Where raw grit meets cinema").
+- Write from our perspective (the creators at Dripp Media). Tell a mini-story (3-4 sentences) about the creative process, how we captured this specific subject matter, or the editing techniques we used to elevate this piece.
+- NO EMOJIS. None. 
+- Include 3-5 highly relevant hashtags based precisely on the visual subject matter.
 Return ONLY raw JSON with 'title' and 'description' keys. Do not include markdown formatting or backticks around the JSON.
          `.trim();
 
