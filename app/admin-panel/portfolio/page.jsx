@@ -843,31 +843,87 @@ export default function PortfolioManager() {
         
         <form onSubmit={handleUploadAndSave}>
             {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) && (
-                <div className="input-group" style={{ marginBottom: '20px' }}>
-                    <label>Category (Video Type)</label>
-                    <div style={{ display: 'flex', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        {['Videography', 'Editing', 'Both'].map((cat) => (
-                            <button
-                                type="button"
-                                key={cat}
-                                onClick={() => setFormData({...formData, category: cat})}
-                                style={{
-                                    flex: 1,
-                                    padding: '12px',
-                                    borderRadius: '10px',
-                                    background: formData.category === cat ? 'rgba(235, 215, 63, 0.15)' : 'transparent',
-                                    border: `1px solid ${formData.category === cat ? 'rgba(235, 215, 63, 0.4)' : 'transparent'}`,
-                                    color: formData.category === cat ? '#ebd73f' : '#888',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    fontWeight: formData.category === cat ? '600' : '500',
-                                    fontSize: '1rem',
-                                    boxShadow: formData.category === cat ? '0 4px 15px rgba(235, 215, 63, 0.1)' : 'none'
-                                }}
-                            >
-                                {cat === 'Both' ? 'Both (Everything)' : cat}
-                            </button>
-                        ))}
+                <div className="input-group" style={{ marginBottom: '24px' }}>
+                    <label style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        Category <span style={{ color: '#ebd73f', opacity: 0.8 }}>(Video Type)</span>
+                    </label>
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '8px', 
+                        background: 'rgba(0,0,0,0.5)', 
+                        padding: '8px', 
+                        borderRadius: '20px', 
+                        border: '1px solid rgba(255,255,255,0.04)',
+                        boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.8)'
+                    }}>
+                        {['Videography', 'Editing', 'Both'].map((cat) => {
+                            const isActive = formData.category === cat;
+                            return (
+                                <button
+                                    type="button"
+                                    key={cat}
+                                    onClick={() => setFormData({...formData, category: cat})}
+                                    style={{
+                                        flex: 1,
+                                        position: 'relative',
+                                        padding: '14px 20px',
+                                        borderRadius: '16px',
+                                        background: isActive ? 'linear-gradient(145deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)' : 'transparent',
+                                        border: `1px solid ${isActive ? 'rgba(235, 215, 63, 0.3)' : 'transparent'}`,
+                                        color: isActive ? '#ebd73f' : '#666',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                        fontFamily: 'Clash Display, sans-serif',
+                                        fontWeight: isActive ? '600' : '500',
+                                        fontSize: '1rem',
+                                        letterSpacing: '0.5px',
+                                        overflow: 'hidden',
+                                        boxShadow: isActive ? '0 8px 25px rgba(235, 215, 63, 0.15)' : 'none'
+                                    }}
+                                    onMouseOver={(e) => {
+                                        if (!isActive) {
+                                            e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                                            e.currentTarget.style.color = '#aaa';
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                        }
+                                    }}
+                                    onMouseOut={(e) => {
+                                        if (!isActive) {
+                                            e.currentTarget.style.background = 'transparent';
+                                            e.currentTarget.style.color = '#666';
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                        }
+                                    }}
+                                    onMouseDown={(e) => {
+                                        e.currentTarget.style.transform = 'scale(0.96)';
+                                    }}
+                                    onMouseUp={(e) => {
+                                        if (!isActive) {
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                        } else {
+                                            e.currentTarget.style.transform = 'scale(1)';
+                                        }
+                                    }}
+                                >
+                                    {isActive && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: 0, left: 0, right: 0, bottom: 0,
+                                            background: 'radial-gradient(circle at 50% -20%, rgba(235, 215, 63, 0.4), transparent 60%)',
+                                            pointerEvents: 'none',
+                                            opacity: 0.8
+                                        }} />
+                                    )}
+                                    <span style={{ 
+                                        position: 'relative', 
+                                        zIndex: 1, 
+                                        textShadow: isActive ? '0 2px 10px rgba(235, 215, 63, 0.3)' : 'none'
+                                    }}>
+                                        {cat === 'Both' ? 'Both (Everything)' : cat}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
