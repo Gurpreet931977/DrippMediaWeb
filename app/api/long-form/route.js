@@ -7,18 +7,27 @@ function getSupabase() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category');
+
     const supabase = getSupabase();
     if (!supabase) {
       return Response.json({ error: 'Database misconfigured' }, { status: 500 });
     }
 
-    let { data: videos, error } = await supabase
+    let query = supabase
       .from('portfolio_long_form')
       .select('video_id, thumbnail_url, duration, title')
       .eq('is_visible', true)
       .order('sort_order', { ascending: false });
+
+    if (category && category !== 'Both') {
+      query = query.in('category', [category, 'Both']);
+    }
+
+    let { data: videos, error } = await query;
 
     if (error) {
       console.error('Error fetching long-form videos:', error);

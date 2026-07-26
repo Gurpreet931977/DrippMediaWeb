@@ -200,7 +200,9 @@ export default function Page() {
   useEffect(() => {
     async function fetchVideos() {
       try {
-        const res = await fetch('/api/long-form');
+        const urlParams = new URLSearchParams(window.location.search);
+        const category = urlParams.get('category') || 'Both';
+        const res = await fetch('/api/long-form?category=' + encodeURIComponent(category));
         if (res.ok) {
           const data = await res.json();
           if (data && data.length > 0) {

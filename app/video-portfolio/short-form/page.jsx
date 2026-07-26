@@ -421,7 +421,9 @@ export default function Page() {
         // Fetch from Supabase and load the first 2 reels
         async function fetchAndInitializeFeed() {
             try {
-                const res = await fetch('/api/reels');
+                const urlParams = new URLSearchParams(window.location.search);
+                const category = urlParams.get('category') || 'Both';
+                const res = await fetch('/api/reels?category=' + encodeURIComponent(category));
                 if (res.ok) {
                     const data = await res.json();
                     if (Array.isArray(data) && data.length > 0) {

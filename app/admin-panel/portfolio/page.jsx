@@ -26,7 +26,8 @@ export default function PortfolioManager() {
     musicText: '',
     duration: '',
     video_id: '',
-    thumbnail_url: ''
+    thumbnail_url: '',
+    category: 'Both'
   });
 
   const [notification, setNotification] = useState(null);
@@ -53,7 +54,7 @@ export default function PortfolioManager() {
   useEffect(() => {
     fetchItems();
     setSelectedFile(null);
-    setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '' });
+    setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: 'Both' });
   }, [activeTab]);
 
   const handleYoutubeBlur = async () => {
@@ -174,6 +175,7 @@ export default function PortfolioManager() {
           videoSrc: publicUrl,
           description: formData.description,
           musicText: formData.musicText || 'Original Audio - Dripp Media',
+          category: formData.category,
           sort_order: items.length > 0 ? items[0].sort_order + 1 : 1
         };
       } else if (activeTab === TABS.GRAPHICS) {
@@ -196,6 +198,7 @@ export default function PortfolioManager() {
           description: formData.description || '',
           duration: formData.duration || '0:00',
           thumbnail_url: publicUrl || formData.thumbnail_url || `https://img.youtube.com/vi/${finalVideoId}/maxresdefault.jpg`,
+          category: formData.category,
           sort_order: items.length > 0 ? items[0].sort_order + 1 : 1
         };
       }
@@ -214,7 +217,7 @@ export default function PortfolioManager() {
       // Reset Form
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '' });
+      setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: 'Both' });
       
       // Refresh list
       fetchItems();
@@ -748,6 +751,21 @@ export default function PortfolioManager() {
         </h2>
         
         <form onSubmit={handleUploadAndSave}>
+            {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) && (
+                <div className="input-group" style={{ marginBottom: '20px' }}>
+                    <label>Category (Video Type)</label>
+                    <select 
+                        value={formData.category} 
+                        onChange={(e) => setFormData({...formData, category: e.target.value})}
+                        style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                    >
+                        <option value="Videography" style={{ color: '#000' }}>Videography</option>
+                        <option value="Editing" style={{ color: '#000' }}>Editing</option>
+                        <option value="Both" style={{ color: '#000' }}>Both</option>
+                    </select>
+                </div>
+            )}
+
             {(activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && (
                 <div className="file-drop-area" onClick={() => fileInputRef.current?.click()}>
                     <input 

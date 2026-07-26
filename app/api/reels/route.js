@@ -10,18 +10,27 @@ function getSupabase() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category');
+
     const supabase = getSupabase();
     if (!supabase) {
       return Response.json({ error: 'Database misconfigured' }, { status: 500 });
     }
 
-    const { data: rawReels, error } = await supabase
+    let query = supabase
       .from('portfolio_reels')
       .select('*')
       .neq('is_visible', false)
       .order('sort_order', { ascending: false, nullsFirst: false });
+
+    if (category && category !== 'Both') {
+      query = query.in('category', [category, 'Both']);
+    }
+
+    const { data: rawReels, error } = await query;
 
     if (error) {
       console.error('Error fetching reels:', error);

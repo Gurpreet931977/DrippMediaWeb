@@ -82,25 +82,13 @@ export default function Page() {
             card.addEventListener('click', () => {
                 const targetUrl = card.getAttribute('data-link');
                 if (targetUrl) {
-                    // Zoom into the clicked card and fade everything out
-                    gsap.to(card, {
-                        scale: 1.5,
-                        opacity: 0,
-                        duration: 0.6,
-                        ease: "power2.inOut",
-                        zIndex: 100
-                    });
-
-                    // Fade out the rest of the body
-                    gsap.to('body', {
-                        opacity: 0,
-                        duration: 0.6,
-                        delay: 0.1,
-                        ease: "power2.inOut",
-                        onComplete: () => {
-                            window.location.href = targetUrl;
-                        }
-                    });
+                    // Intercept and open category selection modal
+                    const modal = document.getElementById('category-modal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        modal.dataset.targetUrl = targetUrl;
+                        gsap.fromTo(modal, { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.4, ease: "power2.out" });
+                    }
                 }
             });
         });
@@ -118,6 +106,31 @@ export default function Page() {
 
         window.addEventListener('resize', resize);
         resize();
+
+        // Modal Option Click Logic
+        window.handleCategorySelect = function(category) {
+            const modal = document.getElementById('category-modal');
+            const targetUrl = modal.dataset.targetUrl;
+            
+            if (targetUrl && category) {
+                // Fade out modal and body
+                gsap.to(modal, { opacity: 0, scale: 0.95, duration: 0.3 });
+                gsap.to('body', {
+                    opacity: 0,
+                    duration: 0.5,
+                    delay: 0.2,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                        window.location.href = `${targetUrl}?category=${category}`;
+                    }
+                });
+            }
+        };
+
+        window.closeCategoryModal = function() {
+            const modal = document.getElementById('category-modal');
+            gsap.to(modal, { opacity: 0, scale: 0.95, duration: 0.3, onComplete: () => { modal.style.display = 'none'; } });
+        };
 
         class Particle {
             constructor() {
@@ -581,6 +594,89 @@ export default function Page() {
         }
 
         .mobile-text { display: none; }
+
+        /* Category Modal Styles */
+        .category-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .category-modal {
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), inset 0 1px 20px rgba(235, 215, 63, 0.05);
+        }
+        .category-modal h3 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff, #ebd73f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .category-modal p {
+            color: #aaa;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .category-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .category-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 18px 24px;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .category-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(235, 215, 63, 0.2), transparent);
+            transition: all 0.5s ease;
+        }
+        .category-btn:hover::before {
+            left: 100%;
+        }
+        .category-btn:hover {
+            border-color: #ebd73f;
+            background: rgba(235, 215, 63, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(235, 215, 63, 0.15);
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .modal-close:hover {
+            color: #fff;
+        }
     ` }} />
 
       <div>
@@ -653,7 +749,22 @@ export default function Page() {
         </div>
       </div>
     </div>
+    </div>
   </section>
+
+  {/* Category Selection Modal */}
+  <div className="category-modal-overlay" id="category-modal">
+    <div className="category-modal">
+      <button className="modal-close" onClick={() => window.closeCategoryModal()}>×</button>
+      <h3>What are you looking for?</h3>
+      <p>Select a category to filter our portfolio</p>
+      <div className="category-options">
+        <button className="category-btn" onClick={() => window.handleCategorySelect('Videography')}>🎥 Videography</button>
+        <button className="category-btn" onClick={() => window.handleCategorySelect('Editing')}>✂️ Editing</button>
+        <button className="category-btn" onClick={() => window.handleCategorySelect('Both')}>🌟 Both (Everything)</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 
