@@ -507,6 +507,50 @@ export default function Page() {
                     btn.classList.remove('active');
                 }
             });
+
+            // Handle smooth loading screen transition
+            const loader = document.getElementById('initialLoader');
+            if (loader) {
+                const firstVideo = reelsContainer ? reelsContainer.querySelector('.reel-video') : null;
+                const hideLoader = () => {
+                    const spinner = loader.querySelector('.premium-spinner');
+                    const text = loader.querySelector('.premium-pulse-text');
+                    
+                    const tl = gsap.timeline({ onComplete: () => loader.remove() });
+                    
+                    if (spinner && text) {
+                        tl.to([spinner, text], { 
+                            y: -20, 
+                            opacity: 0, 
+                            scale: 0.9,
+                            duration: 0.6, 
+                            ease: 'power3.inOut',
+                            stagger: 0.1
+                        });
+                    }
+                    
+                    tl.to(loader, { 
+                        yPercent: -100, 
+                        borderBottomLeftRadius: '50px',
+                        borderBottomRightRadius: '50px',
+                        duration: 1.2, 
+                        ease: 'expo.inOut' 
+                    }, "-=0.2");
+                };
+                
+                if (firstVideo) {
+                    if (firstVideo.readyState >= 3) {
+                        hideLoader();
+                    } else {
+                        firstVideo.addEventListener('canplay', hideLoader, { once: true });
+                        firstVideo.addEventListener('loadeddata', hideLoader, { once: true });
+                        firstVideo.addEventListener('error', hideLoader, { once: true });
+                        setTimeout(hideLoader, 5000); // safety fallback
+                    }
+                } else {
+                    hideLoader();
+                }
+            }
         }
         
         window.changeCategory = function (cat) {
@@ -1550,49 +1594,51 @@ export default function Page() {
   </div>
 
   <div className="cursor" id="cursor" />
-  <div className="reels-container" id="reelsContainer">
-    <div style={{ 
+  <div id="initialLoader" style={{ 
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      zIndex: 99999,
       display: 'flex', 
       flexDirection: 'column', 
       justifyContent: 'center', 
       alignItems: 'center', 
-      height: '100dvh', 
-      width: '100vw', 
-      background: 'radial-gradient(circle at center, rgba(235, 215, 63, 0.08) 0%, transparent 60%)',
+      background: 'radial-gradient(circle at center, rgba(235, 215, 63, 0.08) 0%, var(--deep-black) 60%)',
       gap: '24px' 
-    }}>
-        <style dangerouslySetInnerHTML={{ __html: `
-            .premium-spinner {
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                border: 2px solid rgba(255, 255, 255, 0.05);
-                border-top-color: var(--brand-yellow);
-                border-right-color: transparent;
-                animation: premium-spin 1s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
-                box-shadow: 0 0 30px rgba(235, 215, 63, 0.15);
-            }
-            .premium-pulse-text {
-                font-family: 'Panchang', sans-serif;
-                letter-spacing: 5px;
-                font-size: 0.8rem;
-                font-weight: 500;
-                color: var(--pure-white);
-                text-transform: uppercase;
-                animation: premium-pulse 2s ease-in-out infinite;
-            }
-            @keyframes premium-spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-            @keyframes premium-pulse {
-                0%, 100% { opacity: 0.4; }
-                50% { opacity: 1; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
-            }
-        ` }} />
-        <div className="premium-spinner"></div>
-        <span className="premium-pulse-text">Loading</span>
-    </div>
+  }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+          .premium-spinner {
+              width: 50px;
+              height: 50px;
+              border-radius: 50%;
+              border: 2px solid rgba(255, 255, 255, 0.05);
+              border-top-color: var(--brand-yellow);
+              border-right-color: transparent;
+              animation: premium-spin 1s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
+              box-shadow: 0 0 30px rgba(235, 215, 63, 0.15);
+          }
+          .premium-pulse-text {
+              font-family: 'Panchang', sans-serif;
+              letter-spacing: 5px;
+              font-size: 0.8rem;
+              font-weight: 500;
+              color: var(--pure-white);
+              text-transform: uppercase;
+              animation: premium-pulse 2s ease-in-out infinite;
+          }
+          @keyframes premium-spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+          }
+          @keyframes premium-pulse {
+              0%, 100% { opacity: 0.4; }
+              50% { opacity: 1; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+          }
+      ` }} />
+      <div className="premium-spinner"></div>
+      <span className="premium-pulse-text">Loading</span>
+  </div>
+
+  <div className="reels-container" id="reelsContainer">
   </div>
 </div>
 
