@@ -302,7 +302,10 @@ export default function PortfolioManager() {
         body: JSON.stringify(payload)
       });
 
-      if (!dbRes.ok) throw new Error('Database insertion failed');
+      if (!dbRes.ok) {
+        const errData = await dbRes.json().catch(() => ({}));
+        throw new Error(errData.error || 'Database insertion failed');
+      }
       
       setUploadProgress(100);
       setUploadPopup({ show: true, type: 'success', message: 'Successfully added to portfolio! It is now visible in the list below.' });
@@ -476,9 +479,8 @@ export default function PortfolioManager() {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 80%; height: 80%;
-            background: radial-gradient(circle, rgba(235, 215, 63, 0.08) 0%, transparent 70%);
-            filter: blur(60px);
+            width: 120%; height: 120%;
+            background: radial-gradient(circle at center, rgba(235, 215, 63, 0.08) 0%, transparent 60%);
             z-index: -1;
             animation: pulseGlow 4s infinite alternate ease-in-out;
             pointer-events: none;
@@ -651,9 +653,8 @@ export default function PortfolioManager() {
             position: absolute;
             top: 20%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 60%; height: 60%;
-            background: radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, transparent 70%);
-            filter: blur(80px);
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(235, 215, 63, 0.05) 0%, transparent 60%);
             z-index: -1;
             pointer-events: none;
         }
