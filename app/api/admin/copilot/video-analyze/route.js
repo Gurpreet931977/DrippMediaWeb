@@ -44,7 +44,14 @@ export async function POST(request) {
         }],
         generationConfig: {
             temperature: 0.8,
-            responseMimeType: "application/json"
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: "object",
+                properties: {
+                    title: { type: "string" }
+                },
+                required: ["title"]
+            }
         }
       })
     });
@@ -54,16 +61,21 @@ export async function POST(request) {
 
     let textOutput = data.candidates[0].content.parts[0].text;
     
-    // Robust JSON extraction to prevent parsing errors
-    textOutput = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
+    // Robust JSON extraction: since responseSchema is used, it should be valid JSON.
+    // We just find the first '{' and last '}' as a fallback safeguard.
     const firstBrace = textOutput.indexOf('{');
     const lastBrace = textOutput.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
       textOutput = textOutput.substring(firstBrace, lastBrace + 1);
     }
 
-    const parsed = JSON.parse(textOutput);
-    return Response.json(parsed);
+    try {
+      const parsed = JSON.parse(textOutput);
+      return Response.json(parsed);
+    } catch (parseError) {
+      console.error('Failed to parse Gemini output:', textOutput);
+      return Response.json({ title: textOutput.replace(/[^a-zA-Z0-9\s#]/g, '').trim() }); // ultimate fallback
+    }
   } catch (error) {
     console.error('Video analysis error:', error);
     return Response.json({ error: error.message }, { status: 500 });
