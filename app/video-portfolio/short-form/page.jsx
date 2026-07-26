@@ -777,11 +777,11 @@ export default function Page() {
             pointer-events: none;
         }
 
-        /* Dripp Media Logo Top Right - Minimal */
+        /* Dripp Media Logo Top Left - Minimal */
         .reel-brand {
             position: absolute;
             top: 25px;
-            right: 25px;
+            left: 25px;
             z-index: 20;
             font-family: 'Panchang', sans-serif;
             font-size: 0.8rem;
