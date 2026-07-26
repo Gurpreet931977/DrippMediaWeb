@@ -182,7 +182,9 @@ export default function PortfolioManager() {
     ]);
     
     const data = await ffmpeg.readFile(outputName);
-    const newBlob = new Blob([data.buffer], { type: 'video/mp4' });
+    // CRITICAL: Must use [data] instead of [data.buffer] to prevent WASM heap padding
+    // from corrupting the MP4 container for strict browsers like Chrome!
+    const newBlob = new Blob([data], { type: 'video/mp4' });
     
     showNotification('success', 'Optimization complete! Uploading...');
     return new File([newBlob], file.name.replace(/\.[^/.]+$/, "") + "_web.mp4", { type: 'video/mp4' });

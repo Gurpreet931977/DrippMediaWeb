@@ -348,6 +348,7 @@ export default function Page() {
 
             newReel.innerHTML = `
                 <video class="reel-ambient-bg" src="${src}" muted loop playsinline preload="metadata" oncontextmenu="return false;"></video>
+                <div class="reel-ambient-blur"></div>
                 <div class="reel-content">
                     <video class="reel-video" src="${src}" muted loop playsinline preload="auto" autoplay oncontextmenu="return false;"></video>
                     <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
@@ -725,15 +726,24 @@ export default function Page() {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            filter: blur(80px) brightness(0.3);
+            /* REMOVED filter: blur(80px) brightness(0.3) due to Chromium bug */
             z-index: -1;
             opacity: 0.6;
+        }
+
+        .reel-ambient-blur {
+            position: absolute;
+            inset: 0;
+            backdrop-filter: blur(80px);
+            background: rgba(0,0,0,0.7);
+            z-index: -1;
         }
 
         .reel-video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transform: translateZ(0); /* force dedicated GPU layer */
         }
 
         /* Interactive overlay for toggling mute/play & liking */
