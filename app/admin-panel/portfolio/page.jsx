@@ -58,6 +58,23 @@ export default function PortfolioManager() {
     setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: 'Both' });
   }, [activeTab]);
 
+  useEffect(() => {
+    window.portfolioFile = selectedFile;
+    window.portfolioFormData = formData;
+  }, [selectedFile, formData]);
+
+  useEffect(() => {
+    const handleUpdate = (e) => {
+      const { detail } = e;
+      if (detail) {
+        setFormData(prev => ({ ...prev, ...detail }));
+        showNotification('success', 'Orlo has filled the form for you!');
+      }
+    };
+    window.addEventListener('UPDATE_PORTFOLIO_FORM', handleUpdate);
+    return () => window.removeEventListener('UPDATE_PORTFOLIO_FORM', handleUpdate);
+  }, []);
+
   const handleYoutubeBlur = async () => {
     let url = formData.video_id;
     if (!url) return;
@@ -214,7 +231,7 @@ export default function PortfolioManager() {
         await new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open('PUT', presignedUrl, true);
-          xhr.setRequestHeader('Content-Type', selectedFile.type);
+          xhr.setRequestHeader('Content-Type', fileToUpload.type);
           
           xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
@@ -734,8 +751,8 @@ export default function PortfolioManager() {
         }
         .notification {
             position: fixed;
-            bottom: 40px;
-            right: 40px;
+            top: 40px;
+            left: 50%;
             padding: 20px 35px;
             border-radius: 16px;
             display: flex;
@@ -745,15 +762,15 @@ export default function PortfolioManager() {
             font-weight: 600;
             z-index: 9999;
             box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             border: 1px solid rgba(255,255,255,0.15);
             backdrop-filter: blur(20px);
         }
         .notification.success { background: linear-gradient(135deg, rgba(34,197,94,0.9), rgba(22,163,74,0.9)); }
         .notification.error { background: linear-gradient(135deg, rgba(239,68,68,0.9), rgba(220,38,38,0.9)); }
-        @keyframes slideUp {
-            0% { transform: translateY(80px) scale(0.9); opacity: 0; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
+        @keyframes slideDown {
+            0% { transform: translate(-50%, -40px) scale(0.9); opacity: 0; }
+            100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
         }
         .custom-file-input {
             display: flex;
@@ -854,6 +871,29 @@ export default function PortfolioManager() {
                     </div>
                 </div>
             )}
+            
+            {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) && (
+                 <div className="input-group">
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <label style={{ margin: 0 }}>Title / Caption</label>
+                        <button type="button" onClick={() => {
+                            if (window.dispatchEvent) {
+                                window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { detail: 'Please analyze the uploaded video and write a catchy title and description.' }));
+                            }
+                        }} style={{ background: 'linear-gradient(135deg, #ebd73f 0%, #d4bc1c 100%)', border: 'none', borderRadius: '20px', padding: '4px 12px', fontSize: '0.8rem', fontWeight: 'bold', color: '#000', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            ✨ Ask Orlo
+                        </button>
+                     </div>
+                     <input type="text" placeholder="Video Title..." value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required={activeTab === TABS.LONG_FORM} />
+                 </div>
+            )}
+
+            {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) && (
+                 <div className="input-group" style={{ marginBottom: '20px' }}>
+                     <label>Description</label>
+                     <textarea placeholder="Write a description or caption..." rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}></textarea>
+                 </div>
+            )}
 
             {(activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && (
                 <div 
@@ -884,17 +924,9 @@ export default function PortfolioManager() {
             {activeTab === TABS.LONG_FORM && (
                 <>
                 <div className="form-grid">
-                    <div className="input-group">
+                    <div className="input-group" style={{ gridColumn: 'span 2' }}>
                         <label>YouTube Link or Video ID (Paste & Click Outside to Auto-Fetch)</label>
                         <input type="text" placeholder="e.g. https://youtu.be/..." value={formData.video_id} onChange={(e) => setFormData({...formData, video_id: e.target.value})} onBlur={handleYoutubeBlur} required />
-                    </div>
-                    <div className="input-group">
-                        <label>Title</label>
-                        <input type="text" placeholder="Video Title" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
-                    </div>
-                    <div className="input-group" style={{ gridColumn: 'span 2' }}>
-                        <label>Description</label>
-                        <textarea placeholder="Video Description..." rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}></textarea>
                     </div>
                     <div className="input-group" style={{ gridColumn: 'span 2' }}>
                         <label>Duration (Auto-Detected)</label>

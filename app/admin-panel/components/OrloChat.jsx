@@ -300,6 +300,92 @@ export default function OrloChat() {
     };
   }, [isOpen, speechBubble]);
 
+  useEffect(() => {
+    const handleQuickAction = (e) => {
+      if (e.detail) {
+        if (!isOpen) {
+          setIsOpen(true);
+          gsap.fromTo(chatRef.current, 
+            { opacity: 0, y: 80, scale: 0.85 }, 
+            { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1.1, 0.5)' }
+          );
+        }
+        setInput(e.detail);
+      }
+    };
+    window.addEventListener('ORLO_QUICK_ACTION', handleQuickAction);
+    return () => window.removeEventListener('ORLO_QUICK_ACTION', handleQuickAction);
+  }, [isOpen]);
+
+
+  const handleVideoAnalysis = async () => {
+     const file = window.portfolioFile;
+     if (!file) {
+         setMessages(prev => [...prev, { role: 'ai', text: "I can't find an uploaded video to analyze. Please drop one into the upload zone first!" }]);
+         return;
+     }
+     
+     setMessages(prev => [...prev, { role: 'ai', text: "Scanning video visually... extracting key frames..." }]);
+     setIsTyping(true);
+     setEmotion('thinking');
+     
+     try {
+         const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+         const { fetchFile, toBlobURL } = await import('@ffmpeg/util');
+
+         const ffmpeg = new FFmpeg();
+         const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
+         
+         await ffmpeg.load({
+             coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+             wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+         });
+         
+         const inputName = 'input_analyze.mp4';
+         await ffmpeg.writeFile(inputName, await fetchFile(file));
+         
+         // Extract 4 screenshots evenly spread
+         await ffmpeg.exec(['-i', inputName, '-vf', 'fps=1/3', 'frame-%03d.jpg']);
+         
+         const frames = [];
+         for (let i = 1; i <= 6; i++) {
+            const fileName = `frame-00${i}.jpg`;
+            try {
+               const data = await ffmpeg.readFile(fileName);
+               const b64 = Buffer.from(data.buffer).toString('base64');
+               frames.push(b64);
+            } catch (e) {
+               break; // No more frames
+            }
+         }
+         
+         setMessages(prev => [...prev, { role: 'ai', text: `Extracted ${frames.length} frames! Analyzing scene composition...` }]);
+         
+         const res = await fetch('/api/admin/copilot/video-analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                frames, 
+                prompt: "Analyze these frames sequentially from a video. Write a catchy, viral 'title' and a short 1-2 sentence 'description' for this video suitable for a portfolio. Return ONLY raw JSON with 'title' and 'description' keys." 
+            })
+         });
+         
+         const data = await res.json();
+         if (!res.ok) throw new Error(data.error);
+         
+         window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data }));
+         setMessages(prev => [...prev, { role: 'ai', text: "Done! I've automatically written the perfect title and description for you." }]);
+         setEmotion('success');
+         setTimeout(() => setEmotion('idle'), 3000);
+     } catch (e) {
+         setMessages(prev => [...prev, { role: 'ai', text: "Error analyzing video: " + e.message }]);
+         setEmotion('disappointed');
+         setTimeout(() => setEmotion('idle'), 4000);
+     } finally {
+         setIsTyping(false);
+     }
+  };
+
 
   const toggleChat = () => {
     if (isOpen) {
@@ -380,6 +466,12 @@ export default function OrloChat() {
           } else if (data.intent === 'invoice') {
             sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
             router.push('/admin-panel/invoice');
+          } else if (data.intent === 'portfolio') {
+            if (data.payload.analyzeVideo) {
+              handleVideoAnalysis();
+            } else {
+              window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data.payload }));
+            }
           }
         }
       }
