@@ -322,6 +322,21 @@ export default function OrloChat() {
     return () => window.removeEventListener('ORLO_QUICK_ACTION', handleQuickAction);
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleAnalyzeTrigger = () => {
+      if (!isOpen) {
+        setIsOpen(true);
+        gsap.fromTo(chatRef.current, 
+          { opacity: 0, y: 80, scale: 0.85 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1.1, 0.5)' }
+        );
+      }
+      handleVideoAnalysis();
+    };
+    window.addEventListener('ORLO_VIDEO_ANALYZE', handleAnalyzeTrigger);
+    return () => window.removeEventListener('ORLO_VIDEO_ANALYZE', handleAnalyzeTrigger);
+  }, [isOpen, messages]); // need messages in deps or we use callback setter
+
 
   const handleVideoAnalysis = async () => {
      const file = window.portfolioFile;
