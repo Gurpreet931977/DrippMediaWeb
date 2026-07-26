@@ -588,7 +588,7 @@ export default function PortfolioManager() {
             justify-content: center;
             gap: 12px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 15px 30px rgba(235, 215, 63, 0.25);
+            box-shadow: 0 0 40px rgba(235, 215, 63, 0.25);
             position: relative;
             overflow: hidden;
         }
@@ -605,7 +605,7 @@ export default function PortfolioManager() {
         }
         .submit-btn:hover:not(:disabled) {
             transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(235, 215, 63, 0.4);
+            box-shadow: 0 0 50px rgba(235, 215, 63, 0.4);
             filter: brightness(1.1);
         }
         .submit-btn:active:not(:disabled) {
