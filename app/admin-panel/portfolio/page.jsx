@@ -16,6 +16,7 @@ export default function PortfolioManager() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   
   // Form State
   const fileInputRef = useRef(null);
@@ -95,6 +96,32 @@ export default function PortfolioManager() {
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setSelectedFile(e.dataTransfer.files[0]);
     }
   };
 
@@ -451,26 +478,27 @@ export default function PortfolioManager() {
             border-color: rgba(235, 215, 63, 0.15);
         }
         .file-drop-area {
-            border: 2px dashed rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 60px 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 50px 20px;
             text-align: center;
+            background: rgba(255, 255, 255, 0.02);
             cursor: pointer;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-bottom: 30px;
-            background: rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
-        .file-drop-area:hover {
+        .file-drop-area:hover, .file-drop-area.drag-active {
+            border-color: #ebd73f;
             background: rgba(235, 215, 63, 0.05);
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 15px 40px rgba(235, 215, 63, 0.08);
-            border-color: rgba(235, 215, 63, 0.4);
+            transform: translateY(-2px);
+        }
+        .file-drop-area.drag-active {
+            background: rgba(235, 215, 63, 0.15);
+            transform: scale(1.02);
         }
         .file-drop-area:hover .upload-icon {
             transform: translateY(-10px) scale(1.1);
@@ -800,29 +828,52 @@ export default function PortfolioManager() {
             {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) && (
                 <div className="input-group" style={{ marginBottom: '20px' }}>
                     <label>Category (Video Type)</label>
-                    <select 
-                        value={formData.category} 
-                        onChange={(e) => setFormData({...formData, category: e.target.value})}
-                        style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-                    >
-                        <option value="Videography" style={{ color: '#000' }}>Videography</option>
-                        <option value="Editing" style={{ color: '#000' }}>Editing</option>
-                        <option value="Both" style={{ color: '#000' }}>Both</option>
-                    </select>
+                    <div style={{ display: 'flex', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        {['Videography', 'Editing', 'Both'].map((cat) => (
+                            <button
+                                type="button"
+                                key={cat}
+                                onClick={() => setFormData({...formData, category: cat})}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    borderRadius: '10px',
+                                    background: formData.category === cat ? 'rgba(235, 215, 63, 0.15)' : 'transparent',
+                                    border: `1px solid ${formData.category === cat ? 'rgba(235, 215, 63, 0.4)' : 'transparent'}`,
+                                    color: formData.category === cat ? '#ebd73f' : '#888',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    fontWeight: formData.category === cat ? '600' : '500',
+                                    fontSize: '1rem',
+                                    boxShadow: formData.category === cat ? '0 4px 15px rgba(235, 215, 63, 0.1)' : 'none'
+                                }}
+                            >
+                                {cat === 'Both' ? 'Both (Everything)' : cat}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
 
             {(activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && (
-                <div className="file-drop-area" onClick={() => fileInputRef.current?.click()}>
+                <div 
+                    className={`file-drop-area ${isDragging ? 'drag-active' : ''}`} 
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
                     <input 
                         type="file" 
                         ref={fileInputRef} 
                         onChange={handleFileSelect} 
                         accept={activeTab === TABS.REELS ? "video/mp4,video/quicktime" : "image/*"} 
+                        style={{ display: 'none' }}
                     />
-                    <UploadCloud size={56} color="#ebd73f" className="upload-icon" style={{ marginBottom: '20px' }} />
-                    <p style={{ fontWeight: '600', fontSize: '1.1rem', color: '#fff', marginBottom: '8px' }}>
-                        {selectedFile ? selectedFile.name : 'Click to browse or drag file here'}
+                    <UploadCloud size={56} color={isDragging ? '#ebd73f' : 'rgba(235, 215, 63, 0.8)'} className="upload-icon" style={{ marginBottom: '20px', transition: 'all 0.3s ease', transform: isDragging ? 'scale(1.2) translateY(-10px)' : 'none' }} />
+                    <p style={{ fontWeight: '600', fontSize: '1.1rem', color: isDragging ? '#ebd73f' : '#fff', marginBottom: '8px', transition: 'color 0.3s ease' }}>
+                        {selectedFile ? selectedFile.name : (isDragging ? 'Drop it here!' : 'Click to browse or drag file here')}
                     </p>
                     <p style={{ fontSize: '0.85rem', color: '#888' }}>
                         Direct upload to Cloudflare R2 - Bypasses Vercel Limits
