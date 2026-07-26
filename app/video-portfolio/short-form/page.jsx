@@ -1602,7 +1602,7 @@ export default function Page() {
       flexDirection: 'column', 
       justifyContent: 'center', 
       alignItems: 'center', 
-      background: 'radial-gradient(circle at center, rgba(235, 215, 63, 0.08) 0%, var(--deep-black) 60%)',
+      background: 'radial-gradient(circle at center, #15140b 0%, var(--deep-black) 60%)',
       gap: '24px' 
   }}>
       <style dangerouslySetInnerHTML={{ __html: `
