@@ -164,9 +164,22 @@ export default function PortfolioManager() {
 
     await ffmpeg.writeFile(inputName, await fetchFile(file));
     
-    // -c copy strips the QuickTime container and applies a standard Web MP4 wrapper
-    // -movflags +faststart moves the MOOV atom to the start so it plays instantly on the web
-    await ffmpeg.exec(['-i', inputName, '-c', 'copy', '-movflags', '+faststart', outputName]);
+    // -vcodec libx264 forces H.264 encoding (most compatible)
+    // -pix_fmt yuv420p ensures 8-bit color space (fixes blank screens from 10-bit exports in Chrome)
+    // -preset ultrafast ensures the browser WASM doesn't freeze or take too long
+    // -crf 28 compresses it slightly for web delivery
+    // -movflags +faststart moves the MOOV atom to the start so it plays instantly
+    showNotification('success', 'Optimizing codec for Web Compatibility (may take a minute)...');
+    await ffmpeg.exec([
+        '-i', inputName, 
+        '-vcodec', 'libx264', 
+        '-pix_fmt', 'yuv420p', 
+        '-preset', 'ultrafast', 
+        '-crf', '26', 
+        '-acodec', 'aac', 
+        '-movflags', '+faststart', 
+        outputName
+    ]);
     
     const data = await ffmpeg.readFile(outputName);
     const newBlob = new Blob([data.buffer], { type: 'video/mp4' });
