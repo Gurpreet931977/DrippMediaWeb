@@ -474,21 +474,6 @@ export default function PortfolioManager() {
             position: relative;
             margin-bottom: 70px;
         }
-        .upload-card-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 120%; height: 120%;
-            background: radial-gradient(circle at center, rgba(235, 215, 63, 0.08) 0%, transparent 60%);
-            z-index: -1;
-            animation: pulseGlow 4s infinite alternate ease-in-out;
-            pointer-events: none;
-        }
-        @keyframes pulseGlow {
-            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.5; }
-            100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.9; }
-        }
         .upload-card {
             background: linear-gradient(145deg, rgba(25, 25, 25, 0.7) 0%, rgba(10, 10, 10, 0.9) 100%);
             backdrop-filter: blur(30px);
@@ -496,7 +481,7 @@ export default function PortfolioManager() {
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 28px;
             padding: 45px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 20px rgba(255,255,255,0.02);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 20px rgba(255,255,255,0.02), 0 0 100px rgba(235, 215, 63, 0.12);
             transition: transform 0.4s ease, box-shadow 0.4s ease;
         }
         .upload-card:hover {

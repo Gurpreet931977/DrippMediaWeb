@@ -10,6 +10,7 @@ function getSupabase() {
 
 const tableMap = {
   'reels': 'portfolio_reels',
+  'short-form': 'portfolio_reels',
   'long-form': 'portfolio_long_form',
   'graphics': 'portfolio_graphics'
 };
