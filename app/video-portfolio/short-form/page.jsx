@@ -271,8 +271,8 @@ export default function Page() {
             const sheet = reelContent.querySelector('.share-sheet');
             sheet.classList.add('open');
 
-            // Set link dynamically here (mocking unique URL)
-            const videoId = Math.random().toString(36).substr(2, 6).toUpperCase();
+            // Set link dynamically to exact reel ID
+            const videoId = reelContent.dataset.id || '';
             const generateLink = window.location.origin + window.location.pathname + '?reel=' + videoId;
             const linkText = sheet.querySelector('.share-link-text');
             linkText.innerText = generateLink;
@@ -299,7 +299,10 @@ export default function Page() {
         // Fullscreen Functionality
         window.toggleFullscreen = function (btn) {
             const container = btn.closest ? btn.closest('.reel-content') : btn;
-            if (container) container.classList.toggle('clean-mode');
+            if (container) {
+                container.classList.toggle('clean-mode');
+                document.body.classList.toggle('clean-mode-active');
+            }
         };
 
         // --- Truly Infinite Scroll Logic - Sequential Array Loop ---
@@ -350,10 +353,9 @@ export default function Page() {
             newReel.innerHTML = `
                 <video class="reel-ambient-bg" src="${src}" muted loop playsinline preload="metadata" oncontextmenu="return false;"></video>
                 <div class="reel-ambient-blur"></div>
-                <div class="reel-content">
+                <div class="reel-content" data-id="${videoData.id || ''}">
                     <video class="reel-video" src="${src}" muted loop playsinline preload="auto" autoplay oncontextmenu="return false;" onerror="alert('Video Error: ' + (this.error ? this.error.message || this.error.code : 'Unknown'))"></video>
                     <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
-                    <button class="exit-fullscreen-btn" onclick="toggleFullscreen(this.closest('.reel-content'))" title="Exit Fullscreen"><i class="uil uil-compress-arrows"></i></button>
                     <div class="reel-overlay-top"></div>
                     <div class="reel-overlay"></div>
                     
@@ -386,9 +388,13 @@ export default function Page() {
                         <button class="action-btn" onclick="openShare(this)">
                             <div class="action-icon-bg"><svg class="action-icon icon-share" viewBox="0 0 24 24"><polyline points="15 17 20 12 15 7"></polyline><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg></div>
                         </button>
-                        <!-- Full Screen Button -->
-                        <button class="action-btn" onclick="toggleFullscreen(this)">
+                        <!-- Full Screen Button (Enter) -->
+                        <button class="action-btn btn-enter-fullscreen" onclick="toggleFullscreen(this)">
                             <div class="action-icon-bg"><svg class="action-icon icon-expand" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg></div>
+                        </button>
+                        <!-- Full Screen Button (Exit) -->
+                        <button class="action-btn exit-fullscreen-btn" onclick="toggleFullscreen(this)">
+                            <div class="action-icon-bg"><svg class="action-icon icon-collapse" viewBox="0 0 24 24"><path d="M8 9H5a2 2 0 0 1-2-2V4m18 5v-3a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 15v3a2 2 0 0 0 2 2h3"></path></svg></div>
                         </button>
                     </div>
 
@@ -472,9 +478,19 @@ export default function Page() {
             if (reelsContainer) {
                 reelsContainer.innerHTML = '';
             }
-            currentVideoIndex = 0;
 
-            const initialCount = Math.min(2, portfolioVideosList.length);
+            currentVideoIndex = 0;
+            
+            // Handle Deep Linking / Shared Reel
+            const targetReelId = urlParams.get('reel');
+            if (targetReelId && portfolioVideosList.length > 0) {
+                const targetIndex = portfolioVideosList.findIndex(v => v.id === targetReelId);
+                if (targetIndex !== -1) {
+                    currentVideoIndex = targetIndex;
+                }
+            }
+
+            const initialCount = portfolioVideosList.length === 0 ? 0 : 2; // Always render at least 2 to allow infinite scroll
             for (let i = 0; i < initialCount; i++) {
                 if (portfolioVideosList.length > 0) {
                     createReelHTML(portfolioVideosList[currentVideoIndex]);
@@ -537,6 +553,7 @@ export default function Page() {
             if (activeCleanMode && !activeCleanMode.contains(e.target)) {
                 // If they clicked an element that is outside the clean-mode video (the black sides)
                 activeCleanMode.classList.remove('clean-mode');
+                document.body.classList.remove('clean-mode-active');
             }
         });
 
@@ -633,6 +650,14 @@ export default function Page() {
             padding: 5px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        body.clean-mode-active .short-form-category-switcher,
+        body.clean-mode-active .nav-back {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-20px) translateX(var(--nav-x, -50%));
         }
 
         .sf-cat-btn {
@@ -1416,6 +1441,14 @@ export default function Page() {
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
         }
 
+        .reel-content.clean-mode .pop-star {
+            display: none !important;
+        }
+
+        .reel-content.clean-mode .btn-enter-fullscreen {
+            display: none !important;
+        }
+
         .reel-content.clean-mode .reel-video {
             object-fit: cover !important;
         }
@@ -1440,7 +1473,6 @@ export default function Page() {
         .reel-content.clean-mode .sound-toggle,
         .reel-content.clean-mode .reel-brand,
         .reel-content.clean-mode .reel-info,
-        .reel-content.clean-mode .reel-actions,
         .reel-content.clean-mode .sharesheet,
         .reel-content.clean-mode .comments-sheet,
         .reel-content.clean-mode .like-burst-container,
@@ -1493,35 +1525,11 @@ export default function Page() {
         }
     
         .exit-fullscreen-btn {
-            position: absolute;
-            top: 75px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .exit-fullscreen-btn:hover {
-            background: rgba(0, 0, 0, 0.8);
-            transform: scale(1.1);
+            display: none;
         }
 
         .reel-content.clean-mode .exit-fullscreen-btn {
-            opacity: 1 !important;
-            pointer-events: auto !important;
+            display: flex;
         }
 
     ` }} />
