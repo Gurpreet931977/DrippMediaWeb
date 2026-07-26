@@ -32,6 +32,7 @@ export default function Page() {
         // Custom Cursor Logic
         const cursor = document.getElementById('cursor');
         if (cursor) {
+            gsap.set(cursor, { xPercent: -50, yPercent: -50 });
             window.addEventListener('mousemove', (e) => {
                 gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
             });
@@ -41,8 +42,8 @@ export default function Page() {
             if (!cursor) return;
             const clickables = element.querySelectorAll('button, a, .video-interact-layer, .sound-toggle, .comment-text-placeholder');
             clickables.forEach(el => {
-                el.addEventListener('mouseenter', () => cursor.classList.add('active'));
-                el.addEventListener('mouseleave', () => cursor.classList.remove('active'));
+                el.addEventListener('mouseenter', () => gsap.to(cursor, { scale: 1.5, backgroundColor: 'rgba(235, 215, 63, 0.2)', duration: 0.2 }));
+                el.addEventListener('mouseleave', () => gsap.to(cursor, { scale: 1, backgroundColor: 'transparent', duration: 0.2 }));
             });
         }
 
@@ -614,12 +615,6 @@ export default function Page() {
             border-radius: 50%;
             pointer-events: none;
             z-index: 10000;
-            transition: transform 0.2s ease, background 0.2s ease;
-        }
-
-        .cursor.active {
-            transform: scale(1.5);
-            background: rgba(235, 215, 63, 0.2);
         }
 
         /* Short Form Category Switcher */

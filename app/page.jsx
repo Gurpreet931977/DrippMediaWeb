@@ -1435,7 +1435,7 @@ export default function ComingSoon() {
         e.target.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.3)';
         const cursor = document.querySelector('.cursor');
         if(cursor) {
-          cursor.classList.add('active');
+          gsap.to(cursor, { scale: 1.5, backgroundColor: 'rgba(235, 215, 63, 0.2)', duration: 0.2 });
           cursorActiveRef.current = true;
         }
       }}
@@ -1445,7 +1445,7 @@ export default function ComingSoon() {
         e.target.style.boxShadow = 'none';
         const cursor = document.querySelector('.cursor');
         if(cursor) {
-          cursor.classList.remove('active');
+          gsap.to(cursor, { scale: 1, backgroundColor: 'transparent', duration: 0.2 });
         }
       }}
     >
@@ -1590,13 +1590,7 @@ export default function ComingSoon() {
            height: 70px !important;
            box-shadow: 0 0 30px rgba(255, 255, 255, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
         }
-        .cursor.active {
-           background: rgba(235, 215, 63, 0.1) !important;
-           border: 2px solid var(--brand-yellow) !important;
-           width: 80px !important;
-           height: 80px !important;
-           box-shadow: 0 0 15px rgba(235, 215, 63, 0.3) !important;
-        }
+        
       `}</style>
       {!isTouch && <CustomCursor />}
 
@@ -2443,13 +2437,13 @@ export default function ComingSoon() {
             e.target.style.borderColor = 'var(--brand-yellow)';
             e.target.style.color = 'var(--brand-yellow)';
             const cursor = document.querySelector('.cursor');
-            if(cursor) { cursor.classList.add('active'); cursorActiveRef.current = true; }
+            if(cursor) { gsap.to(cursor, { scale: 1.5, backgroundColor: 'rgba(235, 215, 63, 0.2)', duration: 0.2 }); cursorActiveRef.current = true; }
           }}
           onMouseLeave={(e) => {
             e.target.style.borderColor = 'transparent';
             e.target.style.color = 'var(--pure-white)';
             const cursor = document.querySelector('.cursor');
-            if(cursor) { cursor.classList.remove('active'); cursorActiveRef.current = false; }
+            if(cursor) { gsap.to(cursor, { scale: 1, backgroundColor: 'transparent', duration: 0.2 }); cursorActiveRef.current = false; }
           }}
           >
             {item.label}

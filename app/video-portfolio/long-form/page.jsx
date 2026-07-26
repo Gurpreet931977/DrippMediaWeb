@@ -37,8 +37,8 @@ export default function Page() {
         });
 
         clickables.forEach(el => {
-            el.addEventListener('mouseenter', () => cursor.classList.add('active'));
-            el.addEventListener('mouseleave', () => cursor.classList.remove('active'));
+            el.addEventListener('mouseenter', () => gsap.to(cursor, { scale: 1.5, backgroundColor: 'rgba(235, 215, 63, 0.2)', duration: 0.2 }));
+            el.addEventListener('mouseleave', () => gsap.to(cursor, { scale: 1, backgroundColor: 'transparent', duration: 0.2 }));
         });
 
         // Intro Animation for Video Cards
@@ -87,7 +87,7 @@ export default function Page() {
                     youtubePlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&color=white`;
                     videoModal.classList.add('active');
                     // Add active cursor for modal interactions
-                    cursor.classList.add('active');
+                    gsap.to(cursor, { scale: 1.5, backgroundColor: 'rgba(235, 215, 63, 0.2)', duration: 0.2 });
                 }
             });
         });
@@ -98,7 +98,7 @@ export default function Page() {
             setTimeout(() => {
                 youtubePlayer.src = '';
             }, 400);
-            cursor.classList.remove('active');
+            gsap.to(cursor, { scale: 1, backgroundColor: 'transparent', duration: 0.2 });
         };
 
         closeModal.addEventListener('click', closeVideo);
@@ -301,12 +301,7 @@ export default function Page() {
             transition: width 0.3s, height 0.3s, background-color 0.3s;
         }
 
-        .cursor.active {
-            width: 50px;
-            height: 50px;
-            background-color: rgba(235, 215, 63, 0.1);
-            backdrop-filter: blur(2px);
-        }
+        
 
         /* --- HERO HEADER --- */
         .header {
