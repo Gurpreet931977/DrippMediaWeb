@@ -14,9 +14,9 @@ export async function GET() {
       return Response.json({ error: 'Database misconfigured' }, { status: 500 });
     }
 
-    const { data: videos, error } = await supabase
+    let { data: videos, error } = await supabase
       .from('portfolio_long_form')
-      .select('video_id, thumbnail_url, duration, title, channel')
+      .select('video_id, thumbnail_url, duration, title')
       .eq('is_visible', true)
       .order('sort_order', { ascending: false });
 
