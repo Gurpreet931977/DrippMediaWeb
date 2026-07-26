@@ -32,11 +32,14 @@ export default function PortfolioManager() {
   });
 
   const [notification, setNotification] = useState(null);
+  const [uploadPopup, setUploadPopup] = useState({ show: false, type: '', message: '' });
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 3000);
   };
+
+  const closeUploadPopup = () => setUploadPopup({ show: false, type: '', message: '' });
 
   const fetchItems = async () => {
     setLoading(true);
@@ -177,11 +180,11 @@ export default function PortfolioManager() {
     
     // Validate
     if (activeTab === TABS.LONG_FORM && !formData.video_id) {
-        showNotification('error', 'YouTube Video ID is required');
+        setUploadPopup({ show: true, type: 'error', message: 'YouTube Video ID is required' });
         return;
     }
     if ((activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && !selectedFile) {
-        showNotification('error', 'Please select a file to upload');
+        setUploadPopup({ show: true, type: 'error', message: 'Please select a file to upload' });
         return;
     }
 
@@ -302,7 +305,7 @@ export default function PortfolioManager() {
       if (!dbRes.ok) throw new Error('Database insertion failed');
       
       setUploadProgress(100);
-      showNotification('success', 'Successfully added to portfolio!');
+      setUploadPopup({ show: true, type: 'success', message: 'Successfully added to portfolio! It is now visible in the list below.' });
       
       // Reset Form
       setSelectedFile(null);
@@ -314,7 +317,11 @@ export default function PortfolioManager() {
 
     } catch (err) {
       console.error(err);
-      showNotification('error', err.message || 'An error occurred during upload');
+      let errorMsg = err.message || 'An error occurred during upload';
+      if (errorMsg === 'Network error during upload' || errorMsg === 'Upload to R2 failed') {
+        errorMsg += '. This is usually caused by missing CORS configuration on your Cloudflare R2 bucket.';
+      }
+      setUploadPopup({ show: true, type: 'error', message: errorMsg });
     } finally {
       setTimeout(() => {
         setUploading(false);
@@ -778,6 +785,112 @@ export default function PortfolioManager() {
             0% { transform: translate(-50%, -40px) scale(0.9); opacity: 0; }
             100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
         }
+        .upload-popup-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+        .upload-popup {
+            background: linear-gradient(145deg, rgba(20,20,20,0.95), rgba(10,10,10,0.98));
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 50px 40px;
+            border-radius: 28px;
+            text-align: center;
+            max-width: 440px;
+            width: 90%;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 2px 20px rgba(255,255,255,0.03);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            font-family: 'Clash Display', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-popup::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+        }
+        .upload-popup.success::before {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+        .upload-popup.error::before {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+        .upload-popup.success {
+            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 20px 50px rgba(34,197,94,0.03);
+        }
+        .upload-popup.error {
+            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 20px 50px rgba(239,68,68,0.03);
+        }
+        .upload-popup .popup-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            margin-bottom: 24px;
+        }
+        .upload-popup.success .popup-icon {
+            background: linear-gradient(145deg, rgba(34,197,94,0.15), rgba(22,163,74,0.05));
+            color: #22c55e;
+            box-shadow: 0 0 40px rgba(34,197,94,0.2), inset 0 2px 10px rgba(255,255,255,0.1);
+        }
+        .upload-popup.error .popup-icon {
+            background: linear-gradient(145deg, rgba(239,68,68,0.15), rgba(220,38,38,0.05));
+            color: #ef4444;
+            box-shadow: 0 0 40px rgba(239,68,68,0.2), inset 0 2px 10px rgba(255,255,255,0.1);
+        }
+        .upload-popup h3 {
+            font-family: 'Panchang', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+        .upload-popup p {
+            color: #a0a0a0;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .upload-popup .popup-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 14px 30px;
+            border-radius: 14px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .upload-popup.success .popup-btn {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: #000;
+            border: none;
+            box-shadow: 0 10px 25px rgba(34,197,94,0.25);
+        }
+        .upload-popup.error .popup-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #fff;
+            border: none;
+            box-shadow: 0 10px 25px rgba(239,68,68,0.25);
+        }
+        .upload-popup .popup-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
         .custom-file-input {
             display: flex;
             align-items: center;
@@ -824,6 +937,21 @@ export default function PortfolioManager() {
           <div className={`notification ${notification.type}`}>
               {notification.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
               {notification.message}
+          </div>
+      )}
+
+      {uploadPopup.show && (
+          <div className="upload-popup-overlay">
+              <div className={`upload-popup ${uploadPopup.type}`}>
+                  <div className="popup-icon">
+                      {uploadPopup.type === 'success' ? <CheckCircle2 size={42} /> : <AlertCircle size={42} />}
+                  </div>
+                  <h3>{uploadPopup.type === 'success' ? 'Upload Successful!' : 'Upload Failed'}</h3>
+                  <p>{uploadPopup.message}</p>
+                  <button type="button" className="popup-btn" onClick={closeUploadPopup}>
+                      {uploadPopup.type === 'success' ? 'Awesome' : 'Try Again'}
+                  </button>
+              </div>
           </div>
       )}
 
