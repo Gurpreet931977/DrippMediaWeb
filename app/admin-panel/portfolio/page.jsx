@@ -98,6 +98,36 @@ export default function PortfolioManager() {
     }
   };
 
+  const optimizeVideo = async (file) => {
+    showNotification('success', 'Loading Optimizer Engine...');
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+    const { fetchFile, toBlobURL } = await import('@ffmpeg/util');
+
+    const ffmpeg = new FFmpeg();
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
+    
+    await ffmpeg.load({
+        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+
+    showNotification('success', 'Optimizing video format (0% quality loss)...');
+    const inputName = 'input' + (file.name.substring(file.name.lastIndexOf('.')) || '.mp4');
+    const outputName = 'output.mp4';
+
+    await ffmpeg.writeFile(inputName, await fetchFile(file));
+    
+    // -c copy strips the QuickTime container and applies a standard Web MP4 wrapper
+    // -movflags +faststart moves the MOOV atom to the start so it plays instantly on the web
+    await ffmpeg.exec(['-i', inputName, '-c', 'copy', '-movflags', '+faststart', outputName]);
+    
+    const data = await ffmpeg.readFile(outputName);
+    const newBlob = new Blob([data.buffer], { type: 'video/mp4' });
+    
+    showNotification('success', 'Optimization complete! Uploading...');
+    return new File([newBlob], file.name.replace(/\.[^/.]+$/, "") + "_web.mp4", { type: 'video/mp4' });
+  };
+
   const handleUploadAndSave = async (e) => {
     e.preventDefault();
     
@@ -118,6 +148,22 @@ export default function PortfolioManager() {
     try {
       // Step 1: Upload to R2 if a file is selected (Reels / Graphics / or custom Long Form thumbnail)
       if (selectedFile) {
+        let fileToUpload = selectedFile;
+        setUploadProgress(15);
+        
+        // Only optimize if it's NOT an MP4 (e.g. .mov or QuickTime)
+        const isMp4 = fileToUpload.name.toLowerCase().endsWith('.mp4') && fileToUpload.type === 'video/mp4';
+        
+        if (activeTab === TABS.REELS && !isMp4) {
+            try {
+                fileToUpload = await optimizeVideo(selectedFile);
+            } catch (err) {
+                console.error("Video optimization failed:", err);
+                showNotification('error', 'Optimization failed, falling back to original file.');
+                // fallback to original file
+            }
+        }
+
         setUploadProgress(30);
         
         // Get Presigned URL
@@ -125,8 +171,8 @@ export default function PortfolioManager() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            fileName: selectedFile.name,
-            contentType: selectedFile.type,
+            fileName: fileToUpload.name,
+            contentType: fileToUpload.type,
             folder: activeTab === TABS.GRAPHICS ? 'Graphics' : 'Reels'
           })
         });
@@ -161,7 +207,7 @@ export default function PortfolioManager() {
 
           xhr.onerror = () => reject(new Error('Network error during upload'));
           
-          xhr.send(selectedFile);
+          xhr.send(fileToUpload);
         });
 
         setUploadProgress(90);

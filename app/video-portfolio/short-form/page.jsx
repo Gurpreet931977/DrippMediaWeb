@@ -72,6 +72,28 @@ export default function Page() {
         window.toggleMuteGlobal = function (element) {
             isGlobalMuted = !isGlobalMuted;
             updateVolumeUI();
+            
+            // If they interact with the sound button, ensure the video starts playing if it was paused by browser policy!
+            const container = element.closest('.reel-content');
+            if (container) {
+                const vid = container.querySelector('.reel-video');
+                const ambVid = container.parentElement.querySelector('.reel-ambient-bg');
+                if (vid && vid.paused) {
+                    vid.play().catch(()=>{});
+                    if (ambVid) ambVid.play().catch(()=>{});
+                    
+                    // Also hide the play indicator since it's playing now
+                    const indicator = container.querySelector('.center-indicator');
+                    if (indicator) {
+                        const icon = indicator.querySelector('.indicator-icon');
+                        icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                        indicator.classList.remove('show');
+                        void indicator.offsetWidth;
+                        indicator.classList.add('show');
+                        setTimeout(() => indicator.classList.remove('show'), 800);
+                    }
+                }
+            }
         };
 
         // Comments Sheet Logic
@@ -106,7 +128,18 @@ export default function Page() {
                     if (mainVid) {
                         const playPromise = mainVid.play();
                         if (playPromise !== undefined) {
-                            playPromise.catch(error => { console.log('Autoplay prevented', error); });
+                            playPromise.catch(error => { 
+                                console.log('Autoplay prevented', error); 
+                                // If autoplay is blocked, the video is paused at 0s. 
+                                // Cinematic videos often start with a black frame. 
+                                // Let's seek to 0.5s so the user sees a thumbnail instead of a black screen!
+                                setTimeout(() => {
+                                    if (mainVid.paused) {
+                                        mainVid.currentTime = 0.5;
+                                        if (ambVid) ambVid.currentTime = 0.5;
+                                    }
+                                }, 100);
+                            });
                         }
                     }
                     if (ambVid) ambVid.play().catch(e => { });
@@ -314,9 +347,9 @@ export default function Page() {
             newReel.className = 'reel-item';
 
             newReel.innerHTML = `
-                <video class="reel-ambient-bg" src="${src}" muted loop oncontextmenu="return false;"></video>
+                <video class="reel-ambient-bg" src="${src}" muted loop playsinline preload="metadata" oncontextmenu="return false;"></video>
                 <div class="reel-content">
-                    <video class="reel-video" src="${src}" muted loop playsinline oncontextmenu="return false;"></video>
+                    <video class="reel-video" src="${src}" muted loop playsinline preload="auto" autoplay oncontextmenu="return false;"></video>
                     <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
                     <button class="exit-fullscreen-btn" onclick="toggleFullscreen(this.closest('.reel-content'))" title="Exit Fullscreen"><i class="uil uil-compress-arrows"></i></button>
                     <div class="reel-overlay-top"></div>
