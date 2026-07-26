@@ -198,10 +198,9 @@ export default function PortfolioManager() {
         let fileToUpload = selectedFile;
         setUploadProgress(15);
         
-        // Only optimize if it's NOT an MP4 (e.g. .mov or QuickTime)
-        const isMp4 = fileToUpload.name.toLowerCase().endsWith('.mp4') && fileToUpload.type === 'video/mp4';
-        
-        if (activeTab === TABS.REELS && !isMp4) {
+        // ALWAYS optimize Reels/Short Form to ensure +faststart (moov atom at beginning)
+        // Otherwise, raw MP4s from Premiere will show a blank screen until fully downloaded
+        if (activeTab === TABS.REELS) {
             try {
                 fileToUpload = await optimizeVideo(selectedFile);
             } catch (err) {
