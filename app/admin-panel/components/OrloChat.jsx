@@ -339,7 +339,7 @@ export default function OrloChat() {
          const { fetchFile, toBlobURL } = await import('@ffmpeg/util');
 
          const ffmpeg = new FFmpeg();
-         const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd';
+         const baseURL = '/ffmpeg';
          
          await ffmpeg.load({
              coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
