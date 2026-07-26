@@ -148,7 +148,7 @@ export default function PortfolioManager() {
     const { fetchFile, toBlobURL } = await import('@ffmpeg/util');
 
     const ffmpeg = new FFmpeg();
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
+    const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd';
     
     await ffmpeg.load({
         coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
@@ -977,9 +977,9 @@ export default function PortfolioManager() {
                  </div>
             )}
 
-            {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) && (
+            {activeTab === TABS.LONG_FORM && (
                  <div className="input-group" style={{ marginBottom: '20px' }}>
-                     <label>Description</label>
+                     <label style={{ fontFamily: 'Clash Display, sans-serif' }}>Description</label>
                      <textarea placeholder="Write a description or caption..." rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}></textarea>
                  </div>
             )}
@@ -1046,11 +1046,7 @@ export default function PortfolioManager() {
             {activeTab === TABS.REELS && (
                 <div className="form-grid">
                     <div className="input-group" style={{ gridColumn: 'span 2' }}>
-                        <label>Description</label>
-                        <textarea placeholder="Write a catchy caption..." rows="2" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}></textarea>
-                    </div>
-                    <div className="input-group" style={{ gridColumn: 'span 2' }}>
-                        <label>Music Text</label>
+                        <label style={{ fontFamily: 'Clash Display, sans-serif' }}>Music Text</label>
                         <input type="text" placeholder="Original Audio - Dripp Media" value={formData.musicText} onChange={(e) => setFormData({...formData, musicText: e.target.value})} />
                     </div>
                 </div>
