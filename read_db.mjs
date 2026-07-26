@@ -11,15 +11,19 @@ const env = envLocal.split('\n').reduce((acc, line) => {
 }, {});
 
 const supabaseUrl = env['NEXT_PUBLIC_SUPABASE_URL'];
-const supabaseKey = env['SUPABASE_SERVICE_ROLE_KEY'] || env['NEXT_PUBLIC_SUPABASE_ANON_KEY'];
+const supabaseKey = env['NEXT_PUBLIC_SUPABASE_ANON_KEY'];
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function readDatabase() {
+    console.log("Fetching reels...");
     const { data: reels, error: reelsError } = await supabase.from('portfolio_reels').select('*');
+    console.log("reels error:", reelsError);
+    console.log("reels data:", reels);
 
-    console.log("=== SUPABASE DATABASE READ RESULTS ===");
-    console.log("portfolio_reels count:", reels ? reels.length : 0);
-    console.log("portfolio_reels data:", JSON.stringify(reels, null, 2));
+    console.log("\nFetching long form...");
+    const { data: lf, error: lfError } = await supabase.from('portfolio_long_form').select('*');
+    console.log("long form error:", lfError);
+    console.log("long form data:", lf);
 }
 
 readDatabase();
