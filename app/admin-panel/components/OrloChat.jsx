@@ -164,6 +164,11 @@ export default function OrloChat() {
         
         recognitionRef.current.onerror = (event) => {
           console.error('Speech recognition error', event.error);
+          let errorMsg = 'Voice recognition error';
+          if (event.error === 'not-allowed') errorMsg = 'Microphone access denied';
+          else if (event.error === 'network') errorMsg = 'Network error during voice recognition';
+          else if (event.error === 'no-speech') errorMsg = 'No speech detected';
+          showToast(errorMsg);
           setIsListening(false);
         };
         
