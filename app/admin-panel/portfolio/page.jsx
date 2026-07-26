@@ -776,9 +776,9 @@ export default function PortfolioManager() {
         .upload-popup-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -786,101 +786,116 @@ export default function PortfolioManager() {
             animation: fadeIn 0.4s ease;
         }
         .upload-popup {
-            background: linear-gradient(145deg, rgba(40, 40, 40, 0.7) 0%, rgba(10, 10, 10, 0.95) 100%);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
+            background: linear-gradient(145deg, rgba(25, 25, 25, 0.8) 0%, rgba(8, 8, 8, 0.98) 100%);
+            backdrop-filter: blur(50px);
+            -webkit-backdrop-filter: blur(50px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-top: 1px solid rgba(255, 255, 255, 0.15);
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 50px 40px;
-            border-radius: 32px;
+            border-left: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 50px 45px;
+            border-radius: 36px;
             text-align: center;
-            max-width: 440px;
+            max-width: 460px;
             width: 90%;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.8), inset 0 2px 20px rgba(255,255,255,0.03);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.9), inset 0 2px 20px rgba(255,255,255,0.04);
             animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             font-family: 'Clash Display', sans-serif;
             position: relative;
             overflow: hidden;
+            transform: translateZ(0); /* Hardware acceleration */
         }
         .upload-popup::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; height: 100%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
             pointer-events: none;
         }
         .upload-popup.success {
-            box-shadow: 0 40px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(34,197,94,0.05);
-            border-color: rgba(34,197,94,0.3);
-            border-top-color: rgba(34,197,94,0.5);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.9), inset 0 0 60px rgba(34,197,94,0.06), 0 0 120px rgba(34,197,94,0.15);
+            border-color: rgba(34,197,94,0.35);
+            border-top-color: rgba(34,197,94,0.6);
         }
         .upload-popup.error {
-            box-shadow: 0 40px 80px rgba(0,0,0,0.8), inset 0 0 40px rgba(239,68,68,0.05);
-            border-color: rgba(239,68,68,0.3);
-            border-top-color: rgba(239,68,68,0.5);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.9), inset 0 0 60px rgba(239,68,68,0.06), 0 0 120px rgba(239,68,68,0.15);
+            border-color: rgba(239,68,68,0.35);
+            border-top-color: rgba(239,68,68,0.6);
         }
         .upload-popup .popup-icon {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 90px; height: 90px;
+            width: 96px; height: 96px;
             border-radius: 50%;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
         .upload-popup.success .popup-icon {
-            background: linear-gradient(145deg, rgba(34,197,94,0.15), rgba(22,163,74,0.05));
-            color: #22c55e;
-            box-shadow: 0 0 40px rgba(34,197,94,0.2), inset 0 2px 10px rgba(255,255,255,0.1);
+            background: linear-gradient(145deg, rgba(34,197,94,0.2), rgba(22,163,74,0.05));
+            color: #4ade80;
+            box-shadow: 0 0 50px rgba(34,197,94,0.25), inset 0 2px 15px rgba(255,255,255,0.15);
         }
         .upload-popup.error .popup-icon {
-            background: linear-gradient(145deg, rgba(239,68,68,0.15), rgba(220,38,38,0.05));
-            color: #ef4444;
-            box-shadow: 0 0 40px rgba(239,68,68,0.2), inset 0 2px 10px rgba(255,255,255,0.1);
+            background: linear-gradient(145deg, rgba(239,68,68,0.2), rgba(220,38,38,0.05));
+            color: #f87171;
+            box-shadow: 0 0 50px rgba(239,68,68,0.25), inset 0 2px 15px rgba(255,255,255,0.15);
         }
         .upload-popup h3 {
             font-family: 'Panchang', sans-serif;
-            font-size: 1.5rem;
-            margin-bottom: 12px;
+            font-size: 1.6rem;
+            margin-bottom: 14px;
             color: #fff;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
         .upload-popup p {
-            color: #a0a0a0;
-            font-size: 1.05rem;
-            line-height: 1.6;
-            margin-bottom: 30px;
+            color: #b0b0b0;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 35px;
+            font-weight: 500;
         }
         .upload-popup .popup-btn {
-            background: rgba(235, 215, 63, 0.1);
-            border: 1px solid rgba(235, 215, 63, 0.3);
+            background: rgba(235, 215, 63, 0.15);
+            border: 1px solid rgba(235, 215, 63, 0.4);
             color: #ebd73f;
-            padding: 14px 30px;
-            border-radius: 14px;
+            padding: 16px 32px;
+            border-radius: 16px;
             font-family: 'Clash Display', sans-serif;
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             width: 100%;
             position: relative;
             z-index: 1;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .upload-popup.success .popup-btn {
-            background: rgba(34,197,94,0.1);
+            background: linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(22,163,74,0.05) 100%);
             color: #4ade80;
-            border-color: rgba(34,197,94,0.3);
+            border-color: rgba(34,197,94,0.4);
+            box-shadow: 0 10px 30px rgba(34,197,94,0.15);
         }
         .upload-popup.error .popup-btn {
-            background: rgba(239,68,68,0.1);
+            background: linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.05) 100%);
             color: #f87171;
-            border-color: rgba(239,68,68,0.3);
+            border-color: rgba(239,68,68,0.4);
+            box-shadow: 0 10px 30px rgba(239,68,68,0.15);
         }
         .upload-popup .popup-btn:hover {
-            transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.3);
-            color: #fff;
+            transform: translateY(-4px) scale(1.02);
+            filter: brightness(1.2);
+        }
+        .upload-popup.success .popup-btn:hover {
+            box-shadow: 0 15px 40px rgba(34,197,94,0.3);
+            border-color: rgba(34,197,94,0.6);
+        }
+        .upload-popup.error .popup-btn:hover {
+            box-shadow: 0 15px 40px rgba(239,68,68,0.3);
+            border-color: rgba(239,68,68,0.6);
         }
         @keyframes popIn {
             0% { transform: scale(0.8) translateY(20px); opacity: 0; }
