@@ -345,56 +345,85 @@ export default function OrloChat() {
          return;
      }
      
-     setMessages(prev => [...prev, { role: 'ai', text: "Scanning video visually... extracting key frames..." }]);
+     setMessages(prev => [...prev, { role: 'ai', text: "Scanning video visually... extracting key frames natively..." }]);
      setIsTyping(true);
      setEmotion('thinking');
      
      try {
-         const { FFmpeg } = await import('@ffmpeg/ffmpeg');
-         const { fetchFile, toBlobURL } = await import('@ffmpeg/util');
-
-         const ffmpeg = new FFmpeg();
-         const baseURL = '/ffmpeg';
+         // Lightning Fast Native HTML5 Frame Extraction (Bypasses slow FFmpeg WASM)
+         const videoUrl = URL.createObjectURL(file);
+         const video = document.createElement('video');
+         video.src = videoUrl;
+         video.crossOrigin = 'anonymous';
+         video.muted = true;
+         video.playsInline = true;
          
-         await ffmpeg.load({
-             coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-             wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+         await new Promise((resolve, reject) => {
+             video.onloadeddata = () => resolve();
+             video.onerror = () => reject(new Error("Failed to load video for native analysis"));
+             video.load();
          });
          
-         const inputName = 'input_analyze.mp4';
-         await ffmpeg.writeFile(inputName, await fetchFile(file));
+         const canvas = document.createElement('canvas');
+         const ctx = canvas.getContext('2d');
          
-         // Extract up to 6 screenshots evenly spread, scaled down to 480p to prevent payload too large errors
-         await ffmpeg.exec(['-i', inputName, '-vf', 'fps=1/3,scale=-1:480', 'frame-%03d.jpg']);
+         // Scale to 480p to keep payload small
+         const targetWidth = 480;
+         const scale = targetWidth / video.videoWidth;
+         const targetHeight = Math.floor(video.videoHeight * scale);
+         canvas.width = targetWidth;
+         canvas.height = targetHeight;
          
          const frames = [];
-         for (let i = 1; i <= 6; i++) {
-            const fileName = `frame-00${i}.jpg`;
-            try {
-               const data = await ffmpeg.readFile(fileName);
-               const b64 = Buffer.from(data.buffer).toString('base64');
-               frames.push(b64);
-            } catch (e) {
-               break; // No more frames
-            }
+         // Extract 4 frames evenly spread across the video
+         const duration = video.duration && isFinite(video.duration) ? video.duration : 15; // default 15s if unknown
+         const timePoints = [
+             duration * 0.1, 
+             duration * 0.4, 
+             duration * 0.7, 
+             duration * 0.95
+         ];
+         
+         for (const time of timePoints) {
+             video.currentTime = time;
+             await new Promise((resolve) => {
+                 video.onseeked = () => {
+                     ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+                     const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+                     frames.push(base64);
+                     resolve();
+                 };
+             });
          }
          
-         setMessages(prev => [...prev, { role: 'ai', text: `Extracted ${frames.length} frames! Analyzing scene composition...` }]);
+         URL.revokeObjectURL(videoUrl);
          
+         setMessages(prev => [...prev, { role: 'ai', text: `Extracted ${frames.length} frames instantly! Writing premium captions...` }]);
+         
+         const superPrompt = `
+You are the elite Social Media Strategist and Lead Copywriter for Dripp Media, a premium creative agency. 
+Analyze these 4 sequential frames from a video we just produced or edited. 
+Write a highly engaging, viral, and premium 'title' and a detailed 'description' (caption) for this video to showcase it in our high-end portfolio. 
+- Do NOT be basic, generic, or boring.
+- Write from the perspective of Dripp Media (using "we", "our team", etc. sparingly but effectively to establish authority).
+- The description MUST be detailed and comprehensive (at least 3-4 impactful sentences or a short paragraph). It should tell a mini-story about the creative direction, the vibe, or the high-end quality of the work we delivered.
+- Use trending structures, psychological hooks, and impactful vocabulary.
+- Include 3-5 highly relevant, high-traffic hashtags and tasteful emojis.
+- The title should be punchy and make people want to click immediately.
+Return ONLY raw JSON with 'title' and 'description' keys. Do not include markdown formatting or backticks around the JSON.
+         `.trim();
+
          const res = await fetch('/api/admin/copilot/video-analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                frames, 
-                prompt: "Analyze these frames sequentially from a video. Write a catchy, viral 'title' and a short 1-2 sentence 'description' for this video suitable for a portfolio. Return ONLY raw JSON with 'title' and 'description' keys." 
-            })
+            body: JSON.stringify({ frames, prompt: superPrompt })
          });
          
          const data = await res.json();
          if (!res.ok) throw new Error(data.error || data.message || 'Unknown API Error');
          
          window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data }));
-         setMessages(prev => [...prev, { role: 'ai', text: "Done! I've automatically written the perfect title and description for you." }]);
+         setMessages(prev => [...prev, { role: 'ai', text: "Done! I've automatically written a premium title and description for you." }]);
          setEmotion('success');
          setTimeout(() => setEmotion('idle'), 3000);
      } catch (e) {
