@@ -539,6 +539,7 @@ export default function PortfolioManager() {
             gap: 10px;
         }
         .input-group label {
+            font-family: 'Clash Display', sans-serif;
             font-size: 0.9rem;
             color: #aaa;
             font-weight: 500;
@@ -551,7 +552,7 @@ export default function PortfolioManager() {
             border-radius: 14px;
             color: white;
             outline: none;
-            font-family: inherit;
+            font-family: 'Clash Display', sans-serif;
             font-size: 1.05rem;
             transition: all 0.4s ease;
             box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
@@ -568,7 +569,10 @@ export default function PortfolioManager() {
             border: none;
             padding: 18px 36px;
             border-radius: 14px;
+            font-family: 'Clash Display', sans-serif;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             cursor: pointer;
             width: 100%;
             font-size: 1.2rem;
@@ -684,6 +688,7 @@ export default function PortfolioManager() {
             flex: 1;
         }
         .item-title {
+            font-family: 'Clash Display', sans-serif;
             font-weight: 600;
             font-size: 1.2rem;
             margin-bottom: 6px;
@@ -699,6 +704,7 @@ export default function PortfolioManager() {
             text-shadow: 0 0 15px rgba(235,215,63,0.4);
         }
         .item-meta {
+            font-family: 'Clash Display', sans-serif;
             font-size: 0.9rem;
             color: #777;
             font-weight: 400;
@@ -803,6 +809,7 @@ export default function PortfolioManager() {
             color: #fff;
             padding: 8px 16px;
             border-radius: 10px;
+            font-family: 'Clash Display', sans-serif;
             font-size: 0.9rem;
             font-weight: 500;
             transition: all 0.3s ease;
@@ -941,6 +948,7 @@ export default function PortfolioManager() {
                             border: '1px solid rgba(235, 215, 63, 0.4)', 
                             borderRadius: '24px', 
                             padding: '6px 14px', 
+                            fontFamily: 'Clash Display, sans-serif',
                             fontSize: '0.85rem', 
                             fontWeight: '600', 
                             color: '#ebd73f', 
