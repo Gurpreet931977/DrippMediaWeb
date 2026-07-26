@@ -405,14 +405,14 @@ export default function OrloChat() {
 You are the Lead Copywriter for Dripp Media, a premium creative agency. 
 Analyze these 4 sequential frames from a video we just produced or edited. 
 The user has categorized this video as: "${currentCategory}".
-Write a strong, literal 'title' (which acts as a short caption) for this video to showcase it in our agency portfolio. 
-- If the category is "Videography", focus heavily on the camera work, filming style, and visual composition.
-- If the category is "Editing", focus heavily on the cuts, pacing, color grading, and post-production techniques.
-- If the category is "Both (Everything)", focus on the end-to-end production value.
-- Do NOT write a long paragraph. Just write a punchy, 1-2 sentence title/caption.
-- Look closely at what is literally happening in the video and state it clearly. Do not use overly abstract or artsy jargon.
+Write a short, literal 'title' for this video to showcase it in our agency portfolio. 
+- If the category is "Videography", hint at the camera work or filming style.
+- If the category is "Editing", hint at the cuts, pacing, or color grading.
+- If the category is "Both (Everything)", hint at the end-to-end production value.
+- CRITICAL: Do NOT write full sentences or paragraphs. Just write a punchy, 3-8 word title (e.g. "Mountain Bike Event Coverage" or "Dynamic Real Estate Edit").
+- Look closely at what is literally happening in the video and state it clearly. Do not use overly abstract jargon.
 - NO EMOJIS. None. 
-- Include 3-4 highly relevant hashtags at the end.
+- Include 2-3 highly relevant hashtags at the end of the title.
 Return ONLY raw JSON with a single 'title' key. Do not include markdown formatting or backticks around the JSON.
          `.trim();
 
