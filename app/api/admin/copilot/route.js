@@ -165,7 +165,16 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
 
-    const textOutput = data.candidates[0].content.parts[0].text;
+    let textOutput = data.candidates[0].content.parts[0].text;
+    
+    // Robust JSON extraction to prevent parsing errors
+    textOutput = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
+    const firstBrace = textOutput.indexOf('{');
+    const lastBrace = textOutput.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      textOutput = textOutput.substring(firstBrace, lastBrace + 1);
+    }
+
     const parsed = JSON.parse(textOutput);
 
     if (parsed.intent === 'learn' && parsed.learnedRule && supabase) {
