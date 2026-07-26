@@ -17,16 +17,24 @@ export async function GET() {
       return Response.json({ error: 'Database misconfigured' }, { status: 500 });
     }
 
-    const { data: reels, error } = await supabase
+    const { data: rawReels, error } = await supabase
       .from('portfolio_reels')
-      .select('videoSrc, musicText, description, sort_order')
-      .eq('is_visible', true)
-      .order('sort_order', { ascending: false });
+      .select('*')
+      .neq('is_visible', false)
+      .order('sort_order', { ascending: false, nullsFirst: false });
 
     if (error) {
       console.error('Error fetching reels:', error);
       return Response.json({ error: error.message }, { status: 500 });
     }
+
+    const reels = (rawReels || []).map(item => ({
+      ...item,
+      videoSrc: item.videoSrc || item.video_src || item.video_url || item.url || item.src || '',
+      musicText: item.musicText || item.music_text || item.music || item.audio || item.title || 'Original Audio - Dripp Media',
+      description: item.description || item.desc || item.caption || '',
+      sort_order: item.sort_order ?? 0
+    })).filter(item => item.videoSrc);
 
     return Response.json(reels);
   } catch (err) {

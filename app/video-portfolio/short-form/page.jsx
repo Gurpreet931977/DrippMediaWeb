@@ -305,13 +305,18 @@ export default function Page() {
         // Create HTML for a single reel instance
         function createReelHTML(videoData) {
             if (!reelsContainer || !videoData) return;
+            const src = videoData.videoSrc || videoData.video_src || videoData.video_url || videoData.url || videoData.src || '';
+            const desc = videoData.description || videoData.desc || videoData.caption || '';
+            const music = videoData.musicText || videoData.music_text || videoData.music || videoData.audio || videoData.title || 'Original Audio - Dripp Media';
+            if (!src) return;
+
             const newReel = document.createElement('div');
             newReel.className = 'reel-item';
 
             newReel.innerHTML = `
-                <video class="reel-ambient-bg" src="${videoData.videoSrc}" muted loop oncontextmenu="return false;"></video>
+                <video class="reel-ambient-bg" src="${src}" muted loop oncontextmenu="return false;"></video>
                 <div class="reel-content">
-                    <video class="reel-video" src="${videoData.videoSrc}" loop playsinline oncontextmenu="return false;"></video>
+                    <video class="reel-video" src="${src}" loop playsinline oncontextmenu="return false;"></video>
                     <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
                     <button class="exit-fullscreen-btn" onclick="toggleFullscreen(this.closest('.reel-content'))" title="Exit Fullscreen"><i class="uil uil-compress-arrows"></i></button>
                     <div class="reel-overlay-top"></div>
@@ -326,10 +331,10 @@ export default function Page() {
                     
                     <div class="reel-info">
                         <h3 class="reel-username">@drippmedia</h3>
-                        <p class="reel-desc">${videoData.description || ''}</p>
+                        <p class="reel-desc">${desc}</p>
                         <div class="reel-music">
                             <svg class="music-icon action-icon" width="16" height="16" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M9 18V5l12-2v13"></path><circle fill="none" stroke="currentColor" stroke-width="2" cx="6" cy="18" r="3"></circle><circle fill="none" stroke="currentColor" stroke-width="2" cx="18" cy="16" r="3"></circle></svg>
-                            <div class="music-text"><span class="music-marquee">${videoData.musicText || 'Original Audio - Dripp Media'}</span></div>
+                            <div class="music-text"><span class="music-marquee">${music}</span></div>
                         </div>
                     </div>
                     
