@@ -393,11 +393,11 @@ export default function Page() {
                         </button>
                         <!-- Full Screen Button (Enter) -->
                         <button class="action-btn btn-enter-fullscreen" onclick="toggleFullscreen(this)">
-                            <div class="action-icon-bg"><svg class="action-icon icon-expand" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg></div>
+                            <div class="action-icon-bg"><svg class="action-icon icon-expand" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg></div>
                         </button>
                         <!-- Full Screen Button (Exit) -->
                         <button class="action-btn exit-fullscreen-btn" onclick="toggleFullscreen(this)">
-                            <div class="action-icon-bg"><svg class="action-icon icon-collapse" viewBox="0 0 24 24"><path d="M8 9H5a2 2 0 0 1-2-2V4m18 5v-3a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 15v3a2 2 0 0 0 2 2h3"></path></svg></div>
+                            <div class="action-icon-bg"><svg class="action-icon icon-collapse" viewBox="0 0 24 24"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg></div>
                         </button>
                     </div>
 
@@ -1559,10 +1559,6 @@ export default function Page() {
             display: none !important;
         }
 
-        .reel-content.clean-mode .btn-enter-fullscreen {
-            display: none !important;
-        }
-
         .reel-content.clean-mode .reel-video {
             object-fit: cover !important;
         }
@@ -1577,7 +1573,8 @@ export default function Page() {
         .sharesheet,
         .comments-sheet,
         .like-burst-container,
-        .center-indicator {
+        .center-indicator,
+        .action-btn {
             transition: opacity 0.4s ease, transform 0.4s ease !important;
         }
 
@@ -1590,7 +1587,8 @@ export default function Page() {
         .reel-content.clean-mode .sharesheet,
         .reel-content.clean-mode .comments-sheet,
         .reel-content.clean-mode .like-burst-container,
-        .reel-content.clean-mode .center-indicator {
+        .reel-content.clean-mode .center-indicator,
+        .reel-content.clean-mode .action-btn:not(.exit-fullscreen-btn) {
             opacity: 0 !important;
             pointer-events: none !important;
         }
