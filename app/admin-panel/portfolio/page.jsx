@@ -33,6 +33,7 @@ export default function PortfolioManager() {
 
   const [notification, setNotification] = useState(null);
   const [uploadPopup, setUploadPopup] = useState({ show: false, type: '', message: '' });
+  const [editPopup, setEditPopup] = useState({ show: false, id: null, field: '', value: '' });
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
@@ -382,24 +383,8 @@ export default function PortfolioManager() {
     }
   };
 
-  const editItemField = async (id, field, currentVal) => {
-    const newVal = prompt(`Enter new ${field === 'description' ? 'caption' : 'title'}:`, currentVal || '');
-    if (newVal === null || newVal === currentVal) return;
-    try {
-      const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, [field]: newVal.trim() })
-      });
-      if (res.ok) {
-        showNotification('success', 'Updated successfully');
-        fetchItems();
-      } else {
-        throw new Error('Update failed');
-      }
-    } catch (e) {
-      showNotification('error', 'Failed to update');
-    }
+  const openEditPopup = (id, field, currentVal) => {
+    setEditPopup({ show: true, id, field, value: currentVal || '' });
   };
 
   // Reordering Logic (Move Up/Down instead of Drag to keep it simple for now)
@@ -992,6 +977,57 @@ export default function PortfolioManager() {
           </div>
       )}
 
+      {editPopup.show && (
+          <div className="upload-popup-overlay" onClick={() => setEditPopup({ show: false, id: null, field: '', value: '' })}>
+              <div className="upload-popup" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '550px', borderTop: '4px solid #ebd73f' }}>
+                  <div className="popup-icon" style={{ background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.05))', color: '#ebd73f', boxShadow: '0 0 50px rgba(235, 215, 63, 0.25), inset 0 2px 15px rgba(255,255,255,0.15)', margin: '0 auto 28px auto' }}>
+                      <Edit2 size={42} />
+                  </div>
+                  <h3 style={{ textAlign: 'center' }}>Edit {editPopup.field === 'description' ? 'Caption' : 'Title'}</h3>
+                  <p style={{ textAlign: 'center' }}>Update the text below and save your changes to apply them live.</p>
+                  
+                  <input 
+                    type="text" 
+                    style={{ width: '100%', padding: '18px 24px', borderRadius: '16px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', marginBottom: '35px', fontSize: '1.1rem', outline: 'none', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.5)', fontFamily: 'Clash Display, sans-serif' }}
+                    value={editPopup.value} 
+                    onChange={e => setEditPopup({...editPopup, value: e.target.value})} 
+                    autoFocus
+                    onKeyDown={async (e) => {
+                        if (e.key === 'Enter') {
+                            document.getElementById('saveEditBtn').click();
+                        }
+                    }}
+                  />
+                  
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <button type="button" className="popup-btn" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setEditPopup({ show: false, id: null, field: '', value: '' })}>
+                        Cancel
+                    </button>
+                    <button id="saveEditBtn" type="button" className="popup-btn" style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.4)' }} onClick={async () => {
+                        try {
+                          const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: editPopup.id, [editPopup.field]: editPopup.value.trim() })
+                          });
+                          if (res.ok) {
+                            showNotification('success', 'Updated successfully');
+                            fetchItems();
+                            setEditPopup({ show: false, id: null, field: '', value: '' });
+                          } else {
+                            throw new Error('Update failed');
+                          }
+                        } catch (e) {
+                          showNotification('error', 'Failed to update');
+                        }
+                    }}>
+                        Save Changes
+                    </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
       {uploadPopup.show && (
           <div className="upload-popup-overlay">
               <div className={`upload-popup ${uploadPopup.type}`}>
@@ -1282,7 +1318,7 @@ export default function PortfolioManager() {
                                 
                                 {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS) && (
                                     <button 
-                                        onClick={() => editItemField(item.id, activeTab === TABS.LONG_FORM ? 'title' : 'description', activeTab === TABS.LONG_FORM ? item.title : item.description)}
+                                        onClick={() => openEditPopup(item.id, activeTab === TABS.LONG_FORM ? 'title' : 'description', activeTab === TABS.LONG_FORM ? item.title : item.description)}
                                         style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
                                         title="Edit Text"
                                     >
