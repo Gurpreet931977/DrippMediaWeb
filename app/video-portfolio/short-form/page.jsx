@@ -340,16 +340,16 @@ export default function Page() {
         let currentVideoIndex = 0; // The tracker
 
         const CTA_OPTIONS = [
-            { title: "The Art of Perception", text: "People don't buy what you do; they buy how you make them feel. Discover how we engineer emotion through light and sound.", button: "Explore Our Process" },
-            { title: "Beyond the Lens", text: "Great visuals don't just capture a moment—they dictate the narrative. See what goes into crafting a legacy brand.", button: "Behind the Scenes" },
-            { title: "The Anatomy of Attention", text: "In an era of endless scrolling, true engagement requires more than just aesthetics. It requires psychology.", button: "Read Our Philosophy" },
-            { title: "Visual Economics", text: "Every frame we shoot is an investment in your brand's perceived value. See how premium positioning changes everything.", button: "Discover the Value" },
-            { title: "Cultivating Desire", text: "We don't create videos; we build worlds that your audience wants to live in. Step inside our creative ecosystem.", button: "Enter the Ecosystem" },
-            { title: "The Silent Salesman", text: "Your brand's visual identity speaks volumes before a single word is read. Ensure it's telling the right story.", button: "Audit Your Aesthetics" },
-            { title: "Architects of Influence", text: "Influence isn't accidental. It's meticulously constructed frame by frame. Learn how we build modern authority.", button: "See How We Work" },
-            { title: "Elevated Storytelling", text: "A camera is just a tool. The real magic happens in the nuance, the pacing, and the unspoken narrative.", button: "Explore Our Narrative" },
-            { title: "Redefining Standards", text: "When you stop chasing trends, you start setting them. Join the brands that are defining the modern aesthetic.", button: "Join the Vanguard" },
-            { title: "The Nuance of Luxury", text: "Premium isn't a price tag—it's a feeling. Discover how we translate abstract value into visceral visual experiences.", button: "Experience Premium" }
+            { title: "Let's work together", text: "We love teaming up with brands that want to stand out. Sound like you? Let's chat about your next project.", button: "Say hello" },
+            { title: "Got an idea?", text: "The best videos start with a simple conversation. Tell us what you're thinking, and we'll help bring it to life.", button: "Let's talk" },
+            { title: "Your story matters", text: "People connect with real stories. We can help you tell yours in a way that feels natural and looks amazing.", button: "Get in touch" },
+            { title: "Need a fresh look?", text: "If your brand's visuals are feeling a bit tired, we'd love to help you give them a serious upgrade.", button: "Drop us a line" },
+            { title: "Let's get creative", text: "We're always looking for fun, new challenges. Have something cool in mind? Let's brainstorm together.", button: "Start a conversation" },
+            { title: "Ready to grow?", text: "Good videos don't just look pretty—they help your business grow. We can show you how.", button: "Contact us" },
+            { title: "Stand out online", text: "It's hard to get noticed these days. We make content that stops the scroll and gets people watching.", button: "Reach out" },
+            { title: "Behind the camera", text: "We're just a small team of creatives who love making cool stuff for good people. Want to be next?", button: "Message us" },
+            { title: "Let's make some magic", text: "From the first idea to the final edit, we handle it all. You just sit back and watch it come together.", button: "Let's connect" },
+            { title: "Curious how we work?", text: "We keep things simple, friendly, and stress-free. Reach out to see if we're a good fit for your brand.", button: "Say hi today" }
         ];
 
         const CREATIVE_QUOTES = [
