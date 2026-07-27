@@ -1911,61 +1911,7 @@ export default function Page() {
   </div>
 
   <div className="cursor" id="cursor" />
-  <div id="initialLoader" style={{ 
-      position: 'fixed',
-      top: 0, left: 0, right: 0, bottom: 0,
-      zIndex: 99999,
-      display: 'flex', 
-      flexDirection: 'column', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      background: 'radial-gradient(circle at center, #15140b 0%, var(--deep-black) 60%)',
-      gap: '24px' 
-  }}>
-      <style dangerouslySetInnerHTML={{ __html: `
-          .premium-spinner {
-              width: 50px;
-              height: 50px;
-              border-radius: 50%;
-              border: 2px solid rgba(255, 255, 255, 0.05);
-              border-top-color: var(--brand-yellow);
-              border-right-color: transparent;
-              animation: premium-spin 1s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
-              box-shadow: 0 0 30px rgba(235, 215, 63, 0.15);
-          }
-          .premium-pulse-text {
-              font-family: 'Panchang', sans-serif;
-              letter-spacing: 5px;
-              font-size: 0.8rem;
-              font-weight: 500;
-              color: var(--pure-white);
-              text-transform: uppercase;
-              animation: premium-pulse 2s ease-in-out infinite;
-          }
-          @keyframes premium-spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-          }
-          @keyframes premium-pulse {
-              0%, 100% { opacity: 0.4; }
-              50% { opacity: 1; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
-          }
-          .cursor-trail-particle {
-              position: fixed;
-              width: 10px;
-              height: 10px;
-              background: var(--brand-yellow);
-              border-radius: 50%;
-              pointer-events: none;
-              z-index: 999999;
-              transform: translate(-50%, -50%);
-              box-shadow: 0 0 12px rgba(235, 215, 63, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
-              mix-blend-mode: screen;
-          }
-      ` }} />
-      <div className="premium-spinner"></div>
-      <span className="premium-pulse-text">Loading</span>
-  </div>
+
 
   <div className="reels-container" id="reelsContainer">
   </div>
