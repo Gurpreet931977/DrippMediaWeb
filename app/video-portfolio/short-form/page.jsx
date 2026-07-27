@@ -352,6 +352,19 @@ export default function Page() {
             { title: "Next-Level Content", text: "Transform your digital presence with industry-leading cinematography.", button: "Book Consultation" }
         ];
 
+        const QUOTE_OPTIONS = [
+            { text: "“Design is not just what it looks like and feels like. Design is how it works.”", author: "Steve Jobs" },
+            { text: "“Make it simple, but significant.”", author: "Don Draper" },
+            { text: "“Creativity is allowing yourself to make mistakes. Art is knowing which ones to keep.”", author: "Scott Adams" },
+            { text: "“The detail is as important as the essential is. When it is inadequate, it destroys the whole outfit.”", author: "Christian Dior" },
+            { text: "“Simplicity is the ultimate sophistication.”", author: "Leonardo da Vinci" },
+            { text: "“Aesthetics is a language, and we speak it fluently.”", author: "Dripp Media" },
+            { text: "“Content builds relationships. Relationships are built on trust. Trust drives revenue.”", author: "Andrew Davis" },
+            { text: "“Good design is good business.”", author: "Thomas Watson Jr." },
+            { text: "“Every frame is a painting. Every edit is a heartbeat.”", author: "Dripp Media" },
+            { text: "“The best marketing doesn't feel like marketing.”", author: "Tom Fishburne" }
+        ];
+
         // Create HTML for a single reel instance
         function createReelHTML(videoData) {
             if (!reelsContainer || !videoData) return;
@@ -362,6 +375,7 @@ export default function Page() {
             if (!src) return;
             
             const randomCTA = CTA_OPTIONS[Math.floor(Math.random() * CTA_OPTIONS.length)];
+            const randomQuote = QUOTE_OPTIONS[Math.floor(Math.random() * QUOTE_OPTIONS.length)];
 
             const newReel = document.createElement('div');
             newReel.className = 'reel-item';
@@ -442,14 +456,22 @@ export default function Page() {
 
                     <div class="case-study-sheet comments-sheet">
                         <div class="comments-header">
-                            <h3>Case Study</h3>
+                            <h3 class="show-on-mobile">Case Study</h3>
+                            <h3 class="show-on-desktop">Creative Quote</h3>
                             <button class="close-comments" onclick="closeComments(this)">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                             </button>
                         </div>
                         <div class="comments-body">
-                            <div class="case-study-text-mobile" style="padding: 0 16px 24px 16px; color: rgba(255,255,255,0.85); font-family: 'Clash Display', sans-serif; font-size: 0.95rem; line-height: 1.6;">
+                            <!-- Mobile Case Study -->
+                            <div class="show-on-mobile case-study-text-mobile" style="padding: 0 16px 24px 16px; color: rgba(255,255,255,0.85); font-family: 'Clash Display', sans-serif; font-size: 0.95rem; line-height: 1.6;">
                                 ${caseStudy.replace(/\n/g, '<br>')}
+                            </div>
+                            <!-- Desktop Creative Quote -->
+                            <div class="show-on-desktop" style="padding: 30px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px;">
+                                <svg style="width: 40px; height: 40px; color: var(--brand-yellow); margin-bottom: 20px; opacity: 0.5;" viewBox="0 0 24 24" fill="currentColor"><path d="M10 11h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2z"></path><path d="M10 11v6a4 4 0 0 1-4 4H5"></path><path d="M20 11h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2z"></path><path d="M20 11v6a4 4 0 0 1-4 4h-1"></path></svg>
+                                <p style="font-family: 'Clash Display', sans-serif; font-weight: 500; font-size: 1.25rem; color: #fff; margin-bottom: 16px; line-height: 1.5; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">${randomQuote.text}</p>
+                                <p style="font-family: 'Panchang', sans-serif; font-size: 0.8rem; color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 2px; margin: 0;">- ${randomQuote.author}</p>
                             </div>
                         </div>
                     </div>
@@ -956,11 +978,18 @@ export default function Page() {
         /* Hide elements on specific screens */
         .case-study-btn-mobile { display: none; }
         .comment-btn-desktop { display: flex; }
+        
+        .desktop-side-panel { display: none !important; } /* Hidden entirely per user request */
+
+        .show-on-mobile { display: none !important; }
+        .show-on-desktop { display: flex !important; }
 
         @media (max-width: 900px) {
             .desktop-side-panel { display: none !important; }
             .case-study-btn-mobile { display: flex; }
             .comment-btn-desktop { display: none; }
+            .show-on-mobile { display: block !important; }
+            .show-on-desktop { display: none !important; }
         }
 
         @media (max-width: 1000px) {
