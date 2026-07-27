@@ -395,6 +395,7 @@ export default function Page() {
             const src = videoData.videoSrc || videoData.video_src || videoData.video_url || videoData.url || videoData.src || '';
             const desc = videoData.description || videoData.desc || videoData.caption || '';
             const music = videoData.musicText || videoData.music_text || videoData.music || videoData.audio || videoData.title || 'Original Audio - Dripp Media';
+            const caseStudy = videoData.caseStudy || videoData.case_study || desc || '';
             
             if (!src) return;
             
