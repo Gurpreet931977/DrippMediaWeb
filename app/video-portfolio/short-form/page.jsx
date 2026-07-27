@@ -810,7 +810,7 @@ export default function Page() {
         .reel-video {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             transform: translateZ(0); /* force dedicated GPU layer */
         }
 
@@ -1542,17 +1542,17 @@ export default function Page() {
 
         /* Clean Mode (Pseudo-Fullscreen) */
         .reel-content.clean-mode {
-            height: 98dvh !important;
+            height: 100dvh !important;
+            width: 100vw !important;
             max-width: 100vw !important;
-            width: auto !important;
-            aspect-ratio: 9/16 !important;
-            border-radius: 12px !important;
-            margin: 1vh auto;
+            aspect-ratio: auto !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
             background: #000;
             z-index: 100;
             /* Ensure it stays above everything */
             overflow: hidden;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+            box-shadow: none;
         }
 
         .reel-content.clean-mode .pop-star {
@@ -1560,7 +1560,7 @@ export default function Page() {
         }
 
         .reel-content.clean-mode .reel-video {
-            object-fit: cover !important;
+            object-fit: contain !important;
         }
 
         /* Ensure UI elements fade out instead of snapping */
