@@ -339,6 +339,19 @@ export default function Page() {
         let portfolioVideosList = [...DEFAULT_REELS];
         let currentVideoIndex = 0; // The tracker
 
+        const CTA_OPTIONS = [
+            { title: "Elevate Your Brand", text: "Stop blending in. Partner with Dripp Media to engineer cinematic attention.", button: "Book Consultation" },
+            { title: "Scale with Aesthetics", text: "Premium visuals aren't a luxury, they're a growth lever. Let's build.", button: "Work With Us" },
+            { title: "Dominate Your Niche", text: "Turn passive scrollers into brand loyalists with high-end storytelling.", button: "Get a Quote" },
+            { title: "The Dripp Effect", text: "We don't just shoot videos. We craft viral, sensory experiences.", button: "Start Your Project" },
+            { title: "Cinematic Growth", text: "Ready for content that actually converts? Let's engineer your next campaign.", button: "Let's Talk" },
+            { title: "Unfair Advantage", text: "Give your brand the visual authority it deserves. Upgrade your content.", button: "Upgrade Now" },
+            { title: "Beyond Ordinary", text: "Vision without execution is just hallucination. Let's execute.", button: "Book Now" },
+            { title: "Command Attention", text: "In a sea of noise, we make you the signal. Partner with the best.", button: "Work With Us" },
+            { title: "Visual Mastery", text: "Your story, told beautifully. High-end production meets algorithmic growth.", button: "Get Started" },
+            { title: "Next-Level Content", text: "Transform your digital presence with industry-leading cinematography.", button: "Book Consultation" }
+        ];
+
         // Create HTML for a single reel instance
         function createReelHTML(videoData) {
             if (!reelsContainer || !videoData) return;
@@ -347,15 +360,32 @@ export default function Page() {
             const music = videoData.musicText || videoData.music_text || videoData.music || videoData.audio || videoData.title || 'Original Audio - Dripp Media';
             const caseStudy = videoData.case_study || 'No case study available for this project. Dive into the visual experience.';
             if (!src) return;
+            
+            const randomCTA = CTA_OPTIONS[Math.floor(Math.random() * CTA_OPTIONS.length)];
 
             const newReel = document.createElement('div');
             newReel.className = 'reel-item';
 
             newReel.innerHTML = `
-                <div class="case-study-panel">
-                    <h4>Case Study</h4>
+                <div class="desktop-side-panel case-study-panel">
+                    <div class="panel-glow"></div>
+                    <div class="panel-header">
+                        <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        <h4>Case Study</h4>
+                    </div>
                     <p>${caseStudy.replace(/\n/g, '<br>')}</p>
                 </div>
+                
+                <div class="desktop-side-panel cta-panel">
+                    <div class="panel-glow-yellow"></div>
+                    <div class="panel-header">
+                        <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 16 12 12 8"></polyline><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                        <h4>${randomCTA.title}</h4>
+                    </div>
+                    <p>${randomCTA.text}</p>
+                    <button class="cta-panel-btn" onclick="window.open('https://drippmedia.com/contact', '_blank')">${randomCTA.button} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
+                </div>
+
                 <video class="reel-ambient-bg" src="${src}" muted loop playsinline preload="metadata" oncontextmenu="return false;"></video>
                 <div class="reel-ambient-blur"></div>
                 <div class="reel-content" data-id="${videoData.id || ''}">
@@ -803,56 +833,132 @@ export default function Page() {
             border-color: rgba(235, 215, 63, 0.3);
         }
 
-        /* Full container background ambient blur */
-        /* Desktop Case Study Panel */
-        .case-study-panel {
+        /* Desktop Side Panels (Case Study & CTA) */
+        .desktop-side-panel {
             position: absolute;
-            left: max(20px, calc(50% - ((90dvh * 9) / 16) / 2 - 340px));
             top: 50%;
-            transform: translateY(-50%);
             width: 320px;
             max-height: 80%;
             background: rgba(10, 10, 10, 0.4);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            border-left: 3px solid var(--brand-yellow);
             border-radius: 20px;
-            padding: 24px;
+            padding: 30px 24px;
             color: #fff;
             z-index: 20;
             overflow-y: auto;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s ease;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .desktop-side-panel::-webkit-scrollbar { display: none; }
+
+        .case-study-panel {
+            left: max(20px, calc(50% - ((90dvh * 9) / 16) / 2 - 340px));
+            border-left: 3px solid var(--brand-yellow);
+            transform: translateY(-50%) perspective(1000px) rotateY(15deg) translateX(-30px);
+        }
+
+        .cta-panel {
+            right: max(20px, calc(50% - ((90dvh * 9) / 16) / 2 - 340px));
+            border-right: 3px solid var(--brand-yellow);
+            transform: translateY(-50%) perspective(1000px) rotateY(-15deg) translateX(30px);
         }
 
         .reel-item.active .case-study-panel {
             opacity: 1;
             pointer-events: auto;
+            transform: translateY(-50%) perspective(1000px) rotateY(0deg) translateX(0);
         }
 
-        .case-study-panel h4 {
+        .reel-item.active .cta-panel {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(-50%) perspective(1000px) rotateY(0deg) translateX(0);
+            transition-delay: 0.1s;
+        }
+
+        .panel-glow {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 60%);
+            pointer-events: none;
+        }
+
+        .panel-glow-yellow {
+            position: absolute;
+            top: 0; right: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at top right, rgba(235, 215, 63, 0.1), transparent 60%);
+            pointer-events: none;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--brand-yellow);
+        }
+
+        .desktop-side-panel h4 {
             font-family: 'Panchang', sans-serif;
             font-size: 1.1rem;
             color: var(--brand-yellow);
-            margin-bottom: 12px;
             letter-spacing: 1px;
             text-transform: uppercase;
+            margin: 0;
+            line-height: 1.2;
         }
 
-        .case-study-panel p {
+        .desktop-side-panel p {
             font-family: 'Clash Display', sans-serif;
             font-size: 0.95rem;
             line-height: 1.6;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.85);
+            margin: 0;
+        }
+        
+        .cta-panel-btn {
+            margin-top: 10px;
+            background: linear-gradient(135deg, rgba(235, 215, 63, 0.15), rgba(212, 188, 28, 0.05));
+            border: 1px solid rgba(235, 215, 63, 0.4);
+            color: #ebd73f;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .cta-panel-btn:hover {
+            background: var(--brand-yellow);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(235, 215, 63, 0.2);
         }
 
         /* Hide elements on specific screens */
         .case-study-btn-mobile { display: none; }
         .comment-btn-desktop { display: flex; }
 
-        @media (max-width: 768px) {
-            .case-study-panel { display: none !important; }
+        @media (max-width: 900px) {
+            .desktop-side-panel { display: none !important; }
             .case-study-btn-mobile { display: flex; }
             .comment-btn-desktop { display: none; }
         }
