@@ -82,13 +82,14 @@ export default function Page() {
             card.addEventListener('click', () => {
                 const targetUrl = card.getAttribute('data-link');
                 if (targetUrl) {
-                    // Intercept and open category selection modal
-                    const modal = document.getElementById('category-modal');
-                    if (modal) {
-                        modal.style.display = 'flex';
-                        modal.dataset.targetUrl = targetUrl;
-                        gsap.fromTo(modal, { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.4, ease: "power2.out" });
-                    }
+                    gsap.to('body', {
+                        opacity: 0,
+                        duration: 0.5,
+                        ease: "power2.inOut",
+                        onComplete: () => {
+                            window.location.href = targetUrl;
+                        }
+                    });
                 }
             });
         });
@@ -106,31 +107,6 @@ export default function Page() {
 
         window.addEventListener('resize', resize);
         resize();
-
-        // Modal Option Click Logic
-        window.handleCategorySelect = function(category) {
-            const modal = document.getElementById('category-modal');
-            const targetUrl = modal.dataset.targetUrl;
-            
-            if (targetUrl && category) {
-                // Fade out modal and body
-                gsap.to(modal, { opacity: 0, scale: 0.95, duration: 0.3 });
-                gsap.to('body', {
-                    opacity: 0,
-                    duration: 0.5,
-                    delay: 0.2,
-                    ease: "power2.inOut",
-                    onComplete: () => {
-                        window.location.href = `${targetUrl}?category=${category}`;
-                    }
-                });
-            }
-        };
-
-        window.closeCategoryModal = function() {
-            const modal = document.getElementById('category-modal');
-            gsap.to(modal, { opacity: 0, scale: 0.95, duration: 0.3, onComplete: () => { modal.style.display = 'none'; } });
-        };
 
         class Particle {
             constructor() {
@@ -751,19 +727,6 @@ export default function Page() {
     </div>
   </section>
 
-  {/* Category Selection Modal */}
-  <div className="category-modal-overlay" id="category-modal">
-    <div className="category-modal">
-      <button className="modal-close" onClick={() => window.closeCategoryModal()}>×</button>
-      <h3>What are you looking for?</h3>
-      <p>Select a category to filter our portfolio</p>
-      <div className="category-options">
-        <button className="category-btn" onClick={() => window.handleCategorySelect('Videography')}>🎥 Videography</button>
-        <button className="category-btn" onClick={() => window.handleCategorySelect('Editing')}>✂️ Editing</button>
-        <button className="category-btn" onClick={() => window.handleCategorySelect('Both')}>🌟 Both (Everything)</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 
