@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
+import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2 } from 'lucide-react';
 import styles from '../admin.module.css';
 
 const TABS = {
@@ -379,6 +379,26 @@ export default function PortfolioManager() {
       }
     } catch (e) {
       showNotification('error', 'Failed to delete item');
+    }
+  };
+
+  const editItemField = async (id, field, currentVal) => {
+    const newVal = prompt(`Enter new ${field === 'description' ? 'caption' : 'title'}:`, currentVal || '');
+    if (newVal === null || newVal === currentVal) return;
+    try {
+      const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, [field]: newVal.trim() })
+      });
+      if (res.ok) {
+        showNotification('success', 'Updated successfully');
+        fetchItems();
+      } else {
+        throw new Error('Update failed');
+      }
+    } catch (e) {
+      showNotification('error', 'Failed to update');
     }
   };
 
@@ -1253,10 +1273,20 @@ export default function PortfolioManager() {
                         )}
 
                         <div className="item-info">
-                            <div className="item-title">
+                            <div className="item-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {activeTab === TABS.REELS ? item.description || 'Reel Video' : ''}
                                 {activeTab === TABS.GRAPHICS ? 'Graphic Design' : ''}
                                 {activeTab === TABS.LONG_FORM ? item.title : ''}
+                                
+                                {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS) && (
+                                    <button 
+                                        onClick={() => editItemField(item.id, activeTab === TABS.LONG_FORM ? 'title' : 'description', activeTab === TABS.LONG_FORM ? item.title : item.description)}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: '4px', display: 'flex', alignItems: 'center' }}
+                                        title="Edit Text"
+                                    >
+                                        <Edit2 size={14} />
+                                    </button>
+                                )}
                             </div>
                             <div className="item-meta">
                                 Added {new Date(item.created_at).toLocaleDateString()}
