@@ -151,6 +151,13 @@ export default function PortfolioManager() {
     const { fetchFile, toBlobURL } = await import('@ffmpeg/util');
 
     const ffmpeg = new FFmpeg();
+    
+    // Listen for FFmpeg optimization progress to update the progress bar (from 15% to 30%)
+    ffmpeg.on('progress', ({ progress, time }) => {
+        // progress is a value from 0 to 1
+        setUploadProgress(15 + Math.round(progress * 15));
+    });
+
     const baseURL = '/ffmpeg';
     
     await ffmpeg.load({
