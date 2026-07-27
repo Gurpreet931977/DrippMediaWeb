@@ -524,6 +524,14 @@ export default function Page() {
                             </a>
                         </div>
                     </div>
+                    
+                    <!-- Premium Scrub Bar -->
+                    <div class="premium-scrub-bar-container">
+                        <div class="premium-scrub-bar">
+                            <div class="premium-scrub-progress"></div>
+                            <div class="premium-scrub-thumb"></div>
+                        </div>
+                    </div>
                 </div>
             `;
 
@@ -540,9 +548,70 @@ export default function Page() {
                 }
             }
             const vid = newReel.querySelector('.reel-video');
-            if (vid) vid.muted = isGlobalMuted;
-        }
+            if (vid) {
+                vid.muted = isGlobalMuted;
+                
+                // Scrub Bar Logic
+                const barContainer = newReel.querySelector('.premium-scrub-bar-container');
+                const progressBar = newReel.querySelector('.premium-scrub-progress');
+                const progressThumb = newReel.querySelector('.premium-scrub-thumb');
+                
+                if (barContainer && progressBar && progressThumb) {
+                    let isDragging = false;
+                    
+                    vid.addEventListener('timeupdate', () => {
+                        if (isDragging || !vid.duration) return;
+                        const percent = (vid.currentTime / vid.duration) * 100;
+                        progressBar.style.width = percent + '%';
+                        progressThumb.style.left = percent + '%';
+                    });
+                    
+                    const updateSeek = (e) => {
+                        const rect = barContainer.getBoundingClientRect();
+                        let clientX = e.clientX;
+                        if (e.touches && e.touches.length > 0) clientX = e.touches[0].clientX;
+                        if (clientX === undefined) return;
+                        
+                        let x = clientX - rect.left;
+                        if (x < 0) x = 0;
+                        if (x > rect.width) x = rect.width;
+                        const percent = x / rect.width;
+                        vid.currentTime = percent * vid.duration;
+                        progressBar.style.width = (percent * 100) + '%';
+                        progressThumb.style.left = (percent * 100) + '%';
+                    };
 
+                    barContainer.addEventListener('mousedown', (e) => {
+                        isDragging = true;
+                        e.stopPropagation();
+                        updateSeek(e);
+                    });
+                    barContainer.addEventListener('mousemove', (e) => {
+                        if (isDragging) {
+                            e.stopPropagation();
+                            updateSeek(e);
+                        }
+                    });
+                    barContainer.addEventListener('mouseup', () => isDragging = false);
+                    barContainer.addEventListener('mouseleave', () => isDragging = false);
+
+                    barContainer.addEventListener('touchstart', (e) => {
+                        isDragging = true;
+                        e.stopPropagation();
+                        updateSeek(e);
+                    }, { passive: false });
+                    barContainer.addEventListener('touchmove', (e) => {
+                        if (isDragging) {
+                            e.stopPropagation();
+                            updateSeek(e);
+                        }
+                    }, { passive: false });
+                    barContainer.addEventListener('touchend', () => isDragging = false);
+                    barContainer.addEventListener('touchcancel', () => isDragging = false);
+                }
+            }
+        }
+        
         // --- Initial Load Setup ---
         // Fetch from Supabase and load the first 2 reels
         async function fetchAndInitializeFeed() {
@@ -1910,6 +1979,63 @@ export default function Page() {
             .sheet-title-mobile { display: none !important; }
             .creative-vision-text-pc { display: block !important; }
             .case-study-text-mobile { display: none !important; }
+        }
+
+        /* Premium Scrub Bar */
+        .premium-scrub-bar-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 24px; /* Hit area */
+            display: flex;
+            align-items: flex-end;
+            cursor: pointer;
+            z-index: 60;
+            opacity: 0.85;
+            transition: opacity 0.3s ease;
+        }
+        .premium-scrub-bar-container:hover {
+            opacity: 1;
+        }
+        .premium-scrub-bar {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.25);
+            position: relative;
+            transition: height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .premium-scrub-bar-container:hover .premium-scrub-bar {
+            height: 6px;
+        }
+        .premium-scrub-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--brand-yellow);
+            width: 0%;
+            pointer-events: none;
+            border-radius: 0 4px 4px 0;
+        }
+        .premium-scrub-thumb {
+            position: absolute;
+            top: 50%;
+            left: 0%;
+            width: 14px;
+            height: 14px;
+            background: var(--pure-white);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            pointer-events: none;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .premium-scrub-bar-container:hover .premium-scrub-thumb {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .premium-scrub-bar-container:active .premium-scrub-thumb {
+            transform: translate(-50%, -50%) scale(1.2);
         }
 
     ` }} />
