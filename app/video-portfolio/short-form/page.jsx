@@ -596,7 +596,7 @@ export default function Page() {
                         }
                     });
                     
-                    const updateSeek = (e) => {
+                    const updateSeek = (e, finalize = false) => {
                         const rect = barContainer.getBoundingClientRect();
                         let clientX = e.clientX;
                         if (e.touches && e.touches.length > 0) clientX = e.touches[0].clientX;
@@ -606,38 +606,62 @@ export default function Page() {
                         if (x < 0) x = 0;
                         if (x > rect.width) x = rect.width;
                         const percent = x / rect.width;
-                        vid.currentTime = percent * vid.duration;
+                        
                         progressBar.style.width = (percent * 100) + '%';
                         progressThumb.style.left = (percent * 100) + '%';
+                        
+                        if (finalize) {
+                            vid.currentTime = percent * vid.duration;
+                        }
                     };
 
                     barContainer.addEventListener('mousedown', (e) => {
                         isDragging = true;
                         e.stopPropagation();
-                        updateSeek(e);
+                        updateSeek(e, false);
                     });
                     barContainer.addEventListener('mousemove', (e) => {
                         if (isDragging) {
                             e.stopPropagation();
-                            updateSeek(e);
+                            updateSeek(e, false);
                         }
                     });
-                    barContainer.addEventListener('mouseup', () => { isDragging = false; });
-                    barContainer.addEventListener('mouseleave', () => { isDragging = false; });
+                    barContainer.addEventListener('mouseup', (e) => { 
+                        if (isDragging) {
+                            updateSeek(e, true);
+                            isDragging = false;
+                        }
+                    });
+                    barContainer.addEventListener('mouseleave', (e) => { 
+                        if (isDragging) {
+                            updateSeek(e, true);
+                            isDragging = false;
+                        }
+                    });
 
                     barContainer.addEventListener('touchstart', (e) => {
                         isDragging = true;
                         e.stopPropagation();
-                        updateSeek(e);
+                        updateSeek(e, false);
                     }, { passive: false });
                     barContainer.addEventListener('touchmove', (e) => {
                         if (isDragging) {
                             e.stopPropagation();
-                            updateSeek(e);
+                            updateSeek(e, false);
                         }
                     }, { passive: false });
-                    barContainer.addEventListener('touchend', () => { isDragging = false; });
-                    barContainer.addEventListener('touchcancel', () => { isDragging = false; });
+                    barContainer.addEventListener('touchend', (e) => { 
+                        if (isDragging) {
+                            updateSeek(e, true);
+                            isDragging = false;
+                        }
+                    });
+                    barContainer.addEventListener('touchcancel', (e) => { 
+                        if (isDragging) {
+                            updateSeek(e, true);
+                            isDragging = false;
+                        }
+                    });
                 }
             }
         }
@@ -2014,12 +2038,13 @@ export default function Page() {
         /* Premium Scrub Bar */
         .premium-scrub-bar-container {
             position: absolute;
-            bottom: 2px; /* Very close to the edge */
-            left: 2px;
-            width: calc(100% - 4px); /* Minimal spacing from edges */
+            bottom: 0; 
+            left: 0;
+            width: 100%;
             height: 24px; /* Hit area */
             display: flex;
             align-items: flex-end; /* Align the line to the bottom of the hit area */
+            padding-bottom: 6px; /* Lift the bar up 6px to give the thumb clearance from overflow hidden! */
             cursor: pointer;
             z-index: 60;
             opacity: 0.9;
