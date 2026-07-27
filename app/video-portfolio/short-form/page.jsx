@@ -1194,7 +1194,7 @@ export default function Page() {
         /* Dripp Media Logo Top Left - Minimal */
         .reel-brand {
             position: absolute;
-            top: 32px;
+            top: 48px;
             left: 25px;
             z-index: 20;
             font-family: 'Panchang', sans-serif;
