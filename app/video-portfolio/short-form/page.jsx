@@ -560,12 +560,40 @@ export default function Page() {
                 
                 if (barContainer && progressBar && progressThumb) {
                     let isDragging = false;
+                    let rAF;
                     
-                    vid.addEventListener('timeupdate', () => {
-                        if (isDragging || !vid.duration) return;
-                        const percent = (vid.currentTime / vid.duration) * 100;
-                        progressBar.style.width = percent + '%';
-                        progressThumb.style.left = percent + '%';
+                    const updateScrubUI = () => {
+                        if (!isDragging && vid.duration) {
+                            const percent = (vid.currentTime / vid.duration) * 100;
+                            progressBar.style.width = percent + '%';
+                            progressThumb.style.left = percent + '%';
+                        }
+                        if (!vid.paused) {
+                            rAF = requestAnimationFrame(updateScrubUI);
+                        }
+                    };
+                    
+                    vid.addEventListener('play', () => {
+                        rAF = requestAnimationFrame(updateScrubUI);
+                    });
+                    
+                    vid.addEventListener('pause', () => {
+                        cancelAnimationFrame(rAF);
+                        // Final update on pause
+                        if (vid.duration) {
+                            const percent = (vid.currentTime / vid.duration) * 100;
+                            progressBar.style.width = percent + '%';
+                            progressThumb.style.left = percent + '%';
+                        }
+                    });
+                    
+                    // Initial update when metadata loads
+                    vid.addEventListener('loadedmetadata', () => {
+                        if (vid.duration) {
+                            const percent = (vid.currentTime / vid.duration) * 100;
+                            progressBar.style.width = percent + '%';
+                            progressThumb.style.left = percent + '%';
+                        }
                     });
                     
                     const updateSeek = (e) => {
@@ -594,8 +622,8 @@ export default function Page() {
                             updateSeek(e);
                         }
                     });
-                    barContainer.addEventListener('mouseup', () => isDragging = false);
-                    barContainer.addEventListener('mouseleave', () => isDragging = false);
+                    barContainer.addEventListener('mouseup', () => { isDragging = false; });
+                    barContainer.addEventListener('mouseleave', () => { isDragging = false; });
 
                     barContainer.addEventListener('touchstart', (e) => {
                         isDragging = true;
@@ -608,8 +636,8 @@ export default function Page() {
                             updateSeek(e);
                         }
                     }, { passive: false });
-                    barContainer.addEventListener('touchend', () => isDragging = false);
-                    barContainer.addEventListener('touchcancel', () => isDragging = false);
+                    barContainer.addEventListener('touchend', () => { isDragging = false; });
+                    barContainer.addEventListener('touchcancel', () => { isDragging = false; });
                 }
             }
         }
@@ -1986,16 +2014,17 @@ export default function Page() {
         /* Premium Scrub Bar */
         .premium-scrub-bar-container {
             position: absolute;
-            bottom: 0;
+            bottom: 4px; /* Float slightly up to prevent clipping */
             left: 0;
             width: 100%;
             height: 24px; /* Hit area */
             display: flex;
-            align-items: flex-end;
+            align-items: center; /* Center line within hit area */
             cursor: pointer;
             z-index: 60;
             opacity: 0.85;
             transition: opacity 0.3s ease;
+            padding: 0 8px; /* Slight padding so it doesn't touch the absolute edge */
         }
         .premium-scrub-bar-container:hover {
             opacity: 1;
@@ -2003,41 +2032,42 @@ export default function Page() {
         .premium-scrub-bar {
             width: 100%;
             height: 3px;
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.2);
             position: relative;
             transition: height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 2px;
         }
         .premium-scrub-bar-container:hover .premium-scrub-bar {
-            height: 6px;
+            height: 5px;
         }
         .premium-scrub-progress {
             position: absolute;
             top: 0;
             left: 0;
             height: 100%;
-            background: var(--brand-yellow);
+            background: var(--pure-white); /* Use white to contrast with yellow cursor */
             width: 0%;
             pointer-events: none;
-            border-radius: 0 4px 4px 0;
+            border-radius: 2px;
         }
         .premium-scrub-thumb {
             position: absolute;
             top: 50%;
             left: 0%;
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             background: var(--pure-white);
             border-radius: 50%;
-            transform: translate(-50%, -50%) scale(0);
+            transform: translate(-50%, -50%) scale(0.7); /* Always visible but small */
             pointer-events: none;
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         }
         .premium-scrub-bar-container:hover .premium-scrub-thumb {
-            transform: translate(-50%, -50%) scale(1);
+            transform: translate(-50%, -50%) scale(1.2); /* Grow on hover */
         }
         .premium-scrub-bar-container:active .premium-scrub-thumb {
-            transform: translate(-50%, -50%) scale(1.2);
+            transform: translate(-50%, -50%) scale(1.4);
         }
 
         /* Premium Creative Vision Quote */
