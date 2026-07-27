@@ -102,8 +102,8 @@ export default function PortfolioManager() {
           });
       }
     };
-    window.addEventListener('ORLO_ANALYSIS_COMPLETE', handleAnalysisComplete);
-    return () => window.removeEventListener('ORLO_ANALYSIS_COMPLETE', handleAnalysisComplete);
+    window.addEventListener('UPDATE_PORTFOLIO_FORM', handleAnalysisComplete);
+    return () => window.removeEventListener('UPDATE_PORTFOLIO_FORM', handleAnalysisComplete);
   }, []);
 
   const handleYoutubeBlur = async () => {
