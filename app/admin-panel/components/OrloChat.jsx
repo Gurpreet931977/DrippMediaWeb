@@ -627,25 +627,28 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
         }
 
         .copilot-orb {
-          width: 64px;
-          height: 64px;
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          width: 65px;
+          height: 65px;
           border-radius: 50%;
-          background: rgba(10, 10, 10, 0.7);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background: linear-gradient(135deg, rgba(15,15,15,0.9), rgba(5,5,5,0.95));
           border: 1px solid rgba(235, 215, 63, 0.4);
-          box-shadow: 0 0 25px rgba(235, 215, 63, 0.2), inset 0 0 15px rgba(235, 215, 63, 0.1);
-          position: relative;
+          box-shadow: 0 0 25px rgba(235, 215, 63, 0.25), inset 0 0 15px rgba(235, 215, 63, 0.1);
+          z-index: 9999;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           animation: pulseOrb 3s infinite alternate;
         }
         
         .copilot-orb:hover {
-          box-shadow: 0 0 35px rgba(235, 215, 63, 0.4), inset 0 0 20px rgba(235, 215, 63, 0.2);
+          transform: scale(1.1);
+          box-shadow: 0 0 45px rgba(235, 215, 63, 0.5), inset 0 0 25px rgba(235, 215, 63, 0.3);
+          border-color: rgba(235, 215, 63, 0.8);
         }
         
         .copilot-ring {
@@ -821,35 +824,46 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
           bottom: 110px;
           right: 30px;
           width: 380px;
-          height: 500px;
+          height: 550px;
           background: rgba(10, 10, 10, 0.85);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          backdrop-filter: blur(40px);
+          -webkit-backdrop-filter: blur(40px);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 24px;
           z-index: 9998;
           display: flex;
           flex-direction: column;
-          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+          box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(235, 215, 63, 0.1);
           overflow: hidden;
+          transition: all 0.3s ease;
         }
         
         .chat-header {
-          padding: 20px;
+          padding: 24px 20px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: linear-gradient(to right, rgba(235, 215, 63, 0.1), transparent);
+          background: rgba(20, 20, 20, 0.5);
+          position: relative;
+        }
+        .chat-header::after {
+          content: '';
+          position: absolute;
+          bottom: -1px;
+          left: 0;
+          width: 100%;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(235, 215, 63, 0.5), transparent);
         }
         
         .chat-body {
           flex: 1;
-          padding: 20px;
+          padding: 24px 20px;
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 20px;
         }
         
         .chat-body::-webkit-scrollbar {
@@ -862,54 +876,80 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
         
         .msg-bubble {
           max-width: 85%;
-          padding: 12px 16px;
-          border-radius: 16px;
+          padding: 14px 18px;
+          border-radius: 18px;
           font-size: 0.95rem;
-          line-height: 1.5;
+          line-height: 1.6;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+          animation: slideUpFade 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2);
         }
+        
+        @keyframes slideUpFade {
+          from { opacity: 0; transform: translateY(15px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
         .msg-ai {
-          background: rgba(255, 255, 255, 0.05);
-          color: #ddd;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(30, 30, 30, 0.7);
+          color: #eee;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-left: 3px solid #ebd73f;
           border-top-left-radius: 4px;
           align-self: flex-start;
         }
         .msg-user {
-          background: rgba(235, 215, 63, 0.15);
-          color: #fff;
-          border: 1px solid rgba(235, 215, 63, 0.3);
+          background: #ebd73f;
+          color: #000;
+          font-weight: 500;
           border-top-right-radius: 4px;
           align-self: flex-end;
         }
         
         .chat-input-area {
-          padding: 16px;
+          padding: 16px 20px;
           border-top: 1px solid rgba(255, 255, 255, 0.05);
-          background: rgba(0, 0, 0, 0.4);
+          background: rgba(0, 0, 0, 0.3);
         }
         
+        .chat-input-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 100px;
+          padding: 4px;
+          transition: all 0.3s ease;
+        }
+        .chat-input-wrapper:focus-within {
+          background: rgba(255,255,255,0.08);
+          border-color: #ebd73f;
+          box-shadow: 0 0 15px rgba(235, 215, 63, 0.15);
+        }
+
         .typing-indicator {
           display: flex;
-          gap: 4px;
-          padding: 12px 16px;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 16px;
+          gap: 6px;
+          padding: 14px 18px;
+          background: rgba(30,30,30,0.5);
+          border-radius: 18px;
           border-top-left-radius: 4px;
+          border-left: 3px solid #ebd73f;
           align-self: flex-start;
           align-items: center;
         }
         .dot {
-          width: 6px;
-          height: 6px;
-          background: #ebd73f;
+          width: 8px;
+          height: 8px;
+          background: rgba(235, 215, 63, 0.8);
           border-radius: 50%;
           animation: bounce 1.4s infinite ease-in-out both;
         }
         .dot:nth-child(1) { animation-delay: -0.32s; }
         .dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes bounce {
-          0%, 80%, 100% { transform: scale(0); }
-          40% { transform: scale(1); }
+          0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+          40% { transform: scale(1); opacity: 1; }
         }
         
         .mic-btn-container {
@@ -1011,7 +1051,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
           </div>
 
           <form className="chat-input-area" onSubmit={handleSubmit}>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <div className="chat-input-wrapper">
               <div className="mic-btn-container">
                 {isListening && <div className="mic-waves"></div>}
                 <button
@@ -1022,7 +1062,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
                     border: 'none',
                     color: isListening ? '#ebd73f' : '#888',
                     cursor: 'pointer',
-                    padding: '12px 10px',
+                    padding: '12px 14px',
                     display: 'flex',
                     alignItems: 'center',
                     transition: 'color 0.3s',
@@ -1038,16 +1078,16 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
                 type="text" 
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Ask me to draft an email..."
+                placeholder="Ask me to analyze or write..."
                 style={{
-                  width: '100%',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '12px',
-                  padding: '12px 45px 12px 16px',
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '12px 10px',
                   color: '#fff',
                   outline: 'none',
-                  fontSize: '0.95rem'
+                  fontSize: '1rem',
+                  fontFamily: 'inherit'
                 }}
                 disabled={isTyping}
               />
@@ -1055,15 +1095,18 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
                 type="submit" 
                 disabled={!input.trim() || isTyping}
                 style={{
-                  position: 'absolute',
-                  right: '8px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'transparent',
-                  border: 'none',
+                  background: input.trim() ? 'linear-gradient(135deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.1))' : 'transparent',
+                  border: input.trim() ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid transparent',
                   color: input.trim() ? '#ebd73f' : '#555',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
                   cursor: input.trim() ? 'pointer' : 'default',
-                  display: 'flex'
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: '6px',
+                  transition: 'all 0.3s ease'
                 }}
               >
                 <Send size={18} />
