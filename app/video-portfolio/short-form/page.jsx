@@ -340,29 +340,29 @@ export default function Page() {
         let currentVideoIndex = 0; // The tracker
 
         const CTA_OPTIONS = [
-            { title: "Elevate Your Brand", text: "Stop blending in. Partner with Dripp Media to engineer cinematic attention.", button: "Book Consultation" },
-            { title: "Scale with Aesthetics", text: "Premium visuals aren't a luxury, they're a growth lever. Let's build.", button: "Work With Us" },
-            { title: "Dominate Your Niche", text: "Turn passive scrollers into brand loyalists with high-end storytelling.", button: "Get a Quote" },
-            { title: "The Dripp Effect", text: "We don't just shoot videos. We craft viral, sensory experiences.", button: "Start Your Project" },
-            { title: "Cinematic Growth", text: "Ready for content that actually converts? Let's engineer your next campaign.", button: "Let's Talk" },
-            { title: "Unfair Advantage", text: "Give your brand the visual authority it deserves. Upgrade your content.", button: "Upgrade Now" },
-            { title: "Beyond Ordinary", text: "Vision without execution is just hallucination. Let's execute.", button: "Book Now" },
-            { title: "Command Attention", text: "In a sea of noise, we make you the signal. Partner with the best.", button: "Work With Us" },
-            { title: "Visual Mastery", text: "Your story, told beautifully. High-end production meets algorithmic growth.", button: "Get Started" },
-            { title: "Next-Level Content", text: "Transform your digital presence with industry-leading cinematography.", button: "Book Consultation" }
+            { title: "The Art of Perception", text: "People don't buy what you do; they buy how you make them feel. Discover how we engineer emotion through light and sound.", button: "Explore Our Process" },
+            { title: "Beyond the Lens", text: "Great visuals don't just capture a moment—they dictate the narrative. See what goes into crafting a legacy brand.", button: "Behind the Scenes" },
+            { title: "The Anatomy of Attention", text: "In an era of endless scrolling, true engagement requires more than just aesthetics. It requires psychology.", button: "Read Our Philosophy" },
+            { title: "Visual Economics", text: "Every frame we shoot is an investment in your brand's perceived value. See how premium positioning changes everything.", button: "Discover the Value" },
+            { title: "Cultivating Desire", text: "We don't create videos; we build worlds that your audience wants to live in. Step inside our creative ecosystem.", button: "Enter the Ecosystem" },
+            { title: "The Silent Salesman", text: "Your brand's visual identity speaks volumes before a single word is read. Ensure it's telling the right story.", button: "Audit Your Aesthetics" },
+            { title: "Architects of Influence", text: "Influence isn't accidental. It's meticulously constructed frame by frame. Learn how we build modern authority.", button: "See How We Work" },
+            { title: "Elevated Storytelling", text: "A camera is just a tool. The real magic happens in the nuance, the pacing, and the unspoken narrative.", button: "Explore Our Narrative" },
+            { title: "Redefining Standards", text: "When you stop chasing trends, you start setting them. Join the brands that are defining the modern aesthetic.", button: "Join the Vanguard" },
+            { title: "The Nuance of Luxury", text: "Premium isn't a price tag—it's a feeling. Discover how we translate abstract value into visceral visual experiences.", button: "Experience Premium" }
         ];
 
-        const QUOTE_OPTIONS = [
-            { text: "“Design is not just what it looks like and feels like. Design is how it works.”", author: "Steve Jobs" },
-            { text: "“Make it simple, but significant.”", author: "Don Draper" },
-            { text: "“Creativity is allowing yourself to make mistakes. Art is knowing which ones to keep.”", author: "Scott Adams" },
-            { text: "“The detail is as important as the essential is. When it is inadequate, it destroys the whole outfit.”", author: "Christian Dior" },
-            { text: "“Simplicity is the ultimate sophistication.”", author: "Leonardo da Vinci" },
-            { text: "“Aesthetics is a language, and we speak it fluently.”", author: "Dripp Media" },
-            { text: "“Content builds relationships. Relationships are built on trust. Trust drives revenue.”", author: "Andrew Davis" },
-            { text: "“Good design is good business.”", author: "Thomas Watson Jr." },
-            { text: "“Every frame is a painting. Every edit is a heartbeat.”", author: "Dripp Media" },
-            { text: "“The best marketing doesn't feel like marketing.”", author: "Tom Fishburne" }
+        const CREATIVE_QUOTES = [
+            "Cinematography is infinite in its possibilities... much more so than music or language.",
+            "A film is – or should be – more like music than like fiction. It should be a progression of moods and feelings.",
+            "There are no rules in filmmaking. Only sins. And the cardinal sin is dullness.",
+            "Photography is truth. The cinema is truth twenty-four times per second.",
+            "The eye should learn to listen before it looks.",
+            "We are artists. We are storytellers. We are the keepers of the narrative.",
+            "Light is the language of the lens; shadow is its vocabulary.",
+            "A great video doesn't just show you what happened; it makes you feel what it was like to be there.",
+            "Every frame is a canvas. Every cut is a heartbeat.",
+            "We don't capture reality. We create a reality that people want to escape into."
         ];
 
         // Create HTML for a single reel instance
@@ -371,11 +371,11 @@ export default function Page() {
             const src = videoData.videoSrc || videoData.video_src || videoData.video_url || videoData.url || videoData.src || '';
             const desc = videoData.description || videoData.desc || videoData.caption || '';
             const music = videoData.musicText || videoData.music_text || videoData.music || videoData.audio || videoData.title || 'Original Audio - Dripp Media';
-            const caseStudy = videoData.case_study || 'No case study available for this project. Dive into the visual experience.';
+            
             if (!src) return;
             
             const randomCTA = CTA_OPTIONS[Math.floor(Math.random() * CTA_OPTIONS.length)];
-            const randomQuote = QUOTE_OPTIONS[Math.floor(Math.random() * QUOTE_OPTIONS.length)];
+            const randomQuote = CREATIVE_QUOTES[Math.floor(Math.random() * CREATIVE_QUOTES.length)];
 
             const newReel = document.createElement('div');
             newReel.className = 'reel-item';
@@ -384,10 +384,10 @@ export default function Page() {
                 <div class="desktop-side-panel case-study-panel">
                     <div class="panel-glow"></div>
                     <div class="panel-header">
-                        <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        <h4>Case Study</h4>
+                        <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <h4>Creative Vision</h4>
                     </div>
-                    <p>${caseStudy.replace(/\n/g, '<br>')}</p>
+                    <p style="font-style: italic; font-size: 1.1rem; line-height: 1.8;">"${randomQuote}"</p>
                 </div>
                 
                 <div class="desktop-side-panel cta-panel">
@@ -456,22 +456,14 @@ export default function Page() {
 
                     <div class="case-study-sheet comments-sheet">
                         <div class="comments-header">
-                            <h3 class="show-on-mobile">Case Study</h3>
-                            <h3 class="show-on-desktop">Creative Quote</h3>
+                            <h3>Case Study</h3>
                             <button class="close-comments" onclick="closeComments(this)">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                             </button>
                         </div>
                         <div class="comments-body">
-                            <!-- Mobile Case Study -->
-                            <div class="show-on-mobile case-study-text-mobile" style="padding: 0 16px 24px 16px; color: rgba(255,255,255,0.85); font-family: 'Clash Display', sans-serif; font-size: 0.95rem; line-height: 1.6;">
+                            <div class="case-study-text-mobile" style="padding: 0 16px 24px 16px; color: rgba(255,255,255,0.85); font-family: 'Clash Display', sans-serif; font-size: 0.95rem; line-height: 1.6;">
                                 ${caseStudy.replace(/\n/g, '<br>')}
-                            </div>
-                            <!-- Desktop Creative Quote -->
-                            <div class="show-on-desktop" style="padding: 30px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px;">
-                                <svg style="width: 40px; height: 40px; color: var(--brand-yellow); margin-bottom: 20px; opacity: 0.5;" viewBox="0 0 24 24" fill="currentColor"><path d="M10 11h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2z"></path><path d="M10 11v6a4 4 0 0 1-4 4H5"></path><path d="M20 11h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2z"></path><path d="M20 11v6a4 4 0 0 1-4 4h-1"></path></svg>
-                                <p style="font-family: 'Clash Display', sans-serif; font-weight: 500; font-size: 1.25rem; color: #fff; margin-bottom: 16px; line-height: 1.5; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">${randomQuote.text}</p>
-                                <p style="font-family: 'Panchang', sans-serif; font-size: 0.8rem; color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 2px; margin: 0;">- ${randomQuote.author}</p>
                             </div>
                         </div>
                     </div>
@@ -978,18 +970,11 @@ export default function Page() {
         /* Hide elements on specific screens */
         .case-study-btn-mobile { display: none; }
         .comment-btn-desktop { display: flex; }
-        
-        .desktop-side-panel { display: none !important; } /* Hidden entirely per user request */
-
-        .show-on-mobile { display: none !important; }
-        .show-on-desktop { display: flex !important; }
 
         @media (max-width: 900px) {
             .desktop-side-panel { display: none !important; }
             .case-study-btn-mobile { display: flex; }
             .comment-btn-desktop { display: none; }
-            .show-on-mobile { display: block !important; }
-            .show-on-desktop { display: none !important; }
         }
 
         @media (max-width: 1000px) {
