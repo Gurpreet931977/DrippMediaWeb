@@ -373,8 +373,8 @@ export default function Page() {
                     
                     <div class="reel-info">
                         <div class="reel-user-profile">
-                            <img src="/images/dripp-logo-yellow.png" alt="Dripp Media" class="reel-avatar" />
-                            <h3 class="reel-username">drippmedia_ <span class="username-dot">•</span> <button class="reel-follow-btn" onclick="window.open('https://www.instagram.com/drippmedia_', '_blank');">Follow</button></h3>
+                            <img src="/images/dripp-logo-yellow.png" alt="Dripp Media" class="reel-avatar" onclick="window.open('https://www.instagram.com/drippmedia_', '_blank');" style="cursor:pointer;" />
+                            <h3 class="reel-username"><span onclick="window.open('https://www.instagram.com/drippmedia_', '_blank');" style="cursor:pointer;">drippmedia_</span> <span class="username-dot">•</span> <button class="reel-follow-btn" onclick="window.open('https://www.instagram.com/drippmedia_', '_blank');">Follow</button></h3>
                         </div>
                         <p class="reel-desc">${desc}</p>
                         <div class="reel-music">
