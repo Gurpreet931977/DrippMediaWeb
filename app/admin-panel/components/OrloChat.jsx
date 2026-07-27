@@ -325,7 +325,7 @@ export default function OrloChat() {
   }, [isOpen]);
 
   useEffect(() => {
-    const handleAnalyzeTrigger = () => {
+    const handleAnalyzeTrigger = (e) => {
       if (!isOpen) {
         setIsOpen(true);
         gsap.fromTo(chatRef.current, 
@@ -333,18 +333,27 @@ export default function OrloChat() {
           { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1.1, 0.5)' }
         );
       }
-      handleVideoAnalysis();
+      handleVideoAnalysis(e);
     };
     window.addEventListener('ORLO_VIDEO_ANALYZE', handleAnalyzeTrigger);
     return () => window.removeEventListener('ORLO_VIDEO_ANALYZE', handleAnalyzeTrigger);
   }, [isOpen, messages]); // need messages in deps or we use callback setter
 
 
-  const handleVideoAnalysis = async () => {
-     const file = window.portfolioFile;
-     if (!file) {
-         setMessages(prev => [...prev, { role: 'ai', text: "I can't find an uploaded video to analyze. Please drop one into the upload zone first!" }]);
-         return;
+  const handleVideoAnalysis = async (e) => {
+     let videoUrl;
+     let isExternal = false;
+     
+     if (e && e.detail && e.detail.videoUrl) {
+         videoUrl = e.detail.videoUrl;
+         isExternal = true;
+     } else {
+         const file = window.portfolioFile;
+         if (!file) {
+             setMessages(prev => [...prev, { role: 'ai', text: "I can't find an uploaded video to analyze. Please drop one into the upload zone first!" }]);
+             return;
+         }
+         videoUrl = URL.createObjectURL(file);
      }
      
      setMessages(prev => [...prev, { role: 'ai', text: "Scanning video visually... extracting key frames natively..." }]);
@@ -353,7 +362,6 @@ export default function OrloChat() {
      
      try {
          // Lightning Fast Native HTML5 Frame Extraction (Bypasses slow FFmpeg WASM)
-         const videoUrl = URL.createObjectURL(file);
          const video = document.createElement('video');
          video.src = videoUrl;
          video.crossOrigin = 'anonymous';
@@ -397,7 +405,9 @@ export default function OrloChat() {
              });
          }
          
-         URL.revokeObjectURL(videoUrl);
+         if (!isExternal) {
+             URL.revokeObjectURL(videoUrl);
+         }
          
          setMessages(prev => [...prev, { role: 'ai', text: `Extracted ${frames.length} frames instantly! Writing premium captions...` }]);
          

@@ -79,6 +79,32 @@ export default function PortfolioManager() {
     window.addEventListener('UPDATE_PORTFOLIO_FORM', handleUpdate);
     return () => window.removeEventListener('UPDATE_PORTFOLIO_FORM', handleUpdate);
   }, []);
+  
+  useEffect(() => {
+    const handleAnalysisComplete = (e) => {
+      const aiData = e.detail;
+      if (aiData) {
+          setEditPopup(prev => {
+              if (!prev.show || !prev.field) return prev;
+              if (prev.field === 'case_study' && aiData.case_study) {
+                  showNotification('success', 'Orlo wrote a new Case Study!');
+                  return { ...prev, value: aiData.case_study };
+              }
+              if (prev.field === 'title' && aiData.title) {
+                  showNotification('success', 'Orlo wrote a new Title!');
+                  return { ...prev, value: aiData.title };
+              }
+              if (prev.field === 'description' && aiData.description) {
+                  showNotification('success', 'Orlo wrote a new Caption!');
+                  return { ...prev, value: aiData.description };
+              }
+              return prev;
+          });
+      }
+    };
+    window.addEventListener('ORLO_ANALYSIS_COMPLETE', handleAnalysisComplete);
+    return () => window.removeEventListener('ORLO_ANALYSIS_COMPLETE', handleAnalysisComplete);
+  }, []);
 
   const handleYoutubeBlur = async () => {
     let url = formData.video_id;
@@ -987,6 +1013,39 @@ export default function PortfolioManager() {
                   </div>
                   <h3 style={{ textAlign: 'center' }}>Edit {editPopup.field === 'description' ? 'Caption' : (editPopup.field === 'case_study' ? 'Case Study' : 'Title')}</h3>
                   <p style={{ textAlign: 'center' }}>Update the text below and save your changes to apply them live.</p>
+                  
+                  {(editPopup.field === 'case_study' || editPopup.field === 'title' || editPopup.field === 'description') && (
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                          <button 
+                            type="button" 
+                            className="btn" 
+                            style={{ 
+                              background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15), rgba(212, 188, 28, 0.05))', 
+                              border: '1px solid rgba(235, 215, 63, 0.4)', 
+                              color: '#ebd73f', 
+                              padding: '8px 16px', 
+                              borderRadius: '20px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '8px',
+                              fontSize: '0.9rem'
+                            }} 
+                            onClick={() => {
+                                const currentItem = items.find(i => i.id === editPopup.id);
+                                if (currentItem) {
+                                    const videoSrc = currentItem.videoSrc || currentItem.video_url;
+                                    if (videoSrc) {
+                                        window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc } }));
+                                    } else {
+                                        showNotification('error', 'No video found for this item to analyze.');
+                                    }
+                                }
+                            }}
+                          >
+                              <Sparkles size={16} /> Ask Orlo to Rewrite
+                          </button>
+                      </div>
+                  )}
                   
                   {editPopup.field === 'case_study' ? (
                       <textarea 
