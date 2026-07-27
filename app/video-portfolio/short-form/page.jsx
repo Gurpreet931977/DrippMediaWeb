@@ -410,9 +410,9 @@ export default function Page() {
                     <div class="panel-glow"></div>
                     <div class="panel-header">
                         <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        <h4>Creative Vision</h4>
+                        <h4>Case Study</h4>
                     </div>
-                    <p style="font-style: italic; font-size: 1.1rem; line-height: 1.8;">"${randomQuote}"</p>
+                    <p style="font-size: 0.95rem; line-height: 1.6; color: rgba(255,255,255,0.9);">${caseStudy.replace(/\n/g, '<br>')}</p>
                 </div>
                 
                 <div class="desktop-side-panel cta-panel">
@@ -481,14 +481,14 @@ export default function Page() {
 
                     <div class="case-study-sheet comments-sheet">
                         <div class="comments-header">
-                            <h3>Case Study</h3>
+                            <h3>Creative Vision</h3>
                             <button class="close-comments" onclick="closeComments(this)">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                             </button>
                         </div>
                         <div class="comments-body">
-                            <div class="case-study-text-mobile" style="padding: 0 16px 24px 16px; color: rgba(255,255,255,0.85); font-family: 'Clash Display', sans-serif; font-size: 0.95rem; line-height: 1.6;">
-                                ${caseStudy.replace(/\n/g, '<br>')}
+                            <div class="case-study-text-mobile" style="padding: 0 16px 24px 16px; color: rgba(255,255,255,0.85); font-family: 'Clash Display', sans-serif; font-size: 1.1rem; line-height: 1.6; font-style: italic; text-align: center;">
+                                "${randomQuote}"
                             </div>
                         </div>
                     </div>
