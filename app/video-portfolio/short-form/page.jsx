@@ -123,6 +123,8 @@ export default function Page() {
                 const ambVid = entry.target.querySelector('.reel-ambient-bg');
 
                 if (entry.isIntersecting) {
+                    entry.target.classList.add('active'); // Triggers side-panel 3D animations
+
                     if (mainVid) mainVid.currentTime = 0;
                     if (ambVid) ambVid.currentTime = 0;
 
@@ -146,6 +148,8 @@ export default function Page() {
                     if (ambVid) ambVid.play().catch(e => { });
 
                 } else {
+                    entry.target.classList.remove('active'); // Resets side-panel animations
+
                     if (mainVid) mainVid.pause();
                     if (ambVid) ambVid.pause();
 
