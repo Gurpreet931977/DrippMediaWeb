@@ -1540,7 +1540,7 @@ export default function Page() {
             background: var(--pure-white);
         }
 
-        /* Clean Mode (Pseudo-Fullscreen) */
+        /* Clean Mode (Pseudo-Fullscreen) Base (Mobile defaults) */
         .reel-content.clean-mode {
             height: 100dvh !important;
             width: 100vw !important;
@@ -1553,6 +1553,18 @@ export default function Page() {
             /* Ensure it stays above everything */
             overflow: hidden;
             box-shadow: none;
+        }
+
+        /* Desktop Clean Mode (Theater Style) */
+        @media (min-width: 769px) {
+            .reel-content.clean-mode {
+                height: 92dvh !important;
+                width: 96vw !important;
+                max-width: 1600px !important;
+                border-radius: 24px !important;
+                margin: 4dvh auto !important;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 100px rgba(0,0,0,0.5);
+            }
         }
 
         .reel-content.clean-mode .pop-star {
