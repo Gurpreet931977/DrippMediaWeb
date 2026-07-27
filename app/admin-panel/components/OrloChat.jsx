@@ -145,24 +145,37 @@ export default function OrloChat() {
   const originalInputRef = useRef('');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    // We only need to check if it's supported here, but instantiation happens on click
+  }, []);
+
+  const toggleListen = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+    } else {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = true;
+      if (!SpeechRecognition) {
+        showToast('Voice commands are not supported on this browser.');
+        return;
+      }
+      
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
         
-        recognitionRef.current.onresult = (event) => {
+        recognition.onresult = (event) => {
           let transcript = '';
           for (let i = event.resultIndex; i < event.results.length; ++i) {
              transcript += event.results[i][0].transcript;
           }
-          
           const prefix = originalInputRef.current ? originalInputRef.current + ' ' : '';
           setInput(prefix + transcript);
         };
         
-        recognitionRef.current.onerror = (event) => {
+        recognition.onerror = (event) => {
           console.error('Speech recognition error', event.error);
           let errorMsg = 'Voice recognition error';
           if (event.error === 'not-allowed') errorMsg = 'Microphone access denied';
@@ -172,29 +185,17 @@ export default function OrloChat() {
           setIsListening(false);
         };
         
-        recognitionRef.current.onend = () => {
-          // If we manually stopped it, isListening will already be false.
+        recognition.onend = () => {
           setIsListening(false);
         };
-      }
-    }
-  }, []);
-
-  const toggleListen = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      try {
-        if (recognitionRef.current) {
-          originalInputRef.current = input; // store what we had
-          recognitionRef.current.start();
-          setIsListening(true);
-        } else {
-          alert('Voice commands are not supported on this browser.');
-        }
+        
+        originalInputRef.current = input;
+        recognition.start();
+        recognitionRef.current = recognition;
+        setIsListening(true);
       } catch (e) {
         console.error('Error starting speech recognition:', e);
+        showToast('Microphone error: Please check your permissions.');
         setIsListening(false);
       }
     }
