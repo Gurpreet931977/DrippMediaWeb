@@ -482,6 +482,14 @@ export default function Page() {
                 reelsContainer.innerHTML = '';
             }
 
+            // Shuffle the array so the sequence is random every time a user opens the page
+            if (portfolioVideosList && portfolioVideosList.length > 0) {
+                for (let i = portfolioVideosList.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [portfolioVideosList[i], portfolioVideosList[j]] = [portfolioVideosList[j], portfolioVideosList[i]];
+                }
+            }
+
             currentVideoIndex = 0;
             
             // Handle Deep Linking / Shared Reel
