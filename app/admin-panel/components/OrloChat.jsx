@@ -376,14 +376,13 @@ export default function OrloChat() {
          canvas.height = targetHeight;
          
          const frames = [];
-         // Extract 10 frames evenly spread across the video
+         // Extract 30 frames evenly spread across the video
          const duration = video.duration && isFinite(video.duration) ? video.duration : 15; // default 15s if unknown
-         const timePoints = [
-             duration * 0.05, duration * 0.15, duration * 0.25, 
-             duration * 0.35, duration * 0.45, duration * 0.55, 
-             duration * 0.65, duration * 0.75, duration * 0.85, 
-             duration * 0.95
-         ];
+         const timePoints = [];
+         const frameCount = 30;
+         for (let i = 0; i < frameCount; i++) {
+             timePoints.push(duration * ((i + 0.5) / frameCount));
+         }
          
          for (const time of timePoints) {
              video.currentTime = time;
@@ -404,7 +403,7 @@ export default function OrloChat() {
          const currentCategory = window.portfolioFormData?.category || 'Both';
          const superPrompt = `
 You are the Lead Creative Director for Dripp Media, a premium creative agency. 
-Analyze these 10 sequential frames from a video we just produced or edited. 
+Analyze these 30 sequential frames from a video we just produced or edited. 
 The user has categorized this video as: "${currentCategory}".
 
 Write three things:
