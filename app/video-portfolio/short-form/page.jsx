@@ -35,6 +35,26 @@ export default function Page() {
             gsap.set(cursor, { xPercent: -50, yPercent: -50 });
             window.addEventListener('mousemove', (e) => {
                 gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+                
+                // Add creative trail during loading
+                const loader = document.getElementById('initialLoader');
+                if (loader) {
+                    const trail = document.createElement('div');
+                    trail.className = 'cursor-trail-particle';
+                    trail.style.left = e.clientX + 'px';
+                    trail.style.top = e.clientY + 'px';
+                    document.body.appendChild(trail);
+                    
+                    gsap.to(trail, {
+                        opacity: 0,
+                        scale: 0.2,
+                        x: "+=" + (Math.random() * 60 - 30),
+                        y: "+=" + (Math.random() * 60 - 30),
+                        duration: 0.8 + Math.random() * 0.5,
+                        ease: "power2.out",
+                        onComplete: () => trail.remove()
+                    });
+                }
             });
         }
 
@@ -607,13 +627,12 @@ export default function Page() {
                 };
                 
                 if (firstVideo) {
-                    if (firstVideo.readyState >= 3) {
+                    if (firstVideo.readyState >= 1) {
                         hideLoader();
                     } else {
-                        firstVideo.addEventListener('canplay', hideLoader, { once: true });
                         firstVideo.addEventListener('loadeddata', hideLoader, { once: true });
                         firstVideo.addEventListener('error', hideLoader, { once: true });
-                        setTimeout(hideLoader, 5000); // safety fallback
+                        setTimeout(hideLoader, 2000); // reduced from 5000 for faster perceived load
                     }
                 } else {
                     hideLoader();
@@ -1916,6 +1935,18 @@ export default function Page() {
           @keyframes premium-pulse {
               0%, 100% { opacity: 0.4; }
               50% { opacity: 1; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+          }
+          .cursor-trail-particle {
+              position: fixed;
+              width: 10px;
+              height: 10px;
+              background: var(--brand-yellow);
+              border-radius: 50%;
+              pointer-events: none;
+              z-index: 999999;
+              transform: translate(-50%, -50%);
+              box-shadow: 0 0 12px rgba(235, 215, 63, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
+              mix-blend-mode: screen;
           }
       ` }} />
       <div className="premium-spinner"></div>
