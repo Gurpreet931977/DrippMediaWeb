@@ -561,10 +561,29 @@ export default function Page() {
                 if (barContainer && progressBar && progressThumb) {
                     let isDragging = false;
                     let rAF;
+                    let lastVideoTime = 0;
+                    let lastPerfTime = 0;
                     
-                    const updateScrubUI = () => {
+                    const updateScrubUI = (now) => {
                         if (!isDragging && vid.duration) {
-                            const percent = (vid.currentTime / vid.duration) * 100;
+                            let simulatedTime = vid.currentTime;
+                            
+                            if (vid.currentTime === lastVideoTime && !vid.paused) {
+                                // Interpolate time for 60fps smoothness between browser updates
+                                const elapsed = (now - lastPerfTime) / 1000;
+                                if (elapsed > 0 && elapsed < 0.5) {
+                                    simulatedTime = lastVideoTime + elapsed;
+                                }
+                            } else {
+                                // Sync baseline when browser updates currentTime
+                                lastVideoTime = vid.currentTime;
+                                lastPerfTime = now;
+                            }
+                            
+                            // Cap it just in case
+                            if (simulatedTime > vid.duration) simulatedTime = vid.duration;
+                            
+                            const percent = (simulatedTime / vid.duration) * 100;
                             progressBar.style.width = percent + '%';
                             progressThumb.style.left = percent + '%';
                         }
@@ -574,12 +593,13 @@ export default function Page() {
                     };
                     
                     vid.addEventListener('play', () => {
+                        lastVideoTime = vid.currentTime;
+                        lastPerfTime = performance.now();
                         rAF = requestAnimationFrame(updateScrubUI);
                     });
                     
                     vid.addEventListener('pause', () => {
                         cancelAnimationFrame(rAF);
-                        // Final update on pause
                         if (vid.duration) {
                             const percent = (vid.currentTime / vid.duration) * 100;
                             progressBar.style.width = percent + '%';
