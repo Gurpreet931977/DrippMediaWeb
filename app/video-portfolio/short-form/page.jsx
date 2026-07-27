@@ -544,7 +544,10 @@ export default function Page() {
             const urlParams = new URLSearchParams(window.location.search);
             const category = urlParams.get('category') || 'Both';
             try {
-                const res = await fetch('/api/reels?category=' + encodeURIComponent(category));
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 1500); // 1.5s max wait time for API
+                const res = await fetch('/api/reels?category=' + encodeURIComponent(category), { signal: controller.signal });
+                clearTimeout(timeoutId);
                 if (res.ok) {
                     const data = await res.json();
                     if (Array.isArray(data) && data.length > 0) {
@@ -552,7 +555,7 @@ export default function Page() {
                     }
                 }
             } catch (err) {
-                console.error('Failed to fetch reels from Supabase. Falling back to local data.', err);
+                console.warn('API fetch took too long or failed. Falling back to local data.', err);
             }
 
             if (reelsContainer) {
