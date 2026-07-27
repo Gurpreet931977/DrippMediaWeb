@@ -427,7 +427,7 @@ export default function Page() {
                 <video class="reel-ambient-bg" src="${src}" muted loop playsinline preload="metadata" oncontextmenu="return false;"></video>
                 <div class="reel-ambient-blur"></div>
                 <div class="reel-content" data-id="${videoData.id || ''}">
-                    <video class="reel-video" src="${src}" muted loop playsinline preload="auto" autoplay oncontextmenu="return false;" onerror="alert('Video Error: ' + (this.error ? this.error.message || this.error.code : 'Unknown'))"></video>
+                    <video class="reel-video" src="${src}" muted loop playsinline preload="auto" autoplay oncontextmenu="return false;" onerror="console.error('Video Error: ', this.error)"></video>
                     <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
                     <div class="reel-overlay-top"></div>
                     <div class="reel-overlay"></div>
@@ -604,10 +604,21 @@ export default function Page() {
             if (loader) {
                 const firstVideo = reelsContainer ? reelsContainer.querySelector('.reel-video') : null;
                 const hideLoader = () => {
+                    if (loader.dataset.hidden) return;
+                    loader.dataset.hidden = 'true';
+                    
                     const spinner = loader.querySelector('.premium-spinner');
                     const text = loader.querySelector('.premium-pulse-text');
                     
-                    const tl = gsap.timeline({ onComplete: () => loader.remove() });
+                    const tl = gsap.timeline({ onComplete: () => {
+                        if (loader && loader.parentNode) loader.remove();
+                    } });
+                    
+                    // Hard fallback in case GSAP animation fails or gets stuck
+                    setTimeout(() => {
+                        if (loader && loader.parentNode) loader.remove();
+                    }, 1500);
+                    
                     
                     if (spinner && text) {
                         tl.to([spinner, text], { 
