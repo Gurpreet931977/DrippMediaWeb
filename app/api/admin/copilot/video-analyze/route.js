@@ -48,9 +48,11 @@ export async function POST(request) {
             responseSchema: {
                 type: "object",
                 properties: {
-                    title: { type: "string" }
+                    title: { type: "string" },
+                    description: { type: "string" },
+                    case_study: { type: "string" }
                 },
-                required: ["title"]
+                required: ["title", "description", "case_study"]
             }
         }
       })

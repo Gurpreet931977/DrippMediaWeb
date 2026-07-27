@@ -28,7 +28,8 @@ export default function PortfolioManager() {
     duration: '',
     video_id: '',
     thumbnail_url: '',
-    category: 'Both'
+    category: 'Both',
+    case_study: ''
   });
 
   const [notification, setNotification] = useState(null);
@@ -59,7 +60,7 @@ export default function PortfolioManager() {
   useEffect(() => {
     fetchItems();
     setSelectedFile(null);
-    setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: 'Both' });
+    setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: 'Both', case_study: '' });
   }, [activeTab]);
 
   useEffect(() => {
@@ -288,9 +289,10 @@ export default function PortfolioManager() {
       if (activeTab === TABS.REELS) {
         payload = {
           videoSrc: publicUrl,
-          description: formData.title,
+          description: formData.title || formData.description, // For backwards compatibility we map title to description for reels
           musicText: formData.musicText || 'Original Audio - Dripp Media',
           category: formData.category,
+          case_study: formData.case_study,
           sort_order: items.length > 0 ? items[0].sort_order + 1 : 1
         };
       } else if (activeTab === TABS.GRAPHICS) {
@@ -335,7 +337,7 @@ export default function PortfolioManager() {
       // Reset Form
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: 'Both' });
+      setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: 'Both', case_study: '' });
       
       // Refresh list
       fetchItems();
@@ -983,21 +985,30 @@ export default function PortfolioManager() {
                   <div className="popup-icon" style={{ background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.05))', color: '#ebd73f', boxShadow: '0 0 50px rgba(235, 215, 63, 0.25), inset 0 2px 15px rgba(255,255,255,0.15)', margin: '0 auto 28px auto' }}>
                       <Edit2 size={42} />
                   </div>
-                  <h3 style={{ textAlign: 'center' }}>Edit {editPopup.field === 'description' ? 'Caption' : 'Title'}</h3>
+                  <h3 style={{ textAlign: 'center' }}>Edit {editPopup.field === 'description' ? 'Caption' : (editPopup.field === 'case_study' ? 'Case Study' : 'Title')}</h3>
                   <p style={{ textAlign: 'center' }}>Update the text below and save your changes to apply them live.</p>
                   
-                  <input 
-                    type="text" 
-                    style={{ width: '100%', padding: '18px 24px', borderRadius: '16px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', marginBottom: '35px', fontSize: '1.1rem', outline: 'none', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.5)', fontFamily: 'Clash Display, sans-serif' }}
-                    value={editPopup.value} 
-                    onChange={e => setEditPopup({...editPopup, value: e.target.value})} 
-                    autoFocus
-                    onKeyDown={async (e) => {
-                        if (e.key === 'Enter') {
-                            document.getElementById('saveEditBtn').click();
-                        }
-                    }}
-                  />
+                  {editPopup.field === 'case_study' ? (
+                      <textarea 
+                          style={{ width: '100%', padding: '18px 24px', borderRadius: '16px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', marginBottom: '35px', fontSize: '1rem', outline: 'none', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.5)', fontFamily: 'Clash Display, sans-serif', minHeight: '150px' }}
+                          value={editPopup.value}
+                          onChange={e => setEditPopup({...editPopup, value: e.target.value})}
+                          autoFocus
+                      />
+                  ) : (
+                      <input 
+                        type="text" 
+                        style={{ width: '100%', padding: '18px 24px', borderRadius: '16px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', marginBottom: '35px', fontSize: '1.1rem', outline: 'none', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.5)', fontFamily: 'Clash Display, sans-serif' }}
+                        value={editPopup.value} 
+                        onChange={e => setEditPopup({...editPopup, value: e.target.value})} 
+                        autoFocus
+                        onKeyDown={async (e) => {
+                            if (e.key === 'Enter') {
+                                document.getElementById('saveEditBtn').click();
+                            }
+                        }}
+                      />
+                  )}
                   
                   <div style={{ display: 'flex', gap: '16px' }}>
                     <button type="button" className="popup-btn" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setEditPopup({ show: false, id: null, field: '', value: '' })}>
@@ -1192,6 +1203,13 @@ export default function PortfolioManager() {
                      <input type="text" placeholder="Video Title..." value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required={activeTab === TABS.LONG_FORM} />
                  </div>
             )}
+            
+            {activeTab === TABS.REELS && (
+                 <div className="input-group" style={{ marginBottom: '24px' }}>
+                     <label style={{ fontFamily: 'Clash Display, sans-serif' }}>Premium Case Study</label>
+                     <textarea placeholder="Discuss cinematography, editing, pacing, or transformation..." rows="4" value={formData.case_study} onChange={(e) => setFormData({...formData, case_study: e.target.value})} style={{ width: '100%', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '14px', color: '#fff', fontFamily: 'inherit', resize: 'vertical' }}></textarea>
+                 </div>
+            )}
 
             {activeTab === TABS.LONG_FORM && (
                  <div className="input-group" style={{ marginBottom: '20px' }}>
@@ -1317,13 +1335,25 @@ export default function PortfolioManager() {
                                 </span>
                                 
                                 {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS) && (
-                                    <button 
-                                        onClick={() => openEditPopup(item.id, activeTab === TABS.LONG_FORM ? 'title' : 'description', activeTab === TABS.LONG_FORM ? item.title : item.description)}
-                                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
-                                        title="Edit Text"
-                                    >
-                                        <Edit2 size={14} />
-                                    </button>
+                                    <>
+                                        <button 
+                                            onClick={() => openEditPopup(item.id, activeTab === TABS.LONG_FORM ? 'title' : 'description', activeTab === TABS.LONG_FORM ? item.title : item.description)}
+                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                                            title="Edit Text"
+                                        >
+                                            <Edit2 size={14} />
+                                        </button>
+                                        
+                                        {activeTab === TABS.REELS && (
+                                            <button 
+                                                onClick={() => openEditPopup(item.id, 'case_study', item.case_study)}
+                                                style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '6px', cursor: 'pointer', color: '#ebd73f', padding: '6px 10px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.8rem', fontWeight: 'bold' }}
+                                                title="Edit Case Study"
+                                            >
+                                                Case Study
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                             </div>
                             <div className="item-meta">

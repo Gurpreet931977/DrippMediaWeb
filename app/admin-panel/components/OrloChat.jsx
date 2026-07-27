@@ -375,12 +375,12 @@ export default function OrloChat() {
          canvas.height = targetHeight;
          
          const frames = [];
-         // Extract 4 frames evenly spread across the video
+         // Extract 10 frames evenly spread across the video
          const duration = video.duration && isFinite(video.duration) ? video.duration : 15; // default 15s if unknown
          const timePoints = [
-             duration * 0.1, 
-             duration * 0.4, 
-             duration * 0.7, 
+             duration * 0.05, duration * 0.15, duration * 0.25, 
+             duration * 0.35, duration * 0.45, duration * 0.55, 
+             duration * 0.65, duration * 0.75, duration * 0.85, 
              duration * 0.95
          ];
          
@@ -402,18 +402,16 @@ export default function OrloChat() {
          
          const currentCategory = window.portfolioFormData?.category || 'Both';
          const superPrompt = `
-You are the Lead Copywriter for Dripp Media, a premium creative agency. 
-Analyze these 4 sequential frames from a video we just produced or edited. 
+You are the Lead Creative Director for Dripp Media, a premium creative agency. 
+Analyze these 10 sequential frames from a video we just produced or edited. 
 The user has categorized this video as: "${currentCategory}".
-Write a short, literal 'title' for this video to showcase it in our agency portfolio. 
-- If the category is "Videography", hint at the camera work or filming style.
-- If the category is "Editing", hint at the cuts, pacing, or color grading.
-- If the category is "Both (Everything)", hint at the end-to-end production value.
-- CRITICAL: Do NOT write full sentences or paragraphs. Just write a punchy, 3-8 word title (e.g. "Mountain Bike Event Coverage" or "Dynamic Real Estate Edit").
-- Look closely at what is literally happening in the video and state it clearly. Do not use overly abstract jargon.
-- NO EMOJIS. None. 
-- Include 2-3 highly relevant hashtags at the end of the title.
-Return ONLY raw JSON with a single 'title' key. Do not include markdown formatting or backticks around the JSON.
+
+Write three things:
+1. A punchy, 3-8 word 'title' (no full sentences).
+2. A short 'description' acting as a social media caption with 2-3 hashtags.
+3. A premium 'case_study' from the creator's perspective. The case study should sell the transformation and explain *why* the edits, pacing, or cinematography choices matter to the viewer's psychology or the brand's premium feel. Be extremely analytical but creative. DO NOT use emojis. DO NOT use basic marketing jargon. Write it like a masterclass case study. Keep it under 100 words.
+
+Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not include markdown formatting or backticks around the JSON.
          `.trim();
 
          const res = await fetch('/api/admin/copilot/video-analyze', {

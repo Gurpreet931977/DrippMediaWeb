@@ -97,15 +97,15 @@ export default function Page() {
             }
         };
 
-        // Comments Sheet Logic
+        // Case Study Sheet Logic (Mobile)
         window.openComments = function (btn) {
             const reelContent = btn.closest('.reel-content');
-            const sheet = reelContent.querySelector('.comments-sheet');
+            const sheet = reelContent.querySelector('.case-study-sheet');
             sheet.classList.add('open');
         };
 
         window.closeComments = function (btn) {
-            const sheet = btn.closest('.comments-sheet');
+            const sheet = btn.closest('.case-study-sheet');
             sheet.classList.remove('open');
         };
 
@@ -345,12 +345,17 @@ export default function Page() {
             const src = videoData.videoSrc || videoData.video_src || videoData.video_url || videoData.url || videoData.src || '';
             const desc = videoData.description || videoData.desc || videoData.caption || '';
             const music = videoData.musicText || videoData.music_text || videoData.music || videoData.audio || videoData.title || 'Original Audio - Dripp Media';
+            const caseStudy = videoData.case_study || 'No case study available for this project. Dive into the visual experience.';
             if (!src) return;
 
             const newReel = document.createElement('div');
             newReel.className = 'reel-item';
 
             newReel.innerHTML = `
+                <div class="case-study-panel">
+                    <h4>Case Study</h4>
+                    <p>${caseStudy.replace(/\n/g, '<br>')}</p>
+                </div>
                 <video class="reel-ambient-bg" src="${src}" muted loop playsinline preload="metadata" oncontextmenu="return false;"></video>
                 <div class="reel-ambient-blur"></div>
                 <div class="reel-content" data-id="${videoData.id || ''}">
@@ -383,9 +388,9 @@ export default function Page() {
                         <button class="action-btn" onclick="toggleLike(this)">
                             <div class="action-icon-bg"><svg class="action-icon icon-heart" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></div>
                         </button>
-                        <!-- Soft Comment Icon -->
-                        <button class="action-btn" onclick="openComments(this)">
-                            <div class="action-icon-bg"><svg class="action-icon icon-comment" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></div>
+                        <!-- Info Icon (Case Study Mobile) -->
+                        <button class="action-btn case-study-btn-mobile" onclick="openComments(this)">
+                            <div class="action-icon-bg"><svg class="action-icon icon-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
                         </button>
                         <!-- Soft Share Icon -->
                         <button class="action-btn" onclick="openShare(this)">
@@ -401,16 +406,16 @@ export default function Page() {
                         </button>
                     </div>
 
-                    <div class="comments-sheet">
+                    <div class="case-study-sheet comments-sheet">
                         <div class="comments-header">
-                            <h3>Comments</h3>
+                            <h3>Case Study</h3>
                             <button class="close-comments" onclick="closeComments(this)">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                             </button>
                         </div>
                         <div class="comments-body">
-                            <div class="reel-comment-box">
-                                <div class="comment-text-placeholder">Only your comment matters...</div>
+                            <div class="case-study-text-mobile" style="padding: 0 16px 24px 16px; color: rgba(255,255,255,0.85); font-family: 'Clash Display', sans-serif; font-size: 0.95rem; line-height: 1.6;">
+                                ${caseStudy.replace(/\n/g, '<br>')}
                             </div>
                         </div>
                     </div>
@@ -795,6 +800,59 @@ export default function Page() {
         }
 
         /* Full container background ambient blur */
+        /* Desktop Case Study Panel */
+        .case-study-panel {
+            position: absolute;
+            left: -320px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 300px;
+            max-height: 80%;
+            background: rgba(10, 10, 10, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 3px solid var(--brand-yellow);
+            border-radius: 20px;
+            padding: 24px;
+            color: #fff;
+            z-index: 20;
+            overflow-y: auto;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .reel-item.active .case-study-panel {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .case-study-panel h4 {
+            font-family: 'Panchang', sans-serif;
+            font-size: 1.1rem;
+            color: var(--brand-yellow);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .case-study-panel p {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @media (max-width: 1000px) {
+            .case-study-panel {
+                display: none !important;
+            }
+        }
+        @media (min-width: 1001px) {
+            .case-study-btn-mobile {
+                display: none !important;
+            }
+        }
         .reel-ambient-bg {
             position: absolute;
             top: 0;
