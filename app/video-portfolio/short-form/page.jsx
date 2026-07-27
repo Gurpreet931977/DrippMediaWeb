@@ -369,7 +369,7 @@ export default function Page() {
                     <div class="reel-info">
                         <div class="reel-user-profile">
                             <img src="/images/dripp-logo-yellow.png" alt="Dripp Media" class="reel-avatar" />
-                            <h3 class="reel-username">drippmedia_ <span class="username-dot">•</span> <button class="reel-follow-btn" onclick="this.innerText = this.innerText === 'Follow' ? 'Following' : 'Follow'; this.classList.toggle('following');">Follow</button></h3>
+                            <h3 class="reel-username">drippmedia_ <span class="username-dot">•</span> <button class="reel-follow-btn" onclick="window.open('https://www.instagram.com/drippmedia_', '_blank');">Follow</button></h3>
                         </div>
                         <p class="reel-desc">${desc}</p>
                         <div class="reel-music">
@@ -803,7 +803,7 @@ export default function Page() {
             position: absolute;
             inset: 0;
             backdrop-filter: blur(80px);
-            background: rgba(0,0,0,0.7);
+            background: linear-gradient(to bottom, var(--deep-black) 0%, rgba(5, 5, 5, 0.6) 15%, rgba(5, 5, 5, 0.6) 85%, var(--deep-black) 100%);
             z-index: -1;
         }
 
