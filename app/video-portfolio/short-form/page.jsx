@@ -491,8 +491,10 @@ export default function Page() {
                             <div class="case-study-text-mobile" style="padding: 0 16px 24px 16px; color: rgba(255,255,255,0.85); font-family: 'Clash Display', sans-serif; font-size: 0.95rem; line-height: 1.6;">
                                 ${caseStudy.replace(/\n/g, '<br>')}
                             </div>
-                            <div class="creative-vision-text-pc" style="padding: 0 16px 24px 16px; color: rgba(255,255,255,0.85); font-family: 'Clash Display', sans-serif; font-style: italic; font-size: 1.1rem; line-height: 1.8;">
-                                "${randomQuote}"
+                            <div class="creative-vision-text-pc">
+                                <div class="quote-icon-bg">"</div>
+                                <p class="quote-text">"${randomQuote}"</p>
+                                <div class="quote-author">— The Dripp Vision</div>
                             </div>
                         </div>
                     </div>
@@ -2036,6 +2038,59 @@ export default function Page() {
         }
         .premium-scrub-bar-container:active .premium-scrub-thumb {
             transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        /* Premium Creative Vision Quote */
+        .creative-vision-text-pc {
+            position: relative;
+            padding: 50px 40px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(235, 215, 63, 0.02) 0%, transparent 100%);
+            border-radius: 12px;
+            margin: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .quote-icon-bg {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 240px;
+            font-family: 'Panchang', sans-serif;
+            color: rgba(235, 215, 63, 0.04);
+            z-index: 0;
+            line-height: 1;
+            pointer-events: none;
+            user-select: none;
+        }
+        .quote-text {
+            font-family: 'Clash Display', sans-serif;
+            font-weight: 300;
+            font-style: italic;
+            font-size: 1.5rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.95);
+            z-index: 1;
+            position: relative;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            margin-bottom: 24px;
+        }
+        .quote-author {
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--brand-yellow);
+            z-index: 1;
+            position: relative;
+            opacity: 0.9;
         }
 
     ` }} />
