@@ -2014,60 +2014,59 @@ export default function Page() {
         /* Premium Scrub Bar */
         .premium-scrub-bar-container {
             position: absolute;
-            bottom: 4px; /* Float slightly up to prevent clipping */
-            left: 0;
-            width: 100%;
+            bottom: 2px; /* Very close to the edge */
+            left: 2px;
+            width: calc(100% - 4px); /* Minimal spacing from edges */
             height: 24px; /* Hit area */
             display: flex;
-            align-items: center; /* Center line within hit area */
+            align-items: flex-end; /* Align the line to the bottom of the hit area */
             cursor: pointer;
             z-index: 60;
-            opacity: 0.85;
+            opacity: 0.9;
             transition: opacity 0.3s ease;
-            padding: 0 8px; /* Slight padding so it doesn't touch the absolute edge */
         }
         .premium-scrub-bar-container:hover {
             opacity: 1;
         }
         .premium-scrub-bar {
             width: 100%;
-            height: 3px;
+            height: 2px; /* Ultra thin */
             background: rgba(255, 255, 255, 0.2);
             position: relative;
             transition: height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 2px;
+            border-radius: 4px;
         }
         .premium-scrub-bar-container:hover .premium-scrub-bar {
-            height: 5px;
+            height: 4px; /* Subtle thickening on hover */
         }
         .premium-scrub-progress {
             position: absolute;
             top: 0;
             left: 0;
             height: 100%;
-            background: var(--pure-white); /* Use white to contrast with yellow cursor */
+            background: rgba(255, 255, 255, 0.95);
             width: 0%;
             pointer-events: none;
-            border-radius: 2px;
+            border-radius: 4px;
         }
         .premium-scrub-thumb {
             position: absolute;
             top: 50%;
             left: 0%;
-            width: 12px;
-            height: 12px;
+            width: 8px; /* Very small dot */
+            height: 8px;
             background: var(--pure-white);
             border-radius: 50%;
-            transform: translate(-50%, -50%) scale(0.7); /* Always visible but small */
+            transform: translate(-50%, -50%) scale(0); /* Hidden by default for minimalism */
             pointer-events: none;
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            box-shadow: 0 0 6px rgba(0,0,0,0.5);
         }
         .premium-scrub-bar-container:hover .premium-scrub-thumb {
-            transform: translate(-50%, -50%) scale(1.2); /* Grow on hover */
+            transform: translate(-50%, -50%) scale(1); /* Reveal on hover */
         }
         .premium-scrub-bar-container:active .premium-scrub-thumb {
-            transform: translate(-50%, -50%) scale(1.4);
+            transform: translate(-50%, -50%) scale(1.3);
         }
 
         /* Premium Creative Vision Quote */
