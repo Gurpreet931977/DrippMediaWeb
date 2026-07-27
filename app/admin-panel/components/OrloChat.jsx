@@ -410,7 +410,13 @@ The user has categorized this video as: "${currentCategory}".
 Write three things:
 1. A punchy, 3-8 word 'title' (no full sentences).
 2. A short 'description' acting as a social media caption with 2-3 hashtags.
-3. A premium 'case_study' from the creator's perspective. The case study should sell the transformation and explain *why* the edits, pacing, or cinematography choices matter to the viewer's psychology or the brand's premium feel. Be extremely analytical but creative. DO NOT use emojis. DO NOT use basic marketing jargon. Write it like a masterclass case study. Keep it under 100 words.
+3. A premium 'case_study' from the creator's perspective. The case study should sell the transformation and explain *why* the edits, pacing, or cinematography choices matter to the viewer's psychology or the brand's premium feel. 
+- CRITICAL: Use simple, everyday conversational language. It should sound like a human talking to a client, not an academic paper.
+- DO NOT use hard grammar, complex vocabulary, or "SAT words" (e.g. avoid words like "juxtaposing", "high-octane", "engineered", "visceral").
+- STRICTLY DO NOT use em dashes (—) or en dashes (–).
+- DO NOT use emojis. 
+- DO NOT use basic marketing jargon. 
+Keep it under 100 words, simple but impactful.
 
 Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not include markdown formatting or backticks around the JSON.
          `.trim();
