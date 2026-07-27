@@ -50,8 +50,8 @@ export default function Page() {
         attachCursorEvents(document);
 
         // Mute/Unmute Logic
-        const muteIconSVG = `<svg class="action-icon" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg><span>Muted</span>`;
-        const unmuteIconSVG = `<svg class="action-icon" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg><span>Sound On</span>`;
+        const muteIconSVG = `<svg class="action-icon" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+        const unmuteIconSVG = `<svg class="action-icon" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
 
         function updateVolumeUI() {
             const allVideos = document.querySelectorAll('.reel-video');
@@ -367,11 +367,14 @@ export default function Page() {
                     <div class="center-indicator"><svg class="indicator-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
                     
                     <div class="reel-info">
-                        <h3 class="reel-username">@drippmedia</h3>
+                        <div class="reel-user-profile">
+                            <img src="/images/dripp-logo-yellow.png" alt="Dripp Media" class="reel-avatar" />
+                            <h3 class="reel-username">drippmedia_ <span class="username-dot">•</span> <button class="reel-follow-btn" onclick="this.innerText = this.innerText === 'Follow' ? 'Following' : 'Follow'; this.classList.toggle('following');">Follow</button></h3>
+                        </div>
                         <p class="reel-desc">${desc}</p>
                         <div class="reel-music">
                             <svg class="music-icon action-icon" width="16" height="16" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M9 18V5l12-2v13"></path><circle fill="none" stroke="currentColor" stroke-width="2" cx="6" cy="18" r="3"></circle><circle fill="none" stroke="currentColor" stroke-width="2" cx="18" cy="16" r="3"></circle></svg>
-                            <div class="music-text"><span class="music-marquee">${music}</span></div>
+                            <div class="music-text"><span class="music-marquee">${music}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${music}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
                         </div>
                     </div>
                     
@@ -743,8 +746,9 @@ export default function Page() {
             scroll-snap-type: y mandatory;
             scrollbar-width: none;
             -ms-overflow-style: none;
-            scroll-behavior: auto;
+            scroll-behavior: smooth;
             will-change: transform;
+            -webkit-overflow-scrolling: touch;
         }
 
         .reels-container::-webkit-scrollbar {
@@ -870,14 +874,80 @@ export default function Page() {
             pointer-events: none;
         }
 
-        .reel-username {
-            font-family: 'Clash Display', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: var(--pure-white);
+        .reel-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             margin-bottom: 8px;
+        }
+
+        .reel-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .reel-username {
+            display: flex;
+            align-items: center;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--pure-white);
             letter-spacing: 0.5px;
             text-shadow: none;
+            margin: 0;
+        }
+
+        .username-dot {
+            margin: 0 8px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .reel-follow-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--pure-white);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+
+        .reel-follow-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .reel-follow-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .reel-follow-btn:hover::before {
+            left: 100%;
+        }
+
+        .reel-follow-btn.following {
+            background: rgba(235, 215, 63, 0.15);
+            border-color: var(--brand-yellow);
+            color: var(--brand-yellow);
         }
 
         .reel-desc {
@@ -948,11 +1018,11 @@ export default function Page() {
 
         @keyframes marquee {
             0% {
-                transform: translateX(10%);
+                transform: translateX(0%);
             }
 
             100% {
-                transform: translateX(-100%);
+                transform: translateX(-50%);
             }
         }
 
