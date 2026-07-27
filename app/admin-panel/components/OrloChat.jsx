@@ -363,7 +363,8 @@ export default function OrloChat() {
      try {
          // Lightning Fast Native HTML5 Frame Extraction (Bypasses slow FFmpeg WASM)
          const video = document.createElement('video');
-         video.src = videoUrl;
+         // Bypass browser cache for external URLs to ensure fresh CORS headers are fetched
+         video.src = isExternal ? `${videoUrl}?cb=${Date.now()}` : videoUrl;
          video.crossOrigin = 'anonymous';
          video.muted = true;
          video.playsInline = true;
