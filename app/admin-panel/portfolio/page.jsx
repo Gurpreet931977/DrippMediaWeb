@@ -1273,15 +1273,17 @@ export default function PortfolioManager() {
                         )}
 
                         <div className="item-info">
-                            <div className="item-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                {activeTab === TABS.REELS ? item.description || 'Reel Video' : ''}
-                                {activeTab === TABS.GRAPHICS ? 'Graphic Design' : ''}
-                                {activeTab === TABS.LONG_FORM ? item.title : ''}
+                            <div className="item-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'visible', maxWidth: '400px' }}>
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {activeTab === TABS.REELS ? item.description || 'Reel Video' : ''}
+                                    {activeTab === TABS.GRAPHICS ? 'Graphic Design' : ''}
+                                    {activeTab === TABS.LONG_FORM ? item.title : ''}
+                                </span>
                                 
                                 {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS) && (
                                     <button 
                                         onClick={() => editItemField(item.id, activeTab === TABS.LONG_FORM ? 'title' : 'description', activeTab === TABS.LONG_FORM ? item.title : item.description)}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: '4px', display: 'flex', alignItems: 'center' }}
+                                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
                                         title="Edit Text"
                                     >
                                         <Edit2 size={14} />
