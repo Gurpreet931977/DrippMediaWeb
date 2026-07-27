@@ -635,53 +635,42 @@ export default function Page() {
                         }
                     };
 
+                    const onGlobalMove = (e) => {
+                        if (isDragging) {
+                            // Don't stop propagation globally, just prevent default if touch
+                            if (e.cancelable && e.type === 'touchmove') e.preventDefault();
+                            updateSeek(e, false);
+                        }
+                    };
+                    
+                    const onGlobalUp = (e) => {
+                        if (isDragging) {
+                            updateSeek(e, true);
+                            isDragging = false;
+                            window.removeEventListener('mousemove', onGlobalMove);
+                            window.removeEventListener('mouseup', onGlobalUp);
+                            window.removeEventListener('touchmove', onGlobalMove);
+                            window.removeEventListener('touchend', onGlobalUp);
+                            window.removeEventListener('touchcancel', onGlobalUp);
+                        }
+                    };
+
                     barContainer.addEventListener('mousedown', (e) => {
                         isDragging = true;
                         e.stopPropagation();
                         updateSeek(e, false);
-                    });
-                    barContainer.addEventListener('mousemove', (e) => {
-                        if (isDragging) {
-                            e.stopPropagation();
-                            updateSeek(e, false);
-                        }
-                    });
-                    barContainer.addEventListener('mouseup', (e) => { 
-                        if (isDragging) {
-                            updateSeek(e, true);
-                            isDragging = false;
-                        }
-                    });
-                    barContainer.addEventListener('mouseleave', (e) => { 
-                        if (isDragging) {
-                            updateSeek(e, true);
-                            isDragging = false;
-                        }
+                        window.addEventListener('mousemove', onGlobalMove, { passive: false });
+                        window.addEventListener('mouseup', onGlobalUp);
                     });
 
                     barContainer.addEventListener('touchstart', (e) => {
                         isDragging = true;
                         e.stopPropagation();
                         updateSeek(e, false);
+                        window.addEventListener('touchmove', onGlobalMove, { passive: false });
+                        window.addEventListener('touchend', onGlobalUp);
+                        window.addEventListener('touchcancel', onGlobalUp);
                     }, { passive: false });
-                    barContainer.addEventListener('touchmove', (e) => {
-                        if (isDragging) {
-                            e.stopPropagation();
-                            updateSeek(e, false);
-                        }
-                    }, { passive: false });
-                    barContainer.addEventListener('touchend', (e) => { 
-                        if (isDragging) {
-                            updateSeek(e, true);
-                            isDragging = false;
-                        }
-                    });
-                    barContainer.addEventListener('touchcancel', (e) => { 
-                        if (isDragging) {
-                            updateSeek(e, true);
-                            isDragging = false;
-                        }
-                    });
                 }
             }
         }
