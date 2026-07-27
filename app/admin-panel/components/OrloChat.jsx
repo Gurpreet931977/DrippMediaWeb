@@ -149,7 +149,7 @@ export default function OrloChat() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = false;
+        recognitionRef.current.continuous = true;
         recognitionRef.current.interimResults = true;
         
         recognitionRef.current.onresult = (event) => {
@@ -173,6 +173,7 @@ export default function OrloChat() {
         };
         
         recognitionRef.current.onend = () => {
+          // If we manually stopped it, isListening will already be false.
           setIsListening(false);
         };
       }
@@ -906,13 +907,38 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
           40% { transform: scale(1); }
         }
         
-        .pulsing-mic {
-          animation: pulseMic 1.5s infinite;
+        .mic-btn-container {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
+
+        .pulsing-mic {
+          animation: pulseMic 1.5s infinite ease-in-out;
+          color: #ebd73f !important;
+        }
+        
+        .mic-waves {
+          position: absolute;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: rgba(235, 215, 63, 0.4);
+          animation: micWave 1.5s infinite ease-out;
+          pointer-events: none;
+          z-index: 0;
+        }
+
         @keyframes pulseMic {
-          0% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.2); opacity: 0.7; }
-          100% { transform: scale(1); opacity: 1; }
+          0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(235, 215, 63, 0)); }
+          50% { transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(235, 215, 63, 0.8)); }
+          100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(235, 215, 63, 0)); }
+        }
+        
+        @keyframes micWave {
+          0% { transform: scale(0.5); opacity: 1; }
+          100% { transform: scale(1.8); opacity: 0; }
         }
         
         .toast-msg {
@@ -981,23 +1007,28 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
 
           <form className="chat-input-area" onSubmit={handleSubmit}>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <button
-                type="button"
-                onClick={toggleListen}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: isListening ? '#ef4444' : '#888',
-                  cursor: 'pointer',
-                  padding: '12px 10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  transition: 'color 0.3s'
-                }}
-                title="Voice Command"
-              >
-                <Mic size={20} className={isListening ? 'pulsing-mic' : ''} />
-              </button>
+              <div className="mic-btn-container">
+                {isListening && <div className="mic-waves"></div>}
+                <button
+                  type="button"
+                  onClick={toggleListen}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: isListening ? '#ebd73f' : '#888',
+                    cursor: 'pointer',
+                    padding: '12px 10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    transition: 'color 0.3s',
+                    position: 'relative',
+                    zIndex: 2
+                  }}
+                  title={isListening ? "Stop Listening" : "Voice Command"}
+                >
+                  <Mic size={20} className={isListening ? 'pulsing-mic' : ''} />
+                </button>
+              </div>
               <input 
                 type="text" 
                 value={input}
