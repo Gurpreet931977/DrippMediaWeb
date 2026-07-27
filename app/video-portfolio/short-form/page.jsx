@@ -389,12 +389,12 @@ export default function Page() {
             "We don't capture reality. We create a reality that people want to escape into."
         ];
 
-        // Create HTML for a single reel instance
         function createReelHTML(videoData) {
             if (!reelsContainer || !videoData) return;
             const src = videoData.videoSrc || videoData.video_src || videoData.video_url || videoData.url || videoData.src || '';
             const desc = videoData.description || videoData.desc || videoData.caption || '';
             const music = videoData.musicText || videoData.music_text || videoData.music || videoData.audio || videoData.title || 'Original Audio - Dripp Media';
+            const caseStudy = videoData.caseStudy || videoData.case_study || desc || '';
             
             if (!src) return;
             
