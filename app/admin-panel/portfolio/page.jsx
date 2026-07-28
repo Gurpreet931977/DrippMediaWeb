@@ -1267,9 +1267,12 @@ export default function PortfolioManager() {
                           <div style={{ position: 'relative', width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(235, 215, 63, 0.4)', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', background: '#000', marginBottom: '20px' }}>
                               <video 
                                   id="frame-extractor-video"
-                                  src={editPopup.value ? editPopup.value + (editPopup.value.includes('?') ? '&' : '?') + 't=' + Date.now() : ''} 
+                                  src={editPopup.value || ''} 
                                   crossOrigin="anonymous" 
                                   controls={false}
+                                  preload="auto"
+                                  muted
+                                  playsInline
                                   style={{ width: '100%', maxWidth: '240px', margin: '0 auto', display: 'block', aspectRatio: '9/16', objectFit: 'cover', borderRadius: '8px' }}
                                   onTimeUpdate={(e) => {
                                       if (e.target.duration && !editPopup.isScrubbing) {
