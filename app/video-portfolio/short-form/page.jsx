@@ -488,7 +488,7 @@ export default function Page() {
                             </button>
                         </div>
                         <div class="comments-body">
-                            <div class="case-study-text-mobile" style="padding: 0 16px 24px 16px; color: rgba(255,255,255,0.85); font-family: 'Clash Display', sans-serif; font-size: 0.95rem; line-height: 1.6;">
+                            <div class="case-study-text-mobile premium-case-study">
                                 ${caseStudy.replace(/\n/g, '<br>')}
                             </div>
                             <div class="creative-vision-text-pc">
@@ -1147,8 +1147,8 @@ export default function Page() {
 
         @media (max-width: 900px) {
             .desktop-side-panel { display: none !important; }
-            .case-study-btn-mobile { display: flex; }
-            .comment-btn-desktop { display: none; }
+            .case-study-btn-mobile { display: flex !important; }
+            .comment-btn-desktop { display: none !important; }
         }
 
         @media (max-width: 1000px) {
@@ -1227,8 +1227,9 @@ export default function Page() {
         /* Dripp Media Logo Top Left - Minimal */
         .reel-brand {
             position: absolute;
-            top: 48px;
-            left: 25px;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 20;
             font-family: 'Panchang', sans-serif;
             font-size: 0.8rem;
@@ -1749,21 +1750,74 @@ export default function Page() {
             color: var(--brand-yellow);
         }
 
-        /* Slide-up Comments Sheet Overlay */
+        /* Slide-up Comments Sheet Overlay - Premium */
         .comments-sheet {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
             height: 0;
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: linear-gradient(180deg, rgba(20, 20, 20, 0.85) 0%, rgba(5, 5, 5, 0.98) 100%);
+            backdrop-filter: blur(24px) saturate(1.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(235, 215, 63, 0.15);
+            border-top-left-radius: 28px;
+            border-top-right-radius: 28px;
             z-index: 30;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: height 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            transition: height 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        
+        .comments-sheet::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 2px;
+            z-index: 31;
+        }
+        
+        .comments-sheet::after {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(235,215,63,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .premium-case-study {
+            padding: 10px 24px 40px;
+            color: rgba(255, 255, 255, 0.9);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            font-weight: 400;
+            position: relative;
+            z-index: 2;
+            overflow-y: auto;
+            text-align: left;
+        }
+        
+        .premium-case-study::first-letter {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--brand-yellow);
+            float: left;
+            margin-right: 8px;
+            line-height: 1.1;
+            font-family: 'Panchang', sans-serif;
+            text-shadow: 0 0 10px rgba(235, 215, 63, 0.4);
         }
 
         .comments-sheet.open {
@@ -1774,16 +1828,22 @@ export default function Page() {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 30px 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            z-index: 2;
         }
 
         .comments-header h3 {
             font-family: 'Panchang', sans-serif;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--pure-white);
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #fff, #ebd73f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            z-index: 2;
         }
 
         .close-comments {

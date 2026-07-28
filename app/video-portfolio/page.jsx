@@ -39,6 +39,9 @@ export default function Page() {
 
         cards.forEach(card => {
             const inner = card.querySelector('.card-inner');
+            
+            // Set initial perspective to prevent the first hover zoom glitch
+            gsap.set(inner, { transformPerspective: 1000 });
 
             card.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();
