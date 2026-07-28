@@ -475,6 +475,25 @@ export default function PortfolioManager() {
   return (
     <div className={styles.mainContent}>
       <style>{`
+        .portfolio-title-hover {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: default;
+        }
+        .portfolio-title-hover:hover {
+            color: #ebd73f;
+            transform: scale(1.02);
+            white-space: normal !important;
+            overflow: visible !important;
+            word-break: break-word;
+            text-shadow: 0 0 10px rgba(235, 215, 63, 0.4);
+            position: relative;
+            z-index: 10;
+        }
+        .hover-pop-btn:hover {
+            transform: scale(1.05);
+            background: rgba(235, 215, 63, 0.2) !important;
+            border-color: rgba(235, 215, 63, 0.5) !important;
+        }
         .portfolio-header {
             display: flex;
             justify-content: space-between;
@@ -1612,8 +1631,12 @@ export default function PortfolioManager() {
                         )}
 
                         <div className="item-info">
-                            <div className="item-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'visible', maxWidth: '400px' }}>
-                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <div className="item-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'visible' }}>
+                                <span 
+                                    className="portfolio-title-hover" 
+                                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', transformOrigin: 'left center' }}
+                                    title={activeTab === TABS.REELS ? (item.description || 'Reel Video') : activeTab === TABS.GRAPHICS ? 'Graphic Design' : item.title}
+                                >
                                     {activeTab === TABS.REELS ? item.description || 'Reel Video' : ''}
                                     {activeTab === TABS.GRAPHICS ? 'Graphic Design' : ''}
                                     {activeTab === TABS.LONG_FORM ? item.title : ''}
@@ -1628,10 +1651,11 @@ export default function PortfolioManager() {
                                                     category: item.category || 'Both',
                                                     case_study: item.case_study || ''
                                                 })}
-                                                style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '6px', cursor: 'pointer', color: '#ebd73f', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: '500' }}
+                                                style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '8px', cursor: 'pointer', color: '#ebd73f', padding: '8px', display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'all 0.2s ease' }}
                                                 title="Edit Details"
+                                                className="hover-pop-btn"
                                             >
-                                                Edit Details <Edit2 size={12} style={{ marginLeft: '4px' }} />
+                                                <Edit2 size={16} />
                                             </button>
                                         )}
                                         
@@ -1640,10 +1664,11 @@ export default function PortfolioManager() {
                                                 onClick={() => {
                                                     setEditPopup({ show: true, id: item.id, field: 'extract_frame', value: item.videoSrc, isUploading: false, progress: 0 });
                                                 }}
-                                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: '500' }}
+                                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer', color: '#fff', padding: '8px', display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'all 0.2s ease' }}
                                                 title="Edit Thumbnail from Video Frames"
+                                                className="hover-pop-btn"
                                             >
-                                                <ImageIcon size={12} style={{ marginRight: '4px' }} /> Thumbnail
+                                                <ImageIcon size={16} />
                                             </button>
                                         )}
                                     </>
