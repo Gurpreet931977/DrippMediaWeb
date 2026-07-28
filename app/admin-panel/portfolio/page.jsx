@@ -39,32 +39,33 @@ export default function PortfolioManager() {
 
   const generateFilmstrip = async (videoUrl) => {
     setEditPopup(prev => ({ ...prev, generatingFilmstrip: true, filmstrip: [] }));
-    const video = document.createElement('video');
-    video.crossOrigin = 'anonymous';
-    video.src = videoUrl + (videoUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
-    video.muted = true;
-    video.playsInline = true;
+    const metaVideo = document.createElement('video');
+    metaVideo.crossOrigin = 'anonymous';
+    metaVideo.preload = 'auto';
+    metaVideo.src = videoUrl + (videoUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+    metaVideo.muted = true;
+    metaVideo.playsInline = true;
     
-    await new Promise(r => { video.onloadedmetadata = r; video.onerror = r; });
-    if (!video.duration || !isFinite(video.duration)) {
+    await new Promise(r => { metaVideo.onloadedmetadata = r; metaVideo.onerror = r; });
+    if (!metaVideo.duration || !isFinite(metaVideo.duration)) {
         setEditPopup(prev => ({ ...prev, generatingFilmstrip: false }));
         return;
     }
 
     const frames = [];
-    const numFrames = 6;
+    const numFrames = 5;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
     for (let i = 0; i < numFrames; i++) {
-        const time = (video.duration / numFrames) * i + (video.duration / numFrames / 2);
-        video.currentTime = time;
-        await new Promise(r => { video.onseeked = r; video.onerror = r; });
+        const time = (metaVideo.duration / numFrames) * i + (metaVideo.duration / numFrames / 2);
+        metaVideo.currentTime = time;
+        await new Promise(r => { metaVideo.onseeked = r; metaVideo.onerror = r; });
         if (i === 0) {
-            canvas.width = video.videoWidth / 4;
-            canvas.height = video.videoHeight / 4;
+            canvas.width = metaVideo.videoWidth / 4;
+            canvas.height = metaVideo.videoHeight / 4;
         }
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(metaVideo, 0, 0, canvas.width, canvas.height);
         frames.push(canvas.toDataURL('image/jpeg', 0.5));
     }
     
@@ -1227,8 +1228,8 @@ export default function PortfolioManager() {
                                   id="frame-extractor-video"
                                   src={editPopup.value ? editPopup.value + (editPopup.value.includes('?') ? '&' : '?') + 't=' + Date.now() : ''} 
                                   crossOrigin="anonymous" 
-                                  controls 
-                                  style={{ width: '100%', maxHeight: '400px', display: 'block', objectFit: 'contain' }}
+                                  controls={false}
+                                  style={{ width: '100%', maxWidth: '240px', margin: '0 auto', display: 'block', aspectRatio: '9/16', objectFit: 'cover', borderRadius: '8px' }}
                                   onTimeUpdate={(e) => {
                                       if (e.target.duration && !editPopup.isScrubbing) {
                                           setEditPopup(prev => ({ ...prev, scrubPercent: (e.target.currentTime / e.target.duration) * 100 }));
@@ -1254,10 +1255,10 @@ export default function PortfolioManager() {
                                           left: `calc(${editPopup.scrubPercent}% - ${editPopup.scrubPercent === 100 ? 40 : editPopup.scrubPercent === 0 ? 0 : 20}px)`, 
                                           width: '40px', 
                                           height: '100%', 
-                                          border: '3px solid #2e71ff', 
+                                          border: '3px solid #ebd73f', 
                                           borderRadius: '6px', 
                                           pointerEvents: 'none',
-                                          boxShadow: '0 0 15px rgba(46, 113, 255, 0.4), inset 0 0 10px rgba(46, 113, 255, 0.2)',
+                                          boxShadow: '0 0 15px rgba(235, 215, 63, 0.4), inset 0 0 10px rgba(235, 215, 63, 0.2)',
                                           background: 'rgba(255,255,255,0.1)',
                                           transition: editPopup.isScrubbing ? 'none' : 'left 0.1s linear'
                                       }}></div>
@@ -1325,11 +1326,11 @@ export default function PortfolioManager() {
                       />
                   )}
                   
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <button type="button" className="popup-btn" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false })}>
-                        Cancel
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button type="button" className="popup-btn" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none', padding: '10px 16px', fontSize: '0.85rem' }} onClick={() => setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false })}>
+                        CANCEL
                     </button>
-                    <button id="saveEditBtn" type="button" className="popup-btn" style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.4)' }} disabled={editPopup.isUploading} onClick={async () => {
+                    <button id="saveEditBtn" type="button" className="popup-btn" style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.4)', padding: '10px 24px', fontSize: '0.85rem' }} disabled={editPopup.isUploading} onClick={async () => {
                         if (editPopup.field === 'extract_frame') {
                             setEditPopup(prev => ({ ...prev, isUploading: true, progress: 10 }));
                             try {
@@ -1436,7 +1437,7 @@ export default function PortfolioManager() {
                           showNotification('error', 'Failed to update');
                         }
                     }}>
-                        {editPopup.field === 'extract_frame' ? (editPopup.isUploading ? `Uploading (${editPopup.progress}%)...` : 'Capture & Save Frame') : 'Save Changes'}
+                        {editPopup.field === 'extract_frame' ? (editPopup.isUploading ? `Uploading (${editPopup.progress}%)...` : 'SAVE') : 'Save Changes'}
                     </button>
                   </div>
               </div>
