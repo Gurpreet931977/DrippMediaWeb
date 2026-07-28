@@ -1042,6 +1042,7 @@ export default function PortfolioManager() {
                           editPopup.field === 'case_study' ? 'Case Study' : 
                           editPopup.field === 'category' ? 'Category' : 
                           editPopup.field === 'extract_frame' ? 'Thumbnail from Video' :
+                          editPopup.field === 'details' ? 'Details' :
                           (editPopup.field === 'videoSrc' || editPopup.field === 'image_url' || editPopup.field === 'thumbnail_url') ? 'Media URL' : 'Title'
                       }
                   </h3>
@@ -1082,7 +1083,57 @@ export default function PortfolioManager() {
                       </div>
                   )}
                   
-                  {editPopup.field === 'category' ? (
+                  {editPopup.field === 'details' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '35px' }}>
+                          <div>
+                              <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>{activeTab === TABS.LONG_FORM ? 'Title' : 'Description / Caption'}</label>
+                              <input 
+                                type="text" 
+                                style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
+                                value={editPopup.value.title || ''} 
+                                onChange={e => setEditPopup({...editPopup, value: {...editPopup.value, title: e.target.value}})} 
+                              />
+                          </div>
+                          
+                          {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) && (
+                              <div>
+                                  <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>Category</label>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: 'rgba(0,0,0,0.5)', padding: '6px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                      {['Videography', 'Editing', 'Both'].map((cat) => {
+                                          const isActive = editPopup.value.category === cat;
+                                          return (
+                                              <button
+                                                  type="button"
+                                                  key={cat}
+                                                  onClick={() => setEditPopup({...editPopup, value: {...editPopup.value, category: cat}})}
+                                                  style={{
+                                                      width: '100%', padding: '10px 0', borderRadius: '8px',
+                                                      background: isActive ? 'rgba(235, 215, 63, 0.15)' : 'transparent',
+                                                      border: `1px solid ${isActive ? 'rgba(235, 215, 63, 0.3)' : 'transparent'}`,
+                                                      color: isActive ? '#ebd73f' : '#888', cursor: 'pointer', fontFamily: 'Clash Display, sans-serif', fontSize: '0.9rem'
+                                                  }}
+                                              >
+                                                  {cat}
+                                              </button>
+                                          );
+                                      })}
+                                  </div>
+                              </div>
+                          )}
+
+                          {activeTab === TABS.REELS && (
+                              <div>
+                                  <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>Case Study</label>
+                                  <textarea 
+                                      style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif', minHeight: '120px' }}
+                                      value={editPopup.value.case_study || ''}
+                                      onChange={e => setEditPopup({...editPopup, value: {...editPopup.value, case_study: e.target.value}})}
+                                      placeholder="Discuss cinematography, editing, pacing, or transformation..."
+                                  />
+                              </div>
+                          )}
+                      </div>
+                  ) : editPopup.field === 'category' ? (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '35px', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
                           {['Videography', 'Editing', 'Both'].map((cat) => {
                               const isActive = editPopup.value === cat;
@@ -1112,19 +1163,29 @@ export default function PortfolioManager() {
                       />
                   ) : editPopup.field === 'extract_frame' ? (
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px' }}>
-                          <video 
-                              id="frame-extractor-video"
-                              src={editPopup.value} 
-                              crossOrigin="anonymous" 
-                              controls 
-                              style={{ width: '100%', borderRadius: '12px', marginBottom: '16px', background: '#000', maxHeight: '300px' }}
-                          />
-                          <p style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '16px', textAlign: 'center' }}>
-                              Pause the video on the frame you want to use as a thumbnail, then click the button below.
-                          </p>
+                          <div style={{ position: 'relative', width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(235, 215, 63, 0.4)', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', background: '#000', marginBottom: '20px' }}>
+                              <video 
+                                  id="frame-extractor-video"
+                                  src={editPopup.value ? editPopup.value + (editPopup.value.includes('?') ? '&' : '?') + 't=' + Date.now() : ''} 
+                                  crossOrigin="anonymous" 
+                                  controls 
+                                  style={{ width: '100%', maxHeight: '400px', display: 'block', objectFit: 'contain' }}
+                              />
+                          </div>
+                          <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px dashed rgba(235, 215, 63, 0.3)', padding: '16px 20px', borderRadius: '12px', width: '100%' }}>
+                              <p style={{ fontSize: '0.95rem', color: '#ebd73f', margin: 0, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontFamily: 'Clash Display, sans-serif', fontWeight: '500' }}>
+                                  <ImageIcon size={18} /> Scrub to the perfect frame and capture
+                              </p>
+                          </div>
                           {editPopup.isUploading && (
-                              <div className="progress-bar-container" style={{ width: '100%', marginBottom: '16px' }}>
-                                  <div className="progress-bar" style={{ width: `${editPopup.progress}%` }}></div>
+                              <div style={{ width: '100%', marginTop: '24px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem', color: '#ebd73f', fontWeight: '500' }}>
+                                      <span>Extracting & Saving...</span>
+                                      <span>{editPopup.progress}%</span>
+                                  </div>
+                                  <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', overflow: 'hidden' }}>
+                                      <div style={{ width: `${editPopup.progress}%`, height: '100%', background: 'linear-gradient(90deg, rgba(212, 188, 28, 1), rgba(235, 215, 63, 1))', borderRadius: '10px', transition: 'width 0.3s ease', boxShadow: '0 0 10px rgba(235, 215, 63, 0.5)' }}></div>
+                                  </div>
                               </div>
                           )}
                       </div>
@@ -1221,10 +1282,28 @@ export default function PortfolioManager() {
                         }
 
                         try {
+                        try {
+                          let updateBody = { id: editPopup.id };
+                          if (editPopup.field === 'details') {
+                             if (activeTab === TABS.LONG_FORM) {
+                                 updateBody.title = editPopup.value.title.trim();
+                             } else {
+                                 updateBody.description = editPopup.value.title.trim();
+                             }
+                             if (activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) {
+                                 updateBody.category = editPopup.value.category;
+                             }
+                             if (activeTab === TABS.REELS) {
+                                 updateBody.case_study = editPopup.value.case_study.trim();
+                             }
+                          } else {
+                             updateBody[editPopup.field] = typeof editPopup.value === 'string' ? editPopup.value.trim() : editPopup.value;
+                          }
+
                           const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: editPopup.id, [editPopup.field]: editPopup.value.trim() })
+                            body: JSON.stringify(updateBody)
                           });
                           if (res.ok) {
                             showNotification('success', 'Updated successfully');
@@ -1544,21 +1623,17 @@ export default function PortfolioManager() {
                                     <>
                                         {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS) && (
                                             <button 
-                                                onClick={() => openEditPopup(item.id, activeTab === TABS.LONG_FORM ? 'title' : 'description', activeTab === TABS.LONG_FORM ? item.title : item.description)}
-                                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
-                                                title="Edit Text"
+                                                onClick={() => openEditPopup(item.id, 'details', {
+                                                    title: activeTab === TABS.LONG_FORM ? (item.title || '') : (item.description || ''),
+                                                    category: item.category || 'Both',
+                                                    case_study: item.case_study || ''
+                                                })}
+                                                style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '6px', cursor: 'pointer', color: '#ebd73f', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: '500' }}
+                                                title="Edit Details"
                                             >
-                                                <Edit2 size={14} />
+                                                Edit Details <Edit2 size={12} style={{ marginLeft: '4px' }} />
                                             </button>
                                         )}
-                                        
-                                        <button 
-                                            onClick={() => openEditPopup(item.id, 'category', item.category || 'Both')}
-                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: '500' }}
-                                            title="Edit Category"
-                                        >
-                                            {item.category || 'Both'} <Edit2 size={12} style={{ marginLeft: '4px' }} />
-                                        </button>
                                         
                                         {activeTab === TABS.REELS && (
                                             <button 
@@ -1569,30 +1644,6 @@ export default function PortfolioManager() {
                                                 title="Edit Thumbnail from Video Frames"
                                             >
                                                 <ImageIcon size={12} style={{ marginRight: '4px' }} /> Thumbnail
-                                            </button>
-                                        )}
-                                        
-                                        <button 
-                                            onClick={() => {
-                                                let field = 'videoSrc';
-                                                let val = item.videoSrc;
-                                                if (activeTab === TABS.LONG_FORM) { field = 'thumbnail_url'; val = item.thumbnail_url; }
-                                                if (activeTab === TABS.GRAPHICS) { field = 'image_url'; val = item.image_url; }
-                                                openEditPopup(item.id, field, val);
-                                            }}
-                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: '500' }}
-                                            title="Edit Media URL"
-                                        >
-                                            <ImageIcon size={12} style={{ marginRight: '4px' }} /> Media URL
-                                        </button>
-                                        
-                                        {activeTab === TABS.REELS && (
-                                            <button 
-                                                onClick={() => openEditPopup(item.id, 'case_study', item.case_study)}
-                                                style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '6px', cursor: 'pointer', color: '#ebd73f', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                                                title="Edit Case Study"
-                                            >
-                                                <BookOpen size={14} />
                                             </button>
                                         )}
                                     </>
