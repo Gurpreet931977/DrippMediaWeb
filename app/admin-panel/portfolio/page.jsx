@@ -1093,18 +1093,23 @@ export default function PortfolioManager() {
       {editPopup.show && (
           <div className="upload-popup-overlay" onClick={() => setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false })}>
               <div className="upload-popup" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '420px', background: 'linear-gradient(180deg, rgba(15,15,15,0.95) 0%, rgba(5,5,5,0.95) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(235, 215, 63, 0.15)', boxShadow: '0 20px 60px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05)' }}>
-                  <div className="popup-icon" style={{ background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.05))', color: '#ebd73f', boxShadow: '0 0 50px rgba(235, 215, 63, 0.25), inset 0 2px 15px rgba(255,255,255,0.15)', margin: '0 auto 28px auto' }}>
-                      <Edit2 size={42} />
-                  </div>
+                  {editPopup.field !== 'extract_frame' && (
+                      <div className="popup-icon" style={{ background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.05))', color: '#ebd73f', boxShadow: '0 0 50px rgba(235, 215, 63, 0.25), inset 0 2px 15px rgba(255,255,255,0.15)', margin: '0 auto 28px auto' }}>
+                          <Edit2 size={42} />
+                      </div>
+                  )}
                   <h3 style={{ textAlign: 'center' }}>
-                      Edit {
-                          editPopup.field === 'description' ? 'Caption' : 
-                          editPopup.field === 'case_study' ? 'Case Study' : 
-                          editPopup.field === 'category' ? 'Category' : 
-                          editPopup.field === 'extract_frame' ? 'Thumbnail from Video' :
-                          editPopup.field === 'details' ? 'Details' :
-                          (editPopup.field === 'videoSrc' || editPopup.field === 'image_url' || editPopup.field === 'thumbnail_url') ? 'Media URL' : 'Title'
-                      }
+                      {editPopup.field === 'extract_frame' ? 'CHOOSE THUMBNAIL' : (
+                          <>
+                              Edit {
+                                  editPopup.field === 'description' ? 'Caption' : 
+                                  editPopup.field === 'case_study' ? 'Case Study' : 
+                                  editPopup.field === 'category' ? 'Category' : 
+                                  editPopup.field === 'details' ? 'Details' :
+                                  (editPopup.field === 'videoSrc' || editPopup.field === 'image_url' || editPopup.field === 'thumbnail_url') ? 'Media URL' : 'Title'
+                              }
+                          </>
+                      )}
                   </h3>
                   {editPopup.field !== 'extract_frame' && (
                       <p style={{ textAlign: 'center' }}>Update the value below and save your changes to apply them live.</p>
