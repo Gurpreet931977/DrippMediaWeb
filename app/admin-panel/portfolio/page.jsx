@@ -34,7 +34,7 @@ export default function PortfolioManager() {
 
   const [notification, setNotification] = useState(null);
   const [uploadPopup, setUploadPopup] = useState({ show: false, type: '', message: '' });
-  const [editPopup, setEditPopup] = useState({ show: false, id: null, field: '', value: '' });
+  const [editPopup, setEditPopup] = useState({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0 });
   const [fileSizes, setFileSizes] = useState({});
 
   const showNotification = (type, message) => {
@@ -433,7 +433,7 @@ export default function PortfolioManager() {
   };
 
   const openEditPopup = (id, field, currentVal) => {
-    setEditPopup({ show: true, id, field, value: currentVal || '' });
+    setEditPopup({ show: true, id, field, value: currentVal || '', isUploading: false, progress: 0 });
   };
 
   // Reordering Logic (Move Up/Down instead of Drag to keep it simple for now)
@@ -1031,7 +1031,7 @@ export default function PortfolioManager() {
       )}
 
       {editPopup.show && (
-          <div className="upload-popup-overlay" onClick={() => setEditPopup({ show: false, id: null, field: '', value: '' })}>
+          <div className="upload-popup-overlay" onClick={() => setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0 })}>
               <div className="upload-popup" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '550px', borderTop: '4px solid #ebd73f' }}>
                   <div className="popup-icon" style={{ background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.05))', color: '#ebd73f', boxShadow: '0 0 50px rgba(235, 215, 63, 0.25), inset 0 2px 15px rgba(255,255,255,0.15)', margin: '0 auto 28px auto' }}>
                       <Edit2 size={42} />
@@ -1041,6 +1041,7 @@ export default function PortfolioManager() {
                           editPopup.field === 'description' ? 'Caption' : 
                           editPopup.field === 'case_study' ? 'Case Study' : 
                           editPopup.field === 'category' ? 'Category' : 
+                          editPopup.field === 'extract_frame' ? 'Thumbnail from Video' :
                           (editPopup.field === 'videoSrc' || editPopup.field === 'image_url' || editPopup.field === 'thumbnail_url') ? 'Media URL' : 'Title'
                       }
                   </h3>
@@ -1107,6 +1108,24 @@ export default function PortfolioManager() {
                           onChange={e => setEditPopup({...editPopup, value: e.target.value})}
                           autoFocus
                       />
+                  ) : editPopup.field === 'extract_frame' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px' }}>
+                          <video 
+                              id="frame-extractor-video"
+                              src={editPopup.value} 
+                              crossOrigin="anonymous" 
+                              controls 
+                              style={{ width: '100%', borderRadius: '12px', marginBottom: '16px', background: '#000', maxHeight: '300px' }}
+                          />
+                          <p style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '16px', textAlign: 'center' }}>
+                              Pause the video on the frame you want to use as a thumbnail, then click the button below.
+                          </p>
+                          {editPopup.isUploading && (
+                              <div className="progress-bar-container" style={{ width: '100%', marginBottom: '16px' }}>
+                                  <div className="progress-bar" style={{ width: `${editPopup.progress}%` }}></div>
+                              </div>
+                          )}
+                      </div>
                   ) : (
                       <input 
                         type="text" 
@@ -1123,10 +1142,82 @@ export default function PortfolioManager() {
                   )}
                   
                   <div style={{ display: 'flex', gap: '16px' }}>
-                    <button type="button" className="popup-btn" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setEditPopup({ show: false, id: null, field: '', value: '' })}>
+                    <button type="button" className="popup-btn" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0 })}>
                         Cancel
                     </button>
-                    <button id="saveEditBtn" type="button" className="popup-btn" style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.4)' }} onClick={async () => {
+                    <button id="saveEditBtn" type="button" className="popup-btn" style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.4)' }} disabled={editPopup.isUploading} onClick={async () => {
+                        if (editPopup.field === 'extract_frame') {
+                            setEditPopup(prev => ({ ...prev, isUploading: true, progress: 10 }));
+                            try {
+                                const videoEl = document.getElementById('frame-extractor-video');
+                                if (!videoEl) throw new Error("Video element not found");
+                                
+                                const canvas = document.createElement('canvas');
+                                canvas.width = videoEl.videoWidth;
+                                canvas.height = videoEl.videoHeight;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                                
+                                setEditPopup(prev => ({ ...prev, progress: 30 }));
+                                
+                                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+                                const fileToUpload = new File([blob], `thumbnail_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                                
+                                const presignRes = await fetch('/api/admin/portfolio/upload-url', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        fileName: fileToUpload.name,
+                                        contentType: fileToUpload.type,
+                                        folder: 'Reels'
+                                    })
+                                });
+                                
+                                if (!presignRes.ok) throw new Error('Failed to get upload URL');
+                                const { presignedUrl, publicUrl } = await presignRes.json();
+                                
+                                setEditPopup(prev => ({ ...prev, progress: 50 }));
+                                
+                                await new Promise((resolve, reject) => {
+                                    const xhr = new XMLHttpRequest();
+                                    xhr.open('PUT', presignedUrl, true);
+                                    xhr.setRequestHeader('Content-Type', fileToUpload.type);
+                                    xhr.upload.onprogress = (e) => {
+                                        if (e.lengthComputable) {
+                                            const percentComplete = 50 + Math.round((e.loaded / e.total) * 40);
+                                            setEditPopup(prev => ({ ...prev, progress: percentComplete }));
+                                        }
+                                    };
+                                    xhr.onload = () => {
+                                        if (xhr.status >= 200 && xhr.status < 300) resolve();
+                                        else reject(new Error('Upload to R2 failed'));
+                                    };
+                                    xhr.onerror = () => reject(new Error('Network error during upload'));
+                                    xhr.send(fileToUpload);
+                                });
+                                
+                                setEditPopup(prev => ({ ...prev, progress: 95 }));
+                                
+                                const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ id: editPopup.id, thumbnail_url: publicUrl })
+                                });
+                                if (res.ok) {
+                                    showNotification('success', 'Thumbnail extracted and saved successfully');
+                                    fetchItems();
+                                    setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0 });
+                                } else {
+                                    throw new Error('Update failed');
+                                }
+                            } catch (err) {
+                                console.error(err);
+                                showNotification('error', err.message || 'Failed to extract frame');
+                                setEditPopup(prev => ({ ...prev, isUploading: false }));
+                            }
+                            return;
+                        }
+
                         try {
                           const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
                             method: 'PUT',
@@ -1136,7 +1227,7 @@ export default function PortfolioManager() {
                           if (res.ok) {
                             showNotification('success', 'Updated successfully');
                             fetchItems();
-                            setEditPopup({ show: false, id: null, field: '', value: '' });
+                            setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0 });
                           } else {
                             throw new Error('Update failed');
                           }
@@ -1144,7 +1235,7 @@ export default function PortfolioManager() {
                           showNotification('error', 'Failed to update');
                         }
                     }}>
-                        Save Changes
+                        {editPopup.field === 'extract_frame' ? (editPopup.isUploading ? `Uploading (${editPopup.progress}%)...` : 'Capture & Save Frame') : 'Save Changes'}
                     </button>
                   </div>
               </div>
@@ -1467,6 +1558,18 @@ export default function PortfolioManager() {
                                             {item.category || 'Both'} <Edit2 size={12} style={{ marginLeft: '4px' }} />
                                         </button>
                                         
+                                        {activeTab === TABS.REELS && (
+                                            <button 
+                                                onClick={() => {
+                                                    setEditPopup({ show: true, id: item.id, field: 'extract_frame', value: item.videoSrc, isUploading: false, progress: 0 });
+                                                }}
+                                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: '500' }}
+                                                title="Edit Thumbnail from Video Frames"
+                                            >
+                                                <ImageIcon size={12} style={{ marginRight: '4px' }} /> Thumbnail
+                                            </button>
+                                        )}
+                                        
                                         <button 
                                             onClick={() => {
                                                 let field = 'videoSrc';
@@ -1476,9 +1579,9 @@ export default function PortfolioManager() {
                                                 openEditPopup(item.id, field, val);
                                             }}
                                             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: '500' }}
-                                            title="Edit Media URL / Thumbnail"
+                                            title="Edit Media URL"
                                         >
-                                            <ImageIcon size={12} style={{ marginRight: '4px' }} /> Media
+                                            <ImageIcon size={12} style={{ marginRight: '4px' }} /> Media URL
                                         </button>
                                         
                                         {activeTab === TABS.REELS && (

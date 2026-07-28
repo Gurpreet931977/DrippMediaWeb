@@ -155,9 +155,9 @@ export default function Page() {
                                 console.log('Autoplay prevented', error); 
                                 // If autoplay is blocked, the video is paused at 0s. 
                                 // Cinematic videos often start with a black frame. 
-                                // Let's seek to 0.5s so the user sees a thumbnail instead of a black screen!
+                                // Let's check if there's a poster (thumbnail), if not, seek to 0.5s
                                 setTimeout(() => {
-                                    if (mainVid.paused) {
+                                    if (mainVid.paused && !mainVid.hasAttribute('poster')) {
                                         mainVid.currentTime = 0.5;
                                         if (ambVid) ambVid.currentTime = 0.5;
                                     }
@@ -396,6 +396,7 @@ export default function Page() {
             const desc = videoData.description || videoData.desc || videoData.caption || '';
             const music = videoData.musicText || videoData.music_text || videoData.music || videoData.audio || videoData.title || 'Original Audio - Dripp Media';
             const caseStudy = videoData.caseStudy || videoData.case_study || desc || '';
+            const posterUrl = videoData.thumbnail_url || '';
             
             if (!src) return;
             
@@ -428,7 +429,7 @@ export default function Page() {
                 <video class="reel-ambient-bg" src="${src}" muted loop playsinline preload="metadata" oncontextmenu="return false;"></video>
                 <div class="reel-ambient-blur"></div>
                 <div class="reel-content" data-id="${videoData.id || ''}">
-                    <video class="reel-video" src="${src}" muted loop playsinline preload="auto" autoplay oncontextmenu="return false;" onerror="console.error('Video Error: ', this.error)"></video>
+                    <video class="reel-video" src="${src}" ${posterUrl ? `poster="${posterUrl}"` : ''} muted loop playsinline preload="auto" autoplay oncontextmenu="return false;" onerror="console.error('Video Error: ', this.error)"></video>
                     <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
                     <div class="reel-overlay-top"></div>
                     <div class="reel-overlay"></div>
