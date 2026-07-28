@@ -1015,8 +1015,8 @@ export default function PortfolioManager() {
                   <div className="popup-icon" style={{ background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.05))', color: '#ebd73f', boxShadow: '0 0 50px rgba(235, 215, 63, 0.25), inset 0 2px 15px rgba(255,255,255,0.15)', margin: '0 auto 28px auto' }}>
                       <Edit2 size={42} />
                   </div>
-                  <h3 style={{ textAlign: 'center' }}>Edit {editPopup.field === 'description' ? 'Caption' : (editPopup.field === 'case_study' ? 'Case Study' : 'Title')}</h3>
-                  <p style={{ textAlign: 'center' }}>Update the text below and save your changes to apply them live.</p>
+                  <h3 style={{ textAlign: 'center' }}>Edit {editPopup.field === 'description' ? 'Caption' : (editPopup.field === 'case_study' ? 'Case Study' : (editPopup.field === 'category' ? 'Category' : 'Title'))}</h3>
+                  <p style={{ textAlign: 'center' }}>Update the value below and save your changes to apply them live.</p>
                   
                   {(editPopup.field === 'case_study' || editPopup.field === 'title' || editPopup.field === 'description') && (
                       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
@@ -1051,7 +1051,28 @@ export default function PortfolioManager() {
                       </div>
                   )}
                   
-                  {editPopup.field === 'case_study' ? (
+                  {editPopup.field === 'category' ? (
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '35px', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                          {['Videography', 'Editing', 'Both'].map((cat) => {
+                              const isActive = editPopup.value === cat;
+                              return (
+                                  <button
+                                      type="button"
+                                      key={cat}
+                                      onClick={() => setEditPopup({...editPopup, value: cat})}
+                                      style={{
+                                          flex: 1, padding: '12px', borderRadius: '14px',
+                                          background: isActive ? 'rgba(235, 215, 63, 0.15)' : 'transparent',
+                                          border: `1px solid ${isActive ? 'rgba(235, 215, 63, 0.3)' : 'transparent'}`,
+                                          color: isActive ? '#ebd73f' : '#888', cursor: 'pointer', fontFamily: 'Clash Display, sans-serif'
+                                      }}
+                                  >
+                                      {cat}
+                                  </button>
+                              );
+                          })}
+                      </div>
+                  ) : editPopup.field === 'case_study' ? (
                       <textarea 
                           style={{ width: '100%', padding: '18px 24px', borderRadius: '16px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', marginBottom: '35px', fontSize: '1rem', outline: 'none', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.5)', fontFamily: 'Clash Display, sans-serif', minHeight: '150px' }}
                           value={editPopup.value}
@@ -1405,6 +1426,14 @@ export default function PortfolioManager() {
                                             title="Edit Text"
                                         >
                                             <Edit2 size={14} />
+                                        </button>
+                                        
+                                        <button 
+                                            onClick={() => openEditPopup(item.id, 'category', item.category || 'Both')}
+                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: '500' }}
+                                            title="Edit Category"
+                                        >
+                                            {item.category || 'Both'} <Edit2 size={12} style={{ marginLeft: '4px' }} />
                                         </button>
                                         
                                         {activeTab === TABS.REELS && (
