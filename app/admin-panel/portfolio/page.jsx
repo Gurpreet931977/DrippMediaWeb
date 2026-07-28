@@ -35,6 +35,7 @@ export default function PortfolioManager() {
   const [notification, setNotification] = useState(null);
   const [uploadPopup, setUploadPopup] = useState({ show: false, type: '', message: '' });
   const [editPopup, setEditPopup] = useState({ show: false, id: null, field: '', value: '' });
+  const [fileSizes, setFileSizes] = useState({});
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
@@ -56,6 +57,26 @@ export default function PortfolioManager() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    // Fetch file sizes for newly loaded items
+    items.forEach(async (item) => {
+        if (fileSizes[item.id]) return; // Already fetched
+        const url = item.videoSrc || item.image_url;
+        // Only fetch sizes for direct R2 urls to avoid CORS issues with YouTube etc.
+        if (url && (url.includes('r2.dev') || url.includes('cloudflare'))) {
+            try {
+                const res = await fetch(url, { method: 'HEAD' });
+                const size = res.headers.get('content-length');
+                if (size) {
+                    setFileSizes(prev => ({ ...prev, [item.id]: parseInt(size, 10) }));
+                }
+            } catch (err) {
+                // Ignore errors
+            }
+        }
+    });
+  }, [items]);
 
   useEffect(() => {
     fetchItems();
@@ -1015,7 +1036,14 @@ export default function PortfolioManager() {
                   <div className="popup-icon" style={{ background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.05))', color: '#ebd73f', boxShadow: '0 0 50px rgba(235, 215, 63, 0.25), inset 0 2px 15px rgba(255,255,255,0.15)', margin: '0 auto 28px auto' }}>
                       <Edit2 size={42} />
                   </div>
-                  <h3 style={{ textAlign: 'center' }}>Edit {editPopup.field === 'description' ? 'Caption' : (editPopup.field === 'case_study' ? 'Case Study' : (editPopup.field === 'category' ? 'Category' : 'Title'))}</h3>
+                  <h3 style={{ textAlign: 'center' }}>
+                      Edit {
+                          editPopup.field === 'description' ? 'Caption' : 
+                          editPopup.field === 'case_study' ? 'Case Study' : 
+                          editPopup.field === 'category' ? 'Category' : 
+                          (editPopup.field === 'videoSrc' || editPopup.field === 'image_url' || editPopup.field === 'thumbnail_url') ? 'Media URL' : 'Title'
+                      }
+                  </h3>
                   <p style={{ textAlign: 'center' }}>Update the value below and save your changes to apply them live.</p>
                   
                   {(editPopup.field === 'case_study' || editPopup.field === 'title' || editPopup.field === 'description') && (
@@ -1052,7 +1080,7 @@ export default function PortfolioManager() {
                   )}
                   
                   {editPopup.field === 'category' ? (
-                      <div style={{ display: 'flex', gap: '8px', marginBottom: '35px', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '35px', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
                           {['Videography', 'Editing', 'Both'].map((cat) => {
                               const isActive = editPopup.value === cat;
                               return (
@@ -1061,7 +1089,7 @@ export default function PortfolioManager() {
                                       key={cat}
                                       onClick={() => setEditPopup({...editPopup, value: cat})}
                                       style={{
-                                          flex: 1, padding: '12px', borderRadius: '14px',
+                                          width: '100%', padding: '12px 0', borderRadius: '14px',
                                           background: isActive ? 'rgba(235, 215, 63, 0.15)' : 'transparent',
                                           border: `1px solid ${isActive ? 'rgba(235, 215, 63, 0.3)' : 'transparent'}`,
                                           color: isActive ? '#ebd73f' : '#888', cursor: 'pointer', fontFamily: 'Clash Display, sans-serif'
@@ -1166,7 +1194,8 @@ export default function PortfolioManager() {
                         Category <span style={{ color: '#ebd73f', opacity: 0.8 }}>(Video Type)</span>
                     </label>
                     <div style={{ 
-                        display: 'flex', 
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
                         gap: '8px', 
                         background: 'rgba(0,0,0,0.5)', 
                         padding: '8px', 
@@ -1182,9 +1211,9 @@ export default function PortfolioManager() {
                                     key={cat}
                                     onClick={() => setFormData({...formData, category: cat})}
                                     style={{
-                                        flex: 1,
+                                        width: '100%',
                                         position: 'relative',
-                                        padding: '14px 20px',
+                                        padding: '14px 0',
                                         borderRadius: '16px',
                                         background: isActive ? 'linear-gradient(145deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)' : 'transparent',
                                         border: `1px solid ${isActive ? 'rgba(235, 215, 63, 0.3)' : 'transparent'}`,
@@ -1418,15 +1447,17 @@ export default function PortfolioManager() {
                                     {activeTab === TABS.LONG_FORM ? item.title : ''}
                                 </span>
                                 
-                                {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS) && (
+                                {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && (
                                     <>
-                                        <button 
-                                            onClick={() => openEditPopup(item.id, activeTab === TABS.LONG_FORM ? 'title' : 'description', activeTab === TABS.LONG_FORM ? item.title : item.description)}
-                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
-                                            title="Edit Text"
-                                        >
-                                            <Edit2 size={14} />
-                                        </button>
+                                        {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS) && (
+                                            <button 
+                                                onClick={() => openEditPopup(item.id, activeTab === TABS.LONG_FORM ? 'title' : 'description', activeTab === TABS.LONG_FORM ? item.title : item.description)}
+                                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                                                title="Edit Text"
+                                            >
+                                                <Edit2 size={14} />
+                                            </button>
+                                        )}
                                         
                                         <button 
                                             onClick={() => openEditPopup(item.id, 'category', item.category || 'Both')}
@@ -1434,6 +1465,20 @@ export default function PortfolioManager() {
                                             title="Edit Category"
                                         >
                                             {item.category || 'Both'} <Edit2 size={12} style={{ marginLeft: '4px' }} />
+                                        </button>
+                                        
+                                        <button 
+                                            onClick={() => {
+                                                let field = 'videoSrc';
+                                                let val = item.videoSrc;
+                                                if (activeTab === TABS.LONG_FORM) { field = 'thumbnail_url'; val = item.thumbnail_url; }
+                                                if (activeTab === TABS.GRAPHICS) { field = 'image_url'; val = item.image_url; }
+                                                openEditPopup(item.id, field, val);
+                                            }}
+                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', color: '#fff', padding: '6px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: '500' }}
+                                            title="Edit Media URL / Thumbnail"
+                                        >
+                                            <ImageIcon size={12} style={{ marginRight: '4px' }} /> Media
                                         </button>
                                         
                                         {activeTab === TABS.REELS && (
@@ -1462,8 +1507,32 @@ export default function PortfolioManager() {
                                     hours = hours ? hours : 12; // the hour '0' should be '12'
                                     const timeStr = `${pad(hours)}:${minutes} ${ampm}`;
                                     
-                                    const sizeStr = item.file_size ? ` • ${(item.file_size / (1024*1024)).toFixed(1)} MB` : '';
-                                    return `Added ${dateStr} at ${timeStr}${sizeStr}`;
+                                    const sizeBytes = item.file_size || fileSizes[item.id];
+                                    const sizeStr = sizeBytes ? ` • ${(sizeBytes / (1024*1024)).toFixed(1)} MB` : '';
+
+                                    // Extract filename from URL
+                                    let url = '';
+                                    if (activeTab === TABS.REELS) url = item.videoSrc;
+                                    else if (activeTab === TABS.GRAPHICS) url = item.image_url;
+                                    else if (activeTab === TABS.LONG_FORM) url = item.thumbnail_url;
+                                    
+                                    let fileNameStr = '';
+                                    if (url && url.includes('r2.dev/')) {
+                                        let rawName = url.split('/').pop();
+                                        rawName = rawName.replace(/^\d{13}_/, ''); // Remove the Date.now()_ prefix
+                                        try { rawName = decodeURIComponent(rawName); } catch(e) {}
+                                        
+                                        // Optional: truncate name if too long to prevent breaking the layout
+                                        if (rawName.length > 40) {
+                                            const parts = rawName.split('.');
+                                            const ext = parts.pop();
+                                            rawName = parts.join('.').substring(0, 35) + '...' + ext;
+                                        }
+                                        
+                                        fileNameStr = ` • ${rawName}`;
+                                    }
+
+                                    return `Added ${dateStr} at ${timeStr}${sizeStr}${fileNameStr}`;
                                 })()}
                             </div>
                         </div>

@@ -409,7 +409,7 @@ export default function Page() {
                 <div class="desktop-side-panel case-study-panel">
                     <div class="panel-glow"></div>
                     <div class="panel-header">
-                        <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                         <h4>Case Study</h4>
                     </div>
                     <p style="font-size: 0.95rem; line-height: 1.6; color: rgba(255,255,255,0.85);">${caseStudy.replace(/\n/g, '<br>')}</p>
@@ -463,7 +463,7 @@ export default function Page() {
                         </button>
                         <!-- Info Icon (Case Study Mobile) -->
                         <button class="action-btn case-study-btn-mobile" onclick="openComments(this)">
-                            <div class="action-icon-bg"><svg class="action-icon icon-case-study" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div>
+                            <div class="action-icon-bg"><svg class="action-icon icon-case-study" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
                         </button>
                         <!-- Soft Share Icon -->
                         <button class="action-btn" onclick="openShare(this)">
@@ -1227,15 +1227,15 @@ export default function Page() {
         /* Dripp Media Logo Top Left - Minimal */
         .reel-brand {
             position: absolute;
-            top: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 20;
+            top: 35px;
+            left: 20px;
+            z-index: 50;
             font-family: 'Panchang', sans-serif;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 600;
             letter-spacing: 3px;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 1px 8px rgba(0,0,0,0.8);
             pointer-events: none;
         }
 
