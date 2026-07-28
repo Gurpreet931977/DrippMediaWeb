@@ -1835,7 +1835,6 @@ export default function PortfolioManager() {
                                     const timeStr = `${pad(hours)}:${minutes} ${ampm}`;
                                     
                                     const sizeBytes = item.file_size || fileSizes[item.id];
-                                    const sizeStr = sizeBytes ? ` • ${(sizeBytes / (1024*1024)).toFixed(1)} MB` : '';
 
                                     // Extract filename from URL
                                     let url = '';
@@ -1843,23 +1842,14 @@ export default function PortfolioManager() {
                                     else if (activeTab === TABS.GRAPHICS) url = item.image_url;
                                     else if (activeTab === TABS.LONG_FORM) url = item.thumbnail_url;
                                     
-                                    let fileNameStr = '';
+                                    let rawName = '';
                                     if (url && url.includes('r2.dev/')) {
-                                        let rawName = url.split('/').pop();
+                                        rawName = url.split('/').pop();
                                         rawName = rawName.replace(/^\d{13}_/, ''); // Remove the Date.now()_ prefix
                                         try { rawName = decodeURIComponent(rawName); } catch(e) {}
-                                        
-                                        // Optional: truncate name if too long to prevent breaking the layout
-                                        if (rawName.length > 40) {
-                                            const parts = rawName.split('.');
-                                            const ext = parts.pop();
-                                            rawName = parts.join('.').substring(0, 35) + '...' + ext;
-                                        }
-                                        
-                                        fileNameStr = ` • ${rawName}`;
                                     }
 
-                                    const detailsText = `Added ${dateStr} at ${timeStr}${sizeStr}${fileNameStr}`;
+                                    const detailsText = `Added ${dateStr} at ${timeStr}`;
                                     const titleText = activeTab === TABS.REELS ? (item.description || 'Reel Video') : activeTab === TABS.GRAPHICS ? 'Graphic Design' : item.title;
                                     
                                     return (
@@ -1867,7 +1857,17 @@ export default function PortfolioManager() {
                                             <Info size={16} />
                                             <div className="info-tooltip-content" style={{ whiteSpace: 'normal', minWidth: '220px', textAlign: 'left', lineHeight: '1.4' }}>
                                                 <strong style={{ display: 'block', marginBottom: '6px', color: '#ebd73f', fontSize: '0.9rem' }}>{titleText}</strong>
-                                                <span style={{ color: '#ccc' }}>{detailsText}</span>
+                                                <span style={{ color: '#ccc', display: 'block' }}>{detailsText}</span>
+                                                {rawName && (
+                                                    <span style={{ color: '#ccc', display: 'block', marginTop: '4px', wordBreak: 'break-all' }}>
+                                                        {rawName}
+                                                    </span>
+                                                )}
+                                                {sizeBytes ? (
+                                                    <span style={{ color: '#aaa', display: 'block', marginTop: '4px', fontSize: '0.8rem' }}>
+                                                        Size: {(sizeBytes / (1024*1024)).toFixed(2)} MB
+                                                    </span>
+                                                ) : null}
                                             </div>
                                         </div>
                                     );
