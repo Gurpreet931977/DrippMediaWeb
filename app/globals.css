@@ -26,6 +26,10 @@
             transition: opacity 0.5s ease-out, background-color 0.8s ease-in-out, color 0.8s ease-in-out;
         }
 
+        button, input, textarea, select {
+            font-family: 'Clash Display', sans-serif;
+        }
+
         body.loaded {
             opacity: 1;
         }
@@ -2375,7 +2379,7 @@
         .receipt-date {
             font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.4);
-            font-family: monospace;
+            font-family: 'Clash Display', sans-serif;
         }
 
         .receipt-items {
@@ -2390,7 +2394,7 @@
             display: flex;
             justify-content: space-between;
             color: var(--pure-white);
-            font-family: monospace;
+            font-family: 'Clash Display', sans-serif;
             font-size: 0.95rem;
             line-height: 1.5;
         }
@@ -2511,14 +2515,14 @@
             min-width: 18px;
             text-align: center;
             font-size: 0.95rem;
-            font-family: var(--font-mono);
+            font-family: 'Clash Display', sans-serif;
             font-weight: 500;
         }
 
         .empty-receipt {
             color: rgba(255, 255, 255, 0.3);
             font-style: italic;
-            font-family: monospace;
+            font-family: 'Clash Display', sans-serif;
             margin-top: 20px;
             text-align: center;
         }
