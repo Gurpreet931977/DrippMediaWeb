@@ -1301,7 +1301,6 @@ export default function PortfolioManager() {
                         }
 
                         try {
-                        try {
                           let updateBody = { id: editPopup.id };
                           if (editPopup.field === 'details') {
                              if (activeTab === TABS.LONG_FORM) {
