@@ -7,6 +7,7 @@ import { useGSAP } from "@gsap/react";
 import { createScoreGuard } from "./lib/scoreGuard";
 import AuthModal from './components/AuthModal';
 import ProfileWidget from './components/ProfileWidget';
+import { useGenz } from './contexts/GenzContext';
 import { generateScoreImage } from './utils/shareUtils';
 
 const CustomCursor = memo(() => {
@@ -20,7 +21,7 @@ export default function ComingSoon() {
 
   // Game States
   const [activeGame, setActiveGame] = useState('dripp'); // 'dripp', 'breaker', 'none'
-  const [isGenz, setIsGenz] = useState(false);
+  const { isGenz, isLoaded } = useGenz() || { isGenz: false, isLoaded: true };
   const activeGameRef = useRef('dripp');
   
   const [score, setScore] = useState(0); // Dripp starts at 0
@@ -1637,27 +1638,6 @@ export default function ComingSoon() {
       {/* Control Buttons (Top Left on desktop, Top Left grouped on mobile) */}
       <div className="control-buttons-wrapper" style={{ position: 'absolute', top: '20px', left: '30px', zIndex: 9999, display: 'flex', gap: '10px', alignItems: 'center' }}>
         <div className="desktop-profile-wrapper" style={{ position: 'fixed', top: '20px', right: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-          <button 
-              onClick={() => setIsGenz(!isGenz)}
-              style={{
-                  background: isGenz ? 'var(--brand-yellow)' : 'transparent',
-                  color: isGenz ? '#000' : 'rgba(255,255,255,0.7)',
-                  border: `1px solid ${isGenz ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.3)'}`,
-                  borderRadius: '20px',
-                  padding: '4px 12px',
-                  fontFamily: "'Clash Display', sans-serif",
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  whiteSpace: 'nowrap',
-                  marginBottom: '5px'
-              }}
-          >
-              {isGenz ? 'Genz Mode: ON 💅' : 'I am Genz'}
-          </button>
           <ProfileWidget 
             onLoginClick={(tab = 'signup') => {
                setAuthModalInitialTab(tab);

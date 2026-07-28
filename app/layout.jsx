@@ -1,6 +1,7 @@
 import './globals.css';
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import ClientProviders from './components/ClientProviders';
 
 export const viewport = {
   width: 'device-width',
@@ -552,9 +553,11 @@ export default function RootLayout({ children }) {
         <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css" />
       </head>
       <body suppressHydrationWarning>
-        {children}
-        <Analytics />
-        <SpeedInsights />
+        <ClientProviders>
+          {children}
+          <Analytics />
+          <SpeedInsights />
+        </ClientProviders>
       </body>
     </html>
   );

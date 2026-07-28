@@ -2,8 +2,10 @@
 import { useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGenz } from '../contexts/GenzContext';
 
 export default function Page() {
+  const { isGenz } = useGenz() || { isGenz: false };
   useEffect(() => {
     // Register GSAP
 
@@ -1408,12 +1410,12 @@ export default function Page() {
     </div>
   </div>
   <div className="features-list">
-    <div className="feature-item" id="list-view-helper"><span>List View</span><span className="feature-key"><span className="desktop-text">Enter</span><span className="mobile-text">Tap</span></span>
+    <div className="feature-item" id="list-view-helper"><span>{isGenz ? 'Feed View' : 'List View'}</span><span className="feature-key"><span className="desktop-text">Enter</span><span className="mobile-text">Tap</span></span>
     </div>
-    <div className="feature-item"><span>Specific View</span><span className="feature-key"><span className="desktop-text">Double Click</span><span className="mobile-text">Double Tap</span></span></div>
+    <div className="feature-item"><span>{isGenz ? 'Enhance' : 'Specific View'}</span><span className="feature-key"><span className="desktop-text">Double Click</span><span className="mobile-text">Double Tap</span></span></div>
   </div>
   <div className="cursor" id="cursor" />
-  <div className="drag-instruction" id="drag-msg">Drag / Scroll to Explore</div>
+  <div className="drag-instruction" id="drag-msg">{isGenz ? 'Swipe / Scroll to Explore' : 'Drag / Scroll to Explore'}</div>
   {/* Specific View Overlay Container */}
   <div className="specific-view-overlay" id="specific-view">
     <div className="close-specific-view" id="close-specific">Close ×</div>

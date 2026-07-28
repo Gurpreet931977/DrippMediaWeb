@@ -2,8 +2,10 @@
 import { useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGenz } from '../../contexts/GenzContext';
 
 export default function Page() {
+  const { isGenz } = useGenz() || { isGenz: false };
   useEffect(() => {
     // Register GSAP
 
@@ -705,8 +707,8 @@ export default function Page() {
   <a href="/video-portfolio" className="nav-back"><i className="uil uil-arrow-left" /></a>
   <div className="cursor" id="cursor" />
   <div className="header">
-    <h1>Long Form <span>Cinematics</span></h1>
-    <p>Documentaries, Commercials, and High-Retention YouTube Videos tailored to the algorithm.</p>
+    <h1>Long Form <span>{isGenz ? 'Lore' : 'Cinematics'}</span></h1>
+    <p>{isGenz ? 'Deep dives, lore videos, and 10/10 drops tailored to farm engagement.' : 'Documentaries, Commercials, and High-Retention YouTube Videos tailored to the algorithm.'}</p>
   </div>
   {/* Category Filters mimicking YouTube */}
   <div className="filters">

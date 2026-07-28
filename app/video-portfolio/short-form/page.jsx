@@ -2,8 +2,10 @@
 import { useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGenz } from '../../contexts/GenzContext';
 
 export default function Page() {
+  const { isGenz } = useGenz() || { isGenz: false };
   useEffect(() => {
     // Register GSAP
 
@@ -2287,7 +2289,7 @@ export default function Page() {
           }
       ` }} />
       <div className="premium-spinner"></div>
-      <span className="premium-pulse-text">Loading</span>
+      <span className="premium-pulse-text">{isGenz ? 'Cooking' : 'Loading'}</span>
   </div>
 
   <div className="reels-container" id="reelsContainer">
