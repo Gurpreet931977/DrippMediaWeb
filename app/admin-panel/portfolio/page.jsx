@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2 } from 'lucide-react';
+import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2, BookOpen } from 'lucide-react';
 import styles from '../admin.module.css';
 
 const TABS = {
@@ -729,6 +729,10 @@ export default function PortfolioManager() {
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
+        .item-thumbnail.reel-ratio {
+            width: 50.6px;
+            height: 90px;
+        }
         .item-row:hover .item-thumbnail {
             transform: scale(1.08) rotate(1deg);
             border-color: rgba(235, 215, 63, 0.6);
@@ -1376,7 +1380,7 @@ export default function PortfolioManager() {
                         </div>
                         
                         {activeTab === TABS.REELS && (
-                            <video className="item-thumbnail" src={item.videoSrc} muted />
+                            <video className="item-thumbnail reel-ratio" src={item.videoSrc} muted />
                         )}
                         {activeTab === TABS.GRAPHICS && (
                             <img className="item-thumbnail" src={item.image_url} alt="graphic" />
@@ -1406,17 +1410,32 @@ export default function PortfolioManager() {
                                         {activeTab === TABS.REELS && (
                                             <button 
                                                 onClick={() => openEditPopup(item.id, 'case_study', item.case_study)}
-                                                style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '6px', cursor: 'pointer', color: '#ebd73f', padding: '6px 10px', display: 'flex', alignItems: 'center', flexShrink: 0, fontSize: '0.8rem', fontWeight: 'bold' }}
+                                                style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '6px', cursor: 'pointer', color: '#ebd73f', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                                                 title="Edit Case Study"
                                             >
-                                                Case Study
+                                                <BookOpen size={14} />
                                             </button>
                                         )}
                                     </>
                                 )}
                             </div>
                             <div className="item-meta">
-                                Added {new Date(item.created_at).toLocaleDateString()}
+                                {(() => {
+                                    const d = new Date(item.created_at);
+                                    const pad = n => n.toString().padStart(2, '0');
+                                    const dateStr = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+                                    
+                                    // Use local time instead of UTC to show accurate timing
+                                    let hours = d.getHours();
+                                    const minutes = pad(d.getMinutes());
+                                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                                    hours = hours % 12;
+                                    hours = hours ? hours : 12; // the hour '0' should be '12'
+                                    const timeStr = `${pad(hours)}:${minutes} ${ampm}`;
+                                    
+                                    const sizeStr = item.file_size ? ` • ${(item.file_size / (1024*1024)).toFixed(1)} MB` : '';
+                                    return `Added ${dateStr} at ${timeStr}${sizeStr}`;
+                                })()}
                             </div>
                         </div>
 
