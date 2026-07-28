@@ -438,7 +438,6 @@ export default function Page() {
                         ${isGlobalMuted ? muteIconSVG : unmuteIconSVG}
                     </div>
                     
-                    <div class="reel-brand">DRIPP</div>
                     <div class="center-indicator"><svg class="indicator-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
                     
                     <div class="reel-info">
