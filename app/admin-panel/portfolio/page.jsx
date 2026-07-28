@@ -1045,7 +1045,9 @@ export default function PortfolioManager() {
                           (editPopup.field === 'videoSrc' || editPopup.field === 'image_url' || editPopup.field === 'thumbnail_url') ? 'Media URL' : 'Title'
                       }
                   </h3>
-                  <p style={{ textAlign: 'center' }}>Update the value below and save your changes to apply them live.</p>
+                  {editPopup.field !== 'extract_frame' && (
+                      <p style={{ textAlign: 'center' }}>Update the value below and save your changes to apply them live.</p>
+                  )}
                   
                   {(editPopup.field === 'case_study' || editPopup.field === 'title' || editPopup.field === 'description') && (
                       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
