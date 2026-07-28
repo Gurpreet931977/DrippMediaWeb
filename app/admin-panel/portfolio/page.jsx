@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2, BookOpen } from 'lucide-react';
+import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2, BookOpen, Info } from 'lucide-react';
 import styles from '../admin.module.css';
 
 const TABS = {
@@ -516,20 +516,7 @@ export default function PortfolioManager() {
   return (
     <div className={styles.mainContent}>
       <style>{`
-        .portfolio-title-hover {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: default;
-        }
-        .portfolio-title-hover:hover {
-            color: #ebd73f;
-            transform: scale(1.02);
-            white-space: normal !important;
-            overflow: visible !important;
-            word-break: break-word;
-            text-shadow: 0 0 10px rgba(235, 215, 63, 0.4);
-            position: relative;
-            z-index: 10;
-        }
+
         .hover-pop-btn:hover {
             transform: scale(1.05);
             background: rgba(235, 215, 63, 0.2) !important;
@@ -1080,6 +1067,55 @@ export default function PortfolioManager() {
         .custom-file-input:hover .browse-btn {
             background: #ebd73f;
             color: #000;
+        }
+        
+        .info-tooltip-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.3s;
+            margin-left: 5px;
+        }
+        .info-tooltip-wrapper:hover {
+            color: #ebd73f;
+        }
+        .info-tooltip-content {
+            position: absolute;
+            bottom: 150%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            opacity: 0;
+            visibility: hidden;
+            background: linear-gradient(145deg, rgba(20,20,20,0.95), rgba(5,5,5,0.98));
+            border: 1px solid rgba(235, 215, 63, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px rgba(235, 215, 63, 0.1);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+        }
+        .info-tooltip-content::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: rgba(235, 215, 63, 0.3) transparent transparent transparent;
+        }
+        .info-tooltip-wrapper:hover .info-tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
         }
       `}</style>
 
@@ -1742,9 +1778,7 @@ export default function PortfolioManager() {
                         <div className="item-info">
                             <div className="item-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'visible' }}>
                                 <span 
-                                    className="portfolio-title-hover" 
-                                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', transformOrigin: 'left center' }}
-                                    title={activeTab === TABS.REELS ? (item.description || 'Reel Video') : activeTab === TABS.GRAPHICS ? 'Graphic Design' : item.title}
+                                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '250px' }}
                                 >
                                     {activeTab === TABS.REELS ? item.description || 'Reel Video' : ''}
                                     {activeTab === TABS.GRAPHICS ? 'Graphic Design' : ''}
@@ -1822,7 +1856,18 @@ export default function PortfolioManager() {
                                         fileNameStr = ` • ${rawName}`;
                                     }
 
-                                    return `Added ${dateStr} at ${timeStr}${sizeStr}${fileNameStr}`;
+                                    const detailsText = `Added ${dateStr} at ${timeStr}${sizeStr}${fileNameStr}`;
+                                    const titleText = activeTab === TABS.REELS ? (item.description || 'Reel Video') : activeTab === TABS.GRAPHICS ? 'Graphic Design' : item.title;
+                                    
+                                    return (
+                                        <div className="info-tooltip-wrapper">
+                                            <Info size={16} />
+                                            <div className="info-tooltip-content" style={{ whiteSpace: 'normal', minWidth: '220px', textAlign: 'left', lineHeight: '1.4' }}>
+                                                <strong style={{ display: 'block', marginBottom: '6px', color: '#ebd73f', fontSize: '0.9rem' }}>{titleText}</strong>
+                                                <span style={{ color: '#ccc' }}>{detailsText}</span>
+                                            </div>
+                                        </div>
+                                    );
                                 })()}
                             </div>
                         </div>
