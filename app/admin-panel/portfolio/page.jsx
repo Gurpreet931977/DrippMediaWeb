@@ -1267,7 +1267,7 @@ export default function PortfolioManager() {
                           <div style={{ position: 'relative', width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(235, 215, 63, 0.4)', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', background: '#000', marginBottom: '20px' }}>
                               <video 
                                   id="frame-extractor-video"
-                                  src={editPopup.value || ''} 
+                                  src={editPopup.value ? (editPopup.value + (editPopup.value.includes('?') ? '&' : '?') + 'cors=1') : ''} 
                                   crossOrigin="anonymous" 
                                   controls={false}
                                   preload="auto"
