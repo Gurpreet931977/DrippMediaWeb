@@ -1382,14 +1382,23 @@ export default function PortfolioManager() {
                                 if (!videoEl) throw new Error("Video element not found");
                                 
                                 const canvas = document.createElement('canvas');
-                                canvas.width = videoEl.videoWidth;
-                                canvas.height = videoEl.videoHeight;
+                                const MAX_WIDTH = 300;
+                                let width = videoEl.videoWidth || 1080;
+                                let height = videoEl.videoHeight || 1920;
+                                
+                                if (width > MAX_WIDTH) {
+                                    height = Math.floor((MAX_WIDTH / width) * height);
+                                    width = MAX_WIDTH;
+                                }
+                                
+                                canvas.width = width;
+                                canvas.height = height;
                                 const ctx = canvas.getContext('2d');
                                 ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
                                 
                                 setEditPopup(prev => ({ ...prev, progress: 30 }));
                                 
-                                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+                                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.5));
                                 const fileToUpload = new File([blob], `thumbnail_${Date.now()}.jpg`, { type: 'image/jpeg' });
                                 
                                 const presignRes = await fetch('/api/admin/portfolio/upload-url', {
