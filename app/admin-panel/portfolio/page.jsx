@@ -34,8 +34,48 @@ export default function PortfolioManager() {
 
   const [notification, setNotification] = useState(null);
   const [uploadPopup, setUploadPopup] = useState({ show: false, type: '', message: '' });
-  const [editPopup, setEditPopup] = useState({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0 });
+  const [editPopup, setEditPopup] = useState({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
   const [fileSizes, setFileSizes] = useState({});
+
+  const generateFilmstrip = async (videoUrl) => {
+    setEditPopup(prev => ({ ...prev, generatingFilmstrip: true, filmstrip: [] }));
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    video.src = videoUrl + (videoUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+    video.muted = true;
+    video.playsInline = true;
+    
+    await new Promise(r => { video.onloadedmetadata = r; video.onerror = r; });
+    if (!video.duration || !isFinite(video.duration)) {
+        setEditPopup(prev => ({ ...prev, generatingFilmstrip: false }));
+        return;
+    }
+
+    const frames = [];
+    const numFrames = 6;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    for (let i = 0; i < numFrames; i++) {
+        const time = (video.duration / numFrames) * i + (video.duration / numFrames / 2);
+        video.currentTime = time;
+        await new Promise(r => { video.onseeked = r; video.onerror = r; });
+        if (i === 0) {
+            canvas.width = video.videoWidth / 4;
+            canvas.height = video.videoHeight / 4;
+        }
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        frames.push(canvas.toDataURL('image/jpeg', 0.5));
+    }
+    
+    setEditPopup(prev => ({ ...prev, filmstrip: frames, generatingFilmstrip: false }));
+  };
+
+  useEffect(() => {
+      if (editPopup.show && editPopup.field === 'extract_frame' && editPopup.value && (!editPopup.filmstrip || editPopup.filmstrip.length === 0) && !editPopup.generatingFilmstrip) {
+          generateFilmstrip(editPopup.value);
+      }
+  }, [editPopup.show, editPopup.field, editPopup.value, editPopup.filmstrip, editPopup.generatingFilmstrip]);
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
@@ -433,7 +473,7 @@ export default function PortfolioManager() {
   };
 
   const openEditPopup = (id, field, currentVal) => {
-    setEditPopup({ show: true, id, field, value: currentVal || '', isUploading: false, progress: 0 });
+    setEditPopup({ show: true, id, field, value: currentVal || '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
   };
 
   // Reordering Logic (Move Up/Down instead of Drag to keep it simple for now)
@@ -1050,8 +1090,8 @@ export default function PortfolioManager() {
       )}
 
       {editPopup.show && (
-          <div className="upload-popup-overlay" onClick={() => setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0 })}>
-              <div className="upload-popup" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '550px', borderTop: '4px solid #ebd73f' }}>
+          <div className="upload-popup-overlay" onClick={() => setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false })}>
+              <div className="upload-popup" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '420px', background: 'linear-gradient(180deg, rgba(15,15,15,0.95) 0%, rgba(5,5,5,0.95) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(235, 215, 63, 0.15)', boxShadow: '0 20px 60px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05)' }}>
                   <div className="popup-icon" style={{ background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.05))', color: '#ebd73f', boxShadow: '0 0 50px rgba(235, 215, 63, 0.25), inset 0 2px 15px rgba(255,255,255,0.15)', margin: '0 auto 28px auto' }}>
                       <Edit2 size={42} />
                   </div>
@@ -1069,39 +1109,7 @@ export default function PortfolioManager() {
                       <p style={{ textAlign: 'center' }}>Update the value below and save your changes to apply them live.</p>
                   )}
                   
-                  {(editPopup.field === 'case_study' || editPopup.field === 'title' || editPopup.field === 'description') && (
-                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-                          <button 
-                            type="button" 
-                            className="btn" 
-                            style={{ 
-                              background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15), rgba(212, 188, 28, 0.05))', 
-                              border: '1px solid rgba(235, 215, 63, 0.4)', 
-                              color: '#ebd73f', 
-                              padding: '8px 16px', 
-                              borderRadius: '20px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '8px',
-                              fontSize: '0.9rem'
-                            }} 
-                            onClick={() => {
-                                const currentItem = items.find(i => i.id === editPopup.id);
-                                if (currentItem) {
-                                    const videoSrc = currentItem.videoSrc || currentItem.video_url;
-                                    if (videoSrc) {
-                                        window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc } }));
-                                    } else {
-                                        showNotification('error', 'No video found for this item to analyze.');
-                                    }
-                                }
-                            }}
-                          >
-                              <Sparkles size={16} /> Ask Orlo to Rewrite
-                          </button>
-                      </div>
-                  )}
-                  
+
                   {editPopup.field === 'details' ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '35px' }}>
                           <div>
@@ -1142,7 +1150,39 @@ export default function PortfolioManager() {
 
                           {activeTab === TABS.REELS && (
                               <div>
-                                  <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>Case Study</label>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                      <label style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>Case Study</label>
+                                      <button 
+                                        type="button" 
+                                        style={{ 
+                                          background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15), rgba(212, 188, 28, 0.05))', 
+                                          border: '1px solid rgba(235, 215, 63, 0.4)', 
+                                          color: '#ebd73f', 
+                                          padding: '4px 10px', 
+                                          borderRadius: '12px', 
+                                          display: 'flex', 
+                                          alignItems: 'center', 
+                                          gap: '6px',
+                                          fontSize: '0.75rem',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s'
+                                        }}
+                                        className="hover-pop-btn"
+                                        onClick={() => {
+                                            const currentItem = items.find(i => i.id === editPopup.id);
+                                            if (currentItem) {
+                                                const videoSrc = currentItem.videoSrc || currentItem.video_url;
+                                                if (videoSrc) {
+                                                    window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc } }));
+                                                } else {
+                                                    showNotification('error', 'No video found for this item to analyze.');
+                                                }
+                                            }
+                                        }}
+                                      >
+                                          <Sparkles size={12} /> Ask Orlo to Fill
+                                      </button>
+                                  </div>
                                   <textarea 
                                       style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif', minHeight: '120px' }}
                                       value={editPopup.value.case_study || ''}
@@ -1189,12 +1229,74 @@ export default function PortfolioManager() {
                                   crossOrigin="anonymous" 
                                   controls 
                                   style={{ width: '100%', maxHeight: '400px', display: 'block', objectFit: 'contain' }}
+                                  onTimeUpdate={(e) => {
+                                      if (e.target.duration && !editPopup.isScrubbing) {
+                                          setEditPopup(prev => ({ ...prev, scrubPercent: (e.target.currentTime / e.target.duration) * 100 }));
+                                      }
+                                  }}
                               />
                           </div>
-                          <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px dashed rgba(235, 215, 63, 0.3)', padding: '16px 20px', borderRadius: '12px', width: '100%' }}>
-                              <p style={{ fontSize: '0.95rem', color: '#ebd73f', margin: 0, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontFamily: 'Clash Display, sans-serif', fontWeight: '500' }}>
-                                  <ImageIcon size={18} /> Scrub to the perfect frame and capture
-                              </p>
+                          <div style={{ position: 'relative', width: '100%', height: '60px', display: 'flex', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: '#111' }}>
+                              {editPopup.generatingFilmstrip ? (
+                                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '0.8rem', fontFamily: 'Clash Display, sans-serif' }}>
+                                      <div style={{ animation: 'pulse 1.5s infinite' }}>Generating frames...</div>
+                                  </div>
+                              ) : editPopup.filmstrip && editPopup.filmstrip.length > 0 ? (
+                                  <>
+                                      {editPopup.filmstrip.map((frame, i) => (
+                                          <img key={i} src={frame} style={{ flex: 1, objectFit: 'cover', height: '100%', opacity: 0.8 }} alt={`frame-${i}`} />
+                                      ))}
+                                      
+                                      {/* Scrubber Thumb Border */}
+                                      <div style={{ 
+                                          position: 'absolute', 
+                                          top: 0, 
+                                          left: `calc(${editPopup.scrubPercent}% - ${editPopup.scrubPercent === 100 ? 40 : editPopup.scrubPercent === 0 ? 0 : 20}px)`, 
+                                          width: '40px', 
+                                          height: '100%', 
+                                          border: '3px solid #2e71ff', 
+                                          borderRadius: '6px', 
+                                          pointerEvents: 'none',
+                                          boxShadow: '0 0 15px rgba(46, 113, 255, 0.4), inset 0 0 10px rgba(46, 113, 255, 0.2)',
+                                          background: 'rgba(255,255,255,0.1)',
+                                          transition: editPopup.isScrubbing ? 'none' : 'left 0.1s linear'
+                                      }}></div>
+                                      
+                                      {/* Invisible Range Input */}
+                                      <input 
+                                          type="range" 
+                                          min="0" 
+                                          max="100" 
+                                          step="0.1" 
+                                          value={editPopup.scrubPercent || 0}
+                                          onMouseDown={() => setEditPopup(prev => ({ ...prev, isScrubbing: true }))}
+                                          onMouseUp={() => setEditPopup(prev => ({ ...prev, isScrubbing: false }))}
+                                          onTouchStart={() => setEditPopup(prev => ({ ...prev, isScrubbing: true }))}
+                                          onTouchEnd={() => setEditPopup(prev => ({ ...prev, isScrubbing: false }))}
+                                          onChange={(e) => {
+                                              const percent = parseFloat(e.target.value);
+                                              setEditPopup(prev => ({ ...prev, scrubPercent: percent }));
+                                              const videoEl = document.getElementById('frame-extractor-video');
+                                              if (videoEl && videoEl.duration) {
+                                                  videoEl.currentTime = (percent / 100) * videoEl.duration;
+                                              }
+                                          }}
+                                          style={{
+                                              position: 'absolute',
+                                              top: 0,
+                                              left: 0,
+                                              width: '100%',
+                                              height: '100%',
+                                              opacity: 0,
+                                              cursor: 'ew-resize'
+                                          }}
+                                      />
+                                  </>
+                              ) : (
+                                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '0.8rem', fontFamily: 'Clash Display, sans-serif' }}>
+                                      No frames available
+                                  </div>
+                              )}
                           </div>
                           {editPopup.isUploading && (
                               <div style={{ width: '100%', marginTop: '24px' }}>
@@ -1224,7 +1326,7 @@ export default function PortfolioManager() {
                   )}
                   
                   <div style={{ display: 'flex', gap: '16px' }}>
-                    <button type="button" className="popup-btn" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0 })}>
+                    <button type="button" className="popup-btn" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false })}>
                         Cancel
                     </button>
                     <button id="saveEditBtn" type="button" className="popup-btn" style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.4)' }} disabled={editPopup.isUploading} onClick={async () => {
@@ -1288,7 +1390,7 @@ export default function PortfolioManager() {
                                 if (res.ok) {
                                     showNotification('success', 'Thumbnail extracted and saved successfully');
                                     fetchItems();
-                                    setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0 });
+                                    setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
                                 } else {
                                     throw new Error('Update failed');
                                 }
@@ -1326,7 +1428,7 @@ export default function PortfolioManager() {
                           if (res.ok) {
                             showNotification('success', 'Updated successfully');
                             fetchItems();
-                            setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0 });
+                            setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
                           } else {
                             throw new Error('Update failed');
                           }
@@ -1620,7 +1722,9 @@ export default function PortfolioManager() {
                         </div>
                         
                         {activeTab === TABS.REELS && (
-                            <video className="item-thumbnail reel-ratio" src={item.videoSrc} muted />
+                            item.thumbnail_url ? 
+                                <img className="item-thumbnail reel-ratio" src={item.thumbnail_url} alt="thumbnail" style={{ objectFit: 'cover' }} /> :
+                                <video className="item-thumbnail reel-ratio" src={item.videoSrc} muted preload="metadata" />
                         )}
                         {activeTab === TABS.GRAPHICS && (
                             <img className="item-thumbnail" src={item.image_url} alt="graphic" />
@@ -1661,7 +1765,7 @@ export default function PortfolioManager() {
                                         {activeTab === TABS.REELS && (
                                             <button 
                                                 onClick={() => {
-                                                    setEditPopup({ show: true, id: item.id, field: 'extract_frame', value: item.videoSrc, isUploading: false, progress: 0 });
+                                                    setEditPopup({ show: true, id: item.id, field: 'extract_frame', value: item.videoSrc, isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
                                                 }}
                                                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer', color: '#fff', padding: '8px', display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'all 0.2s ease' }}
                                                 title="Edit Thumbnail from Video Frames"

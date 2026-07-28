@@ -20,6 +20,7 @@ export default function ComingSoon() {
 
   // Game States
   const [activeGame, setActiveGame] = useState('dripp'); // 'dripp', 'breaker', 'none'
+  const [isGenz, setIsGenz] = useState(false);
   const activeGameRef = useRef('dripp');
   
   const [score, setScore] = useState(0); // Dripp starts at 0
@@ -1635,7 +1636,28 @@ export default function ComingSoon() {
 
       {/* Control Buttons (Top Left on desktop, Top Left grouped on mobile) */}
       <div className="control-buttons-wrapper" style={{ position: 'absolute', top: '20px', left: '30px', zIndex: 9999, display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <div className="desktop-profile-wrapper" style={{ position: 'fixed', top: '20px', right: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="desktop-profile-wrapper" style={{ position: 'fixed', top: '20px', right: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+          <button 
+              onClick={() => setIsGenz(!isGenz)}
+              style={{
+                  background: isGenz ? 'var(--brand-yellow)' : 'transparent',
+                  color: isGenz ? '#000' : 'rgba(255,255,255,0.7)',
+                  border: `1px solid ${isGenz ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.3)'}`,
+                  borderRadius: '20px',
+                  padding: '4px 12px',
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  whiteSpace: 'nowrap',
+                  marginBottom: '5px'
+              }}
+          >
+              {isGenz ? 'Genz Mode: ON 💅' : 'I am Genz'}
+          </button>
           <ProfileWidget 
             onLoginClick={(tab = 'signup') => {
                setAuthModalInitialTab(tab);
@@ -1713,31 +1735,31 @@ export default function ComingSoon() {
            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 20
         }}>
-           <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--brand-yellow)', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', margin: 0, textAlign: 'center' }}>HOW TO PLAY</h2>
+           <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--brand-yellow)', fontSize: 'clamp(1.5rem, 6vw, 2.5rem)', margin: 0, textAlign: 'center' }}>{isGenz ? 'HOW TO COOK' : 'HOW TO PLAY'}</h2>
            
            <div style={{ width: '90%', maxWidth: '600px', textAlign: 'center', marginTop: '20px', fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.8)', fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', lineHeight: 1.6, overflowY: 'auto', maxHeight: '60vh' }}>
              {activeGame === 'dripp' ? (
                <>
-                 <p>Catch <span style={{color: 'var(--brand-yellow)'}}>Yellow Drops</span> for +1 point.</p>
-                 <p>Catch <span style={{color: '#eb3f3f'}}>Red Drops</span> for +5 points.</p>
-                 <p>Catch rare <span style={{color: '#ffffff'}}>White Drops</span> for +69 points!</p>
+                 <p>Catch <span style={{color: 'var(--brand-yellow)'}}>Yellow Drops</span> for +1 {isGenz ? 'aura' : 'point'}.</p>
+                 <p>Catch <span style={{color: '#eb3f3f'}}>Red Drops</span> for +5 {isGenz ? 'aura' : 'points'}.</p>
+                 <p>Catch rare <span style={{color: '#ffffff'}}>White Drops</span> for +69 {isGenz ? 'aura, sheesh!' : 'points!'}</p>
                  <br/>
-                 <p>Avoid the <span style={{color: '#777'}}>Bombs</span>! Catching a bomb will instantly fail the game.</p>
+                 <p>{isGenz ? 'Dodge the Bombs! Catching a bomb is an instant L.' : 'Avoid the Bombs! Catching a bomb will instantly fail the game.'}</p>
                </>
              ) : activeGame === 'breaker' ? (
                <>
-                 <p>Smash the glowing capsules with your magnetic paddle.</p>
-                 <p>Catch <span style={{color: '#00ffcc'}}>Cyan</span> for Points, <span style={{color: '#ff00ff'}}>Magenta</span> for Multi-Ball.</p>
-                 <p>Catch <span style={{color: '#33ff33'}}>Green</span> for Wider Paddle, <span style={{color: '#ebd73f'}}>Yellow</span> for Piercing Fireball!</p>
+                 <p>{isGenz ? 'Bust those glowing capsules with your paddle, no cap.' : 'Smash the glowing capsules with your magnetic paddle.'}</p>
+                 <p>Catch <span style={{color: '#00ffcc'}}>Cyan</span> for {isGenz ? 'Aura' : 'Points'}, <span style={{color: '#ff00ff'}}>Magenta</span> for {isGenz ? 'Multi-Ball glitch' : 'Multi-Ball'}.</p>
+                 <p>Catch <span style={{color: '#33ff33'}}>Green</span> {isGenz ? 'to get swole' : 'for Wider Paddle'}, <span style={{color: '#ebd73f'}}>Yellow</span> for {isGenz ? 'that Piercing Fireball rizz!' : 'Piercing Fireball!'}</p>
                  <br/>
-                 <p>Avoid <span style={{color: '#ff3333'}}>Red</span> (Shrinks Paddle) and <span style={{color: '#33ccff'}}>Blue</span> (Shields Targets).</p>
-                 <p>If you drop the ball once, you fail instantly!</p>
+                 <p>Avoid <span style={{color: '#ff3333'}}>Red</span> ({isGenz ? 'smol energy' : 'Shrinks Paddle'}) and <span style={{color: '#33ccff'}}>Blue</span> ({isGenz ? 'gatekeeps targets' : 'Shields Targets'}).</p>
+                 <p>{isGenz ? "If you fumble the ball, it's over for you." : "If you drop the ball once, you fail instantly!"}</p>
                </>
              ) : (
-               <p>The game is currently disabled. Toggle the Easter Egg icon in the bottom left to play!</p>
+               <p>{isGenz ? 'The game is currently gatekept. Toggle the Easter Egg icon in the bottom left to play!' : 'The game is currently disabled. Toggle the Easter Egg icon in the bottom left to play!'}</p>
              )}
            </div>
-           <PrimaryButton onClick={() => setIsHelpOpen(false)}>Close Guidelines</PrimaryButton>
+           <PrimaryButton onClick={() => setIsHelpOpen(false)}>{isGenz ? 'Spit your shit indeed' : 'Close Guidelines'}</PrimaryButton>
         </div>
       )}
 
@@ -1790,7 +1812,7 @@ export default function ComingSoon() {
           onMouseEnter={(e) => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = activeGame === 'none' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
         >
-          {activeGame === 'none' ? 'Ignite Canvas' : 'Disable Game'}
+          {isGenz ? (activeGame === 'none' ? 'Let him cook' : 'Touch grass') : (activeGame === 'none' ? 'Ignite Canvas' : 'Disable Game')}
         </button>
         
         <button 
@@ -1819,7 +1841,7 @@ export default function ComingSoon() {
              }
           }}
         >
-          {hideHero ? 'Show Intro' : 'Hide Intro'}
+          {isGenz ? (hideHero ? 'Spill the tea' : 'Gatekeep') : (hideHero ? 'Show Intro' : 'Hide Intro')}
         </button>
       </div>
 
@@ -1831,25 +1853,25 @@ export default function ComingSoon() {
            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 10
         }}>
            <div className="ui-popup-enter" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-             <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--pure-white)', fontSize: '3rem', margin: 0, marginBottom: '20px' }}>PAUSED</h2>
+             <h2 style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--pure-white)', fontSize: '3rem', margin: 0, marginBottom: '20px' }}>{isGenz ? 'HOLD UP' : 'PAUSED'}</h2>
              <div className="action-buttons-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                <PrimaryButton onClick={() => {
                    gsap.to('.ui-overlay', { opacity: 0, duration: 0.2, onComplete: () => {
                        setIsPaused(false);
                        gsap.set('.ui-overlay', { opacity: 1 });
                    }});
-               }}>Resume Game</PrimaryButton>
+               }}>{isGenz ? 'We so back' : 'Resume Game'}</PrimaryButton>
                {!showShareOptions ? (
                  <PrimaryButton onClick={prepareShare}>
-                   Brag your score
+                   {isGenz ? 'Flex your aura' : 'Brag your score'}
                  </PrimaryButton>
                ) : (
                  <div className="share-container" style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
                    <PrimaryButton onClick={() => handleShare('download')} disabled={isCapturing}>
-                     {isCapturing ? "Preparing..." : "Download"}
+                     {isCapturing ? (isGenz ? "Cooking..." : "Preparing...") : (isGenz ? "Rip it" : "Download")}
                    </PrimaryButton>
                    <PrimaryButton onClick={() => handleShare('instagram')} disabled={isCapturing}>
-                     {isCapturing ? "Preparing..." : "IG Story"}
+                     {isCapturing ? (isGenz ? "Cooking..." : "Preparing...") : "IG Story"}
                    </PrimaryButton>
                  </div>
                )}
@@ -1877,14 +1899,14 @@ export default function ComingSoon() {
               boxShadow: '0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(235, 63, 63, 0.1)'
            }}>
              <h2 style={{ fontFamily: "'Panchang', sans-serif", color: '#eb3f3f', fontSize: 'clamp(3rem, 6vw, 5rem)', margin: 0, textShadow: '0 0 20px rgba(235, 63, 63, 0.6), 0 0 40px rgba(235, 63, 63, 0.4)', textAlign: 'center', letterSpacing: '2px' }}>
-               DRIPPED OUT!
+               {isGenz ? 'COOKED!' : 'DRIPPED OUT!'}
              </h2>
              <p style={{ marginTop: '10px', fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', letterSpacing: '1px' }}>
-               {activeGame === 'dripp' ? 'You caught a bomb! Game Over.' : 'You dropped the ball! Game Over.'}
+               {activeGame === 'dripp' ? (isGenz ? 'You caught a bomb! Massive L.' : 'You caught a bomb! Game Over.') : (isGenz ? 'You fumbled! Massive L.' : 'You dropped the ball! Game Over.')}
              </p>
              
              <div style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-               <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px' }}>Final Score</span>
+               <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px' }}>{isGenz ? 'Aura points' : 'Final Score'}</span>
                <span style={{ fontSize: '3.5rem', fontWeight: 600, color: 'var(--brand-yellow)', textShadow: '0 0 20px rgba(235, 215, 63, 0.4)', lineHeight: 1, marginTop: '5px', filter: cheatedSession && activeGame === 'dripp' ? 'blur(6px)' : 'none', userSelect: 'none' }}>
                   {activeGame === 'dripp' ? score : breakerScore}
                </span>
@@ -1930,7 +1952,7 @@ export default function ComingSoon() {
                             window.initBreakerGame(breakerLevelRef.current);
                             gsap.set('.ui-overlay', { opacity: 1, scale: 1 });
                         }});
-                     }}>Retry Level</PrimaryButton>
+                     }}>{isGenz ? 'Run it back' : 'Retry Level'}</PrimaryButton>
                      <div 
                         style={{ position: 'relative' }}
                         onMouseEnter={(e) => {
@@ -2279,7 +2301,7 @@ export default function ComingSoon() {
                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
                 </svg>
                 <h2 style={{ color: '#fff', fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(1.1rem, 4vw, 1.4rem)', textTransform: 'uppercase', letterSpacing: '2px', margin: 0, textShadow: '0 4px 20px rgba(0,0,0,0.5)', whiteSpace: 'nowrap' }}>
-                   HALL OF FAME
+                   {isGenz ? 'GOAT STATUS' : 'HALL OF FAME'}
                 </h2>
               </div>
                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -2417,7 +2439,7 @@ export default function ComingSoon() {
             fontFamily: "'Clash Display', sans-serif", fontSize: 'clamp(0.8rem, 2vw, 1.5rem)', color: 'rgba(255, 255, 255, 0.7)',
             letterSpacing: 'clamp(2px, 1vw, 5px)', textTransform: 'uppercase', zIndex: 2, textAlign: 'center', margin: 0
           }}>
-            Coming Soon
+            {isGenz ? 'Cooking Soon' : 'Coming Soon'}
           </p>
         </div>
 
