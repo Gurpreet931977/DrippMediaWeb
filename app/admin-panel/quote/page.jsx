@@ -1668,22 +1668,50 @@ export default function QuoteMaker() {
                                   <h1 className={styles.pdfTitle} style={{ margin: 0, fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
                               </div>
                           )}
-                          {packageTiers.flatMap(t => t.items).slice(0, 5).map((item, i) => (
-                              <div key={i} className={styles.pdfServiceCard}>
-                                  <div style={{ flex: 1, paddingRight: '30px' }}>
-                                      <h4 style={{ margin: '0 0 10px 0', fontSize: '32px', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>{item.desc || 'Service Item'}</h4>
-                                      {item.details && <p style={{ margin: 0, fontSize: '20px', color: '#888', lineHeight: 1.4 }}>{item.details}</p>}
+                          
+                          {packageTiers.length > 1 ? (
+                              packageTiers.map((tier, tIdx) => (
+                                  <div key={tIdx} style={{ marginBottom: '30px' }}>
+                                      <h3 style={{ fontSize: '28px', color: '#ebd73f', margin: '0 0 15px 0' }}>{tier.name || `Option ${tIdx + 1}`}</h3>
+                                      {tier.items.slice(0, 5).map((item, i) => (
+                                          <div key={i} className={styles.pdfServiceCard} style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', marginBottom: '15px' }}>
+                                              <div style={{ flex: 1, paddingRight: '30px' }}>
+                                                  <h4 style={{ margin: '0 0 10px 0', fontSize: '26px', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>{item.desc || 'Service Item'}</h4>
+                                                  {item.details && <p style={{ margin: 0, fontSize: '18px', color: '#888', lineHeight: 1.4 }}>{item.details}</p>}
+                                              </div>
+                                              <div style={{ textAlign: 'right' }}>
+                                                  <div style={{ fontSize: '20px', color: '#888', marginBottom: '5px' }}>QTY: {item.qty}</div>
+                                                  {item.rate > 0 && <div className={styles.pdfAmount} style={{ fontSize: '24px' }}>{quoteDetails.currency} {item.rate.toLocaleString()}</div>}
+                                              </div>
+                                          </div>
+                                      ))}
+                                      {tier.items.length > 5 && (
+                                          <div style={{ fontSize: '20px', color: '#888', textAlign: 'center', marginTop: '10px' }}>
+                                              + {tier.items.length - 5} more items.
+                                          </div>
+                                      )}
                                   </div>
-                                  <div style={{ textAlign: 'right' }}>
-                                      <div style={{ fontSize: '24px', color: '#888', marginBottom: '5px' }}>QTY: {item.qty}</div>
-                                      {item.rate > 0 && <div className={styles.pdfAmount}>{quoteDetails.currency} {item.rate.toLocaleString()}</div>}
-                                  </div>
-                              </div>
-                          ))}
-                          {packageTiers.flatMap(t => t.items || []).length > 5 && (
-                              <div style={{ fontSize: '24px', color: '#888', textAlign: 'center', marginTop: '20px' }}>
-                                  + {packageTiers.flatMap(t => t.items || []).length - 5} more items detailed in the full agreement.
-                              </div>
+                              ))
+                          ) : (
+                              <>
+                                  {packageTiers.flatMap(t => t.items).slice(0, 5).map((item, i) => (
+                                      <div key={i} className={styles.pdfServiceCard}>
+                                          <div style={{ flex: 1, paddingRight: '30px' }}>
+                                              <h4 style={{ margin: '0 0 10px 0', fontSize: '32px', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>{item.desc || 'Service Item'}</h4>
+                                              {item.details && <p style={{ margin: 0, fontSize: '20px', color: '#888', lineHeight: 1.4 }}>{item.details}</p>}
+                                          </div>
+                                          <div style={{ textAlign: 'right' }}>
+                                              <div style={{ fontSize: '24px', color: '#888', marginBottom: '5px' }}>QTY: {item.qty}</div>
+                                              {item.rate > 0 && <div className={styles.pdfAmount}>{quoteDetails.currency} {item.rate.toLocaleString()}</div>}
+                                          </div>
+                                      </div>
+                                  ))}
+                                  {packageTiers.flatMap(t => t.items || []).length > 5 && (
+                                      <div style={{ fontSize: '24px', color: '#888', textAlign: 'center', marginTop: '20px' }}>
+                                          + {packageTiers.flatMap(t => t.items || []).length - 5} more items detailed in the full agreement.
+                                      </div>
+                                  )}
+                              </>
                           )}
                       </div>
                   )}

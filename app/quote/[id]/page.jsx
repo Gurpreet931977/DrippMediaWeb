@@ -377,23 +377,54 @@ export default function SharedQuote() {
           <div>
             <h3 style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'left' }}>{isInvoice ? 'Billed Items' : 'Proposed Services'}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {(quoteData.items || []).map((item, i) => {
-                const qty = parseFloat(item.qty || 0);
-                const rate = parseFloat(item.rate || 0);
-                const rowTotal = qty * rate;
-                return (
-                  <div key={i} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(235, 215, 63, 0.15)', borderRadius: '12px', padding: 'clamp(15px, 3vw, 20px) clamp(15px, 4vw, 20px)', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center' }}>
-                     <div style={{ flex: '1 1 200px' }}>
-                        <h4 style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#fff', margin: '0 0 8px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h4>
-                        {item.details && <p style={{ fontSize: 'clamp(0.8rem, 3.5vw, 0.95rem)', color: '#ccc', margin: '0 0 10px 0', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{item.details}</p>}
-                        <p style={{ fontSize: 'clamp(0.75rem, 3vw, 0.85rem)', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {currency}{rate.toLocaleString()}</p>
+              {quoteData.packageTiers && quoteData.packageTiers.length > 0 ? (
+                 quoteData.packageTiers.map((tier, tIdx) => (
+                    <div key={`tier-${tIdx}`} style={{ marginBottom: '20px' }}>
+                       {quoteData.packageTiers.length > 1 && (
+                         <div style={{ background: '#ebd73f', color: '#000', padding: '8px 16px', borderRadius: '8px 8px 0 0', display: 'inline-block', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '-1px', position: 'relative', zIndex: 2 }}>
+                           {tier.name || `Package Tier ${tIdx + 1}`}
+                         </div>
+                       )}
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: quoteData.packageTiers.length > 1 ? 'rgba(255,255,255,0.01)' : 'transparent', border: quoteData.packageTiers.length > 1 ? '1px solid rgba(235,215,63,0.3)' : 'none', padding: quoteData.packageTiers.length > 1 ? '15px' : '0', borderRadius: quoteData.packageTiers.length > 1 ? '0 12px 12px 12px' : '0' }}>
+                           {(tier.items || []).map((item, i) => {
+                             const qty = parseFloat(item.qty || 0);
+                             const rate = parseFloat(item.rate || 0);
+                             const rowTotal = qty * rate;
+                             return (
+                               <div key={`item-${tIdx}-${i}`} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(235, 215, 63, 0.15)', borderRadius: '12px', padding: 'clamp(15px, 3vw, 20px) clamp(15px, 4vw, 20px)', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <div style={{ flex: '1 1 200px' }}>
+                                     <h4 style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#fff', margin: '0 0 8px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h4>
+                                     {item.details && <p style={{ fontSize: 'clamp(0.8rem, 3.5vw, 0.95rem)', color: '#ccc', margin: '0 0 10px 0', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{item.details}</p>}
+                                     <p style={{ fontSize: 'clamp(0.75rem, 3vw, 0.85rem)', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {currency}{rate.toLocaleString()}</p>
+                                  </div>
+                                  <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: 'bold', color: '#ebd73f', textShadow: '0 0 10px rgba(235, 215, 63, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                     <span style={{ color: '#666', fontSize: 'clamp(0.9rem, 3vw, 1rem)', fontWeight: 'normal' }}>=</span> {currency}{rowTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                  </div>
+                               </div>
+                             );
+                           })}
+                       </div>
+                    </div>
+                 ))
+              ) : (
+                 (quoteData.items || []).map((item, i) => {
+                   const qty = parseFloat(item.qty || 0);
+                   const rate = parseFloat(item.rate || 0);
+                   const rowTotal = qty * rate;
+                   return (
+                     <div key={i} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(235, 215, 63, 0.15)', borderRadius: '12px', padding: 'clamp(15px, 3vw, 20px) clamp(15px, 4vw, 20px)', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ flex: '1 1 200px' }}>
+                           <h4 style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#fff', margin: '0 0 8px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h4>
+                           {item.details && <p style={{ fontSize: 'clamp(0.8rem, 3.5vw, 0.95rem)', color: '#ccc', margin: '0 0 10px 0', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{item.details}</p>}
+                           <p style={{ fontSize: 'clamp(0.75rem, 3vw, 0.85rem)', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {currency}{rate.toLocaleString()}</p>
+                        </div>
+                        <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: 'bold', color: '#ebd73f', textShadow: '0 0 10px rgba(235, 215, 63, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                           <span style={{ color: '#666', fontSize: 'clamp(0.9rem, 3vw, 1rem)', fontWeight: 'normal' }}>=</span> {currency}{rowTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </div>
                      </div>
-                     <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: 'bold', color: '#ebd73f', textShadow: '0 0 10px rgba(235, 215, 63, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#666', fontSize: 'clamp(0.9rem, 3vw, 1rem)', fontWeight: 'normal' }}>=</span> {currency}{rowTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                     </div>
-                  </div>
-                );
-              })}
+                   );
+                 })
+              )}
             </div>
           </div>
 
