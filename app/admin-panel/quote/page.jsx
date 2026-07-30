@@ -412,7 +412,7 @@ export default function QuoteMaker() {
     });
 
     consolidatedParsedItems.forEach(pi => {
-        const sim = items.find(ex => ex.desc && ex.desc.toLowerCase().replace(/s$/, '') === pi.desc.toLowerCase().replace(/s$/, ''));
+        const sim = packageTiers[0]?.items?.find(ex => ex.desc && ex.desc.toLowerCase().replace(/s$/, '') === pi.desc.toLowerCase().replace(/s$/, ''));
         if (sim) {
             if (sim.rate === pi.rate) {
                 detectedConflicts.push({
@@ -469,9 +469,12 @@ export default function QuoteMaker() {
       setQuoteDetails(updatedQuote);
       
       if (data.pendingItems.length > 0) {
-          // Add non-empty items
-          const validCurrent = items.filter(i => i.desc || i.rate > 0);
-          setItems([...validCurrent, ...data.pendingItems]);
+          // Add non-empty items to Tier 1
+          const validCurrent = packageTiers[0]?.items?.filter(i => i.desc || i.rate > 0) || [];
+          const newTiers = [...packageTiers];
+          if(newTiers.length === 0) newTiers.push({ id: Date.now(), name: 'Standard Package', items: [] });
+          newTiers[0].items = [...validCurrent, ...data.pendingItems];
+          setPackageTiers(newTiers);
       }
       
       setSmartText('');
@@ -497,14 +500,16 @@ export default function QuoteMaker() {
           }
       } else if (conflict.type.startsWith('item')) {
           if (action === 'merge') {
-              const itemsCopy = [...items];
+              const newTiers = [...packageTiers];
+              const itemsCopy = [...(newTiers[0]?.items || [])];
               const idx = itemsCopy.findIndex(i => i === conflict.existingItem);
               if (idx !== -1) {
                   itemsCopy[idx].qty += conflict.item.qty;
                   if (valueOverride === 'new' && conflict.type === 'item_diff_rate') {
                        itemsCopy[idx].rate = conflict.item.rate;
                   }
-                  setItems(itemsCopy);
+                  newTiers[0].items = itemsCopy;
+                  setPackageTiers(newTiers);
               }
           } else if (action === 'add_new') {
               data.pendingItems.push(conflict.item);
@@ -1176,71 +1181,86 @@ export default function QuoteMaker() {
             </div>
           </div>
 
-          {/* Section 3: Services & Rates */}
+          {/* Section 3: Services & Tiers */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Services List</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h3 style={{ margin: 0, color: '#ebd73f' }}>Services & Tiers</h3>
+                <button onClick={addTier} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem' }}>
+                  <Plus size={14} /> Add Tier
+                </button>
+            </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-              {items.map((item, index) => (
-                <div key={index} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ flex: 2 }}>
-                    <input 
-                       list="services-list"
-                       type="text" 
-                       value={item.desc} 
-                       onChange={(e) => handleItemChange(index, 'desc', e.target.value)}
-                       placeholder="e.g. Website Development or Social Media Management"
-                       className={styles.inputField}
-                       style={{ padding: '8px 12px' }}
-                    />
-                    <datalist id="services-list">
-                      {DEFAULT_SERVICES.map(s => <option key={s} value={s} />)}
-                    </datalist>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '20px' }}>
+              {packageTiers.map((tier, tierIndex) => (
+                <div key={tier.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                     <input type="text" value={tier.name} onChange={(e) => { const nt = [...packageTiers]; nt[tierIndex].name = e.target.value; setPackageTiers(nt); }} className={styles.inputField} style={{ fontSize: '1.2rem', fontWeight: 'bold', width: '300px', background: 'rgba(0,0,0,0.2)' }} />
+                     {packageTiers.length > 1 && <button onClick={() => { const nt = [...packageTiers]; nt.splice(tierIndex, 1); setPackageTiers(nt); }} className={styles.btnDanger} style={{ padding: '5px 10px', fontSize: '0.8rem' }}><Trash2 size={14} /> Remove Tier</button>}
                   </div>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{color: '#888'}}>Qty</span>
-                    <input 
-                      type="number" 
-                      value={item.qty} 
-                      onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
-                      placeholder="1"
-                      className={styles.inputField}
-                      style={{ padding: '8px 12px' }}
-                    />
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    {tier.items.map((item, index) => (
+                      <div key={index} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                        <div style={{ flex: 2 }}>
+                          <input 
+                             list="services-list"
+                             type="text" 
+                             value={item.desc} 
+                             onChange={(e) => handleItemChange(tierIndex, index, 'desc', e.target.value)}
+                             placeholder="e.g. Website Development"
+                             className={styles.inputField}
+                             style={{ padding: '8px 12px' }}
+                          />
+                        </div>
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <span style={{color: '#888'}}>Qty</span>
+                          <input 
+                            type="number" 
+                            value={item.qty} 
+                            onChange={(e) => handleItemChange(tierIndex, index, 'qty', e.target.value)}
+                            placeholder="1"
+                            className={styles.inputField}
+                            style={{ padding: '8px 12px' }}
+                          />
+                        </div>
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <span style={{color: '#888'}}>{quoteDetails.currency}</span>
+                          <input 
+                            type="number" 
+                            value={item.rate} 
+                            onChange={(e) => handleItemChange(tierIndex, index, 'rate', e.target.value)}
+                            placeholder="0"
+                            className={styles.inputField}
+                            style={{ padding: '8px 12px' }}
+                          />
+                        </div>
+                        <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '100px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
+                           <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toFixed(2)}
+                        </div>
+                        <button onClick={() => removeItem(tierIndex, index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '5px', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity=1} onMouseOut={(e) => e.currentTarget.style.opacity=0.7}>
+                          <Trash2 size={18} />
+                        </button>
+                        <div style={{ flexBasis: '100%', marginTop: '10px' }}>
+                           <textarea 
+                             value={item.details || ''} 
+                             onChange={(e) => handleItemChange(tierIndex, index, 'details', e.target.value)}
+                             placeholder="e.g. Includes 5 custom pages, responsive design, and 1 year of hosting..."
+                             className={styles.inputField}
+                             style={{ padding: '8px 12px', fontSize: '0.9rem', width: '100%', minHeight: '60px' }}
+                           />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{color: '#888'}}>{quoteDetails.currency}</span>
-                    <input 
-                      type="number" 
-                      value={item.rate} 
-                      onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-                      placeholder="0"
-                      className={styles.inputField}
-                      style={{ padding: '8px 12px' }}
-                    />
-                  </div>
-                  <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '100px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
-                     <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toFixed(2)}
-                  </div>
-                  <button onClick={() => removeItem(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '5px', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity=1} onMouseOut={(e) => e.currentTarget.style.opacity=0.7}>
-                    <Trash2 size={18} />
-                  </button>
-                  <div style={{ flexBasis: '100%', marginTop: '10px' }}>
-                     <textarea 
-                       value={item.details || ''} 
-                       onChange={(e) => handleItemChange(index, 'details', e.target.value)}
-                       placeholder="e.g. Includes 5 custom pages, responsive design, and 1 year of hosting..."
-                       className={styles.inputField}
-                       style={{ padding: '8px 12px', fontSize: '0.9rem', width: '100%', minHeight: '60px' }}
-                     />
+                  
+                  <div style={{ marginTop: '15px' }}>
+                      <button onClick={() => addItem(tierIndex)} className={styles.btn} style={{ padding: '8px 15px', fontSize: '0.85rem' }}>
+                        <Plus size={14} /> Add Service to {tier.name}
+                      </button>
                   </div>
                 </div>
               ))}
             </div>
-
-            <button onClick={addItem} className={styles.btn}>
-              <Plus size={16} /> Add Another Service
-            </button>
             
             <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                <span style={{ fontSize: '1.1rem', color: '#888' }}>Total Amount:</span>
@@ -1264,7 +1284,7 @@ export default function QuoteMaker() {
 
             <div style={{ marginBottom: '24px', padding: '20px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
               <p className={styles.label} style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileText size={16} /> Total Budget Quoted
+                <FileText size={16} /> Total Quoted
               </p>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ebd73f' }}>
                 {quoteDetails.currency}{total.toLocaleString()}
@@ -1273,18 +1293,23 @@ export default function QuoteMaker() {
 
             <div style={{ marginBottom: '20px' }}>
               <p className={styles.label} style={{ marginBottom: '16px' }}>Included Services</p>
-              {items.length === 0 && !includePMP && <span style={{ color: '#666', fontSize: '0.9rem' }}>No services added yet.</span>}
+              {packageTiers.flatMap(t => t.items).length === 0 && !includePMP && <span style={{ color: '#666', fontSize: '0.9rem' }}>No services added yet.</span>}
               {includePMP && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.95rem', color: '#ebd73f', fontWeight: '500' }}>
                   <span>✓ Personal Marketing Plan</span>
                   <span style={{ color: '#888', fontWeight: 'normal', fontSize: '0.85rem' }}>INCLUDED</span>
                 </div>
               )}
-              {items.map((s, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.95rem' }}>
-                  <span style={{ color: '#ddd' }}>{s.qty}x {s.desc || 'Unnamed Service'}</span>
-                  <span style={{ color: '#888' }}>{s.rate > 0 ? `${quoteDetails.currency}${s.rate}` : ''}</span>
-                </div>
+              {packageTiers.map((tier, tIdx) => (
+                  <div key={tIdx} style={{ marginBottom: '15px' }}>
+                     {packageTiers.length > 1 && <div style={{ fontSize: '0.8rem', color: '#ebd73f', marginBottom: '5px' }}>{tier.name}</div>}
+                     {tier.items.map((s, i) => (
+                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.95rem', paddingLeft: packageTiers.length > 1 ? '10px' : '0' }}>
+                         <span style={{ color: '#ddd' }}>{s.qty}x {s.desc || 'Unnamed Service'}</span>
+                         <span style={{ color: '#888' }}>{s.rate > 0 ? `${quoteDetails.currency}${s.rate}` : ''}</span>
+                       </div>
+                     ))}
+                  </div>
               ))}
             </div>
             
@@ -1638,23 +1663,26 @@ export default function QuoteMaker() {
                   {/* SERVICES PAGE */}
                   {page.type === 'services' && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
-                          {items.slice(0, 5).map((item, i) => (
+                          {!page.hideHeading && (
+                              <div style={{ marginBottom: '40px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
+                                  <h1 className={styles.pdfTitle} style={{ margin: 0, fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
+                              </div>
+                          )}
+                          {packageTiers.flatMap(t => t.items).slice(0, 5).map((item, i) => (
                               <div key={i} className={styles.pdfServiceCard}>
                                   <div style={{ flex: 1, paddingRight: '30px' }}>
-                                      <h3 style={{ fontSize: '36px', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif" }}>{item.desc || 'Service Item'}</h3>
-                                      {item.details && (
-                                          <p style={{ fontSize: '20px', color: '#ccc', margin: '0 0 15px 0', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{item.details}</p>
-                                      )}
-                                      <p style={{ fontSize: '24px', color: '#888', margin: 0 }}>Qty: {item.qty} &nbsp;|&nbsp; Rate: {quoteDetails.currency}{parseFloat(item.rate || 0).toLocaleString()}</p>
+                                      <h4 style={{ margin: '0 0 10px 0', fontSize: '32px', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>{item.desc || 'Service Item'}</h4>
+                                      {item.details && <p style={{ margin: 0, fontSize: '20px', color: '#888', lineHeight: 1.4 }}>{item.details}</p>}
                                   </div>
-                                  <div className={styles.pdfAmount} style={{ paddingTop: '5px' }}>
-                                      <span style={{ color: '#666' }}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toLocaleString()}
+                                  <div style={{ textAlign: 'right' }}>
+                                      <div style={{ fontSize: '24px', color: '#888', marginBottom: '5px' }}>QTY: {item.qty}</div>
+                                      {item.rate > 0 && <div className={styles.pdfAmount}>{quoteDetails.currency} {item.rate.toLocaleString()}</div>}
                                   </div>
                               </div>
                           ))}
-                          {items.length > 5 && (
+                          {packageTiers.flatMap(t => t.items).length > 5 && (
                               <div style={{ fontSize: '24px', color: '#888', textAlign: 'center', marginTop: '20px' }}>
-                                  + {items.length - 5} more items detailed in the full agreement.
+                                  + {packageTiers.flatMap(t => t.items).length - 5} more items detailed in the full agreement.
                               </div>
                           )}
                       </div>
