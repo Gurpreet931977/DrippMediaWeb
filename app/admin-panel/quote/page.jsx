@@ -732,7 +732,7 @@ export default function QuoteMaker() {
   useEffect(() => {
     window._drippFormContext = { clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy };
     return () => { window._drippFormContext = null; };
-  }, [clientDetails, items, quoteDetails, packageType, pmpStrategy]);
+  }, [clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy]);
 
   const handleClientChange = (field, value) => setClientDetails(prev => ({ ...prev, [field]: value }));
   const handleQuoteChange = (field, value) => setQuoteDetails(prev => ({ ...prev, [field]: value }));
