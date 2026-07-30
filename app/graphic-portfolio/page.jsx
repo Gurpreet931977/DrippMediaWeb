@@ -1419,7 +1419,7 @@ export default function Page() {
   {/* Specific View Overlay Container */}
   <div className="specific-view-overlay" id="specific-view">
     <div className="close-specific-view" id="close-specific">Close ×</div>
-    <img src className="specific-view-img" id="specific-img" alt="Specific View" />
+    <img src="" className="specific-view-img" id="specific-img" alt="Specific View" />
   </div>
   {/* Drop-in wrapper mimicking user's React implementation */}
   <div id="portfolio-showcase">

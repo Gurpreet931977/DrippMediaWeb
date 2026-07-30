@@ -95,7 +95,7 @@ If the user asks Orlo to write the description/title by looking at or analyzing 
 Return the modified form data in the payload.
 
 If the intent is "package" OR "quote" OR "invoice":
-Read the "Current Active Form State" to see what is already there. If the user is asking to add, modify, or apply a discount, you MUST append to or modify the existing "services" or fields rather than starting from scratch. Extract the "clientName" (e.g. Ritvik Kala), "brandName", "clientEmail", "clientMobile", "clientAddress", "gstNumber", the overall "totalBudget" (e.g. 30000), "packageType" (e.g. "monthly" or "project"), a list of "services" requested (e.g. "5 Reels", "Social Media Management", "Ads Boosting", or "Discount of $500"), and the overall "pmpStrategy" which should be a structured object containing an overview, target audience, and phases for their Personal Marketing Plan. Include these in the payload. If you see a price or the word "quote", default to "quote" intent unless they explicitly said "invoice" or "bill".
+Read the "Current Active Form State" to see what is already there. If the user is asking to add, modify, or apply a discount, you MUST append to or modify the existing "packageTiers" or fields rather than starting from scratch. Extract the "clientName" (e.g. Ritvik Kala), "brandName", "clientEmail", "clientMobile", "clientAddress", "gstNumber", the overall "totalBudget" (e.g. 30000), "packageType" (e.g. "monthly" or "project"), a list of "packageTiers" (e.g. tier 1 with "8 Reels", tier 2 with "8 Reels + 8 Posts") requested, and the overall "pmpStrategy" which should be a structured object containing an overview, target audience, and phases for their Personal Marketing Plan. Include these in the payload. If you see a price or the word "quote", default to "quote" intent unless they explicitly said "invoice" or "bill".
 
 If the intent is "chat":
 Reply creatively, playfully, or offer a workaround in the Dripp Media style. If they ask about you (Orlo) or your private life, feel free to give them a fun, Dripp-styled backstory or witty response!
@@ -139,8 +139,13 @@ JSON Schema to return:
         { "title": "Phase 1: Strategy", "description": "What happens in phase 1" }
       ]
     },
-    "services": [
-      { "name": "Service name", "qty": 1, "rate": 0, "details": "Optional detailed description of what this service includes" }
+    "packageTiers": [
+      {
+        "name": "Standard Package",
+        "items": [
+          { "name": "Service name", "qty": 1, "rate": 0, "details": "Optional details" }
+        ]
+      }
     ],
     "rewrittenContent": "Full rewritten text if intent is system_doc"
   }

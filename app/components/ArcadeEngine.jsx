@@ -166,11 +166,12 @@ function createGameEngine(canvas, callbacks) {
     this.isBomb = Math.random() < 0.15;
     this.isRed = !this.isBomb && isRed;
     
-    let speedMult = isMobile ? (1 + Math.log10(1 + getScoreRef() / 300) * 0.4) : (1.5 + Math.log10(1 + getScoreRef() / 150) * 0.6);
+    let rawMult = isMobile ? (1 + Math.log10(1 + getScoreRef() / 500) * 0.3) : (1.2 + Math.log10(1 + getScoreRef() / 300) * 0.4);
+    let speedMult = Math.min(rawMult, isMobile ? 1.6 : 2.0); // Cap the max speed to prevent bugs
     const mobileSpeedMult = isMobile ? 0.9 : 1.0;
     
-    this.vy = (1.0 + Math.random() * 3.5) * speedMult * mobileSpeedMult; 
-    this.gravity = (0.005 + Math.random() * 0.02) * speedMult * mobileSpeedMult; 
+    this.vy = (1.0 + Math.random() * 3.0) * speedMult * mobileSpeedMult; 
+    this.gravity = (0.005 + Math.random() * 0.015) * speedMult * mobileSpeedMult; 
     
     this.radius = 2 + Math.random() * 2; 
     this.length = this.vy * 3;
@@ -646,16 +647,16 @@ function createGameEngine(canvas, callbacks) {
         let scaling = Math.log10(1 + getScoreRef() / 300) * 0.1;
         
         if (!isMobile) {
-           baseIntensity = 0.04;
-           scaling = Math.log10(1 + getScoreRef() / 150) * 0.15;
+           baseIntensity = 0.035;
+           scaling = Math.log10(1 + getScoreRef() / 200) * 0.10;
         }
         
-        const rainIntensity = Math.min(0.25, baseIntensity + scaling);
+        const rainIntensity = Math.min(0.18, baseIntensity + scaling);
         const spawnAttempts = 1; 
         
         for (let i = 0; i < spawnAttempts; i++) {
            if (Math.random() < rainIntensity) drops.push(new Drop(Math.random() < 0.15));
-           if (Math.random() < rainIntensity * 0.15) drops.push(new Drop(Math.random() < 0.15));
+           if (Math.random() < rainIntensity * 0.10) drops.push(new Drop(Math.random() < 0.15));
         }
 
         if (drops.length === 0 && getGameStateRef() === 'playing' && !getIsPausedRef()) {

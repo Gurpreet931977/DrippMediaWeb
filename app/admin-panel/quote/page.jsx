@@ -69,7 +69,7 @@ export default function QuoteMaker() {
   }, []);
 
   // Services
-  const [items, setItems] = useState([]);
+  const [packageTiers, setPackageTiers] = useState([{ id: Date.now(), name: 'Standard Package', items: [] }]);
   
   // PMP Modality
   const [includePMP, setIncludePMP] = useState(false);
@@ -543,7 +543,7 @@ export default function QuoteMaker() {
       expectedDelivery: '',
       message: "At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality. While our rates reflect this premium standard, our results ensure you never have to second-guess the investment."
     });
-    setItems([]);
+    setPackageTiers([{ id: Date.now(), name: 'Standard Package', items: [] }]);
     setPackageType('project');
     setSmartText('');
     setShowClearModal(false);
@@ -552,10 +552,78 @@ export default function QuoteMaker() {
   useEffect(() => {
     setIsClient(true);
     const localPackages = localStorage.getItem('dripp_advanced_packages');
+    
+    const defaultTemplates = [
+      {
+        id: 'tpl_1',
+        name: 'Standard vs Premium (8 Reels)',
+        type: 'monthly',
+        message: 'At Dripp Media, we believe in delivering nothing short of excellence. Our focus is entirely on producing high-end, uncompromising quality.',
+        packageTiers: [
+          {
+            id: 'tier_1',
+            name: 'Standard Package',
+            items: [
+              { desc: 'Reels / Short-form Videos', qty: 8, rate: 2250, details: 'High-retention editing, sound design, color grading.' }
+            ]
+          },
+          {
+            id: 'tier_2',
+            name: 'Premium Package (8 Reels + 8 Posts)',
+            items: [
+              { desc: 'Reels / Short-form Videos', qty: 8, rate: 2250, details: 'High-retention editing, sound design, color grading.' },
+              { desc: 'Graphic Design Posts', qty: 8, rate: 500, details: 'Custom designed carousel or static posts for Instagram/Facebook.' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'tpl_2',
+        name: 'Website Project (3 Tiers)',
+        type: 'project',
+        message: 'A structured approach to your digital presence.',
+        packageTiers: [
+          {
+            id: 'tier_1',
+            name: 'Landing Page',
+            items: [
+              { desc: 'Custom Landing Page Design', qty: 1, rate: 15000, details: 'Single page conversion optimized design.' }
+            ]
+          },
+          {
+            id: 'tier_2',
+            name: 'Standard Website',
+            items: [
+              { desc: 'Custom Website Design (Up to 5 pages)', qty: 1, rate: 35000, details: 'Full website design and development.' }
+            ]
+          },
+          {
+            id: 'tier_3',
+            name: 'E-commerce Platform',
+            items: [
+              { desc: 'E-commerce Development', qty: 1, rate: 65000, details: 'Shopify / WooCommerce setup with up to 50 products.' }
+            ]
+          }
+        ]
+      }
+    ];
+
     if (localPackages) {
       try {
-        setSavedPackages(JSON.parse(localPackages));
-      } catch (e) { console.error('Failed to parse packages'); }
+        const parsed = JSON.parse(localPackages);
+        if (parsed.length > 0) {
+          setSavedPackages(parsed);
+        } else {
+          setSavedPackages(defaultTemplates);
+          localStorage.setItem('dripp_advanced_packages', JSON.stringify(defaultTemplates));
+        }
+      } catch (e) {
+        setSavedPackages(defaultTemplates);
+        localStorage.setItem('dripp_advanced_packages', JSON.stringify(defaultTemplates));
+      }
+    } else {
+      setSavedPackages(defaultTemplates);
+      localStorage.setItem('dripp_advanced_packages', JSON.stringify(defaultTemplates));
     }
     
     // Check if there is pending package data from Orlo
@@ -588,9 +656,18 @@ export default function QuoteMaker() {
           });
         }
         
-        if (data.services && data.services.length > 0) {
-          // Add services
-          setItems(data.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0 })));
+        if (data.packageTiers && data.packageTiers.length > 0) {
+          setPackageTiers(data.packageTiers.map((t, idx) => ({
+            id: Date.now() + idx,
+            name: t.name,
+            items: t.items.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0, details: s.details || '' }))
+          })));
+        } else if (data.services && data.services.length > 0) {
+          setPackageTiers([{
+            id: Date.now(),
+            name: 'Standard Package',
+            items: data.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0, details: s.details || '' }))
+          }]);
         }
         // Clear it
         sessionStorage.removeItem('pendingPackageData');
@@ -628,8 +705,18 @@ export default function QuoteMaker() {
             return prev;
           });
         }
-        if (payload.services && payload.services.length > 0) {
-          setItems(payload.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0, details: s.details || '' })));
+        if (payload.packageTiers && payload.packageTiers.length > 0) {
+          setPackageTiers(payload.packageTiers.map((t, idx) => ({
+            id: Date.now() + idx,
+            name: t.name,
+            items: t.items.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0, details: s.details || '' }))
+          })));
+        } else if (payload.services && payload.services.length > 0) {
+          setPackageTiers([{
+            id: Date.now(),
+            name: 'Standard Package',
+            items: payload.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0, details: s.details || '' }))
+          }]);
         }
       }
     };
@@ -638,21 +725,43 @@ export default function QuoteMaker() {
   }, []);
 
   useEffect(() => {
-    window._drippFormContext = { clientDetails, services: items, quoteDetails, packageType, pmpStrategy };
+    window._drippFormContext = { clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy };
     return () => { window._drippFormContext = null; };
   }, [clientDetails, items, quoteDetails, packageType, pmpStrategy]);
 
   const handleClientChange = (field, value) => setClientDetails(prev => ({ ...prev, [field]: value }));
   const handleQuoteChange = (field, value) => setQuoteDetails(prev => ({ ...prev, [field]: value }));
   
-  const handleItemChange = (index, field, value) => {
-    const newItems = [...items];
-    newItems[index][field] = value;
-    setItems(newItems);
+  const handleItemChange = (tierIndex, index, field, value) => {
+    const newTiers = [...packageTiers];
+    newTiers[tierIndex].items[index][field] = value;
+    setPackageTiers(newTiers);
   };
-
-  const addItem = () => setItems([...items, { desc: '', qty: 1, rate: 0 }]);
-  const removeItem = (index) => setItems(items.filter((_, i) => i !== index));
+  const addItem = (tierIndex) => {
+    const newTiers = [...packageTiers];
+    newTiers[tierIndex].items.push({ desc: '', qty: 1, rate: 0 });
+    setPackageTiers(newTiers);
+  };
+  const removeItem = (tierIndex, index) => {
+    const newTiers = [...packageTiers];
+    newTiers[tierIndex].items.splice(index, 1);
+    setPackageTiers(newTiers);
+  };
+  const addTier = () => setPackageTiers([...packageTiers, { id: Date.now(), name: `Option ${packageTiers.length + 1}`, items: [] }]);
+  const removeTier = (tierIndex) => {
+    if (packageTiers.length > 1) {
+      const newTiers = [...packageTiers];
+      newTiers.splice(tierIndex, 1);
+      setPackageTiers(newTiers);
+    } else {
+      showAlert("You must have at least one package option.");
+    }
+  };
+  const updateTierName = (tierIndex, name) => {
+    const newTiers = [...packageTiers];
+    newTiers[tierIndex].name = name;
+    setPackageTiers(newTiers);
+  };
 
   const saveCurrentAsPackage = () => {
     const name = prompt("Enter a name for this package template:");
@@ -661,7 +770,7 @@ export default function QuoteMaker() {
         id: Date.now(),
         name: name.trim(), 
         type: packageType,
-        items: [...items],
+        packageTiers: JSON.parse(JSON.stringify(packageTiers)),
         message: quoteDetails.message
       };
       const updatedPackages = [...savedPackages, newPackage];
@@ -673,12 +782,15 @@ export default function QuoteMaker() {
 
   const loadPackage = (pkg) => {
     showConfirm(`Load template "${pkg.name}"? This will replace your current items.`, () => {
-       setItems([...pkg.items]);
+       if (pkg.packageTiers) { setPackageTiers(JSON.parse(JSON.stringify(pkg.packageTiers))); } else if (pkg.items) { setPackageTiers([{ id: Date.now(), name: 'Standard Package', items: [...pkg.items] }]); }
        setPackageType(pkg.type || 'project');
     });
   };
 
-  const total = items.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.rate || 0)), 0);
+  const getTierTotal = (tier) => tier.items.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.rate || 0)), 0);
+  const isMultiTier = packageTiers.length > 1;
+  const highestTotal = isMultiTier ? Math.max(...packageTiers.map(t => getTierTotal(t))) : (packageTiers[0] ? getTierTotal(packageTiers[0]) : 0);
+  const total = highestTotal;
 
   const generatePDF = async () => {
     // We will generate the PDF using the hidden DOM elements via html2canvas
@@ -727,7 +839,7 @@ export default function QuoteMaker() {
         const payload = {
             clientDetails,
             quoteDetails,
-            items,
+            packageTiers,
             packageType,
             total,
             includePMP,
@@ -1457,7 +1569,7 @@ export default function QuoteMaker() {
               </tr>
             </thead>
             <tbody>
-              {items.map((item, i) => (
+              {packageTiers.flatMap(t => t.items).map((item, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid #222' }}>
                   <td style={{ padding: '20px 0' }}>{item.desc || 'Service Item'}</td>
                   <td style={{ textAlign: 'center', padding: '20px 0' }}>{item.qty}</td>

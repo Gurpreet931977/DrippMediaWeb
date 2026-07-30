@@ -83,7 +83,7 @@ function GlobalGenzToggle() {
             style={{
                 background: isGenz ? 'var(--brand-yellow)' : 'rgba(255, 255, 255, 0.03)',
                 color: isGenz ? '#000' : 'rgba(255,255,255,0.5)',
-                border: \`1px solid \${isGenz ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.08)'}\`,
+                border: `1px solid ${isGenz ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.08)'}`,
                 borderRadius: '30px',
                 padding: '6px 14px',
                 fontFamily: "'Clash Display', sans-serif",
