@@ -1738,13 +1738,30 @@ export default function QuoteMaker() {
                         <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '24px', padding: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                             <p style={{ fontSize: '30px', color: '#888', textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px' }}>Total {packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
                             
-                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '20px' }}>
-                                <span style={{ fontSize: '60px', color: '#ebd73f', fontWeight: '500' }}>{quoteDetails.currency}</span>
-                                <span style={{ fontSize: '180px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-5px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{total.toLocaleString()}</span>
-                            </div>
+                            {packageTiers.length > 1 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '40px', width: '100%', alignItems: 'center' }}>
+                                    {packageTiers.map((tier, tIdx) => {
+                                        const tierTotal = tier.items.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.rate || 0)), 0);
+                                        return (
+                                            <div key={tIdx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 50px', background: 'rgba(0,0,0,0.2)', borderRadius: '20px', border: '1px solid rgba(235, 215, 63, 0.1)', width: '100%', maxWidth: '800px' }}>
+                                                <span style={{ fontSize: '24px', color: '#888', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '2px' }}>{tier.name || `Option ${tIdx + 1}`}</span>
+                                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '20px' }}>
+                                                    <span style={{ fontSize: '50px', color: '#ebd73f', fontWeight: '500' }}>{quoteDetails.currency}</span>
+                                                    <span style={{ fontSize: '130px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-3px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{tierTotal.toLocaleString()}</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '20px' }}>
+                                    <span style={{ fontSize: '60px', color: '#ebd73f', fontWeight: '500' }}>{quoteDetails.currency}</span>
+                                    <span style={{ fontSize: '180px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-5px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{total.toLocaleString()}</span>
+                                </div>
+                            )}
                             
                             {packageType === 'monthly' && (
-                                <p style={{ fontSize: '24px', color: '#aaa', marginTop: '20px' }}>*Billed monthly. Cancel anytime with 30 days notice.</p>
+                                <p style={{ fontSize: '24px', color: '#aaa', marginTop: '40px' }}>*Billed monthly. Cancel anytime with 30 days notice.</p>
                             )}
                             {packageType === 'project' && (
                                 <div style={{ display: 'flex', gap: '40px', marginTop: '40px' }}>

@@ -431,12 +431,29 @@ export default function SharedQuote() {
           {/* Investment Section */}
           <div style={{ marginTop: '20px' }}>
             <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '20px', padding: 'clamp(40px, 6vw, 60px) clamp(20px, 4vw, 40px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', width: '100%', boxSizing: 'border-box' }}>
-                <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#888', textTransform: 'uppercase', letterSpacing: 'clamp(1px, 1vw, 2px)', margin: '0 0 10px 0', textAlign: 'center' }}>{isInvoice ? 'Total Due' : `Total ${quoteData.packageType === 'monthly' ? 'Monthly ' : ''}Investment`}</p>
+                <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#888', textTransform: 'uppercase', letterSpacing: 'clamp(1px, 1vw, 2px)', margin: '0 0 20px 0', textAlign: 'center' }}>{isInvoice ? 'Total Due' : `Total ${quoteData.packageType === 'monthly' ? 'Monthly ' : ''}Investment`}</p>
                 
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', textShadow: '0 0 20px rgba(235, 215, 63, 0.4)', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
-                    <span style={{ fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', color: '#ebd73f', fontWeight: '500' }}>{currency}</span>
-                    <span style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', color: '#ebd73f', fontWeight: '800', fontFamily: "'Panchang', sans-serif", letterSpacing: '-1px', wordBreak: 'break-word', textAlign: 'center' }}>{parseFloat(quoteData.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                </div>
+                {quoteData.packageTiers && quoteData.packageTiers.length > 1 ? (
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', alignItems: 'center' }}>
+                      {quoteData.packageTiers.map((tier, tIdx) => {
+                         const tierTotal = (tier.items || []).reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.rate || 0)), 0);
+                         return (
+                            <div key={`inv-tier-${tIdx}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px 30px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.1)', width: '100%', maxWidth: '400px' }}>
+                               <span style={{ fontSize: '0.85rem', color: '#888', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '1px' }}>{tier.name || `Option ${tIdx + 1}`}</span>
+                               <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', textShadow: '0 0 15px rgba(235, 215, 63, 0.4)' }}>
+                                  <span style={{ fontSize: '1.2rem', color: '#ebd73f', fontWeight: '500' }}>{currency}</span>
+                                  <span style={{ fontSize: '2.5rem', color: '#ebd73f', fontWeight: '800', fontFamily: "'Panchang', sans-serif", letterSpacing: '-1px' }}>{tierTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                               </div>
+                            </div>
+                         );
+                      })}
+                   </div>
+                ) : (
+                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', textShadow: '0 0 20px rgba(235, 215, 63, 0.4)', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
+                       <span style={{ fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', color: '#ebd73f', fontWeight: '500' }}>{currency}</span>
+                       <span style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', color: '#ebd73f', fontWeight: '800', fontFamily: "'Panchang', sans-serif", letterSpacing: '-1px', wordBreak: 'break-word', textAlign: 'center' }}>{parseFloat(quoteData.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                   </div>
+                )}
 
                 <div style={{ marginTop: '30px', textAlign: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px', width: '100%', maxWidth: '300px' }}>
                     <p style={{ color: '#888', fontSize: 'clamp(0.75rem, 3vw, 0.9rem)', margin: '0 0 5px 0' }}>Thank you for considering Dripp Media.</p>
