@@ -1293,7 +1293,7 @@ export default function QuoteMaker() {
 
             <div style={{ marginBottom: '20px' }}>
               <p className={styles.label} style={{ marginBottom: '16px' }}>Included Services</p>
-              {packageTiers.flatMap(t => t.items).length === 0 && !includePMP && <span style={{ color: '#666', fontSize: '0.9rem' }}>No services added yet.</span>}
+              {packageTiers.flatMap(t => t.items || []).length === 0 && !includePMP && <span style={{ color: '#666', fontSize: '0.9rem' }}>No services added yet.</span>}
               {includePMP && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.95rem', color: '#ebd73f', fontWeight: '500' }}>
                   <span>✓ Personal Marketing Plan</span>
@@ -1378,7 +1378,7 @@ export default function QuoteMaker() {
                    <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.2s' }}>
                      <div>
                        <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{pkg.name}</div>
-                       <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '3px' }}>{pkg.type === 'project' ? 'Project' : 'Monthly'} • {pkg.items.length} items</div>
+                       <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '3px' }}>{pkg.type === 'project' ? 'Project' : 'Monthly'} • {pkg.packageTiers ? pkg.packageTiers.flatMap(t => t.items || []).length : pkg.items?.length || 0} items</div>
                      </div>
                      <button onClick={() => loadPackage(pkg)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: 'rgba(235, 215, 63, 0.3)', color: '#ebd73f' }}>Load</button>
                    </div>
@@ -1680,9 +1680,9 @@ export default function QuoteMaker() {
                                   </div>
                               </div>
                           ))}
-                          {packageTiers.flatMap(t => t.items).length > 5 && (
+                          {packageTiers.flatMap(t => t.items || []).length > 5 && (
                               <div style={{ fontSize: '24px', color: '#888', textAlign: 'center', marginTop: '20px' }}>
-                                  + {packageTiers.flatMap(t => t.items).length - 5} more items detailed in the full agreement.
+                                  + {packageTiers.flatMap(t => t.items || []).length - 5} more items detailed in the full agreement.
                               </div>
                           )}
                       </div>
