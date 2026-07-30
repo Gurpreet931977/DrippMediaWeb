@@ -353,10 +353,10 @@ export default function ComingSoon() {
         // Logarithmic difficulty scaling prevents sudden spikes when catching 69-point White drops
         let speedMult;
         if (!isMobileCanvas) {
-           // PC version: slower speed to make game more manageable
-           speedMult = 1.1 + Math.log10(1 + scoreRef.current / 200) * 0.45; 
+           // PC version: slower speed to make game more manageable (cap at 3.0)
+           speedMult = Math.min(3.0, 1.1 + Math.log10(1 + scoreRef.current / 200) * 0.45); 
         } else {
-           speedMult = 1 + Math.log10(1 + scoreRef.current / 300) * 0.4; 
+           speedMult = Math.min(3.0, 1 + Math.log10(1 + scoreRef.current / 300) * 0.4); 
         }
         const mobileSpeedMult = isMobileCanvas ? 0.9 : 1.0;
         
@@ -391,13 +391,20 @@ export default function ComingSoon() {
           this.markedForDeletion = true;
         }
         
-        const dx = mouseRef.current.x - this.x;
-        const dy = mouseRef.current.y - this.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
+        // Check distance, also check previous position to prevent tunneling at high speeds
+        const prevY = this.y - this.vy;
         const hitRadius = cursorActiveRef.current ? 40 : (isMobileCanvas ? 60 : 35);
+        
+        // Simple swept collision check (check halfway point too)
+        const checkHit = (checkX, checkY) => {
+           const dx = mouseRef.current.x - checkX;
+           const dy = mouseRef.current.y - checkY;
+           return Math.sqrt(dx * dx + dy * dy) < hitRadius;
+        };
+        
+        const hit = checkHit(this.x, this.y) || checkHit(this.x, (this.y + prevY)/2) || checkHit(this.x, prevY);
 
-        if (distance < hitRadius) {
+        if (hit) {
           this.markedForDeletion = true;
           
           const cursor = document.querySelector('.cursor');
@@ -674,9 +681,15 @@ export default function ComingSoon() {
                  t.hit();
                  
                  if (piercingTimer <= 0) {
-                   // Reflect vector
                    const nx = (this.x - t.x) / dist;
                    const ny = (this.y - t.y) / dist;
+                   
+                   // Push ball out of collision to prevent getting stuck (vibrating bug)
+                   const overlap = (this.radius + t.radius) - dist;
+                   this.x += nx * overlap;
+                   this.y += ny * overlap;
+                   
+                   // Reflect vector
                    const dot = this.vx * nx + this.vy * ny;
                    this.vx = this.vx - 2 * dot * nx;
                    this.vy = this.vy - 2 * dot * ny;
@@ -1179,10 +1192,7 @@ export default function ComingSoon() {
          }
       }
 
-      // Ball speed scaling based on level cycles (every 20 levels it gets slightly faster)
-      const speedMult = 1 + Math.floor((level - 1) / 20) * 0.2;
-      balls[0].vx *= speedMult;
-      balls[0].vy *= speedMult;
+      // Removed secondary speed multiplier to prevent game from getting uncontrollably fast
     };
     
     window.initDrippGame = () => {

@@ -64,7 +64,7 @@ function createGameEngine(canvas, callbacks) {
   let drops = [], splashes = [], miniParticles = [], fireworks = [];
   let scopeDrops = [], scopePaddle = null;
   let bricks = [], balls = [], powerUps = [], paddle = null;
-  let snake = [], snakeDir = {x: 1, y: 0}, snakeFood = null, snakeFrame = 0, snakeReverseTimer = 0;
+  let snake = [], snakeDir = {x: 1, y: 0}, snakeFood = null, snakeFrame = 0, snakeReverseTimer = 0, snakeInputQueue = [];
   let pongBall = {x:0, y:0, vx:0, vy:0, r:8}, pongAI = 0, pongTrails = [];
   let runnerState = {y:0, vy:0, frame:0}, runnerObs = [];
   let invPlayer = {x: 0, w: 40, h: 20}, invLasers = [], invaders = [], invFrame = 0, invKeys = {};
@@ -118,6 +118,7 @@ function createGameEngine(canvas, callbacks) {
     snakeDir = {x: 1, y: 0};
     snakeFrame = 0;
     snakeReverseTimer = 0;
+    snakeInputQueue = [];
     spawnSnakeFood();
   }
   window.initSnakeGame = initSnake;
@@ -710,8 +711,12 @@ function createGameEngine(canvas, callbacks) {
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        if (++snakeFrame > Math.max(2, 6 - Math.floor(getScoreRef() / 50))) {
+        // Limit the maximum speed by raising the frame threshold (4 instead of 2).
+        if (++snakeFrame > Math.max(4, 7 - Math.floor(getScoreRef() / 50))) {
           snakeFrame = 0;
+          if (snakeInputQueue.length > 0) {
+             snakeDir = snakeInputQueue.shift();
+          }
           let head = { x: snake[0].x + snakeDir.x, y: snake[0].y + snakeDir.y };
           
           const gridX = Math.floor(canvas.width / 25);
@@ -1092,10 +1097,15 @@ function createGameEngine(canvas, callbacks) {
       const left = isReversed ? 'ArrowRight' : 'ArrowLeft';
       const right = isReversed ? 'ArrowLeft' : 'ArrowRight';
 
-      if (e.key === up && snakeDir.y === 0) snakeDir = {x: 0, y: -1};
-      if (e.key === down && snakeDir.y === 0) snakeDir = {x: 0, y: 1};
-      if (e.key === left && snakeDir.x === 0) snakeDir = {x: -1, y: 0};
-      if (e.key === right && snakeDir.x === 0) snakeDir = {x: 1, y: 0};
+      let lastDir = snakeInputQueue.length > 0 ? snakeInputQueue[snakeInputQueue.length - 1] : snakeDir;
+
+      // Allow up to 3 inputs in queue to prevent buffer bloat
+      if (snakeInputQueue.length < 3) {
+        if (e.key === up && lastDir.y === 0) snakeInputQueue.push({x: 0, y: -1});
+        if (e.key === down && lastDir.y === 0) snakeInputQueue.push({x: 0, y: 1});
+        if (e.key === left && lastDir.x === 0) snakeInputQueue.push({x: -1, y: 0});
+        if (e.key === right && lastDir.x === 0) snakeInputQueue.push({x: 1, y: 0});
+      }
     } else if (ag === "runner") {
       if (e.key === ' ' || e.key === 'ArrowUp') {
         if (runnerState.y >= canvas.height - 100) runnerState.vy = -16;

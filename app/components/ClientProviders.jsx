@@ -9,7 +9,7 @@ function GlobalGenzToggle() {
   if (!isLoaded) return null; // Prevent hydration mismatch
 
   return (
-    <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 99999 }}>
+    <div style={{ position: 'fixed', bottom: '20px', left: '20px', zIndex: 99999 }}>
       <button 
           onClick={() => setIsGenz(!isGenz)}
           style={{
