@@ -102,7 +102,7 @@ Rules:
 Ensure the output is creative, original, and does not just repeat or slightly rephrase the inputs unless they are already excellent. Make it punchy, engaging, and premium.`;
 
     // 4. Call Gemini API
-    const modelToUse = selectedModel || 'gemini-1.5-flash';
+    const modelToUse = selectedModel || 'gemini-3.6-flash';
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
     
     const response = await fetch(geminiUrl, {

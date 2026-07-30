@@ -154,7 +154,7 @@ JSON Schema to return:
 
 ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${userPrompt}"`;
 
-    const selectedModel = model || 'gemini-1.5-flash';
+    const selectedModel = model || 'gemini-3.6-flash';
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
     
     const response = await fetch(geminiUrl, {

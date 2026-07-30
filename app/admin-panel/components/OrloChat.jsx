@@ -100,7 +100,7 @@ export default function OrloChat() {
   const [emotion, setEmotion] = useState('idle');
   const [isHovered, setIsHovered] = useState(false);
   const [speechBubble, setSpeechBubble] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash');
+  const [selectedModel, setSelectedModel] = useState('gemini-3.6-flash');
   
   const chatRef = useRef(null);
   const btnRef = useRef(null);
@@ -1068,9 +1068,10 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
                   cursor: 'pointer'
                 }}
               >
-                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast)</option>
-                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Smart)</option>
-                <option value="gemini-3.6-flash">Gemini 3.6 Flash (Exp)</option>
+                <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
+                <option value="gemini-3.6-pro">Gemini 3.6 Pro</option>
+                <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+                <option value="gemini-3.5-pro">Gemini 3.5 Pro</option>
               </select>
               <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='#888'}>
                 <X size={20} />

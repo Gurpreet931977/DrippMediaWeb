@@ -21,7 +21,7 @@ export async function POST(request) {
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
     if (!frames || frames.length === 0) return Response.json({ error: 'No frames provided' }, { status: 400 });
 
-    const selectedModel = model || 'gemini-1.5-flash';
+    const selectedModel = model || 'gemini-3.6-flash';
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
     
     // Construct inline data for each frame
