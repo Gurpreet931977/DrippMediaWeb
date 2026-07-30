@@ -22,7 +22,7 @@ export async function POST(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userPrompt, chatHistory, context, systemContext, formContext, currentDate } = await request.json();
+    const { userPrompt, chatHistory, context, systemContext, formContext, currentDate, model } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
@@ -48,6 +48,7 @@ export async function POST(request) {
       ]);
       statsContext = `\nCurrent Dashboard Stats (If they ask): Total Quotes Generated: ${quotesCount || 0}, Total Standalone Packages: ${packagesCount || 0}.`;
     }
+
     const historyText = (chatHistory || [])
       .map(msg => `${msg.role === 'ai' ? 'Orlo' : 'User'}: ${msg.text}`)
       .join('\n');
@@ -153,7 +154,8 @@ JSON Schema to return:
 
 ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${userPrompt}"`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+    const selectedModel = model || 'gemini-1.5-flash';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
     
     const response = await fetch(geminiUrl, {
       method: 'POST',

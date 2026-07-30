@@ -15,13 +15,14 @@ export async function POST(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { frames, prompt } = await request.json();
+    const { frames, prompt, model } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
     if (!frames || frames.length === 0) return Response.json({ error: 'No frames provided' }, { status: 400 });
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+    const selectedModel = model || 'gemini-1.5-flash';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
     
     // Construct inline data for each frame
     const imageParts = frames.map(b64 => ({

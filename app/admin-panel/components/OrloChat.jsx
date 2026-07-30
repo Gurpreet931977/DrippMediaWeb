@@ -100,6 +100,7 @@ export default function OrloChat() {
   const [emotion, setEmotion] = useState('idle');
   const [isHovered, setIsHovered] = useState(false);
   const [speechBubble, setSpeechBubble] = useState('');
+  const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash');
   
   const chatRef = useRef(null);
   const btnRef = useRef(null);
@@ -127,6 +128,11 @@ export default function OrloChat() {
       } catch (e) {
         console.error('Failed to load Orlo chat history', e);
       }
+    }
+    
+    const savedModel = localStorage.getItem('orlo_preferred_model');
+    if (savedModel) {
+      setSelectedModel(savedModel);
     }
   }, []);
 
@@ -435,7 +441,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
          const res = await fetch('/api/admin/copilot/video-analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ frames, prompt: superPrompt })
+            body: JSON.stringify({ frames, prompt: superPrompt, model: selectedModel })
          });
          
          const data = await res.json();
@@ -500,7 +506,8 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
           context: currentContext, 
           systemContext: systemContext,
           formContext: formContext,
-          currentDate: new Date().toString() 
+          currentDate: new Date().toString(),
+          model: selectedModel
         })
       });
       const data = await res.json();
@@ -1043,9 +1050,32 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
                 <p style={{ margin: 0, fontSize: '0.75rem', color: '#ebd73f' }}>Online & Ready</p>
               </div>
             </div>
-            <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='#888'}>
-              <X size={20} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <select 
+                value={selectedModel} 
+                onChange={(e) => {
+                  setSelectedModel(e.target.value);
+                  localStorage.setItem('orlo_preferred_model', e.target.value);
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#aaa',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast)</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Smart)</option>
+                <option value="gemini-3.6-flash">Gemini 3.6 Flash (Exp)</option>
+              </select>
+              <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='#888'}>
+                <X size={20} />
+              </button>
+            </div>
           </div>
           
           <div className="chat-body">

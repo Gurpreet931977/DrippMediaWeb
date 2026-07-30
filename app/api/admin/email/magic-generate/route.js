@@ -17,7 +17,7 @@ export async function POST(request) {
     }
 
     // 2. Parse request
-    const { templateType, currentSubject, currentTitle, currentBody, userInstruction } = await request.json();
+    const { templateType, currentSubject, currentTitle, currentBody, userInstruction, selectedModel } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
@@ -102,7 +102,8 @@ Rules:
 Ensure the output is creative, original, and does not just repeat or slightly rephrase the inputs unless they are already excellent. Make it punchy, engaging, and premium.`;
 
     // 4. Call Gemini API
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+    const modelToUse = selectedModel || 'gemini-1.5-flash';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
     
     const response = await fetch(geminiUrl, {
       method: 'POST',
