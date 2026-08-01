@@ -3,13 +3,15 @@
 import Link from 'next/link';
 import { FileText, PackagePlus, Users, TrendingUp, ShieldCheck } from 'lucide-react';
 import styles from './admin.module.css';
+import { useGenz } from '../contexts/GenzContext';
 
 export default function AdminDashboard() {
+  const { isGenz } = useGenz() || { isGenz: false };
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Dashboard Overview</h1>
-        <p className={styles.subtitle}>Welcome to the Dripp Media Admin Hub.</p>
+        <h1 className={styles.title}>{isGenz ? 'Main Character Energy' : 'Dashboard Overview'}</h1>
+        <p className={styles.subtitle}>{isGenz ? 'Welcome to the Dripp Media admin hub.' : 'Welcome to the Dripp Media Admin Hub.'}</p>
       </div>
 
       <div className={styles.row}>
@@ -19,13 +21,13 @@ export default function AdminDashboard() {
                <FileText size={24} color="#ebd73f" />
             </div>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: '700' }}>
-               Quick Invoice
+               {isGenz ? 'Securing the Bag (Invoice)' : 'Quick Invoice'}
             </h3>
             <p className={styles.subtitle} style={{ marginBottom: '2rem', flex: 1, lineHeight: '1.6' }}>
-              Generate a professional, branded invoice in seconds. Seamlessly export to PDF and send directly to clients.
+              {isGenz ? 'Generate a professional invoice in seconds. Drop the PDF and secure the bag.' : 'Generate a professional, branded invoice in seconds. Seamlessly export to PDF and send directly to clients.'}
             </p>
             <Link href="/admin-panel/invoice" className={styles.btnPrimary} style={{ textDecoration: 'none', width: '100%', textAlign: 'center', padding: '1rem', borderRadius: '0.75rem', fontSize: '1rem' }}>
-              Create New Invoice
+              {isGenz ? 'Drop Invoice' : 'Create New Invoice'}
             </Link>
           </div>
         </div>
@@ -36,13 +38,13 @@ export default function AdminDashboard() {
                <PackagePlus size={24} color="#ebd73f" />
             </div>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: '700' }}>
-               Quote Maker Pro
+               {isGenz ? 'Vibe Check (Quote)' : 'Quote Maker Pro'}
             </h3>
             <p className={styles.subtitle} style={{ marginBottom: '2rem', flex: 1, lineHeight: '1.6' }}>
-              Build dynamic project proposals, detailed quotations, and customized premium package offerings with AI Smart Paste.
+              {isGenz ? 'Build proposals and custom quotes with AI. Basically a cheat code for pitching.' : 'Build dynamic project proposals, detailed quotations, and customized premium package offerings with AI Smart Paste.'}
             </p>
             <Link href="/admin-panel/quote" className={styles.btnPrimary} style={{ textDecoration: 'none', width: '100%', textAlign: 'center', padding: '1rem', borderRadius: '0.75rem', fontSize: '1rem' }}>
-              Create New Quote
+              {isGenz ? 'Drop Quote' : 'Create New Quote'}
             </Link>
           </div>
         </div>
@@ -54,10 +56,10 @@ export default function AdminDashboard() {
         </div>
         <div>
           <h3 style={{ marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: '600' }}>
-             System Secure & Active
+             {isGenz ? 'System is Secured' : 'System Secure & Active'}
           </h3>
           <p className={styles.subtitle} style={{ margin: 0 }}>
-            Local storage is active. Your invoices, quotes, and packages are securely saved directly to your browser session.
+            {isGenz ? 'Local storage is active. Your receipts and docs are safely tucked in the browser.' : 'Local storage is active. Your invoices, quotes, and packages are securely saved directly to your browser session.'}
           </p>
         </div>
       </div>

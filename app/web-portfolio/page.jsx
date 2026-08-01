@@ -744,7 +744,7 @@ export default function Page() {
   <a href="/" className="nav-back"><i className="uil uil-arrow-left" /></a>
   <div className="portfolio-header">
     <h1>{isGenz ? 'Web Builds' : 'Web Portfolio'}</h1>
-    <p>{isGenz ? 'Digital Aura' : 'Interactive Experiences'}</p>
+    <p>{isGenz ? 'Digital Footprint' : 'Interactive Experiences'}</p>
   </div>
   {/* ScrollTrigger Pin Wrapper */}
   <div id="pin-container">
@@ -762,7 +762,7 @@ export default function Page() {
           <div className="card-meta">
             <div className="card-title">BharatUp</div>
             <div className="card-desc">Online educational platform bridging the gap between students and knowledge.</div>
-            <a href="https://www.bharatup.online" target="_blank" className="visit-btn">{isGenz ? 'Peep it' : 'Experience'} <i className="uil uil-arrow-up-right" /></a>
+            <a href="https://www.bharatup.online" target="_blank" className="visit-btn">{isGenz ? 'Visit' : 'Experience'} <i className="uil uil-arrow-up-right" /></a>
           </div>
         </div>
       </div>
@@ -778,7 +778,7 @@ export default function Page() {
           <div className="card-meta">
             <div className="card-title">Pinaka Care Clinic</div>
             <div className="card-desc">Professional healthcare and medical clinic website providing a seamless patient experience.</div>
-            <a href="https://www.pinakacareclinic.com" target="_blank" className="visit-btn">{isGenz ? 'Peep it' : 'Experience'} <i className="uil uil-arrow-up-right" /></a>
+            <a href="https://www.pinakacareclinic.com" target="_blank" className="visit-btn">{isGenz ? 'Visit' : 'Experience'} <i className="uil uil-arrow-up-right" /></a>
           </div>
         </div>
       </div>
@@ -794,7 +794,7 @@ export default function Page() {
           <div className="card-meta">
             <div className="card-title">Goat Society</div>
             <div className="card-desc">Exclusive community and lifestyle brand platform.</div>
-            <a href="https://www.goatsociety.in" target="_blank" className="visit-btn">{isGenz ? 'Peep it' : 'Experience'} <i className="uil uil-arrow-up-right" /></a>
+            <a href="https://www.goatsociety.in" target="_blank" className="visit-btn">{isGenz ? 'Visit' : 'Experience'} <i className="uil uil-arrow-up-right" /></a>
           </div>
         </div>
       </div>
@@ -811,14 +811,14 @@ export default function Page() {
           <div className="card-meta">
             <div className="card-title">Rasmlai AI</div>
             <div className="card-desc">Next-generation artificial intelligence interface built with modern web technologies.</div>
-            <a href="https://rasmlai.vercel.app" target="_blank" className="visit-btn">{isGenz ? 'Peep it' : 'Experience'} <i className="uil uil-arrow-up-right" /></a>
+            <a href="https://rasmlai.vercel.app" target="_blank" className="visit-btn">{isGenz ? 'Visit' : 'Experience'} <i className="uil uil-arrow-up-right" /></a>
           </div>
         </div>
       </div>
     </div>
   </div>
   <div className="scroll-instruction">
-    <span>{isGenz ? 'Hover to peep / Slide ' : 'Hover cards to experience / Slide '}<span style={{ fontSize: '0.75em', opacity: 0.7 }}>{isGenz ? '(Drag that)' : '(Click & Drag)'}</span> {isGenz ? 'to explore' : 'to explore'}</span>
+    <span>{isGenz ? 'Hover to peep / Swipe ' : 'Hover cards to experience / Slide '}<span style={{ fontSize: '0.75em', opacity: 0.7 }}>{isGenz ? '(Drag)' : '(Click & Drag)'}</span> {isGenz ? 'to explore' : 'to explore'}</span>
     <div className="scroll-line" />
   </div>
 </div>

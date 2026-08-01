@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { shareScoreImage } from '../utils/shareUtils';
+import { useGenz } from '../contexts/GenzContext';
 
 import PendulumGame from "./games/Pendulum";
 import GravityFlip from "./games/GravityFlip";
@@ -38,6 +39,7 @@ function createGameEngine(canvas, callbacks) {
   
   // High DPI Support Proxy
   const logicalCanvas = new Proxy(canvas, {
+  const logicalCanvas = new Proxy(canvas, {
     get(target, prop) {
       if (prop === 'width') return window.innerWidth;
       if (prop === 'height') return window.innerHeight;
@@ -47,7 +49,7 @@ function createGameEngine(canvas, callbacks) {
   });
 
   const {
-    getMouseRef, getCursorActiveRef, getActiveGameRef, getGameStateRef,
+    getMouseRef, getCursorActiveRef, getActiveGameRef, getGameStateRef, getIsGenz,
     getIsPausedRef,
     getScoreRef, setScoreRef,
     getBreakScoreRef, setBreakScoreRef,
@@ -834,7 +836,8 @@ function createGameEngine(canvas, callbacks) {
         ctx.font = "bold 40px 'Panchang', sans-serif";
         ctx.textAlign = "center";
         ctx.shadowBlur = 20; ctx.shadowColor = "#ebd73f";
-        ctx.fillText("COMING SOON", canvas.width/2, canvas.height/2);
+        const msg = getIsGenz && getIsGenz() ? "COOKING RN..." : "COMING SOON";
+        ctx.fillText(msg, canvas.width/2, canvas.height/2);
         ctx.shadowBlur = 0;
       }
 
@@ -1386,8 +1389,10 @@ const getHelpText = (game) => {
 // ─── REACT COMPONENT ──────────────────────────────────────────────────────────
 
 export default function ArcadeEngine({ onClose, forcedGame }) {
-  const canvasRef = useRef(null);
   const containerRef = useRef(null);
+  const canvasRef = useRef(null);
+  const { isGenz } = useGenz() || { isGenz: false };
+  const isGenzRef = useRef(isGenz);
   const engineRef = useRef(null);
 
   const [activeGame, setActiveGame] = useState(forcedGame || "none");
@@ -1422,6 +1427,10 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
   const lastMilestoneRef = useRef(0);
   const isMountedRef = useRef(false); // Skip first-render effect execution
   const audioRef = useRef(null);
+
+  useEffect(() => {
+    isGenzRef.current = isGenz;
+  }, [isGenz]);
 
   const checkIsHighScore = () => {
     let currentScore = score;
@@ -1563,7 +1572,8 @@ export default function ArcadeEngine({ onClose, forcedGame }) {
       setCursorActiveRef: (v) => { cursorActiveRef.current = v; },
       getActiveGameRef: () => activeGameRef.current,
       getGameStateRef: () => gameStateRef.current,
-      getIsPausedRef: () => isPausedRef.current,
+      getIsGenz: () => isGenzRef.current,
+      setGameState: (state) => setGameState(state),
       getScoreRef: () => scoreRef.current,
       setScoreRef: (v) => { scoreRef.current = v; },
       getBreakScoreRef: () => breakerScoreRef.current,

@@ -9,6 +9,7 @@ import QRCode from 'qrcode';
 import styles from '../admin.module.css';
 import CurrencyConverter from '../components/CurrencyConverter';
 import { allCurrencies } from '../components/currencies';
+import { useGenz } from '../../contexts/GenzContext';
 
 const DEFAULT_SERVICES = [
   'Video Production - 1 Minute Edit',
@@ -20,6 +21,7 @@ const DEFAULT_SERVICES = [
 
 export default function InvoiceMaker() {
   const [isClient, setIsClient] = useState(false);
+  const { isGenz } = useGenz() || { isGenz: false };
   
   // -- MY DETAILS (LOCKED BY DEFAULT) --
   const [myDetailsLocked, setMyDetailsLocked] = useState(true);
@@ -1035,8 +1037,8 @@ export default function InvoiceMaker() {
 
     
       <div className={styles.header}>
-        <h1 className={styles.title}>Invoice Maker Pro</h1>
-        <p className={styles.subtitle}>Generate premium, secure invoices with integrated payment codes.</p>
+        <h1 className={styles.title}>{isGenz ? 'Receipts Pro' : 'Invoice Maker Pro'}</h1>
+        <p className={styles.subtitle}>{isGenz ? 'Drop receipts with payment links so you can get that bread.' : 'Generate premium, secure invoices with integrated payment codes.'}</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
@@ -1047,10 +1049,10 @@ export default function InvoiceMaker() {
           {/* Smart Paste Section */}
           <div className={styles.smartPasteCard}>
             <h3 style={{ marginBottom: '10px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Search size={20} /> AI Smart Paste
+              <Search size={20} /> {isGenz ? 'AI Brain dump' : 'AI Smart Paste'}
             </h3>
             <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '15px', lineHeight: 1.4 }}>
-              Paste unstructured project details here. We'll extract the client name, contact info, and line items automatically.
+              {isGenz ? 'Yap about your project here. AI will clutch up and organize the lore.' : 'Paste unstructured project details here. We\'ll extract the client name, contact info, and line items automatically.'}
             </p>
             <textarea 
               value={smartText} 
@@ -1067,9 +1069,9 @@ export default function InvoiceMaker() {
                 ) : isAutoFillSuccess ? (
                    <><div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #000', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} /> Filling form...</>
                 ) : isAutoFillDone ? (
-                   <><CheckCircle2 size={18} color="#000" /> Success!</>
+                   <><CheckCircle2 size={18} color="#000" /> {isGenz ? 'W' : 'Success!'}</>
                 ) : (
-                   'Auto-Fill Invoice'
+                   isGenz ? 'Cook Invoice' : 'Auto-Fill Invoice'
                 )}
               </button>
               <button onClick={handleClearForm} className={styles.btnDanger} style={{ padding: '10px 20px', borderRadius: '8px' }}>

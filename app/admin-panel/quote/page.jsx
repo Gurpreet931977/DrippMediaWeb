@@ -1,5 +1,7 @@
 'use client';
 
+'use client';
+
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, ArrowUp, ArrowDown, Layers, Type, Image, EyeOff, Eye, Copy, MessageCircle } from 'lucide-react';
@@ -8,6 +10,7 @@ import html2canvas from 'html2canvas';
 import styles from '../admin.module.css';
 import CurrencyConverter from '../components/CurrencyConverter';
 import { allCurrencies } from '../components/currencies';
+import { useGenz } from '../../contexts/GenzContext';
 
 const DEFAULT_SERVICES = [
   'Custom Landing Page Design',
@@ -28,6 +31,7 @@ const DEFAULT_MODALITIES = [
 
 export default function QuoteMaker() {
   const [isClient, setIsClient] = useState(false);
+  const { isGenz } = useGenz() || { isGenz: false };
   const pdfRef = useRef(null);
   
   // Package Modality
@@ -845,215 +849,6 @@ export default function QuoteMaker() {
             clientDetails,
             quoteDetails,
             packageTiers,
-            packageType,
-            total,
-            includePMP,
-            pmpStrategy,
-            password: pass
-        };
-        
-        const response = await fetch('/api/quote', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-        
-        if (response.ok) {
-            const data = await response.json();
-            setShareLink(`${window.location.origin}/quote/${data.id}`);
-        } else {
-            showAlert("Failed to save quote securely.");
-        }
-    } catch(err) {
-        console.error(err);
-        showAlert("API error while generating secure link.");
-    }
-  };
-
-  if (!isClient) return <div style={{padding: '50px', color: 'white'}}>Loading Package Maker...</div>;
-
-  const filteredTemplates = savedPackages.filter(p => p.name.toLowerCase().includes(searchTemplate.toLowerCase()));
-
-  return (
-    <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
-
-      {/* CUSTOM DIALOG (ALERT / CONFIRM) */}
-      {customDialog.isOpen && createPortal(
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100000 }}>
-          <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-            <h3 style={{ fontSize: '24px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{customDialog.title}</h3>
-            <p style={{ fontSize: '16px', color: '#ccc', marginBottom: '30px', lineHeight: '1.5' }}>{customDialog.message}</p>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              {customDialog.type === 'confirm' && (
-                <button 
-                  onClick={() => {
-                    if (customDialog.onCancel) customDialog.onCancel();
-                    closeDialog();
-                  }} 
-                  style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  Cancel
-                </button>
-              )}
-              <button 
-                onClick={() => {
-                  if (customDialog.type === 'confirm' && customDialog.onConfirm) {
-                    customDialog.onConfirm();
-                  }
-                  closeDialog();
-                }} 
-                style={{ flex: 1, padding: '12px', background: '#ebd73f', border: 'none', color: '#111', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                {customDialog.type === 'confirm' ? 'Confirm' : 'OK'}
-              </button>
-            </div>
-          </div>
-        </div>
-      , document.body)}
-
-      
-      
-      {/* CONFLICT RESOLUTION MODAL */}
-      {showConflictModal && conflicts[currentConflictIdx] && createPortal(
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '24px', padding: '40px', maxWidth: '500px', width: '90%', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-            <h3 style={{ color: '#ebd73f', marginBottom: '20px' }}>Resolve Auto-Fill Conflict</h3>
-            
-            <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                <strong style={{ display: 'block', marginBottom: '10px', color: '#fff' }}>{conflicts[currentConflictIdx].label}</strong>
-                
-                {conflicts[currentConflictIdx].type === 'scalar_multiple' && (
-                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                        Multiple values found in pasted text: <br/>
-                        {conflicts[currentConflictIdx].values.map((v, i) => <div key={i}>- {v}</div>)}
-                    </div>
-                )}
-                {conflicts[currentConflictIdx].type === 'scalar_exists' && (
-                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                        Current form has: <strong>{conflicts[currentConflictIdx].currentValue}</strong><br/>
-                        Pasted text has: <strong>{conflicts[currentConflictIdx].value}</strong>
-                    </div>
-                )}
-                {conflicts[currentConflictIdx].type === 'item_match_rate' && (
-                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                        Item already exists with the same rate ({quoteDetails.currency}{conflicts[currentConflictIdx].item.rate}).
-                    </div>
-                )}
-                {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
-                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                        Existing Item Rate: {quoteDetails.currency}{conflicts[currentConflictIdx].existingItem.rate}<br/>
-                        Pasted Item Rate: {quoteDetails.currency}{conflicts[currentConflictIdx].item.rate}
-                    </div>
-                )}
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {conflicts[currentConflictIdx].type.startsWith('scalar') && (
-                    <>
-                        <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
-                            Overwrite Current Value
-                        </button>
-                        <button onClick={() => handleConflictResolution('append')} className={styles.btn}>
-                            Append / Keep Both
-                        </button>
-                    </>
-                )}
-                
-                {conflicts[currentConflictIdx].type === 'item_match_rate' && (
-                    <>
-                        <button onClick={() => handleConflictResolution('merge')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
-                            Merge (Add +{conflicts[currentConflictIdx].item.qty} Quantity)
-                        </button>
-                        <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
-                            Add as Separate Line Item
-                        </button>
-                    </>
-                )}
-                
-                {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
-                    <>
-                        <button onClick={() => handleConflictResolution('merge', 'new')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
-                            Update Rate & Add Quantity
-                        </button>
-                        <button onClick={() => handleConflictResolution('merge', 'old')} className={styles.btn}>
-                            Keep Old Rate & Add Quantity
-                        </button>
-                        <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
-                            Add as Separate Line Item
-                        </button>
-                    </>
-                )}
-
-                <button onClick={() => handleConflictResolution('skip')} className={styles.btn} style={{ marginTop: '10px', borderColor: '#ff4d4d', color: '#ff4d4d' }}>
-                    Skip / Ignore Pasted Value
-                </button>
-            </div>
-            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>
-                Conflict {currentConflictIdx + 1} of {conflicts.length}
-            </div>
-          </div>
-        </div>
-      , document.body)}
-      {/* Clear Form Modal */}
-      {showClearModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-           <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '16px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-              <div style={{ background: 'rgba(255, 77, 77, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
-                 <Trash2 size={30} color="#ff4d4d" />
-              </div>
-              <h2 style={{ color: '#fff', marginBottom: '15px', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem' }}>Clear Entire Form?</h2>
-              <p style={{ color: '#aaa', marginBottom: '30px', fontSize: '0.9rem', lineHeight: '1.5' }}>This action cannot be undone. All client details, services, and customizations will be permanently erased.</p>
-              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                 <button onClick={() => setShowClearModal(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', flex: 1, fontWeight: 'bold' }}>Cancel</button>
-                 <button onClick={confirmClearForm} style={{ background: '#ff4d4d', border: 'none', color: '#fff', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', flex: 1, fontWeight: 'bold', boxShadow: '0 5px 15px rgba(255,77,77,0.3)' }}>Yes, Clear It</button>
-              </div>
-           </div>
-        </div>
-      )}
-      <div className={styles.header}>
-        <h1 className={styles.title}>Package Maker Pro</h1>
-        <p className={styles.subtitle}>Build customized, premium quotes and packages.</p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
-        
-        {/* LEFT COLUMN: BUILDER FORM */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
-          {/* Smart Paste Section */}
-          <div className={styles.card} style={{ border: '1px dashed #ebd73f', background: 'rgba(235, 215, 63, 0.05)' }}>
-            <h3 style={{ marginBottom: '10px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Search size={20} /> AI Smart Paste
-            </h3>
-            <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '15px', lineHeight: 1.4 }}>
-              Paste an unstructured paragraph of client requirements, meeting notes, or chat messages. 
-              We'll automatically extract emails, phone numbers, names, and service prices to build your quote instantly.
-            </p>
-            <textarea 
-              value={smartText} 
-              onChange={(e) => setSmartText(e.target.value)} 
-              placeholder="e.g. Client: John Doe. Phone: 555-1234. Email: john@doe.com. We need a Website Redesign for $1500 and Monthly SEO for $500."
-              className={styles.inputField} 
-              rows={4} 
-              style={{ resize: 'vertical', marginBottom: '15px' }} 
-            />
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSmartPaste} disabled={isAutoFilling || isAutoFillSuccess || isAutoFillDone} style={{ background: (isAutoFillSuccess || isAutoFillDone) ? '#ebd73f' : '#ebd73f', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: (isAutoFilling || isAutoFillSuccess || isAutoFillDone) ? 'wait' : 'pointer', fontWeight: 'bold', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}>
-                {isAutoFilling ? (
-                   <><Loader size={18} className={styles.spin} /> Analyzing text...</>
-                ) : isAutoFillSuccess ? (
-                   <><div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #000', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} /> Filling form...</>
-                ) : isAutoFillDone ? (
-                   <><CheckCircle2 size={18} color="#000" /> Success!</>
-                ) : (
-                   'Auto-Fill Package'
-                )}
-              </button>
-              <button 
-                onClick={handleClearFormClick} 
-                style={{ background: 'rgba(255, 77, 77, 0.05)', color: '#ff4d4d', border: '1px solid rgba(255, 77, 77, 0.3)', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.3s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 77, 77, 0.15)'; e.currentTarget.style.transform = 'scale(1.02)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 77, 77, 0.05)'; e.currentTarget.style.transform = 'scale(1)' }}
               >
@@ -1340,7 +1135,7 @@ export default function QuoteMaker() {
                       <button onClick={() => copyToClipboard(shareLink, 'link')} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link">
                         {copiedItem === 'link' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
                       </button>
-                   </div>
+</div>
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client PIN:</p>
                    <div style={{ display: 'flex', gap: '8px' }}>
                       <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
@@ -1348,11 +1143,11 @@ export default function QuoteMaker() {
                         {copiedItem === 'password' ? <CheckCircle2 size={16} color="#ebd73f" /> : <Copy size={16} />}
                       </button>
                    </div>
-                    <button onClick={handleCopyMessage} className={styles.btnShare}>
+                   <button onClick={handleCopyMessage} className={styles.btnShare}>
                       {copiedItem === 'message' ? (
-                          <><CheckCircle2 size={18} /> Message Copied!</>
+                          <><CheckCircle2 size={18} /> {isGenz ? 'W' : 'Message Copied!'}</>
                       ) : (
-                          <><Share2 size={18} /> Copy Share Message</>
+                          <><Share2 size={18} /> {isGenz ? 'Plug it' : 'Copy Share Message'}</>
                       )}
                     </button>
                 </div>
@@ -1392,6 +1187,7 @@ export default function QuoteMaker() {
 
       {/* PDF PAGE BUILDER - FULL WIDTH */}
       <div style={{ marginTop: "40px" }}>
+
           {/* PDF PAGE BUILDER */}
           <div className={styles.card}>
             <h3 style={{ marginBottom: '30px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', borderBottom: '1px solid rgba(235, 215, 63, 0.2)', paddingBottom: '15px' }}>

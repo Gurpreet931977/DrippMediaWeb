@@ -712,11 +712,11 @@ export default function Page() {
   </div>
   {/* Category Filters mimicking YouTube */}
   <div className="filters">
-    <div className="filter-btn active">All Work</div>
-    <div className="filter-btn">Documentary</div>
-    <div className="filter-btn">Commercial</div>
-    <div className="filter-btn">YouTube Format</div>
-    <div className="filter-btn">Music Videos</div>
+    <div className="filter-btn active">{isGenz ? 'All Lore' : 'All Work'}</div>
+    <div className="filter-btn">{isGenz ? 'Lore' : 'Documentary'}</div>
+    <div className="filter-btn">{isGenz ? 'Brand Deals' : 'Commercial'}</div>
+    <div className="filter-btn">{isGenz ? 'YT Core' : 'YouTube Format'}</div>
+    <div className="filter-btn">{isGenz ? 'Vibes' : 'Music Videos'}</div>
   </div>
   <div className="grid-container">
     {videos.map((video, index) => (

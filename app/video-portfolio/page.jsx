@@ -667,8 +667,8 @@ export default function Page() {
   <div className="cursor" id="cursor" />
   <section className="portfolio">
     <div className="portfolio-title-container">
-      <h2 className="cards-title">Video <span>{isGenz ? 'Formats' : 'Dimensions'}</span></h2>
-      <p className="cards-subtitle">{isGenz ? 'Pick your poison. Peep the edits.' : 'Choose your format. Experience the cut.'}</p>
+      <h2 className="cards-title">Video <span>{isGenz ? 'Vibes' : 'Dimensions'}</span></h2>
+      <p className="cards-subtitle">{isGenz ? 'Pick your aesthetic. Peep the edits.' : 'Choose your format. Experience the cut.'}</p>
     </div>
     <div className="cards-container">
       {/* HORIZONTAL LONG FORM CARD */}
@@ -693,7 +693,7 @@ export default function Page() {
               </div>
               <div className="card-body">
                 <h2>Long Form<br /><span>{isGenz ? 'Lore' : 'Cinematics'}</span></h2>
-                <p className="front-desc">{isGenz ? 'Deep dives, lore videos, and high-production drops that let him cook.' : 'Immersive storytelling, mini-documentaries, YouTube videos, and high-production commercials that breathe life into your brand narrative.'}</p>
+                <p className="front-desc">{isGenz ? 'Deep dives, lore, and high-production drops.' : 'Immersive storytelling, mini-documentaries, YouTube videos, and high-production commercials that breathe life into your brand narrative.'}</p>
               </div>
             </div>
           </div>
@@ -720,8 +720,8 @@ export default function Page() {
                 </div>
               </div>
               <div className="card-body">
-                <h2>Short Form<br /><span>{isGenz ? 'Brainrot' : 'Viral Edits'}</span></h2>
-                <p className="front-desc">{isGenz ? 'High-retention, hyper-engaging content engineered to farm aura on TikTok and Reels.' : 'High-retention, hyper-engaging content engineered perfectly for Reels, TikToks, and Shorts.'}</p>
+                <h2>Short Form<br /><span>{isGenz ? 'Doomscroll' : 'Viral Edits'}</span></h2>
+                <p className="front-desc">{isGenz ? 'High-retention content built for the doomscroll on TikTok and Reels.' : 'High-retention, hyper-engaging content engineered perfectly for Reels, TikToks, and Shorts.'}</p>
               </div>
             </div>
           </div>

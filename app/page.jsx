@@ -1732,24 +1732,24 @@ export default function ComingSoon() {
                <>
                  <p>Catch <span style={{color: 'var(--brand-yellow)'}}>Yellow Drops</span> for +1 {isGenz ? 'aura' : 'point'}.</p>
                  <p>Catch <span style={{color: '#eb3f3f'}}>Red Drops</span> for +5 {isGenz ? 'aura' : 'points'}.</p>
-                 <p>Catch rare <span style={{color: '#ffffff'}}>White Drops</span> for +69 {isGenz ? 'aura, sheesh!' : 'points!'}</p>
+                 <p>Catch rare <span style={{color: '#ffffff'}}>White Drops</span> for +69 {isGenz ? 'aura' : 'points!'}</p>
                  <br/>
-                 <p>{isGenz ? 'Dodge the Bombs! Catching a bomb is an instant L.' : 'Avoid the Bombs! Catching a bomb will instantly fail the game.'}</p>
+                 <p>{isGenz ? 'Dodge the bombs! Catching a bomb is an instant L.' : 'Avoid the Bombs! Catching a bomb will instantly fail the game.'}</p>
                </>
              ) : activeGame === 'breaker' ? (
                <>
-                 <p>{isGenz ? 'Bust those glowing capsules with your paddle, no cap.' : 'Smash the glowing capsules with your magnetic paddle.'}</p>
-                 <p>Catch <span style={{color: '#00ffcc'}}>Cyan</span> for {isGenz ? 'Aura' : 'Points'}, <span style={{color: '#ff00ff'}}>Magenta</span> for {isGenz ? 'Multi-Ball glitch' : 'Multi-Ball'}.</p>
-                 <p>Catch <span style={{color: '#33ff33'}}>Green</span> {isGenz ? 'to get swole' : 'for Wider Paddle'}, <span style={{color: '#ebd73f'}}>Yellow</span> for {isGenz ? 'that Piercing Fireball rizz!' : 'Piercing Fireball!'}</p>
+                 <p>{isGenz ? 'Break the glowing capsules with your paddle.' : 'Smash the glowing capsules with your magnetic paddle.'}</p>
+                 <p>Catch <span style={{color: '#00ffcc'}}>Cyan</span> for {isGenz ? 'Aura' : 'Points'}, <span style={{color: '#ff00ff'}}>Magenta</span> for {isGenz ? 'Multi-Ball' : 'Multi-Ball'}.</p>
+                 <p>Catch <span style={{color: '#33ff33'}}>Green</span> {isGenz ? 'to level up paddle' : 'for Wider Paddle'}, <span style={{color: '#ebd73f'}}>Yellow</span> for {isGenz ? 'Piercing Fireball!' : 'Piercing Fireball!'}</p>
                  <br/>
-                 <p>Avoid <span style={{color: '#ff3333'}}>Red</span> ({isGenz ? 'smol energy' : 'Shrinks Paddle'}) and <span style={{color: '#33ccff'}}>Blue</span> ({isGenz ? 'gatekeeps targets' : 'Shields Targets'}).</p>
-                 <p>{isGenz ? "If you fumble the ball, it's over for you." : "If you drop the ball once, you fail instantly!"}</p>
+                 <p>Avoid <span style={{color: '#ff3333'}}>Red</span> ({isGenz ? 'Shrink' : 'Shrinks Paddle'}) and <span style={{color: '#33ccff'}}>Blue</span> ({isGenz ? 'Gatekeep targets' : 'Shields Targets'}).</p>
+                 <p>{isGenz ? "If you drop the ball, it's over." : "If you drop the ball once, you fail instantly!"}</p>
                </>
              ) : (
-               <p>{isGenz ? 'The game is currently gatekept. Toggle the Easter Egg icon in the bottom left to play!' : 'The game is currently disabled. Toggle the Easter Egg icon in the bottom left to play!'}</p>
+               <p>{isGenz ? 'The game is currently vaulted. Toggle the Easter Egg icon in the bottom left to play!' : 'The game is currently disabled. Toggle the Easter Egg icon in the bottom left to play!'}</p>
              )}
            </div>
-           <PrimaryButton onClick={() => setIsHelpOpen(false)}>{isGenz ? 'Spit your shit indeed' : 'Close Guidelines'}</PrimaryButton>
+           <PrimaryButton onClick={() => setIsHelpOpen(false)}>{isGenz ? 'Got it' : 'Close Guidelines'}</PrimaryButton>
         </div>
       )}
 
@@ -1802,7 +1802,7 @@ export default function ComingSoon() {
           onMouseEnter={(e) => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = activeGame === 'none' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
         >
-          {isGenz ? (activeGame === 'none' ? 'Let him cook' : 'Touch grass') : (activeGame === 'none' ? 'Ignite Canvas' : 'Disable Game')}
+          {isGenz ? (activeGame === 'none' ? 'Main Character' : 'Touch Grass') : (activeGame === 'none' ? 'Ignite Canvas' : 'Disable Game')}
         </button>
         
         <button 
@@ -1831,7 +1831,7 @@ export default function ComingSoon() {
              }
           }}
         >
-          {isGenz ? (hideHero ? 'Spill the tea' : 'Gatekeep') : (hideHero ? 'Show Intro' : 'Hide Intro')}
+          {isGenz ? (hideHero ? 'Spill' : 'Gatekeep') : (hideHero ? 'Show Intro' : 'Hide Intro')}
         </button>
       </div>
 
@@ -1850,15 +1850,15 @@ export default function ComingSoon() {
                        setIsPaused(false);
                        gsap.set('.ui-overlay', { opacity: 1 });
                    }});
-               }}>{isGenz ? 'We so back' : 'Resume Game'}</PrimaryButton>
+               }}>{isGenz ? "We're back" : 'Resume Game'}</PrimaryButton>
                {!showShareOptions ? (
                  <PrimaryButton onClick={prepareShare}>
-                   {isGenz ? 'Flex your aura' : 'Brag your score'}
+                   {isGenz ? 'Flex your score' : 'Brag your score'}
                  </PrimaryButton>
                ) : (
                  <div className="share-container" style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
                    <PrimaryButton onClick={() => handleShare('download')} disabled={isCapturing}>
-                     {isCapturing ? (isGenz ? "Cooking..." : "Preparing...") : (isGenz ? "Rip it" : "Download")}
+                     {isCapturing ? (isGenz ? "Cooking..." : "Preparing...") : (isGenz ? "Save receipt" : "Download")}
                    </PrimaryButton>
                    <PrimaryButton onClick={() => handleShare('instagram')} disabled={isCapturing}>
                      {isCapturing ? (isGenz ? "Cooking..." : "Preparing...") : "IG Story"}
@@ -1892,11 +1892,11 @@ export default function ComingSoon() {
                {isGenz ? 'COOKED!' : 'DRIPPED OUT!'}
              </h2>
              <p style={{ marginTop: '10px', fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', letterSpacing: '1px' }}>
-               {activeGame === 'dripp' ? (isGenz ? 'You caught a bomb! Massive L.' : 'You caught a bomb! Game Over.') : (isGenz ? 'You fumbled! Massive L.' : 'You dropped the ball! Game Over.')}
+               {activeGame === 'dripp' ? (isGenz ? 'You caught a bomb! Instant L.' : 'You caught a bomb! Game Over.') : (isGenz ? 'You fumbled.' : 'You dropped the ball! Game Over.')}
              </p>
              
              <div style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-               <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px' }}>{isGenz ? 'Aura points' : 'Final Score'}</span>
+               <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px' }}>{isGenz ? 'Aura' : 'Final Score'}</span>
                <span style={{ fontSize: '3.5rem', fontWeight: 600, color: 'var(--brand-yellow)', textShadow: '0 0 20px rgba(235, 215, 63, 0.4)', lineHeight: 1, marginTop: '5px', filter: cheatedSession && activeGame === 'dripp' ? 'blur(6px)' : 'none', userSelect: 'none' }}>
                   {activeGame === 'dripp' ? score : breakerScore}
                </span>
@@ -2405,7 +2405,7 @@ export default function ComingSoon() {
           justifyContent: 'center', alignItems: 'center', lineHeight: 0.8
         }}>
           <div style={{ display: 'flex', gap: 'clamp(2px, 1vw, 5px)' }}>
-            {"DRIPP".split('').map((char, index) => (
+            {(isGenz ? "DRIPP" : "DRIPP").split('').map((char, index) => (
               <span key={`d-${index}`} className="char" style={{ 
                 display: 'inline-block', color: 'var(--pure-white)'
               }}>
@@ -2414,7 +2414,7 @@ export default function ComingSoon() {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 'clamp(2px, 1vw, 5px)' }}>
-            {"MEDIA".split('').map((char, index) => (
+            {(isGenz ? "MEDIA" : "MEDIA").split('').map((char, index) => (
               <span key={`m-${index}`} className="char" style={{ 
                 display: 'inline-block', color: 'var(--brand-yellow)', textShadow: '0 0 30px var(--brand-glow)'
               }}>
@@ -2423,6 +2423,15 @@ export default function ComingSoon() {
             ))}
           </div>
         </h1>
+
+        {isGenz && (
+          <h2 style={{
+            fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(1rem, 3vw, 2rem)', fontWeight: 600, color: 'var(--brand-yellow)',
+            textTransform: 'uppercase', letterSpacing: '2px', textAlign: 'center', margin: '15px 0 0 0', zIndex: 2, pointerEvents: 'none'
+          }}>
+            CEO OF CONTENT
+          </h2>
+        )}
 
         <div style={{ overflow: 'hidden', marginTop: 'clamp(0px, 1vh, 0.5rem)', pointerEvents: 'none' }}>
           <p className="subtitle" style={{
