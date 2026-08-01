@@ -9,6 +9,7 @@ export default function SharedQuote() {
   const [pin, setPin] = useState(['', '', '', '']);
   const [password, setPassword] = useState('');
   const [isLocked, setIsLocked] = useState(true);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const [quoteData, setQuoteData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -121,15 +122,17 @@ export default function SharedQuote() {
               <div key={index} style={{
                 width: 'clamp(60px, 15vw, 72px)',
                 height: 'clamp(70px, 18vw, 84px)',
-                background: 'rgba(255,255,255,0.04)',
-                border: `2px solid ${digit ? '#ebd73f' : 'rgba(255,255,255,0.08)'}`,
-                borderRadius: '14px',
+                background: focusedIndex === index ? 'rgba(235, 215, 63, 0.05)' : 'rgba(255,255,255,0.03)',
+                border: `2px solid ${focusedIndex === index ? '#ebd73f' : (digit ? 'rgba(235, 215, 63, 0.5)' : 'rgba(255,255,255,0.1)')}`,
+                borderRadius: '16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: digit ? '0 0 20px rgba(235, 215, 63, 0.15)' : 'none',
-                transition: 'all 0.2s ease',
-                position: 'relative'
+                boxShadow: focusedIndex === index ? '0 0 25px rgba(235, 215, 63, 0.25), inset 0 0 10px rgba(235, 215, 63, 0.1)' : (digit ? '0 0 15px rgba(235, 215, 63, 0.1)' : 'inset 0 2px 10px rgba(0,0,0,0.2)'),
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                backdropFilter: 'blur(10px)',
+                position: 'relative',
+                transform: focusedIndex === index ? 'scale(1.05)' : 'scale(1)'
               }}>
                 <input
                   ref={pinRefs[index]}
@@ -140,8 +143,8 @@ export default function SharedQuote() {
                   onChange={(e) => handlePinChange(index, e.target.value)}
                   onKeyDown={(e) => handlePinKeyDown(index, e)}
                   onPaste={handlePinPaste}
-                  onFocus={(e) => { e.target.parentElement.style.border = '2px solid #ebd73f'; e.target.parentElement.style.boxShadow = '0 0 20px rgba(235, 215, 63, 0.25)'; }}
-                  onBlur={(e) => { if (!digit) { e.target.parentElement.style.border = '2px solid rgba(255,255,255,0.08)'; e.target.parentElement.style.boxShadow = 'none'; } }}
+                  onFocus={() => setFocusedIndex(index)}
+                  onBlur={() => setFocusedIndex(-1)}
                   style={{
                     width: '100%',
                     height: '100%',
@@ -149,14 +152,15 @@ export default function SharedQuote() {
                     border: 'none',
                     outline: 'none',
                     textAlign: 'center',
-                    fontSize: 'clamp(1.5rem, 5vw, 2rem)',
+                    fontSize: 'clamp(1.8rem, 6vw, 2.5rem)',
                     fontWeight: '700',
                     color: '#ebd73f',
                     caretColor: '#ebd73f',
-                    letterSpacing: '0'
+                    letterSpacing: '0',
+                    fontFamily: "'Panchang', sans-serif"
                   }}
                 />
-                {!digit && <span style={{ position: 'absolute', width: '20px', height: '2px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', pointerEvents: 'none' }}></span>}
+                {(!digit && focusedIndex !== index) && <span style={{ position: 'absolute', width: '24px', height: '3px', background: 'rgba(255,255,255,0.15)', borderRadius: '3px', pointerEvents: 'none', transition: 'all 0.3s ease' }}></span>}
               </div>
             ))}
           </div>
