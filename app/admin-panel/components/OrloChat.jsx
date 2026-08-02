@@ -255,8 +255,12 @@ export default function OrloChat() {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
+    if (isOpen) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 50);
+    }
+  }, [messages, isTyping, isOpen]);
 
   useEffect(() => {
     const handleCopilotReply = (e) => {
