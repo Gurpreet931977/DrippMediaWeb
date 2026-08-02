@@ -8,9 +8,12 @@ import confettiData from '../../../public/lottie/confetti.json';
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const BRUSH_COLORS = [
-  '#ff3333', '#ff9933', '#ebd73f', '#33ff33', '#33ffff', '#3333ff', '#ff33ff',
-  '#ffb3ba', '#ffdba4', '#ffffba', '#baffc9', '#bae1ff', '#e8baff', '#ffb3e6',
-  '#8b4513', '#a0522d', '#cd853f', '#ffffff', '#aaaaaa', '#555555', '#0a0a0a'
+  '#ff3333', '#cc0000', '#800000', '#ff9933', '#e65100', '#ebd73f', '#ffeb3b', '#ffffba', '#ffdba4',
+  '#33ff33', '#00cc00', '#006400', '#baffc9', '#cddc39', '#8bc34a',
+  '#33ffff', '#00bcd4', '#3333ff', '#0000cc', '#000080', '#bae1ff', '#009688',
+  '#ff33ff', '#9c27b0', '#673ab7', '#3f51b5', '#e8baff', '#ffb3ba', '#ffb3e6', '#e91e63',
+  '#4e342e', '#5d4037', '#795548', '#8d6e63', '#a1887f', '#8b4513', '#a0522d', '#cd853f', '#d7ccc8', '#f5f5dc',
+  '#ffffff', '#aaaaaa', '#555555', '#222222', '#0a0a0a'
 ];
 
 const DEFAULT_WORDS = [
@@ -117,28 +120,34 @@ const WORD_PACKS = {
   'Fantasy': FANTASY_WORDS,
   'Actions': ACTION_WORDS,
   'Hardcore': HARDCORE_WORDS,
-  '18+ No Mercy': [
+  'Adult Party': [
     "EGGPLANT", "PEACH", "SAUSAGE", "ROOSTER", "WOODPECKER", "BEAVER", "MELONS", "TACO", 
     "JOYSTICK", "BACKDOOR", "WALNUTS", "PLUMBING", "CUCUMBER", "BANANA", "GARDEN HOSE", 
     "HAMBURGER BUNS", "DONUT", "HOLE IN ONE", "CLAM", "HANDCUFFS", "WHIP", "BLOWFISH", 
-    "OIL CAN", "PAINT STRIPPER", "DOG BONE", "PITCHING A TENT", "SUGAR DADDY", "PITCHER", 
-    "SNAKE", "MOUSE HOLE", "HOT DOG", "STRIPPER POLE", "WALK OF SHAME", "SUGAR MOMMA", 
-    "FRENCH KISS", "BOOTY CALL", "THIRD BASE", "TRAMP STAMP", "HAPPY ENDING", "SKINNY DIPPING", 
-    "FRENCH MAID", "HICKEY", "ONE NIGHT STAND", "FRIENDS WITH BENEFITS", "DRUNK TEXT", 
-    "BEER GOGGLES", "CHASTITY BELT", "LAP DANCE", "DIRTY TALK", "CENSORED", "69", "SPOONING", 
-    "MISSIONARY", "BLUE BALLS", "PREGNANT", "JUICY", "HUMP DAY", "NETFLIX AND CHILL", "LOVE BITE", 
-    "QUICKIE", "HORN DOG", "DADDY ISSUES", "THIRST TRAP", "COUGAR", "SUGAR BABY", 
-    "WET DREAM", "MORNING AFTER PILL", "BALL GAG", "SAFE WORD", "MILE HIGH CLUB", "PLAYBOY BUNNY", 
-    "RED LIGHT DISTRICT", "GOLD DIGGER", "ONLYFANS", "POWER BOTTOM", "SWALLOW", "SPIT", 
-    "PANTIES", "THONG", "JOCKSTRAP", "MISTRESS", "WINGMAN", "COCK BLOCK", "VIRGINITY", 
-    "HOOTERS", "BAREBACK", "FOREPLAY", "CLIMAX", "STRIP CLUB", "PEEP SHOW", "TWERKING", 
-    "NAKED", "NUDIST COLONY", "FLASHING", "STREAKING", "LOVE TRIANGLE", "BODY SHOTS", 
-    "SEX TOY", "EDGING", "TEABAGGING", "CAMEL TOE", "MOOSE KNUCKLE", "BIMBO", "HIMBO", 
-    "GIGOLO", "ESCORT", "CHERRY POPPER", "DRY HUMP", "HEAVY PETTING", "TONGUE WRESTLING", 
-    "MATING CALL", "BIRDS AND THE BEES", "SIZE MATTERS", "GAG REFLEX", "SWINGER PARTY", 
-    "KINKY", "VANILLA", "DOMINATRIX", "SUBMISSIVE", "SAFE SEX", "CONDOM", "LUBRICANT", 
+    "PITCHING A TENT", "SUGAR DADDY", "PITCHER", 
+    "SNAKE", "MOUSE HOLE", "HOT DOG", "STRIPPER POLE", 
+    "FRENCH KISS", "BOOTY CALL", "THIRD BASE", "TRAMP STAMP", "SKINNY DIPPING", 
+    "FRENCH MAID", "HICKEY", "ONE NIGHT STAND", 
+    "CHASTITY BELT", "LAP DANCE", "DIRTY TALK", "CENSORED", "69", "SPOONING", 
+    "MISSIONARY", "BLUE BALLS", "PREGNANT", "JUICY", "HUMP DAY", "LOVE BITE", 
+    "QUICKIE", "COUGAR", "SUGAR BABY", 
+    "WET DREAM", "MORNING AFTER PILL", "BALL GAG", "SAFE WORD", "PLAYBOY BUNNY", 
+    "GOLD DIGGER", "ONLYFANS", "SWALLOW", "SPIT", 
+    "PANTIES", "THONG", "JOCKSTRAP", "MISTRESS", "WINGMAN", "VIRGINITY", 
+    "HOOTERS", "FOREPLAY", "CLIMAX", "STRIP CLUB", "PEEP SHOW", "TWERKING", 
+    "NAKED", "NUDIST COLONY", "FLASHING", "STREAKING", "LOVE TRIANGLE", 
+    "SEX TOY", "CAMEL TOE", "MOOSE KNUCKLE", "BIMBO", "HIMBO", 
+    "GIGOLO", "ESCORT", "DRY HUMP", "TONGUE WRESTLING", 
+    "MATING CALL", "BIRDS AND THE BEES", "SIZE MATTERS", "GAG REFLEX", 
+    "KINKY", "DOMINATRIX", "SUBMISSIVE", "SAFE SEX", "CONDOM", "LUBRICANT", 
     "SPERM BANK", "MORNING WOOD", "POLE DANCER", "BIKINI WAX", "CLEAVAGE", "HEADLIGHTS", 
-    "MOTORBOATING", "THIGH GAP"
+    "MOTORBOATING", "THIGH GAP", "MILF", "DILF", "DOGGY STYLE", "VIBRATOR", 
+    "BUTT PLUG", "ANAL", "ORGASM", "ERECTION", "PENIS", "VAGINA", "BOOBS", "TITS", "ASS",
+    "SEMEN", "SPERM", "CUM", "BUKKAKE", "THREESOME", "ORGY", "BONDAGE",
+    "SADIST", "MASOCHIST", "GLORY HOLE", "MONEY SHOT", 
+    "SCISSORING", "STRAP ON", "GOLDEN SHOWER",
+    "BEDROOM", "KISSING", "LUST", "HOT AND HEAVY", "UNDERWEAR", "BRA", "LINGERIE", "SEDUCTIVE",
+    "SEXY", "FLIRTING", "MAKING OUT", "NECKING", "PASSION", "HOOKUP", "KAMA SUTRA", "ROMANCE"
   ]
 };
 
@@ -320,7 +329,8 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       fadingInk: false
     },
     guessedPlayers: [],
-    revealedIndices: []
+    revealedIndices: [],
+    usedWords: []
   });
 
   const [chat, setChat] = useState([]);
@@ -335,6 +345,35 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   const [isMobileLeaderboardOpen, setIsMobileLeaderboardOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [latestMobileMessage, setLatestMobileMessage] = useState(null);
+
+  const colorContainerRef = useRef(null);
+  const [isDraggingColors, setIsDraggingColors] = useState(false);
+  const [colorDragStartX, setColorDragStartX] = useState(0);
+  const [colorDragScrollLeft, setColorDragScrollLeft] = useState(0);
+
+  const handleColorScroll = (e) => {
+    if (colorContainerRef.current) {
+      colorContainerRef.current.scrollLeft += e.deltaY;
+    }
+  };
+
+  const startColorDrag = (e) => {
+    setIsDraggingColors(true);
+    setColorDragStartX(e.pageX - colorContainerRef.current.offsetLeft);
+    setColorDragScrollLeft(colorContainerRef.current.scrollLeft);
+  };
+
+  const stopColorDrag = () => {
+    setIsDraggingColors(false);
+  };
+
+  const onColorDrag = (e) => {
+    if (!isDraggingColors) return;
+    e.preventDefault();
+    const x = e.pageX - colorContainerRef.current.offsetLeft;
+    const walk = (x - colorDragStartX) * 1.5;
+    colorContainerRef.current.scrollLeft = colorDragScrollLeft - walk;
+  };
 
   useEffect(() => {
     if (gameState.guessedPlayers?.includes(playerName) && gameState.status === 'playing') {
@@ -449,18 +488,20 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     if (config.customWordsOnly) {
       return custom.length >= config.wordCount ? custom : (custom.length > 0 ? custom : WORD_PACKS['Default']);
     }
-    if (config.gameMode === 'No Mercy') {
-      return [...custom, ...HARDCORE_WORDS];
-    }
     const pack = WORD_PACKS[config.wordPack] || WORD_PACKS['Default'];
     return [...custom, ...pack];
   };
 
-  const generateWordChoices = (config) => {
+  const generateWordChoices = (config, usedWords = []) => {
     const pool = getWordPool(config);
+    // Filter out words that have already been played
+    const availablePool = pool.filter(w => !usedWords.includes(w));
+    // If we run out of words, just use the full pool again
+    const workingPool = availablePool.length >= config.wordCount ? availablePool : pool;
+    
     const choices = [];
-    while(choices.length < config.wordCount && choices.length < pool.length) {
-      const w = pool[Math.floor(Math.random() * pool.length)];
+    while(choices.length < config.wordCount && choices.length < workingPool.length) {
+      const w = workingPool[Math.floor(Math.random() * workingPool.length)];
       if(!choices.includes(w)) choices.push(w);
     }
     if (choices.length === 0) choices.push("DEFAULT");
@@ -468,7 +509,9 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
   };
 
   const startRound = (config = gameState.config, currentRound = 1, currentTurnIndex = 0, scores = gameState.scores) => {
-    const choices = generateWordChoices(config);
+    // Starting a new game, reset used words
+    const usedWords = currentRound === 1 && currentTurnIndex === 0 ? [] : gameState.usedWords;
+    const choices = generateWordChoices(config, usedWords);
     const newState = {
       ...gameState,
       status: 'choosing_word',
@@ -479,6 +522,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
       currentWord: '',
       guessedPlayers: [],
       revealedIndices: [],
+      usedWords,
       timer: 15, // 15s to choose a word
       scores
     };
@@ -503,11 +547,13 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
             if (prev.status === 'choosing_word') {
               // Auto-pick a word
               const autoWord = prev.wordChoices[0];
-              const actualDrawTime = prev.config.gameMode === 'No Mercy' ? Math.min(30, prev.config.drawTime) : prev.config.drawTime;
+              const actualDrawTime = prev.config.gameMode === 'Adult Party' ? 120 : prev.config.drawTime;
+              const newUsedWords = [...prev.usedWords, autoWord];
               const newState = {
                 ...prev,
                 status: 'playing',
                 currentWord: autoWord,
+                usedWords: newUsedWords,
                 timer: actualDrawTime,
                 revealedIndices: []
               };
@@ -543,7 +589,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 channel.send({ type: 'broadcast', event: 'sync_state', payload: newState });
                 return newState;
               } else {
-                const choices = generateWordChoices(prev.config);
+                const choices = generateWordChoices(prev.config, prev.usedWords);
                 const newState = {
                   ...prev,
                   status: 'choosing_word',
@@ -564,7 +610,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           
           let newRevealedIndices = [...prev.revealedIndices];
           if (prev.status === 'playing' && prev.config.hints > 0) {
-            const actualDrawTime = prev.config.gameMode === 'No Mercy' ? Math.min(30, prev.config.drawTime) : prev.config.drawTime;
+            const actualDrawTime = prev.config.gameMode === 'Adult Party' ? 120 : prev.config.drawTime;
             const timePassed = actualDrawTime - newTimer;
             const hintInterval = Math.floor(actualDrawTime / (prev.config.hints + 1));
             const expectedHints = Math.min(prev.config.hints, Math.floor(timePassed / hintInterval));
@@ -801,16 +847,14 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     if (!isMyTurn || !isHost) {
       channel.send({ type: 'broadcast', event: 'select_word', payload: word });
       return;
-    }
-    // Host selection logic
-    let actualDrawTime = gameState.config.gameMode === 'No Mercy' ? Math.min(30, gameState.config.drawTime) : gameState.config.drawTime;
-    if (gameState.config.wordPack === '18+ No Mercy') {
-      actualDrawTime = Math.min(80, actualDrawTime); // Max 80 seconds
-    }
+    if (!isMyTurn || gameState.status !== 'choosing_word') return;
+    const actualDrawTime = gameState.config.gameMode === 'Adult Party' ? 120 : gameState.config.drawTime;
+    const newUsedWords = [...gameState.usedWords, word];
     const newState = {
       ...gameState,
       status: 'playing',
       currentWord: word,
+      usedWords: newUsedWords,
       timer: actualDrawTime,
       revealedIndices: []
     };
@@ -967,7 +1011,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
           setChat(chatPrev => [...chatPrev, sysMsg].slice(-30));
 
           const newScores = { ...prev.scores };
-          const actualDrawTime = prev.config.gameMode === 'No Mercy' ? Math.min(30, prev.config.drawTime) : prev.config.drawTime;
+          const actualDrawTime = prev.config.gameMode === 'Adult Party' ? 120 : prev.config.drawTime;
           const timeBonus = Math.floor((prev.timer / actualDrawTime) * 200);
           newScores[playerWhoGuessed] = (newScores[playerWhoGuessed] || 0) + 100 + timeBonus;
           
@@ -988,7 +1032,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
 
       channel.on('broadcast', { event: 'incorrect_guess' }, ({ payload: playerWhoGuessed }) => {
         setGameState(prev => {
-          if (prev.config.gameMode !== 'No Mercy') return prev;
+          if (prev.config.gameMode !== 'Adult Party') return prev;
           if (prev.guessedPlayers.includes(playerWhoGuessed)) return prev;
 
           const newScores = { ...prev.scores };
@@ -1061,7 +1105,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
                 <div style={{...styles.configRow, flexDirection: 'column', alignItems: 'flex-start', padding: '10px 15px', gap: '8px'}}>
                   <label style={{...styles.configLabel, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)'}}>Game Mode</label>
                   <select value={gameState.config.gameMode} onChange={(e) => updateConfig('gameMode', e.target.value)} style={{...styles.configInput, width: '100%', padding: '6px', fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'}}>
-                    {['Normal', 'No Mercy'].map(v => <option key={v} value={v} style={{background:'#000'}}>{v}</option>)}
+                    {['Normal', 'Adult Party'].map(v => <option key={v} value={v} style={{background:'#000'}}>{v}</option>)}
                   </select>
                 </div>
 
@@ -1261,10 +1305,10 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               </h1>
             
             <div style={{ display: 'flex', gap: '10px' }}>
-              {gameState.config.gameMode === 'No Mercy' && (
+              {gameState.config.gameMode === 'Adult Party' && (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(255,0,0,0.5)', padding: '5px 15px', borderRadius: '30px' }}>
                   <Flame size={14} color="#fff" />
-                  <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.7rem', color: '#fff' }}>NO MERCY</span>
+                  <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.7rem', color: '#fff' }}>ADULT PARTY</span>
                 </div>
               )}
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '5px 15px', borderRadius: '30px' }}>
@@ -1514,10 +1558,19 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                 
                 {/* Color Ribbon */}
-                <div style={{ 
-                  display: 'flex', gap: '12px', overflowX: 'auto', padding: '15px 10px', margin: '-10px 0',
-                  scrollbarWidth: 'none', flex: 1, maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' 
-                }}>
+                <div 
+                  ref={colorContainerRef}
+                  onWheel={handleColorScroll}
+                  onMouseDown={startColorDrag}
+                  onMouseLeave={stopColorDrag}
+                  onMouseUp={stopColorDrag}
+                  onMouseMove={onColorDrag}
+                  style={{ 
+                    display: 'flex', gap: '12px', overflowX: 'auto', padding: '15px 10px', margin: '-10px 0',
+                    scrollbarWidth: 'none', flex: 1, maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)',
+                    cursor: isDraggingColors ? 'grabbing' : 'grab', scrollBehavior: isDraggingColors ? 'auto' : 'smooth'
+                  }}
+                >
                   <div style={{ width: '5px', flexShrink: 0 }} /> {/* spacer */}
                   {BRUSH_COLORS.map(c => {
                     const isActive = brushColor === c;
@@ -1714,7 +1767,6 @@ const styles = {
     display: 'flex',
     gap: '15px',
     padding: '10px',
-    height: '100%',
     minHeight: '100vh',
     boxSizing: 'border-box',
     maxWidth: '1600px',
