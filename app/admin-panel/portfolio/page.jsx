@@ -39,8 +39,28 @@ export default function PortfolioManager() {
   const [fileSizes, setFileSizes] = useState({});
   const [showCustomGraphicCategory, setShowCustomGraphicCategory] = useState(false);
   const [editorConfig, setEditorConfig] = useState({ show: false, item: null });
-  const graphicCategories = Array.from(new Set(items.filter(i => i.category).map(i => i.category)));
+  const [storedCustomCats, setStoredCustomCats] = useState([]);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [isEditCategoryDropdownOpen, setIsEditCategoryDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('dripp_custom_graphic_cats');
+      if (stored) setStoredCustomCats(JSON.parse(stored));
+    } catch(e) {}
+  }, []);
+
+  const graphicCategories = Array.from(new Set([...items.filter(i => i.category).map(i => i.category), ...storedCustomCats]));
   if (graphicCategories.length === 0) graphicCategories.push('Logo Design', 'Poster Design', 'Thumbnail Design');
+
+  const addCustomGraphicCategory = (cat) => {
+    if (!cat.trim()) return;
+    const newCats = [...storedCustomCats, cat.trim()];
+    setStoredCustomCats(newCats);
+    localStorage.setItem('dripp_custom_graphic_cats', JSON.stringify(newCats));
+    setFormData({...formData, category: cat.trim()});
+    setShowCustomGraphicCategory(false);
+  };
 
   const generateFilmstrip = async (videoUrl) => {
     setEditPopup(prev => ({ ...prev, generatingFilmstrip: true, filmstrip: [] }));
@@ -1259,13 +1279,30 @@ export default function PortfolioManager() {
                           {activeTab === TABS.GRAPHICS && (
                               <div>
                                   <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>Category</label>
-                                  <input 
-                                    type="text" 
-                                    placeholder="e.g. Logo Design"
-                                    style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
-                                    value={editPopup.value.category || ''} 
-                                    onChange={e => setEditPopup({...editPopup, value: {...editPopup.value, category: e.target.value}})} 
-                                  />
+                                  <div style={{ position: 'relative' }}>
+                                      <div 
+                                          onClick={() => setIsEditCategoryDropdownOpen(!isEditCategoryDropdownOpen)}
+                                          style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                      >
+                                          <span>{editPopup.value.category || 'Select Category'}</span>
+                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: isEditCategoryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                      </div>
+                                      {isEditCategoryDropdownOpen && (
+                                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden', zIndex: 100 }}>
+                                              {graphicCategories.map(cat => (
+                                                  <div
+                                                      key={cat}
+                                                      onClick={() => { setEditPopup({...editPopup, value: {...editPopup.value, category: cat}}); setIsEditCategoryDropdownOpen(false); }}
+                                                      style={{ padding: '12px 18px', cursor: 'pointer', color: editPopup.value.category === cat ? '#ebd73f' : '#ccc', background: editPopup.value.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent' }}
+                                                      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                                      onMouseOut={(e) => e.currentTarget.style.background = editPopup.value.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent'}
+                                                  >
+                                                      {cat}
+                                                  </div>
+                                              ))}
+                                          </div>
+                                      )}
+                                  </div>
                               </div>
                           )}
 
@@ -1705,70 +1742,128 @@ export default function PortfolioManager() {
                     <label style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         Category <span style={{ color: '#ebd73f', opacity: 0.8 }}>(Graphic Type)</span>
                     </label>
-                    <div style={{ 
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '8px', 
-                        background: 'rgba(0,0,0,0.5)', 
-                        padding: '8px', 
-                        borderRadius: '20px', 
-                        border: '1px solid rgba(255,255,255,0.04)',
-                        boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.8)'
-                    }}>
-                        {graphicCategories.map((cat) => {
-                            const isActive = formData.category === cat || (!formData.category && graphicCategories[0] === cat);
-                            return (
-                                <button
-                                    type="button"
-                                    key={cat}
-                                    onClick={() => { setFormData({...formData, category: cat}); setShowCustomGraphicCategory(false); }}
-                                    style={{
-                                        flex: '1 1 auto',
-                                        position: 'relative',
-                                        padding: '12px 16px',
-                                        borderRadius: '16px',
-                                        background: isActive ? 'linear-gradient(145deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)' : 'transparent',
-                                        border: `1px solid ${isActive ? 'rgba(235, 215, 63, 0.3)' : 'transparent'}`,
-                                        color: isActive ? '#ebd73f' : '#666',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                                        fontFamily: 'Clash Display, sans-serif',
-                                        fontWeight: isActive ? '600' : '500',
-                                        fontSize: '0.95rem',
-                                        letterSpacing: '0.5px'
-                                    }}
-                                >
-                                    {cat}
-                                </button>
-                            );
-                        })}
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <div style={{ position: 'relative', flex: 1 }}>
+                            <div 
+                                onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                                style={{
+                                    width: '100%',
+                                    padding: '14px 18px',
+                                    borderRadius: '12px',
+                                    background: 'rgba(0,0,0,0.6)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    color: formData.category || graphicCategories[0] ? '#fff' : 'rgba(255,255,255,0.4)',
+                                    fontFamily: 'Clash Display, sans-serif',
+                                    fontSize: '1rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
+                                }}
+                            >
+                                <span>{formData.category || graphicCategories[0]}</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isCategoryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                            
+                            {isCategoryDropdownOpen && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: 0,
+                                    right: 0,
+                                    marginTop: '8px',
+                                    background: '#0a0a0a',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: '12px',
+                                    overflow: 'hidden',
+                                    zIndex: 50,
+                                    boxShadow: '0 10px 40px rgba(0,0,0,0.8)'
+                                }}>
+                                    {graphicCategories.map(cat => (
+                                        <div
+                                            key={cat}
+                                            onClick={() => {
+                                                setFormData({...formData, category: cat});
+                                                setIsCategoryDropdownOpen(false);
+                                                setShowCustomGraphicCategory(false);
+                                            }}
+                                            style={{
+                                                padding: '12px 18px',
+                                                cursor: 'pointer',
+                                                fontFamily: 'Clash Display, sans-serif',
+                                                fontSize: '0.95rem',
+                                                color: formData.category === cat ? '#ebd73f' : '#ccc',
+                                                background: formData.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
+                                                transition: 'background 0.2s'
+                                            }}
+                                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                            onMouseOut={(e) => e.currentTarget.style.background = formData.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent'}
+                                        >
+                                            {cat}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        
                         <button
                             type="button"
-                            onClick={() => setShowCustomGraphicCategory(true)}
+                            onClick={() => setShowCustomGraphicCategory(!showCustomGraphicCategory)}
                             style={{
-                                flex: '1 1 auto',
-                                padding: '12px 16px',
-                                borderRadius: '16px',
-                                background: showCustomGraphicCategory ? 'rgba(255,255,255,0.05)' : 'transparent',
-                                border: '1px dashed rgba(255,255,255,0.2)',
-                                color: '#aaa',
+                                padding: '14px 20px',
+                                borderRadius: '12px',
+                                background: showCustomGraphicCategory ? 'rgba(235, 215, 63, 0.15)' : 'rgba(255,255,255,0.05)',
+                                border: `1px solid ${showCustomGraphicCategory ? 'rgba(235, 215, 63, 0.3)' : 'rgba(255,255,255,0.1)'}`,
+                                color: showCustomGraphicCategory ? '#ebd73f' : '#fff',
                                 cursor: 'pointer',
                                 fontFamily: 'Clash Display, sans-serif',
-                                fontSize: '0.95rem'
+                                fontSize: '0.95rem',
+                                transition: 'all 0.3s ease',
+                                whiteSpace: 'nowrap'
                             }}
                         >
                             + Add Custom
                         </button>
                     </div>
+
                     {showCustomGraphicCategory && (
-                        <input 
-                            type="text"
-                            placeholder="Type new category..."
-                            value={formData.category && !graphicCategories.includes(formData.category) ? formData.category : ''}
-                            onChange={(e) => setFormData({...formData, category: e.target.value})}
-                            style={{ marginTop: '12px', width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
-                            autoFocus
-                        />
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                            <input 
+                                type="text"
+                                placeholder="Type new category..."
+                                id="custom-cat-input"
+                                style={{ flex: 1, padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        addCustomGraphicCategory(e.target.value);
+                                    }
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const val = document.getElementById('custom-cat-input').value;
+                                    addCustomGraphicCategory(val);
+                                }}
+                                style={{
+                                    padding: '0 24px',
+                                    borderRadius: '12px',
+                                    background: '#ebd73f',
+                                    color: '#000',
+                                    border: 'none',
+                                    fontFamily: 'Clash Display, sans-serif',
+                                    fontWeight: '600',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Save
+                            </button>
+                        </div>
                     )}
                 </div>
             )}
