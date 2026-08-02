@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon, Mic, MicOff } from 'lucide-react';
 import OrloIcon from './OrloIcon';
 import gsap from 'gsap';
+import { useGenz } from '../../contexts/GenzContext';
 
 const ProfileScene = ({ size = 84 }) => (
   <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#000' }}>
