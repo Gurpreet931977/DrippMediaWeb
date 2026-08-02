@@ -1071,6 +1071,20 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           box-shadow: 0 0 15px rgba(235, 215, 63, 0.15);
         }
 
+        .chat-input-textarea::-webkit-scrollbar {
+          width: 4px;
+        }
+        .chat-input-textarea::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .chat-input-textarea::-webkit-scrollbar-thumb {
+          background: rgba(235, 215, 63, 0.3);
+          border-radius: 4px;
+        }
+        .chat-input-textarea::-webkit-scrollbar-thumb:hover {
+          background: rgba(235, 215, 63, 0.6);
+        }
+
         .typing-indicator {
           display: flex;
           gap: 6px;
@@ -1253,6 +1267,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
               </div>
               <textarea 
                 ref={inputRef}
+                className="chat-input-textarea"
                 value={input}
                 onChange={e => {
                   setInput(e.target.value);
