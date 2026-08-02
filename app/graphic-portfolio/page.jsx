@@ -122,7 +122,14 @@ export default function Page() {
                         img.src = sourceItem.image_url;
                         if (sourceItem.category) {
                             el.dataset.category = sourceItem.category;
+                            
+                            const catLabel = document.createElement('div');
+                            catLabel.className = 'infinite-cat-label';
+                            catLabel.innerText = sourceItem.category;
+                            el.appendChild(catLabel);
                         }
+                        if (sourceItem.title) el.dataset.title = sourceItem.title;
+                        if (sourceItem.case_study) el.dataset.case_study = sourceItem.case_study;
                     } else {
                         // Use inline SVG placeholder to completely avoid network spam and infinite loading
                         img.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23222'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='20' fill='%23666'%3EPlaceholder%3C/text%3E%3C/svg%3E`;
@@ -235,6 +242,9 @@ export default function Page() {
                         if (this.isListView) return;
                         const src = item.el.querySelector('img').src;
                         document.getElementById('specific-img').src = src;
+                        document.getElementById('specific-title').innerText = item.el.dataset.title || 'Untitled Project';
+                        document.getElementById('specific-category').innerText = item.el.dataset.category || 'Uncategorized';
+                        document.getElementById('specific-case-study').innerText = item.el.dataset.case_study || 'No details provided.';
                         document.getElementById('specific-view').classList.add('active');
                     });
                 });
@@ -1331,19 +1341,117 @@ export default function Page() {
             opacity: 1;
             pointer-events: auto;
         }
+        
+        .specific-view-content-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 90vw;
+            height: 90vh;
+            gap: 40px;
+            max-width: 1400px;
+        }
+
+        .specific-view-img-container {
+            flex: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
 
         .specific-view-img {
-            max-width: 90vw;
-            max-height: 90vh;
+            max-width: 100%;
+            max-height: 100%;
             object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
             transform: scale(0.9);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .specific-view-overlay.active .specific-view-img {
             transform: scale(1);
+        }
+        
+        .specific-view-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+            max-width: 450px;
+        }
+        
+        .specific-view-overlay.active .specific-view-info {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .specific-category {
+            color: var(--brand-yellow);
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        
+        .specific-title {
+            color: #fff;
+            font-family: 'Panchang', sans-serif;
+            font-size: 2rem;
+            margin: 0 0 20px 0;
+            line-height: 1.2;
+        }
+        
+        .specific-case-study {
+            color: #aaa;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 900px) {
+            .specific-view-content-wrapper {
+                flex-direction: column;
+                height: 100%;
+                overflow-y: auto;
+                padding: 40px 0;
+            }
+            .specific-view-img-container {
+                height: auto;
+                max-height: 60vh;
+            }
+            .specific-view-info {
+                padding: 0 20px;
+            }
+        }
+        
+        .infinite-cat-label {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .canvas-item:hover .infinite-cat-label {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .close-specific-view {
@@ -1428,10 +1536,18 @@ export default function Page() {
   </div>
   <div className="cursor" id="cursor" />
   <div className="drag-instruction" id="drag-msg">{isGenz ? 'Swipe / Scroll to Explore' : 'Drag / Scroll to Explore'}</div>
-  {/* Specific View Overlay Container */}
   <div className="specific-view-overlay" id="specific-view">
     <div className="close-specific-view" id="close-specific">Close ×</div>
-    <img src="" className="specific-view-img" id="specific-img" alt="Specific View" />
+    <div className="specific-view-content-wrapper">
+      <div className="specific-view-img-container">
+        <img src="" className="specific-view-img" id="specific-img" alt="Specific View" />
+      </div>
+      <div className="specific-view-info">
+        <div className="specific-category" id="specific-category">Category</div>
+        <h2 className="specific-title" id="specific-title">Project Title</h2>
+        <div className="specific-case-study" id="specific-case-study">Case study details...</div>
+      </div>
+    </div>
   </div>
   {/* Drop-in wrapper mimicking user's React implementation */}
   <div id="portfolio-showcase">
@@ -1485,6 +1601,9 @@ export default function Page() {
                           <div key={idx} style={{ marginBottom: '20px', breakInside: 'avoid', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: '#111', cursor: 'zoom-in', transition: 'transform 0.3s ease' }}
                           onClick={() => {
                               document.getElementById('specific-img').src = item.image_url;
+                              document.getElementById('specific-title').innerText = item.title || 'Untitled Project';
+                              document.getElementById('specific-category').innerText = item.category || 'Uncategorized';
+                              document.getElementById('specific-case-study').innerText = item.case_study || 'No details provided.';
                               document.getElementById('specific-view').classList.add('active');
                           }}
                           onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}

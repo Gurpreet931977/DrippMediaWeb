@@ -16,7 +16,7 @@ export async function GET() {
 
     const { data: graphics, error } = await supabase
       .from('portfolio_graphics')
-      .select('image_url, category')
+      .select('image_url, category, title, case_study')
       .eq('is_visible', true)
       .order('sort_order', { ascending: false });
 
