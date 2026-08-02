@@ -64,6 +64,8 @@ export default function Page() {
                     targetY: 0,
                     velX: 0,
                     velY: 0,
+                    zoom: 1,
+                    targetZoom: 1,
                     isDragging: false,
                     lastPointer: { x: 0, y: 0 }
                 };
@@ -94,8 +96,8 @@ export default function Page() {
                 const appliedGap = isMobile ? this.gap * 1.5 : this.gap;
 
                 const vw = window.innerWidth / 100;
-                this.itemSizePx = appliedSize * vw;
-                this.gapPx = appliedGap * vw;
+                this.itemSizePx = appliedSize * vw * this.state.zoom;
+                this.gapPx = appliedGap * vw * this.state.zoom;
                 this.stepX = this.itemSizePx + this.gapPx;
                 this.stepY = this.itemSizePx + this.gapPx;
 
@@ -248,6 +250,22 @@ export default function Page() {
                         document.getElementById('specific-view').classList.add('active');
                     });
                 });
+                
+                // Zoom Controls
+                const zoomInBtn = document.getElementById('zoom-in-btn');
+                const zoomOutBtn = document.getElementById('zoom-out-btn');
+                if (zoomInBtn) {
+                    zoomInBtn.addEventListener('click', () => { 
+                        if (this.isListView) return;
+                        this.state.targetZoom = Math.min(2.5, this.state.targetZoom + 0.3); 
+                    });
+                }
+                if (zoomOutBtn) {
+                    zoomOutBtn.addEventListener('click', () => { 
+                        if (this.isListView) return;
+                        this.state.targetZoom = Math.max(0.3, this.state.targetZoom - 0.3); 
+                    });
+                }
 
                 // Click to close via "X" button
                 document.getElementById('close-specific').addEventListener('click', () => {
@@ -386,6 +404,12 @@ export default function Page() {
                 // Smooth interpolation for dragging tightness
                 this.state.x += (this.state.targetX - this.state.x) * 0.2;
                 this.state.y += (this.state.targetY - this.state.y) * 0.2;
+
+                if (Math.abs(this.state.targetZoom - this.state.zoom) > 0.001) {
+                    this.state.zoom += (this.state.targetZoom - this.state.zoom) * 0.1;
+                    this.updateMetrics();
+                    this.recalcPositions();
+                }
 
                 const limitX = this.gridWidth / 2;
                 const limitY = this.gridHeight / 2;
@@ -1322,19 +1346,16 @@ export default function Page() {
         .specific-view-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            /* Lighter background for visibility */
+            background: radial-gradient(circle at center, rgba(10, 10, 10, 0.6) 0%, rgba(0, 0, 0, 0.95) 100%);
             z-index: 9000;
             display: flex;
             justify-content: center;
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.4s ease;
-            backdrop-filter: blur(8px);
-            /* Lighter blur to see the space/grid behind it */
-            cursor: pointer;
-            /* Indicate it's clickable to close */
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(25px);
+            cursor: zoom-out;
         }
 
         .specific-view-overlay.active {
@@ -1364,14 +1385,17 @@ export default function Page() {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            border-radius: 12px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
-            transform: scale(0.9);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 16px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.95), 0 0 60px rgba(235, 215, 63, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transform: scale(0.85) translateY(20px);
+            opacity: 0;
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
         }
 
         .specific-view-overlay.active .specific-view-img {
-            transform: scale(1);
+            transform: scale(1) translateY(0);
+            opacity: 1;
         }
         
         .specific-view-info {
@@ -1380,11 +1404,28 @@ export default function Page() {
             flex-direction: column;
             justify-content: center;
             opacity: 0;
-            transform: translateX(30px);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+            transform: translateX(40px);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
             max-width: 450px;
+            background: linear-gradient(135deg, rgba(25, 25, 25, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%);
+            backdrop-filter: blur(30px);
+            padding: 45px 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 20px rgba(255,255,255,0.02);
+            position: relative;
+            overflow: hidden;
         }
         
+        .specific-view-info::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(235, 215, 63, 0.5), transparent);
+            opacity: 0.5;
+        }
+
         .specific-view-overlay.active .specific-view-info {
             opacity: 1;
             transform: translateX(0);
@@ -1393,25 +1434,38 @@ export default function Page() {
         .specific-category {
             color: var(--brand-yellow);
             font-family: 'Panchang', sans-serif;
-            font-size: 0.85rem;
-            letter-spacing: 2px;
+            font-size: 0.75rem;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .specific-category::before {
+            content: '';
+            display: block;
+            width: 30px;
+            height: 1px;
+            background: var(--brand-yellow);
         }
         
         .specific-title {
-            color: #fff;
+            color: #ffffff;
             font-family: 'Panchang', sans-serif;
-            font-size: 2rem;
-            margin: 0 0 20px 0;
-            line-height: 1.2;
+            font-size: 2.2rem;
+            margin: 0 0 25px 0;
+            line-height: 1.1;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         
         .specific-case-study {
-            color: #aaa;
+            color: #b0b0b0;
             font-family: 'Clash Display', sans-serif;
-            font-size: 1.1rem;
-            line-height: 1.6;
+            font-size: 1.15rem;
+            line-height: 1.7;
+            font-weight: 400;
         }
         
         @media (max-width: 900px) {
@@ -1432,26 +1486,72 @@ export default function Page() {
         
         .infinite-cat-label {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(10, 10, 10, 0.7);
-            backdrop-filter: blur(10px);
+            bottom: 25px;
+            left: 25px;
+            background: linear-gradient(135deg, rgba(20, 20, 20, 0.85) 0%, rgba(5, 5, 5, 0.95) 100%);
+            backdrop-filter: blur(15px);
             color: #fff;
-            padding: 8px 16px;
-            border-radius: 30px;
+            padding: 10px 20px;
+            border-radius: 40px;
             font-family: 'Panchang', sans-serif;
             font-size: 0.7rem;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
             opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s ease;
+            transform: translateY(15px) scale(0.95);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6), 0 0 15px rgba(235, 215, 63, 0.05);
         }
         
         .canvas-item:hover .infinite-cat-label {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
+        }
+
+        .infinite-zoom-controls {
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+            display: flex;
+            gap: 5px;
+            z-index: 50;
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(15, 15, 15, 0.6);
+            backdrop-filter: blur(20px);
+            padding: 6px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7), inset 0 1px 10px rgba(255,255,255,0.03);
+        }
+        .zoom-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: 'Clash Display', sans-serif;
+            outline: none;
+        }
+        .zoom-btn:hover {
+            background: rgba(235, 215, 63, 0.15);
+            color: var(--brand-yellow);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(235, 215, 63, 0.2);
+        }
+        @media (max-width: 768px) {
+            .infinite-zoom-controls {
+                bottom: 30px;
+                right: 30px;
+            }
         }
 
         .close-specific-view {
@@ -1465,11 +1565,19 @@ export default function Page() {
             text-transform: uppercase;
             cursor: pointer;
             pointer-events: auto;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 24px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
 
         .close-specific-view:hover {
             color: var(--brand-yellow);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(235, 215, 63, 0.3);
+            transform: translateY(-2px);
         }
 
         /* Space Background Canvas */
@@ -1536,6 +1644,12 @@ export default function Page() {
   </div>
   <div className="cursor" id="cursor" />
   <div className="drag-instruction" id="drag-msg">{isGenz ? 'Swipe / Scroll to Explore' : 'Drag / Scroll to Explore'}</div>
+  
+  <div className="infinite-zoom-controls" id="infinite-zoom-controls" style={{ opacity: isListViewActive ? 0 : 1, pointerEvents: isListViewActive ? 'none' : 'auto' }}>
+      <button className="zoom-btn" id="zoom-out-btn" title="Zoom Out">−</button>
+      <button className="zoom-btn" id="zoom-in-btn" title="Zoom In">+</button>
+  </div>
+
   <div className="specific-view-overlay" id="specific-view">
     <div className="close-specific-view" id="close-specific">Close ×</div>
     <div className="specific-view-content-wrapper">
