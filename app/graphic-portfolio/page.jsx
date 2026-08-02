@@ -1,11 +1,15 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGenz } from '../contexts/GenzContext';
 
 export default function Page() {
   const { isGenz } = useGenz() || { isGenz: false };
+  const [graphics, setGraphics] = useState([]);
+  const [isListViewActive, setIsListViewActive] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(null);
+
   useEffect(() => {
     // Register GSAP
 
@@ -48,9 +52,8 @@ export default function Page() {
 
                 this.imageSize = parseFloat(options.imageSize) || 20;
                 this.numberOfImages = options.numberOfImages || 32;
-                this.imageRootPath = options.imageRootPath || 'graphics/posters';
                 this.gap = parseFloat(options.gap) || 0.5;
-                this.customUrls = options.customUrls || [];
+                this.customItems = options.customItems || [];
 
                 this.items = [];
 
@@ -114,17 +117,25 @@ export default function Page() {
                     };
 
                     // Map to custom URLs from database if available, looping if there are fewer URLs than total grid items
-                    if (this.customUrls && this.customUrls.length > 0) {
-                        img.src = this.customUrls[i % this.customUrls.length];
+                    if (this.customItems && this.customItems.length > 0) {
+                        const sourceItem = this.customItems[i % this.customItems.length];
+                        img.src = sourceItem.image_url;
+                        if (sourceItem.category) {
+                            el.dataset.category = sourceItem.category;
+                        }
                     } else {
-                        // Map to sequentially numbered images as requested
-                        img.src = `${this.imageRootPath}/img${i + 1}.jpg`;
+                        // Use inline SVG placeholder to completely avoid network spam and infinite loading
+                        img.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23222'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='20' fill='%23666'%3EPlaceholder%3C/text%3E%3C/svg%3E`;
+                        setTimeout(() => {
+                            el.classList.remove('is-loading');
+                            img.classList.add('loaded');
+                        }, 50);
                     }
 
-                    // Smart Fallback placeholder while user organizes their local photos
+                    // Smart Fallback placeholder
                     img.onerror = () => {
                         img.onerror = null; // Prevent infinite loop
-                        img.src = `https://picsum.photos/seed/${i + 15}/400/400`; // Fast lightweight load
+                        img.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='20' fill='%23999'%3EImage Error%3C/text%3E%3C/svg%3E`; 
                     };
 
                     el.appendChild(img);
@@ -312,10 +323,9 @@ export default function Page() {
 
                             gsap.ticker.remove(this.renderBound); // stop render loop
 
-                            // Remove inline transform translations used for 2D parallax
-                            this.items.forEach(item => {
-                                gsap.set(item.el, { clearProps: "transform,x,y,rotationX,rotationY" });
-                            });
+                            // Tell React to show the category folder view
+                            setIsListViewActive(true);
+                            setActiveCategory(null);
                         } else {
                             showcase.classList.remove('list-view-mode');
                             showcase.style.overflowY = 'hidden';
@@ -324,6 +334,8 @@ export default function Page() {
                             if (resetHelperNode2) resetHelperNode2.classList.remove('hidden');
                             if (spWrapper) spWrapper.style.display = 'block';
                             if (listViewHelperText) listViewHelperText.innerText = 'List View';
+
+                            setIsListViewActive(false);
 
                             // Snap to original state before turning renderer back on to prevent jumping
                             this.state.x = 0;
@@ -453,13 +465,14 @@ export default function Page() {
 
         // --- DEPLOY INSTANCE ---
         async function fetchGraphicsAndInit() {
-            let fetchedUrls = [];
+            let fetchedItems = [];
             try {
                 const res = await fetch('/api/graphics');
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.length > 0) {
-                        fetchedUrls = data.map(item => item.image_url);
+                        fetchedItems = data;
+                        setGraphics(data);
                     }
                 }
             } catch (err) {
@@ -468,10 +481,9 @@ export default function Page() {
 
             const graphicCanvas = new InfiniteCanvas('canvas-container', {
                 imageSize: '20',       // 20vw sizing base
-                numberOfImages: 400,   // Massive grid of 400 elements to cover all empty bounds
-                imageRootPath: 'images/custom', // Exact path matching the user request
+                numberOfImages: fetchedItems.length > 0 ? (fetchedItems.length < 32 ? 64 : 200) : 64, // Scale grid down to avoid lag if few items
                 gap: '0.5',            // Minimal 0.5vw gap so images are nearly touching
-                customUrls: fetchedUrls // Dynamically loaded from Supabase
+                customItems: fetchedItems // Dynamically loaded from Supabase
             });
         }
         
@@ -895,7 +907,7 @@ export default function Page() {
         .canvas-item img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             pointer-events: none;
             transition: transform 0.5s ease, opacity 0.5s ease;
             opacity: 0;
@@ -1423,9 +1435,73 @@ export default function Page() {
   </div>
   {/* Drop-in wrapper mimicking user's React implementation */}
   <div id="portfolio-showcase">
-    <div className="infinite-canvas" id="canvas-container">
+    <div className="infinite-canvas" id="canvas-container" style={{ display: isListViewActive ? 'none' : 'block' }}>
       {/* Items injected by JS */}
     </div>
+    
+    {isListViewActive && (
+      <div className="react-list-view-container" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflowY: 'auto', padding: '120px 5vw', zIndex: 10, background: '#0a0a0a' }}>
+          {activeCategory === null ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
+                  {Array.from(new Set(graphics.map(g => g.category || 'Uncategorized'))).map(cat => (
+                      <div key={cat} onClick={() => setActiveCategory(cat)} className="category-folder hover-pop-btn" style={{
+                          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '40px 30px', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px'
+                      }}
+                      onMouseOver={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)';
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                          e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.3)';
+                          e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.4), 0 0 20px rgba(235, 215, 63, 0.1)';
+                      }}
+                      onMouseOut={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                          e.currentTarget.style.boxShadow = 'none';
+                      }}
+                      >
+                          <div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.2) 0%, rgba(212, 188, 28, 0.05) 100%)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(235, 215, 63, 0.2)' }}>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ebd73f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                          </div>
+                          <h3 style={{ fontSize: '1.2rem', margin: 0, color: '#fff', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'Panchang, sans-serif' }}>{cat}</h3>
+                          <span style={{ color: '#888', fontSize: '0.85rem', fontFamily: 'Clash Display, sans-serif' }}>{graphics.filter(g => (g.category || 'Uncategorized') === cat).length} items</span>
+                      </div>
+                  ))}
+              </div>
+          ) : (
+              <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '40px' }}>
+                      <button onClick={() => setActiveCategory(null)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px 24px', borderRadius: '100px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.3s ease', fontFamily: 'Clash Display, sans-serif' }}
+                      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                      onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                      >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                          Back to Folders
+                      </button>
+                      <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#ebd73f', letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'Panchang, sans-serif' }}>{activeCategory}</h2>
+                  </div>
+                  <div style={{ columnCount: 3, columnGap: '20px' }}>
+                      {graphics.filter(g => (g.category || 'Uncategorized') === activeCategory).map((item, idx) => (
+                          <div key={idx} style={{ marginBottom: '20px', breakInside: 'avoid', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: '#111', cursor: 'zoom-in', transition: 'transform 0.3s ease' }}
+                          onClick={() => {
+                              document.getElementById('specific-img').src = item.image_url;
+                              document.getElementById('specific-view').classList.add('active');
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                          >
+                              <img src={item.image_url} alt="graphic" style={{ width: '100%', display: 'block', objectFit: 'contain' }} />
+                          </div>
+                      ))}
+                      <style dangerouslySetInnerHTML={{ __html: `
+                          @media (max-width: 900px) { .react-list-view-container > div > div:last-child { column-count: 2 !important; } }
+                          @media (max-width: 500px) { .react-list-view-container > div > div:last-child { column-count: 1 !important; } }
+                      `}} />
+                  </div>
+              </div>
+          )}
+      </div>
+    )}
   </div>
 </div>
 

@@ -354,15 +354,15 @@ export default function ComingSoon() {
         let speedMult;
         if (!isMobileCanvas) {
            // PC version: slower speed to make game more manageable (cap at 3.0)
-           speedMult = Math.min(3.0, 1.1 + Math.log10(1 + scoreRef.current / 200) * 0.45); 
+           speedMult = Math.min(3.0, 0.6 + Math.log10(1 + scoreRef.current / 500) * 0.35); 
         } else {
-           speedMult = Math.min(3.0, 1 + Math.log10(1 + scoreRef.current / 300) * 0.4); 
+           speedMult = Math.min(3.0, 0.5 + Math.log10(1 + scoreRef.current / 600) * 0.3); 
         }
-        const mobileSpeedMult = isMobileCanvas ? 0.9 : 1.0;
+        const mobileSpeedMult = isMobileCanvas ? 0.85 : 1.0;
         
-        // Randomise speed and gravity more broadly
-        this.vy = (1.0 + Math.random() * 3.5) * speedMult * mobileSpeedMult; 
-        this.gravity = (0.005 + Math.random() * 0.02) * speedMult * mobileSpeedMult; 
+        // Randomise speed and gravity more broadly but slower initial
+        this.vy = (0.8 + Math.random() * 2.0) * speedMult * mobileSpeedMult; 
+        this.gravity = (0.003 + Math.random() * 0.01) * speedMult * mobileSpeedMult; 
         
         this.radius = 2 + Math.random() * 2; 
         this.length = this.vy * 3; // Make trail slightly longer
@@ -1255,12 +1255,12 @@ export default function ComingSoon() {
       
       if (activeGameRef.current === 'dripp') {
         // Logarithmic intensity curve so it scales gently over time
-        let baseIntensity = 0.025; 
-        let scaling = Math.log10(1 + scoreRef.current / 300) * 0.1;
+        let baseIntensity = 0.015; 
+        let scaling = Math.log10(1 + scoreRef.current / 600) * 0.08;
         
         if (!isMobileCanvas) {
-           baseIntensity = 0.04;
-           scaling = Math.log10(1 + scoreRef.current / 150) * 0.15;
+           baseIntensity = 0.025;
+           scaling = Math.log10(1 + scoreRef.current / 300) * 0.1;
         }
         
         const rainIntensity = Math.min(0.25, baseIntensity + scaling);

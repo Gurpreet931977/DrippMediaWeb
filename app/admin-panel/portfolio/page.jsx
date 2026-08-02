@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2, BookOpen, Info } from 'lucide-react';
+import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2, BookOpen, Info, Crop } from 'lucide-react';
 import styles from '../admin.module.css';
+import ImageEditorModal from './ImageEditorModal';
 
 const TABS = {
   REELS: 'reels',
@@ -36,6 +37,10 @@ export default function PortfolioManager() {
   const [uploadPopup, setUploadPopup] = useState({ show: false, type: '', message: '' });
   const [editPopup, setEditPopup] = useState({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
   const [fileSizes, setFileSizes] = useState({});
+  const [showCustomGraphicCategory, setShowCustomGraphicCategory] = useState(false);
+  const [editorConfig, setEditorConfig] = useState({ show: false, item: null });
+  const graphicCategories = Array.from(new Set(items.filter(i => i.category).map(i => i.category)));
+  if (graphicCategories.length === 0) graphicCategories.push('Logo Design', 'Poster Design', 'Thumbnail Design');
 
   const generateFilmstrip = async (videoUrl) => {
     setEditPopup(prev => ({ ...prev, generatingFilmstrip: true, filmstrip: [] }));
@@ -208,6 +213,64 @@ export default function PortfolioManager() {
       setSelectedFile(e.target.files[0]);
     }
   };
+
+    // Helper to upload a Blob to R2 and return the URL
+    const uploadBlobToR2 = async (blob, folder) => {
+        // Get Presigned URL
+        const presignRes = await fetch('/api/admin/portfolio/upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: blob.name,
+            contentType: blob.type,
+            folder: folder
+          })
+        });
+
+        if (!presignRes.ok) throw new Error('Failed to get upload URL');
+        const { presignedUrl, publicUrl } = await presignRes.json();
+
+        // Upload to Cloudflare R2
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', presignedUrl, true);
+          xhr.setRequestHeader('Content-Type', blob.type);
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error('Upload to R2 failed'));
+          };
+          xhr.onerror = () => reject(new Error('Network error during upload'));
+          xhr.send(blob);
+        });
+
+        return publicUrl;
+    };
+
+    const handleSaveEditedImage = async (blob) => {
+        if (!editorConfig.item) return;
+        setUploadPopup({ show: true, type: 'uploading', message: 'Saving cropped image...' });
+        try {
+            const publicUrl = await uploadBlobToR2(blob, 'Graphics');
+            
+            const res = await fetch('/api/admin/portfolio/manage/graphics', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: editorConfig.item.id, image_url: publicUrl })
+            });
+
+            if (!res.ok) throw new Error('Failed to update image in database');
+            
+            // Refresh
+            fetchItems();
+            setUploadPopup({ show: true, type: 'success', message: 'Image updated successfully!' });
+        } catch (err) {
+            console.error('Save edited image failed:', err);
+            setUploadPopup({ show: true, type: 'error', message: err.message });
+        } finally {
+            setTimeout(() => setUploadPopup({ show: false, type: '', message: '' }), 3000);
+            setEditorConfig({ show: false, item: null });
+        }
+    };
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -386,6 +449,7 @@ export default function PortfolioManager() {
       } else if (activeTab === TABS.GRAPHICS) {
         payload = {
           image_url: publicUrl,
+          category: formData.category || graphicCategories[0],
           sort_order: items.length > 0 ? items[0].sort_order + 1 : 1
         };
       } else if (activeTab === TABS.LONG_FORM) {
@@ -1154,15 +1218,17 @@ export default function PortfolioManager() {
 
                   {editPopup.field === 'details' ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '35px' }}>
-                          <div>
-                              <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>{activeTab === TABS.LONG_FORM ? 'Title' : 'Description / Caption'}</label>
-                              <input 
-                                type="text" 
-                                style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
-                                value={editPopup.value.title || ''} 
-                                onChange={e => setEditPopup({...editPopup, value: {...editPopup.value, title: e.target.value}})} 
-                              />
-                          </div>
+                          {activeTab !== TABS.GRAPHICS && (
+                              <div>
+                                  <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>{activeTab === TABS.LONG_FORM ? 'Title' : 'Description / Caption'}</label>
+                                  <input 
+                                    type="text" 
+                                    style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
+                                    value={editPopup.value.title || ''} 
+                                    onChange={e => setEditPopup({...editPopup, value: {...editPopup.value, title: e.target.value}})} 
+                                  />
+                              </div>
+                          )}
                           
                           {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) && (
                               <div>
@@ -1187,6 +1253,19 @@ export default function PortfolioManager() {
                                           );
                                       })}
                                   </div>
+                              </div>
+                          )}
+
+                          {activeTab === TABS.GRAPHICS && (
+                              <div>
+                                  <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>Category</label>
+                                  <input 
+                                    type="text" 
+                                    placeholder="e.g. Logo Design"
+                                    style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
+                                    value={editPopup.value.category || ''} 
+                                    onChange={e => setEditPopup({...editPopup, value: {...editPopup.value, category: e.target.value}})} 
+                                  />
                               </div>
                           )}
 
@@ -1461,10 +1540,10 @@ export default function PortfolioManager() {
                           if (editPopup.field === 'details') {
                              if (activeTab === TABS.LONG_FORM) {
                                  updateBody.title = editPopup.value.title.trim();
-                             } else {
+                             } else if (activeTab === TABS.REELS) {
                                  updateBody.description = editPopup.value.title.trim();
                              }
-                             if (activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) {
+                             if (activeTab === TABS.REELS || activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) {
                                  updateBody.category = editPopup.value.category;
                              }
                              if (activeTab === TABS.REELS) {
@@ -1618,6 +1697,79 @@ export default function PortfolioManager() {
                             );
                         })}
                     </div>
+                </div>
+            )}
+
+            {activeTab === TABS.GRAPHICS && (
+                <div className="input-group" style={{ marginBottom: '24px' }}>
+                    <label style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        Category <span style={{ color: '#ebd73f', opacity: 0.8 }}>(Graphic Type)</span>
+                    </label>
+                    <div style={{ 
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '8px', 
+                        background: 'rgba(0,0,0,0.5)', 
+                        padding: '8px', 
+                        borderRadius: '20px', 
+                        border: '1px solid rgba(255,255,255,0.04)',
+                        boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.8)'
+                    }}>
+                        {graphicCategories.map((cat) => {
+                            const isActive = formData.category === cat || (!formData.category && graphicCategories[0] === cat);
+                            return (
+                                <button
+                                    type="button"
+                                    key={cat}
+                                    onClick={() => { setFormData({...formData, category: cat}); setShowCustomGraphicCategory(false); }}
+                                    style={{
+                                        flex: '1 1 auto',
+                                        position: 'relative',
+                                        padding: '12px 16px',
+                                        borderRadius: '16px',
+                                        background: isActive ? 'linear-gradient(145deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)' : 'transparent',
+                                        border: `1px solid ${isActive ? 'rgba(235, 215, 63, 0.3)' : 'transparent'}`,
+                                        color: isActive ? '#ebd73f' : '#666',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                        fontFamily: 'Clash Display, sans-serif',
+                                        fontWeight: isActive ? '600' : '500',
+                                        fontSize: '0.95rem',
+                                        letterSpacing: '0.5px'
+                                    }}
+                                >
+                                    {cat}
+                                </button>
+                            );
+                        })}
+                        <button
+                            type="button"
+                            onClick={() => setShowCustomGraphicCategory(true)}
+                            style={{
+                                flex: '1 1 auto',
+                                padding: '12px 16px',
+                                borderRadius: '16px',
+                                background: showCustomGraphicCategory ? 'rgba(255,255,255,0.05)' : 'transparent',
+                                border: '1px dashed rgba(255,255,255,0.2)',
+                                color: '#aaa',
+                                cursor: 'pointer',
+                                fontFamily: 'Clash Display, sans-serif',
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            + Add Custom
+                        </button>
+                    </div>
+                    {showCustomGraphicCategory && (
+                        <input 
+                            type="text"
+                            placeholder="Type new category..."
+                            value={formData.category && !graphicCategories.includes(formData.category) ? formData.category : ''}
+                            onChange={(e) => setFormData({...formData, category: e.target.value})}
+                            style={{ marginTop: '12px', width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
+                            autoFocus
+                        />
+                    )}
                 </div>
             )}
             
@@ -1793,27 +1945,36 @@ export default function PortfolioManager() {
                                     style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '250px' }}
                                 >
                                     {activeTab === TABS.REELS ? item.description || 'Reel Video' : ''}
-                                    {activeTab === TABS.GRAPHICS ? 'Graphic Design' : ''}
+                                    {activeTab === TABS.GRAPHICS ? (item.category ? `Graphic: ${item.category}` : 'Graphic Design') : ''}
                                     {activeTab === TABS.LONG_FORM ? item.title : ''}
                                 </span>
                                 
                                 {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && (
                                     <>
-                                        {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS) && (
+                                        <button 
+                                            onClick={() => openEditPopup(item.id, 'details', {
+                                                title: activeTab === TABS.LONG_FORM ? (item.title || '') : (item.description || ''),
+                                                category: item.category || (activeTab === TABS.GRAPHICS ? graphicCategories[0] : 'Both'),
+                                                case_study: item.case_study || ''
+                                            })}
+                                            style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '8px', cursor: 'pointer', color: '#ebd73f', padding: '8px', display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'all 0.2s ease' }}
+                                            title="Edit Details"
+                                            className="hover-pop-btn"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        
+                                        {activeTab === TABS.GRAPHICS && (
                                             <button 
-                                                onClick={() => openEditPopup(item.id, 'details', {
-                                                    title: activeTab === TABS.LONG_FORM ? (item.title || '') : (item.description || ''),
-                                                    category: item.category || 'Both',
-                                                    case_study: item.case_study || ''
-                                                })}
+                                                onClick={() => setEditorConfig({ show: true, item: item })}
                                                 style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '8px', cursor: 'pointer', color: '#ebd73f', padding: '8px', display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'all 0.2s ease' }}
-                                                title="Edit Details"
+                                                title="Crop & Edit Image"
                                                 className="hover-pop-btn"
                                             >
-                                                <Edit2 size={16} />
+                                                <Crop size={16} />
                                             </button>
                                         )}
-                                        
+
                                         {activeTab === TABS.REELS && (
                                             <button 
                                                 onClick={() => {
@@ -1896,6 +2057,14 @@ export default function PortfolioManager() {
                 ))}
             </div>
         )}
+            {/* Image Editor Modal */}
+            <ImageEditorModal 
+                isOpen={editorConfig.show} 
+                onClose={() => setEditorConfig({ show: false, item: null })} 
+                imageUrl={editorConfig.item?.image_url} 
+                onSave={handleSaveEditedImage} 
+            />
+            
       </div>
 
     </div>
