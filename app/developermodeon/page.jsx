@@ -8,8 +8,10 @@ import Link from "next/link";
 import Preloader from "../components/Preloader";
 import ProfileWidget from "../components/ProfileWidget";
 import AuthModal from "../components/AuthModal";
+import { useGenz } from '../contexts/GenzContext';
 
 export default function Page() {
+  const { isGenz } = useGenz() || { isGenz: false };
   const [showAuthModal, setShowAuthModal] = useState(false);
   
   useEffect(() => {
@@ -2175,16 +2177,16 @@ export default function Page() {
       <a href="#">DRIPP</a>
     </div>
     <ul className="nav-links">
-      <li><a href="#work" className="nav-link">Work</a></li>
-      <li><a href="#services" className="nav-link">Services</a></li>
-      <li><a href="#founder-pin-section" className="nav-link">About</a></li>
+      <li><a href="#work" className="nav-link">{isGenz ? 'Lore' : 'Work'}</a></li>
+      <li><a href="#services" className="nav-link">{isGenz ? 'Vibes' : 'Services'}</a></li>
+      <li><a href="#founder-pin-section" className="nav-link">{isGenz ? 'Tea' : 'About'}</a></li>
       <li style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         <div className="c-nav-group">
           <a href="#community" className="c-nav-btn c-community" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `document.getElementById('community').scrollIntoView({behavior: 'smooth'})`, target: event.currentTarget, originalEvent: event } }))}>
-            <span className="c-txt-wrap"><span className="c-txt" data-text="Community">Community</span></span>
+            <span className="c-txt-wrap"><span className="c-txt" data-text={isGenz ? 'Family' : 'Community'}>{isGenz ? 'Family' : 'Community'}</span></span>
           </a>
           <a href="#contact" className="c-nav-btn c-talk" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `document.getElementById('contact').scrollIntoView({behavior: 'smooth'})`, target: event.currentTarget, originalEvent: event } }))}>
-            <span className="c-txt-wrap"><span className="c-txt" data-text="Let's Talk">Let's Talk</span></span>
+            <span className="c-txt-wrap"><span className="c-txt" data-text={isGenz ? 'Plug It' : "Let's Talk"}>{isGenz ? 'Plug It' : "Let's Talk"}</span></span>
             <svg className="c-arrow" viewBox="0 0 24 24">
               <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -2237,7 +2239,7 @@ export default function Page() {
     <div className="velocity-fill" />
   </div>
   <div className="scroll-prompt">
-    <div className="scroll-text">Keep Scrolling</div>
+    <div className="scroll-text">{isGenz ? 'Doomscroll' : 'Keep Scrolling'}</div>
     <div className="scroll-line" />
   </div>
   <canvas id="maze-canvas" />
@@ -2247,13 +2249,12 @@ export default function Page() {
       <span className="word" id="word2">MEDIA</span>
     </h1>
     <div className="hero-sub tooltip-container">
-      We are a creative agency
+      {isGenz ? 'We cook aesthetics' : 'We are a creative agency'}
       <div className="creative-tooltip">
         <div className="tooltip-sparkle s1" />
         <div className="tooltip-sparkle s2" />
         <div className="tooltip-sparkle s3" />
-        Think of us as a team of artists, builders, and storytellers who make cool things for the internet and
-        beyond!
+        {isGenz ? 'Think of us as a team of tryhards who cook 10/10 vibes for the timeline.' : 'Think of us as a team of artists, builders, and storytellers who make cool things for the internet and beyond!'}
       </div>
     </div>
   </section>
