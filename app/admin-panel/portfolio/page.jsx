@@ -1910,10 +1910,47 @@ export default function PortfolioManager() {
                  </div>
             )}
             
-            {activeTab === TABS.REELS && (
+            {(activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && (
                  <div className="input-group" style={{ marginBottom: '24px' }}>
-                     <label style={{ fontFamily: 'Clash Display, sans-serif' }}>Premium Case Study</label>
-                     <textarea placeholder="Discuss cinematography, editing, pacing, or transformation..." rows="4" value={formData.case_study} onChange={(e) => setFormData({...formData, case_study: e.target.value})} style={{ width: '100%', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '14px', color: '#fff', fontFamily: 'inherit', resize: 'vertical' }}></textarea>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <label style={{ margin: 0, fontFamily: 'Clash Display, sans-serif' }}>Premium Case Study</label>
+                        {activeTab === TABS.GRAPHICS && (
+                            <button type="button" onClick={() => {
+                                if (window.dispatchEvent) {
+                                    window.dispatchEvent(new CustomEvent('ORLO_GRAPHIC_ANALYZE'));
+                                }
+                            }} style={{ 
+                                background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', 
+                                border: '1px solid rgba(235, 215, 63, 0.4)', 
+                                borderRadius: '24px', 
+                                padding: '6px 14px', 
+                                fontFamily: 'Clash Display, sans-serif',
+                                fontSize: '0.85rem', 
+                                fontWeight: '600', 
+                                color: '#ebd73f', 
+                                cursor: 'pointer', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '8px',
+                                boxShadow: '0 4px 15px rgba(235, 215, 63, 0.15)',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                            }}
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 6px 20px rgba(235, 215, 63, 0.25)';
+                                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(235, 215, 63, 0.25) 0%, rgba(212, 188, 28, 0.1) 100%)';
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 4px 15px rgba(235, 215, 63, 0.15)';
+                                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)';
+                            }}
+                            >
+                                <Sparkles size={16} /> Ask Orlo
+                            </button>
+                        )}
+                     </div>
+                     <textarea placeholder={activeTab === TABS.GRAPHICS ? "Discuss design choices, colors, typography..." : "Discuss cinematography, editing, pacing, or transformation..."} rows="4" value={formData.case_study} onChange={(e) => setFormData({...formData, case_study: e.target.value})} style={{ width: '100%', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '14px', color: '#fff', fontFamily: 'inherit', resize: 'vertical' }}></textarea>
                  </div>
             )}
 

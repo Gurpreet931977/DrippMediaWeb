@@ -343,8 +343,24 @@ export default function OrloChat() {
       }
       handleVideoAnalysis(e);
     };
+
+    const handleGraphicAnalyzeTrigger = (e) => {
+      if (!isOpen) {
+        setIsOpen(true);
+        gsap.fromTo(chatRef.current, 
+          { opacity: 0, y: 80, scale: 0.85 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1.1, 0.5)' }
+        );
+      }
+      handleGraphicAnalysis(e);
+    };
+
     window.addEventListener('ORLO_VIDEO_ANALYZE', handleAnalyzeTrigger);
-    return () => window.removeEventListener('ORLO_VIDEO_ANALYZE', handleAnalyzeTrigger);
+    window.addEventListener('ORLO_GRAPHIC_ANALYZE', handleGraphicAnalyzeTrigger);
+    return () => {
+        window.removeEventListener('ORLO_VIDEO_ANALYZE', handleAnalyzeTrigger);
+        window.removeEventListener('ORLO_GRAPHIC_ANALYZE', handleGraphicAnalyzeTrigger);
+    };
   }, [isOpen, messages]); // need messages in deps or we use callback setter
 
 
@@ -455,6 +471,90 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
          setTimeout(() => setEmotion('idle'), 3000);
      } catch (e) {
          setMessages(prev => [...prev, { role: 'ai', text: "Error analyzing video: " + e.message }]);
+         setEmotion('disappointed');
+         setTimeout(() => setEmotion('idle'), 4000);
+     } finally {
+         setIsTyping(false);
+     }
+  };
+
+  const handleGraphicAnalysis = async (e) => {
+     let imageUrl;
+     let isExternal = false;
+     
+     if (e && e.detail && e.detail.imageUrl) {
+         imageUrl = e.detail.imageUrl;
+         isExternal = true;
+     } else {
+         const file = window.portfolioFile;
+         if (!file) {
+             setMessages(prev => [...prev, { role: 'ai', text: "I can't find an uploaded graphic to analyze. Please drop one into the upload zone first!" }]);
+             return;
+         }
+         imageUrl = URL.createObjectURL(file);
+     }
+     
+     setMessages(prev => [...prev, { role: 'ai', text: "Analyzing graphic design details... preparing premium case study..." }]);
+     setIsTyping(true);
+     setEmotion('thinking');
+     
+     try {
+         const img = new Image();
+         img.crossOrigin = 'anonymous';
+         img.src = isExternal ? `${imageUrl}?cb=${Date.now()}` : imageUrl;
+         
+         await new Promise((resolve, reject) => {
+             img.onload = () => resolve();
+             img.onerror = () => reject(new Error("Failed to load graphic for analysis"));
+         });
+         
+         const canvas = document.createElement('canvas');
+         const ctx = canvas.getContext('2d');
+         
+         const targetWidth = 800; // slightly higher res for graphic analysis
+         const scale = Math.min(1, targetWidth / img.width);
+         const targetHeight = Math.floor(img.height * scale);
+         canvas.width = Math.floor(img.width * scale);
+         canvas.height = targetHeight;
+         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+         
+         const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+         
+         if (!isExternal) {
+             URL.revokeObjectURL(imageUrl);
+         }
+         
+         const currentCategory = window.portfolioFormData?.category || 'Graphic Design';
+         const superPrompt = `
+You are the Lead Creative Director for Dripp Media, a premium creative agency. 
+Analyze this single graphic design (Category: "${currentCategory}") that we just produced.
+
+Write a premium 'case_study' from the creator's perspective. The case study should sell the transformation, explain the design choices (colors, typography, composition, visual hierarchy), and describe why they matter to the brand's premium feel or viewer psychology.
+- CRITICAL: Use simple, everyday conversational language. It should sound like a human talking to a client, not an academic paper.
+- DO NOT use hard grammar, complex vocabulary, or "SAT words" (e.g. avoid words like "juxtaposing", "high-octane", "engineered", "visceral").
+- STRICTLY DO NOT use em dashes (—) or en dashes (–).
+- DO NOT use emojis. 
+- DO NOT use basic marketing jargon. 
+Keep it under 100 words, simple but impactful.
+
+Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can put "Title" for title and "Desc" for description, the main focus is the case_study key. Do not include markdown formatting.
+         `.trim();
+
+         const res = await fetch('/api/admin/copilot/video-analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ frames: [base64], prompt: superPrompt, model: selectedModel })
+         });
+         
+         const data = await res.json();
+         if (!res.ok) throw new Error(data.error || data.message || 'Unknown API Error');
+         
+         window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data }));
+         setMessages(prev => [...prev, { role: 'ai', text: "Done! I've automatically written a premium case study for your graphic." }]);
+         setEmotion('success');
+         setTimeout(() => setEmotion('idle'), 3000);
+     } catch (e) {
+         setMessages(prev => [...prev, { role: 'ai', text: "Error analyzing graphic: " + e.message }]);
          setEmotion('disappointed');
          setTimeout(() => setEmotion('idle'), 4000);
      } finally {

@@ -133,12 +133,28 @@ export default function Page() {
                         if (sourceItem.title) el.dataset.title = sourceItem.title;
                         if (sourceItem.case_study) el.dataset.case_study = sourceItem.case_study;
                     } else {
-                        // Use inline SVG placeholder to completely avoid network spam and infinite loading
-                        img.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23222'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='20' fill='%23666'%3EPlaceholder%3C/text%3E%3C/svg%3E`;
-                        setTimeout(() => {
-                            el.classList.remove('is-loading');
-                            img.classList.add('loaded');
-                        }, 50);
+                        const dummyImages = [
+                            'https://images.unsplash.com/photo-1626544827763-d516dce335e2?w=800&q=80',
+                            'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80',
+                            'https://images.unsplash.com/photo-1558655146-d09347e92766?w=800&q=80',
+                            'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80',
+                            'https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=800&q=80',
+                            'https://images.unsplash.com/photo-1600132806370-bf17e65e942f?w=800&q=80',
+                            'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800&q=80',
+                            'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&q=80',
+                            'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=800&q=80',
+                            'https://images.unsplash.com/photo-1574169208507-84376144848b?w=800&q=80'
+                        ];
+                        img.src = dummyImages[i % dummyImages.length];
+                        
+                        el.dataset.category = 'Concept Art';
+                        const catLabel = document.createElement('div');
+                        catLabel.className = 'infinite-cat-label';
+                        catLabel.innerText = 'Concept Art';
+                        el.appendChild(catLabel);
+                        
+                        el.dataset.title = 'Placeholder Project';
+                        el.dataset.case_study = 'This is a premium placeholder image because no graphics were found in the database. Add some graphics in the Admin Panel!';
                     }
 
                     // Smart Fallback placeholder
