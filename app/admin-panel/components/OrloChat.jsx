@@ -1085,6 +1085,40 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           background: rgba(235, 215, 63, 0.6);
         }
 
+        .send-btn {
+          background: rgba(255,255,255,0.05);
+          border: none;
+          color: #555;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          cursor: default;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 6px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .send-btn.active {
+          background: linear-gradient(135deg, rgba(235, 215, 63, 0.9), rgba(212, 188, 28, 0.95));
+          color: #000;
+          cursor: pointer;
+          box-shadow: 0 4px 15px rgba(235, 215, 63, 0.3), inset 0 2px 5px rgba(255,255,255,0.2);
+        }
+        .send-btn.active:hover {
+          transform: scale(1.08);
+          box-shadow: 0 6px 20px rgba(235, 215, 63, 0.5), inset 0 2px 5px rgba(255,255,255,0.3);
+        }
+        .send-btn svg {
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .send-btn.active svg {
+          fill: #000;
+        }
+        .send-btn.active:hover svg {
+          transform: translate(2px, -2px) scale(1.1);
+        }
+
         .typing-indicator {
           display: flex;
           gap: 6px;
@@ -1231,17 +1265,17 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
             )}
             <div ref={messagesEndRef} />
           </div>
-          {showScrollDown && (
-            <button 
-                type="button"
-                onClick={scrollToBottom} 
-                style={{ position: 'absolute', bottom: '80px', right: '20px', background: 'rgba(235, 215, 63, 0.9)', color: '#000', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.5)', transition: 'all 0.3s' }}
-            >
-                <ArrowDown size={18} />
-            </button>
-          )}
 
-          <form className="chat-input-area" onSubmit={handleSubmit}>
+          <form className="chat-input-area" onSubmit={handleSubmit} style={{ position: 'relative' }}>
+            {showScrollDown && (
+              <button 
+                  type="button"
+                  onClick={scrollToBottom} 
+                  style={{ position: 'absolute', top: '-45px', right: '20px', background: 'rgba(235, 215, 63, 0.9)', color: '#000', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.5)', transition: 'all 0.3s' }}
+              >
+                  <ArrowDown size={18} />
+              </button>
+            )}
             <div className="chat-input-wrapper">
               <div className="mic-btn-container">
                 {isListening && <div className="mic-waves"></div>}
@@ -1302,21 +1336,8 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
               />
               <button 
                 type="submit" 
+                className={`send-btn ${input.trim() ? 'active' : ''}`}
                 disabled={!input.trim() || isTyping}
-                style={{
-                  background: input.trim() ? 'linear-gradient(135deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.1))' : 'transparent',
-                  border: input.trim() ? '1px solid rgba(235, 215, 63, 0.4)' : '1px solid transparent',
-                  color: input.trim() ? '#ebd73f' : '#555',
-                  borderRadius: '50%',
-                  width: '40px',
-                  height: '40px',
-                  cursor: input.trim() ? 'pointer' : 'default',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: '6px',
-                  transition: 'all 0.3s ease'
-                }}
               >
                 <Send size={18} />
               </button>
