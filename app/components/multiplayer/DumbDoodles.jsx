@@ -847,6 +847,7 @@ export default function DumbDoodles({ channel, isHost, players, playerName, play
     if (!isMyTurn || !isHost) {
       channel.send({ type: 'broadcast', event: 'select_word', payload: word });
       return;
+    }
     if (!isMyTurn || gameState.status !== 'choosing_word') return;
     const actualDrawTime = gameState.config.gameMode === 'Adult Party' ? 120 : gameState.config.drawTime;
     const newUsedWords = [...gameState.usedWords, word];
