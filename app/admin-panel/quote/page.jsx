@@ -1012,9 +1012,20 @@ export default function QuoteMaker() {
            </div>
         </div>
       )}
-      <div className={styles.header}>
-        <h1 className={styles.title}>Package Maker Pro</h1>
-        <p className={styles.subtitle}>Build customized, premium quotes and packages.</p>
+      <div className={styles.headerTop}>
+        <div>
+          <div className={styles.genzPill}>GEN-Z</div>
+          <h1 className={styles.titleModern}>PERSONAL <span className={styles.titleHighlight}>MARKETING</span> PLAN</h1>
+          <p className={styles.subtitleModern}>Design a personalized PMP for your clients</p>
+        </div>
+        <div className={styles.headerActions}>
+           <button onClick={generatePDF} className={styles.btnModernSecondary}>
+             <Download size={18} /> Export PDF
+           </button>
+           <button onClick={generateSecureLink} className={styles.btnModernPrimary}>
+             <Share2 size={18} /> SHARE PACKAGE
+           </button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
@@ -1063,129 +1074,57 @@ export default function QuoteMaker() {
           </div>
 
           {/* Section 1: Client Details */}
-          <div className={styles.card}>
-            <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileText size={20} /> Client Information
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <div className={styles.cardModern}>
+            <div className={styles.cardHeaderModern}>
+              <Package size={20} color="#ebd73f" />
+              <h3 className={styles.cardTitleModern}>Client Details</h3>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Client Name</label>
-                 <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="John Doe" className={styles.inputField}  />
+                 <label className={styles.inputLabelModern}>BRAND / CLIENT NAME</label>
+                 <input type="text" value={clientDetails.brandName || clientDetails.name} onChange={e => handleClientChange('brandName', e.target.value)} placeholder="e.g. Habivana Stays" className={styles.inputModern}  />
               </div>
               <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Brand Name</label>
-                 <input type="text" value={clientDetails.brandName} onChange={e => handleClientChange('brandName', e.target.value)} placeholder="Acme Corp" className={styles.inputField}  />
+                 <label className={styles.inputLabelModern}>PACKAGE MODALITY</label>
+                 <select value={packageType} onChange={e => setPackageType(e.target.value)} className={styles.inputModern}>
+                    <option value="project">Project Basis</option>
+                    <option value="monthly">Monthly Retainer</option>
+                 </select>
               </div>
-              <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Email Address</label>
-                 <input type="email" value={clientDetails.email} onChange={e => handleClientChange('email', e.target.value)} placeholder="john@acme.com" className={styles.inputField}  />
-              </div>
-              <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Mobile Number</label>
-                 <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="+1 555-0199" className={styles.inputField}  />
-              </div>
-              <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>GST Number (Optional)</label>
-                 <input type="text" value={clientDetails.gst} onChange={e => handleClientChange('gst', e.target.value)} placeholder="22AAAAA0000A1Z5" className={styles.inputField}  />
-              </div>
-              <div>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Date</label>
-                 <input type="date" value={clientDetails.date} onChange={e => handleClientChange('date', e.target.value)} className={styles.inputField}  />
+              <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '20px' }}>
+                <div style={{ flex: 1 }}>
+                   <label className={styles.inputLabelModern}>Email Address</label>
+                   <input type="email" value={clientDetails.email} onChange={e => handleClientChange('email', e.target.value)} placeholder="Contact email" className={styles.inputModern}  />
+                </div>
+                <div style={{ flex: 1 }}>
+                   <label className={styles.inputLabelModern}>Mobile Number</label>
+                   <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="Contact number" className={styles.inputModern}  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Section 2: Package Settings */}
-          <div className={styles.card}>
-            <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Package size={20} /> Package Configuration
-            </h3>
-            
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-              <div style={{ flex: 1 }}>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Quotation Number</label>
-                 <input type="text" value={quoteDetails.number} onChange={e => handleQuoteChange('number', e.target.value)} className={styles.inputField}  />
-              </div>
-              <div style={{ flex: 1 }}>
-                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Currency</label>
-                 <select value={quoteDetails.currency} onChange={e => handleQuoteChange('currency', e.target.value)} className={styles.inputField} >
-                    {allCurrencies.map(c => <option key={c.code} value={c.symbol}>{c.code} ({c.symbol})</option>)}
-                 </select>
-              </div>
+                    {/* Strategy / Concept Pitch */}
+          <div className={styles.cardModern}>
+            <div className={styles.cardHeaderModern}>
+              <Edit3 size={20} color="#ebd73f" />
+              <h3 className={styles.cardTitleModern}>Strategy / Concept Pitch</h3>
             </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label className={styles.label}>Modality</label>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => setPackageType('project')} className={styles.btn} style={{ flex: 1, borderColor: packageType === 'project' ? '#ebd73f' : 'rgba(255,255,255,0.1)', background: packageType === 'project' ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.05)', color: packageType === 'project' ? '#ebd73f' : 'white' }}>Project Basis</button>
-                <button onClick={() => setPackageType('monthly')} className={styles.btn} style={{ flex: 1, borderColor: packageType === 'monthly' ? '#ebd73f' : 'rgba(255,255,255,0.1)', background: packageType === 'monthly' ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.05)', color: packageType === 'monthly' ? '#ebd73f' : 'white' }}>Monthly / Retainer Basis</button>
-              </div>
-            </div>
-
-            {/* PMP TOGGLE */}
-            <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.2)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: includePMP ? '15px' : '0' }}>
-                <div>
-                  <h4 style={{ margin: '0 0 5px 0', color: '#ebd73f', fontSize: '0.95rem' }}>Personal Marketing Plan (PMP)</h4>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#888' }}>Attach a beautiful strategy pitch to your quote.</p>
-                </div>
-                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
-                  <input type="checkbox" checked={includePMP} onChange={e => {
-                    const checked = e.target.checked;
-                    setIncludePMP(checked);
-                    if (checked && !pdfPages.find(p => p.type === 'pmp')) {
-                      const newPages = [...pdfPages];
-                      newPages.splice(1, 0, { id: 'pmp_1', type: 'pmp', title: 'Marketing Strategy & Concept', hideHeading: false });
-                      setPdfPages(newPages);
-                    } else if (!checked) {
-                      setPdfPages(pdfPages.filter(p => p.type !== 'pmp'));
-                    }
-                  }} style={{ opacity: 0, width: 0, height: 0 }} />
-                  <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: includePMP ? '#ebd73f' : 'rgba(255,255,255,0.1)', transition: '.4s', borderRadius: '34px' }}>
-                    <span style={{ position: 'absolute', content: '""', height: '18px', width: '18px', left: includePMP ? '22px' : '3px', bottom: '3px', backgroundColor: includePMP ? '#000' : '#888', transition: '.4s', borderRadius: '50%' }} />
-                  </span>
-                </label>
-              </div>
-              
-              {includePMP && (
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Pitch Strategy / Concept Outline</label>
-                  <textarea 
-                    value={pmpStrategy} 
-                    onChange={e => setPmpStrategy(e.target.value)} 
-                    className={styles.inputField} 
-                    rows={4} 
-                    placeholder="e.g. A storytelling-led UGC campaign paired with aggressive Meta Ads boosting to maximize reach and drive high-intent leads..."
-                    style={{ resize: 'vertical' }} 
-                  />
-                </div>
-              )}
-            </div>
-
-            {packageType === 'project' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
-                <div>
-                   <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Project Duration (e.g. 4 Weeks)</label>
-                   <input type="text" value={quoteDetails.projectDuration} onChange={e => handleQuoteChange('projectDuration', e.target.value)} className={styles.inputField}  />
-                </div>
-                <div>
-                   <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Expected Delivery Date</label>
-                   <input type="date" value={quoteDetails.expectedDelivery} onChange={e => handleQuoteChange('expectedDelivery', e.target.value)} className={styles.inputField}  />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Creative Message / Quality Promise</label>
-              <textarea value={quoteDetails.message} onChange={e => handleQuoteChange('message', e.target.value)} className={styles.inputField} rows={4} style={{ resize: 'vertical' }} />
-            </div>
+            <textarea 
+              value={pmpStrategy} 
+              onChange={e => { setPmpStrategy(e.target.value); setIncludePMP(!!e.target.value.trim()); }} 
+              className={styles.inputModern} 
+              rows={4} 
+              placeholder="e.g. A storytelling UGC campaign targeting high-income demographics..."
+              style={{ resize: 'vertical' }} 
+            />
           </div>
 
           {/* Section 3: Services & Tiers */}
-          <div className={styles.card}>
+          <div className={styles.cardModern}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h3 style={{ margin: 0, color: '#ebd73f' }}>Services & Tiers</h3>
-                <button onClick={addTier} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem' }}>
+                <div className={styles.cardHeaderModern}><Layers size={20} color="#ebd73f" /><h3 className={styles.cardTitleModern}>Scope of Services</h3></div>
+                <button onClick={addTier} className={styles.addServiceBtn} style={{ padding: '5px 10px', fontSize: '0.8rem' }}>
                   <Plus size={14} /> Add Tier
                 </button>
             </div>
@@ -1194,13 +1133,13 @@ export default function QuoteMaker() {
               {packageTiers.map((tier, tierIndex) => (
                 <div key={tier.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                     <input type="text" value={tier.name} onChange={(e) => { const nt = [...packageTiers]; nt[tierIndex].name = e.target.value; setPackageTiers(nt); }} className={styles.inputField} style={{ fontSize: '1.2rem', fontWeight: 'bold', width: '300px', background: 'rgba(0,0,0,0.2)' }} />
+                     <input type="text" value={tier.name} onChange={(e) => { const nt = [...packageTiers]; nt[tierIndex].name = e.target.value; setPackageTiers(nt); }} className={styles.inputModern} style={{ fontSize: '1.2rem', fontWeight: 'bold', width: '300px', background: 'rgba(0,0,0,0.2)' }} />
                      {packageTiers.length > 1 && <button onClick={() => { const nt = [...packageTiers]; nt.splice(tierIndex, 1); setPackageTiers(nt); }} className={styles.btnDanger} style={{ padding: '5px 10px', fontSize: '0.8rem' }}><Trash2 size={14} /> Remove Tier</button>}
                   </div>
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     {tier.items.map((item, index) => (
-                      <div key={index} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                      <div key={index} className={styles.serviceItemRow}>
                         <div style={{ flex: 2 }}>
                           <input 
                              list="services-list"
@@ -1208,7 +1147,7 @@ export default function QuoteMaker() {
                              value={item.desc} 
                              onChange={(e) => handleItemChange(tierIndex, index, 'desc', e.target.value)}
                              placeholder="e.g. Website Development"
-                             className={styles.inputField}
+                             className={styles.inputModern}
                              style={{ padding: '8px 12px' }}
                           />
                         </div>
@@ -1219,7 +1158,7 @@ export default function QuoteMaker() {
                             value={item.qty} 
                             onChange={(e) => handleItemChange(tierIndex, index, 'qty', e.target.value)}
                             placeholder="1"
-                            className={styles.inputField}
+                            className={styles.inputModern}
                             style={{ padding: '8px 12px' }}
                           />
                         </div>
@@ -1230,14 +1169,14 @@ export default function QuoteMaker() {
                             value={item.rate} 
                             onChange={(e) => handleItemChange(tierIndex, index, 'rate', e.target.value)}
                             placeholder="0"
-                            className={styles.inputField}
+                            className={styles.inputModern}
                             style={{ padding: '8px 12px' }}
                           />
                         </div>
                         <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '100px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
                            <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toFixed(2)}
                         </div>
-                        <button onClick={() => removeItem(tierIndex, index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '5px', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity=1} onMouseOut={(e) => e.currentTarget.style.opacity=0.7}>
+                        <button onClick={() => removeItem(tierIndex, index)} className={styles.serviceItemDelete}>
                           <Trash2 size={18} />
                         </button>
                         <div style={{ flexBasis: '100%', marginTop: '10px' }}>
@@ -1245,7 +1184,7 @@ export default function QuoteMaker() {
                              value={item.details || ''} 
                              onChange={(e) => handleItemChange(tierIndex, index, 'details', e.target.value)}
                              placeholder="e.g. Includes 5 custom pages, responsive design, and 1 year of hosting..."
-                             className={styles.inputField}
+                             className={styles.inputModern}
                              style={{ padding: '8px 12px', fontSize: '0.9rem', width: '100%', minHeight: '60px' }}
                            />
                         </div>
@@ -1254,8 +1193,8 @@ export default function QuoteMaker() {
                   </div>
                   
                   <div style={{ marginTop: '15px' }}>
-                      <button onClick={() => addItem(tierIndex)} className={styles.btn} style={{ padding: '8px 15px', fontSize: '0.85rem' }}>
-                        <Plus size={14} /> Add Service to {tier.name}
+                      <button onClick={() => addItem(tierIndex)} className={styles.addServiceBtn} style={{ padding: '8px 15px', fontSize: '0.85rem' }}>
+                        + Add Service
                       </button>
                   </div>
                 </div>
@@ -1273,39 +1212,36 @@ export default function QuoteMaker() {
         {/* RIGHT COLUMN: TEMPLATES & ACTIONS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
            
-          {/* PACKAGE SUMMARY */}
-          <div className={styles.card} style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.05) 0%, rgba(20, 20, 20, 0.8) 100%)', borderColor: 'rgba(235, 215, 63, 0.2)' }}>
-            <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: '#ebd73f' }}>Package Summary</h3>
+                    {/* PACKAGE SUMMARY */}
+          <div className={styles.cardSummary}>
+            <h3 className={styles.summaryTitle}>Package Summary</h3>
             
-            <div style={{ marginBottom: '24px' }}>
-              <p className={styles.label} style={{ marginBottom: '8px' }}>Target Client</p>
-              <div style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{quoteDetails.client || 'Unnamed Client'}</div>
+            <div style={{ marginBottom: '25px' }}>
+              <span className={styles.inputLabelModern}>Target Client</span>
+              <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#fff', marginTop: '5px' }}>{clientDetails.brandName || clientDetails.name || 'Unnamed Client'}</div>
             </div>
 
-            <div style={{ marginBottom: '24px', padding: '20px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <p className={styles.label} style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileText size={16} /> Total Quoted
-              </p>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ebd73f' }}>
+            <div className={styles.summaryAmountBox}>
+              <span className={styles.summaryAmountLabel}>$ Total Budget Quoted</span>
+              <h2 className={styles.summaryAmountValue}>
                 {quoteDetails.currency}{total.toLocaleString()}
-              </div>
+              </h2>
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <p className={styles.label} style={{ marginBottom: '16px' }}>Included Services</p>
-              {packageTiers.flatMap(t => t.items || []).length === 0 && !includePMP && <span style={{ color: '#666', fontSize: '0.9rem' }}>No services added yet.</span>}
+            <div>
+              <h4 className={styles.summarySectionTitle}>Included Services</h4>
               {includePMP && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.95rem', color: '#ebd73f', fontWeight: '500' }}>
-                  <span>✓ Personal Marketing Plan</span>
-                  <span style={{ color: '#888', fontWeight: 'normal', fontSize: '0.85rem' }}>INCLUDED</span>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryItemIncluded}>✓ Personal Marketing Plan</span>
+                  <span className={styles.summaryItemBadge}>INCLUDED</span>
                 </div>
               )}
               {packageTiers.map((tier, tIdx) => (
-                  <div key={tIdx} style={{ marginBottom: '15px' }}>
-                     {packageTiers.length > 1 && <div style={{ fontSize: '0.8rem', color: '#ebd73f', marginBottom: '5px' }}>{tier.name}</div>}
+                  <div key={tIdx}>
+                     {packageTiers.length > 1 && <div style={{ fontSize: '0.8rem', color: '#ebd73f', marginBottom: '8px', marginTop: '10px' }}>{tier.name}</div>}
                      {tier.items.map((s, i) => (
-                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.95rem', paddingLeft: packageTiers.length > 1 ? '10px' : '0' }}>
-                         <span style={{ color: '#ddd' }}>{s.qty}x {s.desc || 'Unnamed Service'}</span>
+                       <div key={i} className={styles.summaryItem}>
+                         <span>{s.qty}x {s.desc || 'Custom Strategy'}</span>
                          <span style={{ color: '#888' }}>{s.rate > 0 ? `${quoteDetails.currency}${s.rate}` : ''}</span>
                        </div>
                      ))}
@@ -1313,24 +1249,22 @@ export default function QuoteMaker() {
               ))}
             </div>
             
-            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-              <p style={{ fontSize: '0.85rem', color: '#888', textAlign: 'center', margin: 0 }}>
-                This is a {packageType === 'monthly' ? 'recurring monthly' : 'project / one-time'} package.
-              </p>
+            <div className={styles.summaryFooterText}>
+              This is a {packageType === 'monthly' ? 'recurring monthly' : 'project / one-time'} package.
             </div>
           </div>
 
-           <CurrencyConverter />
+          <CurrencyConverter />
 
            {/* Actions */}
            <div className={styles.card}>
-             <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Export & Share</h3>
+             <div style={{display: "none"}}><h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Export & Share</h3>
              <button onClick={generatePDF} className={styles.btnPrimary} style={{ width: '100%', padding: '12px', justifyContent: 'center', marginBottom: '15px' }}>
                <Download size={18} /> Download as PDF
              </button>
              <button onClick={generateSecureLink} className={styles.btn} style={{ width: '100%', padding: '12px', justifyContent: 'center' }}>
                <Lock size={18} /> Generate Secure Link
-             </button>
+             </button></div>
              
              {shareLink && (
                 <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '0.75rem' }}>

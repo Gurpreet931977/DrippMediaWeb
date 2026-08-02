@@ -990,10 +990,10 @@ export default function InvoiceMaker() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {conflicts[currentConflictIdx].type.startsWith('scalar') && (
                     <>
-                        <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                        <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className={styles.addServiceBtn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
                             Overwrite Current Value
                         </button>
-                        <button onClick={() => handleConflictResolution('append')} className={styles.btn}>
+                        <button onClick={() => handleConflictResolution('append')} className={styles.addServiceBtn}>
                             Append / Keep Both
                         </button>
                     </>
@@ -1001,10 +1001,10 @@ export default function InvoiceMaker() {
                 
                 {conflicts[currentConflictIdx].type === 'item_match_rate' && (
                     <>
-                        <button onClick={() => handleConflictResolution('merge')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                        <button onClick={() => handleConflictResolution('merge')} className={styles.addServiceBtn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
                             Merge (Add +{conflicts[currentConflictIdx].item.qty} Quantity)
                         </button>
-                        <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
+                        <button onClick={() => handleConflictResolution('add_new')} className={styles.addServiceBtn}>
                             Add as Separate Line Item
                         </button>
                     </>
@@ -1012,19 +1012,19 @@ export default function InvoiceMaker() {
                 
                 {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
                     <>
-                        <button onClick={() => handleConflictResolution('merge', 'new')} className={styles.btn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                        <button onClick={() => handleConflictResolution('merge', 'new')} className={styles.addServiceBtn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
                             Update Rate & Add Quantity
                         </button>
-                        <button onClick={() => handleConflictResolution('merge', 'old')} className={styles.btn}>
+                        <button onClick={() => handleConflictResolution('merge', 'old')} className={styles.addServiceBtn}>
                             Keep Old Rate & Add Quantity
                         </button>
-                        <button onClick={() => handleConflictResolution('add_new')} className={styles.btn}>
+                        <button onClick={() => handleConflictResolution('add_new')} className={styles.addServiceBtn}>
                             Add as Separate Line Item
                         </button>
                     </>
                 )}
 
-                <button onClick={() => handleConflictResolution('skip')} className={styles.btn} style={{ marginTop: '10px', borderColor: '#ff4d4d', color: '#ff4d4d' }}>
+                <button onClick={() => handleConflictResolution('skip')} className={styles.addServiceBtn} style={{ marginTop: '10px', borderColor: '#ff4d4d', color: '#ff4d4d' }}>
                     Skip / Ignore Pasted Value
                 </button>
             </div>
@@ -1036,9 +1036,20 @@ export default function InvoiceMaker() {
       , document.body)}
 
     
-      <div className={styles.header}>
-        <h1 className={styles.title}>{isGenz ? 'Receipts Pro' : 'Invoice Maker Pro'}</h1>
-        <p className={styles.subtitle}>{isGenz ? 'Drop receipts with payment links so you can get that bread.' : 'Generate premium, secure invoices with integrated payment codes.'}</p>
+      <div className={styles.headerTop}>
+        <div>
+          <div className={styles.genzPill}>{isGenz ? 'GEN-Z' : 'INVOICE'}</div>
+          <h1 className={styles.titleModern}>PREMIUM <span className={styles.titleHighlight}>INVOICE</span> MAKER</h1>
+          <p className={styles.subtitleModern}>{isGenz ? 'Drop receipts with payment links so you can get that bread.' : 'Generate premium, secure invoices with integrated payment codes.'}</p>
+        </div>
+        <div className={styles.headerActions}>
+           <button onClick={generatePDF} className={styles.btnModernSecondary}>
+             <Download size={18} /> Export PDF
+           </button>
+           <button onClick={generateSecureLink} className={styles.btnModernPrimary}>
+             <Share2 size={18} /> SHARE INVOICE
+           </button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
@@ -1058,7 +1069,7 @@ export default function InvoiceMaker() {
               value={smartText} 
               onChange={(e) => setSmartText(e.target.value)} 
               placeholder="e.g. Invoice for John Doe. Email: john@doe.com. Web Dev for $1500 and Hosting for $200."
-              className={styles.inputField} 
+              className={styles.inputModern} 
               rows={3} 
               style={{ resize: 'vertical', marginBottom: '15px' }} 
             />
@@ -1079,23 +1090,23 @@ export default function InvoiceMaker() {
               </button>
             </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-              <button onClick={handleCopyAllDetails} className={styles.btn} style={{ padding: '10px 20px', borderRadius: '8px', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+              <button onClick={handleCopyAllDetails} className={styles.addServiceBtn} style={{ padding: '10px 20px', borderRadius: '8px', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
                 <Copy size={18} /> Copy Form Details
               </button>
-              <button onClick={handlePasteAllDetails} className={styles.btn} style={{ padding: '10px 20px', borderRadius: '8px', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+              <button onClick={handlePasteAllDetails} className={styles.addServiceBtn} style={{ padding: '10px 20px', borderRadius: '8px', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
                 <FileText size={18} /> Paste Form Details
               </button>
             </div>
           </div>
 
           {/* Section 1: My Details (Defaults) */}
-          <div className={styles.card} style={{ borderLeft: '4px solid #ebd73f' }}>
+          <div className={styles.cardModern} style={{ borderLeft: '4px solid #ebd73f' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h3 style={{ color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <h3 className={styles.cardTitleModern}>
                   {myDetailsLocked ? <Lock size={20} /> : <Edit3 size={20} />} My Default Details
                 </h3>
                 {myDetailsLocked ? (
-                   <button onClick={() => setMyDetailsLocked(false)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.75rem' }}>Unlock to Edit</button>
+                   <button onClick={() => setMyDetailsLocked(false)} className={styles.addServiceBtn} style={{ padding: '5px 10px', fontSize: '0.75rem' }}>Unlock to Edit</button>
                 ) : (
                    <button onClick={saveMyDetails} className={styles.btnPrimary} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '5px' }}><Save size={14}/> Save Defaults</button>
                 )}
@@ -1104,7 +1115,7 @@ export default function InvoiceMaker() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', opacity: myDetailsLocked ? 0.6 : 1, transition: 'opacity 0.3s' }}>
               <div>
                  <label className={styles.label}>Company Name</label>
-                 <input type="text" value={myDetails.companyName} onChange={e => handleMyDetailsChange('companyName', e.target.value)} disabled={myDetailsLocked} className={styles.inputField} />
+                 <input type="text" value={myDetails.companyName} onChange={e => handleMyDetailsChange('companyName', e.target.value)} disabled={myDetailsLocked} className={styles.inputModern} />
               </div>
               <div>
                  <label className={styles.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1113,37 +1124,37 @@ export default function InvoiceMaker() {
                        <input type="checkbox" checked={includeGST} onChange={e => setIncludeGST(e.target.checked)} /> Include in Invoice
                     </label>
                  </label>
-                 <input type="text" value={myDetails.gst} onChange={e => handleMyDetailsChange('gst', e.target.value)} disabled={myDetailsLocked || !includeGST} className={styles.inputField} style={{ opacity: includeGST ? 1 : 0.5 }} />
+                 <input type="text" value={myDetails.gst} onChange={e => handleMyDetailsChange('gst', e.target.value)} disabled={myDetailsLocked || !includeGST} className={styles.inputModern} style={{ opacity: includeGST ? 1 : 0.5 }} />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                  <label className={styles.label}>Official Address</label>
-                 <textarea value={myDetails.address} onChange={e => handleMyDetailsChange('address', e.target.value)} disabled={myDetailsLocked} className={styles.inputField} rows={2} />
+                 <textarea value={myDetails.address} onChange={e => handleMyDetailsChange('address', e.target.value)} disabled={myDetailsLocked} className={styles.inputModern} rows={2} />
               </div>
               <div>
                  <label className={styles.label}>Email Address</label>
-                 <input type="email" value={myDetails.email} onChange={e => handleMyDetailsChange('email', e.target.value)} disabled={myDetailsLocked} className={styles.inputField} />
+                 <input type="email" value={myDetails.email} onChange={e => handleMyDetailsChange('email', e.target.value)} disabled={myDetailsLocked} className={styles.inputModern} />
               </div>
               <div>
                  <label className={styles.label}>Phone Number</label>
-                 <input type="text" value={myDetails.phone} onChange={e => handleMyDetailsChange('phone', e.target.value)} disabled={myDetailsLocked} className={styles.inputField} />
+                 <input type="text" value={myDetails.phone} onChange={e => handleMyDetailsChange('phone', e.target.value)} disabled={myDetailsLocked} className={styles.inputModern} />
               </div>
             </div>
           </div>
 
           {/* Section 2: Client & Invoice Info */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 className={styles.cardTitleModern}>
               <FileText size={20} /> Invoice & Client Info
             </h3>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginBottom: '20px' }}>
               <div>
                  <label className={styles.label}>Invoice Number</label>
-                 <input type="text" value={invoiceDetails.number} onChange={e => handleInvoiceChange('number', e.target.value)} className={styles.inputField} />
+                 <input type="text" value={invoiceDetails.number} onChange={e => handleInvoiceChange('number', e.target.value)} className={styles.inputModern} />
               </div>
               <div>
                  <label className={styles.label}>Currency</label>
-                 <select value={invoiceDetails.currency} onChange={e => setInvoiceDetails({...invoiceDetails, currency: e.target.value})} className={styles.inputField}>
+                 <select value={invoiceDetails.currency} onChange={e => setInvoiceDetails({...invoiceDetails, currency: e.target.value})} className={styles.inputModern}>
                     {allCurrencies.map(c => (
                         <option key={c.code} value={c.symbol}>{c.code} ({c.symbol})</option>
                     ))}
@@ -1151,34 +1162,34 @@ export default function InvoiceMaker() {
               </div>
               <div>
                  <label className={styles.label}>Date</label>
-                 <input type="date" value={invoiceDetails.date} onChange={e => handleInvoiceChange('date', e.target.value)} className={styles.inputField} />
+                 <input type="date" value={invoiceDetails.date} onChange={e => handleInvoiceChange('date', e.target.value)} className={styles.inputModern} />
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
               <div>
                  <label className={styles.label}>Client Name</label>
-                 <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="John Doe" className={styles.inputField} />
+                 <input type="text" value={clientDetails.name} onChange={e => handleClientChange('name', e.target.value)} placeholder="John Doe" className={styles.inputModern} />
               </div>
               <div>
                  <label className={styles.label}>Brand Name</label>
-                 <input type="text" value={clientDetails.brandName} onChange={e => handleClientChange('brandName', e.target.value)} placeholder="Acme Corp" className={styles.inputField} />
+                 <input type="text" value={clientDetails.brandName} onChange={e => handleClientChange('brandName', e.target.value)} placeholder="Acme Corp" className={styles.inputModern} />
               </div>
               <div>
                  <label className={styles.label}>Client Email</label>
-                 <input type="email" value={clientDetails.email} onChange={e => handleClientChange('email', e.target.value)} placeholder="john@acme.com" className={styles.inputField} />
+                 <input type="email" value={clientDetails.email} onChange={e => handleClientChange('email', e.target.value)} placeholder="john@acme.com" className={styles.inputModern} />
               </div>
               <div>
                  <label className={styles.label}>Client Mobile</label>
-                 <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="+1 555-0199" className={styles.inputField} />
+                 <input type="text" value={clientDetails.mobile} onChange={e => handleClientChange('mobile', e.target.value)} placeholder="+1 555-0199" className={styles.inputModern} />
               </div>
               <div>
                  <label className={styles.label}>GST Number (Optional)</label>
-                 <input type="text" value={clientDetails.gst} onChange={e => handleClientChange('gst', e.target.value)} placeholder="22AAAAA0000A1Z5" className={styles.inputField} />
+                 <input type="text" value={clientDetails.gst} onChange={e => handleClientChange('gst', e.target.value)} placeholder="22AAAAA0000A1Z5" className={styles.inputModern} />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                  <label className={styles.label}>Client Billing Address</label>
-                 <textarea value={clientDetails.address} onChange={e => handleClientChange('address', e.target.value)} placeholder="123 Corporate Blvd" className={styles.inputField} rows={2} />
+                 <textarea value={clientDetails.address} onChange={e => handleClientChange('address', e.target.value)} placeholder="123 Corporate Blvd" className={styles.inputModern} rows={2} />
               </div>
             </div>
           </div>
@@ -1197,7 +1208,7 @@ export default function InvoiceMaker() {
                          value={item.desc} 
                          onChange={(e) => handleItemChange(index, 'desc', e.target.value)}
                          placeholder="Item Title"
-                         className={styles.inputField}
+                         className={styles.inputModern}
                          onFocus={() => setActiveDropdown(index)}
                          onBlur={() => setTimeout(() => setActiveDropdown(null), 200)}
                          style={{ padding: '12px 40px 12px 15px', width: '100%', boxSizing: 'border-box' }}
@@ -1254,7 +1265,7 @@ export default function InvoiceMaker() {
                       value={item.qty} 
                       onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
                       placeholder="1"
-                      className={styles.inputField}
+                      className={styles.inputModern}
                       style={{ padding: '8px 12px' }}
                     />
                   </div>
@@ -1265,7 +1276,7 @@ export default function InvoiceMaker() {
                       value={item.rate} 
                       onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
                       placeholder="0"
-                      className={styles.inputField}
+                      className={styles.inputModern}
                       style={{ padding: '8px 12px' }}
                     />
                   </div>
@@ -1280,7 +1291,7 @@ export default function InvoiceMaker() {
                        value={item.details || ''} 
                        onChange={(e) => handleItemChange(index, 'details', e.target.value)}
                        placeholder="e.g. Includes 5 custom pages, responsive design, and 1 year of hosting..."
-                       className={styles.inputField}
+                       className={styles.inputModern}
                        style={{ padding: '8px 12px', fontSize: '0.9rem', width: '100%', minHeight: '60px' }}
                      />
                   </div>
@@ -1326,14 +1337,14 @@ export default function InvoiceMaker() {
 
            {/* Payment Methods */}
            <div className={styles.card}>
-              <h3 style={{ marginBottom: '15px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 className={styles.cardTitleModern}>
                   <ShieldCheck size={18} /> Payment Methods
               </h3>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '15px' }}>
                 <div style={{ flex: 1 }}>
                   <label className={styles.label}>Select Bank Account</label>
                   <select 
-                      className={styles.inputField} 
+                      className={styles.inputModern} 
                       value={selectedBankId} 
                       onChange={(e) => setSelectedBankId(e.target.value)}
                       style={{ width: '100%' }}
@@ -1377,7 +1388,7 @@ export default function InvoiceMaker() {
                       <button onClick={() => {
                           setEditingBankDetails({ id: 'bank_' + Date.now(), name: '', details: '', upi: '' });
                           setIsEditingBank(true);
-                      }} className={styles.btn} style={{ width: '100%', marginTop: '10px', justifyContent: 'center' }}>
+                      }} className={styles.addServiceBtn} style={{ width: '100%', marginTop: '10px', justifyContent: 'center' }}>
                           <Plus size={16} /> Add New Payment Method
                       </button>
                   </>
@@ -1385,19 +1396,19 @@ export default function InvoiceMaker() {
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <div style={{ marginBottom: '10px' }}>
                           <label className={styles.label}>Display Name</label>
-                          <input type="text" value={editingBankDetails.name} onChange={e => setEditingBankDetails({...editingBankDetails, name: e.target.value})} placeholder="e.g., HDFC Current" className={styles.inputField} />
+                          <input type="text" value={editingBankDetails.name} onChange={e => setEditingBankDetails({...editingBankDetails, name: e.target.value})} placeholder="e.g., HDFC Current" className={styles.inputModern} />
                       </div>
                       <div style={{ marginBottom: '10px' }}>
                           <label className={styles.label}>Bank Details (Account No, IFSC, etc.)</label>
-                          <textarea value={editingBankDetails.details} onChange={e => setEditingBankDetails({...editingBankDetails, details: e.target.value})} placeholder="Bank: HDFC\nA/C No: 123456" className={styles.inputField} rows={4} />
+                          <textarea value={editingBankDetails.details} onChange={e => setEditingBankDetails({...editingBankDetails, details: e.target.value})} placeholder="Bank: HDFC\nA/C No: 123456" className={styles.inputModern} rows={4} />
                       </div>
                       <div style={{ marginBottom: '15px' }}>
                           <label className={styles.label}>UPI ID (optional, generates QR)</label>
-                          <input type="text" value={editingBankDetails.upi} onChange={e => setEditingBankDetails({...editingBankDetails, upi: e.target.value})} placeholder="name@bank" className={styles.inputField} />
+                          <input type="text" value={editingBankDetails.upi} onChange={e => setEditingBankDetails({...editingBankDetails, upi: e.target.value})} placeholder="name@bank" className={styles.inputModern} />
                       </div>
                       <div style={{ display: 'flex', gap: '10px' }}>
                           <button onClick={handleSaveBank} className={styles.btnPrimary} style={{ flex: 1, padding: '8px' }}>Save</button>
-                          <button onClick={() => setIsEditingBank(false)} className={styles.btn} style={{ flex: 1, padding: '8px', justifyContent: 'center' }}>Cancel</button>
+                          <button onClick={() => setIsEditingBank(false)} className={styles.addServiceBtn} style={{ flex: 1, padding: '8px', justifyContent: 'center' }}>Cancel</button>
                       </div>
                       {editingBankDetails.id.includes('bank_') && bankAccounts.find(b => b.id === editingBankDetails.id) && (
                           <button onClick={() => handleDeleteBank(editingBankDetails.id)} className={styles.btnDanger} style={{ width: '100%', padding: '8px', marginTop: '10px' }}>
@@ -1408,10 +1419,10 @@ export default function InvoiceMaker() {
               )}
            </div>
 
-           <div className={styles.card}>
-              <label className={styles.label}>Footer Notes (Optional)</label>
+           <div className={styles.cardModern}>
+              <label className={styles.labelModern}>Footer Notes (Optional)</label>
               <textarea 
-                  className={styles.inputField} 
+                  className={styles.inputModern} 
                   rows={3} 
                   value={invoiceDetails.notes} 
                   onChange={e => handleInvoiceChange('notes', e.target.value)} 
@@ -1432,7 +1443,7 @@ export default function InvoiceMaker() {
              <button onClick={generatePDF} className={styles.btnPrimary} style={{ width: '100%', padding: '12px', justifyContent: 'center', marginBottom: '15px' }}>
                <Download size={18} /> Download Invoice PDF
              </button>
-             <button onClick={generateSecureLink} className={styles.btn} style={{ width: '100%', padding: '12px', justifyContent: 'center' }}>
+             <button onClick={generateSecureLink} className={styles.addServiceBtn} style={{ width: '100%', padding: '12px', justifyContent: 'center' }}>
                <Lock size={18} /> Generate Secure Link
              </button>
              
@@ -1440,13 +1451,13 @@ export default function InvoiceMaker() {
                 <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '0.75rem' }}>
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
                    <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                      <input type="text" readOnly value={shareLink} onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} className={styles.inputField} style={{ padding: '8px', flex: 1, cursor: 'pointer' }} title="Click to open link directly" />
-                      <button onClick={() => copyToClipboard(shareLink)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link"><Copy size={16} /></button>
+                      <input type="text" readOnly value={shareLink} onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} className={styles.inputModern} style={{ padding: '8px', flex: 1, cursor: 'pointer' }} title="Click to open link directly" />
+                      <button onClick={() => copyToClipboard(shareLink)} className={styles.addServiceBtn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link"><Copy size={16} /></button>
                    </div>
                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client Password:</p>
                    <div style={{ display: 'flex', gap: '8px' }}>
-                     <input type="text" readOnly value={sharePassword} className={styles.inputField} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
-                     <button onClick={() => copyToClipboard(sharePassword)} className={styles.btn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
+                     <input type="text" readOnly value={sharePassword} className={styles.inputModern} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
+                     <button onClick={() => copyToClipboard(sharePassword)} className={styles.addServiceBtn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
                    </div>
                    <button onClick={handleCopyMessage} className={styles.btnShare}>
                      <Share2 size={18} /> Copy Share Message

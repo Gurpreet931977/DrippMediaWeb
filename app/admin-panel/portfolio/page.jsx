@@ -29,7 +29,7 @@ export default function PortfolioManager() {
     duration: '',
     video_id: '',
     thumbnail_url: '',
-    category: 'Both',
+    category: '',
     case_study: ''
   });
 
@@ -46,12 +46,27 @@ export default function PortfolioManager() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem('dripp_custom_graphic_cats');
-      if (stored) setStoredCustomCats(JSON.parse(stored));
+      if (stored) {
+        setStoredCustomCats(JSON.parse(stored));
+      } else {
+        const defaults = ['Logo Design', 'Poster Design', 'Thumbnail Design', 'UI/UX Design', 'Branding', 'Social Media', 'Packaging', 'Illustration', 'Motion Graphics', 'Typography', 'Pitch Deck', 'Web Design'];
+        setStoredCustomCats(defaults);
+        localStorage.setItem('dripp_custom_graphic_cats', JSON.stringify(defaults));
+      }
     } catch(e) {}
   }, []);
 
   const graphicCategories = Array.from(new Set([...items.filter(i => i.category).map(i => i.category), ...storedCustomCats]));
-  if (graphicCategories.length === 0) graphicCategories.push('Logo Design', 'Poster Design', 'Thumbnail Design');
+
+  const deleteCategory = (catToDelete) => {
+      const newCats = storedCustomCats.filter(c => c !== catToDelete);
+      setStoredCustomCats(newCats);
+      localStorage.setItem('dripp_custom_graphic_cats', JSON.stringify(newCats));
+      if (formData.category === catToDelete) {
+          setFormData({...formData, category: ''});
+      }
+  };
+
 
   const addCustomGraphicCategory = (cat) => {
     if (!cat.trim()) return;
@@ -147,7 +162,7 @@ export default function PortfolioManager() {
   useEffect(() => {
     fetchItems();
     setSelectedFile(null);
-    setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: 'Both', case_study: '' });
+    setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: '', case_study: '' });
   }, [activeTab]);
 
   useEffect(() => {
@@ -382,6 +397,14 @@ export default function PortfolioManager() {
         setUploadPopup({ show: true, type: 'error', message: 'Please select a file to upload' });
         return;
     }
+    if (!formData.category || formData.category.trim() === '') {
+        setUploadPopup({ show: true, type: 'error', message: 'Category is required' });
+        return;
+    }
+    if (!formData.case_study || formData.case_study.trim() === '') {
+        setUploadPopup({ show: true, type: 'error', message: 'Case study is required' });
+        return;
+    }
 
     setUploading(true);
     setUploadProgress(10);
@@ -469,7 +492,7 @@ export default function PortfolioManager() {
       } else if (activeTab === TABS.GRAPHICS) {
         payload = {
           image_url: publicUrl,
-          category: formData.category || graphicCategories[0],
+          category: formData.category,
           sort_order: items.length > 0 ? items[0].sort_order + 1 : 1
         };
       } else if (activeTab === TABS.LONG_FORM) {
@@ -509,7 +532,7 @@ export default function PortfolioManager() {
       // Reset Form
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: 'Both', case_study: '' });
+      setFormData({ title: '', description: '', musicText: '', duration: '', video_id: '', thumbnail_url: '', category: '', case_study: '' });
       
       // Refresh list
       fetchItems();
@@ -1292,12 +1315,27 @@ export default function PortfolioManager() {
                                               {graphicCategories.map(cat => (
                                                   <div
                                                       key={cat}
-                                                      onClick={() => { setEditPopup({...editPopup, value: {...editPopup.value, category: cat}}); setIsEditCategoryDropdownOpen(false); }}
-                                                      style={{ padding: '12px 18px', cursor: 'pointer', color: editPopup.value.category === cat ? '#ebd73f' : '#ccc', background: editPopup.value.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent' }}
+                                                      style={{ padding: '12px 18px', cursor: 'pointer', color: editPopup.value.category === cat ? '#ebd73f' : '#ccc', background: editPopup.value.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                                                       onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                                                       onMouseOut={(e) => e.currentTarget.style.background = editPopup.value.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent'}
                                                   >
-                                                      {cat}
+                                                      <span 
+                                                          onClick={() => { setEditPopup({...editPopup, value: {...editPopup.value, category: cat}}); setIsEditCategoryDropdownOpen(false); }}
+                                                          style={{ flex: 1 }}
+                                                      >
+                                                          {cat}
+                                                      </span>
+                                                      <Trash2 
+                                                          size={14} 
+                                                          color="#ff4d4d" 
+                                                          onClick={(e) => { 
+                                                              e.stopPropagation(); 
+                                                              if(confirm('Are you sure you want to delete this category?')) deleteCategory(cat); 
+                                                          }} 
+                                                          style={{ cursor: 'pointer', opacity: 0.6 }}
+                                                          onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+                                                          onMouseOut={(e) => e.currentTarget.style.opacity = 0.6}
+                                                      />
                                                   </div>
                                               ))}
                                           </div>
@@ -1752,7 +1790,7 @@ export default function PortfolioManager() {
                                     borderRadius: '12px',
                                     background: 'rgba(0,0,0,0.6)',
                                     border: '1px solid rgba(255,255,255,0.1)',
-                                    color: formData.category || graphicCategories[0] ? '#fff' : 'rgba(255,255,255,0.4)',
+                                    color: formData.category ? '#fff' : 'rgba(255,255,255,0.4)',
                                     fontFamily: 'Clash Display, sans-serif',
                                     fontSize: '1rem',
                                     cursor: 'pointer',
@@ -1762,7 +1800,7 @@ export default function PortfolioManager() {
                                     boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
                                 }}
                             >
-                                <span>{formData.category || graphicCategories[0]}</span>
+                                <span>{formData.category || 'Select Category'}</span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isCategoryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
                                     <polyline points="6 9 12 15 18 9"></polyline>
                                 </svg>
@@ -1785,11 +1823,6 @@ export default function PortfolioManager() {
                                     {graphicCategories.map(cat => (
                                         <div
                                             key={cat}
-                                            onClick={() => {
-                                                setFormData({...formData, category: cat});
-                                                setIsCategoryDropdownOpen(false);
-                                                setShowCustomGraphicCategory(false);
-                                            }}
                                             style={{
                                                 padding: '12px 18px',
                                                 cursor: 'pointer',
@@ -1797,12 +1830,35 @@ export default function PortfolioManager() {
                                                 fontSize: '0.95rem',
                                                 color: formData.category === cat ? '#ebd73f' : '#ccc',
                                                 background: formData.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
-                                                transition: 'background 0.2s'
+                                                transition: 'background 0.2s',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
                                             }}
                                             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                                             onMouseOut={(e) => e.currentTarget.style.background = formData.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent'}
                                         >
-                                            {cat}
+                                            <span 
+                                                onClick={() => {
+                                                    setFormData({...formData, category: cat});
+                                                    setIsCategoryDropdownOpen(false);
+                                                    setShowCustomGraphicCategory(false);
+                                                }}
+                                                style={{ flex: 1 }}
+                                            >
+                                                {cat}
+                                            </span>
+                                            <Trash2 
+                                                size={14} 
+                                                color="#ff4d4d" 
+                                                onClick={(e) => { 
+                                                    e.stopPropagation(); 
+                                                    if(confirm('Are you sure you want to delete this category?')) deleteCategory(cat); 
+                                                }} 
+                                                style={{ cursor: 'pointer', opacity: 0.6 }}
+                                                onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+                                                onMouseOut={(e) => e.currentTarget.style.opacity = 0.6}
+                                            />
                                         </div>
                                     ))}
                                 </div>
@@ -2086,7 +2142,7 @@ export default function PortfolioManager() {
                                         <button 
                                             onClick={() => openEditPopup(item.id, 'details', {
                                                 title: activeTab === TABS.LONG_FORM ? (item.title || '') : (item.description || ''),
-                                                category: item.category || (activeTab === TABS.GRAPHICS ? graphicCategories[0] : 'Both'),
+                                                category: item.category || '',
                                                 case_study: item.case_study || ''
                                             })}
                                             style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '8px', cursor: 'pointer', color: '#ebd73f', padding: '8px', display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'all 0.2s ease' }}
