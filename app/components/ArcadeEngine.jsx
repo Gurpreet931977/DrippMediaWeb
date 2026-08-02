@@ -167,12 +167,12 @@ function createGameEngine(canvas, callbacks) {
     this.isBomb = Math.random() < 0.15;
     this.isRed = !this.isBomb && isRed;
     
-    let rawMult = isMobile ? (1 + Math.log10(1 + getScoreRef() / 500) * 0.3) : (1.2 + Math.log10(1 + getScoreRef() / 300) * 0.4);
-    let speedMult = Math.min(rawMult, isMobile ? 1.6 : 2.0); // Cap the max speed to prevent bugs
+    let rawMult = isMobile ? (0.8 + Math.log10(1 + getScoreRef() / 800) * 0.3) : (0.8 + Math.log10(1 + getScoreRef() / 800) * 0.3);
+    let speedMult = Math.min(rawMult, isMobile ? 1.5 : 1.8); // Cap the max speed to prevent bugs
     const mobileSpeedMult = isMobile ? 0.9 : 1.0;
     
-    this.vy = (1.0 + Math.random() * 3.0) * speedMult * mobileSpeedMult; 
-    this.gravity = (0.005 + Math.random() * 0.015) * speedMult * mobileSpeedMult; 
+    this.vy = (0.8 + Math.random() * 2.2) * speedMult * mobileSpeedMult; 
+    this.gravity = (0.002 + Math.random() * 0.008) * speedMult * mobileSpeedMult; 
     
     this.radius = 2 + Math.random() * 2; 
     this.length = this.vy * 3;
@@ -644,15 +644,15 @@ function createGameEngine(canvas, callbacks) {
 
       // Dripp logic
       if (ag === "dripp") {
-        let baseIntensity = 0.025; 
-        let scaling = Math.log10(1 + getScoreRef() / 300) * 0.1;
+        let baseIntensity = 0.015; 
+        let scaling = Math.log10(1 + getScoreRef() / 800) * 0.08;
         
         if (!isMobile) {
-           baseIntensity = 0.035;
-           scaling = Math.log10(1 + getScoreRef() / 200) * 0.10;
+           baseIntensity = 0.02;
+           scaling = Math.log10(1 + getScoreRef() / 800) * 0.08;
         }
         
-        const rainIntensity = Math.min(0.18, baseIntensity + scaling);
+        const rainIntensity = Math.min(0.12, baseIntensity + scaling);
         const spawnAttempts = 1; 
         
         for (let i = 0; i < spawnAttempts; i++) {
