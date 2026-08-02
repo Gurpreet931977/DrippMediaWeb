@@ -2261,7 +2261,7 @@ export default function Page() {
   {/* --- MODERN CREATIVE CARDS SECTION --- */}
   <section className="portfolio" id="work">
     <div className="portfolio-title-container">
-      <h2 className="cards-title">The <span>Aces</span> Your Brand Needs to Play.</h2>
+      <h2 className="cards-title">{isGenz ? 'The ' : 'The '}<span>{isGenz ? 'Cheat Codes' : 'Aces'}</span>{isGenz ? ' For Your Brand.' : ' Your Brand Needs to Play.'}</h2>
     </div>
     <div className="cards-container">
       {/* CARD 1 */}
@@ -2278,9 +2278,8 @@ export default function Page() {
                 </span>
               </div>
               <div className="card-body">
-                <h2>Video<br /><span>Production</span></h2>
-                <p className="front-desc">High-end video editing and professional shooting to capture your
-                  brand's essence.</p>
+                <h2>{isGenz ? 'Cinematic' : 'Video'}<br /><span>{isGenz ? 'Dripp' : 'Production'}</span></h2>
+                <p className="front-desc">{isGenz ? "God-tier edits and raw footage that makes your brand go viral." : "High-end video editing and professional shooting to capture your brand's essence."}</p>
               </div>
             </div>
           </div>
@@ -2291,10 +2290,9 @@ export default function Page() {
             </div>
             <div className="back-content">
               <div className="back-header">
-                <div className="back-title">The Cut</div>
+                <div className="back-title">{isGenz ? 'The Sauce' : 'The Cut'}</div>
               </div>
-              <p className="back-text">We handle the entire production pipeline to engineer captivating visual
-                dopamine.</p>
+              <p className="back-text">{isGenz ? 'We handle the entire production pipeline to engineer pure visual dopamine.' : 'We handle the entire production pipeline to engineer captivating visual dopamine.'}</p>
               <div style={{marginTop: 'auto', position: 'relative', zIndex: 10, transformStyle: 'preserve-3d'}}>
                 <a href="/video-portfolio" className="btn btn-primary" style={{display: 'inline-block', textDecoration: 'none', textAlign: 'center', width: '100%', borderRadius: 8, padding: 12, fontSize: '0.8rem'}}>
                   <span style={{position: 'relative', zIndex: 2}}>View Video Portfolio</span>
@@ -2319,8 +2317,8 @@ export default function Page() {
                 </span>
               </div>
               <div className="card-body">
-                <h2>Graphic<br /><span style={{fontSize: '1.55rem'}}>Designing</span></h2>
-                <p className="front-desc">Visual identities that melt faces. Bold typography &amp; surreal art.
+                <h2>{isGenz ? 'God Tier' : 'Graphic'}<br /><span style={{fontSize: '1.55rem'}}>{isGenz ? 'Aesthetics' : 'Designing'}</span></h2>
+                <p className="front-desc">{isGenz ? 'Visual identities that actually slap. Bold typography & unreal art.' : 'Visual identities that melt faces. Bold typography & surreal art.'}
                 </p>
               </div>
             </div>
@@ -2360,8 +2358,8 @@ export default function Page() {
                 </span>
               </div>
               <div className="card-body">
-                <h2>Website<br /><span>Development</span></h2>
-                <p className="front-desc">Immersive, high-performance websites optimized for the algorithm.
+                <h2>{isGenz ? 'The' : 'Website'}<br /><span>{isGenz ? 'Matrix' : 'Development'}</span></h2>
+                <p className="front-desc">{isGenz ? 'Immersive, high-performance digital worlds optimized for the algorithm.' : 'Immersive, high-performance websites optimized for the algorithm.'}
                 </p>
               </div>
             </div>
@@ -2373,9 +2371,9 @@ export default function Page() {
             </div>
             <div className="back-content">
               <div className="back-header">
-                <div className="back-title">The Code</div>
+                <div className="back-title">{isGenz ? 'The Source' : 'The Code'}</div>
               </div>
-              <p className="back-text">From robust architecture to surreal animations, we build digital homes.
+              <p className="back-text">{isGenz ? 'From cracked architecture to fluid animations, we build digital homes.' : 'From robust architecture to surreal animations, we build digital homes.'}
               </p>
               <div style={{marginTop: 'auto', position: 'relative', zIndex: 10, transformStyle: 'preserve-3d'}}>
                 <a href="/web-portfolio" className="btn btn-primary" style={{display: 'inline-block', textDecoration: 'none', textAlign: 'center', width: '100%', borderRadius: 8, padding: 12, fontSize: '0.8rem'}}>
@@ -2416,8 +2414,8 @@ export default function Page() {
   <section id="services" className="services-section">
     <div className="services-container">
       <div className="service-header">
-        <span className="section-label">03.5 / SERVICES</span>
-        <h2 className="section-title">What We Do</h2>
+        <span className="section-label">{isGenz ? '03.5 / THE MOVES' : '03.5 / SERVICES'}</span>
+        <h2 className="section-title">{isGenz ? 'Our Meta' : 'What We Do'}</h2>
         <p className="service-intro">Click any service that interests you - it'll be added to your quote below.</p>
       </div>
       {/* Floating Services Cloud */}
@@ -2514,10 +2512,9 @@ export default function Page() {
       <div className="builder-container" id="custom-builder">
         <div className="builder-left">
           <div>
-            <span className="section-label">BUILD YOUR OWN</span>
-            <h3 className="builder-title">Customise Your Package</h3>
-            <p className="builder-sub">Browse by category and select the exact services you need. Your quote
-              builds automatically.</p>
+            <span className="section-label">{isGenz ? 'CRAFT YOUR META' : 'BUILD YOUR OWN'}</span>
+            <h3 className="builder-title">{isGenz ? 'Build Your Loadout' : 'Customise Your Package'}</h3>
+            <p className="builder-sub">{isGenz ? 'Pick your perks and secure the bag. Your quote builds automatically.' : 'Browse by category and select the exact services you need. Your quote builds automatically.'}</p>
           </div>
           {/* Category Tabs */}
           <div className="builder-tabs" id="builder-tabs">
@@ -2652,7 +2649,7 @@ export default function Page() {
         </div>
         <div className="builder-right">
           <div className="receipt-header">
-            <div className="receipt-title">Est. Cart</div>
+            <div className="receipt-title">{isGenz ? 'Est. Loot' : 'Est. Cart'}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <button id="clear-cart-btn" style={{ background: 'transparent', color: '#ff4d4d', border: '1px solid rgba(255, 60, 60, 0.2)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', display: 'none', fontFamily: "'Clash Display', sans-serif" }} onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `clearCart()`, target: event.currentTarget, originalEvent: event } }))}>Clear All</button>
               <div className="receipt-date" id="receipt-date">YYYY-MM-DD</div>
@@ -2756,9 +2753,9 @@ export default function Page() {
           landscape. Pure creative chaos awaits.
         </p>
         <div style={{marginTop: 40}}>
-          <button className="attract-btn" data-default-text="Join Dripp Community" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `openCommunityModal(event)`, target: event.currentTarget, originalEvent: event } }))}>
+          <button className="attract-btn" data-default-text={isGenz ? 'Join The Cult' : 'Join Dripp Community'} onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `openCommunityModal(event)`, target: event.currentTarget, originalEvent: event } }))}>
             <span className="attract-btn-content">
-              <span className="btn-text" style={{position: 'relative', zIndex: 2}}>Join Dripp <span className="morph-word"><span className="morph-word-inner"><span className="morph-front">Community</span><span className="morph-back">Family</span></span></span></span>
+              <span className="btn-text" style={{position: 'relative', zIndex: 2}}>Join {isGenz ? 'The ' : 'Dripp '} <span className="morph-word"><span className="morph-word-inner"><span className="morph-front">{isGenz ? 'Cult' : 'Community'}</span><span className="morph-back">{isGenz ? 'Family' : 'Family'}</span></span></span></span>
             </span>
           </button>
         </div>
