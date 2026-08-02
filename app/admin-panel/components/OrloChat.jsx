@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon, Mic, MicOff } from 'lucide-react';
+import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon, Mic, MicOff, ArrowDown } from 'lucide-react';
 import OrloIcon from './OrloIcon';
 import gsap from 'gsap';
 import { useGenz } from '../../contexts/GenzContext';
@@ -107,6 +107,9 @@ export default function OrloChat() {
   const chatRef = useRef(null);
   const btnRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const chatBodyRef = useRef(null);
+  const inputRef = useRef(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
   const typingTimeoutRef = useRef(null);
   const idleTimeoutRef = useRef(null);
   const keypressCountRef = useRef(0);
@@ -238,10 +241,21 @@ export default function OrloChat() {
   }, [input, isTyping, emotion]);
 
   // Scroll to bottom
-  useEffect(() => {
+  const handleScroll = () => {
+    if (chatBodyRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = chatBodyRef.current;
+      setShowScrollDown(scrollHeight - scrollTop - clientHeight > 100);
+    }
+  };
+
+  const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages, isTyping]);
 
   useEffect(() => {
@@ -585,11 +599,14 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!input.trim() || isTyping) return;
 
     const userText = input.trim();
     setInput('');
+    if (inputRef.current) {
+        inputRef.current.style.height = 'auto';
+    }
     setMessages(prev => [...prev, { role: 'user', text: userText }]);
     setIsTyping(true);
     setEmotion('thinking');
@@ -707,14 +724,15 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           border: 1px solid rgba(235, 215, 63, 0.25);
           color: #fff;
           padding: 14px 24px;
-          border-radius: 30px;
+          border-radius: 24px;
           font-size: 0.95rem;
           font-weight: 500;
           line-height: 1.4;
           box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(235, 215, 63, 0.05);
           width: fit-content;
-          max-width: 400px;
-          white-space: nowrap;
+          max-width: 250px;
+          white-space: pre-wrap;
+          word-wrap: break-word;
           transform-origin: right center;
           opacity: 0;
           transform: scale(0.6) translateX(30px);
@@ -1036,10 +1054,10 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         .chat-input-wrapper {
           position: relative;
           display: flex;
-          align-items: center;
+          align-items: flex-end;
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 100px;
+          border-radius: 24px;
           padding: 4px;
           transition: all 0.3s ease;
         }
@@ -1182,7 +1200,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
             </div>
           </div>
           
-          <div className="chat-body">
+          <div className="chat-body" ref={chatBodyRef} onScroll={handleScroll}>
             {messages.map((m, i) => (
               <div key={i} className={`msg-bubble ${m.role === 'ai' ? 'msg-ai' : 'msg-user'}`}>
                 {m.text}
@@ -1195,6 +1213,15 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
             )}
             <div ref={messagesEndRef} />
           </div>
+          {showScrollDown && (
+            <button 
+                type="button"
+                onClick={scrollToBottom} 
+                style={{ position: 'absolute', bottom: '80px', right: '20px', background: 'rgba(235, 215, 63, 0.9)', color: '#000', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.5)', transition: 'all 0.3s' }}
+            >
+                <ArrowDown size={18} />
+            </button>
+          )}
 
           <form className="chat-input-area" onSubmit={handleSubmit}>
             <div className="chat-input-wrapper">
@@ -1220,10 +1247,22 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   <Mic size={20} className={isListening ? 'pulsing-mic' : ''} />
                 </button>
               </div>
-              <input 
-                type="text" 
+              <textarea 
+                ref={inputRef}
                 value={input}
-                onChange={e => setInput(e.target.value)}
+                onChange={e => {
+                  setInput(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (input.trim() && !isTyping) {
+                      handleSubmit();
+                    }
+                  }
+                }}
                 placeholder="Ask me to analyze or write..."
                 style={{
                   flex: 1,
@@ -1233,9 +1272,14 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   color: '#fff',
                   outline: 'none',
                   fontSize: '1rem',
-                  fontFamily: 'inherit'
+                  fontFamily: 'inherit',
+                  resize: 'none',
+                  maxHeight: '150px',
+                  minHeight: '44px',
+                  overflowY: 'auto'
                 }}
                 disabled={isTyping}
+                rows={1}
               />
               <button 
                 type="submit" 
