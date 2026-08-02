@@ -39,7 +39,6 @@ function createGameEngine(canvas, callbacks) {
   
   // High DPI Support Proxy
   const logicalCanvas = new Proxy(canvas, {
-  const logicalCanvas = new Proxy(canvas, {
     get(target, prop) {
       if (prop === 'width') return window.innerWidth;
       if (prop === 'height') return window.innerHeight;

@@ -2249,12 +2249,12 @@ export default function Page() {
       <span className="word" id="word2">MEDIA</span>
     </h1>
     <div className="hero-sub tooltip-container">
-      {isGenz ? 'We cook aesthetics' : 'We are a creative agency'}
+      {isGenz ? 'We build the timeline' : 'We are a creative agency'}
       <div className="creative-tooltip">
         <div className="tooltip-sparkle s1" />
         <div className="tooltip-sparkle s2" />
         <div className="tooltip-sparkle s3" />
-        {isGenz ? 'Think of us as a team of tryhards who cook 10/10 vibes for the timeline.' : 'Think of us as a team of artists, builders, and storytellers who make cool things for the internet and beyond!'}
+        {isGenz ? 'Think of us as a team of artists, builders, and storytellers who curate the absolute best vibes for the internet.' : 'Think of us as a team of artists, builders, and storytellers who make cool things for the internet and beyond!'}
       </div>
     </div>
   </section>
@@ -2676,9 +2676,9 @@ export default function Page() {
     <div className="founder-bg-text-meta" id="founder-meta-bg">META</div>
     <div className="founder-wrapper">
       <div className="founder-text-block" id="founder-text-block">
-        <span className="founder-label">04 / THE VISION</span>
+        <span className="founder-label">{isGenz ? '04 / THE LORE' : '04 / THE VISION'}</span>
         <div className="founder-accent" />
-        <h2 className="founder-heading">Meet the<span>Founder.</span></h2>
+        <h2 className="founder-heading">Meet the<span>{isGenz ? 'Final Boss.' : 'Founder.'}</span></h2>
         <p className="founder-bio">
           I am Gurpreet, often known as Meta Gurpreet. At 18, I stepped away from formal education to learn
           and build something that actually dictates digital culture rather than just participating in it.
@@ -2748,8 +2748,8 @@ export default function Page() {
         <span className="guideline-quote">"Don't touch the <span className="highlight-text">bubbles(people)</span> - they will go away"</span>
       </div>
       <div className="community-wrapper">
-        <span className="section-label">05 / THE COLLECTIVE</span>
-        <h2 className="section-title">Join the Creative Community</h2>
+        <span className="section-label">{isGenz ? '05 / THE GANG' : '05 / THE COLLECTIVE'}</span>
+        <h2 className="section-title">{isGenz ? 'Join the Cult' : 'Join the Creative Community'}</h2>
         <p className="section-desc">
           Step into an exclusive realm of top-tier designers, editors, and digital alchemists. Elevate your
           craft, gain access to premium assets, and collaborate with the minds shaping tomorrow's digital
@@ -2831,16 +2831,15 @@ export default function Page() {
         </div>
       </div>
       <div className="client-center">
-        <span className="section-label">06 / LET'S COLLABORATE</span>
+        <span className="section-label">{isGenz ? '06 / SLIDE IN' : "06 / LET'S COLLABORATE"}</span>
         <a href="#" className="mega-project-btn" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `openContactModal(event)`, target: event.currentTarget, originalEvent: event } }))}>
           <div className="mega-text-wrapper">
-            <h2 className="mega-text outline">LET'S TALK</h2>
-            <h2 className="mega-text solid">LET'S TALK</h2>
+            <h2 className="mega-text outline">{isGenz ? "LET'S COOK" : "LET'S TALK"}</h2>
+            <h2 className="mega-text solid">{isGenz ? "LET'S COOK" : "LET'S TALK"}</h2>
           </div>
         </a>
         <div className="client-footer-content">
-          <p style={{fontSize: '1.2rem', marginBottom: 10, fontWeight: 500, textAlign: 'center'}}>Ready to
-            create something surreal?</p>
+          <p style={{fontSize: '1.2rem', marginBottom: 10, fontWeight: 500, textAlign: 'center'}}>{isGenz ? 'Ready to cook up something insane?' : 'Ready to create something surreal?'}</p>
           <a href="#" className="footer-email" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `openContactModal(event)`, target: event.currentTarget, originalEvent: event } }))}>mediadripp@gmail.com</a>
           <a href="tel:+917818995147" className="footer-phone">+91 78189 95147</a>
         </div>

@@ -22,7 +22,7 @@ export async function POST(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userPrompt, chatHistory, context, systemContext, formContext, currentDate, model } = await request.json();
+    const { userPrompt, chatHistory, context, systemContext, formContext, currentDate, model, isGenz } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
@@ -58,6 +58,7 @@ Current Date/Time: ${currentDate || new Date().toISOString()}
 Current Email Form State: ${JSON.stringify(context || {}, null, 2)}
 Current System Docs State: ${JSON.stringify(systemContext || {}, null, 2)}
 Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${memoryContext}${statsContext}
+${isGenz ? "\nSince the user is in GenZ mode, you must respond strictly using natural GenZ internet slang, aesthetics terminology (like 'cook', 'W', 'aura', 'timeline', 'locked in', 'lore', 'vibes'). Keep it casual but not overly forced. Do NOT use emojis. Treat the user like a peer in a creative agency." : ""}
 
 Your job is to read the user's natural language command, determine what action they want to take, and return JSON to PRE-FILL or EDIT the form.
 

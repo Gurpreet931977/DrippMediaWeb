@@ -89,6 +89,7 @@ const PostScene = ({ id, size = 120 }) => {
 };
 
 export default function OrloChat() {
+  const { isGenz } = useGenz() || { isGenz: false };
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -507,7 +508,8 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
           systemContext: systemContext,
           formContext: formContext,
           currentDate: new Date().toString(),
-          model: selectedModel
+          model: selectedModel,
+          isGenz: isGenz
         })
       });
       const data = await res.json();
