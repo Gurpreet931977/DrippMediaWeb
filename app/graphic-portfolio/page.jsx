@@ -1641,7 +1641,21 @@ export default function Page() {
       <div>
   {/* 3D Space Background */}
   <canvas id="space-canvas" />
-  <a href="/" className="nav-back"><i className="uil uil-arrow-left" /></a>
+    <button 
+      onClick={() => {
+        if (activeCategory) {
+            setActiveCategory(null);
+        } else if (isListViewActive) {
+            window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }));
+        } else {
+            window.location.href = '/';
+        }
+      }} 
+      className="nav-back" 
+      style={{ border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    >
+      <i className="uil uil-arrow-left" />
+    </button>
   <div className="sp-wrapper">
     <button className="sparkle-button" id="tripp-toggle-btn">
       <span className="spark" />
