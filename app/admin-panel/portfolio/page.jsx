@@ -231,16 +231,19 @@ export default function PortfolioManager() {
               if (prev.field === 'details') {
                   let newPopup = { ...prev, value: { ...prev.value } };
                   let updated = false;
-                  if (aiData.case_study) {
+                  const target = aiData.fillTarget || 'all';
+                  
+                  if ((target === 'all' || target === 'case_study') && aiData.case_study) {
                       newPopup.value.case_study = aiData.case_study;
                       updated = true;
                   }
-                  if (aiData.title || aiData.description) {
+                  if ((target === 'all' || target === 'title') && (aiData.title || aiData.description)) {
                       newPopup.value.title = aiData.title || aiData.description;
                       updated = true;
                   }
                   if (updated) {
-                      showNotification('success', 'Orlo filled in the details!');
+                      const msg = target === 'title' ? 'Orlo wrote a new Title!' : target === 'case_study' ? 'Orlo wrote a new Case Study!' : 'Orlo filled in the details!';
+                      showNotification('success', msg);
                       return newPopup;
                   }
               }
@@ -1304,6 +1307,44 @@ export default function PortfolioManager() {
                   )}
                   
 
+                  {editPopup.field === 'details' && (
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '25px', marginTop: '10px' }}>
+                          <button 
+                              type="button" 
+                              style={{ 
+                                  background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.2), rgba(212, 188, 28, 0.1))', 
+                                  border: '1px solid rgba(235, 215, 63, 0.5)', 
+                                  color: '#ebd73f', 
+                                  padding: '8px 24px', 
+                                  borderRadius: '20px', 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  gap: '8px',
+                                  fontSize: '0.9rem',
+                                  fontWeight: '600',
+                                  cursor: 'pointer',
+                                  boxShadow: '0 4px 15px rgba(235, 215, 63, 0.15)',
+                                  transition: 'all 0.3s'
+                              }}
+                              className="hover-pop-btn"
+                              onClick={() => {
+                                  const currentItem = items.find(i => i.id === editPopup.id);
+                                  if (currentItem) {
+                                      if (activeTab === TABS.GRAPHICS) {
+                                          const imageUrl = currentItem.image_url;
+                                          if (imageUrl) window.dispatchEvent(new CustomEvent('ORLO_GRAPHIC_ANALYZE', { detail: { imageUrl: imageUrl, fillTarget: 'all' } }));
+                                      } else {
+                                          const videoSrc = currentItem.videoSrc || currentItem.video_url;
+                                          if (videoSrc) window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc, fillTarget: 'all' } }));
+                                      }
+                                  }
+                              }}
+                          >
+                              <Sparkles size={16} /> Ask Orlo to Fill All
+                          </button>
+                      </div>
+                  )}
+
                   {editPopup.field === 'details' ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '35px' }}>
                           <div>
@@ -1331,14 +1372,14 @@ export default function PortfolioManager() {
                                             if (activeTab === TABS.GRAPHICS) {
                                                 const imageUrl = currentItem.image_url;
                                                 if (imageUrl) {
-                                                    window.dispatchEvent(new CustomEvent('ORLO_GRAPHIC_ANALYZE', { detail: { imageUrl: imageUrl } }));
+                                                    window.dispatchEvent(new CustomEvent('ORLO_GRAPHIC_ANALYZE', { detail: { imageUrl: imageUrl, fillTarget: 'title' } }));
                                                 } else {
                                                     showNotification('error', 'No image found for this item to analyze.');
                                                 }
                                             } else {
                                                 const videoSrc = currentItem.videoSrc || currentItem.video_url;
                                                 if (videoSrc) {
-                                                    window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc } }));
+                                                    window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc, fillTarget: 'title' } }));
                                                 } else {
                                                     showNotification('error', 'No video found for this item to analyze.');
                                                 }
@@ -1477,14 +1518,14 @@ export default function PortfolioManager() {
                                                 if (activeTab === TABS.GRAPHICS) {
                                                     const imageUrl = currentItem.image_url;
                                                     if (imageUrl) {
-                                                        window.dispatchEvent(new CustomEvent('ORLO_GRAPHIC_ANALYZE', { detail: { imageUrl: imageUrl } }));
+                                                        window.dispatchEvent(new CustomEvent('ORLO_GRAPHIC_ANALYZE', { detail: { imageUrl: imageUrl, fillTarget: 'case_study' } }));
                                                     } else {
                                                         showNotification('error', 'No image found for this item to analyze.');
                                                     }
                                                 } else {
                                                     const videoSrc = currentItem.videoSrc || currentItem.video_url;
                                                     if (videoSrc) {
-                                                        window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc } }));
+                                                        window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc, fillTarget: 'case_study' } }));
                                                     } else {
                                                         showNotification('error', 'No video found for this item to analyze.');
                                                     }
