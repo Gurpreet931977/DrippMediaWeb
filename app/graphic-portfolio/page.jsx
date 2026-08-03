@@ -50,6 +50,9 @@ export default function Page() {
                 this.container = document.getElementById(containerId);
                 if (!this.container) return;
 
+                // Clear container to prevent duplicate elements on re-renders/Strict Mode
+                this.container.innerHTML = '';
+
                 this.imageSize = parseFloat(options.imageSize) || 20;
                 this.numberOfImages = options.numberOfImages || 32;
                 this.gap = parseFloat(options.gap) || 0.5;
@@ -83,10 +86,12 @@ export default function Page() {
 
                 // 60fps binding for position updates 
                 gsap.ticker.add(this.renderBound);
-                window.addEventListener('resize', () => {
+                
+                this.resizeBound = () => {
                     this.updateMetrics();
                     this.recalcPositions();
-                });
+                };
+                window.addEventListener('resize', this.resizeBound);
             }
 
             updateMetrics() {
@@ -536,7 +541,10 @@ export default function Page() {
             // Proper context cleanup method mapping
             destroy() {
                 gsap.ticker.remove(this.renderBound);
-                window.removeEventListener('resize', this.updateMetrics);
+                window.removeEventListener('resize', this.resizeBound);
+                if (this.container) {
+                    this.container.innerHTML = '';
+                }
             }
         }
 
@@ -819,20 +827,12 @@ export default function Page() {
 
         // Bind click to the new UI button
         document.getElementById('tripp-toggle-btn').addEventListener('click', toggleSpaceMode);
-        // Fetch portfolio graphics and initialize canvas
-        fetch('/api/graphics')
-            .then(res => res.json())
-            .then(data => {
-                const fetchedGraphics = Array.isArray(data) ? data : [];
-                setGraphics(fetchedGraphics);
-                window.canvasEngine = new InfiniteCanvas('canvas-container', { customItems: fetchedGraphics });
-            })
-            .catch(err => {
-                console.error("Failed to fetch graphics:", err);
-                window.canvasEngine = new InfiniteCanvas('canvas-container', { customItems: [] });
-            });
+
     return () => {
       ScrollTrigger.getAll().forEach(t => t.kill());
+      if (window.canvasEngine) {
+        window.canvasEngine.destroy();
+      }
     };
   }, []);
 
