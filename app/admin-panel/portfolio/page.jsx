@@ -11,6 +11,14 @@ const TABS = {
   GRAPHICS: 'graphics'
 };
 
+const DEFAULT_CATEGORIES = [
+  'Logo Design', 'Poster Design', 'Thumbnail Design', 'UI/UX Design', 'Branding & Identity', 
+  'Social Media Assets', 'Packaging Design', 'Illustration', 'Motion Graphics', 'Typography', 
+  'Pitch Deck Design', 'Web Design', '3D Modeling & Rendering', 'Album Cover Art', 
+  'Apparel & Merch', 'Billboard & OOH', 'Editorial & Print', 'Concept Art', 'Infographics', 
+  'Stream Overlays', 'Iconography', 'Email Templates', 'Character Design'
+];
+
 export default function PortfolioManager() {
   const [activeTab, setActiveTab] = useState(TABS.REELS);
   const [items, setItems] = useState([]);
@@ -49,21 +57,39 @@ export default function PortfolioManager() {
       if (stored) {
         setStoredCustomCats(JSON.parse(stored));
       } else {
-        const defaults = ['Logo Design', 'Poster Design', 'Thumbnail Design', 'UI/UX Design', 'Branding', 'Social Media', 'Packaging', 'Illustration', 'Motion Graphics', 'Typography', 'Pitch Deck', 'Web Design'];
-        setStoredCustomCats(defaults);
-        localStorage.setItem('dripp_custom_graphic_cats', JSON.stringify(defaults));
+        setStoredCustomCats([]);
+        localStorage.setItem('dripp_custom_graphic_cats', JSON.stringify([]));
       }
     } catch(e) {}
   }, []);
 
-  const graphicCategories = Array.from(new Set([...items.filter(i => i.category).map(i => i.category), ...storedCustomCats]));
+  const toggleCategoryStr = (currentString, newCategory) => {
+      if (!currentString) return newCategory;
+      const cats = currentString.split(',').map(c => c.trim()).filter(Boolean);
+      if (cats.includes(newCategory)) {
+          return cats.filter(c => c !== newCategory).join(', ');
+      } else {
+          return [...cats, newCategory].join(', ');
+      }
+  };
+
+  const isCategorySelected = (currentString, category) => {
+      if (!currentString) return false;
+      return currentString.split(',').map(c => c.trim()).filter(Boolean).includes(category);
+  };
+
+  const graphicCategories = Array.from(new Set([
+      ...DEFAULT_CATEGORIES, 
+      ...items.filter(i => i.category).flatMap(i => i.category.split(',').map(c => c.trim()).filter(Boolean)), 
+      ...storedCustomCats
+  ]));
 
   const deleteCategory = (catToDelete) => {
       const newCats = storedCustomCats.filter(c => c !== catToDelete);
       setStoredCustomCats(newCats);
       localStorage.setItem('dripp_custom_graphic_cats', JSON.stringify(newCats));
-      if (formData.category === catToDelete) {
-          setFormData({...formData, category: ''});
+      if (formData.category && formData.category.includes(catToDelete)) {
+          setFormData({...formData, category: toggleCategoryStr(formData.category, catToDelete)});
       }
   };
 
@@ -1307,7 +1333,14 @@ export default function PortfolioManager() {
                                           onClick={() => setIsEditCategoryDropdownOpen(!isEditCategoryDropdownOpen)}
                                           style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                                       >
-                                          <span>{editPopup.value.category || 'Select Category'}</span>
+                                          <span>
+                                              {editPopup.value.category 
+                                                  ? (editPopup.value.category.split(',').length > 2 
+                                                      ? `${editPopup.value.category.split(',').length} Categories Selected` 
+                                                      : editPopup.value.category)
+                                                  : 'Select Category'
+                                              }
+                                          </span>
                                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: isEditCategoryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
                                       </div>
                                       {isEditCategoryDropdownOpen && (
@@ -1315,27 +1348,34 @@ export default function PortfolioManager() {
                                               {graphicCategories.map(cat => (
                                                   <div
                                                       key={cat}
-                                                      style={{ padding: '12px 18px', cursor: 'pointer', color: editPopup.value.category === cat ? '#ebd73f' : '#ccc', background: editPopup.value.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                                      style={{ padding: '12px 18px', cursor: 'pointer', fontFamily: 'Clash Display, sans-serif', fontSize: '0.95rem', color: isCategorySelected(editPopup.value.category, cat) ? '#ebd73f' : '#ccc', background: isCategorySelected(editPopup.value.category, cat) ? 'rgba(235, 215, 63, 0.1)' : 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                                                       onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                                      onMouseOut={(e) => e.currentTarget.style.background = editPopup.value.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent'}
+                                                      onMouseOut={(e) => e.currentTarget.style.background = isCategorySelected(editPopup.value.category, cat) ? 'rgba(235, 215, 63, 0.1)' : 'transparent'}
                                                   >
                                                       <span 
-                                                          onClick={() => { setEditPopup({...editPopup, value: {...editPopup.value, category: cat}}); setIsEditCategoryDropdownOpen(false); }}
-                                                          style={{ flex: 1 }}
+                                                          onClick={() => { 
+                                                              setEditPopup({...editPopup, value: {...editPopup.value, category: toggleCategoryStr(editPopup.value.category, cat)}}); 
+                                                          }} 
+                                                          style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}
                                                       >
+                                                          <div style={{ width: '16px', height: '16px', border: '1px solid #ebd73f', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: isCategorySelected(editPopup.value.category, cat) ? '#ebd73f' : 'transparent' }}>
+                                                              {isCategorySelected(editPopup.value.category, cat) && <CheckCircle2 size={12} color="#000" />}
+                                                          </div>
                                                           {cat}
                                                       </span>
-                                                      <Trash2 
-                                                          size={14} 
-                                                          color="#ff4d4d" 
-                                                          onClick={(e) => { 
-                                                              e.stopPropagation(); 
-                                                              if(confirm('Are you sure you want to delete this category?')) deleteCategory(cat); 
-                                                          }} 
-                                                          style={{ cursor: 'pointer', opacity: 0.6 }}
-                                                          onMouseOver={(e) => e.currentTarget.style.opacity = 1}
-                                                          onMouseOut={(e) => e.currentTarget.style.opacity = 0.6}
-                                                      />
+                                                      {!DEFAULT_CATEGORIES.includes(cat) && (
+                                                          <Trash2 
+                                                              size={14} 
+                                                              color="#ff4d4d" 
+                                                              onClick={(e) => { 
+                                                                  e.stopPropagation(); 
+                                                                  if(confirm('Are you sure you want to delete this category?')) deleteCategory(cat); 
+                                                              }} 
+                                                              style={{ cursor: 'pointer', opacity: 0.7 }}
+                                                              onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+                                                              onMouseOut={(e) => e.currentTarget.style.opacity = 0.7}
+                                                          />
+                                                      )}
                                                   </div>
                                               ))}
                                           </div>
@@ -1800,7 +1840,14 @@ export default function PortfolioManager() {
                                     boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
                                 }}
                             >
-                                <span>{formData.category || 'Select Category'}</span>
+                                <span>
+                                    {formData.category 
+                                        ? (formData.category.split(',').length > 2 
+                                            ? `${formData.category.split(',').length} Categories Selected` 
+                                            : formData.category)
+                                        : 'Select Category'
+                                    }
+                                </span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isCategoryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
                                     <polyline points="6 9 12 15 18 9"></polyline>
                                 </svg>
@@ -1828,37 +1875,40 @@ export default function PortfolioManager() {
                                                 cursor: 'pointer',
                                                 fontFamily: 'Clash Display, sans-serif',
                                                 fontSize: '0.95rem',
-                                                color: formData.category === cat ? '#ebd73f' : '#ccc',
-                                                background: formData.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
+                                                color: isCategorySelected(formData.category, cat) ? '#ebd73f' : '#ccc',
+                                                background: isCategorySelected(formData.category, cat) ? 'rgba(235, 215, 63, 0.1)' : 'transparent',
                                                 transition: 'background 0.2s',
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
                                                 alignItems: 'center'
                                             }}
                                             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                            onMouseOut={(e) => e.currentTarget.style.background = formData.category === cat ? 'rgba(235, 215, 63, 0.1)' : 'transparent'}
+                                            onMouseOut={(e) => e.currentTarget.style.background = isCategorySelected(formData.category, cat) ? 'rgba(235, 215, 63, 0.1)' : 'transparent'}
                                         >
                                             <span 
                                                 onClick={() => {
-                                                    setFormData({...formData, category: cat});
-                                                    setIsCategoryDropdownOpen(false);
-                                                    setShowCustomGraphicCategory(false);
+                                                    setFormData({...formData, category: toggleCategoryStr(formData.category, cat)});
                                                 }}
-                                                style={{ flex: 1 }}
+                                                style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}
                                             >
+                                                <div style={{ width: '16px', height: '16px', border: '1px solid #ebd73f', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: isCategorySelected(formData.category, cat) ? '#ebd73f' : 'transparent' }}>
+                                                    {isCategorySelected(formData.category, cat) && <CheckCircle2 size={12} color="#000" />}
+                                                </div>
                                                 {cat}
                                             </span>
-                                            <Trash2 
-                                                size={14} 
-                                                color="#ff4d4d" 
-                                                onClick={(e) => { 
-                                                    e.stopPropagation(); 
-                                                    if(confirm('Are you sure you want to delete this category?')) deleteCategory(cat); 
-                                                }} 
-                                                style={{ cursor: 'pointer', opacity: 0.6 }}
-                                                onMouseOver={(e) => e.currentTarget.style.opacity = 1}
-                                                onMouseOut={(e) => e.currentTarget.style.opacity = 0.6}
-                                            />
+                                            {!DEFAULT_CATEGORIES.includes(cat) && (
+                                                <Trash2 
+                                                    size={14} 
+                                                    color="#ff4d4d" 
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); 
+                                                        if(confirm('Are you sure you want to delete this category?')) deleteCategory(cat); 
+                                                    }} 
+                                                    style={{ cursor: 'pointer', opacity: 0.7 }}
+                                                    onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+                                                    onMouseOut={(e) => e.currentTarget.style.opacity = 0.7}
+                                                />
+                                            )}
                                         </div>
                                     ))}
                                 </div>

@@ -1704,7 +1704,7 @@ export default function Page() {
       <div className="react-list-view-container" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflowY: 'auto', padding: '120px 5vw', zIndex: 10, background: '#0a0a0a' }}>
           {activeCategory === null ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
-                  {Array.from(new Set(graphics.map(g => g.category || 'Uncategorized'))).map(cat => (
+                  {Array.from(new Set(graphics.flatMap(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean)))).map(cat => (
                       <div key={cat} onClick={() => setActiveCategory(cat)} className="category-folder hover-pop-btn" style={{
                           background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '40px 30px', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px'
                       }}
@@ -1725,7 +1725,7 @@ export default function Page() {
                               <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ebd73f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                           </div>
                           <h3 style={{ fontSize: '1.2rem', margin: 0, color: '#fff', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'Panchang, sans-serif' }}>{cat}</h3>
-                          <span style={{ color: '#888', fontSize: '0.85rem', fontFamily: 'Clash Display, sans-serif' }}>{graphics.filter(g => (g.category || 'Uncategorized') === cat).length} items</span>
+                          <span style={{ color: '#888', fontSize: '0.85rem', fontFamily: 'Clash Display, sans-serif' }}>{graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(cat)).length} items</span>
                       </div>
                   ))}
               </div>
@@ -1742,7 +1742,7 @@ export default function Page() {
                       <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#ebd73f', letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'Panchang, sans-serif' }}>{activeCategory}</h2>
                   </div>
                   <div style={{ columnCount: 3, columnGap: '20px' }}>
-                      {graphics.filter(g => (g.category || 'Uncategorized') === activeCategory).map((item, idx) => (
+                      {graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(activeCategory)).map((item, idx) => (
                           <div key={idx} style={{ marginBottom: '20px', breakInside: 'avoid', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: '#111', cursor: 'zoom-in', transition: 'transform 0.3s ease' }}
                           onClick={() => {
                               document.getElementById('specific-img').src = item.image_url;
