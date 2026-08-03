@@ -148,6 +148,8 @@ export default function OrloChat() {
         messages,
         timestamp: new Date().getTime()
       }));
+    } else {
+      localStorage.removeItem('orlo_chat_history');
     }
   }, [messages]);
   const recognitionRef = useRef(null);
@@ -638,7 +640,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       
       if (!res.ok) throw new Error(data.error || 'Failed to process command');
 
-      if (data.intent === 'unsupported' || (!data.payload && data.intent !== 'learn' && data.intent !== 'chat')) {
+      if (data.intent === 'unsupported' || (!data.payload && data.intent !== 'learn' && data.intent !== 'chat' && data.intent !== 'clear_chat')) {
         setEmotion('disappointed');
         setTimeout(() => setEmotion('idle'), 4000);
       } else {
@@ -646,7 +648,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         setTimeout(() => setEmotion('idle'), 3000);
       }
 
-      setMessages(prev => [...prev, { role: 'ai', text: data.replyMessage || "Done. Check your form!" }]);
+      if (data.intent === 'clear_chat') {
+        setMessages([{ role: 'ai', text: data.replyMessage || "Chat history cleared. My mind is a blank slate!" }]);
+      } else {
+        setMessages(prev => [...prev, { role: 'ai', text: data.replyMessage || "Done. Check your form!" }]);
+      }
       
       // Dispatch event to window so forms can pick it up
       if (data.intent && data.payload) {
