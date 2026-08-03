@@ -228,6 +228,22 @@ export default function PortfolioManager() {
                   showNotification('success', 'Orlo wrote a new Caption!');
                   return { ...prev, value: aiData.description };
               }
+              if (prev.field === 'details') {
+                  let newPopup = { ...prev, value: { ...prev.value } };
+                  let updated = false;
+                  if (aiData.case_study) {
+                      newPopup.value.case_study = aiData.case_study;
+                      updated = true;
+                  }
+                  if (aiData.title || aiData.description) {
+                      newPopup.value.title = aiData.title || aiData.description;
+                      updated = true;
+                  }
+                  if (updated) {
+                      showNotification('success', 'Orlo filled in the details!');
+                      return newPopup;
+                  }
+              }
               return prev;
           });
       }
@@ -1289,17 +1305,15 @@ export default function PortfolioManager() {
 
                   {editPopup.field === 'details' ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '35px' }}>
-                          {activeTab !== TABS.GRAPHICS && (
-                              <div>
-                                  <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>{activeTab === TABS.LONG_FORM ? 'Title' : 'Description / Caption'}</label>
-                                  <input 
-                                    type="text" 
-                                    style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
-                                    value={editPopup.value.title || ''} 
-                                    onChange={e => setEditPopup({...editPopup, value: {...editPopup.value, title: e.target.value}})} 
-                                  />
-                              </div>
-                          )}
+                          <div>
+                              <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>{activeTab === TABS.REELS ? 'Description / Caption' : 'Title'}</label>
+                              <input 
+                                type="text" 
+                                style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
+                                value={editPopup.value.title || ''} 
+                                onChange={e => setEditPopup({...editPopup, value: {...editPopup.value, title: e.target.value}})} 
+                              />
+                          </div>
                           
                           {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) && (
                               <div>
@@ -1396,8 +1410,7 @@ export default function PortfolioManager() {
                                   </div>
                               )}
 
-                          {activeTab === TABS.REELS && (
-                              <div>
+                              <div style={{ marginTop: '20px' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                       <label style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>Case Study</label>
                                       <button 
@@ -1419,11 +1432,20 @@ export default function PortfolioManager() {
                                         onClick={() => {
                                             const currentItem = items.find(i => i.id === editPopup.id);
                                             if (currentItem) {
-                                                const videoSrc = currentItem.videoSrc || currentItem.video_url;
-                                                if (videoSrc) {
-                                                    window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc } }));
+                                                if (activeTab === TABS.GRAPHICS) {
+                                                    const imageUrl = currentItem.image_url;
+                                                    if (imageUrl) {
+                                                        window.dispatchEvent(new CustomEvent('ORLO_GRAPHIC_ANALYZE', { detail: { imageUrl: imageUrl } }));
+                                                    } else {
+                                                        showNotification('error', 'No image found for this item to analyze.');
+                                                    }
                                                 } else {
-                                                    showNotification('error', 'No video found for this item to analyze.');
+                                                    const videoSrc = currentItem.videoSrc || currentItem.video_url;
+                                                    if (videoSrc) {
+                                                        window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc } }));
+                                                    } else {
+                                                        showNotification('error', 'No video found for this item to analyze.');
+                                                    }
                                                 }
                                             }
                                         }}
@@ -1435,10 +1457,10 @@ export default function PortfolioManager() {
                                       style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif', minHeight: '120px' }}
                                       value={editPopup.value.case_study || ''}
                                       onChange={e => setEditPopup({...editPopup, value: {...editPopup.value, case_study: e.target.value}})}
-                                      placeholder="Discuss cinematography, editing, pacing, or transformation..."
+                                      placeholder="Discuss design process, cinematography, pacing, or transformation..."
                                   />
                               </div>
-                          )}
+
                       </div>
                   ) : editPopup.field === 'category' ? (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '35px', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
@@ -1665,7 +1687,7 @@ export default function PortfolioManager() {
                         try {
                           let updateBody = { id: editPopup.id };
                           if (editPopup.field === 'details') {
-                             if (activeTab === TABS.LONG_FORM) {
+                             if (activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) {
                                  updateBody.title = editPopup.value.title.trim();
                              } else if (activeTab === TABS.REELS) {
                                  updateBody.description = editPopup.value.title.trim();
@@ -1673,7 +1695,7 @@ export default function PortfolioManager() {
                              if (activeTab === TABS.REELS || activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) {
                                  updateBody.category = editPopup.value.category;
                              }
-                             if (activeTab === TABS.REELS) {
+                             if (editPopup.value.case_study !== undefined) {
                                  updateBody.case_study = editPopup.value.case_study.trim();
                              }
                           } else {
@@ -2201,14 +2223,14 @@ export default function PortfolioManager() {
                                 >
                                     {activeTab === TABS.REELS ? item.description || 'Reel Video' : ''}
                                     {activeTab === TABS.GRAPHICS ? (item.category ? `Graphic: ${item.category}` : 'Graphic Design') : ''}
-                                    {activeTab === TABS.LONG_FORM ? item.title : ''}
+                                    {(activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) ? item.title : ''}
                                 </span>
                                 
                                 {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && (
                                     <>
                                         <button 
                                             onClick={() => openEditPopup(item.id, 'details', {
-                                                title: activeTab === TABS.LONG_FORM ? (item.title || '') : (item.description || ''),
+                                                title: (activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) ? (item.title || '') : (item.description || ''),
                                                 category: item.category || '',
                                                 case_study: item.case_study || ''
                                             })}
@@ -2275,7 +2297,7 @@ export default function PortfolioManager() {
                                     }
 
                                     const detailsText = `Added ${dateStr} at ${timeStr}`;
-                                    const titleText = activeTab === TABS.REELS ? (item.description || 'Reel Video') : activeTab === TABS.GRAPHICS ? 'Graphic Design' : item.title;
+                                    const titleText = activeTab === TABS.REELS ? (item.description || 'Reel Video') : activeTab === TABS.GRAPHICS ? (item.title || 'Graphic Design') : item.title;
                                     
                                     return (
                                         <div className="info-tooltip-wrapper">
