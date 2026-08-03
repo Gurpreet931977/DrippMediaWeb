@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import OrloChat from './components/OrloChat';
 import styles from './admin.module.css';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
@@ -18,6 +18,7 @@ export default function AdminLayout({ children }) {
   const [loginLoading, setLoginLoading]   = useState(false);
   const [showPassword, setShowPassword]   = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkDevice = () => setIsDesktop(window.innerWidth >= 1024);
@@ -286,7 +287,7 @@ export default function AdminLayout({ children }) {
         }
       `}</style>
       <AdminSidebar />
-      <main className={styles.mainContent} style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+      <main key={pathname} className={styles.mainContent} style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
         {children}
       </main>
       <OrloChat />

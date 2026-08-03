@@ -73,7 +73,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto', animation: 'fadeIn 0.5s ease' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       {/* Hero Header */}
       <div className={styles.header} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '2rem' }}>
         <div>

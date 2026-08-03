@@ -891,7 +891,7 @@ export default function InvoiceMaker() {
 
   return (
 
-      <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto', animation: 'fadeIn 0.5s ease' }}>
+      <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
 
       {/* CUSTOM DIALOG (ALERT / CONFIRM) */}
       {customDialog.isOpen && createPortal(

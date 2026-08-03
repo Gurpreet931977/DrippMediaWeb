@@ -152,7 +152,7 @@ export default function PackageMaker() {
   if (!isClient) return <div style={{ padding: '50px', color: 'white' }}>Loading PMP Maker...</div>;
 
   return (
-    <div style={{ color: 'white', maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn 0.5s ease' }}>
+    <div style={{ color: 'white', maxWidth: '1200px', margin: '0 auto' }}>
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
