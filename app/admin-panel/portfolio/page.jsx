@@ -1388,11 +1388,11 @@ export default function PortfolioManager() {
                                                           />
                                                       )}
                                                   </div>
+                                              ))}
                                           </div>
                                       </div>
                                   </div>
-                              </div>
-                          )}
+                              )}
 
                           {activeTab === TABS.REELS && (
                               <div>
@@ -1926,9 +1926,9 @@ export default function PortfolioManager() {
                                                 />
                                             )}
                                         </div>
+                                    ))}
                                 </div>
                             </div>
-                        </div>
                         
                         <button
                             type="button"
