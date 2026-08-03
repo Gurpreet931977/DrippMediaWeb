@@ -1328,24 +1328,35 @@ export default function PortfolioManager() {
                           {activeTab === TABS.GRAPHICS && (
                               <div>
                                   <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>Category</label>
-                                  <div style={{ position: 'relative' }}>
+                                  <div ref={editDropdownRef} style={{ position: 'relative' }}>
                                       <div 
                                           onClick={() => setIsEditCategoryDropdownOpen(!isEditCategoryDropdownOpen)}
                                           style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                                       >
-                                          <span>
+                                          <span style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                               {editPopup.value.category 
-                                                  ? (editPopup.value.category.split(',').length > 2 
-                                                      ? `${editPopup.value.category.split(',').length} Categories Selected` 
-                                                      : editPopup.value.category)
-                                                  : 'Select Category'
+                                                  ? editPopup.value.category.split(',').map(c => c.trim()).filter(Boolean).map(cat => (
+                                                      <div key={cat} style={{ background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', padding: '4px 10px', borderRadius: '8px', fontSize: '0.8rem', fontFamily: 'Clash Display, sans-serif' }}>
+                                                          {cat}
+                                                      </div>
+                                                  ))
+                                                  : <span style={{ color: 'rgba(255,255,255,0.4)' }}>Select Category</span>
                                               }
                                           </span>
-                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: isEditCategoryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: isEditCategoryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
                                       </div>
-                                      {isEditCategoryDropdownOpen && (
-                                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden', zIndex: 100 }}>
-                                              {graphicCategories.map(cat => (
+                                      
+                                      <div style={{ 
+                                          position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', 
+                                          background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', 
+                                          overflowY: 'auto', maxHeight: '250px', zIndex: 100,
+                                          opacity: isEditCategoryDropdownOpen ? 1 : 0,
+                                          transform: isEditCategoryDropdownOpen ? 'translateY(0)' : 'translateY(-10px)',
+                                          pointerEvents: isEditCategoryDropdownOpen ? 'auto' : 'none',
+                                          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                                          boxShadow: '0 10px 40px rgba(0,0,0,0.8)'
+                                      }}>
+                                          {graphicCategories.map(cat => (
                                                   <div
                                                       key={cat}
                                                       style={{ padding: '12px 18px', cursor: 'pointer', fontFamily: 'Clash Display, sans-serif', fontSize: '0.95rem', color: isCategorySelected(editPopup.value.category, cat) ? '#ebd73f' : '#ccc', background: isCategorySelected(editPopup.value.category, cat) ? 'rgba(235, 215, 63, 0.1)' : 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
@@ -1377,9 +1388,8 @@ export default function PortfolioManager() {
                                                           />
                                                       )}
                                                   </div>
-                                              ))}
                                           </div>
-                                      )}
+                                      </div>
                                   </div>
                               </div>
                           )}
@@ -1821,7 +1831,7 @@ export default function PortfolioManager() {
                         Category <span style={{ color: '#ebd73f', opacity: 0.8 }}>(Graphic Type)</span>
                     </label>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <div style={{ position: 'relative', flex: 1 }}>
+                        <div ref={dropdownRef} style={{ position: 'relative', flex: 1 }}>
                             <div 
                                 onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
                                 style={{
@@ -1840,12 +1850,14 @@ export default function PortfolioManager() {
                                     boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
                                 }}
                             >
-                                <span>
+                                <span style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                     {formData.category 
-                                        ? (formData.category.split(',').length > 2 
-                                            ? `${formData.category.split(',').length} Categories Selected` 
-                                            : formData.category)
-                                        : 'Select Category'
+                                        ? formData.category.split(',').map(c => c.trim()).filter(Boolean).map(cat => (
+                                            <div key={cat} style={{ background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', padding: '4px 10px', borderRadius: '8px', fontSize: '0.8rem', fontFamily: 'Clash Display, sans-serif' }}>
+                                                {cat}
+                                            </div>
+                                        ))
+                                        : <span style={{ color: 'rgba(255,255,255,0.4)' }}>Select Category</span>
                                     }
                                 </span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isCategoryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
@@ -1853,21 +1865,25 @@ export default function PortfolioManager() {
                                 </svg>
                             </div>
                             
-                            {isCategoryDropdownOpen && (
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '100%',
-                                    left: 0,
-                                    right: 0,
-                                    marginTop: '8px',
-                                    background: '#0a0a0a',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: '12px',
-                                    overflow: 'hidden',
-                                    zIndex: 50,
-                                    boxShadow: '0 10px 40px rgba(0,0,0,0.8)'
-                                }}>
-                                    {graphicCategories.map(cat => (
+                            <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: 0,
+                                right: 0,
+                                marginTop: '8px',
+                                background: '#0a0a0a',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '12px',
+                                overflowY: 'auto',
+                                maxHeight: '250px',
+                                zIndex: 50,
+                                boxShadow: '0 10px 40px rgba(0,0,0,0.8)',
+                                opacity: isCategoryDropdownOpen ? 1 : 0,
+                                transform: isCategoryDropdownOpen ? 'translateY(0)' : 'translateY(-10px)',
+                                pointerEvents: isCategoryDropdownOpen ? 'auto' : 'none',
+                                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                            }}>
+                                {graphicCategories.map(cat => (
                                         <div
                                             key={cat}
                                             style={{
@@ -1910,9 +1926,8 @@ export default function PortfolioManager() {
                                                 />
                                             )}
                                         </div>
-                                    ))}
                                 </div>
-                            )}
+                            </div>
                         </div>
                         
                         <button
