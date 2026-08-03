@@ -265,6 +265,15 @@ export default function OrloChat() {
   }, [messages, isTyping, isOpen]);
 
   useEffect(() => {
+    if (isOpen && chatRef.current) {
+      gsap.fromTo(chatRef.current, 
+        { opacity: 0, y: 80, scale: 0.85 }, 
+        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1.1, 0.5)' }
+      );
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
     const handleCopilotReply = (e) => {
       const data = e.detail;
       if (data && data.replyMessage) {
@@ -340,10 +349,6 @@ export default function OrloChat() {
       if (e.detail) {
         if (!isOpen) {
           setIsOpen(true);
-          gsap.fromTo(chatRef.current, 
-            { opacity: 0, y: 80, scale: 0.85 }, 
-            { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1.1, 0.5)' }
-          );
         }
         setInput(e.detail);
       }
@@ -356,10 +361,6 @@ export default function OrloChat() {
     const handleAnalyzeTrigger = (e) => {
       if (!isOpen) {
         setIsOpen(true);
-        gsap.fromTo(chatRef.current, 
-          { opacity: 0, y: 80, scale: 0.85 }, 
-          { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1.1, 0.5)' }
-        );
       }
       handleVideoAnalysis(e);
     };
@@ -367,10 +368,6 @@ export default function OrloChat() {
     const handleGraphicAnalyzeTrigger = (e) => {
       if (!isOpen) {
         setIsOpen(true);
-        gsap.fromTo(chatRef.current, 
-          { opacity: 0, y: 80, scale: 0.85 }, 
-          { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1.1, 0.5)' }
-        );
       }
       handleGraphicAnalysis(e);
     };
@@ -606,13 +603,6 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       setTimeout(() => {
         setEmotion(prev => prev === 'excited' ? 'idle' : prev);
       }, 1500);
-
-      setTimeout(() => {
-        gsap.fromTo(chatRef.current, 
-          { opacity: 0, y: 80, scale: 0.85 }, 
-          { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1.1, 0.5)' }
-        );
-      }, 10);
     }
   };
 
