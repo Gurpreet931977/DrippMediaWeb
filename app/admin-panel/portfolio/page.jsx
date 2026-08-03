@@ -1306,7 +1306,48 @@ export default function PortfolioManager() {
                   {editPopup.field === 'details' ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '35px' }}>
                           <div>
-                              <label style={{ display: 'block', marginBottom: '8px', color: '#888', fontSize: '0.9rem' }}>{activeTab === TABS.REELS ? 'Description / Caption' : 'Title'}</label>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                  <label style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>{activeTab === TABS.REELS ? 'Description / Caption' : 'Title'}</label>
+                                  <button 
+                                    type="button" 
+                                    style={{ 
+                                      background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15), rgba(212, 188, 28, 0.05))', 
+                                      border: '1px solid rgba(235, 215, 63, 0.4)', 
+                                      color: '#ebd73f', 
+                                      padding: '4px 10px', 
+                                      borderRadius: '12px', 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      gap: '6px',
+                                      fontSize: '0.75rem',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s'
+                                    }}
+                                    className="hover-pop-btn"
+                                    onClick={() => {
+                                        const currentItem = items.find(i => i.id === editPopup.id);
+                                        if (currentItem) {
+                                            if (activeTab === TABS.GRAPHICS) {
+                                                const imageUrl = currentItem.image_url;
+                                                if (imageUrl) {
+                                                    window.dispatchEvent(new CustomEvent('ORLO_GRAPHIC_ANALYZE', { detail: { imageUrl: imageUrl } }));
+                                                } else {
+                                                    showNotification('error', 'No image found for this item to analyze.');
+                                                }
+                                            } else {
+                                                const videoSrc = currentItem.videoSrc || currentItem.video_url;
+                                                if (videoSrc) {
+                                                    window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE', { detail: { videoUrl: videoSrc } }));
+                                                } else {
+                                                    showNotification('error', 'No video found for this item to analyze.');
+                                                }
+                                            }
+                                        }
+                                    }}
+                                  >
+                                      <Sparkles size={12} /> Ask Orlo to Fill
+                                  </button>
+                              </div>
                               <input 
                                 type="text" 
                                 style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '1rem', outline: 'none', fontFamily: 'Clash Display, sans-serif' }}
