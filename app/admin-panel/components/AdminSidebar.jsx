@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video } from 'lucide-react';
+import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video, AlertTriangle } from 'lucide-react';
 import styles from '../admin.module.css';
 import { useGenz } from '../../contexts/GenzContext';
 
@@ -17,6 +17,7 @@ export default function AdminSidebar() {
     { name: isGenz ? 'Masterplan Maker' : 'PMP Maker', path: '/admin-panel/package', icon: PackagePlus },
     { name: isGenz ? 'The Showcase' : 'Portfolio Manager', path: '/admin-panel/portfolio', icon: Video },
     { name: isGenz ? 'Mail Blaster' : 'Email Campaigns', path: '/admin-panel/email', icon: Mail },
+    { name: isGenz ? 'Glitch Radar' : 'Error Logs', path: '/admin-panel/errors', icon: AlertTriangle },
     { name: isGenz ? 'The Engine' : 'System', path: '/admin-panel/system', icon: Settings },
   ];
 

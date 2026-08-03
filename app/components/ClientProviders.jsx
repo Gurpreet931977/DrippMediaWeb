@@ -133,11 +133,15 @@ function GlobalGenzToggle() {
   );
 }
 
+import { ErrorLogProvider } from '../contexts/ErrorLogContext';
+
 export default function ClientProviders({ children }) {
   return (
-    <GenzProvider>
-      {children}
-      <GlobalGenzToggle />
-    </GenzProvider>
+    <ErrorLogProvider>
+      <GenzProvider>
+        {children}
+        <GlobalGenzToggle />
+      </GenzProvider>
+    </ErrorLogProvider>
   );
 }

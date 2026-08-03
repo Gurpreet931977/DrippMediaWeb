@@ -133,7 +133,7 @@ export default function Page() {
                         if (sourceItem.title) el.dataset.title = sourceItem.title;
                         if (sourceItem.case_study) el.dataset.case_study = sourceItem.case_study;
                       } else {
-                          const dummyImages = Array.from({ length: 12 }).map((_, i) => `https://placehold.co/800x800/111111/ebd73f.png?text=Image+${i + 1}`);
+                          const dummyImages = Array.from({ length: 12 }).map((_, i) => `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`);
                           img.src = dummyImages[i % dummyImages.length];
                         
                         el.dataset.category = 'Concept Art';
@@ -515,7 +515,7 @@ export default function Page() {
         async function fetchGraphicsAndInit() {
             let fetchedItems = [];
             const dummyGraphics = Array.from({ length: 12 }).map((_, i) => ({
-                image_url: `https://placehold.co/800x800/111111/ebd73f.png?text=Project+${i + 1}`,
+                image_url: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`,
                 category: i % 2 === 0 ? 'Concept Art' : 'Branding',
                 title: `Placeholder Project ${i + 1}`,
                 case_study: 'This is a premium placeholder image because no graphics were found in the database. Add some graphics in the Admin Panel!'
@@ -544,7 +544,7 @@ export default function Page() {
 
             const graphicCanvas = new InfiniteCanvas('canvas-container', {
                 imageSize: '20',       // 20vw sizing base
-                numberOfImages: fetchedItems.length > 0 ? (fetchedItems.length < 32 ? 64 : 200) : 64, // Scale grid down to avoid lag if few items
+                numberOfImages: fetchedItems.length > 0 ? (fetchedItems.length < 64 ? 256 : fetchedItems.length * 4) : 256, // Massive grid ensures wrapping boundaries are strictly off-screen
                 gap: '0.5',            // Minimal 0.5vw gap so images are nearly touching
                 customItems: fetchedItems // Dynamically loaded from Supabase
             });
@@ -1703,7 +1703,17 @@ export default function Page() {
               }
           }}
         >
-          <img src="" className="specific-view-img" id="specific-img" alt="Specific View" style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img 
+            src="" 
+            className="specific-view-img" 
+            id="specific-img" 
+            alt="Specific View" 
+            style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', width: '100%', height: '100%', objectFit: 'contain' }}
+            onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
+            }}
+          />
         </div>
         <div className="specific-view-info">
         <div className="specific-category" id="specific-category">Category</div>
@@ -1772,7 +1782,15 @@ export default function Page() {
                           onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
                           onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                           >
-                              <img src={item.image_url} alt="graphic" style={{ width: '100%', display: 'block', objectFit: 'contain' }} />
+                              <img 
+                                src={item.image_url} 
+                                alt="graphic" 
+                                style={{ width: '100%', display: 'block', objectFit: 'contain' }}
+                                onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
+                                }}
+                              />
                           </div>
                       ))}
                       <style dangerouslySetInnerHTML={{ __html: `
