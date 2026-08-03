@@ -145,7 +145,7 @@ export default function ErrorLogsPage() {
               style={{ 
                 padding: '0', 
                 overflow: 'hidden', 
-                borderLeft: \`4px solid \${getLevelColor(log.level)}\`,
+                borderLeft: `4px solid ${getLevelColor(log.level)}`,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
@@ -165,7 +165,7 @@ export default function ErrorLogsPage() {
                       fontSize: '0.7rem', 
                       padding: '2px 8px', 
                       borderRadius: '12px', 
-                      background: \`\${getLevelColor(log.level)}22\`, 
+                      background: `${getLevelColor(log.level)}22`, 
                       color: getLevelColor(log.level),
                       textTransform: 'uppercase',
                       letterSpacing: '1px'
