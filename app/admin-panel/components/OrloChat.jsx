@@ -485,8 +485,14 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
          const data = await res.json();
          if (!res.ok) throw new Error(data.error || data.message || 'Unknown API Error');
          
+         data.fillTarget = e?.detail?.fillTarget || 'all';
+         
          window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data }));
-         setMessages(prev => [...prev, { role: 'ai', text: "Done! I've automatically written a premium title and description for you." }]);
+         
+         const target = data.fillTarget;
+         const textMsg = target === 'title' ? "Done! I've automatically written a premium title for you." : target === 'case_study' ? "Done! I've automatically written a premium case study for you." : "Done! I've automatically written a premium title, description, and case study for you.";
+         
+         setMessages(prev => [...prev, { role: 'ai', text: textMsg }]);
          setEmotion('success');
          setTimeout(() => setEmotion('idle'), 3000);
      } catch (e) {
@@ -569,8 +575,14 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
          const data = await res.json();
          if (!res.ok) throw new Error(data.error || data.message || 'Unknown API Error');
          
+         data.fillTarget = e?.detail?.fillTarget || 'all';
+         
          window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data }));
-         setMessages(prev => [...prev, { role: 'ai', text: "Done! I've automatically written a premium case study for your graphic." }]);
+         
+         const target = data.fillTarget;
+         const textMsg = target === 'title' ? "Done! I've automatically written a premium title for your graphic." : target === 'case_study' ? "Done! I've automatically written a premium case study for your graphic." : "Done! I've automatically written a premium title and case study for your graphic.";
+         
+         setMessages(prev => [...prev, { role: 'ai', text: textMsg }]);
          setEmotion('success');
          setTimeout(() => setEmotion('idle'), 3000);
      } catch (e) {

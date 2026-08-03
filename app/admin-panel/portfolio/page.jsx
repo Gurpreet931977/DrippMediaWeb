@@ -536,6 +536,7 @@ export default function PortfolioManager() {
       } else if (activeTab === TABS.GRAPHICS) {
         payload = {
           image_url: publicUrl,
+          title: formData.title,
           category: formData.category,
           sort_order: items.length > 0 ? items[0].sort_order + 1 : 1
         };
@@ -1729,15 +1730,15 @@ export default function PortfolioManager() {
                           let updateBody = { id: editPopup.id };
                           if (editPopup.field === 'details') {
                              if (activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) {
-                                 updateBody.title = editPopup.value.title.trim();
+                                 updateBody.title = (editPopup.value?.title || '').trim();
                              } else if (activeTab === TABS.REELS) {
-                                 updateBody.description = editPopup.value.title.trim();
+                                 updateBody.description = (editPopup.value?.title || '').trim();
                              }
                              if (activeTab === TABS.REELS || activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) {
-                                 updateBody.category = editPopup.value.category;
+                                 updateBody.category = editPopup.value?.category || '';
                              }
-                             if (editPopup.value.case_study !== undefined) {
-                                 updateBody.case_study = editPopup.value.case_study.trim();
+                             if (editPopup.value?.case_study !== undefined) {
+                                 updateBody.case_study = (editPopup.value?.case_study || '').trim();
                              }
                           } else {
                              updateBody[editPopup.field] = typeof editPopup.value === 'string' ? editPopup.value.trim() : editPopup.value;
@@ -1753,10 +1754,12 @@ export default function PortfolioManager() {
                             fetchItems();
                             setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
                           } else {
-                            throw new Error('Update failed');
+                            const errData = await res.json().catch(() => ({}));
+                            throw new Error(errData.error || 'Update failed on server');
                           }
                         } catch (e) {
-                          showNotification('error', 'Failed to update');
+                          console.error("Save Details Error:", e);
+                          showNotification('error', `Failed to update: ${e.message}`);
                         }
                     }}>
                         {editPopup.field === 'extract_frame' ? (editPopup.isUploading ? `Uploading (${editPopup.progress}%)...` : 'SAVE') : 'Save Changes'}
@@ -2255,7 +2258,7 @@ export default function PortfolioManager() {
                                 <video className="item-thumbnail reel-ratio" src={item.videoSrc} muted preload="metadata" />
                         )}
                         {activeTab === TABS.GRAPHICS && (
-                            <img className="item-thumbnail" src={item.image_url} alt="graphic" />
+                            <img className="item-thumbnail" src={item.image_url} alt="graphic" style={{ objectFit: 'contain', background: 'transparent' }} />
                         )}
                         {activeTab === TABS.LONG_FORM && (
                             <img className="item-thumbnail" src={item.thumbnail_url} alt="thumbnail" />
@@ -2266,9 +2269,13 @@ export default function PortfolioManager() {
                                 <span 
                                     style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '250px' }}
                                 >
-                                    {activeTab === TABS.REELS ? item.description || 'Reel Video' : ''}
-                                    {activeTab === TABS.GRAPHICS ? (item.category ? `Graphic: ${item.category}` : 'Graphic Design') : ''}
-                                    {(activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) ? item.title : ''}
+                                    {activeTab === TABS.REELS && (item.description || 'Reel Video')}
+                                    {activeTab === TABS.LONG_FORM && item.title}
+                                    {activeTab === TABS.GRAPHICS && (
+                                        item.title 
+                                            ? <>{item.title} <span style={{ fontSize: '0.8rem', color: '#888', fontWeight: 'normal' }}>({item.category || 'Graphic'})</span></>
+                                            : (item.category ? `Graphic: ${item.category}` : 'Graphic Design')
+                                    )}
                                 </span>
                                 
                                 {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && (
