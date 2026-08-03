@@ -771,9 +771,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         }
 
         .copilot-orb {
-          position: fixed;
-          bottom: 30px;
-          right: 30px;
+          position: relative;
           width: 65px;
           height: 65px;
           border-radius: 50%;
