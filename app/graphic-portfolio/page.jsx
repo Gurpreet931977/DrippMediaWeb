@@ -134,16 +134,16 @@ export default function Page() {
                         if (sourceItem.case_study) el.dataset.case_study = sourceItem.case_study;
                     } else {
                         const dummyImages = [
-                            'https://images.unsplash.com/photo-1626544827763-d516dce335e2?w=800&q=80',
-                            'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80',
-                            'https://images.unsplash.com/photo-1558655146-d09347e92766?w=800&q=80',
-                            'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80',
-                            'https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=800&q=80',
-                            'https://images.unsplash.com/photo-1600132806370-bf17e65e942f?w=800&q=80',
-                            'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800&q=80',
-                            'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&q=80',
-                            'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=800&q=80',
-                            'https://images.unsplash.com/photo-1574169208507-84376144848b?w=800&q=80'
+                            'https://picsum.photos/seed/100/800/800',
+                            'https://picsum.photos/seed/101/800/800',
+                            'https://picsum.photos/seed/102/800/800',
+                            'https://picsum.photos/seed/103/800/800',
+                            'https://picsum.photos/seed/104/800/800',
+                            'https://picsum.photos/seed/105/800/800',
+                            'https://picsum.photos/seed/106/800/800',
+                            'https://picsum.photos/seed/107/800/800',
+                            'https://picsum.photos/seed/108/800/800',
+                            'https://picsum.photos/seed/109/800/800'
                         ];
                         img.src = dummyImages[i % dummyImages.length];
                         
@@ -516,6 +516,13 @@ export default function Page() {
         // --- DEPLOY INSTANCE ---
         async function fetchGraphicsAndInit() {
             let fetchedItems = [];
+            const dummyGraphics = Array.from({ length: 12 }).map((_, i) => ({
+                image_url: `https://picsum.photos/seed/${i + 200}/800/800`,
+                category: i % 2 === 0 ? 'Concept Art' : 'Branding',
+                title: `Placeholder Project ${i + 1}`,
+                case_study: 'This is a premium placeholder image because no graphics were found in the database. Add some graphics in the Admin Panel!'
+            }));
+
             try {
                 const res = await fetch('/api/graphics');
                 if (res.ok) {
@@ -523,10 +530,18 @@ export default function Page() {
                     if (data && data.length > 0) {
                         fetchedItems = data;
                         setGraphics(data);
+                    } else {
+                        fetchedItems = dummyGraphics;
+                        setGraphics(dummyGraphics);
                     }
+                } else {
+                    fetchedItems = dummyGraphics;
+                    setGraphics(dummyGraphics);
                 }
             } catch (err) {
                 console.error("Failed to fetch graphics from Supabase", err);
+                fetchedItems = dummyGraphics;
+                setGraphics(dummyGraphics);
             }
 
             const graphicCanvas = new InfiniteCanvas('canvas-container', {
