@@ -121,7 +121,7 @@ export default function Page() {
                     // Map to custom URLs from database if available, looping if there are fewer URLs than total grid items
                     if (this.customItems && this.customItems.length > 0) {
                         const sourceItem = this.customItems[i % this.customItems.length];
-                        img.src = sourceItem.image_url;
+                        img.src = sourceItem.image_url || sourceItem.img_src || sourceItem.imgSrc || sourceItem.url || sourceItem.src || '';
                         if (sourceItem.category) {
                             el.dataset.category = sourceItem.category;
                             

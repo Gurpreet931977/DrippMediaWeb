@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { AlertTriangle, Info, AlertCircle, XCircle, Trash2, Clock, MapPin, Search, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Info, AlertCircle, XCircle, Trash2, Clock, MapPin, Search, CheckCircle2, Copy, Check } from 'lucide-react';
 import styles from '../admin.module.css';
 import { useGenz } from '../../contexts/GenzContext';
 import { useErrorLog } from '../../contexts/ErrorLogContext';
@@ -13,6 +13,8 @@ export default function ErrorLogsPage() {
   const [filterLevel, setFilterLevel] = useState('all'); // all, error, warn, fatal
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedLogId, setExpandedLogId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
+  const [copiedAll, setCopiedAll] = useState(false);
 
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
@@ -48,6 +50,22 @@ export default function ErrorLogsPage() {
       case 'warn': return <AlertTriangle size={16} color="#ebd73f" />;
       default: return <Info size={16} color="#3b82f6" />;
     }
+  };
+
+  const handleCopyPrompt = (e, log) => {
+    e.stopPropagation();
+    const prompt = `Please fix this error:\nMessage: ${log.message}\nLevel: ${log.level}\nSource: ${log.source}\nDetails: ${log.details || 'None'}`;
+    navigator.clipboard.writeText(prompt);
+    setCopiedId(log.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleCopyAllPrompt = () => {
+    if (logs.length === 0) return;
+    const prompt = "Please fix these errors:\n\n" + logs.map(log => `--- ERROR ---\nMessage: ${log.message}\nLevel: ${log.level}\nSource: ${log.source}\nDetails: ${log.details || 'None'}\n`).join('\n');
+    navigator.clipboard.writeText(prompt);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 2000);
   };
 
   return (
@@ -113,16 +131,26 @@ export default function ErrorLogsPage() {
           </div>
           
           {logs.length > 0 && (
-            <button 
-              onClick={() => {
-                if(confirm('Are you sure you want to clear all error logs?')) clearLogs();
-              }}
-              className={styles.btn} 
-              style={{ color: '#ff4d4d', borderColor: 'rgba(255, 77, 77, 0.2)' }}
-            >
-              <Trash2 size={16} />
-              Clear All
-            </button>
+            <>
+              <button 
+                onClick={handleCopyAllPrompt}
+                className={styles.btn} 
+                style={{ color: '#3b82f6', borderColor: 'rgba(59, 130, 246, 0.2)' }}
+              >
+                {copiedAll ? <Check size={16} /> : <Copy size={16} />}
+                {copiedAll ? 'Copied(success)' : 'Give Prompt (All)'}
+              </button>
+              <button 
+                onClick={() => {
+                  if(confirm('Are you sure you want to clear all error logs?')) clearLogs();
+                }}
+                className={styles.btn} 
+                style={{ color: '#ff4d4d', borderColor: 'rgba(255, 77, 77, 0.2)' }}
+              >
+                <Trash2 size={16} />
+                Clear All
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -184,6 +212,27 @@ export default function ErrorLogsPage() {
                       {log.source.split('/').pop() || log.source}
                     </span>
                   </div>
+                </div>
+
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+                  <button 
+                    onClick={(e) => handleCopyPrompt(e, log)}
+                    className={styles.btn}
+                    style={{ 
+                      padding: '6px 12px', 
+                      fontSize: '0.85rem', 
+                      background: 'rgba(255,255,255,0.05)', 
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: copiedId === log.id ? '#10b981' : '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      borderRadius: '8px'
+                    }}
+                  >
+                    {copiedId === log.id ? <Check size={14} /> : <Copy size={14} />}
+                    {copiedId === log.id ? 'Copied(success)' : 'Give Prompt'}
+                  </button>
                 </div>
               </div>
 
