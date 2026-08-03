@@ -137,8 +137,17 @@ export default function Page() {
                             catLabel.innerText = sourceItem.category;
                             el.appendChild(catLabel);
                         }
-                        if (sourceItem.title) el.dataset.title = sourceItem.title;
-                        if (sourceItem.case_study) el.dataset.case_study = sourceItem.case_study;
+                        const dummyTitles = ['Neon Brand Identity', 'Event Poster Vibe', 'Tech Startup Logo', 'Creative Thumbnail', 'Web Redesign'];
+                        const dummyCaseStudies = [
+                          "This project focused on creating a bold, eye-catching aesthetic. We used high-contrast colors and custom typography to make the brand instantly recognizable.",
+                          "The goal was to design something clean and modern. By stripping away unnecessary elements, we created a minimalist design that speaks volumes.",
+                          "This was built for maximum engagement. We used vibrant gradients and dynamic layouts to capture attention in less than a second.",
+                          "Designed specifically to resonate with a younger demographic. It blends modern aesthetics with retro elements to create a nostalgic yet fresh vibe.",
+                          "A complete visual overhaul. We maintained the core identity but modernized the geometry and color palette for a premium feel."
+                        ];
+
+                        el.dataset.title = sourceItem.title || dummyTitles[i % dummyTitles.length];
+                        el.dataset.case_study = sourceItem.case_study || dummyCaseStudies[i % dummyCaseStudies.length];
                       } else {
                           const dummyImages = Array.from({ length: 12 }).map((_, i) => `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`);
                           img.src = dummyImages[i % dummyImages.length];
@@ -1826,9 +1835,17 @@ export default function Page() {
                           <div key={idx} style={{ marginBottom: '20px', breakInside: 'avoid', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: '#111', cursor: 'zoom-in', transition: 'transform 0.3s ease' }}
                           onClick={() => {
                               document.getElementById('specific-img').src = item.image_url;
-                              document.getElementById('specific-title').innerText = item.title || 'Untitled Project';
+                              const dummyTitles = ['Neon Brand Identity', 'Event Poster Vibe', 'Tech Startup Logo', 'Creative Thumbnail', 'Web Redesign'];
+                              const dummyCaseStudies = [
+                                "This project focused on creating a bold, eye-catching aesthetic. We used high-contrast colors and custom typography to make the brand instantly recognizable.",
+                                "The goal was to design something clean and modern. By stripping away unnecessary elements, we created a minimalist design that speaks volumes.",
+                                "This was built for maximum engagement. We used vibrant gradients and dynamic layouts to capture attention in less than a second.",
+                                "Designed specifically to resonate with a younger demographic. It blends modern aesthetics with retro elements to create a nostalgic yet fresh vibe.",
+                                "A complete visual overhaul. We maintained the core identity but modernized the geometry and color palette for a premium feel."
+                              ];
+                              document.getElementById('specific-title').innerText = item.title || dummyTitles[idx % dummyTitles.length];
                               document.getElementById('specific-category').innerText = item.category || 'Uncategorized';
-                              document.getElementById('specific-case-study').innerText = item.case_study || 'No details provided.';
+                              document.getElementById('specific-case-study').innerText = item.case_study || dummyCaseStudies[idx % dummyCaseStudies.length];
                               document.getElementById('specific-view').classList.add('active');
                           }}
                           onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
