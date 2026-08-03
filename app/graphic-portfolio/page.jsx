@@ -1542,6 +1542,29 @@ export default function Page() {
             font-size: 1.15rem;
             line-height: 1.7;
             font-weight: 400;
+            margin-top: 15px;
+        }
+
+        .specific-case-study-heading {
+            color: #ebd73f;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 30px 0 10px 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .specific-case-study-heading::before {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 1px;
+            background: #ebd73f;
+        }
         }
         
         @media (max-width: 900px) {
@@ -1779,6 +1802,7 @@ export default function Page() {
         <div className="specific-view-info">
         <div className="specific-category" id="specific-category">Category</div>
         <h2 className="specific-title" id="specific-title">Project Title</h2>
+        <h3 className="specific-case-study-heading">Case Study</h3>
         <div className="specific-case-study" id="specific-case-study">Case study details...</div>
       </div>
     </div>

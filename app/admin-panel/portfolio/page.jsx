@@ -2013,13 +2013,17 @@ export default function PortfolioManager() {
                 </div>
             )}
             
-            {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM) && (
+            {(activeTab === TABS.REELS || activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) && (
                  <div className="input-group" style={{ marginBottom: '24px' }}>
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <label style={{ margin: 0 }}>Title / Caption</label>
+                        <label style={{ margin: 0, fontFamily: 'Clash Display, sans-serif' }}>{activeTab === TABS.GRAPHICS ? 'Title' : 'Title / Caption'}</label>
                         <button type="button" onClick={() => {
                             if (window.dispatchEvent) {
-                                window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE'));
+                                if (activeTab === TABS.GRAPHICS) {
+                                    window.dispatchEvent(new CustomEvent('ORLO_GRAPHIC_ANALYZE'));
+                                } else {
+                                    window.dispatchEvent(new CustomEvent('ORLO_VIDEO_ANALYZE'));
+                                }
                             }
                         }} style={{ 
                             background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', 
@@ -2051,7 +2055,7 @@ export default function PortfolioManager() {
                             <Sparkles size={16} /> Ask Orlo
                         </button>
                      </div>
-                     <input type="text" placeholder="Video Title..." value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required={activeTab === TABS.LONG_FORM} />
+                     <input type="text" placeholder={activeTab === TABS.GRAPHICS ? "Graphic Title..." : "Video Title..."} value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required={activeTab === TABS.LONG_FORM} />
                  </div>
             )}
             
