@@ -1685,122 +1685,129 @@ export default function PortfolioManager() {
                     <button type="button" className="popup-btn" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'none', padding: '10px 16px', fontSize: '0.85rem' }} onClick={() => setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false })}>
                         CANCEL
                     </button>
-                    <button id="saveEditBtn" type="button" className="popup-btn" style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.4)', padding: '10px 24px', fontSize: '0.85rem' }} disabled={editPopup.isUploading} onClick={async () => {
-                        if (editPopup.field === 'extract_frame') {
-                            setEditPopup(prev => ({ ...prev, isUploading: true, progress: 10 }));
-                            try {
-                                const videoEl = document.getElementById('frame-extractor-video');
-                                if (!videoEl) throw new Error("Video element not found");
-                                
-                                const canvas = document.createElement('canvas');
-                                const MAX_WIDTH = 300;
-                                let width = videoEl.videoWidth || 1080;
-                                let height = videoEl.videoHeight || 1920;
-                                
-                                if (width > MAX_WIDTH) {
-                                    height = Math.floor((MAX_WIDTH / width) * height);
-                                    width = MAX_WIDTH;
-                                }
-                                
-                                canvas.width = width;
-                                canvas.height = height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-                                
-                                setEditPopup(prev => ({ ...prev, progress: 30 }));
-                                
-                                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.5));
-                                const fileToUpload = new File([blob], `thumbnail_${Date.now()}.jpg`, { type: 'image/jpeg' });
-                                
-                                const presignRes = await fetch('/api/admin/portfolio/upload-url', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        fileName: fileToUpload.name,
-                                        contentType: fileToUpload.type,
-                                        folder: 'Reels'
-                                    })
-                                });
-                                
-                                if (!presignRes.ok) throw new Error('Failed to get upload URL');
-                                const { presignedUrl, publicUrl } = await presignRes.json();
-                                
-                                setEditPopup(prev => ({ ...prev, progress: 50 }));
-                                
-                                await new Promise((resolve, reject) => {
-                                    const xhr = new XMLHttpRequest();
-                                    xhr.open('PUT', presignedUrl, true);
-                                    xhr.setRequestHeader('Content-Type', fileToUpload.type);
-                                    xhr.upload.onprogress = (e) => {
-                                        if (e.lengthComputable) {
-                                            const percentComplete = 50 + Math.round((e.loaded / e.total) * 40);
-                                            setEditPopup(prev => ({ ...prev, progress: percentComplete }));
-                                        }
-                                    };
-                                    xhr.onload = () => {
-                                        if (xhr.status >= 200 && xhr.status < 300) resolve();
-                                        else reject(new Error('Upload to R2 failed'));
-                                    };
-                                    xhr.onerror = () => reject(new Error('Network error during upload'));
-                                    xhr.send(fileToUpload);
-                                });
-                                
-                                setEditPopup(prev => ({ ...prev, progress: 95 }));
-                                
-                                const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ id: editPopup.id, thumbnail_url: publicUrl })
-                                });
-                                if (res.ok) {
-                                    showNotification('success', 'Thumbnail extracted and saved successfully');
-                                    fetchItems();
-                                    setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
-                                } else {
-                                    throw new Error('Update failed');
-                                }
-                            } catch (err) {
-                                console.error(err);
-                                showNotification('error', err.message || 'Failed to extract frame');
-                                setEditPopup(prev => ({ ...prev, isUploading: false }));
-                            }
-                            return;
-                        }
-
+                    <button id="saveEditBtn" type="button" className="popup-btn" style={{ background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)', color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.4)', padding: '10px 24px', fontSize: '0.85rem' }} disabled={editPopup.isUploading} onClick={async (e) => {
+                        e.preventDefault();
+                        console.log("SAVE CHANGES BUTTON CLICKED", editPopup.field, editPopup.value);
+                        
                         try {
-                          let updateBody = { id: editPopup.id };
-                          if (editPopup.field === 'details') {
-                             if (activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) {
-                                 updateBody.title = (editPopup.value?.title || '').trim();
-                             } else if (activeTab === TABS.REELS) {
-                                 updateBody.description = (editPopup.value?.title || '').trim();
-                             }
-                             if (activeTab === TABS.REELS || activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) {
-                                 updateBody.category = editPopup.value?.category || '';
-                             }
-                             if (editPopup.value?.case_study !== undefined) {
-                                 updateBody.case_study = (editPopup.value?.case_study || '').trim();
-                             }
-                          } else {
-                             updateBody[editPopup.field] = typeof editPopup.value === 'string' ? editPopup.value.trim() : editPopup.value;
-                          }
+                            if (editPopup.field === 'extract_frame') {
+                                setEditPopup(prev => ({ ...prev, isUploading: true, progress: 10 }));
+                                try {
+                                    const videoEl = document.getElementById('frame-extractor-video');
+                                    if (!videoEl) throw new Error("Video element not found");
+                                    
+                                    const canvas = document.createElement('canvas');
+                                    const MAX_WIDTH = 300;
+                                    let width = videoEl.videoWidth || 1080;
+                                    let height = videoEl.videoHeight || 1920;
+                                    
+                                    if (width > MAX_WIDTH) {
+                                        height = Math.floor((MAX_WIDTH / width) * height);
+                                        width = MAX_WIDTH;
+                                    }
+                                    
+                                    canvas.width = width;
+                                    canvas.height = height;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                                    
+                                    setEditPopup(prev => ({ ...prev, progress: 30 }));
+                                    
+                                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.5));
+                                    const fileToUpload = new File([blob], `thumbnail_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                                    
+                                    const presignRes = await fetch('/api/admin/portfolio/upload-url', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            fileName: fileToUpload.name,
+                                            contentType: fileToUpload.type,
+                                            folder: 'Reels'
+                                        })
+                                    });
+                                    
+                                    if (!presignRes.ok) throw new Error('Failed to get upload URL');
+                                    const { presignedUrl, publicUrl } = await presignRes.json();
+                                    
+                                    setEditPopup(prev => ({ ...prev, progress: 50 }));
+                                    
+                                    await new Promise((resolve, reject) => {
+                                        const xhr = new XMLHttpRequest();
+                                        xhr.open('PUT', presignedUrl, true);
+                                        xhr.setRequestHeader('Content-Type', fileToUpload.type);
+                                        xhr.upload.onprogress = (e) => {
+                                            if (e.lengthComputable) {
+                                                const percentComplete = 50 + Math.round((e.loaded / e.total) * 40);
+                                                setEditPopup(prev => ({ ...prev, progress: percentComplete }));
+                                            }
+                                        };
+                                        xhr.onload = () => {
+                                            if (xhr.status >= 200 && xhr.status < 300) resolve();
+                                            else reject(new Error('Upload to R2 failed'));
+                                        };
+                                        xhr.onerror = () => reject(new Error('Network error during upload'));
+                                        xhr.send(fileToUpload);
+                                    });
+                                    
+                                    setEditPopup(prev => ({ ...prev, progress: 95 }));
+                                    
+                                    const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ id: editPopup.id, thumbnail_url: publicUrl })
+                                    });
+                                    if (res.ok) {
+                                        showNotification('success', 'Thumbnail extracted and saved successfully');
+                                        fetchItems();
+                                        setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
+                                    } else {
+                                        throw new Error('Update failed');
+                                    }
+                                } catch (err) {
+                                    console.error(err);
+                                    showNotification('error', err.message || 'Failed to extract frame');
+                                    setEditPopup(prev => ({ ...prev, isUploading: false }));
+                                }
+                                return;
+                            }
 
-                          const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(updateBody)
-                          });
-                          if (res.ok) {
-                            showNotification('success', 'Updated successfully');
-                            fetchItems();
-                            setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
-                          } else {
-                            const errData = await res.json().catch(() => ({}));
-                            throw new Error(errData.error || 'Update failed on server');
-                          }
-                        } catch (e) {
-                          console.error("Save Details Error:", e);
-                          showNotification('error', `Failed to update: ${e.message}`);
+                            let updateBody = { id: editPopup.id };
+                            if (editPopup.field === 'details') {
+                               if (activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) {
+                                   updateBody.title = (editPopup.value?.title || '').trim();
+                               } else if (activeTab === TABS.REELS) {
+                                   updateBody.description = (editPopup.value?.title || '').trim();
+                               }
+                               if (activeTab === TABS.REELS || activeTab === TABS.LONG_FORM || activeTab === TABS.GRAPHICS) {
+                                   updateBody.category = editPopup.value?.category || '';
+                               }
+                               if (editPopup.value?.case_study !== undefined) {
+                                   updateBody.case_study = (editPopup.value?.case_study || '').trim();
+                               }
+                            } else {
+                               updateBody[editPopup.field] = typeof editPopup.value === 'string' ? (editPopup.value || '').trim() : editPopup.value;
+                            }
+
+                            console.log("Sending PUT request with:", updateBody);
+                            const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify(updateBody)
+                            });
+                            
+                            console.log("Response status:", res.status);
+                            if (res.ok) {
+                              showNotification('success', 'Updated successfully');
+                              fetchItems();
+                              setEditPopup({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
+                            } else {
+                              const errData = await res.json().catch(() => ({}));
+                              throw new Error(errData.error || 'Update failed on server');
+                            }
+                        } catch (err) {
+                            console.error("Save Details Error:", err);
+                            alert(`Error saving changes: ${err.message}`);
+                            showNotification('error', `Failed to update: ${err.message}`);
                         }
                     }}>
                         {editPopup.field === 'extract_frame' ? (editPopup.isUploading ? `Uploading (${editPopup.progress}%)...` : 'SAVE') : 'Save Changes'}
