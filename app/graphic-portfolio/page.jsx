@@ -132,20 +132,9 @@ export default function Page() {
                         }
                         if (sourceItem.title) el.dataset.title = sourceItem.title;
                         if (sourceItem.case_study) el.dataset.case_study = sourceItem.case_study;
-                    } else {
-                        const dummyImages = [
-                            'https://picsum.photos/seed/100/800/800',
-                            'https://picsum.photos/seed/101/800/800',
-                            'https://picsum.photos/seed/102/800/800',
-                            'https://picsum.photos/seed/103/800/800',
-                            'https://picsum.photos/seed/104/800/800',
-                            'https://picsum.photos/seed/105/800/800',
-                            'https://picsum.photos/seed/106/800/800',
-                            'https://picsum.photos/seed/107/800/800',
-                            'https://picsum.photos/seed/108/800/800',
-                            'https://picsum.photos/seed/109/800/800'
-                        ];
-                        img.src = dummyImages[i % dummyImages.length];
+                      } else {
+                          const dummyImages = Array.from({ length: 12 }).map((_, i) => `https://placehold.co/800x800/111111/ebd73f.png?text=Image+${i + 1}`);
+                          img.src = dummyImages[i % dummyImages.length];
                         
                         el.dataset.category = 'Concept Art';
                         const catLabel = document.createElement('div');
@@ -279,7 +268,16 @@ export default function Page() {
                 if (zoomOutBtn) {
                     zoomOutBtn.addEventListener('click', () => { 
                         if (this.isListView) return;
-                        this.state.targetZoom = Math.max(0.3, this.state.targetZoom - 0.3); 
+                        const isMobile = window.innerWidth <= 768;
+                        const appliedSize = isMobile ? this.imageSize * 1.5 : this.imageSize;
+                        const appliedGap = isMobile ? this.gap * 1.5 : this.gap;
+                        const gridWidthVw = this.cols * (appliedSize + appliedGap);
+                        const gridHeightVw = this.rows * (appliedSize + appliedGap);
+                        const minZoomX = 100 / gridWidthVw;
+                        const minZoomY = (window.innerHeight / window.innerWidth * 100) / gridHeightVw;
+                        const minZoom = Math.max(minZoomX, minZoomY, 0.2);
+                        
+                        this.state.targetZoom = Math.max(minZoom, this.state.targetZoom - 0.3); 
                     });
                 }
 
@@ -517,7 +515,7 @@ export default function Page() {
         async function fetchGraphicsAndInit() {
             let fetchedItems = [];
             const dummyGraphics = Array.from({ length: 12 }).map((_, i) => ({
-                image_url: `https://picsum.photos/seed/${i + 200}/800/800`,
+                image_url: `https://placehold.co/800x800/111111/ebd73f.png?text=Project+${i + 1}`,
                 category: i % 2 === 0 ? 'Concept Art' : 'Branding',
                 title: `Placeholder Project ${i + 1}`,
                 case_study: 'This is a premium placeholder image because no graphics were found in the database. Add some graphics in the Admin Panel!'
@@ -1683,11 +1681,31 @@ export default function Page() {
 
   <div className="specific-view-overlay" id="specific-view">
     <div className="close-specific-view" id="close-specific">Close ×</div>
-    <div className="specific-view-content-wrapper">
-      <div className="specific-view-img-container">
-        <img src="" className="specific-view-img" id="specific-img" alt="Specific View" />
-      </div>
-      <div className="specific-view-info">
+      <div className="specific-view-content-wrapper">
+        <div 
+          className="specific-view-img-container"
+          style={{ overflow: 'hidden', cursor: 'zoom-in', borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}
+          onMouseMove={(e) => {
+              const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+              const x = (e.clientX - left) / width;
+              const y = (e.clientY - top) / height;
+              const img = e.currentTarget.querySelector('img');
+              if(img) {
+                  img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+                  img.style.transform = 'scale(1.5)';
+              }
+          }}
+          onMouseLeave={(e) => {
+              const img = e.currentTarget.querySelector('img');
+              if(img) {
+                  img.style.transformOrigin = `center center`;
+                  img.style.transform = 'scale(1)';
+              }
+          }}
+        >
+          <img src="" className="specific-view-img" id="specific-img" alt="Specific View" style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', width: '100%', height: '100%', objectFit: 'contain' }} />
+        </div>
+        <div className="specific-view-info">
         <div className="specific-category" id="specific-category">Category</div>
         <h2 className="specific-title" id="specific-title">Project Title</h2>
         <div className="specific-case-study" id="specific-case-study">Case study details...</div>
