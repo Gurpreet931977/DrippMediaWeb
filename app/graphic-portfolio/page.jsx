@@ -1766,38 +1766,65 @@ export default function Page() {
   <div className="specific-view-overlay" id="specific-view">
     <div className="close-specific-view" id="close-specific">Close ×</div>
       <div className="specific-view-content-wrapper">
-        <div 
-          className="specific-view-img-container"
-          style={{ overflow: 'hidden', cursor: 'zoom-in', borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}
-          onMouseMove={(e) => {
-              const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-              const x = (e.clientX - left) / width;
-              const y = (e.clientY - top) / height;
-              const img = e.currentTarget.querySelector('img');
-              if(img) {
-                  img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-                  img.style.transform = 'scale(1.5)';
-              }
-          }}
-          onMouseLeave={(e) => {
-              const img = e.currentTarget.querySelector('img');
-              if(img) {
-                  img.style.transformOrigin = `center center`;
-                  img.style.transform = 'scale(1)';
-              }
-          }}
-        >
-          <img 
-            src="" 
-            className="specific-view-img" 
-            id="specific-img" 
-            alt="Specific View" 
-            style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', width: '100%', height: '100%', objectFit: 'contain' }}
-            onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
+        <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', position: 'relative' }}>
+          <div 
+            className="specific-view-img-container"
+            style={{ 
+              flex: 'none',
+              position: 'relative',
+              overflow: 'hidden', 
+              cursor: 'zoom-in', 
+              borderRadius: '16px', 
+              boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+              display: 'inline-flex',
+              maxWidth: '100%',
+              maxHeight: '100%'
             }}
-          />
+            onMouseMove={(e) => {
+                const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+                const x = (e.clientX - left) / width;
+                const y = (e.clientY - top) / height;
+                const img = e.currentTarget.querySelector('img');
+                const slider = document.getElementById('magnify-slider');
+                const zoomLevel = slider ? slider.value : 1.5;
+                if(img) {
+                    img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+                    img.style.transform = `scale(${zoomLevel})`;
+                }
+            }}
+            onMouseLeave={(e) => {
+                const img = e.currentTarget.querySelector('img');
+                if(img) {
+                    img.style.transformOrigin = `center center`;
+                    img.style.transform = 'scale(1)';
+                }
+            }}
+          >
+            <img 
+              src="" 
+              className="specific-view-img" 
+              id="specific-img" 
+              alt="Specific View" 
+              style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', maxWidth: '100%', maxHeight: '100%', display: 'block' }}
+              onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
+              }}
+            />
+          </div>
+          
+          <div style={{ position: 'absolute', bottom: '0px', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(15,15,15,0.85)', padding: '10px 25px', borderRadius: '40px', backdropFilter: 'blur(20px)', border: '1px solid rgba(235, 215, 63, 0.2)', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', zIndex: 10 }}>
+            <span style={{ color: '#ebd73f', fontSize: '0.75rem', fontFamily: 'Panchang, sans-serif', letterSpacing: '2px', textTransform: 'uppercase' }}>Zoom Power</span>
+            <input 
+              type="range" 
+              id="magnify-slider"
+              min="1.2" 
+              max="4.0" 
+              step="0.1" 
+              defaultValue="1.5"
+              style={{ width: '120px', cursor: 'pointer', accentColor: '#ebd73f' }}
+            />
+          </div>
         </div>
         <div className="specific-view-info">
         <div className="specific-category" id="specific-category">Category</div>
