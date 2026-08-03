@@ -29,6 +29,8 @@ export default function PortfolioManager() {
   
   // Form State
   const fileInputRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const editDropdownRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [formData, setFormData] = useState({
     title: '',

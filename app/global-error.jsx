@@ -7,6 +7,14 @@ export default function GlobalError({ error, reset }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
+    // Smart Error Logging
+    console.error("%c🚨 CRITICAL SYSTEM FAILURE", "color: #eb3f3f; font-size: 20px; font-weight: bold; background: #220000; padding: 4px 8px; border-radius: 4px;");
+    console.error(`%cError Name:%c ${error.name}`, "color: #ffaa00; font-weight: bold;", "color: white;");
+    console.error(`%cError Message:%c ${error.message}`, "color: #ffaa00; font-weight: bold;", "color: white;");
+    console.groupCollapsed("%cView Stack Trace", "color: #00aaff; cursor: pointer;");
+    console.error(error.stack);
+    console.groupEnd();
+
     gsap.fromTo(
       ".error-glitch",
       { opacity: 0, scale: 0.9 },
