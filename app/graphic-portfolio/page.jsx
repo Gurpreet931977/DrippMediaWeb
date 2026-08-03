@@ -790,9 +790,18 @@ export default function Page() {
 
         // Bind click to the new UI button
         document.getElementById('tripp-toggle-btn').addEventListener('click', toggleSpaceMode);
-
-    
-
+        // Fetch portfolio graphics and initialize canvas
+        fetch('/api/graphics')
+            .then(res => res.json())
+            .then(data => {
+                const fetchedGraphics = Array.isArray(data) ? data : [];
+                setGraphics(fetchedGraphics);
+                window.canvasEngine = new InfiniteCanvas('canvas-container', { customItems: fetchedGraphics });
+            })
+            .catch(err => {
+                console.error("Failed to fetch graphics:", err);
+                window.canvasEngine = new InfiniteCanvas('canvas-container', { customItems: [] });
+            });
     return () => {
       ScrollTrigger.getAll().forEach(t => t.kill());
     };
