@@ -116,6 +116,8 @@ export default function Page() {
                     img.onload = () => {
                         el.classList.remove('is-loading');
                         img.classList.add('loaded');
+                        // Smart layout: recalculate grid now that natural aspect ratio is known
+                        this.recalcPositions();
                     };
 
                     // Map to custom URLs from database if available, looping if there are fewer URLs than total grid items
@@ -180,16 +182,43 @@ export default function Page() {
             }
 
             recalcPositions() {
+                // Find maximum aspect ratio among loaded images to smartly size grid rows
+                let maxAspectRatio = 1;
+                for (let i = 0; i < this.items.length; i++) {
+                    const img = this.items[i].el.querySelector('img');
+                    if (img && img.naturalWidth && img.naturalHeight) {
+                        const ratio = img.naturalHeight / img.naturalWidth;
+                        if (ratio > maxAspectRatio) maxAspectRatio = ratio;
+                    }
+                }
+
+                // Adjust stepY intelligently to accommodate the tallest image naturally
+                const maxItemHeightPx = this.itemSizePx * maxAspectRatio;
+                this.stepX = this.itemSizePx + this.gapPx;
+                this.stepY = maxItemHeightPx + this.gapPx;
+                this.gridWidth = this.cols * this.stepX;
+                this.gridHeight = this.rows * this.stepY;
+
                 for (let i = 0; i < this.items.length; i++) {
                     const item = this.items[i];
-                    item.el.style.width = `${this.itemSizePx * item.sizeFactor}px`;
-                    item.el.style.height = `${this.itemSizePx * item.sizeFactor}px`;
+                    // Wrapper naturally shrink-wraps to contents
+                    item.el.style.width = 'max-content';
+                    item.el.style.height = 'max-content';
+
+                    const img = item.el.querySelector('img');
+                    if (img) {
+                        // Image width scales to strict grid size, height scales proportionally to aspect ratio
+                        img.style.width = `${this.itemSizePx * item.sizeFactor}px`;
+                        img.style.height = 'auto';
+                        img.style.maxWidth = 'none';
+                        img.style.maxHeight = 'none';
+                        img.style.display = 'block';
+                    }
 
                     const col = i % this.cols;
                     const row = Math.floor(i / this.cols);
 
                     // Symmetrical Diagonal Grid Layout
-                    // Push every column down by exactly half its Y height sequentially to create perfect diagonal steps
                     const diagonalStagger = col * (this.stepY / 2);
 
                     // Compute final base coordinates symmetrically spread from center origin
