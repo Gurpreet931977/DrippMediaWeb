@@ -1099,17 +1099,25 @@ export default function QuoteMaker() {
             </div>
           </div>
 
-                    {/* Strategy / Concept Pitch */}
+          {/* Strategy / Concept Pitch (PMP) */}
           <div className={styles.cardModern}>
-            <div className={styles.cardHeaderModern}>
-              <Edit3 size={20} color="#ebd73f" />
-              <h3 className={styles.cardTitleModern}>Strategy / Concept Pitch</h3>
+            <div className={styles.cardHeaderModern} style={{ justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Edit3 size={20} color="#ebd73f" />
+                <h3 className={styles.cardTitleModern}>PMP Strategy & Concept Pitch</h3>
+              </div>
+              <span style={{ fontSize: '0.75rem', background: 'rgba(235, 215, 63, 0.15)', color: '#ebd73f', padding: '3px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
+                PMP SLIDE CONTENT
+              </span>
             </div>
+            <p style={{ fontSize: '0.8rem', color: '#aaa', margin: '-5px 0 12px 0' }}>
+              This section populates the PMP (Personal Marketing Plan) slide in your proposal presentation.
+            </p>
             <textarea 
               value={pmpStrategy} 
               onChange={e => { setPmpStrategy(e.target.value); setIncludePMP(!!e.target.value.trim()); }} 
               className={styles.inputModern} 
-              rows={4} 
+              rows={5} 
               placeholder="e.g. A storytelling UGC campaign targeting high-income demographics..."
               style={{ resize: 'vertical' }} 
             />
@@ -1346,13 +1354,14 @@ export default function QuoteMaker() {
                            }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                              {page.type === 'cover' && <Image size={16} color="#888" />}
+                             {page.type === 'pmp' && <Edit3 size={16} color="#ebd73f" />}
                              {page.type === 'services' && <FileText size={16} color="#888" />}
                              {page.type === 'investment' && <Package size={16} color="#888" />}
                              {page.type === 'next_steps' && <CheckCircle size={16} color="#888" />}
                              {page.type === 'custom_text' && <Type size={16} color="#888" />}
                              {page.type === 'infographic' && <Layers size={16} color="#888" />}
                              <span style={{ fontSize: '0.9rem', color: selectedPageIndex === index ? '#fff' : '#aaa' }}>
-                                {page.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                {page.type === 'pmp' ? 'PMP Strategy' : page.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                              </span>
                           </div>
                           
