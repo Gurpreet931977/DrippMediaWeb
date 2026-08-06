@@ -667,35 +667,50 @@ export default function QuoteMaker() {
       });
     }
     
+    const targetBudget = Number(payload.totalBudget) || 0;
+    const normalizeItems = (rawItems) => {
+      let mapped = (rawItems || []).map(s => {
+        const title = s.desc || s.name || 'Service Item';
+        return {
+          name: title,
+          desc: title,
+          qty: Number(s.qty) || 1,
+          rate: Number(s.rate) || 0,
+          details: s.details || ''
+        };
+      });
+
+      if (targetBudget > 0 && mapped.length > 0) {
+        const sum = mapped.reduce((acc, it) => acc + (it.qty * it.rate), 0);
+        if (sum > 0 && Math.abs(sum - targetBudget) > 1) {
+          const factor = targetBudget / sum;
+          let runningSum = 0;
+          mapped = mapped.map((it, idx) => {
+            if (idx === mapped.length - 1) {
+              const rem = targetBudget - runningSum;
+              const r = Math.max(0, Math.round(rem / (it.qty || 1)));
+              return { ...it, rate: r };
+            }
+            const r = Math.round(it.rate * factor);
+            runningSum += (it.qty * r);
+            return { ...it, rate: r };
+          });
+        }
+      }
+      return mapped;
+    };
+
     if (payload.packageTiers && payload.packageTiers.length > 0) {
       setPackageTiers(payload.packageTiers.map((t, idx) => ({
         id: Date.now() + idx,
         name: t.name || `Package ${idx + 1}`,
-        items: (t.items || []).map(s => {
-          const title = s.desc || s.name || 'Service Item';
-          return {
-            name: title,
-            desc: title,
-            qty: Number(s.qty) || 1,
-            rate: Number(s.rate) || 0,
-            details: s.details || ''
-          };
-        })
+        items: normalizeItems(t.items)
       })));
     } else if (payload.services && payload.services.length > 0) {
       setPackageTiers([{
         id: Date.now(),
         name: 'Standard Package',
-        items: payload.services.map(s => {
-          const title = s.desc || s.name || 'Service Item';
-          return {
-            name: title,
-            desc: title,
-            qty: Number(s.qty) || 1,
-            rate: Number(s.rate) || 0,
-            details: s.details || ''
-          };
-        })
+        items: normalizeItems(payload.services)
       }]);
     }
   };
@@ -708,25 +723,23 @@ export default function QuoteMaker() {
         parseQuotePayload(data);
         sessionStorage.removeItem('pendingPackageData');
       } catch (err) {
-        console.error('Failed to parse package data', err);
+        console.error('Failed to parse pending package data', err);
       }
     }
-  }, []);
 
-  useEffect(() => {
     const handleCopilotAction = (e) => {
       const data = e.detail;
-      if (data && (data.intent === 'package' || data.intent === 'quote') && data.payload) {
+      if (['quote', 'package'].includes(data?.intent) && data?.payload) {
         parseQuotePayload(data.payload);
       }
     };
+    
     window.addEventListener('copilot-action', handleCopilotAction);
     return () => window.removeEventListener('copilot-action', handleCopilotAction);
   }, []);
 
   useEffect(() => {
     window._drippFormContext = { clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy };
-    return () => { window._drippFormContext = null; };
   }, [clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy]);
 
   const handleClientChange = (field, value) => setClientDetails(prev => ({ ...prev, [field]: value }));
@@ -734,7 +747,8 @@ export default function QuoteMaker() {
   
   const handleItemChange = (tierIndex, index, field, value) => {
     const newTiers = [...packageTiers];
-    newTiers[tierIndex].items[index][field] = value;
+    const val = (field === 'qty' || field === 'rate') ? (value === '' ? '' : Number(value)) : value;
+    newTiers[tierIndex].items[index][field] = val;
     setPackageTiers(newTiers);
   };
   const addItem = (tierIndex) => {
@@ -1101,26 +1115,77 @@ export default function QuoteMaker() {
 
           {/* Strategy / Concept Pitch (PMP) */}
           <div className={styles.cardModern}>
-            <div className={styles.cardHeaderModern} style={{ justifyContent: 'space-between' }}>
+            <div className={styles.cardHeaderModern} style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Edit3 size={20} color="#ebd73f" />
                 <h3 className={styles.cardTitleModern}>PMP Strategy & Concept Pitch</h3>
               </div>
-              <span style={{ fontSize: '0.75rem', background: 'rgba(235, 215, 63, 0.15)', color: '#ebd73f', padding: '3px 8px', borderRadius: '12px', fontWeight: 'bold' }}>
-                PMP SLIDE CONTENT
-              </span>
+              
+              {/* Interactive PMP Toggle Switch */}
+              <label 
+                onClick={() => {
+                  const nextVal = !includePMP;
+                  setIncludePMP(nextVal);
+                  if (nextVal) {
+                    if (!pdfPages.find(p => p.type === 'pmp')) {
+                      const newPages = [...pdfPages];
+                      newPages.splice(1, 0, { id: 'pmp_' + Date.now(), type: 'pmp', title: 'PMP Strategy', hideHeading: false });
+                      setPdfPages(newPages);
+                    }
+                  } else {
+                    setPdfPages(pdfPages.filter(p => p.type !== 'pmp'));
+                  }
+                }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}
+              >
+                <span style={{ fontSize: '0.75rem', color: includePMP ? '#ebd73f' : '#888', fontWeight: '600', letterSpacing: '0.5px' }}>
+                  {includePMP ? 'PMP SLIDE INCLUDED' : 'PMP SLIDE EXCLUDED'}
+                </span>
+                <div 
+                  style={{
+                    width: '42px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    background: includePMP ? '#ebd73f' : 'rgba(255, 255, 255, 0.1)',
+                    border: `1px solid ${includePMP ? '#ebd73f' : 'rgba(255, 255, 255, 0.2)'}`,
+                    position: 'relative',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <div 
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: includePMP ? '#000' : '#888',
+                      position: 'absolute',
+                      top: '2px',
+                      left: includePMP ? '20px' : '2px',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  />
+                </div>
+              </label>
             </div>
             <p style={{ fontSize: '0.8rem', color: '#aaa', margin: '-5px 0 12px 0' }}>
               This section populates the PMP (Personal Marketing Plan) slide in your proposal presentation.
             </p>
-            <textarea 
-              value={pmpStrategy} 
-              onChange={e => { setPmpStrategy(e.target.value); setIncludePMP(!!e.target.value.trim()); }} 
-              className={styles.inputModern} 
-              rows={5} 
-              placeholder="e.g. A storytelling UGC campaign targeting high-income demographics..."
-              style={{ resize: 'vertical' }} 
-            />
+            {includePMP ? (
+              <textarea 
+                value={pmpStrategy} 
+                onChange={e => { 
+                  setPmpStrategy(e.target.value); 
+                }} 
+                className={styles.inputModern} 
+                rows={5} 
+                placeholder="e.g. A storytelling UGC campaign targeting high-income demographics..."
+                style={{ resize: 'vertical' }} 
+              />
+            ) : (
+              <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)', color: '#888', fontSize: '0.85rem', textAlign: 'center' }}>
+                PMP Strategy slide is currently excluded from this proposal. Toggle ON above to include a PMP Strategy slide.
+              </div>
+            )}
           </div>
 
           {/* Section 3: Services & Tiers */}
@@ -1155,29 +1220,29 @@ export default function QuoteMaker() {
                           />
                         </div>
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <span style={{color: '#888'}}>Qty</span>
+                          <span style={{color: '#aaa', fontSize: '0.85rem'}}>Qty</span>
                           <input 
                             type="number" 
-                            value={item.qty} 
+                            value={item.qty ?? ''} 
                             onChange={(e) => handleItemChange(tierIndex, index, 'qty', e.target.value)}
                             placeholder="1"
                             className={styles.inputModern}
-                            style={{ padding: '8px 12px' }}
+                            style={{ padding: '8px 12px', background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ffffff', fontWeight: 'bold' }}
                           />
                         </div>
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <span style={{color: '#888'}}>{quoteDetails.currency}</span>
+                          <span style={{color: '#ebd73f', fontWeight: 'bold'}}>{quoteDetails.currency}</span>
                           <input 
                             type="number" 
-                            value={item.rate} 
+                            value={item.rate ?? ''} 
                             onChange={(e) => handleItemChange(tierIndex, index, 'rate', e.target.value)}
                             placeholder="0"
                             className={styles.inputModern}
-                            style={{ padding: '8px 12px' }}
+                            style={{ padding: '8px 12px', background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ffffff', fontWeight: 'bold' }}
                           />
                         </div>
-                        <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '100px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
-                           <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {quoteDetails.currency}{(item.qty * item.rate).toFixed(2)}
+                        <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '110px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
+                           <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {quoteDetails.currency}{((Number(item.qty) || 0) * (Number(item.rate) || 0)).toFixed(2)}
                         </div>
                         <button onClick={() => removeItem(tierIndex, index)} className={styles.serviceItemDelete}>
                           <Trash2 size={18} />

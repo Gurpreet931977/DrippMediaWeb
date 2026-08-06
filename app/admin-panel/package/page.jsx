@@ -15,6 +15,7 @@ export default function PackageMaker() {
   const [packageType, setPackageType] = useState('monthly');
   const [totalBudget, setTotalBudget] = useState('0');
   const [pmpStrategy, setPmpStrategy] = useState('');
+  const [includePMP, setIncludePMP] = useState(true);
   const [services, setServices] = useState([
     { name: 'Custom Strategy', qty: 1, rate: 0 }
   ]);
@@ -33,6 +34,7 @@ export default function PackageMaker() {
         `Overview:\n${payload.pmpStrategy.overview || ''}\n\nTarget Audience:\n${payload.pmpStrategy.targetAudience || ''}\n\nPhases:\n${(payload.pmpStrategy.phases || []).map(p => `- ${p.title}: ${p.description}`).join('\n')}` : 
         payload.pmpStrategy;
       setPmpStrategy(strategyString);
+      setIncludePMP(true);
     }
     
     let extracted = [];
@@ -61,7 +63,25 @@ export default function PackageMaker() {
         });
       });
     }
+    const targetBudget = Number(payload.totalBudget) || 0;
     if (extracted.length > 0) {
+      if (targetBudget > 0) {
+        const sum = extracted.reduce((acc, it) => acc + (it.qty * it.rate), 0);
+        if (sum > 0 && Math.abs(sum - targetBudget) > 1) {
+          const factor = targetBudget / sum;
+          let runningSum = 0;
+          extracted = extracted.map((it, idx) => {
+            if (idx === extracted.length - 1) {
+              const rem = targetBudget - runningSum;
+              const r = Math.max(0, Math.round(rem / (it.qty || 1)));
+              return { ...it, rate: r };
+            }
+            const r = Math.round(it.rate * factor);
+            runningSum += (it.qty * r);
+            return { ...it, rate: r };
+          });
+        }
+      }
       setServices(extracted);
     }
   };
@@ -79,9 +99,7 @@ export default function PackageMaker() {
         console.error('Failed to parse package data', err);
       }
     }
-  }, []);
 
-  useEffect(() => {
     const handleCopilotAction = (e) => {
       const data = e.detail;
       if (data && (data.intent === 'package' || data.intent === 'quote') && data.payload) {
@@ -99,7 +117,8 @@ export default function PackageMaker() {
 
   const handleServiceChange = (index, field, value) => {
     const newServices = [...services];
-    newServices[index][field] = value;
+    const val = (field === 'qty' || field === 'rate') ? (value === '' ? '' : Number(value)) : value;
+    newServices[index][field] = val;
     setServices(newServices);
   };
 
@@ -143,7 +162,8 @@ export default function PackageMaker() {
             clientDetails: { brandName: brandName || 'Client' },
             packageType,
             total: parseFloat(totalBudget || 0),
-            pmpStrategy,
+            includePMP,
+            pmpStrategy: includePMP ? pmpStrategy : '',
             items: services.map(s => ({ desc: s.name || s.desc || 'Service Item', qty: s.qty || 1, rate: s.rate || 0 })),
             password: pass
         };
@@ -359,16 +379,59 @@ export default function PackageMaker() {
           </div>
 
           <div className="pmp-card">
-            <h3 style={{ margin: '0 0 24px 0', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Edit3 size={20} color="#ebd73f" /> Strategy / Concept Pitch
-            </h3>
-            <textarea 
-              className="pmp-input" 
-              style={{ minHeight: '120px', resize: 'vertical' }}
-              placeholder="e.g. A storytelling UGC campaign targeting high-income demographics..."
-              value={pmpStrategy}
-              onChange={(e) => setPmpStrategy(e.target.value)}
-            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Edit3 size={20} color="#ebd73f" /> PMP Strategy & Concept Pitch
+              </h3>
+
+              {/* PMP Toggle Switch */}
+              <label 
+                onClick={() => setIncludePMP(!includePMP)} 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}
+              >
+                <span style={{ fontSize: '0.75rem', color: includePMP ? '#ebd73f' : '#888', fontWeight: '600', letterSpacing: '0.5px' }}>
+                  {includePMP ? 'PMP INCLUDED' : 'PMP EXCLUDED'}
+                </span>
+                <div 
+                  style={{
+                    width: '42px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    background: includePMP ? '#ebd73f' : 'rgba(255, 255, 255, 0.1)',
+                    border: `1px solid ${includePMP ? '#ebd73f' : 'rgba(255, 255, 255, 0.2)'}`,
+                    position: 'relative',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <div 
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: includePMP ? '#000' : '#888',
+                      position: 'absolute',
+                      top: '2px',
+                      left: includePMP ? '20px' : '2px',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  />
+                </div>
+              </label>
+            </div>
+
+            {includePMP ? (
+              <textarea 
+                className="pmp-input" 
+                style={{ minHeight: '120px', resize: 'vertical' }}
+                placeholder="e.g. A storytelling UGC campaign targeting high-income demographics..."
+                value={pmpStrategy}
+                onChange={(e) => setPmpStrategy(e.target.value)}
+              />
+            ) : (
+              <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)', color: '#888', fontSize: '0.85rem', textAlign: 'center' }}>
+                PMP Strategy is currently disabled for this package. Toggle back ON above to include a Personal Marketing Plan.
+              </div>
+            )}
           </div>
 
           <div className="pmp-card">
