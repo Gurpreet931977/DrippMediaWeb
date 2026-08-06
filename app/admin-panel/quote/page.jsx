@@ -1208,53 +1208,74 @@ export default function QuoteMaker() {
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     {tier.items.map((item, index) => (
-                      <div key={index} className={styles.serviceItemRow}>
-                        <div style={{ flex: 2 }}>
+                      <div key={index} className={styles.serviceItemRow} style={{ flexWrap: 'wrap', background: '#111', border: '1px solid rgba(235, 215, 63, 0.25)', padding: '12px 16px', borderRadius: '12px' }}>
+                        <div style={{ flex: '1 1 240px', minWidth: '200px' }}>
                           <input 
                              list="services-list"
                              type="text" 
-                             value={item.desc} 
+                             value={item.desc || item.name || ''} 
                              onChange={(e) => handleItemChange(tierIndex, index, 'desc', e.target.value)}
-                             placeholder="e.g. Website Development"
+                             placeholder="Service Item Description"
                              className={styles.inputModern}
-                             style={{ padding: '8px 12px' }}
+                             style={{ padding: '10px 14px', background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#ffffff', fontWeight: '600' }}
                           />
                         </div>
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <span style={{color: '#aaa', fontSize: '0.85rem'}}>Qty</span>
+                        <div style={{ flex: '0 0 110px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ color: '#aaa', fontSize: '0.85rem', fontWeight: 'bold' }}>Qty</span>
                           <input 
                             type="number" 
                             value={item.qty ?? ''} 
                             onChange={(e) => handleItemChange(tierIndex, index, 'qty', e.target.value)}
                             placeholder="1"
                             className={styles.inputModern}
-                            style={{ padding: '8px 12px', background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ffffff', fontWeight: 'bold' }}
+                            style={{ 
+                              width: '70px', 
+                              minWidth: '70px',
+                              padding: '8px 10px', 
+                              background: 'rgba(255, 255, 255, 0.12)', 
+                              border: '1px solid #ebd73f', 
+                              color: '#ffffff', 
+                              fontWeight: 'bold',
+                              fontSize: '0.95rem',
+                              textAlign: 'center',
+                              borderRadius: '8px'
+                            }}
                           />
                         </div>
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <span style={{color: '#ebd73f', fontWeight: 'bold'}}>{quoteDetails.currency}</span>
+                        <div style={{ flex: '0 0 145px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ color: '#ebd73f', fontWeight: 'bold', fontSize: '0.95rem' }}>{quoteDetails.currency}</span>
                           <input 
                             type="number" 
                             value={item.rate ?? ''} 
                             onChange={(e) => handleItemChange(tierIndex, index, 'rate', e.target.value)}
                             placeholder="0"
                             className={styles.inputModern}
-                            style={{ padding: '8px 12px', background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ffffff', fontWeight: 'bold' }}
+                            style={{ 
+                              width: '105px', 
+                              minWidth: '105px',
+                              padding: '8px 10px', 
+                              background: 'rgba(255, 255, 255, 0.12)', 
+                              border: '1px solid #ebd73f', 
+                              color: '#ffffff', 
+                              fontWeight: 'bold',
+                              fontSize: '0.95rem',
+                              borderRadius: '8px'
+                            }}
                           />
                         </div>
-                        <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '110px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
-                           <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {quoteDetails.currency}{((Number(item.qty) || 0) * (Number(item.rate) || 0)).toFixed(2)}
+                        <div style={{ flex: '0 0 120px', padding: '0 5px', color: '#ebd73f', fontWeight: 'bold', fontSize: '1rem', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                           <span style={{ color: '#666', fontWeight: 'normal' }}>=</span> {quoteDetails.currency}{((Number(item.qty) || 0) * (Number(item.rate) || 0)).toFixed(2)}
                         </div>
-                        <button onClick={() => removeItem(tierIndex, index)} className={styles.serviceItemDelete}>
+                        <button onClick={() => removeItem(tierIndex, index)} className={styles.serviceItemDelete} style={{ flexShrink: 0 }}>
                           <Trash2 size={18} />
                         </button>
                         <div style={{ flexBasis: '100%', marginTop: '10px' }}>
                            <textarea 
                              value={item.details || ''} 
                              onChange={(e) => handleItemChange(tierIndex, index, 'details', e.target.value)}
-                             placeholder="e.g. Includes 5 custom pages, responsive design, and 1 year of hosting..."
+                             placeholder="e.g. Detailed breakdown of deliverables..."
                              className={styles.inputModern}
-                             style={{ padding: '8px 12px', fontSize: '0.9rem', width: '100%', minHeight: '60px' }}
+                             style={{ padding: '8px 12px', fontSize: '0.88rem', width: '100%', minHeight: '50px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#ddd' }}
                            />
                         </div>
                       </div>

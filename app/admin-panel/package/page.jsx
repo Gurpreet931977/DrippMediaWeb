@@ -440,8 +440,8 @@ export default function PackageMaker() {
             </h3>
             
             {services.map((service, index) => (
-              <div key={index} className="service-row">
-                <div style={{ flex: 2 }}>
+              <div key={index} className="service-row" style={{ flexWrap: 'wrap', gap: '12px', background: '#111', border: '1px solid rgba(235, 215, 63, 0.25)', padding: '12px 16px', borderRadius: '12px', marginBottom: '10px' }}>
+                <div style={{ flex: '1 1 240px', minWidth: '200px' }}>
                   <input 
                     type="text" 
                     className="pmp-input" 
@@ -451,33 +451,60 @@ export default function PackageMaker() {
                       handleServiceChange(index, 'name', e.target.value);
                       handleServiceChange(index, 'desc', e.target.value);
                     }}
+                    style={{ padding: '10px 14px', background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#ffffff', fontWeight: '600' }}
                   />
                 </div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <span style={{color: '#888'}}>Qty</span>
+                <div style={{ flex: '0 0 110px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: '#aaa', fontSize: '0.85rem', fontWeight: 'bold' }}>Qty</span>
                   <input 
                     type="number" 
                     className="pmp-input" 
                     placeholder="1" 
-                    value={service.qty} 
+                    value={service.qty ?? ''} 
                     onChange={(e) => handleServiceChange(index, 'qty', e.target.value)}
+                    style={{ 
+                      width: '70px', 
+                      minWidth: '70px',
+                      padding: '8px 10px', 
+                      background: 'rgba(255, 255, 255, 0.12)', 
+                      border: '1px solid #ebd73f', 
+                      color: '#ffffff', 
+                      fontWeight: 'bold',
+                      fontSize: '0.95rem',
+                      textAlign: 'center',
+                      borderRadius: '8px'
+                    }}
                   />
                 </div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <span style={{color: '#888'}}>₹</span>
+                <div style={{ flex: '0 0 145px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: '#ebd73f', fontWeight: 'bold', fontSize: '0.95rem' }}>₹</span>
                   <input 
                     type="number" 
                     className="pmp-input" 
                     placeholder="Rate" 
-                    value={service.rate} 
+                    value={service.rate ?? ''} 
                     onChange={(e) => handleServiceChange(index, 'rate', e.target.value)}
+                    style={{ 
+                      width: '105px', 
+                      minWidth: '105px',
+                      padding: '8px 10px', 
+                      background: 'rgba(255, 255, 255, 0.12)', 
+                      border: '1px solid #ebd73f', 
+                      color: '#ffffff', 
+                      fontWeight: 'bold',
+                      fontSize: '0.95rem',
+                      borderRadius: '8px'
+                    }}
                   />
+                </div>
+                <div style={{ flex: '0 0 120px', padding: '0 5px', color: '#ebd73f', fontWeight: 'bold', fontSize: '1rem', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                   <span style={{ color: '#666', fontWeight: 'normal' }}>=</span> ₹{((Number(service.qty) || 0) * (Number(service.rate) || 0)).toFixed(2)}
                 </div>
                 <button 
                   onClick={() => removeService(index)}
-                  style={{ background: 'rgba(255, 77, 77, 0.1)', border: 'none', width: '42px', height: '42px', borderRadius: '10px', color: '#ff4d4d', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ background: 'rgba(255, 77, 77, 0.1)', border: 'none', width: '42px', height: '42px', borderRadius: '10px', color: '#ff4d4d', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', flexShrink: 0 }}
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))}
