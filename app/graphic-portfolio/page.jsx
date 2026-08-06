@@ -1487,19 +1487,77 @@ export default function Page() {
             backdrop-filter: blur(30px);
             padding: 45px 40px;
             border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 20px rgba(255,255,255,0.02);
             position: relative;
             overflow: hidden;
         }
         
+        /* The dynamic interactive glowing border */
         .specific-view-info::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 24px; 
+            padding: 1px; /* Border thickness */
+            background: radial-gradient(
+                400px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), 
+                rgba(235, 215, 63, 0.6), 
+                rgba(255, 255, 255, 0.05) 40%
+            );
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            z-index: 2;
+            pointer-events: none;
+            transition: background 0.3s ease;
+        }
+
+        /* The glowing orb behind the content */
+        .specific-view-info::after {
             content: '';
             position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(235, 215, 63, 0.12) 0%, rgba(212, 188, 28, 0.05) 40%, transparent 70%);
+            top: -50px;
+            left: -50px;
+            z-index: -1;
+            animation: floatOrb 8s infinite alternate ease-in-out;
+            pointer-events: none;
+            filter: blur(40px);
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(60px, 120px) scale(1.3); }
+            100% { transform: translate(-40px, 80px) scale(0.8); }
+        }
+
+        /* Animated Scanlines */
+        .scanline-container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .scanline-overlay {
+            position: absolute;
             top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(235, 215, 63, 0.5), transparent);
+            height: 60px;
+            background: linear-gradient(to bottom, transparent 0%, rgba(235, 215, 63, 0.15) 50%, transparent 100%);
+            animation: scanlineSweep 5s infinite linear;
+            pointer-events: none;
+            z-index: 3;
             opacity: 0.5;
+            box-shadow: 0 0 10px rgba(235, 215, 63, 0.1);
+        }
+
+        @keyframes scanlineSweep {
+            0% { transform: translateY(-60px); opacity: 0; }
+            5% { opacity: 0.5; }
+            95% { opacity: 0.5; }
+            100% { transform: translateY(500px); opacity: 0; }
         }
 
         .specific-view-overlay.active .specific-view-info {
@@ -1830,12 +1888,27 @@ export default function Page() {
             />
           </div>
         </div>
-        <div className="specific-view-info">
-        <div className="specific-category" id="specific-category">Category</div>
-        <h2 className="specific-title" id="specific-title">Project Title</h2>
-        <h3 className="specific-case-study-heading">Case Study</h3>
-        <div className="specific-case-study" id="specific-case-study">Case study details...</div>
-      </div>
+        <div className="specific-view-info"
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+            e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.setProperty('--mouse-x', `-500px`);
+            e.currentTarget.style.setProperty('--mouse-y', `-500px`);
+          }}
+        >
+          <div className="scanline-overlay"></div>
+          <div className="scanline-container">
+            <div className="specific-category" id="specific-category">Category</div>
+            <h2 className="specific-title" id="specific-title">Project Title</h2>
+            <h3 className="specific-case-study-heading">THE VISION</h3>
+            <div className="specific-case-study" id="specific-case-study">Case study details...</div>
+          </div>
+        </div>
     </div>
   </div>
   {/* Drop-in wrapper mimicking user's React implementation */}

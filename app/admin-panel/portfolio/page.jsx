@@ -217,7 +217,7 @@ export default function PortfolioManager() {
           setEditPopup(prev => {
               if (!prev.show || !prev.field) return prev;
               if (prev.field === 'case_study' && aiData.case_study) {
-                  showNotification('success', 'Orlo wrote a new Case Study!');
+                  showNotification('success', 'Orlo wrote a new Vision!');
                   return { ...prev, value: aiData.case_study };
               }
               if (prev.field === 'title' && aiData.title) {
@@ -242,7 +242,7 @@ export default function PortfolioManager() {
                       updated = true;
                   }
                   if (updated) {
-                      const msg = target === 'title' ? 'Orlo wrote a new Title!' : target === 'case_study' ? 'Orlo wrote a new Case Study!' : 'Orlo filled in the details!';
+                      const msg = target === 'title' ? 'Orlo wrote a new Title!' : target === 'case_study' ? 'Orlo wrote a new Vision!' : 'Orlo filled in the details!';
                       showNotification('success', msg);
                       return newPopup;
                   }
@@ -449,7 +449,7 @@ export default function PortfolioManager() {
         return;
     }
     if (!formData.case_study || formData.case_study.trim() === '') {
-        setUploadPopup({ show: true, type: 'error', message: 'Case study is required' });
+        setUploadPopup({ show: true, type: 'error', message: 'The Vision is required' });
         return;
     }
 
@@ -1294,7 +1294,7 @@ export default function PortfolioManager() {
                           <>
                               Edit {
                                   editPopup.field === 'description' ? 'Caption' : 
-                                  editPopup.field === 'case_study' ? 'Case Study' : 
+                                  editPopup.field === 'case_study' ? 'The Vision' : 
                                   editPopup.field === 'category' ? 'Category' : 
                                   editPopup.field === 'details' ? 'Details' :
                                   (editPopup.field === 'videoSrc' || editPopup.field === 'image_url' || editPopup.field === 'thumbnail_url') ? 'Media URL' : 'Title'
@@ -1495,7 +1495,7 @@ export default function PortfolioManager() {
 
                               <div style={{ marginTop: '20px' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                      <label style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>Case Study</label>
+                                      <label style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>The Vision</label>
                                       <button 
                                         type="button" 
                                         style={{ 
@@ -2154,7 +2154,7 @@ export default function PortfolioManager() {
             {(activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && (
                  <div className="input-group" style={{ marginBottom: '24px' }}>
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <label style={{ margin: 0, fontFamily: 'Clash Display, sans-serif' }}>Premium Case Study</label>
+                        <label style={{ margin: 0, fontFamily: 'Clash Display, sans-serif' }}>The Vision</label>
                         {activeTab === TABS.GRAPHICS && (
                             <button type="button" onClick={() => {
                                 if (window.dispatchEvent) {

@@ -522,7 +522,7 @@ The user has categorized this video as: "${currentCategory}".
 Write three things:
 1. A punchy, 3-8 word 'title' (no full sentences).
 2. A short 'description' acting as a social media caption with 2-3 hashtags.
-3. A premium 'case_study' from the creator's perspective. The case study should sell the transformation and explain *why* the edits, pacing, or cinematography choices matter to the viewer's psychology or the brand's premium feel. 
+3. A premium 'case_study' (The Vision) from the creator's perspective. The Vision should sell the transformation and explain *why* the edits, pacing, or cinematography choices matter to the viewer's psychology or the brand's premium feel. 
 - CRITICAL: Use simple, everyday conversational language. It should sound like a human talking to a client, not an academic paper.
 - DO NOT use hard grammar, complex vocabulary, or "SAT words" (e.g. avoid words like "juxtaposing", "high-octane", "engineered", "visceral").
 - STRICTLY DO NOT use em dashes (—) or en dashes (–).
@@ -547,7 +547,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
          window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data }));
          
          const target = data.fillTarget;
-         const textMsg = target === 'title' ? "Done! I've automatically written a premium title for you." : target === 'case_study' ? "Done! I've automatically written a premium case study for you." : "Done! I've automatically written a premium title, description, and case study for you.";
+         const textMsg = target === 'title' ? "Done! I've automatically written a premium title for you." : target === 'case_study' ? "Done! I've automatically written a premium Vision for you." : "Done! I've automatically written a premium title, description, and Vision for you.";
          
          setMessages(prev => [...prev, { role: 'ai', text: textMsg }]);
          setEmotion('success');
@@ -577,7 +577,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
          imageUrl = URL.createObjectURL(file);
      }
      
-     setMessages(prev => [...prev, { role: 'ai', text: "Analyzing graphic design details... preparing premium case study..." }]);
+     setMessages(prev => [...prev, { role: 'ai', text: "Analyzing graphic design details... preparing premium Vision..." }]);
      setIsTyping(true);
      setEmotion('thinking');
      
@@ -612,7 +612,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. Do not 
 You are the Lead Creative Director for Dripp Media, a premium creative agency. 
 Analyze this single graphic design (Category: "${currentCategory}") that we just produced.
 
-Write a premium 'case_study' from the creator's perspective. The case study should sell the transformation, explain the design choices (colors, typography, composition, visual hierarchy), and describe why they matter to the brand's premium feel or viewer psychology.
+Write a premium 'case_study' (The Vision) from the creator's perspective. The Vision should sell the transformation, explain the design choices (colors, typography, composition, visual hierarchy), and describe why they matter to the brand's premium feel or viewer psychology.
 - CRITICAL: Use simple, everyday conversational language. It should sound like a human talking to a client, not an academic paper.
 - DO NOT use hard grammar, complex vocabulary, or "SAT words" (e.g. avoid words like "juxtaposing", "high-octane", "engineered", "visceral").
 - STRICTLY DO NOT use em dashes (—) or en dashes (–).
@@ -637,7 +637,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
          window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data }));
          
          const target = data.fillTarget;
-         const textMsg = target === 'title' ? "Done! I've automatically written a premium title for your graphic." : target === 'case_study' ? "Done! I've automatically written a premium case study for your graphic." : "Done! I've automatically written a premium title and case study for your graphic.";
+         const textMsg = target === 'title' ? "Done! I've automatically written a premium title for your graphic." : target === 'case_study' ? "Done! I've automatically written a premium Vision for your graphic." : "Done! I've automatically written a premium title and Vision for your graphic.";
          
          setMessages(prev => [...prev, { role: 'ai', text: textMsg }]);
          setEmotion('success');
