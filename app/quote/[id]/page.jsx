@@ -505,21 +505,32 @@ function SignatureBlock({ quoteId, quoteData, setQuoteData }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // 1. If already signed, show the signed badge
+  // 1. If already signed, show the signed & locked badge (1 signature entry limit)
   if (quoteData?.signature) {
     return (
-      <div style={{ marginTop: '40px', gridColumn: '1 / -1', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '20px', padding: 'clamp(30px, 5vw, 50px)', textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}>
-        <div style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', marginBottom: '15px' }}>
-          <CheckCircle2 size={30} color="#ebd73f" />
-        </div>
-        <h3 style={{ fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>Proposal Accepted</h3>
-        
-        <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', display: 'inline-block', marginBottom: '20px' }}>
-          <img src={quoteData.signature} alt="Client Signature" style={{ height: '80px', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+      <div style={{ marginTop: '40px', gridColumn: '1 / -1', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '20px', padding: 'clamp(30px, 5vw, 50px)', textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.4)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(235, 215, 63, 0.15)', color: '#ebd73f', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <CheckCircle2 size={16} color="#ebd73f" /> 1 / 1 Signature Entry Completed (Locked)
         </div>
         
-        <p style={{ color: '#fff', fontSize: '1.1rem', margin: '0 0 5px 0' }}>Signed by: <strong>{quoteData.signedBy}</strong></p>
-        <p style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>Date: {new Date(quoteData.signedAt).toLocaleString()}</p>
+        <h3 style={{ fontSize: 'clamp(1.2rem, 4vw, 1.6rem)', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>
+          Proposal Accepted & Executed
+        </h3>
+        
+        <div style={{ background: '#ffffff', borderRadius: '12px', padding: '20px 30px', display: 'inline-block', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.2)' }}>
+          <img src={quoteData.signature} alt="Verified Client Signature" style={{ height: '80px', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+        </div>
+        
+        <p style={{ color: '#ffffff', fontSize: '1.15rem', margin: '0 0 6px 0', fontWeight: '600' }}>
+          Signed by: <span style={{ color: '#ebd73f' }}>{quoteData.signedBy}</span>
+        </p>
+        <p style={{ color: '#888', fontSize: '0.9rem', margin: '0 0 16px 0' }}>
+          Timestamp: {new Date(quoteData.signedAt).toLocaleString()}
+        </p>
+        
+        <div style={{ fontSize: '0.8rem', color: '#666', fontStyle: 'italic', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px', maxWidth: '500px', margin: '0 auto' }}>
+          🔒 This proposal package is permanently locked. No further signature entries or modifications can be submitted for this link.
+        </div>
       </div>
     );
   }
