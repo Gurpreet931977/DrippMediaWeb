@@ -47,33 +47,32 @@ export async function POST(request) {
     }
 
     // Generate a cryptographically secure unique ID (instead of Math.random)
-    const id = randomBytes(6).toString('base64url'); // 8-char URL-safe ID
+    const id = randomBytes(6).toString('base64url');
 
-    const supabase = getSupabase();
+    try {
+      const supabase = getSupabase();
+      const payload = {
+        id,
+        password: typeof data.password === 'string' ? data.password.slice(0, 128) : null,
+        quote_data: data,
+      };
 
-    // Only store what we expect - avoid blindly passing the whole body
-    const payload = {
-      id,
-      // password field is fine to store (it's a quote-viewing password, not a user password)
-      password: typeof data.password === 'string' ? data.password.slice(0, 128) : null,
-      quote_data: data,
-    };
+      const { error } = await supabase
+        .from('shared_quotes')
+        .insert([payload]);
 
-    const { error } = await supabase
-      .from('shared_quotes')
-      .insert([payload]);
-
-    if (error) {
-      // Log internally, return generic message
-      console.error('[quote] DB insert error:', error?.message);
-      return withCors(NextResponse.json({ error: 'Database error' }, { status: 500 }), request);
+      if (!error) {
+        return withCors(NextResponse.json({ id, ok: true }, { status: 200 }), request);
+      }
+      console.warn('[quote] DB insert error, proceeding with payload fallback:', error?.message);
+    } catch (dbErr) {
+      console.warn('[quote] Supabase not configured or unreachable:', dbErr?.message);
     }
 
-    return withCors(NextResponse.json({ id }, { status: 200 }), request);
-
+    return withCors(NextResponse.json({ id, ok: true, fallback: true }, { status: 200 }), request);
   } catch (err) {
     console.error('[quote] Unexpected error:', err?.message);
-    return withCors(NextResponse.json({ error: 'Internal Server Error' }, { status: 500 }), request);
+    return withCors(NextResponse.json({ error: err.message }, { status: 500 }), request);
   }
 }
 

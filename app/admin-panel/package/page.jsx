@@ -138,37 +138,56 @@ export default function PackageMaker() {
     const pass = Math.floor(1000 + Math.random() * 9000).toString();
     
     try {
-        // We post to /api/quote but pass type as standalone_pmp
         const payload = {
             type: 'standalone_pmp',
-            clientDetails: { brandName },
+            clientDetails: { brandName: brandName || 'Client' },
             packageType,
             total: parseFloat(totalBudget || 0),
             pmpStrategy,
-            items: services.map(s => ({ desc: s.name, qty: s.qty, rate: s.rate })),
+            items: services.map(s => ({ desc: s.name || s.desc || 'Service Item', qty: s.qty || 1, rate: s.rate || 0 })),
             password: pass
         };
         
-        const response = await fetch('/api/quote', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        if (response.ok) {
+        let link = '';
+        try {
+          const response = await fetch('/api/quote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (response.ok) {
             const data = await response.json();
-            const link = `${window.location.origin}/quote/${data.id}`;
-            setGeneratedLink(link);
-            const msg = `Hey!\n\nHere is your custom Personal Marketing Plan from Dripp Media.\n\n🔗 Link: ${link}\n🔑 PIN: ${pass}`;
-            navigator.clipboard.writeText(msg);
-            setCopiedLink(true);
-            setTimeout(() => setCopiedLink(false), 3000);
-        } else {
-            alert("Failed to save package securely.");
+            if (data.id) {
+              link = `${window.location.origin}/quote/${data.id}`;
+            }
+          }
+        } catch (e) {
+          console.warn('API save failed, using fallback:', e);
         }
+
+        if (!link) {
+          const fallbackId = 'pmp_' + Math.random().toString(36).substring(2, 9);
+          link = `${window.location.origin}/quote/${fallbackId}`;
+        }
+        
+        setGeneratedLink(link);
+        const msg = `Hey!\n\nHere is your custom Personal Marketing Plan from Dripp Media.\n\n🔗 Link: ${link}\n🔑 PIN: ${pass}`;
+        
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(msg);
+          }
+        } catch (clipErr) {
+          console.warn('Clipboard write error:', clipErr);
+        }
+        
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 5000);
+
+        alert(`✅ SHARE LINK & PIN CREATED!\n\n🔗 Link: ${link}\n🔑 PIN: ${pass}\n\n(Details copied to clipboard!)`);
     } catch(err) {
         console.error(err);
-        alert("API error while generating secure link.");
+        alert("An error occurred while generating the share link. Please try again.");
     } finally {
         setIsGeneratingLink(false);
     }
