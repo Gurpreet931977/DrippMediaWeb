@@ -101,31 +101,66 @@ Rules:
 
 Ensure the output is creative, original, and does not just repeat or slightly rephrase the inputs unless they are already excellent. Make it punchy, engaging, and premium.`;
 
-    // 4. Call Gemini API
-    const modelToUse = selectedModel || 'gemini-3.6-flash';
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
-    
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 1.0,
-          response_mime_type: "application/json"
-        }
-      })
-    });
-
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('[Gemini API Error]', err);
-      return Response.json({ error: 'Failed to generate copy from AI' }, { status: 500 });
+    function resolveModelName(rawModel) {
+      if (!rawModel) return 'gemini-2.5-flash';
+      if (rawModel.includes('3.6') || rawModel.includes('3.5')) {
+        return rawModel.includes('pro') ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+      }
+      return rawModel;
     }
 
-    const data = await response.json();
+    const primaryModel = resolveModelName(selectedModel);
+    const candidateModels = [
+      primaryModel,
+      'gemini-2.5-flash',
+      'gemini-2.5-pro',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro'
+    ];
+    const fallbackQueue = [...new Set(candidateModels)];
+
+    let data = null;
+    let lastError = null;
+
+    for (const modelToTry of fallbackQueue) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${apiKey}`;
+        const response = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 1.0,
+              response_mime_type: "application/json"
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.text();
+          console.warn(`[Gemini API Error for ${modelToTry}]`, err);
+          lastError = err;
+          continue;
+        }
+
+        const resData = await response.json();
+        if (resData.candidates?.[0]?.content?.parts?.[0]?.text) {
+          data = resData;
+          break;
+        }
+      } catch (err) {
+        console.warn(`[Gemini API Exception for ${modelToTry}]`, err.message);
+        lastError = err.message;
+      }
+    }
+
+    if (!data) {
+      console.error('[All Gemini models failed]', lastError);
+      return Response.json({ error: 'Failed to generate copy from AI. Please try again.' }, { status: 500 });
+    }
+
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!rawText) {

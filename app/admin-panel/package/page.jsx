@@ -22,6 +22,44 @@ export default function PackageMaker() {
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [generatedLink, setGeneratedLink] = useState('');
 
+  const parsePackagePayload = (payload) => {
+    if (!payload) return;
+    if (payload.brandName) setBrandName(payload.brandName);
+    if (payload.packageType) setPackageType(payload.packageType.toLowerCase());
+    if (payload.totalBudget) setTotalBudget(payload.totalBudget.toString());
+    
+    if (payload.pmpStrategy) {
+      const strategyString = typeof payload.pmpStrategy === 'object' ? 
+        `Overview:\n${payload.pmpStrategy.overview || ''}\n\nTarget Audience:\n${payload.pmpStrategy.targetAudience || ''}\n\nPhases:\n${(payload.pmpStrategy.phases || []).map(p => `- ${p.title}: ${p.description}`).join('\n')}` : 
+        payload.pmpStrategy;
+      setPmpStrategy(strategyString);
+    }
+    
+    let extracted = [];
+    if (payload.services && payload.services.length > 0) {
+      extracted = payload.services.map(s => ({
+        desc: s.desc || s.name || 'Service Item',
+        qty: Number(s.qty) || 1,
+        rate: Number(s.rate) || 0,
+        details: s.details || ''
+      }));
+    } else if (payload.packageTiers && payload.packageTiers.length > 0) {
+      payload.packageTiers.forEach(tier => {
+        (tier.items || []).forEach(item => {
+          extracted.push({
+            desc: item.desc || item.name || 'Service Item',
+            qty: Number(item.qty) || 1,
+            rate: Number(item.rate) || 0,
+            details: item.details || ''
+          });
+        });
+      });
+    }
+    if (extracted.length > 0) {
+      setServices(extracted);
+    }
+  };
+
   useEffect(() => {
     setIsClient(true);
     // Check if there is pending package data from Orlo
@@ -29,14 +67,7 @@ export default function PackageMaker() {
     if (pendingDataStr) {
       try {
         const data = JSON.parse(pendingDataStr);
-        if (data.brandName) setBrandName(data.brandName);
-        if (data.packageType) setPackageType(data.packageType.toLowerCase());
-        if (data.totalBudget) setTotalBudget(data.totalBudget.toString());
-        if (data.pmpStrategy) setPmpStrategy(data.pmpStrategy);
-        if (data.services && data.services.length > 0) {
-          setServices(data.services);
-        }
-        // Clear it so it doesn't auto-fill again on refresh
+        parsePackagePayload(data);
         sessionStorage.removeItem('pendingPackageData');
       } catch (err) {
         console.error('Failed to parse package data', err);
@@ -48,19 +79,7 @@ export default function PackageMaker() {
     const handleCopilotAction = (e) => {
       const data = e.detail;
       if (data && (data.intent === 'package' || data.intent === 'quote') && data.payload) {
-        const payload = data.payload;
-        if (payload.brandName) setBrandName(payload.brandName);
-        if (payload.packageType) setPackageType(payload.packageType.toLowerCase());
-        if (payload.totalBudget) setTotalBudget(payload.totalBudget.toString());
-        if (payload.pmpStrategy) {
-          const strategyString = typeof payload.pmpStrategy === 'object' ? 
-            `Overview:\n${payload.pmpStrategy.overview || ''}\n\nTarget Audience:\n${payload.pmpStrategy.targetAudience || ''}\n\nPhases:\n${(payload.pmpStrategy.phases || []).map(p => `- ${p.title}: ${p.description}`).join('\n')}` : 
-            payload.pmpStrategy;
-          setPmpStrategy(strategyString);
-        }
-        if (payload.services && payload.services.length > 0) {
-          setServices(payload.services);
-        }
+        parsePackagePayload(data.payload);
       }
     };
     window.addEventListener('copilot-action', handleCopilotAction);

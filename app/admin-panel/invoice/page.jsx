@@ -203,23 +203,45 @@ export default function InvoiceMaker() {
      generateQR();
   }, [selectedBankId, bankAccounts, myDetails.companyName]);
 
-  // -- ORLO COPILOT INTEGRATION --
+  const parseInvoicePayload = (payload) => {
+    if (!payload) return;
+    if (payload.clientName) setClientDetails(prev => ({ ...prev, name: payload.clientName }));
+    else if (payload.brandName) setClientDetails(prev => ({ ...prev, name: payload.brandName }));
+    if (payload.brandName) setClientDetails(prev => ({ ...prev, brandName: payload.brandName }));
+    if (payload.clientEmail) setClientDetails(prev => ({ ...prev, email: payload.clientEmail }));
+    if (payload.clientMobile) setClientDetails(prev => ({ ...prev, mobile: payload.clientMobile }));
+    if (payload.clientAddress) setClientDetails(prev => ({ ...prev, address: payload.clientAddress }));
+    if (payload.gstNumber) setClientDetails(prev => ({ ...prev, gst: payload.gstNumber }));
+    
+    let extracted = [];
+    if (payload.services && payload.services.length > 0) {
+      extracted = payload.services.map(s => ({
+        desc: s.desc || s.name || 'Service Item',
+        qty: Number(s.qty) || 1,
+        rate: Number(s.rate) || 0
+      }));
+    } else if (payload.packageTiers && payload.packageTiers.length > 0) {
+      payload.packageTiers.forEach(tier => {
+        (tier.items || []).forEach(item => {
+          extracted.push({
+            desc: item.desc || item.name || 'Service Item',
+            qty: Number(item.qty) || 1,
+            rate: Number(item.rate) || 0
+          });
+        });
+      });
+    }
+    if (extracted.length > 0) {
+      setItems(extracted);
+    }
+  };
+
   useEffect(() => {
     const pendingDataStr = sessionStorage.getItem('pendingPackageData');
     if (pendingDataStr) {
       try {
         const data = JSON.parse(pendingDataStr);
-        if (data.clientName) setClientDetails(prev => ({ ...prev, name: data.clientName }));
-        else if (data.brandName) setClientDetails(prev => ({ ...prev, name: data.brandName }));
-        if (data.brandName) setClientDetails(prev => ({ ...prev, brandName: data.brandName }));
-        if (data.clientEmail) setClientDetails(prev => ({ ...prev, email: data.clientEmail }));
-        if (data.clientMobile) setClientDetails(prev => ({ ...prev, mobile: data.clientMobile }));
-        if (data.clientAddress) setClientDetails(prev => ({ ...prev, address: data.clientAddress }));
-        if (data.gstNumber) setClientDetails(prev => ({ ...prev, gst: data.gstNumber }));
-        
-        if (data.services && data.services.length > 0) {
-          setItems(data.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0 })));
-        }
+        parseInvoicePayload(data);
         sessionStorage.removeItem('pendingPackageData');
       } catch (err) {
         console.error('Failed to parse pending invoice data', err);
@@ -231,23 +253,12 @@ export default function InvoiceMaker() {
     const handleCopilotAction = (e) => {
       const data = e.detail;
       if (data && data.intent === 'invoice' && data.payload) {
-        const payload = data.payload;
-        if (payload.clientName) setClientDetails(prev => ({ ...prev, name: payload.clientName }));
-        else if (payload.brandName) setClientDetails(prev => ({ ...prev, name: payload.brandName }));
-        if (payload.brandName) setClientDetails(prev => ({ ...prev, brandName: payload.brandName }));
-        if (payload.clientEmail) setClientDetails(prev => ({ ...prev, email: payload.clientEmail }));
-        if (payload.clientMobile) setClientDetails(prev => ({ ...prev, mobile: payload.clientMobile }));
-        if (payload.clientAddress) setClientDetails(prev => ({ ...prev, address: payload.clientAddress }));
-        if (payload.gstNumber) setClientDetails(prev => ({ ...prev, gst: payload.gstNumber }));
-        
-        if (payload.services && payload.services.length > 0) {
-          setItems(payload.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0 })));
-        }
+        parseInvoicePayload(data.payload);
       }
     };
     window.addEventListener('copilot-action', handleCopilotAction);
     return () => window.removeEventListener('copilot-action', handleCopilotAction);
-  }, [items]); // ensure we capture latest items to append if needed
+  }, []); // ensure we capture latest items to append if needed
 
   useEffect(() => {
     window._drippFormContext = { clientDetails, services: items, invoiceDetails };

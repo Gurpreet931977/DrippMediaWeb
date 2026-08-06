@@ -102,7 +102,7 @@ export default function OrloChat() {
   const [emotion, setEmotion] = useState('idle');
   const [isHovered, setIsHovered] = useState(false);
   const [speechBubble, setSpeechBubble] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemini-3.6-flash');
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
   
   const chatRef = useRef(null);
   const btnRef = useRef(null);
@@ -116,12 +116,12 @@ export default function OrloChat() {
   const keypressTimeoutRef = useRef(null);
   const speechBubbleTimeoutRef = useRef(null);
 
-  // Load chat history from local storage
+  // Load chat history and preferred model from local storage on mount
   useEffect(() => {
-    const savedChat = localStorage.getItem('orlo_chat_history');
-    if (savedChat) {
+    const saved = localStorage.getItem('orlo_chat_history');
+    if (saved) {
       try {
-        const { messages: savedMessages, timestamp } = JSON.parse(savedChat);
+        const { messages: savedMessages, timestamp } = JSON.parse(saved);
         const now = new Date().getTime();
         const fifteenDays = 15 * 24 * 60 * 60 * 1000;
         
@@ -170,7 +170,7 @@ export default function OrloChat() {
     } else {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        showToast('Voice commands are not supported on this browser.');
+        showToast('Voice recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
         return;
       }
       
@@ -178,22 +178,31 @@ export default function OrloChat() {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
+        recognition.lang = navigator.language || 'en-US';
         
         recognition.onresult = (event) => {
-          let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-             transcript += event.results[i][0].transcript;
+          let fullTranscript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            fullTranscript += event.results[i][0].transcript;
           }
-          const prefix = originalInputRef.current ? originalInputRef.current + ' ' : '';
-          setInput(prefix + transcript);
+          const prefix = originalInputRef.current ? originalInputRef.current.trim() + ' ' : '';
+          setInput(prefix + fullTranscript);
         };
         
         recognition.onerror = (event) => {
-          console.error('Speech recognition error', event.error);
+          console.error('Speech recognition error:', event.error);
+          if (event.error === 'no-speech') {
+            // Ignore brief silence so recognition doesn't immediately abort
+            return;
+          }
           let errorMsg = 'Voice recognition error';
-          if (event.error === 'not-allowed') errorMsg = 'Microphone access denied';
-          else if (event.error === 'network') errorMsg = 'Network error during voice recognition';
-          else if (event.error === 'no-speech') errorMsg = 'No speech detected';
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            errorMsg = 'Microphone access denied. Please grant microphone permissions in browser.';
+          } else if (event.error === 'network') {
+            errorMsg = 'Network error: Web Speech API requires an active internet connection.';
+          } else if (event.error === 'audio-capture') {
+            errorMsg = 'No microphone detected or mic is currently in use.';
+          }
           showToast(errorMsg);
           setIsListening(false);
         };
@@ -206,9 +215,10 @@ export default function OrloChat() {
         recognition.start();
         recognitionRef.current = recognition;
         setIsListening(true);
+        showToast('Listening... Speak now.');
       } catch (e) {
         console.error('Error starting speech recognition:', e);
-        showToast('Microphone error: Please check your permissions.');
+        showToast('Microphone error: Please check your browser permissions.');
         setIsListening(false);
       }
     }
@@ -658,27 +668,23 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       
       // Dispatch event to window so forms can pick it up
       if (data.intent && data.payload) {
+        if (['quote', 'package', 'invoice'].includes(data.intent)) {
+          sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
+        }
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
         
         const currentPath = window.location.pathname;
-        const isAlreadyOnRelevantPage = currentPath === '/admin-panel/quote' || currentPath === '/admin-panel/package' || currentPath === '/admin-panel/invoice';
-        
-        if (!isAlreadyOnRelevantPage) {
-          if (data.intent === 'quote') {
-            sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
-            router.push('/admin-panel/quote');
-          } else if (data.intent === 'package') {
-            sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
-            router.push('/admin-panel/package');
-          } else if (data.intent === 'invoice') {
-            sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
-            router.push('/admin-panel/invoice');
-          } else if (data.intent === 'portfolio') {
-            if (data.payload.analyzeVideo) {
-              handleVideoAnalysis();
-            } else {
-              window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data.payload }));
-            }
+        const targetPath = data.intent === 'quote' ? '/admin-panel/quote' :
+                           data.intent === 'package' ? '/admin-panel/package' :
+                           data.intent === 'invoice' ? '/admin-panel/invoice' : null;
+                           
+        if (targetPath && currentPath !== targetPath) {
+          router.push(targetPath);
+        } else if (data.intent === 'portfolio') {
+          if (data.payload.analyzeVideo) {
+            handleVideoAnalysis();
+          } else {
+            window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data.payload }));
           }
         }
       }
@@ -1247,10 +1253,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   cursor: 'pointer'
                 }}
               >
-                <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
-                <option value="gemini-3.6-pro">Gemini 3.6 Pro</option>
-                <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
-                <option value="gemini-3.5-pro">Gemini 3.5 Pro</option>
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
               </select>
               <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='#888'}>
                 <X size={20} />

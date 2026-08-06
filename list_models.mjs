@@ -1,13 +1,20 @@
 import fs from 'fs';
 
-const envLocal = fs.readFileSync('.env.local', 'utf8');
-const env = envLocal.split('\n').reduce((acc, line) => {
-    const [key, ...val] = line.split('=');
-    if (key && val.length > 0) acc[key.trim()] = val.join('=').trim().replace(/['"]/g, '');
-    return acc;
-}, {});
+let apiKey = process.env.GEMINI_API_KEY;
 
-const apiKey = env['GEMINI_API_KEY'];
+if (!apiKey) {
+    for (const envFile of ['.env.local', '.env']) {
+        if (fs.existsSync(envFile)) {
+            const content = fs.readFileSync(envFile, 'utf8');
+            const match = content.match(/GEMINI_API_KEY\s*=\s*["']?([^"'\r\n]+)["']?/);
+            if (match && match[1]) {
+                apiKey = match[1].trim();
+                break;
+            }
+        }
+    }
+}
+
 console.log('API Key starts with:', apiKey ? apiKey.substring(0, 5) : 'MISSING');
 
 fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + apiKey)

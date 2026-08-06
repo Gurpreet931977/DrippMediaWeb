@@ -155,24 +155,63 @@ JSON Schema to return:
 }
 
 ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${userPrompt}"`;
+    function resolveModelName(rawModel) {
+      if (!rawModel) return 'gemini-2.5-flash';
+      if (rawModel.includes('3.6') || rawModel.includes('3.5')) {
+        return rawModel.includes('pro') ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+      }
+      return rawModel;
+    }
 
-    const selectedModel = model || 'gemini-3.6-flash';
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
-    
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
-        generationConfig: {
-            temperature: 0.7,
-            responseMimeType: "application/json"
+    const primaryModel = resolveModelName(model);
+    const candidateModels = [
+      primaryModel,
+      'gemini-2.5-flash',
+      'gemini-2.5-pro',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro'
+    ];
+    const fallbackQueue = [...new Set(candidateModels)];
+
+    let lastError = null;
+    let data = null;
+
+    for (const modelToTry of fallbackQueue) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${apiKey}`;
+        const response = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
+            generationConfig: {
+                temperature: 0.7,
+                responseMimeType: "application/json"
+            }
+          })
+        });
+
+        const resData = await response.json();
+        if (resData.error) {
+          console.warn(`[Gemini Model ${modelToTry} Error]: ${resData.error.message}. Retrying fallback model...`);
+          lastError = resData.error.message;
+          continue;
         }
-      })
-    });
 
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
+        if (resData.candidates && resData.candidates[0]?.content?.parts?.[0]?.text) {
+          data = resData;
+          break;
+        }
+      } catch (err) {
+        console.warn(`[Gemini Model ${modelToTry} Exception]: ${err.message}. Retrying fallback model...`);
+        lastError = err.message;
+      }
+    }
+
+    if (!data) {
+      throw new Error(lastError || 'All AI models are currently unavailable. Please try again in a moment.');
+    }
 
     let textOutput = data.candidates[0].content.parts[0].text;
     

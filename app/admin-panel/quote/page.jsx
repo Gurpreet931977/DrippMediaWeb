@@ -229,26 +229,34 @@ export default function QuoteMaker() {
     
     if (confirmedPhones.length > 0) parsedClient.phones = confirmedPhones;
 
+    // Pre-normalize '28k' / '28K' to numeric values
+    let normalizedText = smartText.replace(/(\d+)\s*k\b/gi, (match, p1) => `${parseInt(p1) * 1000}`);
+
     // 4. Extract Name & Brand
+    const brandPatternMatch = normalizedText.match(/(?:brand\s*name\s*[-:]?\s*|for\s+brand\s+)([\w\s]+?)(?=\.|\n|,|$)/i);
+    if (brandPatternMatch) {
+        parsedClient.brands = [brandPatternMatch[1].trim()];
+    } else {
+        const forMatch = normalizedText.match(/for\s+([A-Z][a-zA-Z0-9'\s]+?(?=\.|\n))/);
+        if (forMatch) {
+            parsedClient.brands = [forMatch[1].trim()];
+        } else {
+            const organizations = doc.organizations().out('array');
+            if (organizations.length > 0) {
+                parsedClient.brands = [organizations[0].replace(/[.,;:!?]$/, '').trim()];
+            } else {
+                const brandMatch = normalizedText.match(/(?:brand|company):\s*([a-zA-Z\s0-9&]+)/i);
+                if (brandMatch) parsedClient.brands = [brandMatch[1].trim()];
+            }
+        }
+    }
+
     const people = doc.people().out('array');
     if (people.length > 0) {
         parsedClient.names = [people[0].replace(/[.,;:!?]$/, '').trim()];
     } else {
-        const nameMatch = smartText.match(/(?:name|client):\s*([a-zA-Z\s]+)/i);
+        const nameMatch = normalizedText.match(/(?:name|client):\s*([a-zA-Z\s]+)/i);
         if (nameMatch) parsedClient.names = [nameMatch[1].trim()];
-    }
-
-    const forMatch = smartText.match(/for\s+([A-Z][a-zA-Z0-9'\s]+?(?=\.|\n))/);
-    if (forMatch) {
-        parsedClient.brands = [forMatch[1].trim()];
-    } else {
-        const organizations = doc.organizations().out('array');
-        if (organizations.length > 0) {
-            parsedClient.brands = [organizations[0].replace(/[.,;:!?]$/, '').trim()];
-        } else {
-            const brandMatch = smartText.match(/(?:brand|company):\s*([a-zA-Z\s0-9&]+)/i);
-            if (brandMatch) parsedClient.brands = [brandMatch[1].trim()];
-        }
     }
 
     // 5. Extract Items/Prices using Advanced Heuristics + NLP
@@ -632,49 +640,64 @@ export default function QuoteMaker() {
     }
     
     // Check if there is pending package data from Orlo
+  const parseQuotePayload = (payload) => {
+    if (!payload) return;
+    if (payload.clientName) setClientDetails(prev => ({ ...prev, name: payload.clientName }));
+    if (payload.brandName) setClientDetails(prev => ({ ...prev, brandName: payload.brandName }));
+    if (payload.clientEmail) setClientDetails(prev => ({ ...prev, email: payload.clientEmail }));
+    if (payload.clientMobile) setClientDetails(prev => ({ ...prev, mobile: payload.clientMobile }));
+    if (payload.clientAddress) setClientDetails(prev => ({ ...prev, address: payload.clientAddress }));
+    if (payload.gstNumber) setClientDetails(prev => ({ ...prev, gst: payload.gstNumber }));
+    
+    if (payload.packageType) setPackageType(payload.packageType.toLowerCase());
+    
+    if (payload.pmpStrategy) {
+      setIncludePMP(true);
+      const strategyString = typeof payload.pmpStrategy === 'object' ? 
+        `Overview:\n${payload.pmpStrategy.overview || ''}\n\nTarget Audience:\n${payload.pmpStrategy.targetAudience || ''}\n\nPhases:\n${(payload.pmpStrategy.phases || []).map(p => `- ${p.title}: ${p.description}`).join('\n')}` : 
+        payload.pmpStrategy;
+      setPmpStrategy(strategyString);
+      setPdfPages(prev => {
+        if (!prev.find(p => p.type === 'pmp')) {
+          const newPages = [...prev];
+          newPages.splice(1, 0, { id: 'pmp_1', type: 'pmp', title: 'Marketing Strategy & Concept', hideHeading: false });
+          return newPages;
+        }
+        return prev;
+      });
+    }
+    
+    if (payload.packageTiers && payload.packageTiers.length > 0) {
+      setPackageTiers(payload.packageTiers.map((t, idx) => ({
+        id: Date.now() + idx,
+        name: t.name || `Package ${idx + 1}`,
+        items: (t.items || []).map(s => ({
+          desc: s.desc || s.name || 'Service Item',
+          qty: Number(s.qty) || 1,
+          rate: Number(s.rate) || 0,
+          details: s.details || ''
+        }))
+      })));
+    } else if (payload.services && payload.services.length > 0) {
+      setPackageTiers([{
+        id: Date.now(),
+        name: 'Standard Package',
+        items: payload.services.map(s => ({
+          desc: s.desc || s.name || 'Service Item',
+          qty: Number(s.qty) || 1,
+          rate: Number(s.rate) || 0,
+          details: s.details || ''
+        }))
+      }]);
+    }
+  };
+
+  useEffect(() => {
     const pendingDataStr = sessionStorage.getItem('pendingPackageData');
     if (pendingDataStr) {
       try {
         const data = JSON.parse(pendingDataStr);
-        if (data.clientName) setClientDetails(prev => ({ ...prev, name: data.clientName }));
-        if (data.brandName) setClientDetails(prev => ({ ...prev, brandName: data.brandName }));
-        if (data.clientEmail) setClientDetails(prev => ({ ...prev, email: data.clientEmail }));
-        if (data.clientMobile) setClientDetails(prev => ({ ...prev, mobile: data.clientMobile }));
-        if (data.clientAddress) setClientDetails(prev => ({ ...prev, address: data.clientAddress }));
-        if (data.gstNumber) setClientDetails(prev => ({ ...prev, gst: data.gstNumber }));
-        
-        if (data.packageType) setPackageType(data.packageType.toLowerCase());
-        
-        // Setup PMP Strategy
-        if (data.pmpStrategy) {
-          setIncludePMP(true);
-          setPmpStrategy(data.pmpStrategy);
-          
-          // Add PMP slide to pdfPages if not exists
-          setPdfPages(prev => {
-            if (!prev.find(p => p.type === 'pmp')) {
-              const newPages = [...prev];
-              newPages.splice(1, 0, { id: 'pmp_1', type: 'pmp', title: 'Marketing Strategy & Concept', hideHeading: false });
-              return newPages;
-            }
-            return prev;
-          });
-        }
-        
-        if (data.packageTiers && data.packageTiers.length > 0) {
-          setPackageTiers(data.packageTiers.map((t, idx) => ({
-            id: Date.now() + idx,
-            name: t.name,
-            items: t.items.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0, details: s.details || '' }))
-          })));
-        } else if (data.services && data.services.length > 0) {
-          setPackageTiers([{
-            id: Date.now(),
-            name: 'Standard Package',
-            items: data.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0, details: s.details || '' }))
-          }]);
-        }
-        // Clear it
+        parseQuotePayload(data);
         sessionStorage.removeItem('pendingPackageData');
       } catch (err) {
         console.error('Failed to parse package data', err);
@@ -686,43 +709,7 @@ export default function QuoteMaker() {
     const handleCopilotAction = (e) => {
       const data = e.detail;
       if (data && (data.intent === 'package' || data.intent === 'quote') && data.payload) {
-        const payload = data.payload;
-        if (payload.clientName) setClientDetails(prev => ({ ...prev, name: payload.clientName }));
-        if (payload.brandName) setClientDetails(prev => ({ ...prev, brandName: payload.brandName }));
-        if (payload.clientEmail) setClientDetails(prev => ({ ...prev, email: payload.clientEmail }));
-        if (payload.clientMobile) setClientDetails(prev => ({ ...prev, mobile: payload.clientMobile }));
-        if (payload.clientAddress) setClientDetails(prev => ({ ...prev, address: payload.clientAddress }));
-        if (payload.gstNumber) setClientDetails(prev => ({ ...prev, gst: payload.gstNumber }));
-        
-        if (payload.packageType) setPackageType(payload.packageType.toLowerCase());
-        if (payload.pmpStrategy) {
-          setIncludePMP(true);
-          const strategyString = typeof payload.pmpStrategy === 'object' ? 
-            `Overview:\n${payload.pmpStrategy.overview || ''}\n\nTarget Audience:\n${payload.pmpStrategy.targetAudience || ''}\n\nPhases:\n${(payload.pmpStrategy.phases || []).map(p => `- ${p.title}: ${p.description}`).join('\n')}` : 
-            payload.pmpStrategy;
-          setPmpStrategy(strategyString);
-          setPdfPages(prev => {
-            if (!prev.find(p => p.type === 'pmp')) {
-              const newPages = [...prev];
-              newPages.splice(1, 0, { id: 'pmp_1', type: 'pmp', title: 'Marketing Strategy & Concept', hideHeading: false });
-              return newPages;
-            }
-            return prev;
-          });
-        }
-        if (payload.packageTiers && payload.packageTiers.length > 0) {
-          setPackageTiers(payload.packageTiers.map((t, idx) => ({
-            id: Date.now() + idx,
-            name: t.name,
-            items: t.items.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0, details: s.details || '' }))
-          })));
-        } else if (payload.services && payload.services.length > 0) {
-          setPackageTiers([{
-            id: Date.now(),
-            name: 'Standard Package',
-            items: payload.services.map(s => ({ desc: s.name, qty: s.qty || 1, rate: s.rate || 0, details: s.details || '' }))
-          }]);
-        }
+        parseQuotePayload(data.payload);
       }
     };
     window.addEventListener('copilot-action', handleCopilotAction);
