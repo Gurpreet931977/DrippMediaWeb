@@ -1549,29 +1549,30 @@ export default function Page() {
             100% { transform: translate(-40px, 80px) scale(0.8); }
         }
 
-        /* Animated Scanlines */
-        .scanline-container {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .scanline-overlay {
+        /* Spotlight that reveals the text brightness when hovered */
+        .text-spotlight {
             position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 60px;
-            background: linear-gradient(to bottom, transparent 0%, rgba(235, 215, 63, 0.15) 50%, transparent 100%);
-            animation: scanlineSweep 5s infinite linear;
+            inset: 0;
+            background: radial-gradient(
+                450px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), 
+                rgba(235, 215, 63, 0.15), 
+                transparent 50%
+            );
             pointer-events: none;
-            z-index: 3;
-            opacity: 0.5;
-            box-shadow: 0 0 10px rgba(235, 215, 63, 0.1);
+            z-index: 10;
+            mix-blend-mode: color-dodge;
+            transition: background 0.1s ease;
         }
 
-        @keyframes scanlineSweep {
-            0% { transform: translateY(-60px); opacity: 0; }
-            5% { opacity: 0.5; }
-            95% { opacity: 0.5; }
-            100% { transform: translateY(500px); opacity: 0; }
+        /* Subtle noise texture for premium frosted glass feel */
+        .text-spotlight::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.05;
+            pointer-events: none;
+            mix-blend-mode: overlay;
         }
 
         .specific-view-overlay.active .specific-view-info {
@@ -1609,12 +1610,20 @@ export default function Page() {
         }
         
         .specific-case-study {
-            color: #b0b0b0;
+            color: rgba(255, 255, 255, 0.55);
             font-family: 'Clash Display', sans-serif;
             font-size: 1.15rem;
-            line-height: 1.7;
+            line-height: 1.8;
             font-weight: 400;
             margin-top: 15px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .specific-case-study::first-line {
+            color: rgba(235, 215, 63, 0.9);
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
         .specific-case-study-heading {
@@ -1915,13 +1924,13 @@ export default function Page() {
             e.currentTarget.style.setProperty('--mouse-y', `-500px`);
           }}
         >
-          <div className="scanline-overlay"></div>
-          <div className="scanline-container">
-            <div className="specific-category" id="specific-category">Category</div>
-            <h2 className="specific-title" id="specific-title">Project Title</h2>
-            <h3 className="specific-case-study-heading">THE VISION</h3>
-            <div className="specific-case-study" id="specific-case-study">Case study details...</div>
-          </div>
+          <div className="specific-category" id="specific-category">Category</div>
+          <h2 className="specific-title" id="specific-title">Project Title</h2>
+          <h3 className="specific-case-study-heading">THE VISION</h3>
+          <div className="specific-case-study" id="specific-case-study">Case study details...</div>
+          
+          {/* Spotlight text glow effect */}
+          <div className="text-spotlight"></div>
         </div>
     </div>
   </div>
