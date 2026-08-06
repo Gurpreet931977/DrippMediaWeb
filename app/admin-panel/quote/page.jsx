@@ -1038,6 +1038,82 @@ export default function QuoteMaker() {
         </div>
       </div>
 
+      {/* TOP HEADER SHARE LINK & PIN CARD */}
+      {shareLink && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(20, 20, 20, 0.95) 100%)',
+          border: '1px solid #ebd73f',
+          borderRadius: '16px',
+          padding: '20px 24px',
+          marginBottom: '30px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <CheckCircle2 size={20} color="#ebd73f" />
+              <h4 style={{ margin: 0, color: '#fff', fontSize: '1.1rem', fontFamily: 'Clash Display, sans-serif' }}>
+                Secure Proposal Share Link Created!
+              </h4>
+            </div>
+            <button 
+              onClick={() => setShareLink('')}
+              style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '1.2rem', padding: '4px 8px' }}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px auto', gap: '16px', alignItems: 'center' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#aaa', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
+                Secure Link:
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={shareLink} 
+                  style={{ 
+                    width: '100%', 
+                    background: '#0a0a0a', 
+                    border: '1px solid rgba(255,255,255,0.15)', 
+                    color: '#ebd73f', 
+                    padding: '10px 14px', 
+                    borderRadius: '8px', 
+                    fontFamily: 'monospace',
+                    fontSize: '0.9rem' 
+                  }}
+                />
+                <button 
+                  onClick={() => copyToClipboard(shareLink, 'link')}
+                  style={{ background: 'rgba(235, 215, 63, 0.2)', border: '1px solid #ebd73f', color: '#ebd73f', padding: '0 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
+                >
+                  Copy Link
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#aaa', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
+                Security PIN:
+              </label>
+              <div style={{ background: '#0a0a0a', border: '1px solid #ebd73f', color: '#fff', padding: '10px 14px', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '2px', textAlign: 'center' }}>
+                {sharePassword}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
+              <button 
+                onClick={copyShareMessage}
+                style={{ background: '#ebd73f', border: 'none', color: '#000', padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+              >
+                <Share2 size={16} /> Copy Full Message
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
         
         {/* LEFT COLUMN: BUILDER FORM */}

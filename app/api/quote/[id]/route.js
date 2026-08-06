@@ -63,6 +63,13 @@ export async function PATCH(request, context) {
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
     }
 
+    // Single-entry enforcement: block re-signing if already signed
+    if (existingData.quote_data?.signature || existingData.quote_data?.signedBy) {
+      return NextResponse.json({ 
+        error: `This proposal package has already been signed by ${existingData.quote_data.signedBy || 'client'}. Only one signature entry is allowed per package link.` 
+      }, { status: 409 });
+    }
+
     // 2. Append signature data
     const updatedQuoteData = {
       ...existingData.quote_data,
