@@ -83,8 +83,8 @@ Valid Intents:
 2. "chat" - General chat, greeting, or answering questions about yourself (even your private life).
 3. "learn" - The user tells you a rule, preference, or feature to remember for the future (e.g. "Always sign off as The Dripp Team", "If I say 'urgent', make it a broadcast").
 7. "invoice" - The user wants to create a formal invoice (e.g., "make an invoice for ritvik kala for 800").
-4. "quote" - The user wants to create a formal quote, or quote with a PMP (Personal Marketing Plan) (e.g., "quote them 30k", "make a quote for...").
-5. "package" - The user wants to create a standalone package or PMP (Personal Marketing Plan) without a quote (e.g., "make a standalone package", "just make a PMP").
+4. "quote" - The user wants to create a formal quote, pricing package, or proposal package (e.g., "create a package for...", "quote them 30k", "make a package for astro...").
+5. "package" - The user explicitly asks for a standalone PMP (Personal Marketing Plan) or Masterplan (e.g., "create a PMP", "make a masterplan strategy").
 6. "system_doc" - The user wants to rewrite, modify, or draft an operational document (e.g. Agreement, Onboarding, Delivery, Feedback forms) currently open in the System Workspace.
 8. "portfolio" - The user wants to fill out the Portfolio Manager upload form (e.g., "set the category to Videography", "write a title for this video", "analyze this video").
 9. "clear_chat" - The user wants to clear, delete, or reset the current chat history with you.
@@ -98,7 +98,7 @@ If the user asks Orlo to write the description/title by looking at or analyzing 
 Return the modified form data in the payload.
 
 If the intent is "package" OR "quote" OR "invoice":
-Read the "Current Active Form State" to see what is already there. If the user is asking to add, modify, or apply a discount, you MUST append to or modify the existing "packageTiers" or fields rather than starting from scratch. Extract the "clientName" (e.g. Ritvik Kala), "brandName", "clientEmail", "clientMobile", "clientAddress", "gstNumber", the overall "totalBudget" (e.g. 30000), "packageType" (e.g. "monthly" or "project"), a list of "packageTiers" (e.g. tier 1 with "8 Reels", tier 2 with "8 Reels + 8 Posts") requested, and the overall "pmpStrategy" which should be a structured object containing an overview, target audience, and phases for their Personal Marketing Plan. Include these in the payload. If you see a price or the word "quote", default to "quote" intent unless they explicitly said "invoice" or "bill".
+Read the "Current Active Form State" to see what is already there. If the user is asking to add, modify, or apply a discount, you MUST append to or modify the existing "packageTiers" or fields rather than starting from scratch. Extract the "clientName" (e.g. Ritvik Kala), "brandName", "clientEmail", "clientMobile", "clientAddress", "gstNumber", the overall "totalBudget" (e.g. 30000), "packageType" (e.g. "monthly" or "project"), a list of "packageTiers" (e.g. tier 1 with "8 Reels", tier 2 with "8 Reels + 8 Posts") requested, and the overall "pmpStrategy" which should be a structured object containing an overview, target audience, and phases for their Personal Marketing Plan. Include these in the payload. If the user asks for a package, pricing, or quote, set intent to "quote". If they explicitly ask for a PMP or Masterplan, set intent to "package".
 
 If the intent is "chat":
 Reply creatively, playfully, or offer a workaround in the Dripp Media style. If they ask about you (Orlo) or your private life, feel free to give them a fun, Dripp-styled backstory or witty response!
@@ -234,15 +234,50 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
 
     let textOutput = data.candidates[0].content.parts[0].text;
     
-    // Robust JSON extraction to prevent parsing errors
-    textOutput = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
-    const firstBrace = textOutput.indexOf('{');
-    const lastBrace = textOutput.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      textOutput = textOutput.substring(firstBrace, lastBrace + 1);
+    function safeParseJSON(str) {
+      if (!str) return null;
+      let cleaned = str.replace(/```json/gi, '').replace(/```/g, '').trim();
+      try { return JSON.parse(cleaned); } catch (e) {}
+      
+      const firstBrace = cleaned.indexOf('{');
+      if (firstBrace !== -1) {
+        let depth = 0;
+        let inString = false;
+        let escapeNext = false;
+        for (let i = firstBrace; i < cleaned.length; i++) {
+          const char = cleaned[i];
+          if (escapeNext) { escapeNext = false; continue; }
+          if (char === '\\') { escapeNext = true; continue; }
+          if (char === '"') { inString = !inString; continue; }
+          if (!inString) {
+            if (char === '{') depth++;
+            else if (char === '}') {
+              depth--;
+              if (depth === 0) {
+                const exactJson = cleaned.substring(firstBrace, i + 1);
+                try { return JSON.parse(exactJson); } catch (e) {}
+                break;
+              }
+            }
+          }
+        }
+        
+        const lastBrace = cleaned.lastIndexOf('}');
+        if (lastBrace > firstBrace) {
+          try {
+            const candidate = cleaned.substring(firstBrace, lastBrace + 1)
+              .replace(/,\s*([}\]])/g, '$1');
+            return JSON.parse(candidate);
+          } catch (e) {}
+        }
+      }
+      return null;
     }
 
-    const parsed = JSON.parse(textOutput);
+    const parsed = safeParseJSON(textOutput);
+    if (!parsed) {
+      throw new Error('Failed to parse AI response. Please rephrase your command.');
+    }
 
     if (parsed.intent === 'learn' && parsed.learnedRule && supabase) {
       const { error } = await supabase.from('orlo_memory').insert([{ rule_text: parsed.learnedRule }]);

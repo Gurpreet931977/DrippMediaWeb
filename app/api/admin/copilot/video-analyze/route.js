@@ -123,20 +123,52 @@ export async function POST(request) {
 
     let textOutput = data.candidates[0].content.parts[0].text;
     
-    // Robust JSON extraction: since responseSchema is used, it should be valid JSON.
-    // We just find the first '{' and last '}' as a fallback safeguard.
-    const firstBrace = textOutput.indexOf('{');
-    const lastBrace = textOutput.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
-      textOutput = textOutput.substring(firstBrace, lastBrace + 1);
+    function safeParseJSON(str) {
+      if (!str) return null;
+      let cleaned = str.replace(/```json/gi, '').replace(/```/g, '').trim();
+      try { return JSON.parse(cleaned); } catch (e) {}
+      
+      const firstBrace = cleaned.indexOf('{');
+      if (firstBrace !== -1) {
+        let depth = 0;
+        let inString = false;
+        let escapeNext = false;
+        for (let i = firstBrace; i < cleaned.length; i++) {
+          const char = cleaned[i];
+          if (escapeNext) { escapeNext = false; continue; }
+          if (char === '\\') { escapeNext = true; continue; }
+          if (char === '"') { inString = !inString; continue; }
+          if (!inString) {
+            if (char === '{') depth++;
+            else if (char === '}') {
+              depth--;
+              if (depth === 0) {
+                const exactJson = cleaned.substring(firstBrace, i + 1);
+                try { return JSON.parse(exactJson); } catch (e) {}
+                break;
+              }
+            }
+          }
+        }
+        
+        const lastBrace = cleaned.lastIndexOf('}');
+        if (lastBrace > firstBrace) {
+          try {
+            const candidate = cleaned.substring(firstBrace, lastBrace + 1)
+              .replace(/,\s*([}\]])/g, '$1');
+            return JSON.parse(candidate);
+          } catch (e) {}
+        }
+      }
+      return null;
     }
 
-    try {
-      const parsed = JSON.parse(textOutput);
+    const parsed = safeParseJSON(textOutput);
+    if (parsed) {
       return Response.json(parsed);
-    } catch (parseError) {
+    } else {
       console.error('Failed to parse Gemini output:', textOutput);
-      return Response.json({ title: textOutput.replace(/[^a-zA-Z0-9\s#]/g, '').trim() }); // ultimate fallback
+      return Response.json({ title: textOutput.replace(/[^a-zA-Z0-9\s#]/g, '').trim() });
     }
   } catch (error) {
     console.error('Video analysis error:', error);

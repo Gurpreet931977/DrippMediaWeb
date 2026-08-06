@@ -37,17 +37,23 @@ export default function PackageMaker() {
     
     let extracted = [];
     if (payload.services && payload.services.length > 0) {
-      extracted = payload.services.map(s => ({
-        desc: s.desc || s.name || 'Service Item',
-        qty: Number(s.qty) || 1,
-        rate: Number(s.rate) || 0,
-        details: s.details || ''
-      }));
+      extracted = payload.services.map(s => {
+        const title = s.name || s.desc || 'Service Item';
+        return {
+          name: title,
+          desc: title,
+          qty: Number(s.qty) || 1,
+          rate: Number(s.rate) || 0,
+          details: s.details || ''
+        };
+      });
     } else if (payload.packageTiers && payload.packageTiers.length > 0) {
       payload.packageTiers.forEach(tier => {
         (tier.items || []).forEach(item => {
+          const title = item.name || item.desc || 'Service Item';
           extracted.push({
-            desc: item.desc || item.name || 'Service Item',
+            name: title,
+            desc: title,
             qty: Number(item.qty) || 1,
             rate: Number(item.rate) || 0,
             details: item.details || ''
@@ -358,8 +364,11 @@ export default function PackageMaker() {
                     type="text" 
                     className="pmp-input" 
                     placeholder="Service Name (e.g. 5 Reels/month)" 
-                    value={service.name} 
-                    onChange={(e) => handleServiceChange(index, 'name', e.target.value)}
+                    value={service.name || service.desc || ''} 
+                    onChange={(e) => {
+                      handleServiceChange(index, 'name', e.target.value);
+                      handleServiceChange(index, 'desc', e.target.value);
+                    }}
                   />
                 </div>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>

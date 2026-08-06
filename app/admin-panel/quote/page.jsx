@@ -671,23 +671,31 @@ export default function QuoteMaker() {
       setPackageTiers(payload.packageTiers.map((t, idx) => ({
         id: Date.now() + idx,
         name: t.name || `Package ${idx + 1}`,
-        items: (t.items || []).map(s => ({
-          desc: s.desc || s.name || 'Service Item',
-          qty: Number(s.qty) || 1,
-          rate: Number(s.rate) || 0,
-          details: s.details || ''
-        }))
+        items: (t.items || []).map(s => {
+          const title = s.desc || s.name || 'Service Item';
+          return {
+            name: title,
+            desc: title,
+            qty: Number(s.qty) || 1,
+            rate: Number(s.rate) || 0,
+            details: s.details || ''
+          };
+        })
       })));
     } else if (payload.services && payload.services.length > 0) {
       setPackageTiers([{
         id: Date.now(),
         name: 'Standard Package',
-        items: payload.services.map(s => ({
-          desc: s.desc || s.name || 'Service Item',
-          qty: Number(s.qty) || 1,
-          rate: Number(s.rate) || 0,
-          details: s.details || ''
-        }))
+        items: payload.services.map(s => {
+          const title = s.desc || s.name || 'Service Item';
+          return {
+            name: title,
+            desc: title,
+            qty: Number(s.qty) || 1,
+            rate: Number(s.rate) || 0,
+            details: s.details || ''
+          };
+        })
       }]);
     }
   };

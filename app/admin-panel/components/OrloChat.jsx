@@ -154,10 +154,16 @@ export default function OrloChat() {
       .then(res => res.json())
       .then(data => {
         if (data.models && Array.isArray(data.models) && data.models.length > 0) {
-          const formatted = data.models.map(m => ({
-            id: m,
-            label: m.replace('gemini-', 'Gemini ').replace('-latest', ' (Latest)')
-          }));
+          const formatted = data.models.map(m => {
+            let label = 'Gemini Model';
+            if (m.includes('2.0') && m.includes('flash')) label = 'Gemini 2.0 Flash';
+            else if (m.includes('1.5') && m.includes('pro')) label = 'Gemini 1.5 Pro';
+            else if (m.includes('1.5') && m.includes('flash')) label = 'Gemini 1.5 Flash';
+            else if (m.includes('2.5') && m.includes('pro')) label = 'Gemini 2.5 Pro';
+            else if (m.includes('2.5') && m.includes('flash')) label = 'Gemini 2.5 Flash';
+            else label = m.replace('gemini-', 'Gemini ').replace(/-/g, ' ');
+            return { id: m, label };
+          });
           setAvailableModels(formatted);
         }
       })
@@ -186,36 +192,23 @@ export default function OrloChat() {
 
   const shouldListenRef = useRef(false);
 
-  const toggleListen = async () => {
+  const toggleListen = () => {
     if (isListening) {
       shouldListenRef.current = false;
+      setIsListening(false);
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch (e) {}
       }
-      setIsListening(false);
     } else {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        showToast('Voice recognition is not supported in this browser. Please use Google Chrome, Edge, or Safari.');
+        showToast('Voice recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
         return;
       }
 
-      // Explicitly request microphone access first to trigger browser permission dialog
-      try {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          // Stop stream tracks after permission check so SpeechRecognition can access microphone exclusively
-          stream.getTracks().forEach(track => track.stop());
-        }
-      } catch (err) {
-        console.error('Microphone permission error:', err);
-        showToast('Microphone access denied. Please click the lock icon in address bar to allow mic access.');
-        return;
-      }
-      
       try {
         const recognition = new SpeechRecognition();
-        recognition.continuous = true;
+        recognition.continuous = false; // Segment-by-segment recognition avoids Chrome speech socket aborts
         recognition.interimResults = true;
         recognition.lang = navigator.language || 'en-US';
         
@@ -224,21 +217,26 @@ export default function OrloChat() {
         };
         
         recognition.onresult = (event) => {
-          let fullTranscript = '';
+          let currentSegment = '';
           for (let i = 0; i < event.results.length; i++) {
-            fullTranscript += event.results[i][0].transcript;
+            currentSegment += event.results[i][0].transcript;
           }
           const prefix = originalInputRef.current ? originalInputRef.current.trim() + ' ' : '';
-          setInput(prefix + fullTranscript);
+          setInput(prefix + currentSegment);
+
+          // Save final segment to prefix so next spoken sentence appends
+          if (event.results[0] && event.results[0].isFinal) {
+            originalInputRef.current = prefix + currentSegment;
+          }
         };
         
         recognition.onerror = (event) => {
-          console.error('Speech recognition error:', event.error);
+          console.warn('Speech recognition event:', event.error);
           if (event.error === 'no-speech') {
             return;
           }
           if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            showToast('Microphone access denied. Please allow microphone in browser settings.');
+            showToast('Microphone access denied. Please click the lock icon in the address bar to allow mic access.');
             shouldListenRef.current = false;
             setIsListening(false);
           } else if (event.error === 'network') {
@@ -250,7 +248,6 @@ export default function OrloChat() {
         
         recognition.onend = () => {
           if (shouldListenRef.current) {
-            // Auto-restart if browser automatically ended session due to silence pause
             try {
               recognition.start();
             } catch (e) {
@@ -264,12 +261,12 @@ export default function OrloChat() {
         
         originalInputRef.current = input;
         shouldListenRef.current = true;
-        recognition.start();
         recognitionRef.current = recognition;
+        recognition.start();
         setIsListening(true);
-        showToast('Listening... Speak your command.');
-      } catch (e) {
-        console.error('Error starting speech recognition:', e);
+        showToast('Listening... Speak now.');
+      } catch (err) {
+        console.error('Microphone error:', err);
         showToast('Microphone error: Please check your browser permissions.');
         setIsListening(false);
         shouldListenRef.current = false;
@@ -721,14 +718,14 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       
       // Dispatch event to window so forms can pick it up
       if (data.intent && data.payload) {
-        if (['quote', 'package', 'invoice'].includes(data.intent)) {
+        if (['quote', 'package', 'pmp', 'invoice'].includes(data.intent)) {
           sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
         }
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
         
         const currentPath = window.location.pathname;
-        const targetPath = data.intent === 'quote' ? '/admin-panel/quote' :
-                           data.intent === 'package' ? '/admin-panel/package' :
+        const targetPath = (data.intent === 'quote' || data.intent === 'package') ? '/admin-panel/quote' :
+                           data.intent === 'pmp' ? '/admin-panel/package' :
                            data.intent === 'invoice' ? '/admin-panel/invoice' : null;
                            
         if (targetPath && currentPath !== targetPath) {
@@ -1296,18 +1293,26 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   localStorage.setItem('orlo_preferred_model', e.target.value);
                 }}
                 style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#aaa',
-                  padding: '4px 8px',
-                  borderRadius: '6px',
+                  background: 'rgba(235, 215, 63, 0.08)',
+                  border: '1px solid rgba(235, 215, 63, 0.3)',
+                  color: '#ebd73f',
+                  padding: '5px 12px',
+                  borderRadius: '20px',
                   fontSize: '0.75rem',
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontWeight: '600',
                   outline: 'none',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  maxWidth: '145px',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden'
                 }}
               >
                 {availableModels.map(m => (
-                  <option key={m.id} value={m.id}>{m.label}</option>
+                  <option key={m.id} value={m.id} style={{ background: '#181818', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>
+                    {m.label}
+                  </option>
                 ))}
               </select>
               <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='#888'}>
