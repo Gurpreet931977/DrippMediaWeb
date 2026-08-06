@@ -72,12 +72,13 @@ export default function QuoteMaker() {
   const [packageTiers, setPackageTiers] = useState([{ id: Date.now(), name: 'Standard Package', items: [] }]);
   
   // PMP Modality
-  const [includePMP, setIncludePMP] = useState(false);
+  const [includePMP, setIncludePMP] = useState(true);
   const [pmpStrategy, setPmpStrategy] = useState('');
 
   // PDF Pages State (Dynamic Builder)
   const [pdfPages, setPdfPages] = useState([
     { id: 'cover_1', type: 'cover', title: 'Immersive Visual Narratives & Strategic Growth', subtitle: 'Prepared Exclusively For', hideHeading: false },
+    { id: 'pmp_1', type: 'pmp', title: 'PMP Strategy', hideHeading: false },
     { id: 'services_1', type: 'services', title: 'Scope of Work', hideHeading: false },
     { id: 'investment_1', type: 'investment', title: 'Investment Overview', hideHeading: false },
     { id: 'next_steps_1', type: 'next_steps', title: 'Next Steps', hideHeading: false }

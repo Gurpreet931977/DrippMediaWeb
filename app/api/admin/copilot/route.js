@@ -99,6 +99,7 @@ Return the modified form data in the payload.
 
 If the intent is "package" OR "quote" OR "invoice":
 Read the "Current Active Form State" to see what is already there. If the user is asking to add, modify, or apply a discount, you MUST append to or modify the existing "packageTiers" or fields rather than starting from scratch. Extract the "clientName" (e.g. Ritvik Kala), "brandName", "clientEmail", "clientMobile", "clientAddress", "gstNumber", the overall "totalBudget" (e.g. 28000), "packageType" (e.g. "monthly" or "project"), a list of "packageTiers" (e.g. tier 1 with "8 Reels", tier 2 with "8 Reels + 8 Posts") requested, and the overall "pmpStrategy" which should be a structured object containing an overview, target audience, and phases for their Personal Marketing Plan. Include these in the payload. If the user asks for a package, pricing, or quote, set intent to "quote". If they explicitly ask for a PMP or Masterplan, set intent to "package".
+CRITICAL PMP RULE: If the user asks to "write pmp", "generate strategy", or "write pmp for it too", you MUST generate a rich, multi-phase Personal Marketing Plan strategy (pmpStrategy) tailored to their brand (e.g., Overview, Target Audience, and Phase 1, Phase 2, Phase 3). Return intent: "quote" and write an enthusiastic, witty replyMessage explaining what strategy you created.
 CRITICAL PRICING RULE: If the user provides a total costing or budget in their prompt (e.g., "costing will be total 28k" -> 28000), you MUST set "totalBudget" to 28000 AND calculate individual item rates (rate) so that the calculated sum of (qty * rate) across items EXACTLY equals 28000! Do NOT output item rates that sum to 30000 or any other number when the user specified 28k.
 
 If the intent is "chat":
@@ -287,19 +288,8 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
 
     let parsed = safeParseJSON(textOutput);
 
-    // Fallback parser for budget adjustment commands if AI outputs raw text
     if (!parsed) {
-      const budgetMatch = userPrompt.match(/(\d+)\s*k/i) || userPrompt.match(/(\d+000)/);
-      const extractedBudget = budgetMatch ? (budgetMatch[1].length <= 3 ? Number(budgetMatch[1]) * 1000 : Number(budgetMatch[1])) : 28000;
-      
-      parsed = {
-        intent: "quote",
-        replyMessage: `Updated package costing to ${extractedBudget.toLocaleString()} as requested.`,
-        payload: {
-          totalBudget: extractedBudget,
-          brandName: formContext?.clientDetails?.brandName || formContext?.brandName || ''
-        }
-      };
+      throw new Error('Failed to parse AI response. Please try rephrasing your command.');
     }
 
     if (parsed.intent === 'learn' && parsed.learnedRule && supabase) {
