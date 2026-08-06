@@ -537,13 +537,20 @@ export default function Page() {
                         item.rotY += (0 - item.rotY) * 0.1;
                     }
 
-                    // Use fast set for 60fps 
-                    gsap.set(item.el, {
+                    // Use fast set for 60fps with Hardware Acceleration
+                    const transformProps = {
                         x: wrappedX + floatX,
                         y: wrappedY + floatY,
-                        rotationX: item.rotX,
-                        rotationY: item.rotY
-                    });
+                        force3D: true // GPU Hardware acceleration
+                    };
+                    
+                    // Only apply expensive 3D rotations on desktop to save battery/performance on mobile
+                    if (!window.matchMedia("(max-width: 768px)").matches) {
+                        transformProps.rotationX = item.rotX;
+                        transformProps.rotationY = item.rotY;
+                    }
+
+                    gsap.set(item.el, transformProps);
                 }
             }
 
@@ -588,9 +595,16 @@ export default function Page() {
                 setGraphics(dummyGraphics);
             }
 
+            // OPTIMIZATION: Dynamically scale DOM elements to prevent lag on low-end devices
+            const isMobile = window.innerWidth <= 768;
+            const minElementsNeeded = isMobile ? 30 : 49; 
+            const baseLength = fetchedItems.length > 0 ? fetchedItems.length : 12;
+            const multiplier = Math.ceil(minElementsNeeded / baseLength);
+            const optimizedCount = baseLength * multiplier;
+
             const graphicCanvas = new InfiniteCanvas('canvas-container', {
                 imageSize: '20',       // 20vw sizing base
-                numberOfImages: fetchedItems.length > 0 ? (fetchedItems.length < 64 ? 256 : fetchedItems.length * 4) : 256, // Massive grid ensures wrapping boundaries are strictly off-screen
+                numberOfImages: optimizedCount, // Drastically reduced DOM nodes
                 gap: '0.5',            // Minimal 0.5vw gap so images are nearly touching
                 customItems: fetchedItems // Dynamically loaded from Supabase
             });
@@ -603,7 +617,7 @@ export default function Page() {
         const spaceCanvas = document.getElementById('space-canvas');
         const ctx = spaceCanvas.getContext('2d');
         let stars = [];
-        const numStars = 800;
+        const numStars = window.innerWidth <= 768 ? 250 : 800; // Less particles on mobile
         let spaceAnimationId;
 
         function resizeSpace() {
