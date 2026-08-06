@@ -331,7 +331,7 @@ export default function Page() {
 
                 // Click to close via clicking anywhere on the blurred background overlay
                 document.getElementById('specific-view').addEventListener('click', (e) => {
-                    if (e.target.id === 'specific-view') {
+                    if (e.target.id === 'specific-view' || e.target.classList.contains('specific-view-content-wrapper') || e.target.classList.contains('specific-view-img-container')) {
                         document.getElementById('specific-view').classList.remove('active');
                     }
                 });
@@ -1795,8 +1795,12 @@ export default function Page() {
             onMouseLeave={(e) => {
                 const img = e.currentTarget.querySelector('img');
                 if(img) {
-                    img.style.transformOrigin = `center center`;
                     img.style.transform = 'scale(1)';
+                    setTimeout(() => {
+                        if (img.style.transform === 'scale(1)') {
+                            img.style.transformOrigin = 'center center';
+                        }
+                    }, 400);
                 }
             }}
           >
