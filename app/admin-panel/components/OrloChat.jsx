@@ -102,7 +102,12 @@ export default function OrloChat() {
   const [emotion, setEmotion] = useState('idle');
   const [isHovered, setIsHovered] = useState(false);
   const [speechBubble, setSpeechBubble] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useState('gemini-2.0-flash');
+  const [availableModels, setAvailableModels] = useState([
+    { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+    { id: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash' },
+    { id: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro' }
+  ]);
   
   const chatRef = useRef(null);
   const btnRef = useRef(null);
@@ -116,7 +121,7 @@ export default function OrloChat() {
   const keypressTimeoutRef = useRef(null);
   const speechBubbleTimeoutRef = useRef(null);
 
-  // Load chat history and preferred model from local storage on mount
+  // Load chat history and fetch working models from API on mount
   useEffect(() => {
     const saved = localStorage.getItem('orlo_chat_history');
     if (saved) {
@@ -135,10 +140,28 @@ export default function OrloChat() {
       }
     }
     
-    const savedModel = localStorage.getItem('orlo_preferred_model');
+    let savedModel = localStorage.getItem('orlo_preferred_model');
     if (savedModel) {
+      if (savedModel.includes('3.6') || savedModel.includes('3.5') || savedModel.includes('2.5')) {
+        savedModel = savedModel.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
+        localStorage.setItem('orlo_preferred_model', savedModel);
+      }
       setSelectedModel(savedModel);
     }
+
+    // Query active models dynamically
+    fetch('/api/admin/copilot/test-models')
+      .then(res => res.json())
+      .then(data => {
+        if (data.models && Array.isArray(data.models) && data.models.length > 0) {
+          const formatted = data.models.map(m => ({
+            id: m,
+            label: m.replace('gemini-', 'Gemini ').replace('-latest', ' (Latest)')
+          }));
+          setAvailableModels(formatted);
+        }
+      })
+      .catch(err => console.warn('Failed to load dynamic model list:', err));
   }, []);
 
   // Save chat history to local storage whenever it changes
@@ -1283,11 +1306,9 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   cursor: 'pointer'
                 }}
               >
-                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                {availableModels.map(m => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
               </select>
               <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='#888'}>
                 <X size={20} />

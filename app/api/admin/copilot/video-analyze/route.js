@@ -21,10 +21,32 @@ export async function POST(request) {
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
     if (!frames || frames.length === 0) return Response.json({ error: 'No frames provided' }, { status: 400 });
 
+    // Dynamic model discovery from Google API
+    let verifiedModels = [];
+    try {
+      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      const listData = await listRes.json();
+      if (listData.models && Array.isArray(listData.models)) {
+        verifiedModels = listData.models
+          .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+          .map(m => m.name.replace('models/', ''));
+      }
+    } catch (e) {
+      console.warn('Failed to query models list from Google:', e);
+    }
+
+    const staticDefaults = [
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-pro-latest',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro'
+    ];
+
     function resolveModelName(rawModel) {
-      if (!rawModel) return 'gemini-2.5-flash';
-      if (rawModel.includes('3.6') || rawModel.includes('3.5')) {
-        return rawModel.includes('pro') ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+      if (!rawModel) return 'gemini-2.0-flash';
+      if (rawModel.includes('3.6') || rawModel.includes('3.5') || rawModel.includes('2.5')) {
+        return rawModel.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
       }
       return rawModel;
     }
@@ -32,11 +54,8 @@ export async function POST(request) {
     const primaryModel = resolveModelName(model);
     const candidateModels = [
       primaryModel,
-      'gemini-2.5-flash',
-      'gemini-2.5-pro',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro'
+      ...verifiedModels,
+      ...staticDefaults
     ];
     const fallbackQueue = [...new Set(candidateModels)];
 
