@@ -161,16 +161,32 @@ export default function OrloChat() {
     // We only need to check if it's supported here, but instantiation happens on click
   }, []);
 
-  const toggleListen = () => {
+  const shouldListenRef = useRef(false);
+
+  const toggleListen = async () => {
     if (isListening) {
+      shouldListenRef.current = false;
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try { recognitionRef.current.stop(); } catch (e) {}
       }
       setIsListening(false);
     } else {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        showToast('Voice recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+        showToast('Voice recognition is not supported in this browser. Please use Google Chrome, Edge, or Safari.');
+        return;
+      }
+
+      // Explicitly request microphone access first to trigger browser permission dialog
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          // Stop stream tracks after permission check so SpeechRecognition can access microphone exclusively
+          stream.getTracks().forEach(track => track.stop());
+        }
+      } catch (err) {
+        console.error('Microphone permission error:', err);
+        showToast('Microphone access denied. Please click the lock icon in address bar to allow mic access.');
         return;
       }
       
@@ -179,6 +195,10 @@ export default function OrloChat() {
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = navigator.language || 'en-US';
+        
+        recognition.onstart = () => {
+          setIsListening(true);
+        };
         
         recognition.onresult = (event) => {
           let fullTranscript = '';
@@ -192,34 +212,44 @@ export default function OrloChat() {
         recognition.onerror = (event) => {
           console.error('Speech recognition error:', event.error);
           if (event.error === 'no-speech') {
-            // Ignore brief silence so recognition doesn't immediately abort
             return;
           }
-          let errorMsg = 'Voice recognition error';
           if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            errorMsg = 'Microphone access denied. Please grant microphone permissions in browser.';
+            showToast('Microphone access denied. Please allow microphone in browser settings.');
+            shouldListenRef.current = false;
+            setIsListening(false);
           } else if (event.error === 'network') {
-            errorMsg = 'Network error: Web Speech API requires an active internet connection.';
-          } else if (event.error === 'audio-capture') {
-            errorMsg = 'No microphone detected or mic is currently in use.';
+            showToast('Network error: Speech Recognition requires Google Speech Service connection.');
+            shouldListenRef.current = false;
+            setIsListening(false);
           }
-          showToast(errorMsg);
-          setIsListening(false);
         };
         
         recognition.onend = () => {
-          setIsListening(false);
+          if (shouldListenRef.current) {
+            // Auto-restart if browser automatically ended session due to silence pause
+            try {
+              recognition.start();
+            } catch (e) {
+              shouldListenRef.current = false;
+              setIsListening(false);
+            }
+          } else {
+            setIsListening(false);
+          }
         };
         
         originalInputRef.current = input;
+        shouldListenRef.current = true;
         recognition.start();
         recognitionRef.current = recognition;
         setIsListening(true);
-        showToast('Listening... Speak now.');
+        showToast('Listening... Speak your command.');
       } catch (e) {
         console.error('Error starting speech recognition:', e);
         showToast('Microphone error: Please check your browser permissions.');
         setIsListening(false);
+        shouldListenRef.current = false;
       }
     }
   };
