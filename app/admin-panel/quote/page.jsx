@@ -638,8 +638,8 @@ export default function QuoteMaker() {
       setSavedPackages(defaultTemplates);
       localStorage.setItem('dripp_advanced_packages', JSON.stringify(defaultTemplates));
     }
-    
-    // Check if there is pending package data from Orlo
+  }, []);
+
   const parseQuotePayload = (payload) => {
     if (!payload) return;
     if (payload.clientName) setClientDetails(prev => ({ ...prev, name: payload.clientName }));

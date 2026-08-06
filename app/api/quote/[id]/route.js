@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-if (!supabaseUrl || !supabaseKey) {
-  console.error('[quote/id] CRITICAL: Supabase env vars missing.');
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return null;
+  return createClient(supabaseUrl, supabaseKey);
 }
-const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 export async function POST(request, context) {
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+
     const { password } = await request.json();
     const { id } = await context.params;
     
@@ -39,6 +42,9 @@ export async function POST(request, context) {
 
 export async function PATCH(request, context) {
   try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+
     const { signatureImage, signedBy, signedAt } = await request.json();
     const { id } = await context.params;
 
