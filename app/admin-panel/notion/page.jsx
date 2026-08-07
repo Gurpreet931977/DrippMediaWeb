@@ -5,7 +5,7 @@ import {
   BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, 
   FileText, Database, CheckSquare, Sparkles, Info, LayoutList, Plus, Maximize2, Minimize2, Star,
   List, ListOrdered, Type, Heading1, Heading2, Heading3, Quote, Code, ToggleLeft,
-  Home, Command, Activity, CheckCircle2, AlertCircle
+  Home, Command, Activity, CheckCircle2, AlertCircle, Trash2
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
 
@@ -29,9 +29,10 @@ function FocusSafeDropdown({ label, options, onChange }) {
         className="notion-font"
         onMouseDown={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
         style={{
-          background: isOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+          background: isOpen ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderTop: '1px solid rgba(255,255,255,0.25)',
+          boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.2)',
           color: '#fff',
           borderRadius: '8px',
           padding: '6px 28px 6px 12px',
@@ -44,8 +45,8 @@ function FocusSafeDropdown({ label, options, onChange }) {
           gap: '8px',
           height: '100%'
         }}
-        onMouseOver={e => !isOpen && (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
-        onMouseOut={e => !isOpen && (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+        onMouseOver={e => !isOpen && (e.currentTarget.style.background = 'rgba(255,255,255,0.12)')}
+        onMouseOut={e => !isOpen && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
       >
         {label}
         <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#888', fontSize: '0.55rem', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</div>
@@ -57,14 +58,16 @@ function FocusSafeDropdown({ label, options, onChange }) {
           top: '100%',
           left: 0,
           marginTop: '8px',
-          background: 'rgba(18, 18, 23, 0.85)',
-          backdropFilter: 'blur(40px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(150%)',
+          background: 'rgba(20, 20, 25, 0.45)',
+          backdropFilter: 'blur(50px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(50px) saturate(200%)',
           border: '1px solid rgba(255,255,255,0.1)',
+          borderTop: '1px solid rgba(255,255,255,0.3)',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
           borderRadius: '12px',
           padding: '6px',
           minWidth: '160px',
-          boxShadow: '0 24px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
+          boxShadow: '0 30px 60px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.15), inset 0 -1px 2px rgba(255,255,255,0.05)',
           zIndex: 10001,
           display: 'flex',
           flexDirection: 'column',
@@ -78,7 +81,7 @@ function FocusSafeDropdown({ label, options, onChange }) {
               onMouseDown={(e) => {
                 e.preventDefault();
                 setIsOpen(false);
-                if (opt.value) onChange(opt.value);
+                if (opt.value !== undefined) onChange(opt.value);
               }}
               style={{
                 padding: '8px 12px',
@@ -272,7 +275,7 @@ export default function NotionHubPage() {
     const presetName = e.target.value;
     const range = savedRangeRef.current;
     
-    if (presetName && range) {
+    if (typeof presetName === 'string' && range) {
       applyDesignerPreset(presetName, range);
       
       const blockId = toolbarRef.current?.dataset.blockId;
@@ -720,25 +723,47 @@ export default function NotionHubPage() {
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         /* 10X Designer Presets */
-        .preset-cyber-glitch {
-          color: #ff4d4f;
-          font-weight: bold;
-          position: relative;
-          display: inline-block;
-          transition: all 0.2s;
+        .preset-glass-morphic {
+          color: #fff;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 6px;
+          padding: 2px 8px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+          font-weight: 600;
+          transition: all 0.3s ease;
         }
-        .preset-cyber-glitch:hover {
-          animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
-          text-shadow: 2px 0 #0ff, -2px 0 #f0f;
-          background: rgba(255, 77, 79, 0.1);
+        .preset-glass-morphic:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.3);
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2);
         }
-        @keyframes glitch {
-          0% { transform: translate(0) }
-          20% { transform: translate(-2px, 2px) }
-          40% { transform: translate(-2px, -2px) }
-          60% { transform: translate(2px, 2px) }
-          80% { transform: translate(2px, -2px) }
-          100% { transform: translate(0) }
+
+        .preset-neon-pulse {
+          color: #00e5ff;
+          font-weight: 700;
+          text-shadow: 0 0 5px rgba(0, 229, 255, 0.3), 0 0 10px rgba(0, 229, 255, 0.2);
+          animation: neonPulse 3s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
+          padding: 0 4px;
+        }
+        @keyframes neonPulse {
+          0% { text-shadow: 0 0 4px rgba(0, 229, 255, 0.4), 0 0 8px rgba(0, 229, 255, 0.2); opacity: 0.8; }
+          100% { text-shadow: 0 0 8px rgba(0, 229, 255, 0.8), 0 0 16px rgba(0, 229, 255, 0.5), 0 0 24px rgba(0, 229, 255, 0.3); opacity: 1; }
+        }
+
+        .preset-iridescent {
+          background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
+          background-size: 1800% 1800%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 800;
+          animation: iridescentFade 8s ease infinite;
+        }
+        @keyframes iridescentFade { 
+          0%{background-position:0% 82%}
+          50%{background-position:100% 19%}
+          100%{background-position:0% 82%}
         }
 
         .preset-liquid-gradient {
@@ -931,10 +956,12 @@ export default function NotionHubPage() {
         {/* Floating Toolbar */}
         <div ref={toolbarRef} style={{
           position: 'fixed',
-          background: 'rgba(15, 15, 20, 0.65)',
-          backdropFilter: 'blur(40px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(150%)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'rgba(20, 20, 25, 0.45)',
+          backdropFilter: 'blur(50px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderTop: '1px solid rgba(255,255,255,0.3)',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
           borderRadius: '16px',
           padding: '8px 10px',
           display: 'flex',
@@ -943,7 +970,7 @@ export default function NotionHubPage() {
           alignItems: 'center',
           gap: '8px',
           zIndex: 10000,
-          boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)',
+          boxShadow: '0 30px 60px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.15), inset 0 -1px 2px rgba(255,255,255,0.05)',
           opacity: 0,
           transform: 'scale(0.95) translateY(5px)',
           pointerEvents: 'none',
@@ -1049,7 +1076,9 @@ export default function NotionHubPage() {
             label="Default"
             options={[
               { label: 'Default', value: '' },
-              { label: 'Cyber Glitch', value: 'critical', color: '#ff4d4f', hoverClass: 'preset-cyber-glitch' },
+              { label: 'Glass Text', value: 'glass', hoverClass: 'preset-glass-morphic' },
+              { label: 'Neon Pulse', value: 'neon', color: '#00e5ff', hoverClass: 'preset-neon-pulse' },
+              { label: 'Iridescent', value: 'iridescent', hoverClass: 'preset-iridescent' },
               { label: 'Liquid Gradient', value: 'liquid', color: '#9400d3', hoverClass: 'preset-liquid-gradient' },
               { label: 'Gold Shimmer', value: 'highlight', color: '#ebd73f', hoverClass: 'shimmer' },
               { label: 'Classified', value: 'code' }
@@ -1649,14 +1678,48 @@ function applyDesignerPreset(presetName, range) {
   if (!range) return;
   if (range.collapsed) return;
   
+  let fragment = range.extractContents();
+  
+  // Clean up any existing preset spans from the selection to prevent stacking
+  const tempDiv = document.createElement('div');
+  tempDiv.appendChild(fragment);
+  const spans = tempDiv.querySelectorAll('span[data-notion-color], span[class^="preset-"]');
+  spans.forEach(span => {
+      while (span.firstChild) {
+          span.parentNode.insertBefore(span.firstChild, span);
+      }
+      span.parentNode.removeChild(span);
+  });
+  
+  fragment = document.createDocumentFragment();
+  while (tempDiv.firstChild) {
+      fragment.appendChild(tempDiv.firstChild);
+  }
+
+  // If Default (empty string), just insert the cleaned fragment without wrapping
+  if (!presetName) {
+      range.insertNode(fragment);
+      return;
+  }
+  
   const span = document.createElement('span');
   
-  if (presetName === 'critical') {
-    span.setAttribute('data-notion-color', 'red_background');
-    span.className = 'preset-cyber-glitch';
-    const b = document.createElement('b');
-    b.appendChild(range.extractContents());
-    span.appendChild(b);
+  if (presetName === 'glass') {
+    span.setAttribute('data-notion-color', 'gray_background');
+    span.className = 'preset-glass-morphic';
+    span.appendChild(fragment);
+    range.insertNode(span);
+    return;
+  } else if (presetName === 'neon') {
+    span.setAttribute('data-notion-color', 'blue_background');
+    span.className = 'preset-neon-pulse';
+    span.appendChild(fragment);
+    range.insertNode(span);
+    return;
+  } else if (presetName === 'iridescent') {
+    span.setAttribute('data-notion-color', 'purple_background');
+    span.className = 'preset-iridescent';
+    span.appendChild(fragment);
     range.insertNode(span);
     return;
   } else if (presetName === 'success') {
@@ -1664,7 +1727,7 @@ function applyDesignerPreset(presetName, range) {
     span.style.color = '#52c41a';
     span.style.backgroundColor = 'rgba(82, 196, 26, 0.2)';
     const b = document.createElement('b');
-    b.appendChild(range.extractContents());
+    b.appendChild(fragment);
     span.appendChild(b);
     range.insertNode(span);
     return;
@@ -1675,7 +1738,7 @@ function applyDesignerPreset(presetName, range) {
     span.setAttribute('data-notion-color', 'gray_background');
     span.className = 'preset-redacted';
     const code = document.createElement('code');
-    code.appendChild(range.extractContents());
+    code.appendChild(fragment);
     span.appendChild(code);
     range.insertNode(span);
     return;
@@ -1684,7 +1747,7 @@ function applyDesignerPreset(presetName, range) {
     span.className = 'preset-liquid-gradient';
   }
   
-  span.appendChild(range.extractContents());
+  span.appendChild(fragment);
   range.insertNode(span);
 }
 
@@ -2105,32 +2168,69 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
       const isDb = block.type === 'child_database';
       const childTitle = isDb ? block.child_database?.title : block.child_page?.title;
       return (
-        <button 
-          onClick={(e) => {
-            e.preventDefault();
-            if (setSelectedItem) {
-              setSelectedItem({ id: block.id, object: isDb ? 'database' : 'page', title: childTitle || 'Untitled' });
-            }
-          }}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '12px 16px', margin: '8px 0',
-            background: 'rgba(235, 215, 63, 0.05)',
-            border: '1px solid rgba(235, 215, 63, 0.2)',
-            borderRadius: '10px', color: '#ebd73f',
-            textDecoration: 'none', transition: 'all 0.2s',
-            boxShadow: '0 4px 12px rgba(235, 215, 63, 0.05)',
-            cursor: 'pointer', width: '100%', textAlign: 'left'
-          }}
-          onMouseOver={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
-          onMouseOut={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.05)'}
-        >
-          {isDb ? <Database size={18} /> : <FileText size={18} />}
-          <span className="notion-font" style={{ fontWeight: 600, fontSize: '1rem', flex: 1 }}>
-            {childTitle || 'Untitled'}
-          </span>
-          <ChevronRight size={14} style={{ opacity: 0.7 }} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0' }}>
+          <button 
+            onClick={(e) => {
+              e.preventDefault();
+              if (setSelectedItem) {
+                setSelectedItem({ id: block.id, object: isDb ? 'database' : 'page', title: childTitle || 'Untitled' });
+              }
+            }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '12px 16px',
+              background: 'rgba(235, 215, 63, 0.05)',
+              border: '1px solid rgba(235, 215, 63, 0.2)',
+              borderRadius: '10px', color: '#ebd73f',
+              textDecoration: 'none', transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(235, 215, 63, 0.05)',
+              cursor: 'pointer', flex: 1, textAlign: 'left'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.05)'}
+          >
+            {isDb ? <Database size={18} /> : <FileText size={18} />}
+            <span className="notion-font" style={{ fontWeight: 600, fontSize: '1rem', flex: 1 }}>
+              {childTitle || 'Untitled'}
+            </span>
+            <ChevronRight size={14} style={{ opacity: 0.7 }} />
+          </button>
+          
+          {onDeleteBlock && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.confirm(`Are you sure you want to delete "${childTitle || 'Untitled'}"? This will archive the page in Notion.`)) {
+                  onDeleteBlock(block.id);
+                }
+              }}
+              style={{
+                background: 'rgba(255, 77, 79, 0.1)',
+                border: '1px solid rgba(255, 77, 79, 0.2)',
+                color: '#ff4d4f',
+                borderRadius: '10px',
+                padding: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 77, 79, 0.2)';
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 77, 79, 0.1)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              title={`Delete ${isDb ? 'Database' : 'Page'}`}
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
+        </div>
       );
 
     default:

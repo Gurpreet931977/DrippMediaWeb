@@ -192,7 +192,7 @@ export default function OrloChat() {
 
   const shouldListenRef = useRef(false);
 
-  const toggleListen = () => {
+  const toggleListen = async () => {
     if (isListening) {
       shouldListenRef.current = false;
       setIsListening(false);
@@ -206,9 +206,20 @@ export default function OrloChat() {
         return;
       }
 
+      // Explicitly request microphone access first to prevent silent failures/flashing
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Release the stream immediately since SpeechRecognition will request its own
+        stream.getTracks().forEach(track => track.stop());
+      } catch (err) {
+        showToast('Microphone access denied. Please allow mic access in your browser settings.');
+        return;
+      }
+
       try {
         const recognition = new SpeechRecognition();
-        recognition.continuous = false; // Segment-by-segment recognition avoids Chrome speech socket aborts
+        // Use continuous to prevent it from immediately ending and causing flashing
+        recognition.continuous = true; 
         recognition.interimResults = true;
         recognition.lang = navigator.language || 'en-US';
         
