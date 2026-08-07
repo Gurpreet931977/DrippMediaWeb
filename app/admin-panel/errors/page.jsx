@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { AlertTriangle, Info, AlertCircle, XCircle, Trash2, Clock, MapPin, Search, CheckCircle2, Copy, Check } from 'lucide-react';
+import { AlertTriangle, Info, AlertCircle, XCircle, Trash2, Clock, MapPin, Search, CheckCircle2, Copy, Check, RefreshCw } from 'lucide-react';
 import styles from '../admin.module.css';
 import { useGenz } from '../../contexts/GenzContext';
 import { useErrorLog } from '../../contexts/ErrorLogContext';
 
 export default function ErrorLogsPage() {
-  const { logs, clearLogs } = useErrorLog();
+  const { logs, clearLogs, refreshLogs } = useErrorLog();
   const { isGenz } = useGenz() || { isGenz: false };
   
   const [filterLevel, setFilterLevel] = useState('all'); // all, error, warn, fatal
@@ -129,6 +129,15 @@ export default function ErrorLogsPage() {
               style={{ paddingLeft: '38px', margin: 0 }}
             />
           </div>
+          
+          <button 
+            onClick={refreshLogs}
+            className={styles.btn} 
+            style={{ color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.2)' }}
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </button>
           
           {logs.length > 0 && (
             <>

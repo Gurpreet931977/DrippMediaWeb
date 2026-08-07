@@ -131,8 +131,17 @@ export function ErrorLogProvider({ children }) {
     };
   }, []);
 
+  const refreshLogs = () => {
+    try {
+      const storedLogs = localStorage.getItem('dripp_error_logs');
+      if (storedLogs) {
+        setLogs(JSON.parse(storedLogs));
+      }
+    } catch (e) {}
+  };
+
   return (
-    <ErrorLogContext.Provider value={{ logs, clearLogs, addLog }}>
+    <ErrorLogContext.Provider value={{ logs, clearLogs, addLog, refreshLogs }}>
       {children}
     </ErrorLogContext.Provider>
   );
