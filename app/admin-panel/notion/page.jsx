@@ -181,7 +181,7 @@ export default function NotionHubPage() {
       const data = await res.json();
       
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to fetch Notion documents');
+        throw new Error(data.error || 'Failed to fetch documents');
       }
 
       // 2. Update state and cache with fresh data
@@ -870,7 +870,27 @@ export default function NotionHubPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {/* Workspace Pulse */}
           {selectedItem && (
-            <div className="notion-font" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600 }}>
+            <button 
+              className="notion-font" 
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', outline: 'none' }}
+              onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+              onClick={() => {
+                const firstPending = docContent?.blocks?.find(b => b.type === 'to_do' && b.to_do?.checked === false);
+                if (firstPending) {
+                  const el = document.getElementById(`block-${firstPending.id}`);
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.style.transition = 'background 0.5s ease-out';
+                    el.style.background = 'rgba(255, 189, 46, 0.2)';
+                    el.style.borderRadius = '8px';
+                    setTimeout(() => {
+                      el.style.background = 'transparent';
+                    }, 1500);
+                  }
+                }
+              }}
+            >
               {(() => {
                 const pending = docContent?.blocks?.filter(b => b.type === 'to_do' && b.to_do?.checked === false).length || 0;
                 if (pending > 0) {
@@ -881,7 +901,7 @@ export default function NotionHubPage() {
                   return <><Activity size={14} style={{ color: '#888' }} /> <span style={{ color: '#888' }}>Ready</span></>;
                 }
               })()}
-            </div>
+            </button>
           )}
 
           {/* Orlo Omnibar */}
@@ -1057,7 +1077,7 @@ export default function NotionHubPage() {
               const blockId = toolbarRef.current?.dataset.blockId;
               const blockType = toolbarRef.current?.dataset.blockType;
               window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
-                detail: { text: `Please explain this Notion text: "${text}"`, blockId, blockType, intent: 'notion_edit' }
+                detail: { text: `Please explain this text: "${text}"`, blockId, blockType, intent: 'notion_edit' }
               }));
             }}
           >
@@ -1074,7 +1094,7 @@ export default function NotionHubPage() {
               const blockId = toolbarRef.current?.dataset.blockId;
               const blockType = toolbarRef.current?.dataset.blockType;
               window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
-                detail: { text: `Please summarize this Notion text: "${text}"`, blockId, blockType, intent: 'notion_edit' }
+                detail: { text: `Please summarize this text: "${text}"`, blockId, blockType, intent: 'notion_edit' }
               }));
             }}
           >
@@ -2311,7 +2331,7 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (window.confirm(`Are you sure you want to delete "${childTitle || 'Untitled'}"? This will archive the page in Notion.`)) {
+                if (window.confirm(`Are you sure you want to delete "${childTitle || 'Untitled'}"? This will archive the page in your workspace.`)) {
                   onDeleteBlock(block.id);
                 }
               }}
