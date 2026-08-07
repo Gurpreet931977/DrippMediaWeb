@@ -24,7 +24,17 @@ export default function AdminLayout({ children }) {
   const { logs } = useErrorLog();
   const [dismissedErrorCount, setDismissedErrorCount] = useState(0);
   
-  const unreadErrorsCount = logs.length - dismissedErrorCount;
+  const unreadErrorsCount = Math.max(0, logs.length - dismissedErrorCount);
+
+  // Auto-dismiss the popup after 3 seconds
+  useEffect(() => {
+    if (unreadErrorsCount > 0) {
+      const timer = setTimeout(() => {
+        setDismissedErrorCount(logs.length);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [unreadErrorsCount, logs.length]);
 
   useEffect(() => {
     const checkDevice = () => setIsDesktop(window.innerWidth >= 1024);

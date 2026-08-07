@@ -561,6 +561,140 @@ export default function NotionHubPage() {
   );
 }
 
+// --- Inline Editing Components ---
+function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder }) {
+  const [localText, setLocalText] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const rawText = initialRichTextArr?.map(t => t.plain_text).join('') || '';
+
+  const handleBlur = async (e) => {
+    const newText = e.target.innerText;
+    if (newText === (localText || rawText)) return;
+    
+    setIsSaving(true);
+    setLocalText(newText);
+    try {
+      await fetch('/api/admin/notion/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockId, type, content: newText })
+      });
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const Tag = tagName;
+  
+  return (
+    <div style={{ position: 'relative', width: '100%', group: 'true' }} title="Click to edit">
+      {localText !== null ? (
+        <Tag
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={handleBlur}
+          onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } }}
+          className={className}
+          style={{ ...style, outline: 'none', cursor: 'text' }}
+          dangerouslySetInnerHTML={{ __html: localText || emptyPlaceholder || '' }}
+        />
+      ) : (
+        <Tag
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={handleBlur}
+          onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } }}
+          className={className}
+          style={{ ...style, outline: 'none', cursor: 'text' }}
+        >
+           {(initialRichTextArr && initialRichTextArr.length > 0) ? renderRichText(initialRichTextArr) : emptyPlaceholder}
+        </Tag>
+      )}
+      {isSaving && <span style={{ position: 'absolute', right: '-40px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', color: '#ebd73f', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: '10px' }}>Saving</span>}
+    </div>
+  );
+}
+
+function EditableTodoBlock({ block, renderRichText }) {
+  const [isChecked, setIsChecked] = useState(block.to_do?.checked);
+  const [localText, setLocalText] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const rawText = block.to_do?.rich_text?.map(t => t.plain_text).join('') || '';
+
+  const toggleCheck = async () => {
+    const newChecked = !isChecked;
+    setIsChecked(newChecked);
+    setIsSaving(true);
+    try {
+      await fetch('/api/admin/notion/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockId: block.id, type: 'to_do', checked: newChecked })
+      });
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleBlur = async (e) => {
+    const newText = e.target.innerText;
+    if (newText === (localText || rawText)) return;
+    
+    setIsSaving(true);
+    setLocalText(newText);
+    try {
+      await fetch('/api/admin/notion/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockId: block.id, type: 'to_do', content: newText })
+      });
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '4px', marginBottom: '8px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px', borderRadius: '8px', position: 'relative' }}>
+      <span 
+        onClick={toggleCheck}
+        style={{
+          width: '20px', height: '20px', borderRadius: '6px',
+          border: isChecked ? '2px solid #ebd73f' : '2px solid #555',
+          background: isChecked ? 'rgba(235, 215, 63, 0.15)' : 'rgba(0,0,0,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#ebd73f', marginTop: '2px', flexShrink: 0, cursor: 'pointer'
+        }}
+      >
+        {isChecked && <CheckSquare size={14} strokeWidth={3} />}
+      </span>
+      <div 
+        className="notion-font"
+        contentEditable
+        suppressContentEditableWarning
+        onBlur={handleBlur}
+        onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } }}
+        style={{
+          fontSize: '1rem', lineHeight: 1.6,
+          color: isChecked ? '#666' : '#eee',
+          textDecoration: isChecked ? 'line-through' : 'none',
+          transition: 'color 0.2s', outline: 'none', cursor: 'text', flex: 1
+        }}
+      >
+        {localText !== null ? localText : renderRichText(block.to_do?.rich_text)}
+      </div>
+      {isSaving && <span style={{ position: 'absolute', right: '-40px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', color: '#ebd73f', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: '10px' }}>Saving</span>}
+    </div>
+  );
+}
+
 // Block Renderer Sub-component
 function NotionBlockRenderer({ block }) {
   const [toggleOpen, setToggleOpen] = useState(false);
@@ -603,32 +737,39 @@ function NotionBlockRenderer({ block }) {
   switch (block.type) {
     case 'heading_1':
       return (
-        <h1 className="notion-font" style={{ fontSize: '1.8rem', fontWeight: 800, margin: '32px 0 12px 0', color: '#ebd73f', letterSpacing: '-0.02em' }}>
-          {renderRichText(block.heading_1?.rich_text)}
-        </h1>
+        <EditableTextBlock
+          blockId={block.id} type="heading_1" initialRichTextArr={block.heading_1?.rich_text} renderRichText={renderRichText}
+          tagName="h1" className="notion-font" style={{ fontSize: '1.8rem', fontWeight: 800, margin: '32px 0 12px 0', color: '#ebd73f', letterSpacing: '-0.02em' }}
+          emptyPlaceholder="Untitled Heading 1"
+        />
       );
 
     case 'heading_2':
       return (
-        <h2 className="notion-font" style={{ fontSize: '1.4rem', fontWeight: 700, margin: '24px 0 10px 0', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '8px' }}>
-          {renderRichText(block.heading_2?.rich_text)}
-        </h2>
+        <EditableTextBlock
+          blockId={block.id} type="heading_2" initialRichTextArr={block.heading_2?.rich_text} renderRichText={renderRichText}
+          tagName="h2" className="notion-font" style={{ fontSize: '1.4rem', fontWeight: 700, margin: '24px 0 10px 0', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '8px' }}
+          emptyPlaceholder="Untitled Heading 2"
+        />
       );
 
     case 'heading_3':
       return (
-        <h3 className="notion-font" style={{ fontSize: '1.15rem', fontWeight: 600, margin: '16px 0 8px 0', color: '#ddd' }}>
-          {renderRichText(block.heading_3?.rich_text)}
-        </h3>
+        <EditableTextBlock
+          blockId={block.id} type="heading_3" initialRichTextArr={block.heading_3?.rich_text} renderRichText={renderRichText}
+          tagName="h3" className="notion-font" style={{ fontSize: '1.15rem', fontWeight: 600, margin: '16px 0 8px 0', color: '#ddd' }}
+          emptyPlaceholder="Untitled Heading 3"
+        />
       );
 
     case 'paragraph':
-      const text = renderRichText(block.paragraph?.rich_text);
-      if (!text) return <div style={{ height: '12px' }} />;
+      if (!block.paragraph?.rich_text || block.paragraph.rich_text.length === 0) return <div style={{ height: '12px' }} />;
       return (
-        <p className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.7, color: '#b3b3b3', margin: '4px 0 12px 0' }}>
-          {text}
-        </p>
+        <EditableTextBlock
+          blockId={block.id} type="paragraph" initialRichTextArr={block.paragraph.rich_text} renderRichText={renderRichText}
+          tagName="p" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.7, color: '#b3b3b3', margin: '4px 0 12px 0' }}
+          emptyPlaceholder=" "
+        />
       );
 
     case 'bulleted_list_item':
@@ -652,35 +793,7 @@ function NotionBlockRenderer({ block }) {
       );
 
     case 'to_do':
-      const isChecked = block.to_do?.checked;
-      return (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '4px', marginBottom: '8px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px', borderRadius: '8px' }}>
-          <span style={{
-            width: '20px',
-            height: '20px',
-            borderRadius: '6px',
-            border: isChecked ? '2px solid #ebd73f' : '2px solid #555',
-            background: isChecked ? 'rgba(235, 215, 63, 0.15)' : 'rgba(0,0,0,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#ebd73f',
-            marginTop: '2px',
-            flexShrink: 0
-          }}>
-            {isChecked && <CheckSquare size={14} strokeWidth={3} />}
-          </span>
-          <div className="notion-font" style={{
-            fontSize: '1rem',
-            lineHeight: 1.6,
-            color: isChecked ? '#666' : '#eee',
-            textDecoration: isChecked ? 'line-through' : 'none',
-            transition: 'color 0.2s'
-          }}>
-            {renderRichText(block.to_do?.rich_text)}
-          </div>
-        </div>
-      );
+      return <EditableTodoBlock block={block} renderRichText={renderRichText} />;
 
     case 'callout':
       return (
