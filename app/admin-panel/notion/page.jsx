@@ -331,8 +331,11 @@ export default function NotionHubPage() {
       // Hide subpages: if the item's parent is also in the items list, it's a subpage.
       const parentId = item.parent?.page_id || item.parent?.database_id;
       // If the parent is a page/database that we fetched, it's a subpage.
-      if (parentId && typeof parentId === 'string' && items.some(i => i && typeof i.id === 'string' && i.id.replace(/-/g, '') === parentId.replace(/-/g, ''))) {
-        return false;
+      if (parentId) {
+        const cleanParentId = String(parentId).replace(/-/g, '');
+        if (items.some(i => i && i.id && String(i.id).replace(/-/g, '') === cleanParentId)) {
+          return false;
+        }
       }
       return true;
     }
@@ -1593,18 +1596,18 @@ function NotionBlockRenderer({ block, setSelectedItem }) {
     if (!richTextArr || richTextArr.length === 0) return null;
     return richTextArr.map((t, idx) => {
       let className = "notion-font";
-      let style = {};
-      if (t.annotations?.bold) style.fontWeight = '800';
-      if (t.annotations?.italic) style.fontStyle = 'italic';
-      if (t.annotations?.strikethrough) style.textDecoration = 'line-through';
-      if (t.annotations?.underline) style.textDecoration = 'underline';
+      let customStyle = {};
+      if (t.annotations?.bold) customStyle.fontWeight = '800';
+      if (t.annotations?.italic) customStyle.fontStyle = 'italic';
+      if (t.annotations?.strikethrough) customStyle.textDecoration = 'line-through';
+      if (t.annotations?.underline) customStyle.textDecoration = 'underline';
       
       if (t.annotations?.color && t.annotations.color !== 'default') {
         if (t.annotations.color === 'red_background') {
           className += " preset-cyber-glitch";
         } else if (t.annotations.color === 'green_background') {
-          style.color = '#52c41a';
-          style.backgroundColor = 'rgba(82, 196, 26, 0.2)';
+          customStyle.color = '#52c41a';
+          customStyle.backgroundColor = 'rgba(82, 196, 26, 0.2)';
         } else if (t.annotations.color === 'yellow_background') {
           className += " preset-gold-shimmer";
         } else if (t.annotations.color === 'purple_background') {
@@ -1613,7 +1616,7 @@ function NotionBlockRenderer({ block, setSelectedItem }) {
           className += " preset-redacted";
         } else {
           // Map standard Notion colors to dark theme equivalents roughly
-          style.color = t.annotations.color.replace('_background', ''); 
+          customStyle.color = t.annotations.color.replace('_background', ''); 
         }
       }
 
@@ -1625,14 +1628,14 @@ function NotionBlockRenderer({ block, setSelectedItem }) {
             target="_blank"
             rel="noopener noreferrer"
             className={className}
-            style={{ ...style, color: '#ebd73f', textDecoration: 'underline', textUnderlineOffset: '4px' }}
+            style={{ ...customStyle, color: '#ebd73f', textDecoration: 'underline', textUnderlineOffset: '4px' }}
           >
             {t.plain_text}
           </a>
         );
       }
       return (
-        <span key={idx} className={className} style={style} data-notion-color={t.annotations?.color}>
+        <span key={idx} className={className} style={customStyle} data-notion-color={t.annotations?.color}>
           {t.plain_text}
         </span>
       );
