@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, ChevronDown, 
-  FileText, Database, CheckSquare, Sparkles, AlertCircle, Info, LayoutList, Plus
+  FileText, Database, CheckSquare, Sparkles, AlertCircle, Info, LayoutList, Plus, Maximize2, Minimize2
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
 
@@ -21,6 +21,13 @@ export default function NotionHubPage() {
   // Scroll progress for the viewer
   const [scrollProgress, setScrollProgress] = useState(0);
   const contentRef = useRef(null);
+
+  // Zenith Mode State
+  const [isZenithMode, setIsZenithMode] = useState(false);
+
+  // Floating Toolbar State
+  const [selectionRect, setSelectionRect] = useState(null);
+  const [selectedText, setSelectedText] = useState('');
 
   // Subpage Creation State
   const [showSubpageInput, setShowSubpageInput] = useState(false);
@@ -118,6 +125,50 @@ export default function NotionHubPage() {
       fetchPageContent(selectedItem.id);
     }
   }, [selectedItem, fetchPageContent]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isZenithMode) {
+        setIsZenithMode(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isZenithMode]);
+
+  useEffect(() => {
+    const handleSelection = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        setSelectionRect(null);
+        setSelectedText('');
+        return;
+      }
+      
+      const text = selection.toString().trim();
+      if (!text) {
+        setSelectionRect(null);
+        setSelectedText('');
+        return;
+      }
+
+      if (contentRef.current && contentRef.current.contains(selection.anchorNode)) {
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        setSelectionRect({
+          top: rect.top,
+          left: rect.left + rect.width / 2,
+        });
+        setSelectedText(text);
+      } else {
+        setSelectionRect(null);
+        setSelectedText('');
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelection);
+    return () => document.removeEventListener('selectionchange', handleSelection);
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -358,6 +409,37 @@ export default function NotionHubPage() {
         width: '100%'
       }}>
         
+        {/* Floating Toolbar */}
+        {selectionRect && (
+          <div style={{
+            position: 'fixed',
+            top: selectionRect.top - 50,
+            left: selectionRect.left,
+            transform: 'translateX(-50%)',
+            background: 'rgba(12, 12, 16, 0.85)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '12px',
+            padding: '6px 8px',
+            display: 'flex',
+            gap: '8px',
+            zIndex: 10000,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+            animation: 'slideUpFade 0.2s ease-out'
+          }}>
+            <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+              <Sparkles size={14} style={{ display: 'inline', marginRight: '4px', color: '#ebd73f' }} /> Ask AI
+            </button>
+            <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+            <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+              <b>B</b>
+            </button>
+            <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, fontStyle: 'italic' }}>
+              I
+            </button>
+          </div>
+        )}
+        
         {/* LEFT PANEL: Document Catalog */}
         <div className="notion-glass-card" style={{
           display: 'flex',
@@ -446,19 +528,45 @@ export default function NotionHubPage() {
           flexDirection: 'column',
           position: 'relative'
         }}>
-          {/* Reading Progress Bar */}
-          {selectedItem && (
-            <div style={{ width: '100%', height: '3px', background: 'rgba(255,255,255,0.05)', position: 'absolute', top: 0, left: 0, zIndex: 10 }}>
-              <div style={{ width: `${scrollProgress}%`, height: '100%', background: '#ebd73f', transition: 'width 0.1s ease-out', boxShadow: '0 0 10px #ebd73f' }} />
-            </div>
-          )}
-
+        <div style={{ 
+          flex: 1, 
+          display: 'flex', 
+          gap: '20px', 
+          height: isZenithMode ? '100vh' : 'calc(100vh - 120px)',
+          position: isZenithMode ? 'fixed' : 'relative',
+          top: isZenithMode ? 0 : 'auto',
+          left: isZenithMode ? 0 : 'auto',
+          width: isZenithMode ? '100vw' : 'auto',
+          zIndex: isZenithMode ? 9999 : 1,
+          background: isZenithMode ? '#020203' : 'transparent',
+          padding: isZenithMode ? '40px' : '0'
+        }}>
           {selectedItem ? (
             <div 
+              className="notion-glass-card" 
               ref={contentRef}
               onScroll={handleScroll}
-              style={{ overflowY: 'auto', flex: 1, padding: '40px 48px', scrollBehavior: 'smooth' }}
+              style={{ 
+                flex: 1, 
+                display: 'flex', 
+                flexDirection: 'column',
+                overflowY: 'auto',
+                position: 'relative',
+                scrollBehavior: 'smooth',
+                border: isZenithMode ? 'none' : undefined,
+                background: isZenithMode ? 'transparent' : undefined,
+                boxShadow: isZenithMode ? 'none' : undefined,
+                maxWidth: isZenithMode ? '900px' : '100%',
+                margin: isZenithMode ? '0 auto' : '0'
+              }}
             >
+              {/* Reading Progress Bar */}
+              {selectedItem && (
+                <div style={{ width: '100%', height: '3px', background: 'rgba(255,255,255,0.05)', position: 'absolute', top: 0, left: 0, zIndex: 10 }}>
+                  <div style={{ width: `${scrollProgress}%`, height: '100%', background: '#ebd73f', transition: 'width 0.1s ease-out', boxShadow: '0 0 10px #ebd73f' }} />
+                </div>
+              )}
+
               {/* Cover Image */}
               {docContent?.page?.cover && (
                 <div style={{
@@ -552,6 +660,29 @@ export default function NotionHubPage() {
                       <Plus size={16} /> Subpage
                     </button>
                   )}
+
+                  <button
+                    onClick={() => setIsZenithMode(!isZenithMode)}
+                    title={isZenithMode ? "Exit Focus Mode (Esc)" : "Enter Zenith Focus Mode"}
+                    className="notion-font"
+                    style={{
+                      padding: '10px 14px',
+                      background: isZenithMode ? 'rgba(235, 215, 63, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderColor: isZenithMode ? 'rgba(235, 215, 63, 0.3)' : 'rgba(255,255,255,0.1)',
+                      borderRadius: '10px',
+                      color: isZenithMode ? '#ebd73f' : '#fff',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = isZenithMode ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255, 255, 255, 0.1)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = isZenithMode ? 'rgba(235, 215, 63, 0.15)' : 'rgba(255, 255, 255, 0.05)'}
+                  >
+                    {isZenithMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                  </button>
 
                   <a
                     href={selectedItem.url}

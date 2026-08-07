@@ -2,13 +2,26 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video, AlertTriangle, BookOpen } from 'lucide-react';
+import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video, AlertTriangle, BookOpen, ChevronLeft, Menu } from 'lucide-react';
 import styles from '../admin.module.css';
 import { useGenz } from '../../contexts/GenzContext';
+import { useState, useEffect } from 'react';
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { isGenz } = useGenz() || { isGenz: false };
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    const savedState = localStorage.getItem('admin_sidebar_collapsed');
+    if (savedState === 'true') setIsCollapsed(true);
+  }, []);
+
+  const toggleSidebar = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem('admin_sidebar_collapsed', newState.toString());
+  };
 
   const navItems = [
     { name: isGenz ? 'Main Base' : 'Dashboard', path: '/admin-panel', icon: LayoutDashboard },
@@ -23,10 +36,29 @@ export default function AdminSidebar() {
   ];
 
   return (
-    <div className={styles.sidebar}>
-      <div className={styles.logo}>{isGenz ? 'DRIPP\nBOSS.' : 'DRIPP\nADMIN.'}</div>
+    <div className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '3rem' }}>
+        {!isCollapsed && <div className={styles.logo}>{isGenz ? 'DRIPP\nBOSS.' : 'DRIPP\nADMIN.'}</div>}
+        {isCollapsed && <div className={styles.logo} style={{ fontSize: '1.2rem', paddingLeft: 0, textAlign: 'center', width: '100%' }}>{isGenz ? 'DB.' : 'DA.'}</div>}
+        
+        <button 
+          onClick={toggleSidebar}
+          style={{
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            color: '#fff', borderRadius: '8px', padding: '6px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: isCollapsed ? 'absolute' : 'static',
+            top: isCollapsed ? '24px' : 'auto',
+            right: isCollapsed ? '22px' : 'auto',
+            zIndex: 20
+          }}
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {isCollapsed ? <Menu size={16} /> : <ChevronLeft size={16} />}
+        </button>
+      </div>
       
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: isCollapsed ? '2rem' : '0' }}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.path;
@@ -36,18 +68,19 @@ export default function AdminSidebar() {
               key={item.path} 
               href={item.path}
               className={`${styles.navLink} ${isActive ? styles.active : ''}`}
+              title={isCollapsed ? item.name : undefined}
             >
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-              {item.name}
+              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} style={{ flexShrink: 0 }} />
+              {!isCollapsed && <span className={styles.navText}>{item.name}</span>}
             </Link>
           );
         })}
       </nav>
 
       <div style={{ marginTop: 'auto', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <Link href="/" className={styles.navLink} style={{ color: '#ef4444' }}>
-           <LogOut size={20} />
-           {isGenz ? 'Bounce to Site' : 'Exit to Site'}
+        <Link href="/" className={styles.navLink} style={{ color: '#ef4444' }} title={isCollapsed ? (isGenz ? 'Bounce to Site' : 'Exit to Site') : undefined}>
+           <LogOut size={20} style={{ flexShrink: 0 }} />
+           {!isCollapsed && <span className={styles.navText}>{isGenz ? 'Bounce to Site' : 'Exit to Site'}</span>}
         </Link>
       </div>
     </div>
