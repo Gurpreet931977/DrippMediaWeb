@@ -118,6 +118,7 @@ export default function NotionHubPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('favorites'); // 'favorites', 'all', 'page', 'database'
+  const [sortBy, setSortBy] = useState('date');
   const [favorites, setFavorites] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [docContent, setDocContent] = useState(null);
@@ -184,7 +185,7 @@ export default function NotionHubPage() {
       }
 
       // 2. Update state and cache with fresh data
-      const sortedItems = (data.items || []).sort((a, b) => new Date(b.created_time || 0) - new Date(a.created_time || 0));
+      const sortedItems = (data.items || []).sort((a, b) => new Date(b.lastEditedTime || b.createdTime || 0) - new Date(a.lastEditedTime || a.createdTime || 0));
       setItems(sortedItems);
       localStorage.setItem(cacheKey, JSON.stringify({ ...data, items: sortedItems }));
       
@@ -562,6 +563,11 @@ export default function NotionHubPage() {
     }
     
     return item.object === filterType;
+  }).sort((a, b) => {
+    if (sortBy === 'name') {
+      return (a.title || '').localeCompare(b.title || '');
+    }
+    return new Date(b.lastEditedTime || 0) - new Date(a.lastEditedTime || 0);
   });
 
   const getBreadcrumbs = (item) => {
@@ -1122,6 +1128,14 @@ export default function NotionHubPage() {
               <span className="notion-font" style={{ fontSize: '0.8rem', fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 Catalog ({filteredItems.length})
               </span>
+              <FocusSafeDropdown 
+                label={`Sort: ${sortBy === 'name' ? 'Name' : 'Date'}`}
+                options={[
+                  { label: 'Date (Last Updated)', value: 'date' },
+                  { label: 'Name (A-Z)', value: 'name' }
+                ]}
+                onChange={(val) => setSortBy(val)}
+              />
             </div>
             
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -2302,23 +2316,25 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
                 }
               }}
               style={{
-                background: 'rgba(255, 77, 79, 0.1)',
-                border: '1px solid rgba(255, 77, 79, 0.2)',
-                color: '#ff4d4f',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                color: '#888',
                 borderRadius: '10px',
                 padding: '12px',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
               onMouseOver={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 77, 79, 0.2)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.color = '#fff';
                 e.currentTarget.style.transform = 'scale(1.05)';
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 77, 79, 0.1)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                e.currentTarget.style.color = '#888';
                 e.currentTarget.style.transform = 'scale(1)';
               }}
               title={`Delete ${isDb ? 'Database' : 'Page'}`}
