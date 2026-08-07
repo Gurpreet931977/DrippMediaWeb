@@ -413,7 +413,7 @@ export default function OrloChat() {
         } else {
           setInput(e.detail.text || '');
           if (e.detail.blockId) {
-            window._notionContext = { blockId: e.detail.blockId };
+            window._notionContext = { blockId: e.detail.blockId, type: e.detail.blockType };
           }
         }
       }

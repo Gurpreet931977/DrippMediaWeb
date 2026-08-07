@@ -22,7 +22,7 @@ export async function POST(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userPrompt, chatHistory, context, systemContext, formContext, currentDate, model, isGenz } = await request.json();
+    const { userPrompt, chatHistory, context, systemContext, formContext, notionContext, currentDate, model, isGenz } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
@@ -89,6 +89,7 @@ Valid Intents:
 6. "system_doc" - The user wants to rewrite, modify, or draft an operational document (e.g. Agreement, Onboarding, Delivery, Feedback forms) currently open in the System Workspace.
 8. "portfolio" - The user wants to fill out the Portfolio Manager upload form (e.g., "set the category to Videography", "write a title for this video", "analyze this video").
 9. "clear_chat" - The user wants to clear, delete, or reset the current chat history with you.
+10. "notion_edit" - The user wants to analyze, summarize, or edit text in the Notion Viewer.
 
 If the intent is "system_doc":
 Read the Current System Docs State (especially the "content" field). Apply the user's prompt (e.g. "make it more formal", "add a paragraph about IP rights") to rewrite the entire text. Return the new, fully rewritten text in the payload as "rewrittenContent".
@@ -97,6 +98,11 @@ If the intent is "portfolio":
 Read the Current Active Form State (which will contain title, description, category, video_id). Update these fields based on the user's prompt. 
 If the user asks Orlo to write the description/title by looking at or analyzing the uploaded video, you MUST set "analyzeVideo": true. 
 Return the modified form data in the payload.
+
+If the intent is "notion_edit":
+Read the user's prompt (which contains the highlighted Notion text). You also have access to the Notion Context containing the block ID. 
+If the user asks you to rewrite, summarize, or fix spelling, generate the improved text.
+Return intent: "notion_edit" and return the modified text in the payload as "rewrittenContent". Your replyMessage should be a short confirmation like "I've fixed the spelling and saved it to Notion."
 
 If the intent is "package" OR "quote" OR "invoice":
 Read the "Current Active Form State" to see what is already there. If the user is asking to add, modify, or apply a discount, you MUST append to or modify the existing "packageTiers" or fields rather than starting from scratch. Extract the "clientName" (e.g. Ritvik Kala), "brandName", "clientEmail", "clientMobile", "clientAddress", "gstNumber", the overall "totalBudget" (e.g. 28000), "packageType" (e.g. "monthly" or "project"), a list of "packageTiers" (e.g. tier 1 with "8 Reels", tier 2 with "8 Reels + 8 Posts") requested, and the overall "pmpStrategy" which should be a structured object containing an overview, target audience, and phases for their Personal Marketing Plan. Include these in the payload. If the user asks for a package, pricing, or quote, set intent to "quote". If they explicitly ask for a PMP or Masterplan, set intent to "package".
@@ -111,7 +117,7 @@ NEVER use em-dashes ("—") anywhere in your output. Use standard punctuation li
 
 JSON Schema to return:
 {
-  "intent": "email" | "chat" | "learn" | "quote" | "package" | "system_doc" | "invoice" | "portfolio" | "clear_chat",
+  "intent": "email" | "chat" | "learn" | "quote" | "package" | "system_doc" | "invoice" | "portfolio" | "clear_chat" | "notion_edit",
   "isNewTopic": boolean,
   "replyMessage": "A short, cool, Dripp-styled response acknowledging what you did (e.g., 'I\\'ve drafted that announcement for you. Review it and hit send.') or answering their question.",
   "learnedRule": "If the intent is 'learn', provide the extracted concise rule to save to memory here. Otherwise, omit.",
@@ -300,6 +306,33 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         console.error('Failed to save memory:', error);
       } else {
         if (!parsed.replyMessage) parsed.replyMessage = "I've locked that into my memory banks. I'll remember it for next time.";
+      }
+    }
+
+    if (parsed.intent === 'notion_edit' && parsed.payload?.rewrittenContent && notionContext?.blockId) {
+      try {
+        const { Client } = require('@notionhq/client');
+        const notionClient = new Client({ auth: process.env.NOTION_API_KEY });
+        const type = notionContext.type || 'paragraph';
+        const content = parsed.payload.rewrittenContent;
+        
+        let blockPayload = {};
+        if (['paragraph', 'heading_1', 'heading_2', 'heading_3', 'to_do'].includes(type)) {
+          blockPayload = {
+            [type]: {
+              rich_text: [{ text: { content } }]
+            }
+          };
+          if (type === 'to_do') blockPayload.to_do.checked = false; // simplify
+
+          await notionClient.blocks.update({
+            block_id: notionContext.blockId,
+            ...blockPayload
+          });
+        }
+      } catch (notionErr) {
+        console.error('Failed to live-edit notion block:', notionErr);
+        parsed.replyMessage = "I generated the text, but couldn't auto-save it to Notion due to an API error.";
       }
     }
 

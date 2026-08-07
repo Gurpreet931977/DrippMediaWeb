@@ -160,9 +160,11 @@ export default function NotionHubPage() {
         const rect = range.getBoundingClientRect();
         
         let blockId = null;
+        let blockType = null;
         const blockElement = selection.anchorNode?.parentElement?.closest('[id^="block-"]');
         if (blockElement) {
           blockId = blockElement.id.replace('block-', '');
+          blockType = blockElement.getAttribute('data-block-type');
         }
 
         setSelectionRect({
@@ -170,7 +172,7 @@ export default function NotionHubPage() {
           left: rect.left + rect.width / 2,
         });
         setSelectedText(text);
-        setSelectedBlockId(blockId);
+        setSelectedBlockId({ id: blockId, type: blockType });
       } else {
         setSelectionRect(null);
         setSelectedText('');
@@ -442,7 +444,7 @@ export default function NotionHubPage() {
             <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
               onClick={() => {
                 window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
-                  detail: { text: `Please explain this Notion text: "${selectedText}"`, blockId: selectedBlockId, intent: 'notion_edit' }
+                  detail: { text: `Please explain this Notion text: "${selectedText}"`, blockId: selectedBlockId?.id, blockType: selectedBlockId?.type, intent: 'notion_edit' }
                 }));
               }}
             >
@@ -452,7 +454,7 @@ export default function NotionHubPage() {
             <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
               onClick={() => {
                 window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
-                  detail: { text: `Please summarize this Notion text: "${selectedText}"`, blockId: selectedBlockId, intent: 'notion_edit' }
+                  detail: { text: `Please summarize this Notion text: "${selectedText}"`, blockId: selectedBlockId?.id, blockType: selectedBlockId?.type, intent: 'notion_edit' }
                 }));
               }}
             >
@@ -461,7 +463,7 @@ export default function NotionHubPage() {
             <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, fontStyle: 'italic' }}
               onClick={() => {
                 window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
-                  detail: { text: `Fix the spelling/grammar in this block.`, blockId: selectedBlockId, intent: 'notion_edit' }
+                  detail: { text: `Fix the spelling/grammar in this block.`, blockId: selectedBlockId?.id, blockType: selectedBlockId?.type, intent: 'notion_edit' }
                 }));
               }}
             >
@@ -754,7 +756,7 @@ export default function NotionHubPage() {
               ) : docContent?.blocks?.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '60px' }}>
                   {docContent.blocks.map((block, i) => (
-                    <div key={block.id} id={`block-${block.id}`} className="block-enter" style={{ animationDelay: `${Math.min(i * 0.03, 1)}s` }}>
+                    <div key={block.id} id={`block-${block.id}`} data-block-type={block.type} className="block-enter" style={{ animationDelay: `${Math.min(i * 0.03, 1)}s` }}>
                       <NotionBlockRenderer block={block} />
                     </div>
                   ))}
