@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video, AlertTriangle, BookOpen } from 'lucide-react';
 import styles from '../admin.module.css';
 import { useGenz } from '../../contexts/GenzContext';
 
@@ -12,6 +12,7 @@ export default function AdminSidebar() {
 
   const navItems = [
     { name: isGenz ? 'Main Base' : 'Dashboard', path: '/admin-panel', icon: LayoutDashboard },
+    { name: isGenz ? 'Brain Vault' : 'Notion Notes & Plans', path: '/admin-panel/notion', icon: BookOpen },
     { name: isGenz ? 'Bag Securer' : 'Invoice Maker', path: '/admin-panel/invoice', icon: FileText },
     { name: isGenz ? 'Pitch Cooker' : 'Quotes & Packages', path: '/admin-panel/quote', icon: PackagePlus },
     { name: isGenz ? 'Masterplan Maker' : 'PMP Maker', path: '/admin-panel/package', icon: PackagePlus },
