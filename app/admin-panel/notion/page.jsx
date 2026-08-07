@@ -25,6 +25,7 @@ export default function NotionHubPage() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const contentRef = useRef(null);
   const searchInputRef = useRef(null);
+  const savedRangeRef = useRef(null);
 
   // Zenith Mode State
   const [isZenithMode, setIsZenithMode] = useState(false);
@@ -1023,7 +1024,7 @@ export default function NotionHubPage() {
                 className={`notion-font filter-chip ${filterType === 'favorites' ? 'active' : ''}`}
                 onClick={() => setFilterType('favorites')}
               >
-                ⭐ Favorites
+                <Star size={14} fill={filterType === 'favorites' ? '#ebd73f' : 'transparent'} strokeWidth={2.5} style={{ display: 'block', margin: '2px 0' }} />
               </button>
               {['all', 'page', 'database'].map((type) => (
                 <button
@@ -1171,9 +1172,60 @@ export default function NotionHubPage() {
                     {docContent?.page?.icon || selectedItem.icon || '📄'}
                   </span>
                   <div>
-                    <h2 className="notion-font" style={{ fontSize: '2.5rem', fontWeight: 800, margin: '0 0 8px 0', color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <h1 
+                      className="notion-font" 
+                      contentEditable
+                      suppressContentEditableWarning
+                      style={{ fontSize: '2.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', outline: 'none' }}
+                      onBlur={async (e) => {
+                        const newTitle = e.target.innerText.trim();
+                        if (newTitle && newTitle !== (docContent?.page?.title || selectedItem.title)) {
+                          // Optimistic update
+                          setSelectedItem(prev => ({ ...prev, title: newTitle }));
+                          setItems(prevItems => prevItems.map(item => item.id === selectedItem.id ? { ...item, title: newTitle } : item));
+                          if (docContent?.page) setDocContent(prev => ({ ...prev, page: { ...prev.page, title: newTitle } }));
+                          
+                          // API call
+                          fetch('/api/admin/notion/update', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ blockId: selectedItem.id, type: selectedItem.object || 'page', content: newTitle })
+                          });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.target.blur();
+                        }
+                      }}
+                    >
                       {docContent?.page?.title || selectedItem.title}
-                    </h2>
+                    </h1>
+                    <button 
+                      onClick={(e) => toggleFavorite(e, selectedItem.id)}
+                      style={{ 
+                        background: 'transparent', 
+                        border: 'none', 
+                        cursor: 'pointer', 
+                        padding: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                      onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <Star 
+                        size={24} 
+                        fill={favorites.includes(selectedItem.id) ? '#ebd73f' : 'transparent'} 
+                        color={favorites.includes(selectedItem.id) ? '#ebd73f' : '#888'} 
+                      />
+                    </button>
+                  </div>
                     <p className="notion-font" style={{ fontSize: '0.9rem', color: '#777', margin: 0, fontWeight: 500 }}>
                       Last updated: <span style={{ color: '#aaa' }}>{selectedItem.lastEditedTime ? new Date(selectedItem.lastEditedTime).toLocaleString() : 'N/A'}</span>
                     </p>

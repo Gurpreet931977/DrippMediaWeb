@@ -37,6 +37,30 @@ export async function PATCH(request) {
           rich_text: richTextArray || [{ text: { content } }]
         }
       };
+    } else if (type === 'page' || type === 'database') {
+      // For updating page/database titles
+      try {
+        const response = await notion.pages.update({
+          page_id: blockId,
+          properties: {
+            title: {
+              title: richTextArray || [{ text: { content } }]
+            }
+          }
+        });
+        return NextResponse.json({ success: true, block: response });
+      } catch (pageErr) {
+        // Fallback: If 'title' property isn't found (common in DBs where title is named 'Name')
+        const response = await notion.pages.update({
+          page_id: blockId,
+          properties: {
+            Name: {
+              title: richTextArray || [{ text: { content } }]
+            }
+          }
+        });
+        return NextResponse.json({ success: true, block: response });
+      }
     } else {
       return NextResponse.json({ error: `Unsupported block type for inline editing: ${type}` }, { status: 400 });
     }
