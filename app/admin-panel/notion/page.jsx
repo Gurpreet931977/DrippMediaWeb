@@ -119,6 +119,7 @@ export default function NotionHubPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('favorites'); // 'favorites', 'all', 'page', 'database'
   const [sortBy, setSortBy] = useState('date');
+  const [blockSortBy, setBlockSortBy] = useState('date');
   const [favorites, setFavorites] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [docContent, setDocContent] = useState(null);
@@ -601,6 +602,28 @@ export default function NotionHubPage() {
     }
     return crumbs;
   };
+
+  const sortedBlocks = React.useMemo(() => {
+    if (!docContent?.blocks) return [];
+    
+    // Create a copy to sort
+    const blocks = [...docContent.blocks];
+    
+    if (blockSortBy === 'date') {
+      return blocks.sort((a, b) => new Date(b.last_edited_time || b.created_time || 0) - new Date(a.last_edited_time || a.created_time || 0));
+    } else if (blockSortBy === 'name') {
+      return blocks.sort((a, b) => {
+        const getText = (block) => {
+          if (block.type === 'child_page') return block.child_page?.title || '';
+          if (block.type === 'child_database') return block.child_database?.title || '';
+          if (block[block.type]?.rich_text) return block[block.type].rich_text.map(t => t.plain_text).join('');
+          return '';
+        };
+        return getText(a).localeCompare(getText(b));
+      });
+    }
+    return blocks;
+  }, [docContent?.blocks, blockSortBy]);
 
   return (
     <div style={{ 
@@ -1372,6 +1395,15 @@ export default function NotionHubPage() {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <FocusSafeDropdown 
+                    label={`Sort: ${blockSortBy === 'name' ? 'Name' : 'Date'}`}
+                    options={[
+                      { label: 'Date (Last Updated)', value: 'date' },
+                      { label: 'Name (A-Z)', value: 'name' }
+                    ]}
+                    onChange={(val) => setBlockSortBy(val)}
+                  />
+
                   {showSubpageInput ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <input 
@@ -1528,7 +1560,7 @@ export default function NotionHubPage() {
                 </div>
               ) : docContent?.blocks?.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '60px' }}>
-                  {docContent.blocks.map((block, i) => (
+                  {sortedBlocks.map((block, i) => (
                     <div key={block.id} id={`block-${block.id}`} data-block-type={block.type} className="block-enter" style={{ position: 'relative', animationDelay: `${Math.min(i * 0.03, 1)}s` }}>
                       <NotionBlockRenderer block={block} setSelectedItem={setSelectedItem} onDeleteBlock={handleDeleteBlock} onInsertBlockAfter={handleInsertBlockAfter} />
                     </div>
