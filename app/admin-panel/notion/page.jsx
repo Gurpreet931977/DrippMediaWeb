@@ -1426,6 +1426,7 @@ function NotionBlockRenderer({ block, setSelectedItem }) {
     if (!richTextArr || richTextArr.length === 0) return null;
     return richTextArr.map((t, idx) => {
       let className = "notion-font";
+      let style = {};
       if (t.annotations?.bold) style.fontWeight = '800';
       if (t.annotations?.italic) style.fontStyle = 'italic';
       if (t.annotations?.strikethrough) style.textDecoration = 'line-through';
