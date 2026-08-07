@@ -11,7 +11,7 @@ function getNotionClient() {
 
 export async function PATCH(request) {
   try {
-    const { blockId, type, content, checked } = await request.json();
+    const { blockId, type, content, richTextArray, checked } = await request.json();
 
     if (!blockId || !type) {
       return NextResponse.json({ error: 'Missing blockId or type' }, { status: 400 });
@@ -26,13 +26,15 @@ export async function PATCH(request) {
           checked: checked !== undefined ? checked : false
         }
       };
-      if (content !== undefined) {
+      if (richTextArray) {
+         payload.to_do.rich_text = richTextArray;
+      } else if (content !== undefined) {
          payload.to_do.rich_text = [{ text: { content } }];
       }
     } else if (['paragraph', 'heading_1', 'heading_2', 'heading_3'].includes(type)) {
       payload = {
         [type]: {
-          rich_text: [{ text: { content } }]
+          rich_text: richTextArray || [{ text: { content } }]
         }
       };
     } else {
