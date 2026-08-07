@@ -58,7 +58,7 @@ export default function AdminSidebar() {
         </button>
       </div>
       
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: isCollapsed ? '2rem' : '0' }}>
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: isCollapsed ? '2rem' : '0', overflowY: 'auto', flex: 1, paddingRight: '8px' }}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.path;

@@ -337,7 +337,7 @@ export default function NotionHubPage() {
               {isGenz ? 'BRAIN VAULT.' : 'STRATEGY HUB.'}
             </h1>
             <p className="notion-font" style={{ fontSize: '0.85rem', color: '#777', margin: '4px 0 0 0', fontWeight: 500 }}>
-              Live synchronized Notion workspace
+              Live synchronized strategy workspace
             </p>
           </div>
         </div>
@@ -349,7 +349,7 @@ export default function NotionHubPage() {
             <input
               type="text"
               className="notion-font"
-              placeholder="Search Notion docs..."
+              placeholder="Search documents..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -480,7 +480,7 @@ export default function NotionHubPage() {
                 <Info size={32} style={{ color: '#ebd73f', margin: '0 auto 16px auto', opacity: 0.8 }} />
                 <h4 className="notion-font" style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>No Documents Found</h4>
                 <p className="notion-font" style={{ fontSize: '0.8rem', color: '#777', lineHeight: 1.6 }}>
-                  Adjust your filters or share pages via the Notion app.
+                  Adjust your filters or ensure pages are shared with the integration.
                 </p>
               </div>
             ) : (
@@ -707,7 +707,7 @@ export default function NotionHubPage() {
                     onMouseOver={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.2)'}
                     onMouseOut={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
                   >
-                    Edit in Notion <ExternalLink size={16} />
+                    Open Document <ExternalLink size={16} />
                   </a>
                 </div>
               </div>
