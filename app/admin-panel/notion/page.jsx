@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
 
-function FocusSafeDropdown({ label, options, onChange }) {
+function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -57,7 +57,8 @@ function FocusSafeDropdown({ label, options, onChange }) {
         <div style={{
           position: 'absolute',
           top: '100%',
-          left: 0,
+          left: align === 'left' ? 0 : 'auto',
+          right: align === 'right' ? 0 : 'auto',
           marginTop: '8px',
           background: 'linear-gradient(135deg, rgba(30, 30, 35, 0.85) 0%, rgba(15, 15, 20, 0.7) 100%)',
           backdropFilter: 'blur(30px) saturate(140%)',
@@ -1172,6 +1173,7 @@ export default function NotionHubPage() {
                 Catalog ({filteredItems.length})
               </span>
               <FocusSafeDropdown 
+                align="right"
                 label={`Sort: ${sortBy === 'name' ? 'Name' : 'Date'}`}
                 options={[
                   { label: 'Date (Last Updated)', value: 'date' },
