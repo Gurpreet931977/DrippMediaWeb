@@ -821,6 +821,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           display: flex;
           align-items: center;
           gap: 16px;
+          pointer-events: none;
         }
 
         .speech-bubble {
@@ -888,6 +889,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           cursor: pointer;
           transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           animation: pulseOrb 3s infinite alternate;
+          pointer-events: auto;
         }
         
         .copilot-orb:hover {

@@ -75,7 +75,9 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
           display: 'flex',
           flexDirection: 'column',
           gap: '2px',
-          animation: 'slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both'
+          animation: 'slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
+          userSelect: 'none',
+          WebkitUserSelect: 'none'
         }}>
           {options.map((opt, i) => (
             <div
@@ -1026,7 +1028,9 @@ export default function NotionHubPage() {
           transform: 'scale(0.95) translateY(5px)',
           pointerEvents: 'none',
           transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-          maxWidth: 'calc(100vw - 20px)'
+          maxWidth: 'calc(100vw - 20px)',
+          userSelect: 'none',
+          WebkitUserSelect: 'none'
         }}>
 
           {/* Turn Into */}
@@ -1529,24 +1533,22 @@ export default function NotionHubPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="notion-font"
+                    title="Open Document"
                     style={{
-                      padding: '10px 16px',
+                      padding: '10px 14px',
                       background: 'rgba(255, 255, 255, 0.05)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       borderRadius: '10px',
                       color: '#fff',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      textDecoration: 'none',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px',
+                      justifyContent: 'center',
                       transition: 'all 0.2s',
                     }}
                     onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
                     onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                   >
-                    Open Document <ExternalLink size={16} />
+                    <ExternalLink size={16} />
                   </a>
                 </div>
               </div>
