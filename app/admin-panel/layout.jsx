@@ -5,7 +5,7 @@ import AdminSidebar from './components/AdminSidebar';
 import OrloChat from './components/OrloChat';
 import styles from './admin.module.css';
 import { useRouter, usePathname } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, AlertTriangle, X } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertTriangle, X, RefreshCw } from 'lucide-react';
 import { useErrorLog } from '../contexts/ErrorLogContext';
 
 export default function AdminLayout({ children }) {
@@ -329,15 +329,31 @@ export default function AdminLayout({ children }) {
               <p style={{ margin: 0, color: '#aaa', fontSize: '0.85rem' }}>
                 {unreadErrorsCount} new error{unreadErrorsCount > 1 ? 's' : ''} logged in the background.
               </p>
-              <button 
-                onClick={() => router.push('/admin-panel/errors')}
-                style={{
-                  background: 'none', border: 'none', color: '#ebd73f', padding: 0, marginTop: '8px',
-                  fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline'
-                }}
-              >
-                View Error Radar
-              </button>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button 
+                  onClick={() => router.push('/admin-panel/errors')}
+                  style={{
+                    background: 'none', border: 'none', color: '#ebd73f', padding: 0,
+                    fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline'
+                  }}
+                >
+                  View Error Radar
+                </button>
+                <button 
+                  onClick={() => {
+                    sessionStorage.removeItem('dripp_session_started'); // Force a fresh session
+                    window.location.reload();
+                  }}
+                  style={{
+                    background: 'none', border: 'none', color: '#888', padding: 0,
+                    fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.color = '#fff'}
+                  onMouseOut={(e) => e.currentTarget.style.color = '#888'}
+                >
+                  <RefreshCw size={12} /> Refresh System
+                </button>
+              </div>
             </div>
             <button 
               onClick={() => setDismissedErrorCount(logs.length)}
