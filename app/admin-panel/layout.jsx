@@ -5,7 +5,8 @@ import AdminSidebar from './components/AdminSidebar';
 import OrloChat from './components/OrloChat';
 import styles from './admin.module.css';
 import { useRouter, usePathname } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertTriangle, X } from 'lucide-react';
+import { useErrorLog } from '../contexts/ErrorLogContext';
 
 export default function AdminLayout({ children }) {
   const [isDesktop, setIsDesktop]         = useState(true);
@@ -19,6 +20,11 @@ export default function AdminLayout({ children }) {
   const [showPassword, setShowPassword]   = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  
+  const { logs } = useErrorLog();
+  const [dismissedErrorCount, setDismissedErrorCount] = useState(0);
+  
+  const unreadErrorsCount = logs.length - dismissedErrorCount;
 
   useEffect(() => {
     const checkDevice = () => setIsDesktop(window.innerWidth >= 1024);
@@ -287,8 +293,72 @@ export default function AdminLayout({ children }) {
         }
       `}</style>
       <AdminSidebar />
-      <main key={pathname} className={styles.mainContent} style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+      <main key={pathname} className={styles.mainContent} style={{ flex: 1, padding: '40px', overflowY: 'auto', position: 'relative' }}>
         {children}
+        
+        {unreadErrorsCount > 0 && pathname !== '/admin-panel/errors' && (
+          <div style={{
+            position: 'fixed',
+            bottom: '30px',
+            right: '30px',
+            background: 'rgba(20, 10, 10, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 77, 77, 0.3)',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            boxShadow: '0 10px 40px rgba(255, 50, 50, 0.2)',
+            zIndex: 9999,
+            animation: 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}>
+            <style>{`
+              @keyframes fadeInUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+            `}</style>
+            <div style={{ padding: '10px', background: 'rgba(255, 77, 77, 0.1)', borderRadius: '50%' }}>
+              <AlertTriangle size={24} color="#ff4d4d" />
+            </div>
+            <div>
+              <h4 style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '1rem', fontFamily: 'Panchang, sans-serif' }}>
+                System Errors Detected
+              </h4>
+              <p style={{ margin: 0, color: '#aaa', fontSize: '0.85rem' }}>
+                {unreadErrorsCount} new error{unreadErrorsCount > 1 ? 's' : ''} logged in the background.
+              </p>
+              <button 
+                onClick={() => router.push('/admin-panel/errors')}
+                style={{
+                  background: 'none', border: 'none', color: '#ebd73f', padding: 0, marginTop: '8px',
+                  fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline'
+                }}
+              >
+                View Error Radar
+              </button>
+            </div>
+            <button 
+              onClick={() => setDismissedErrorCount(logs.length)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#666',
+                cursor: 'pointer',
+                padding: '4px',
+                marginLeft: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.color = '#fff'}
+              onMouseOut={(e) => e.currentTarget.style.color = '#666'}
+            >
+              <X size={20} />
+            </button>
+          </div>
+        )}
       </main>
       <OrloChat />
     </div>

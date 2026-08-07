@@ -231,7 +231,6 @@ export default function OrloChat() {
         };
         
         recognition.onerror = (event) => {
-          console.warn('Speech recognition event:', event.error);
           if (event.error === 'no-speech') {
             return;
           }
@@ -266,7 +265,6 @@ export default function OrloChat() {
         setIsListening(true);
         showToast('Listening... Speak now.');
       } catch (err) {
-        console.error('Microphone error:', err);
         showToast('Microphone error: Please check your browser permissions.');
         setIsListening(false);
         shouldListenRef.current = false;

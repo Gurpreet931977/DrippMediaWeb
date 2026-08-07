@@ -45,7 +45,7 @@ export default function CurrencyConverter() {
         setLastUpdated(date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
       }
     } catch (err) {
-      console.error("Failed to fetch exchange rates", err);
+      // Silently fail, user will use fallback values or see '0.00'
     }
     setLoading(false);
   };
