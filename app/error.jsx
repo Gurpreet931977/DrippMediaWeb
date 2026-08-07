@@ -1,11 +1,27 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
+import { Copy, Check } from "lucide-react";
 
 export default function Error({ error, reset }) {
   const containerRef = useRef(null);
+  const [copied, setCopied] = useState(false);
 
+  const handleCopyPrompt = () => {
+    const promptText = `Please fix this error:
+
+--- ERROR ---
+Message: ${error?.message || "Unknown error"}
+Name: ${error?.name || "Error"}
+Stack Trace:
+${error?.stack || "No stack trace available"}
+----------------`;
+
+    navigator.clipboard.writeText(promptText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   useEffect(() => {
     // Smart Error Logging
     console.error("%c🚨 FATAL DRIPP ERROR DETECTED", "color: #eb3f3f; font-size: 20px; font-weight: bold; background: #220000; padding: 4px 8px; border-radius: 4px;");
@@ -95,6 +111,24 @@ export default function Error({ error, reset }) {
                e.target.style.background = 'rgba(255, 255, 255, 0.05)';
             }}>
               Go Home
+            </button>
+            
+            <button className="error-glitch" onClick={handleCopyPrompt} style={{
+               padding: '15px 40px', borderRadius: '30px',
+               background: copied ? 'rgba(82, 196, 26, 0.2)' : 'rgba(255, 255, 255, 0.05)', 
+               border: `1px solid ${copied ? 'rgba(82, 196, 26, 0.5)' : 'rgba(255, 255, 255, 0.2)'}`,
+               color: copied ? '#52c41a' : 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '1.1rem',
+               textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer',
+               transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '8px'
+            }}
+            onMouseEnter={(e) => {
+               if (!copied) e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+               if (!copied) e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+            }}>
+              {copied ? <Check size={18} /> : <Copy size={18} />}
+              {copied ? 'Copied Prompt' : 'Copy Prompt'}
             </button>
         </div>
       </div>
