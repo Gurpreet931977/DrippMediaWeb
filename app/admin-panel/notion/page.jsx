@@ -9,6 +9,101 @@ import {
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
 
+function FocusSafeDropdown({ label, options, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        className="notion-font"
+        onMouseDown={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
+        style={{
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '6px 28px 6px 12px',
+          fontSize: '0.8rem',
+          fontWeight: 600,
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          height: '100%'
+        }}
+        onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+        onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+      >
+        {label}
+        <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#aaa', fontSize: '0.6rem' }}>▼</div>
+      </button>
+      
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          marginTop: '6px',
+          background: 'rgba(20, 20, 24, 0.95)',
+          backdropFilter: 'blur(30px)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: '12px',
+          padding: '6px',
+          minWidth: '160px',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+          zIndex: 10001,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px'
+        }}>
+          {options.map((opt, i) => (
+            <div
+              key={i}
+              className="notion-font"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setIsOpen(false);
+                if (opt.value) onChange(opt.value);
+              }}
+              style={{
+                padding: '8px 12px',
+                color: opt.color || '#fff',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                if (opt.hoverClass) e.currentTarget.classList.add(opt.hoverClass);
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.background = 'transparent';
+                if (opt.hoverClass) e.currentTarget.classList.remove(opt.hoverClass);
+              }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function NotionHubPage() {
   const { isGenz } = useGenz() || { isGenz: false };
   const [items, setItems] = useState([]);
@@ -851,40 +946,17 @@ export default function NotionHubPage() {
         }}>
 
           {/* Turn Into */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <select 
-              className="notion-font"
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: '#fff',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                outline: 'none',
-                cursor: 'pointer',
-                appearance: 'none',
-                paddingRight: '28px',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-              onChange={(e) => {
-                if(e.target.value) {
-                  handleTurnInto(e);
-                  e.target.value = ""; // Reset
-                }
-              }}
-            >
-              <option value="" style={{ background: '#111' }}>Turn Into</option>
-              <option value="heading_1" style={{ background: '#111' }}>Heading 1</option>
-              <option value="heading_2" style={{ background: '#111' }}>Heading 2</option>
-              <option value="heading_3" style={{ background: '#111' }}>Heading 3</option>
-              <option value="paragraph" style={{ background: '#111' }}>Paragraph</option>
-            </select>
-            <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#aaa', fontSize: '0.7rem' }}>▼</div>
-          </div>
+          <FocusSafeDropdown 
+            label="Turn Into"
+            options={[
+              { label: 'Turn Into', value: '' },
+              { label: 'Heading 1', value: 'heading_1' },
+              { label: 'Heading 2', value: 'heading_2' },
+              { label: 'Heading 3', value: 'heading_3' },
+              { label: 'Paragraph', value: 'paragraph' }
+            ]}
+            onChange={(val) => handleTurnInto({ target: { value: val } })}
+          />
 
           <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
 
@@ -967,40 +1039,17 @@ export default function NotionHubPage() {
           <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
 
           {/* Designer Presets */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <select 
-              className="notion-font"
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: '#fff',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                outline: 'none',
-                cursor: 'pointer',
-                appearance: 'none',
-                paddingRight: '28px',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-              onChange={(e) => {
-                if(e.target.value) {
-                  handleApplyPreset(e);
-                  e.target.value = ""; // Reset
-                }
-              }}
-            >
-              <option value="" style={{ background: '#111' }}>Default</option>
-              <option value="critical" style={{ background: '#111', color: '#ff4d4f' }}>Cyber Glitch</option>
-              <option value="liquid" style={{ background: '#111', color: '#9400d3' }}>Liquid Gradient</option>
-              <option value="highlight" style={{ background: '#111', color: '#ebd73f' }}>Gold Shimmer</option>
-              <option value="code" style={{ background: '#111' }}>Classified</option>
-            </select>
-            <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#aaa', fontSize: '0.7rem' }}>▼</div>
-          </div>
+          <FocusSafeDropdown 
+            label="Default"
+            options={[
+              { label: 'Default', value: '' },
+              { label: 'Cyber Glitch', value: 'critical', color: '#ff4d4f', hoverClass: 'preset-cyber-glitch' },
+              { label: 'Liquid Gradient', value: 'liquid', color: '#9400d3', hoverClass: 'preset-liquid-gradient' },
+              { label: 'Gold Shimmer', value: 'highlight', color: '#ebd73f', hoverClass: 'shimmer' },
+              { label: 'Classified', value: 'code' }
+            ]}
+            onChange={(val) => handleApplyPreset({ target: { value: val } })}
+          />
 
         </div>
         
