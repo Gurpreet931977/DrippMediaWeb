@@ -184,11 +184,12 @@ export default function NotionHubPage() {
       }
 
       // 2. Update state and cache with fresh data
-      setItems(data.items || []);
-      localStorage.setItem(cacheKey, JSON.stringify(data));
+      const sortedItems = (data.items || []).sort((a, b) => new Date(b.created_time || 0) - new Date(a.created_time || 0));
+      setItems(sortedItems);
+      localStorage.setItem(cacheKey, JSON.stringify({ ...data, items: sortedItems }));
       
-      if (data.items && data.items.length > 0 && !selectedItem && !isSearch) {
-        setSelectedItem(data.items[0]);
+      if (sortedItems.length > 0 && !selectedItem && !isSearch) {
+        setSelectedItem(sortedItems[0]);
       }
     } catch (err) {
       if (!cachedData) setError(err.message);
@@ -1358,7 +1359,8 @@ export default function NotionHubPage() {
                               if (res.ok) {
                                 setShowSubpageInput(false);
                                 setSubpageTitle('');
-                                fetchPageContent(selectedItem.id); // Reload content
+                                fetchPageContent(selectedItem.id);
+                                fetchNotionItems(); // Refresh catalog to see new subpage at top
                               }
                             } catch (err) {
                               console.error(err);
@@ -1373,7 +1375,38 @@ export default function NotionHubPage() {
                         className="notion-font"
                         style={{ background: 'transparent', border: 'none', color: '#fff', padding: '4px 8px', outline: 'none', width: '150px', fontSize: '0.85rem' }}
                       />
-                      {isCreatingSubpage && <RefreshCw size={14} className="spin" style={{ color: '#ebd73f', marginRight: '8px' }} />}
+                      {!isCreatingSubpage ? (
+                        <button 
+                          onClick={async () => {
+                            if (!subpageTitle.trim()) return;
+                            setIsCreatingSubpage(true);
+                            try {
+                              const res = await fetch('/api/admin/notion/create', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ parentId: selectedItem.id, parentType: selectedItem.object, title: subpageTitle.trim() })
+                              });
+                              if (res.ok) {
+                                setShowSubpageInput(false);
+                                setSubpageTitle('');
+                                fetchPageContent(selectedItem.id);
+                                fetchNotionItems();
+                              }
+                            } catch (err) {
+                              console.error(err);
+                            } finally {
+                              setIsCreatingSubpage(false);
+                            }
+                          }}
+                          style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+                          onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                          onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                        >
+                          <ChevronRight size={14} />
+                        </button>
+                      ) : (
+                        <RefreshCw size={14} className="spin" style={{ color: '#ebd73f', marginRight: '4px' }} />
+                      )}
                     </div>
                   ) : (
                     <button
@@ -1775,6 +1808,7 @@ function applyDesignerPreset(presetName, range) {
 function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter }) {
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const tagRef = useRef(null);
 
   useEffect(() => {
@@ -1829,7 +1863,12 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   const Tag = tagName;
   
   return (
-    <div style={{ position: 'relative', width: '100%', group: 'true' }} title="Click to edit">
+    <div 
+      style={{ position: 'relative', width: '100%', group: 'true' }} 
+      title="Click to edit"
+      onMouseOver={() => setIsHovered(true)}
+      onMouseOut={() => setIsHovered(false)}
+    >
       {localText !== null ? (
         <Tag
           contentEditable
@@ -1855,6 +1894,17 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
            {(initialRichTextArr && initialRichTextArr.length > 0) ? renderRichText(initialRichTextArr) : null}
         </Tag>
       )}
+      {isHovered && onDeleteBlock && (
+        <button 
+          onClick={() => onDeleteBlock(blockId)}
+          style={{ position: 'absolute', right: '-35px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+          onMouseOver={e => e.currentTarget.style.color = '#fff'}
+          onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+          title="Delete Block"
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
       {isSaving && <span style={{ position: 'absolute', right: '-40px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', color: '#ebd73f', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: '10px' }}>Saving</span>}
     </div>
   );
@@ -1864,6 +1914,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   const [isChecked, setIsChecked] = useState(block.to_do?.checked);
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const rawText = block.to_do?.rich_text?.map(t => t.plain_text).join('') || '';
 
@@ -1920,7 +1971,11 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '4px', marginBottom: '8px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px', borderRadius: '8px', position: 'relative' }}>
+    <div 
+      style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '4px', marginBottom: '8px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px', borderRadius: '8px', position: 'relative' }}
+      onMouseOver={() => setIsHovered(true)}
+      onMouseOut={() => setIsHovered(false)}
+    >
       <span 
         onClick={toggleCheck}
         style={{
@@ -1948,6 +2003,17 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
       >
         {localText !== null ? localText : renderRichText(block.to_do?.rich_text)}
       </div>
+      {isHovered && onDeleteBlock && (
+        <button 
+          onClick={() => onDeleteBlock(block.id)}
+          style={{ position: 'absolute', right: '-35px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+          onMouseOver={e => e.currentTarget.style.color = '#fff'}
+          onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+          title="Delete Block"
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
       {isSaving && <span style={{ position: 'absolute', right: '-40px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', color: '#ebd73f', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: '10px' }}>Saving</span>}
     </div>
   );
