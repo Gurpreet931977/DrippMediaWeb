@@ -5,7 +5,7 @@ import {
   BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, 
   FileText, Database, CheckSquare, Sparkles, Info, LayoutList, Plus, Maximize2, Minimize2, Star,
   List, ListOrdered, Type, Heading1, Heading2, Heading3, Quote, Code, ToggleLeft,
-  Home, Command, Activity, CheckCircle2, AlertCircle, Trash2
+  Home, Command, Activity, CheckCircle2, AlertCircle, Trash2, Undo2, Redo2
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
 
@@ -29,10 +29,10 @@ function FocusSafeDropdown({ label, options, onChange }) {
         className="notion-font"
         onMouseDown={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
         style={{
-          background: isOpen ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderTop: '1px solid rgba(255,255,255,0.25)',
-          boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.2)',
+          background: isOpen ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderTop: '1px solid rgba(255,255,255,0.3)',
+          boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.15)',
           color: '#fff',
           borderRadius: '8px',
           padding: '6px 28px 6px 12px',
@@ -45,7 +45,7 @@ function FocusSafeDropdown({ label, options, onChange }) {
           gap: '8px',
           height: '100%'
         }}
-        onMouseOver={e => !isOpen && (e.currentTarget.style.background = 'rgba(255,255,255,0.12)')}
+        onMouseOver={e => !isOpen && (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
         onMouseOut={e => !isOpen && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
       >
         {label}
@@ -58,16 +58,16 @@ function FocusSafeDropdown({ label, options, onChange }) {
           top: '100%',
           left: 0,
           marginTop: '8px',
-          background: 'rgba(20, 20, 25, 0.45)',
-          backdropFilter: 'blur(50px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(50px) saturate(200%)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderTop: '1px solid rgba(255,255,255,0.3)',
+          background: 'rgba(255, 255, 255, 0.08)',
+          backdropFilter: 'blur(30px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(140%)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          borderTop: '1px solid rgba(255,255,255,0.4)',
           borderBottom: '1px solid rgba(255,255,255,0.05)',
           borderRadius: '12px',
           padding: '6px',
           minWidth: '160px',
-          boxShadow: '0 30px 60px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.15), inset 0 -1px 2px rgba(255,255,255,0.05)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -1px 2px rgba(255,255,255,0.1)',
           zIndex: 10001,
           display: 'flex',
           flexDirection: 'column',
@@ -956,11 +956,11 @@ export default function NotionHubPage() {
         {/* Floating Toolbar */}
         <div ref={toolbarRef} style={{
           position: 'fixed',
-          background: 'rgba(20, 20, 25, 0.45)',
-          backdropFilter: 'blur(50px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(50px) saturate(200%)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderTop: '1px solid rgba(255,255,255,0.3)',
+          background: 'rgba(255, 255, 255, 0.08)',
+          backdropFilter: 'blur(30px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(140%)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          borderTop: '1px solid rgba(255,255,255,0.4)',
           borderBottom: '1px solid rgba(255,255,255,0.05)',
           borderRadius: '16px',
           padding: '8px 10px',
@@ -970,7 +970,7 @@ export default function NotionHubPage() {
           alignItems: 'center',
           gap: '8px',
           zIndex: 10000,
-          boxShadow: '0 30px 60px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.15), inset 0 -1px 2px rgba(255,255,255,0.05)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -1px 2px rgba(255,255,255,0.1)',
           opacity: 0,
           transform: 'scale(0.95) translateY(5px)',
           pointerEvents: 'none',
@@ -990,6 +990,26 @@ export default function NotionHubPage() {
             ]}
             onChange={(val) => handleTurnInto({ target: { value: val } })}
           />
+
+          <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
+
+          {/* Undo / Redo */}
+          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 8px', borderRadius: '8px', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+            onMouseDown={(e) => { e.preventDefault(); document.execCommand('undo'); }}
+            title="Undo"
+          >
+            <Undo2 size={16} />
+          </button>
+          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 8px', borderRadius: '8px', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+            onMouseDown={(e) => { e.preventDefault(); document.execCommand('redo'); }}
+            title="Redo"
+          >
+            <Redo2 size={16} />
+          </button>
 
           <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
 
@@ -1755,6 +1775,15 @@ function applyDesignerPreset(presetName, range) {
 function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter }) {
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const tagRef = useRef(null);
+
+  useEffect(() => {
+    // Immediately convert React-managed children to an HTML string on mount.
+    // This prevents React from crashing if we manually mutate the DOM later via applyDesignerPreset.
+    if (tagRef.current && localText === null) {
+      setLocalText(tagRef.current.innerHTML);
+    }
+  }, []);
 
   const rawText = initialRichTextArr?.map(t => t.plain_text).join('') || '';
 
@@ -1814,6 +1843,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
         />
       ) : (
         <Tag
+          ref={tagRef}
           contentEditable
           suppressContentEditableWarning
           onBlur={handleBlur}
