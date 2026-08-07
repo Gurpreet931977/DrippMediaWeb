@@ -319,47 +319,22 @@ export default function NotionHubPage() {
 
       {/* Top Header */}
       <header style={{
-        padding: '24px 40px',
+        padding: '16px 40px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '20px',
+        justifyContent: 'flex-end',
+        gap: '16px',
         background: 'rgba(5, 5, 8, 0.7)',
         backdropFilter: 'blur(12px)',
         position: 'sticky',
         top: 0,
         zIndex: 50
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '14px',
-            background: 'linear-gradient(135deg, #ebd73f 0%, #b8a623 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#000',
-            boxShadow: '0 10px 25px rgba(235, 215, 63, 0.3)'
-          }}>
-            <BookOpen size={24} strokeWidth={2.5} />
-          </div>
-          <div>
-            <h1 className="notion-font" style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>
-              {isGenz ? 'BRAIN VAULT.' : 'STRATEGY HUB.'}
-            </h1>
-            <p className="notion-font" style={{ fontSize: '0.85rem', color: '#777', margin: '4px 0 0 0', fontWeight: 500 }}>
-              Live synchronized strategy workspace
-            </p>
-          </div>
-        </div>
-
         {/* Search & Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '300px' }}>
-            <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#ebd73f' }} />
+            <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
             <input
               type="text"
               className="notion-font"
@@ -368,18 +343,17 @@ export default function NotionHubPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: '100%',
-                padding: '12px 16px 12px 42px',
-                background: 'rgba(0, 0, 0, 0.4)',
-                border: '1px solid rgba(235, 215, 63, 0.3)',
-                borderRadius: '12px',
+                padding: '10px 16px 10px 42px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '10px',
                 color: '#fff',
                 fontSize: '0.85rem',
                 outline: 'none',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2), 0 0 15px rgba(235, 215, 63, 0.05)',
-                transition: 'all 0.3s'
+                transition: 'all 0.2s'
               }}
-              onFocus={(e) => e.target.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2), 0 0 20px rgba(235, 215, 63, 0.15)'}
-              onBlur={(e) => e.target.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2), 0 0 15px rgba(235, 215, 63, 0.05)'}
+              onFocus={(e) => { e.target.style.background = 'rgba(255, 255, 255, 0.05)'; e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)'; }}
+              onBlur={(e) => { e.target.style.background = 'rgba(255, 255, 255, 0.03)'; e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'; }}
             />
           </form>
 
@@ -388,21 +362,20 @@ export default function NotionHubPage() {
             disabled={loading}
             className="notion-font"
             style={{
-              padding: '12px 20px',
-              background: 'rgba(255, 255, 255, 0.05)',
+              padding: '10px 16px',
+              background: 'rgba(255, 255, 255, 0.03)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '12px',
+              borderRadius: '10px',
               color: '#fff',
               fontSize: '0.85rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              transition: 'all 0.2s ease',
-              fontWeight: 600
+              transition: 'all 0.2s'
             }}
-            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = '#ebd73f'; }}
-            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'}
           >
             <RefreshCw size={16} className={loading ? 'notion-pulse' : ''} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
             <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
@@ -476,7 +449,7 @@ export default function NotionHubPage() {
         <div className="notion-glass-card" style={{
           display: 'flex',
           flexDirection: 'column',
-          height: 'calc(100vh - 180px)',
+          height: 'calc(100vh - 120px)',
           overflow: 'hidden'
         }}>
           {/* Filters */}
@@ -563,7 +536,7 @@ export default function NotionHubPage() {
           alignItems: 'flex-start',
           overflow: 'hidden'
         } : {
-          height: 'calc(100vh - 180px)',
+          height: 'calc(100vh - 120px)',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
@@ -576,7 +549,7 @@ export default function NotionHubPage() {
           height: isZenithMode ? '100vh' : 'calc(100vh - 120px)',
           width: isZenithMode ? '100vw' : '100%',
           maxWidth: isZenithMode ? '900px' : '100%',
-          padding: isZenithMode ? '60px 40px' : '0'
+          padding: isZenithMode ? '60px 0 0 0' : '0'
         }}>
           {selectedItem ? (
               <div 
@@ -592,7 +565,8 @@ export default function NotionHubPage() {
                 scrollBehavior: 'smooth',
                 width: '100%',
                 overflowWrap: 'break-word',
-                wordWrap: 'break-word'
+                wordWrap: 'break-word',
+                padding: '40px'
               }}
             >
               {/* Reading Progress Bar */}
@@ -726,21 +700,20 @@ export default function NotionHubPage() {
                     className="notion-font"
                     style={{
                       padding: '10px 16px',
-                      background: 'rgba(235, 215, 63, 0.1)',
-                      border: '1px solid rgba(235, 215, 63, 0.3)',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
                       borderRadius: '10px',
-                      color: '#ebd73f',
+                      color: '#fff',
                       fontSize: '0.85rem',
-                      fontWeight: 700,
+                      fontWeight: 600,
                       textDecoration: 'none',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
                       transition: 'all 0.2s',
-                      boxShadow: '0 4px 12px rgba(235, 215, 63, 0.1)'
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.2)'}
-                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                   >
                     Open Document <ExternalLink size={16} />
                   </a>
@@ -790,7 +763,7 @@ export default function NotionHubPage() {
         {tocItems.length > 0 && (
           <div className="notion-glass-card" style={{
             padding: '24px',
-            height: 'calc(100vh - 180px)',
+            height: 'calc(100vh - 120px)',
             overflowY: 'auto'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
