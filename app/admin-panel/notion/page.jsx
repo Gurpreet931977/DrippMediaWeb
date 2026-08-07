@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, ChevronDown, 
-  FileText, Database, CheckSquare, Sparkles, AlertCircle, Info, LayerGroup
+  FileText, Database, CheckSquare, Sparkles, AlertCircle, Info, LayoutList
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
 
@@ -12,10 +12,15 @@ export default function NotionHubPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('all'); // 'all', 'page', 'database'
   const [selectedItem, setSelectedItem] = useState(null);
   const [docContent, setDocContent] = useState(null);
   const [contentLoading, setContentLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Scroll progress for the viewer
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const contentRef = useRef(null);
 
   // Fetch shared Notion items
   const fetchNotionItems = useCallback(async (query = '') => {
@@ -35,7 +40,6 @@ export default function NotionHubPage() {
 
       setItems(data.items || []);
       
-      // Auto-select first item if available and none selected
       if (data.items && data.items.length > 0 && !selectedItem) {
         setSelectedItem(data.items[0]);
       }
@@ -51,6 +55,7 @@ export default function NotionHubPage() {
   const fetchPageContent = useCallback(async (pageId) => {
     if (!pageId) return;
     setContentLoading(true);
+    setScrollProgress(0);
     try {
       const res = await fetch(`/api/admin/notion?action=blocks&pageId=${pageId}`);
       const data = await res.json();
@@ -83,12 +88,32 @@ export default function NotionHubPage() {
     fetchNotionItems(searchQuery);
   };
 
+  const handleScroll = () => {
+    if (!contentRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = contentRef.current;
+    const windowHeight = scrollHeight - clientHeight;
+    const progress = windowHeight > 0 ? (scrollTop / windowHeight) * 100 : 0;
+    setScrollProgress(progress);
+  };
+
+  // Extract Table of Contents
+  const tocItems = docContent?.blocks?.filter(b => b.type.startsWith('heading_'))?.map((block, i) => {
+    const text = block[block.type]?.rich_text?.map(t => t.plain_text).join('') || 'Untitled';
+    return { id: block.id, type: block.type, text, index: i };
+  }) || [];
+
+  // Filter Items
+  const filteredItems = items.filter(item => {
+    if (filterType === 'all') return true;
+    return item.object === filterType;
+  });
+
   return (
     <div style={{ 
       fontFamily: "'Clash Display', 'Panchang', sans-serif", 
       color: '#fff', 
       minHeight: '100vh', 
-      background: '#050507',
+      background: '#030305',
       display: 'flex',
       flexDirection: 'column'
     }}>
@@ -96,69 +121,144 @@ export default function NotionHubPage() {
         .notion-font {
           font-family: 'Clash Display', 'Panchang', sans-serif !important;
         }
+        
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(235, 215, 63, 0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(235, 215, 63, 0.5); }
+
         .notion-glass-card {
-          background: rgba(18, 18, 22, 0.7);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
+          background: rgba(12, 12, 16, 0.6);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.04);
+          border-radius: 20px;
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+          position: relative;
+        }
+        
+        .notion-item-btn {
+          width: 100%;
+          text-align: left;
+          padding: 14px 16px;
+          border-radius: 14px;
+          border: 1px solid transparent;
+          background: transparent;
+          cursor: pointer;
+          display: flex;
+          alignItems: center;
+          gap: 14px;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          outline: none;
         }
         .notion-item-active {
-          background: rgba(235, 215, 63, 0.12) !important;
-          border-color: rgba(235, 215, 63, 0.4) !important;
+          background: rgba(235, 215, 63, 0.08) !important;
+          border-color: rgba(235, 215, 63, 0.2) !important;
+          box-shadow: 0 8px 24px rgba(235, 215, 63, 0.05);
         }
-        .notion-item-hover:hover {
-          background: rgba(255, 255, 255, 0.04);
-          border-color: rgba(255, 255, 255, 0.15);
+        .notion-item-btn:hover:not(.notion-item-active) {
+          background: rgba(255, 255, 255, 0.03);
+          border-color: rgba(255, 255, 255, 0.08);
+          transform: translateX(4px);
         }
-        .notion-pulse {
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+        .filter-chip {
+          padding: 6px 14px;
+          border-radius: 30px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: transparent;
+          color: #888;
         }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: .5; }
+        .filter-chip.active {
+          background: rgba(235, 215, 63, 0.15);
+          border-color: rgba(235, 215, 63, 0.4);
+          color: #ebd73f;
         }
+        .filter-chip:hover:not(.active) {
+          background: rgba(255, 255, 255, 0.05);
+          color: #fff;
+        }
+
+        .block-enter {
+          animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes slideUpFade {
+          from { opacity: 0; transform: translateY(15px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toc-link {
+          display: block;
+          padding: 6px 12px;
+          color: #666;
+          text-decoration: none;
+          font-size: 0.8rem;
+          border-left: 2px solid transparent;
+          transition: all 0.2s;
+          cursor: pointer;
+        }
+        .toc-link:hover {
+          color: #ebd73f;
+          border-left-color: #ebd73f;
+          background: rgba(235, 215, 63, 0.05);
+        }
+        
+        .shimmer {
+          background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite linear;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
       `}</style>
 
       {/* Top Header */}
       <header style={{
-        padding: '24px 32px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        padding: '24px 40px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '16px',
-        background: 'rgba(10, 10, 14, 0.8)'
+        gap: '20px',
+        background: 'rgba(5, 5, 8, 0.7)',
+        backdropFilter: 'blur(12px)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
           <div style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #ebd73f 0%, #d4b810 100%)',
+            width: '48px',
+            height: '48px',
+            borderRadius: '14px',
+            background: 'linear-gradient(135deg, #ebd73f 0%, #b8a623 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#000',
-            boxShadow: '0 8px 20px rgba(235, 215, 63, 0.25)'
+            boxShadow: '0 10px 25px rgba(235, 215, 63, 0.3)'
           }}>
-            <BookOpen size={24} />
+            <BookOpen size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <h1 className="notion-font" style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>
-              {isGenz ? 'BRAIN VAULT.' : 'NOTION HUB & STRATEGY.'}
+            <h1 className="notion-font" style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>
+              {isGenz ? 'BRAIN VAULT.' : 'STRATEGY HUB.'}
             </h1>
-            <p className="notion-font" style={{ fontSize: '0.82rem', color: '#888', margin: '4px 0 0 0' }}>
-              {isGenz ? 'Live synced notes & masterplans from Notion' : 'Real-time sync of Dripp Media notes, databases & business plans'}
+            <p className="notion-font" style={{ fontSize: '0.85rem', color: '#777', margin: '4px 0 0 0', fontWeight: 500 }}>
+              Live synchronized Notion workspace
             </p>
           </div>
         </div>
 
-        {/* Action Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '260px' }}>
-            <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#777' }} />
+        {/* Search & Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '300px' }}>
+            <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#ebd73f' }} />
             <input
               type="text"
               className="notion-font"
@@ -167,15 +267,18 @@ export default function NotionHubPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 14px 10px 38px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '10px',
+                padding: '12px 16px 12px 42px',
+                background: 'rgba(0, 0, 0, 0.4)',
+                border: '1px solid rgba(235, 215, 63, 0.3)',
+                borderRadius: '12px',
                 color: '#fff',
                 fontSize: '0.85rem',
                 outline: 'none',
-                boxSizing: 'border-box'
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2), 0 0 15px rgba(235, 215, 63, 0.05)',
+                transition: 'all 0.3s'
               }}
+              onFocus={(e) => e.target.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2), 0 0 20px rgba(235, 215, 63, 0.15)'}
+              onBlur={(e) => e.target.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2), 0 0 15px rgba(235, 215, 63, 0.05)'}
             />
           </form>
 
@@ -184,135 +287,114 @@ export default function NotionHubPage() {
             disabled={loading}
             className="notion-font"
             style={{
-              padding: '10px 18px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '10px',
+              padding: '12px 20px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
               color: '#fff',
               fontSize: '0.85rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              fontWeight: 600
             }}
+            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = '#ebd73f'; }}
+            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; }}
           >
-            <RefreshCw size={16} className={loading ? 'notion-pulse' : ''} />
+            <RefreshCw size={16} className={loading ? 'notion-pulse' : ''} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
             Refresh
           </button>
         </div>
       </header>
 
-      {/* Error Alert */}
-      {error && (
-        <div style={{
-          margin: '20px 32px 0 32px',
-          padding: '16px 20px',
-          background: 'rgba(239, 68, 68, 0.1)',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          borderRadius: '12px',
-          color: '#f87171',
-          fontSize: '0.88rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <AlertCircle size={20} />
-          <span className="notion-font">{error}</span>
-        </div>
-      )}
-
-      {/* Main Workspace split into List (Left) and Block Viewer (Right) */}
+      {/* Main Workspace Layout (Left: Nav, Center: Content, Right: TOC) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '320px 1fr',
+        gridTemplateColumns: tocItems.length > 0 ? '340px 1fr 280px' : '340px 1fr',
         gap: '24px',
-        padding: '24px 32px',
-        flex: 1
+        padding: '32px 40px',
+        flex: 1,
+        maxWidth: '1800px',
+        margin: '0 auto',
+        width: '100%'
       }}>
-        {/* Left Panel: Shared Documents Catalog */}
+        
+        {/* LEFT PANEL: Document Catalog */}
         <div className="notion-glass-card" style={{
-          padding: '20px',
           display: 'flex',
           flexDirection: 'column',
-          height: 'calc(100vh - 170px)',
+          height: 'calc(100vh - 180px)',
           overflow: 'hidden'
         }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '16px',
-            paddingBottom: '12px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
-          }}>
-            <span className="notion-font" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Connected Notes ({items.length})
-            </span>
-            <Sparkles size={16} style={{ color: '#ebd73f' }} />
+          {/* Filters */}
+          <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <span className="notion-font" style={{ fontSize: '0.8rem', fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Catalog ({filteredItems.length})
+              </span>
+              <Sparkles size={16} style={{ color: '#ebd73f' }} />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {['all', 'page', 'database'].map((type) => (
+                <button
+                  key={type}
+                  className={`notion-font filter-chip ${filterType === type ? 'active' : ''}`}
+                  onClick={() => setFilterType(type)}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)}s
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* List */}
+          <div style={{ overflowY: 'auto', flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {loading && items.length === 0 ? (
-              <div style={{ padding: '30px 10px', textAlign: 'center', color: '#777' }} className="notion-font">
-                Loading Notion Workspace...
-              </div>
-            ) : items.length === 0 ? (
-              <div style={{
-                padding: '24px 16px',
-                textAlign: 'center',
-                background: 'rgba(255,255,255,0.02)',
-                borderRadius: '12px',
-                border: '1px dashed rgba(255,255,255,0.1)'
-              }}>
-                <Info size={28} style={{ color: '#ebd73f', marginBottom: '12px' }} />
-                <h4 className="notion-font" style={{ margin: '0 0 8px 0', fontSize: '0.9rem' }}>No Shared Pages Found</h4>
-                <p className="notion-font" style={{ fontSize: '0.78rem', color: '#888', lineHeight: 1.5 }}>
-                  Share pages from your Notion App by clicking <strong>...</strong> → <strong>Add connections</strong> → select <strong>Dripp Media Admin</strong>.
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="shimmer" style={{ height: '64px', borderRadius: '14px', marginBottom: '8px' }} />
+              ))
+            ) : filteredItems.length === 0 ? (
+              <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                <Info size={32} style={{ color: '#ebd73f', margin: '0 auto 16px auto', opacity: 0.8 }} />
+                <h4 className="notion-font" style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>No Documents Found</h4>
+                <p className="notion-font" style={{ fontSize: '0.8rem', color: '#777', lineHeight: 1.6 }}>
+                  Adjust your filters or share pages via the Notion app.
                 </p>
               </div>
             ) : (
-              items.map((item) => {
+              filteredItems.map((item) => {
                 const isSelected = selectedItem?.id === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => setSelectedItem(item)}
-                    className={`notion-font notion-item-hover ${isSelected ? 'notion-item-active' : ''}`}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      transition: 'all 0.2s ease',
-                      outline: 'none'
-                    }}
+                    className={`notion-font notion-item-btn ${isSelected ? 'notion-item-active' : ''}`}
                   >
-                    <span style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center' }}>
-                      {item.icon || (item.object === 'database' ? <Database size={18} style={{ color: '#ebd73f' }} /> : <FileText size={18} style={{ color: '#aaa' }} />)}
+                    <span style={{ fontSize: '1.4rem', display: 'flex', alignItems: 'center', opacity: isSelected ? 1 : 0.7 }}>
+                      {item.icon || (item.object === 'database' ? '🗃️' : '📄')}
                     </span>
-                    <div style={{ overflow: 'hidden', flex: 1 }}>
+                    <div style={{ overflow: 'hidden', flex: 1, textAlign: 'left' }}>
                       <div style={{
-                        fontSize: '0.88rem',
-                        fontWeight: 600,
+                        fontSize: '0.92rem',
+                        fontWeight: 700,
                         color: isSelected ? '#ebd73f' : '#fff',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
-                        textOverflow: 'ellipsis'
+                        textOverflow: 'ellipsis',
+                        marginBottom: '4px'
                       }}>
                         {item.title}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: '#666', marginTop: '2px' }}>
-                        {item.lastEditedTime ? new Date(item.lastEditedTime).toLocaleDateString() : 'Recent'}
+                      <div style={{ fontSize: '0.72rem', color: '#666', fontWeight: 500, letterSpacing: '0.02em' }}>
+                        {item.lastEditedTime ? new Date(item.lastEditedTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'} 
+                        {' • '} <span style={{ textTransform: 'capitalize' }}>{item.object}</span>
                       </div>
                     </div>
-                    <ChevronRight size={14} style={{ color: isSelected ? '#ebd73f' : '#444' }} />
+                    <ChevronRight size={16} style={{ color: isSelected ? '#ebd73f' : '#444', transform: isSelected ? 'translateX(2px)' : 'none', transition: 'transform 0.2s' }} />
                   </button>
                 );
               })
@@ -320,41 +402,53 @@ export default function NotionHubPage() {
           </div>
         </div>
 
-        {/* Right Panel: Page Header & Rendered Notion Content */}
+        {/* CENTER PANEL: Main Reader */}
         <div className="notion-glass-card" style={{
-          padding: '32px',
-          height: 'calc(100vh - 170px)',
-          overflowY: 'auto',
+          height: 'calc(100vh - 180px)',
+          overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          position: 'relative'
         }}>
+          {/* Reading Progress Bar */}
+          {selectedItem && (
+            <div style={{ width: '100%', height: '3px', background: 'rgba(255,255,255,0.05)', position: 'absolute', top: 0, left: 0, zIndex: 10 }}>
+              <div style={{ width: `${scrollProgress}%`, height: '100%', background: '#ebd73f', transition: 'width 0.1s ease-out', boxShadow: '0 0 10px #ebd73f' }} />
+            </div>
+          )}
+
           {selectedItem ? (
-            <div>
-              {/* Document Banner & Cover Image if present */}
+            <div 
+              ref={contentRef}
+              onScroll={handleScroll}
+              style={{ overflowY: 'auto', flex: 1, padding: '40px 48px', scrollBehavior: 'smooth' }}
+            >
+              {/* Cover Image */}
               {docContent?.page?.cover && (
                 <div style={{
-                  height: '140px',
+                  height: '180px',
                   width: '100%',
-                  borderRadius: '12px',
+                  borderRadius: '16px',
                   backgroundImage: `url(${docContent.page.cover})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  marginBottom: '24px'
+                  marginBottom: '32px',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
                 }} />
               )}
 
               {/* Header Info */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <span style={{ fontSize: '2.4rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+                  <span style={{ fontSize: '3rem', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))' }}>
                     {docContent?.page?.icon || selectedItem.icon || '📄'}
                   </span>
                   <div>
-                    <h2 className="notion-font" style={{ fontSize: '1.6rem', fontWeight: 700, margin: 0, color: '#ebd73f' }}>
+                    <h2 className="notion-font" style={{ fontSize: '2.2rem', fontWeight: 800, margin: '0 0 8px 0', color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                       {docContent?.page?.title || selectedItem.title}
                     </h2>
-                    <p className="notion-font" style={{ fontSize: '0.78rem', color: '#777', margin: '4px 0 0 0' }}>
-                      Last updated: {selectedItem.lastEditedTime ? new Date(selectedItem.lastEditedTime).toLocaleString() : 'N/A'}
+                    <p className="notion-font" style={{ fontSize: '0.85rem', color: '#777', margin: 0, fontWeight: 500 }}>
+                      Last updated: <span style={{ color: '#aaa' }}>{selectedItem.lastEditedTime ? new Date(selectedItem.lastEditedTime).toLocaleString() : 'N/A'}</span>
                     </p>
                   </div>
                 </div>
@@ -365,57 +459,110 @@ export default function NotionHubPage() {
                   rel="noopener noreferrer"
                   className="notion-font"
                   style={{
-                    padding: '8px 14px',
+                    padding: '10px 16px',
                     background: 'rgba(235, 215, 63, 0.1)',
                     border: '1px solid rgba(235, 215, 63, 0.3)',
-                    borderRadius: '8px',
+                    borderRadius: '10px',
                     color: '#ebd73f',
-                    fontSize: '0.82rem',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
                     textDecoration: 'none',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 12px rgba(235, 215, 63, 0.1)'
                   }}
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.2)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
                 >
-                  Open in Notion <ExternalLink size={14} />
+                  Edit in Notion <ExternalLink size={16} />
                 </a>
               </div>
 
-              <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '24px 0' }} />
-
-              {/* Rendered Document Content Blocks */}
+              {/* Rendered Content */}
               {contentLoading ? (
-                <div style={{ padding: '60px 0', textAlign: 'center', color: '#888' }} className="notion-font">
-                  Fetching live content from Notion...
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '40px' }}>
+                  <div className="shimmer block-enter" style={{ height: '40px', width: '60%', borderRadius: '8px' }} />
+                  <div className="shimmer block-enter" style={{ height: '20px', width: '100%', borderRadius: '4px', animationDelay: '0.1s' }} />
+                  <div className="shimmer block-enter" style={{ height: '20px', width: '90%', borderRadius: '4px', animationDelay: '0.2s' }} />
+                  <div className="shimmer block-enter" style={{ height: '20px', width: '95%', borderRadius: '4px', animationDelay: '0.3s' }} />
+                  <div className="shimmer block-enter" style={{ height: '100px', width: '100%', borderRadius: '12px', marginTop: '20px', animationDelay: '0.4s' }} />
                 </div>
               ) : docContent?.blocks?.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {docContent.blocks.map((block) => (
-                    <NotionBlockRenderer key={block.id} block={block} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '60px' }}>
+                  {docContent.blocks.map((block, i) => (
+                    <div key={block.id} id={`block-${block.id}`} className="block-enter" style={{ animationDelay: `${Math.min(i * 0.03, 1)}s` }}>
+                      <NotionBlockRenderer block={block} />
+                    </div>
                   ))}
                 </div>
               ) : (
-                <div style={{ padding: '40px', textAlign: 'center', color: '#666', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }} className="notion-font">
-                  This document has no content blocks yet.
+                <div style={{ padding: '60px 40px', textAlign: 'center', color: '#555', background: 'rgba(255,255,255,0.01)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.05)' }} className="notion-font">
+                  <Database size={48} style={{ color: '#444', marginBottom: '20px' }} />
+                  <h3 style={{ fontSize: '1.2rem', color: '#888', margin: '0 0 10px 0' }}>Empty Document</h3>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}>This page has no content blocks or could not be fully read.</p>
                 </div>
               )}
             </div>
           ) : (
-            <div style={{ margin: 'auto', textAlign: 'center', color: '#777', maxWidth: '400px' }}>
-              <BookOpen size={48} style={{ color: '#ebd73f', marginBottom: '16px', opacity: 0.8 }} />
-              <h3 className="notion-font" style={{ fontSize: '1.2rem', margin: '0 0 8px 0', color: '#fff' }}>Select a Notion Document</h3>
-              <p className="notion-font" style={{ fontSize: '0.85rem', color: '#888', lineHeight: 1.6 }}>
-                Choose any note or business plan from the catalog on the left to read its live contents directly inside your Admin Panel.
+            <div style={{ margin: 'auto', textAlign: 'center', color: '#777', maxWidth: '420px', padding: '40px' }}>
+              <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(235, 215, 63, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto' }}>
+                <BookOpen size={40} style={{ color: '#ebd73f' }} />
+              </div>
+              <h3 className="notion-font" style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 12px 0', color: '#fff' }}>Select a Document</h3>
+              <p className="notion-font" style={{ fontSize: '0.9rem', color: '#888', lineHeight: 1.6 }}>
+                Choose any note, database, or business plan from the catalog on the left to read its live contents with a premium viewing experience.
               </p>
             </div>
           )}
         </div>
+
+        {/* RIGHT PANEL: Table of Contents (Only visible if doc has headings) */}
+        {tocItems.length > 0 && (
+          <div className="notion-glass-card" style={{
+            padding: '24px',
+            height: 'calc(100vh - 180px)',
+            overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <LayoutList size={18} style={{ color: '#ebd73f' }} />
+              <span className="notion-font" style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                On this page
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {tocItems.map((item) => {
+                let indent = 0;
+                if (item.type === 'heading_2') indent = 12;
+                if (item.type === 'heading_3') indent = 24;
+                
+                return (
+                  <div
+                    key={item.id}
+                    className="notion-font toc-link"
+                    style={{ marginLeft: `${indent}px` }}
+                    onClick={() => {
+                      const el = document.getElementById(`block-${item.id}`);
+                      if (el && contentRef.current) {
+                        contentRef.current.scrollTo({ top: el.offsetTop - 60, behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    {item.text}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
 }
 
-// Sub-component to render Notion blocks cleanly using brand typography
+// Block Renderer Sub-component
 function NotionBlockRenderer({ block }) {
   const [toggleOpen, setToggleOpen] = useState(false);
 
@@ -423,11 +570,14 @@ function NotionBlockRenderer({ block }) {
     if (!richTextArr || richTextArr.length === 0) return null;
     return richTextArr.map((t, idx) => {
       let style = {};
-      if (t.annotations?.bold) style.fontWeight = '700';
+      if (t.annotations?.bold) style.fontWeight = '800';
       if (t.annotations?.italic) style.fontStyle = 'italic';
       if (t.annotations?.strikethrough) style.textDecoration = 'line-through';
       if (t.annotations?.underline) style.textDecoration = 'underline';
-      if (t.annotations?.color && t.annotations.color !== 'default') style.color = t.annotations.color;
+      if (t.annotations?.color && t.annotations.color !== 'default') {
+        // Map Notion colors to dark theme equivalents roughly
+        style.color = t.annotations.color.replace('_background', ''); 
+      }
 
       if (t.href) {
         return (
@@ -437,7 +587,7 @@ function NotionBlockRenderer({ block }) {
             target="_blank"
             rel="noopener noreferrer"
             className="notion-font"
-            style={{ ...style, color: '#ebd73f', textDecoration: 'underline' }}
+            style={{ ...style, color: '#ebd73f', textDecoration: 'underline', textUnderlineOffset: '4px' }}
           >
             {t.plain_text}
           </a>
@@ -454,39 +604,39 @@ function NotionBlockRenderer({ block }) {
   switch (block.type) {
     case 'heading_1':
       return (
-        <h1 className="notion-font" style={{ fontSize: '1.5rem', fontWeight: 700, margin: '16px 0 8px 0', color: '#ebd73f' }}>
+        <h1 className="notion-font" style={{ fontSize: '1.8rem', fontWeight: 800, margin: '32px 0 12px 0', color: '#ebd73f', letterSpacing: '-0.02em' }}>
           {renderRichText(block.heading_1?.rich_text)}
         </h1>
       );
 
     case 'heading_2':
       return (
-        <h2 className="notion-font" style={{ fontSize: '1.25rem', fontWeight: 700, margin: '14px 0 6px 0', color: '#fff' }}>
+        <h2 className="notion-font" style={{ fontSize: '1.4rem', fontWeight: 700, margin: '24px 0 10px 0', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '8px' }}>
           {renderRichText(block.heading_2?.rich_text)}
         </h2>
       );
 
     case 'heading_3':
       return (
-        <h3 className="notion-font" style={{ fontSize: '1.05rem', fontWeight: 600, margin: '12px 0 4px 0', color: '#ddd' }}>
+        <h3 className="notion-font" style={{ fontSize: '1.15rem', fontWeight: 600, margin: '16px 0 8px 0', color: '#ddd' }}>
           {renderRichText(block.heading_3?.rich_text)}
         </h3>
       );
 
     case 'paragraph':
       const text = renderRichText(block.paragraph?.rich_text);
-      if (!text) return <div style={{ height: '8px' }} />;
+      if (!text) return <div style={{ height: '12px' }} />;
       return (
-        <p className="notion-font" style={{ fontSize: '0.9rem', lineHeight: 1.6, color: '#ccc', margin: 0 }}>
+        <p className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.7, color: '#b3b3b3', margin: '4px 0 12px 0' }}>
           {text}
         </p>
       );
 
     case 'bulleted_list_item':
       return (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '8px' }}>
-          <span style={{ color: '#ebd73f', fontSize: '1rem', lineHeight: '1.5rem' }}>•</span>
-          <div className="notion-font" style={{ fontSize: '0.9rem', lineHeight: 1.6, color: '#ccc' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '8px', marginBottom: '8px' }}>
+          <span style={{ color: '#ebd73f', fontSize: '1.2rem', lineHeight: '1.5rem', userSelect: 'none' }}>•</span>
+          <div className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.7, color: '#b3b3b3' }}>
             {renderRichText(block.bulleted_list_item?.rich_text)}
           </div>
         </div>
@@ -494,9 +644,9 @@ function NotionBlockRenderer({ block }) {
 
     case 'numbered_list_item':
       return (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '8px' }}>
-          <span className="notion-font" style={{ color: '#ebd73f', fontSize: '0.88rem', fontWeight: 600 }}>1.</span>
-          <div className="notion-font" style={{ fontSize: '0.9rem', lineHeight: 1.6, color: '#ccc' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '8px', marginBottom: '8px' }}>
+          <span className="notion-font" style={{ color: '#ebd73f', fontSize: '0.95rem', fontWeight: 700, marginTop: '2px', userSelect: 'none' }}>#</span>
+          <div className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.7, color: '#b3b3b3' }}>
             {renderRichText(block.numbered_list_item?.rich_text)}
           </div>
         </div>
@@ -505,24 +655,28 @@ function NotionBlockRenderer({ block }) {
     case 'to_do':
       const isChecked = block.to_do?.checked;
       return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '4px', marginBottom: '8px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px', borderRadius: '8px' }}>
           <span style={{
-            width: '18px',
-            height: '18px',
-            borderRadius: '4px',
-            border: isChecked ? '1px solid #ebd73f' : '1px solid #555',
-            background: isChecked ? 'rgba(235, 215, 63, 0.2)' : 'transparent',
+            width: '20px',
+            height: '20px',
+            borderRadius: '6px',
+            border: isChecked ? '2px solid #ebd73f' : '2px solid #555',
+            background: isChecked ? 'rgba(235, 215, 63, 0.15)' : 'rgba(0,0,0,0.3)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#ebd73f'
+            color: '#ebd73f',
+            marginTop: '2px',
+            flexShrink: 0
           }}>
-            {isChecked && <CheckSquare size={12} />}
+            {isChecked && <CheckSquare size={14} strokeWidth={3} />}
           </span>
           <div className="notion-font" style={{
-            fontSize: '0.9rem',
-            color: isChecked ? '#777' : '#ccc',
-            textDecoration: isChecked ? 'line-through' : 'none'
+            fontSize: '1rem',
+            lineHeight: 1.6,
+            color: isChecked ? '#666' : '#eee',
+            textDecoration: isChecked ? 'line-through' : 'none',
+            transition: 'color 0.2s'
           }}>
             {renderRichText(block.to_do?.rich_text)}
           </div>
@@ -532,16 +686,19 @@ function NotionBlockRenderer({ block }) {
     case 'callout':
       return (
         <div style={{
-          padding: '14px 18px',
-          background: 'rgba(235, 215, 63, 0.06)',
+          padding: '20px 24px',
+          background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.08) 0%, rgba(235, 215, 63, 0.02) 100%)',
           border: '1px solid rgba(235, 215, 63, 0.2)',
+          borderLeft: '4px solid #ebd73f',
           borderRadius: '12px',
           display: 'flex',
           alignItems: 'flex-start',
-          gap: '12px'
+          gap: '16px',
+          margin: '16px 0',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
         }}>
-          <span style={{ fontSize: '1.2rem' }}>{block.callout?.icon?.emoji || '💡'}</span>
-          <div className="notion-font" style={{ fontSize: '0.9rem', lineHeight: 1.6, color: '#eee' }}>
+          <span style={{ fontSize: '1.6rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>{block.callout?.icon?.emoji || '💡'}</span>
+          <div className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.7, color: '#fff', fontWeight: 500 }}>
             {renderRichText(block.callout?.rich_text)}
           </div>
         </div>
@@ -549,48 +706,63 @@ function NotionBlockRenderer({ block }) {
 
     case 'toggle':
       return (
-        <div style={{ borderLeft: '2px solid rgba(235, 215, 63, 0.3)', paddingLeft: '12px', margin: '4px 0' }}>
+        <div style={{ 
+          background: 'rgba(255,255,255,0.02)', 
+          border: '1px solid rgba(255,255,255,0.05)', 
+          borderRadius: '12px',
+          margin: '8px 0',
+          overflow: 'hidden'
+        }}>
           <button
             onClick={() => setToggleOpen(!toggleOpen)}
             className="notion-font"
             style={{
-              background: 'none',
+              width: '100%',
+              background: 'transparent',
               border: 'none',
               color: '#fff',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: 0,
-              fontSize: '0.9rem',
-              fontWeight: 600
+              gap: '10px',
+              padding: '12px 16px',
+              fontSize: '1rem',
+              fontWeight: 600,
+              textAlign: 'left'
             }}
           >
-            {toggleOpen ? <ChevronDown size={16} style={{ color: '#ebd73f' }} /> : <ChevronRight size={16} style={{ color: '#888' }} />}
+            <ChevronRight size={18} style={{ color: toggleOpen ? '#ebd73f' : '#888', transform: toggleOpen ? 'rotate(90deg)' : 'none', transition: 'all 0.2s' }} />
             {renderRichText(block.toggle?.rich_text)}
           </button>
 
-          {toggleOpen && block.children && (
-            <div style={{ marginTop: '10px', paddingLeft: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {block.children.map((child) => (
+          <div style={{
+            maxHeight: toggleOpen ? '2000px' : '0',
+            opacity: toggleOpen ? 1 : 0,
+            overflow: 'hidden',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            padding: toggleOpen ? '0 16px 16px 44px' : '0 16px 0 44px'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '16px' }}>
+              {block.children?.map((child) => (
                 <NotionBlockRenderer key={child.id} block={child} />
               ))}
             </div>
-          )}
+          </div>
         </div>
       );
 
     case 'quote':
       return (
         <blockquote style={{
-          borderLeft: '3px solid #ebd73f',
-          margin: '8px 0',
-          padding: '8px 16px',
-          background: 'rgba(255,255,255,0.02)',
-          borderRadius: '0 8px 8px 0',
-          fontSize: '0.92rem',
+          borderLeft: '4px solid #ebd73f',
+          margin: '16px 0',
+          padding: '16px 24px',
+          background: 'rgba(255,255,255,0.03)',
+          borderRadius: '0 12px 12px 0',
+          fontSize: '1.1rem',
           fontStyle: 'italic',
-          color: '#ddd'
+          color: '#e0e0e0',
+          lineHeight: 1.8
         }} className="notion-font">
           {renderRichText(block.quote?.rich_text)}
         </blockquote>
@@ -599,22 +771,35 @@ function NotionBlockRenderer({ block }) {
     case 'code':
       return (
         <div style={{
-          background: '#0d0d12',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: '8px',
-          padding: '14px',
-          fontSize: '0.85rem',
-          color: '#ebd73f',
-          overflowX: 'auto'
+          background: '#08080a',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '12px',
+          padding: '16px 20px',
+          margin: '16px 0',
+          fontSize: '0.9rem',
+          color: '#a3f08c', // Terminal green accent
+          overflowX: 'auto',
+          boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)'
         }} className="notion-font">
-          <pre style={{ margin: 0 }}>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f56' }} />
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffbd2e' }} />
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#27c93f' }} />
+          </div>
+          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}>
             {block.code?.rich_text?.map(t => t.plain_text).join('')}
           </pre>
         </div>
       );
 
     case 'divider':
-      return <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.08)', margin: '16px 0' }} />;
+      return (
+        <div style={{ 
+          height: '1px', 
+          background: 'linear-gradient(90deg, transparent, rgba(235, 215, 63, 0.3), transparent)', 
+          margin: '32px 0' 
+        }} />
+      );
 
     default:
       return null;
