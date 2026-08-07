@@ -169,11 +169,30 @@ export default function NotionHubPage() {
 
   const handleApplyPreset = (e) => {
     const presetName = e.target.value;
-    const text = window.getSelection().toString().trim();
-    if (presetName && text) {
-      applyDesignerPreset(presetName);
+    const range = savedRangeRef.current;
+    
+    if (presetName && range) {
+      applyDesignerPreset(presetName, range);
+      
+      const blockId = toolbarRef.current?.dataset.blockId;
+      const blockType = toolbarRef.current?.dataset.blockType;
+      
+      if (blockId && blockType) {
+        const blockEl = document.querySelector(`#block-${blockId} [contenteditable="true"]`);
+        if (blockEl) {
+          const richTextArray = parseHTMLToNotion(blockEl);
+          const plainText = richTextArray.map(r => r.text.content).join('');
+          fetch('/api/admin/notion/update', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ blockId, type: blockType, content: plainText, richTextArray })
+          });
+        }
+      }
+
       if (toolbarRef.current) {
         toolbarRef.current.style.opacity = '0';
+        toolbarRef.current.style.transform = 'scale(0.95) translateY(5px)';
         toolbarRef.current.style.pointerEvents = 'none';
       }
     }
@@ -185,26 +204,45 @@ export default function NotionHubPage() {
     
     const blockId = toolbarRef.current?.dataset.blockId;
     const currentType = toolbarRef.current?.dataset.blockType;
-    if (!blockId || !currentType) return;
+    if (!blockId || !currentType || !selectedItem?.id) return;
 
-    let richTextArray = null;
-    const block = docContent?.blocks?.find(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
-    if (block && block[currentType]) {
-      richTextArray = block[currentType].rich_text;
-    } else {
-      richTextArray = [{ text: { content: window.getSelection().anchorNode?.textContent || '' } }];
+    if (toolbarRef.current) {
+      toolbarRef.current.style.opacity = '0';
+      toolbarRef.current.style.pointerEvents = 'none';
     }
 
     try {
-      if (toolbarRef.current) {
-        toolbarRef.current.style.opacity = '0';
-        toolbarRef.current.style.pointerEvents = 'none';
+      let richTextArray = [];
+      const blockEl = document.querySelector(`#block-${blockId} [contenteditable="true"]`);
+      if (blockEl) {
+        richTextArray = parseHTMLToNotion(blockEl);
+      } else {
+        const block = docContent?.blocks?.find(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
+        richTextArray = block?.[currentType]?.rich_text || [];
       }
-      await fetch('/api/admin/notion/update', {
-        method: 'PATCH',
+
+      const appendRes = await fetch('/api/admin/notion/append', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blockId, type: newType, richTextArray })
+        body: JSON.stringify({
+          blockId: selectedItem.id,
+          type: newType,
+          afterBlockId: blockId,
+          richTextArray
+        })
       });
+      
+      const appendData = await appendRes.json();
+      const newBlockId = appendData.response?.results?.[0]?.id || appendData.response?.id;
+
+      if (appendRes.ok) {
+        await fetch('/api/admin/notion/update', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ blockId })
+        });
+      }
+
       fetchPageContent(selectedItem.id);
     } catch(err) {
       console.error(err);
@@ -236,12 +274,82 @@ export default function NotionHubPage() {
     }
   };
 
+  const handleDeleteBlock = async (blockId) => {
+    // Optimistic UI update
+    setDocContent(prev => {
+      if (!prev || !prev.blocks) return prev;
+      return {
+        ...prev,
+        blocks: prev.blocks.filter(b => b.id !== blockId)
+      };
+    });
+    try {
+      await fetch('/api/admin/notion/update', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockId })
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleInsertBlockAfter = async (currentBlockId, type = 'paragraph') => {
+    if (!selectedItem?.id) return;
+    
+    // Optimistic UI update to feel instant
+    const tempId = `temp-${Date.now()}`;
+    const newBlock = { id: tempId, type, [type]: { rich_text: [] } };
+    
+    setDocContent(prev => {
+      if (!prev || !prev.blocks) return prev;
+      const index = prev.blocks.findIndex(b => b.id === currentBlockId);
+      if (index === -1) return prev;
+      
+      const newBlocks = [...prev.blocks];
+      newBlocks.splice(index + 1, 0, newBlock);
+      return { ...prev, blocks: newBlocks };
+    });
+
+    try {
+      const res = await fetch('/api/admin/notion/append', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          blockId: selectedItem.id, 
+          type, 
+          afterBlockId: currentBlockId 
+        })
+      });
+      if (res.ok) {
+        await fetchPageContent(selectedItem.id);
+        // Auto-focus the new block after it loads
+        setTimeout(() => {
+          const blocks = document.querySelectorAll('.block-enter [contenteditable="true"]');
+          let found = false;
+          for (let i = 0; i < blocks.length; i++) {
+            if (blocks[i].closest(`[id="block-${currentBlockId}"]`)) {
+              if (blocks[i+1]) {
+                blocks[i+1].focus();
+                found = true;
+              }
+              break;
+            }
+          }
+        }, 300);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     const handleSelection = () => {
       const selection = window.getSelection();
       if (!selection || selection.isCollapsed) {
         if (toolbarRef.current) {
           toolbarRef.current.style.opacity = '0';
+          toolbarRef.current.style.transform = 'scale(0.95) translateY(5px)';
           toolbarRef.current.style.pointerEvents = 'none';
         }
         return;
@@ -251,6 +359,7 @@ export default function NotionHubPage() {
       if (!text) {
         if (toolbarRef.current) {
           toolbarRef.current.style.opacity = '0';
+          toolbarRef.current.style.transform = 'scale(0.95) translateY(5px)';
           toolbarRef.current.style.pointerEvents = 'none';
         }
         return;
@@ -258,6 +367,7 @@ export default function NotionHubPage() {
 
       if (contentRef.current && contentRef.current.contains(selection.anchorNode)) {
         const range = selection.getRangeAt(0);
+        savedRangeRef.current = range.cloneRange();
         const rect = range.getBoundingClientRect();
         
         let blockId = '';
@@ -269,23 +379,29 @@ export default function NotionHubPage() {
         }
 
         if (toolbarRef.current) {
-          let top = rect.top - 70;
-          let left = rect.left + rect.width / 2;
+          // Temporarily make visible to get accurate dimensions if it was 0
+          const wasPointerEvents = toolbarRef.current.style.pointerEvents;
           
-          if (top < 10) top = rect.bottom + 10;
+          const toolbarWidth = toolbarRef.current.offsetWidth || 600;
+          const toolbarHeight = toolbarRef.current.offsetHeight || 70;
           
-          const toolbarWidth = toolbarRef.current.offsetWidth || 350;
-          const halfWidth = toolbarWidth / 2;
+          let top = rect.top - toolbarHeight - 15; // 15px gap above
+          let left = rect.left + (rect.width / 2) - (toolbarWidth / 2); // Center horizontally
           
-          if (left - halfWidth < 10) {
-            left = halfWidth + 10;
-          } else if (left + halfWidth > window.innerWidth - 10) {
-            left = window.innerWidth - halfWidth - 10;
+          // Vertically flip to bottom if too high
+          if (top < 10) top = rect.bottom + 15;
+          
+          // Horizontally clamp to screen edges
+          if (left < 10) {
+            left = 10;
+          } else if (left + toolbarWidth > window.innerWidth - 10) {
+            left = window.innerWidth - toolbarWidth - 10;
           }
           
           toolbarRef.current.style.top = `${top}px`;
           toolbarRef.current.style.left = `${left}px`;
           toolbarRef.current.style.opacity = '1';
+          toolbarRef.current.style.transform = 'scale(1) translateY(0)';
           toolbarRef.current.style.pointerEvents = 'auto';
           toolbarRef.current.dataset.blockId = blockId;
           toolbarRef.current.dataset.blockType = blockType;
@@ -397,7 +513,18 @@ export default function NotionHubPage() {
         .notion-font {
           font-family: 'Clash Display', 'Panchang', sans-serif !important;
         }
+
+        .empty-block:empty::before,
+        .empty-block:has(br:only-child)::before {
+          content: attr(data-placeholder);
+          color: rgba(255, 255, 255, 0.2);
+          pointer-events: none;
+          cursor: text;
+        }
         
+        .empty-block:focus::before {
+          color: rgba(255, 255, 255, 0.4);
+        }
         /* Custom Scrollbars */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -703,20 +830,22 @@ export default function NotionHubPage() {
         {/* Floating Toolbar */}
         <div ref={toolbarRef} style={{
           position: 'fixed',
-          transform: 'translateX(-50%)',
-          background: 'rgba(20, 20, 24, 0.85)',
-          backdropFilter: 'blur(30px)',
-          WebkitBackdropFilter: 'blur(30px)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          borderRadius: '12px',
-          padding: '6px 8px',
+          background: 'rgba(15, 15, 20, 0.65)',
+          backdropFilter: 'blur(40px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(150%)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '16px',
+          padding: '8px 10px',
           display: 'flex',
-          gap: '6px',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: '8px',
           zIndex: 10000,
-          boxShadow: '0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)',
           opacity: 0,
+          transform: 'scale(0.95) translateY(5px)',
           pointerEvents: 'none',
-          transition: 'opacity 0.2s ease-out',
+          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           maxWidth: 'calc(100vw - 20px)'
         }}>
 
@@ -1178,7 +1307,7 @@ export default function NotionHubPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '60px' }}>
                   {docContent.blocks.map((block, i) => (
                     <div key={block.id} id={`block-${block.id}`} data-block-type={block.type} className="block-enter" style={{ position: 'relative', animationDelay: `${Math.min(i * 0.03, 1)}s` }}>
-                      <NotionBlockRenderer block={block} setSelectedItem={setSelectedItem} />
+                      <NotionBlockRenderer block={block} setSelectedItem={setSelectedItem} onDeleteBlock={handleDeleteBlock} onInsertBlockAfter={handleInsertBlockAfter} />
                     </div>
                   ))}
                   
@@ -1384,6 +1513,11 @@ function parseHTMLToNotion(htmlNode) {
         richTextArray.push({ type: 'text', text: { content: '\n' }, annotations: { ...currentAnnotations } });
         return;
       }
+      if (tag === 'div' || tag === 'p') {
+        if (richTextArray.length > 0 && richTextArray[richTextArray.length-1].text.content !== '\n') {
+          richTextArray.push({ type: 'text', text: { content: '\n' }, annotations: { ...currentAnnotations } });
+        }
+      }
 
       for (const child of node.childNodes) {
         traverse(child, annotations);
@@ -1404,11 +1538,8 @@ function parseHTMLToNotion(htmlNode) {
 }
 
 // --- Utility: Apply Designer Preset ---
-function applyDesignerPreset(presetName) {
-  const selection = window.getSelection();
-  if (!selection.rangeCount) return;
-  
-  const range = selection.getRangeAt(0);
+function applyDesignerPreset(presetName, range) {
+  if (!range) return;
   if (range.collapsed) return;
   
   const span = document.createElement('span');
@@ -1451,7 +1582,7 @@ function applyDesignerPreset(presetName) {
 }
 
 // --- Inline Editing Components ---
-function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder }) {
+function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter }) {
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -1480,6 +1611,22 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { 
+      e.preventDefault(); 
+      handleBlur(e);
+      if (onInsertBlockAfter) {
+        onInsertBlockAfter(blockId, 'paragraph');
+      }
+    }
+    if (e.key === 'Backspace' && e.target.innerText.trim() === '') {
+      e.preventDefault();
+      if (onDeleteBlock) {
+        onDeleteBlock(blockId);
+      }
+    }
+  };
+
   const Tag = tagName;
   
   return (
@@ -1489,21 +1636,23 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           contentEditable
           suppressContentEditableWarning
           onBlur={handleBlur}
-          onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } }}
-          className={className}
+          onKeyDown={handleKeyDown}
+          className={`${className} empty-block`}
+          data-placeholder={emptyPlaceholder}
           style={{ ...style, outline: 'none', cursor: 'text' }}
-          dangerouslySetInnerHTML={{ __html: localText || emptyPlaceholder || '' }}
+          dangerouslySetInnerHTML={{ __html: localText }}
         />
       ) : (
         <Tag
           contentEditable
           suppressContentEditableWarning
           onBlur={handleBlur}
-          onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } }}
-          className={className}
+          onKeyDown={handleKeyDown}
+          className={`${className} empty-block`}
+          data-placeholder={emptyPlaceholder}
           style={{ ...style, outline: 'none', cursor: 'text' }}
         >
-           {(initialRichTextArr && initialRichTextArr.length > 0) ? renderRichText(initialRichTextArr) : emptyPlaceholder}
+           {(initialRichTextArr && initialRichTextArr.length > 0) ? renderRichText(initialRichTextArr) : null}
         </Tag>
       )}
       {isSaving && <span style={{ position: 'absolute', right: '-40px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', color: '#ebd73f', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: '10px' }}>Saving</span>}
@@ -1511,7 +1660,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   );
 }
 
-function EditableTodoBlock({ block, renderRichText }) {
+function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlockAfter }) {
   const [isChecked, setIsChecked] = useState(block.to_do?.checked);
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -1554,6 +1703,22 @@ function EditableTodoBlock({ block, renderRichText }) {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { 
+      e.preventDefault(); 
+      handleBlur(e);
+      if (onInsertBlockAfter) {
+        onInsertBlockAfter(block.id, 'to_do');
+      }
+    }
+    if (e.key === 'Backspace' && e.target.innerText.trim() === '') {
+      e.preventDefault();
+      if (onDeleteBlock) {
+        onDeleteBlock(block.id);
+      }
+    }
+  };
+
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '4px', marginBottom: '8px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px', borderRadius: '8px', position: 'relative' }}>
       <span 
@@ -1573,7 +1738,7 @@ function EditableTodoBlock({ block, renderRichText }) {
         contentEditable
         suppressContentEditableWarning
         onBlur={handleBlur}
-        onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } }}
+        onKeyDown={handleKeyDown}
         style={{
           fontSize: '1rem', lineHeight: 1.6,
           color: isChecked ? '#666' : '#eee',
@@ -1589,7 +1754,7 @@ function EditableTodoBlock({ block, renderRichText }) {
 }
 
 // Block Renderer Sub-component
-function NotionBlockRenderer({ block, setSelectedItem }) {
+function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBlockAfter }) {
   const [toggleOpen, setToggleOpen] = useState(false);
 
   const renderRichText = (richTextArr) => {
@@ -1649,6 +1814,8 @@ function NotionBlockRenderer({ block, setSelectedItem }) {
           blockId={block.id} type="heading_1" initialRichTextArr={block.heading_1?.rich_text} renderRichText={renderRichText}
           tagName="h1" className="notion-font" style={{ fontSize: '1.8rem', fontWeight: 800, margin: '32px 0 12px 0', color: '#ebd73f', letterSpacing: '-0.02em' }}
           emptyPlaceholder="Untitled Heading 1"
+          onDeleteBlock={onDeleteBlock}
+          onInsertBlockAfter={onInsertBlockAfter}
         />
       );
 
@@ -1658,6 +1825,8 @@ function NotionBlockRenderer({ block, setSelectedItem }) {
           blockId={block.id} type="heading_2" initialRichTextArr={block.heading_2?.rich_text} renderRichText={renderRichText}
           tagName="h2" className="notion-font" style={{ fontSize: '1.4rem', fontWeight: 700, margin: '24px 0 10px 0', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '8px' }}
           emptyPlaceholder="Untitled Heading 2"
+          onDeleteBlock={onDeleteBlock}
+          onInsertBlockAfter={onInsertBlockAfter}
         />
       );
 
@@ -1667,6 +1836,8 @@ function NotionBlockRenderer({ block, setSelectedItem }) {
           blockId={block.id} type="heading_3" initialRichTextArr={block.heading_3?.rich_text} renderRichText={renderRichText}
           tagName="h3" className="notion-font" style={{ fontSize: '1.15rem', fontWeight: 600, margin: '16px 0 8px 0', color: '#ddd' }}
           emptyPlaceholder="Untitled Heading 3"
+          onDeleteBlock={onDeleteBlock}
+          onInsertBlockAfter={onInsertBlockAfter}
         />
       );
 
@@ -1676,6 +1847,8 @@ function NotionBlockRenderer({ block, setSelectedItem }) {
           blockId={block.id} type="paragraph" initialRichTextArr={block.paragraph?.rich_text} renderRichText={renderRichText}
           tagName="p" className="notion-font" style={{ fontSize: '1.05rem', lineHeight: 1.7, color: '#f0f0f0', margin: '4px 0 16px 0', letterSpacing: '0.01em' }}
           emptyPlaceholder="Type something..."
+          onDeleteBlock={onDeleteBlock}
+          onInsertBlockAfter={onInsertBlockAfter}
         />
       );
 
@@ -1700,7 +1873,7 @@ function NotionBlockRenderer({ block, setSelectedItem }) {
       );
 
     case 'to_do':
-      return <EditableTodoBlock block={block} renderRichText={renderRichText} />;
+      return <EditableTodoBlock block={block} renderRichText={renderRichText} onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} />;
 
     case 'callout':
       return (

@@ -55,3 +55,28 @@ export async function PATCH(request) {
     );
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const { blockId } = await request.json();
+
+    if (!blockId) {
+      return NextResponse.json({ error: 'Missing blockId' }, { status: 400 });
+    }
+
+    const notion = getNotionClient();
+    
+    // Deleting a block in Notion API is equivalent to archiving it
+    const response = await notion.blocks.delete({
+      block_id: blockId,
+    });
+
+    return NextResponse.json({ success: true, block: response });
+  } catch (error) {
+    console.error('Notion Delete API Error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to delete Notion block' },
+      { status: 500 }
+    );
+  }
+}
