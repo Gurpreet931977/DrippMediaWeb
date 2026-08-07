@@ -29,13 +29,12 @@ function FocusSafeDropdown({ label, options, onChange }) {
         className="notion-font"
         onMouseDown={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
         style={{
-          background: isOpen ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)' : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderTop: '1px solid rgba(255,255,255,0.3)',
-          borderLeft: '1px solid rgba(255,255,255,0.15)',
-          boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 2px 8px rgba(0,0,0,0.15)',
+          background: isOpen ? 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)' : 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.05)',
+          borderTop: isOpen ? '1px solid rgba(255,255,255,0.6)' : '1px solid rgba(255,255,255,0.2)',
+          boxShadow: isOpen ? 'inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.2)' : 'inset 0 1px 2px rgba(255,255,255,0.1)',
           color: '#fff',
-          borderRadius: '8px',
+          borderRadius: '16px',
           padding: '6px 28px 6px 12px',
           fontSize: '0.8rem',
           fontWeight: 600,
@@ -46,8 +45,16 @@ function FocusSafeDropdown({ label, options, onChange }) {
           gap: '8px',
           height: '100%'
         }}
-        onMouseOver={e => !isOpen && (e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)')}
-        onMouseOut={e => !isOpen && (e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%)')}
+        onMouseOver={e => !isOpen && (
+          e.currentTarget.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)',
+          e.currentTarget.style.borderTop = '1px solid rgba(255,255,255,0.4)',
+          e.currentTarget.style.boxShadow = 'inset 0 2px 4px rgba(255,255,255,0.3)'
+        )}
+        onMouseOut={e => !isOpen && (
+          e.currentTarget.style.background = 'rgba(255,255,255,0.02)',
+          e.currentTarget.style.borderTop = '1px solid rgba(255,255,255,0.2)',
+          e.currentTarget.style.boxShadow = 'inset 0 1px 2px rgba(255,255,255,0.1)'
+        )}
       >
         {label}
         <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#888', fontSize: '0.55rem', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</div>
@@ -59,17 +66,16 @@ function FocusSafeDropdown({ label, options, onChange }) {
           top: '100%',
           left: 0,
           marginTop: '8px',
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)',
-          backdropFilter: 'blur(30px) saturate(140%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(140%)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderTop: '1px solid rgba(255,255,255,0.4)',
-          borderLeft: '1px solid rgba(255,255,255,0.2)',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-          borderRadius: '12px',
+          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 30%, rgba(255, 255, 255, 0.02) 100%)',
+          backdropFilter: 'blur(8px) contrast(1.2)',
+          WebkitBackdropFilter: 'blur(8px) contrast(1.2)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderTop: '1px solid rgba(255,255,255,0.6)',
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
+          borderRadius: '20px',
           padding: '6px',
           minWidth: '160px',
-          boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 -1px 2px rgba(255, 255, 255, 0.1), 0 20px 40px rgba(0,0,0,0.5)',
+          boxShadow: 'inset 0 4px 10px rgba(255, 255, 255, 0.5), inset 0 -4px 10px rgba(0, 0, 0, 0.3), 0 20px 40px rgba(0,0,0,0.6)',
           zIndex: 10001,
           display: 'flex',
           flexDirection: 'column',
@@ -958,21 +964,20 @@ export default function NotionHubPage() {
         {/* Floating Toolbar */}
         <div ref={toolbarRef} style={{
           position: 'fixed',
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)',
-          backdropFilter: 'blur(30px) saturate(140%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(140%)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderTop: '1px solid rgba(255,255,255,0.4)',
-          borderLeft: '1px solid rgba(255,255,255,0.2)',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-          borderRadius: '16px',
+          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(255, 255, 255, 0.02) 100%)',
+          backdropFilter: 'blur(8px) contrast(1.2)',
+          WebkitBackdropFilter: 'blur(8px) contrast(1.2)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderTop: '1px solid rgba(255,255,255,0.7)',
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
+          borderRadius: '24px',
           padding: '8px 10px',
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           gap: '8px',
           zIndex: 10000,
-          boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 -1px 2px rgba(255, 255, 255, 0.1), 0 20px 40px rgba(0,0,0,0.5)',
+          boxShadow: 'inset 0 4px 12px rgba(255, 255, 255, 0.5), inset 0 -4px 12px rgba(0, 0, 0, 0.3), 0 20px 40px rgba(0,0,0,0.6)',
           opacity: 0,
           transform: 'scale(0.95) translateY(5px)',
           pointerEvents: 'none',
