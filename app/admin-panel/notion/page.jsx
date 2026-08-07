@@ -29,25 +29,26 @@ function FocusSafeDropdown({ label, options, onChange }) {
         className="notion-font"
         onMouseDown={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
         style={{
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: isOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
           color: '#fff',
           borderRadius: '8px',
           padding: '6px 28px 6px 12px',
           fontSize: '0.8rem',
           fontWeight: 600,
           cursor: 'pointer',
-          transition: 'all 0.2s ease',
+          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
           height: '100%'
         }}
-        onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-        onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+        onMouseOver={e => !isOpen && (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+        onMouseOut={e => !isOpen && (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
       >
         {label}
-        <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#aaa', fontSize: '0.6rem' }}>▼</div>
+        <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#888', fontSize: '0.55rem', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</div>
       </button>
       
       {isOpen && (
@@ -55,18 +56,20 @@ function FocusSafeDropdown({ label, options, onChange }) {
           position: 'absolute',
           top: '100%',
           left: 0,
-          marginTop: '6px',
-          background: 'rgba(20, 20, 24, 0.95)',
-          backdropFilter: 'blur(30px)',
-          border: '1px solid rgba(255,255,255,0.15)',
+          marginTop: '8px',
+          background: 'rgba(18, 18, 23, 0.85)',
+          backdropFilter: 'blur(40px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(150%)',
+          border: '1px solid rgba(255,255,255,0.1)',
           borderRadius: '12px',
           padding: '6px',
           minWidth: '160px',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+          boxShadow: '0 24px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
           zIndex: 10001,
           display: 'flex',
           flexDirection: 'column',
-          gap: '4px'
+          gap: '2px',
+          animation: 'slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both'
         }}>
           {options.map((opt, i) => (
             <div
@@ -79,19 +82,21 @@ function FocusSafeDropdown({ label, options, onChange }) {
               }}
               style={{
                 padding: '8px 12px',
-                color: opt.color || '#fff',
+                color: opt.color || '#eee',
                 fontSize: '0.85rem',
                 fontWeight: 600,
                 borderRadius: '8px',
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
               }}
               onMouseOver={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                e.currentTarget.style.transform = 'translateX(4px)';
                 if (opt.hoverClass) e.currentTarget.classList.add(opt.hoverClass);
               }}
               onMouseOut={e => {
                 e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.transform = 'translateX(0)';
                 if (opt.hoverClass) e.currentTarget.classList.remove(opt.hoverClass);
               }}
             >
@@ -933,7 +938,8 @@ export default function NotionHubPage() {
           borderRadius: '16px',
           padding: '8px 10px',
           display: 'flex',
-          flexWrap: 'wrap',
+          flexWrap: 'nowrap',
+          whiteSpace: 'nowrap',
           alignItems: 'center',
           gap: '8px',
           zIndex: 10000,
