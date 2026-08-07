@@ -42,12 +42,13 @@ export default function AdminSidebar() {
         alignItems: 'center', 
         justifyContent: isCollapsed ? 'center' : 'space-between', 
         marginBottom: '2.5rem',
-        height: '48px', /* Fixed height to prevent jumping */
-        position: 'relative'
+        minHeight: '48px',
+        position: 'relative',
+        gap: '12px'
       }}>
         {!isCollapsed && (
-          <div className={styles.logo} style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>
-            {isGenz ? 'DRIPP BOSS.' : 'DRIPP ADMIN.'}
+          <div className={styles.logo} style={{ marginBottom: 0, fontSize: '1.4rem' }}>
+            {isGenz ? 'DRIPP\nBOSS.' : 'DRIPP\nADMIN.'}
           </div>
         )}
         
