@@ -669,7 +669,19 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
     if (!input.trim() || isTyping) return;
 
     const userText = input.trim();
+    const lowerInput = userText.toLowerCase().replace(/[^a-z\s]/g, '').trim();
     setInput('');
+    
+    // Intercept clear chat locally so AI doesn't misinterpret it as a form command
+    if (lowerInput === 'clear chat' || lowerInput === 'clearchat' || lowerInput === 'reset chat') {
+      setMessages([{ role: 'ai', text: 'Chat history cleared. My mind is a blank slate!' }]);
+      setIsTyping(false);
+      setEmotion('success');
+      setTimeout(() => setEmotion('idle'), 2000);
+      if (inputRef.current) inputRef.current.style.height = 'auto';
+      return;
+    }
+
     if (inputRef.current) {
         inputRef.current.style.height = 'auto';
     }
@@ -708,10 +720,16 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         setTimeout(() => setEmotion('idle'), 3000);
       }
 
+      const nextMessages = [];
+      if (data.isNewTopic) {
+        nextMessages.push({ role: 'divider', text: '— New Topic —' });
+      }
+
       if (data.intent === 'clear_chat') {
         setMessages([{ role: 'ai', text: data.replyMessage || "Chat history cleared. My mind is a blank slate!" }]);
       } else {
-        setMessages(prev => [...prev, { role: 'ai', text: data.replyMessage || "Done. Check your form!" }]);
+        nextMessages.push({ role: 'ai', text: data.replyMessage || "Done. Check your form!" });
+        setMessages(prev => [...prev, ...nextMessages]);
       }
       
       // Dispatch event to window so forms can pick it up
@@ -1320,11 +1338,24 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           </div>
           
           <div className="chat-body" ref={chatBodyRef} onScroll={handleScroll}>
-            {messages.map((m, i) => (
-              <div key={i} className={`msg-bubble ${m.role === 'ai' ? 'msg-ai' : 'msg-user'}`}>
-                {m.text}
-              </div>
-            ))}
+            {messages.map((m, i) => {
+              if (m.role === 'divider') {
+                return (
+                  <div key={i} style={{ 
+                    textAlign: 'center', margin: '20px 0', position: 'relative', 
+                    color: '#ebd73f', fontSize: '0.75rem', letterSpacing: '2px', textTransform: 'uppercase'
+                  }}>
+                    <span style={{ background: '#111', padding: '0 15px', position: 'relative', zIndex: 2 }}>{m.text}</span>
+                    <div style={{ position: 'absolute', top: '50%', left: '0', right: '0', height: '1px', background: 'rgba(235, 215, 63, 0.2)', zIndex: 1 }} />
+                  </div>
+                );
+              }
+              return (
+                <div key={i} className={`msg-bubble ${m.role === 'ai' ? 'msg-ai' : 'msg-user'}`}>
+                  {m.text}
+                </div>
+              );
+            })}
             {isTyping && (
               <div className="typing-indicator">
                 <div className="dot"></div><div className="dot"></div><div className="dot"></div>

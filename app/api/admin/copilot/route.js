@@ -61,6 +61,7 @@ Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${memory
 ${isGenz ? "\nSince the user is in GenZ mode, you must respond strictly using natural GenZ internet slang, aesthetics terminology (like 'cook', 'W', 'aura', 'timeline', 'locked in', 'lore', 'vibes'). Keep it casual but not overly forced. Do NOT use emojis. Treat the user like a peer in a creative agency." : ""}
 
 Your job is to read the user's natural language command, determine what action they want to take, and return JSON to PRE-FILL or EDIT the form.
+Also, check if the user is starting a completely new conversation or topic that has zero relation to the previous chat history. If so, include "isNewTopic": true in the payload. If it is a natural continuation, set it to false.
 
 If the user wants to edit the current email (e.g. "make it personalized for everyone", "make it shorter", "rewrite the subject"):
 Read the Current Email Form State and modify the subject/title/body accordingly. For example, if they ask to personalize it, add {{name}} or similar placeholders to the current body/subject. Return the full updated payload.
@@ -111,6 +112,7 @@ NEVER use em-dashes ("—") anywhere in your output. Use standard punctuation li
 JSON Schema to return:
 {
   "intent": "email" | "chat" | "learn" | "quote" | "package" | "system_doc" | "invoice" | "portfolio" | "clear_chat",
+  "isNewTopic": boolean,
   "replyMessage": "A short, cool, Dripp-styled response acknowledging what you did (e.g., 'I\\'ve drafted that announcement for you. Review it and hit send.') or answering their question.",
   "learnedRule": "If the intent is 'learn', provide the extracted concise rule to save to memory here. Otherwise, omit.",
   "payload": {
