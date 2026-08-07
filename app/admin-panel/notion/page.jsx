@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
-  BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, ChevronDown, 
-  FileText, Database, CheckSquare, Sparkles, AlertCircle, Info, LayoutList, Plus, Maximize2, Minimize2
+  BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, 
+  FileText, Database, CheckSquare, Sparkles, Info, LayoutList, Plus, Maximize2, Minimize2
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
 
@@ -427,7 +427,9 @@ export default function NotionHubPage() {
             boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
             animation: 'slideUpFade 0.2s ease-out'
           }}>
-            <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+            <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+              onClick={() => console.log('AI action for:', selectedText)}
+            >
               <Sparkles size={14} style={{ display: 'inline', marginRight: '4px', color: '#ebd73f' }} /> Ask AI
             </button>
             <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
