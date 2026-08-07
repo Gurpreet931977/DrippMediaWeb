@@ -59,7 +59,7 @@ function FocusSafeDropdown({ label, options, onChange }) {
           top: '100%',
           left: 0,
           marginTop: '8px',
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)',
+          background: 'linear-gradient(135deg, rgba(30, 30, 35, 0.85) 0%, rgba(15, 15, 20, 0.7) 100%)',
           backdropFilter: 'blur(30px) saturate(140%)',
           WebkitBackdropFilter: 'blur(30px) saturate(140%)',
           border: '1px solid rgba(255,255,255,0.08)',
@@ -97,12 +97,10 @@ function FocusSafeDropdown({ label, options, onChange }) {
               onMouseOver={e => {
                 e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
                 e.currentTarget.style.transform = 'translateX(4px)';
-                if (opt.hoverClass) e.currentTarget.classList.add(opt.hoverClass);
               }}
               onMouseOut={e => {
                 e.currentTarget.style.background = 'transparent';
                 e.currentTarget.style.transform = 'translateX(0)';
-                if (opt.hoverClass) e.currentTarget.classList.remove(opt.hoverClass);
               }}
             >
               {opt.label}
@@ -1098,11 +1096,11 @@ export default function NotionHubPage() {
             label="Default"
             options={[
               { label: 'Default', value: '' },
-              { label: 'Glass Text', value: 'glass', hoverClass: 'preset-glass-morphic' },
-              { label: 'Neon Pulse', value: 'neon', color: '#00e5ff', hoverClass: 'preset-neon-pulse' },
-              { label: 'Iridescent', value: 'iridescent', hoverClass: 'preset-iridescent' },
-              { label: 'Liquid Gradient', value: 'liquid', color: '#9400d3', hoverClass: 'preset-liquid-gradient' },
-              { label: 'Gold Shimmer', value: 'highlight', color: '#ebd73f', hoverClass: 'shimmer' },
+              { label: 'Glass Text', value: 'glass' },
+              { label: 'Neon Pulse', value: 'neon' },
+              { label: 'Iridescent', value: 'iridescent' },
+              { label: 'Liquid Gradient', value: 'liquid' },
+              { label: 'Gold Shimmer', value: 'highlight' },
               { label: 'Classified', value: 'code' }
             ]}
             onChange={(val) => handleApplyPreset({ target: { value: val } })}
