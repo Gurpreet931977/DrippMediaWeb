@@ -751,8 +751,9 @@ export default function NotionHubPage() {
             </div>
           )}
         </div>
+      </div>
 
-        {/* RIGHT PANEL: Table of Contents (Only visible if doc has headings) */}
+      {/* RIGHT PANEL: Table of Contents (Only visible if doc has headings) */}
         {tocItems.length > 0 && (
           <div className="notion-glass-card" style={{
             padding: '24px',
