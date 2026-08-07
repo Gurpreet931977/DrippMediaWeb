@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, ChevronDown, 
-  FileText, Database, CheckSquare, Sparkles, AlertCircle, Info, LayoutList
+  FileText, Database, CheckSquare, Sparkles, AlertCircle, Info, LayoutList, Plus
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
 
@@ -22,12 +22,34 @@ export default function NotionHubPage() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const contentRef = useRef(null);
 
+  // Subpage Creation State
+  const [showSubpageInput, setShowSubpageInput] = useState(false);
+  const [subpageTitle, setSubpageTitle] = useState('');
+  const [isCreatingSubpage, setIsCreatingSubpage] = useState(false);
+
   // Fetch shared Notion items
   const fetchNotionItems = useCallback(async (query = '') => {
-    setLoading(true);
+    const isSearch = query.trim() !== '';
+    const cacheKey = isSearch ? `notion_search_${query.trim()}` : 'notion_list';
+    
+    // 1. Optimistic Cache Load
+    const cachedData = localStorage.getItem(cacheKey);
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        setItems(parsed.items || []);
+        if (parsed.items && parsed.items.length > 0 && !selectedItem && !isSearch) {
+          setSelectedItem(parsed.items[0]);
+        }
+        // Don't set loading true if we have cache, just fetch quietly
+      } catch(e) {}
+    } else {
+      setLoading(true);
+    }
+    
     setError('');
     try {
-      const url = query.trim() 
+      const url = isSearch
         ? `/api/admin/notion?action=search&query=${encodeURIComponent(query.trim())}`
         : `/api/admin/notion?action=list`;
       
@@ -38,13 +60,15 @@ export default function NotionHubPage() {
         throw new Error(data.error || 'Failed to fetch Notion documents');
       }
 
+      // 2. Update state and cache with fresh data
       setItems(data.items || []);
+      localStorage.setItem(cacheKey, JSON.stringify(data));
       
-      if (data.items && data.items.length > 0 && !selectedItem) {
+      if (data.items && data.items.length > 0 && !selectedItem && !isSearch) {
         setSelectedItem(data.items[0]);
       }
     } catch (err) {
-      setError(err.message);
+      if (!cachedData) setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -53,20 +77,33 @@ export default function NotionHubPage() {
   // Fetch content blocks for selected page
   const fetchPageContent = useCallback(async (pageId) => {
     if (!pageId) return;
-    setContentLoading(true);
     setScrollProgress(0);
+    
+    const cacheKey = `notion_page_${pageId}`;
+    const cachedData = localStorage.getItem(cacheKey);
+    
+    if (cachedData) {
+      try {
+        setDocContent(JSON.parse(cachedData));
+      } catch(e) {}
+    } else {
+      setContentLoading(true);
+      setDocContent(null);
+    }
+
     try {
       const res = await fetch(`/api/admin/notion?action=blocks&pageId=${pageId}`);
       const data = await res.json();
 
       if (res.ok && data.success) {
         setDocContent(data);
+        localStorage.setItem(cacheKey, JSON.stringify(data));
       } else {
-        setDocContent(null);
+        if (!cachedData) setDocContent(null);
       }
     } catch (err) {
       console.error('Fetch Page Content Error:', err);
-      setDocContent(null);
+      if (!cachedData) setDocContent(null);
     } finally {
       setContentLoading(false);
     }
@@ -452,31 +489,96 @@ export default function NotionHubPage() {
                   </div>
                 </div>
 
-                <a
-                  href={selectedItem.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="notion-font"
-                  style={{
-                    padding: '10px 16px',
-                    background: 'rgba(235, 215, 63, 0.1)',
-                    border: '1px solid rgba(235, 215, 63, 0.3)',
-                    borderRadius: '10px',
-                    color: '#ebd73f',
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.2s',
-                    boxShadow: '0 4px 12px rgba(235, 215, 63, 0.1)'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.2)'}
-                  onMouseOut={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
-                >
-                  Edit in Notion <ExternalLink size={16} />
-                </a>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {showSubpageInput ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <input 
+                        type="text" 
+                        autoFocus
+                        placeholder="Subpage name..."
+                        value={subpageTitle}
+                        onChange={e => setSubpageTitle(e.target.value)}
+                        disabled={isCreatingSubpage}
+                        onKeyDown={async (e) => {
+                          if (e.key === 'Enter' && subpageTitle.trim()) {
+                            setIsCreatingSubpage(true);
+                            try {
+                              const res = await fetch('/api/admin/notion/create', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ parentId: selectedItem.id, parentType: selectedItem.object, title: subpageTitle.trim() })
+                              });
+                              if (res.ok) {
+                                setShowSubpageInput(false);
+                                setSubpageTitle('');
+                                fetchPageContent(selectedItem.id); // Reload content
+                              }
+                            } catch (err) {
+                              console.error(err);
+                            } finally {
+                              setIsCreatingSubpage(false);
+                            }
+                          } else if (e.key === 'Escape') {
+                            setShowSubpageInput(false);
+                            setSubpageTitle('');
+                          }
+                        }}
+                        className="notion-font"
+                        style={{ background: 'transparent', border: 'none', color: '#fff', padding: '4px 8px', outline: 'none', width: '150px', fontSize: '0.85rem' }}
+                      />
+                      {isCreatingSubpage && <RefreshCw size={14} className="spin" style={{ color: '#ebd73f', marginRight: '8px' }} />}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowSubpageInput(true)}
+                      className="notion-font"
+                      style={{
+                        padding: '10px 16px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '10px',
+                        color: '#fff',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                      onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                    >
+                      <Plus size={16} /> Subpage
+                    </button>
+                  )}
+
+                  <a
+                    href={selectedItem.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="notion-font"
+                    style={{
+                      padding: '10px 16px',
+                      background: 'rgba(235, 215, 63, 0.1)',
+                      border: '1px solid rgba(235, 215, 63, 0.3)',
+                      borderRadius: '10px',
+                      color: '#ebd73f',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 4px 12px rgba(235, 215, 63, 0.1)'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.2)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
+                  >
+                    Edit in Notion <ExternalLink size={16} />
+                  </a>
+                </div>
               </div>
 
               {/* Rendered Content */}
@@ -911,6 +1013,33 @@ function NotionBlockRenderer({ block }) {
           background: 'linear-gradient(90deg, transparent, rgba(235, 215, 63, 0.3), transparent)', 
           margin: '32px 0' 
         }} />
+      );
+
+    case 'child_page':
+      return (
+        <a 
+          href={`https://notion.so/${block.id.replace(/-/g, '')}`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex', alignItems: 'center', gap: '10px',
+            padding: '12px 16px', margin: '8px 0',
+            background: 'rgba(235, 215, 63, 0.05)',
+            border: '1px solid rgba(235, 215, 63, 0.2)',
+            borderRadius: '10px', color: '#ebd73f',
+            textDecoration: 'none', transition: 'all 0.2s',
+            boxShadow: '0 4px 12px rgba(235, 215, 63, 0.05)',
+            cursor: 'pointer'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
+          onMouseOut={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.05)'}
+        >
+          <FileText size={18} />
+          <span className="notion-font" style={{ fontWeight: 600, fontSize: '1rem' }}>
+            {block.child_page?.title || 'Untitled Page'}
+          </span>
+          <ExternalLink size={14} style={{ marginLeft: 'auto', opacity: 0.7 }} />
+        </a>
       );
 
     default:
