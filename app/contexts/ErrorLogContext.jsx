@@ -10,9 +10,16 @@ export function ErrorLogProvider({ children }) {
   useEffect(() => {
     // Load existing logs from local storage on mount
     try {
-      const storedLogs = localStorage.getItem('dripp_error_logs');
-      if (storedLogs) {
-        setLogs(JSON.parse(storedLogs));
+      // SMART AUTO-CLEAR: If this is a fresh session/tab, wipe out old ghost errors.
+      if (!sessionStorage.getItem('dripp_session_started')) {
+        localStorage.removeItem('dripp_error_logs');
+        sessionStorage.setItem('dripp_session_started', 'true');
+        setLogs([]);
+      } else {
+        const storedLogs = localStorage.getItem('dripp_error_logs');
+        if (storedLogs) {
+          setLogs(JSON.parse(storedLogs));
+        }
       }
     } catch (e) {
       console.error('Failed to load error logs from local storage', e);

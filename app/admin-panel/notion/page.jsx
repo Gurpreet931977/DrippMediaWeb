@@ -44,7 +44,6 @@ export default function NotionHubPage() {
         setSelectedItem(data.items[0]);
       }
     } catch (err) {
-      console.error('Fetch Notion Error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
