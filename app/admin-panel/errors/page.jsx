@@ -131,7 +131,7 @@ export default function ErrorLogsPage() {
           </div>
           
           <button 
-            onClick={refreshLogs}
+            onClick={() => window.location.reload()}
             className={styles.btn} 
             style={{ color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.2)' }}
           >

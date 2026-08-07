@@ -179,6 +179,38 @@ export default function NotionHubPage() {
     }
   };
 
+  const handleTurnInto = async (e) => {
+    const newType = e.target.value;
+    if (!newType) return;
+    
+    const blockId = toolbarRef.current?.dataset.blockId;
+    const currentType = toolbarRef.current?.dataset.blockType;
+    if (!blockId || !currentType) return;
+
+    let richTextArray = null;
+    const block = docContent?.blocks?.find(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
+    if (block && block[currentType]) {
+      richTextArray = block[currentType].rich_text;
+    } else {
+      richTextArray = [{ text: { content: window.getSelection().anchorNode?.textContent || '' } }];
+    }
+
+    try {
+      if (toolbarRef.current) {
+        toolbarRef.current.style.opacity = '0';
+        toolbarRef.current.style.pointerEvents = 'none';
+      }
+      await fetch('/api/admin/notion/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockId, type: newType, richTextArray })
+      });
+      fetchPageContent(selectedItem.id);
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
   const handleAppendBlock = async (type) => {
     if (!selectedItem?.id) return;
     setIsAppendingBlock(true);
@@ -237,7 +269,7 @@ export default function NotionHubPage() {
         }
 
         if (toolbarRef.current) {
-          let top = rect.top - 55;
+          let top = rect.top - 70;
           let left = rect.left + rect.width / 2;
           
           if (top < 10) top = rect.bottom + 10;
@@ -321,7 +353,18 @@ export default function NotionHubPage() {
       const parentId = current.parent?.page_id || current.parent?.database_id;
       if (parentId && typeof parentId === 'string') {
         const parentIdClean = parentId.replace(/-/g, '');
-        current = items.find(i => i && typeof i.id === 'string' && i.id.replace(/-/g, '') === parentIdClean);
+        const found = items.find(i => i && typeof i.id === 'string' && i.id.replace(/-/g, '') === parentIdClean);
+        if (found) {
+          current = found;
+        } else {
+          // If parent is not loaded in items, add a generic parent so user can still navigate up
+          current = {
+            id: parentId,
+            title: 'Parent Page',
+            object: current.parent?.type === 'database_id' ? 'database' : 'page',
+            parent: null
+          };
+        }
       } else {
         current = null;
       }
@@ -339,6 +382,15 @@ export default function NotionHubPage() {
       flexDirection: 'column'
     }}>
       <style>{`
+        ::selection {
+          background: rgba(235, 215, 63, 0.4); /* Yellow highlight */
+          color: #fff;
+        }
+        ::-moz-selection {
+          background: rgba(235, 215, 63, 0.4);
+          color: #fff;
+        }
+        
         .notion-font {
           font-family: 'Clash Display', 'Panchang', sans-serif !important;
         }
@@ -649,21 +701,23 @@ export default function NotionHubPage() {
         <div ref={toolbarRef} style={{
           position: 'fixed',
           transform: 'translateX(-50%)',
-          background: 'rgba(15, 15, 18, 0.95)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'rgba(20, 20, 24, 0.85)',
+          backdropFilter: 'blur(30px)',
+          WebkitBackdropFilter: 'blur(30px)',
+          border: '1px solid rgba(255,255,255,0.15)',
           borderRadius: '12px',
           padding: '6px 8px',
           display: 'flex',
           gap: '6px',
           zIndex: 10000,
-          boxShadow: '0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03) inset',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset',
           opacity: 0,
           pointerEvents: 'none',
           transition: 'opacity 0.2s ease-out',
           maxWidth: 'calc(100vw - 20px)'
         }}>
-          {/* Designer Presets */}
+
+          {/* Turn Into */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <select 
               className="notion-font"
@@ -685,16 +739,16 @@ export default function NotionHubPage() {
               onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
               onChange={(e) => {
                 if(e.target.value) {
-                  handleApplyPreset(e);
+                  handleTurnInto(e);
                   e.target.value = ""; // Reset
                 }
               }}
             >
-              <option value="" style={{ background: '#111' }}>10X Presets</option>
-              <option value="critical" style={{ background: '#111', color: '#ff4d4f' }}>Cyber Glitch</option>
-              <option value="liquid" style={{ background: '#111', color: '#9400d3' }}>Liquid Gradient</option>
-              <option value="highlight" style={{ background: '#111', color: '#ebd73f' }}>Gold Shimmer</option>
-              <option value="code" style={{ background: '#111' }}>Classified</option>
+              <option value="" style={{ background: '#111' }}>Turn Into</option>
+              <option value="heading_1" style={{ background: '#111' }}>Heading 1</option>
+              <option value="heading_2" style={{ background: '#111' }}>Heading 2</option>
+              <option value="heading_3" style={{ background: '#111' }}>Heading 3</option>
+              <option value="paragraph" style={{ background: '#111' }}>Paragraph</option>
             </select>
             <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#aaa', fontSize: '0.7rem' }}>▼</div>
           </div>
@@ -776,6 +830,45 @@ export default function NotionHubPage() {
           >
             Fix Spelling
           </button>
+
+          <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
+
+          {/* Designer Presets */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <select 
+              className="notion-font"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#fff',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'none',
+                paddingRight: '28px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              onChange={(e) => {
+                if(e.target.value) {
+                  handleApplyPreset(e);
+                  e.target.value = ""; // Reset
+                }
+              }}
+            >
+              <option value="" style={{ background: '#111' }}>Default</option>
+              <option value="critical" style={{ background: '#111', color: '#ff4d4f' }}>Cyber Glitch</option>
+              <option value="liquid" style={{ background: '#111', color: '#9400d3' }}>Liquid Gradient</option>
+              <option value="highlight" style={{ background: '#111', color: '#ebd73f' }}>Gold Shimmer</option>
+              <option value="code" style={{ background: '#111' }}>Classified</option>
+            </select>
+            <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#aaa', fontSize: '0.7rem' }}>▼</div>
+          </div>
+
         </div>
         
         {/* LEFT PANEL: Document Catalog */}
@@ -1575,12 +1668,11 @@ function NotionBlockRenderer({ block, setSelectedItem }) {
       );
 
     case 'paragraph':
-      if (!block.paragraph?.rich_text || block.paragraph.rich_text.length === 0) return <div style={{ height: '12px' }} />;
       return (
         <EditableTextBlock
-          blockId={block.id} type="paragraph" initialRichTextArr={block.paragraph.rich_text} renderRichText={renderRichText}
-          tagName="p" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.7, color: '#b3b3b3', margin: '4px 0 12px 0' }}
-          emptyPlaceholder=" "
+          blockId={block.id} type="paragraph" initialRichTextArr={block.paragraph?.rich_text} renderRichText={renderRichText}
+          tagName="p" className="notion-font" style={{ fontSize: '1.05rem', lineHeight: 1.7, color: '#f0f0f0', margin: '4px 0 16px 0', letterSpacing: '0.01em' }}
+          emptyPlaceholder="Type something..."
         />
       );
 

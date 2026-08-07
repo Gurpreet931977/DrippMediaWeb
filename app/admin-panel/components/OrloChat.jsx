@@ -231,18 +231,22 @@ export default function OrloChat() {
         };
         
         recognition.onerror = (event) => {
-          if (event.error === 'no-speech') {
+          if (event.error === 'no-speech' || event.error === 'aborted') {
             return;
           }
+          let msg = 'Microphone error.';
           if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            showToast('Microphone access denied. Please click the lock icon in the address bar to allow mic access.');
-            shouldListenRef.current = false;
-            setIsListening(false);
+            msg = 'Microphone access denied. Please allow mic access.';
           } else if (event.error === 'network') {
-            showToast('Network error: Speech Recognition requires Google Speech Service connection.');
-            shouldListenRef.current = false;
-            setIsListening(false);
+            msg = 'Network error: Speech Recognition requires internet.';
+          } else if (event.error === 'audio-capture') {
+            msg = 'No microphone found. Please connect a mic.';
+          } else {
+            msg = `Voice error: ${event.error}`;
           }
+          showToast(msg);
+          shouldListenRef.current = false;
+          setIsListening(false);
         };
         
         recognition.onend = () => {
