@@ -58,7 +58,7 @@
 
 .sidebar.collapsed {
   width: 84px;
-  padding: 2.5rem 1rem;
+  padding: 2rem 0.75rem;
 }
 
 .logo {
@@ -105,9 +105,19 @@
 }
 
 .navLink:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   color: #fff;
   transform: translateX(4px);
+}
+
+.sidebar.collapsed .navLink {
+  justify-content: center;
+  padding: 0.875rem 0;
+  border-radius: 12px;
+}
+
+.sidebar.collapsed .navLink:hover {
+  transform: translateY(-2px);
 }
 
 .navLink.active {
@@ -117,7 +127,11 @@
 
 .navLink.active::before {
   opacity: 1;
-  transform: scaleY(0.7);
+  transform: scaleY(0.6);
+}
+
+.sidebar.collapsed .navLink.active::before {
+  left: -2px; /* Pull the active indicator slightly outside so it doesn't overlap the icon */
 }
 
 .mainContent {

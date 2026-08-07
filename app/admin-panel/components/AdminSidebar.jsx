@@ -37,28 +37,45 @@ export default function AdminSidebar() {
 
   return (
     <div className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '3rem' }}>
-        {!isCollapsed && <div className={styles.logo}>{isGenz ? 'DRIPP\nBOSS.' : 'DRIPP\nADMIN.'}</div>}
-        {isCollapsed && <div className={styles.logo} style={{ fontSize: '1.2rem', paddingLeft: 0, textAlign: 'center', width: '100%' }}>{isGenz ? 'DB.' : 'DA.'}</div>}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: isCollapsed ? 'center' : 'space-between', 
+        marginBottom: '2.5rem',
+        height: '48px', /* Fixed height to prevent jumping */
+        position: 'relative'
+      }}>
+        {!isCollapsed && (
+          <div className={styles.logo} style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>
+            {isGenz ? 'DRIPP BOSS.' : 'DRIPP ADMIN.'}
+          </div>
+        )}
         
         <button 
           onClick={toggleSidebar}
           style={{
-            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-            color: '#fff', borderRadius: '8px', padding: '6px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            position: isCollapsed ? 'absolute' : 'static',
-            top: isCollapsed ? '24px' : 'auto',
-            right: isCollapsed ? '22px' : 'auto',
-            zIndex: 20
+            background: 'rgba(255,255,255,0.03)', 
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: '#fff', 
+            borderRadius: '10px', 
+            width: '36px',
+            height: '36px',
+            cursor: 'pointer',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            transition: 'all 0.2s ease',
+            flexShrink: 0
           }}
+          onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.3)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
           title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
-          {isCollapsed ? <Menu size={16} /> : <ChevronLeft size={16} />}
+          {isCollapsed ? <Menu size={18} /> : <ChevronLeft size={18} />}
         </button>
       </div>
       
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: isCollapsed ? '2rem' : '0', overflowY: 'auto', flex: 1, paddingRight: '8px' }}>
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', overflowY: 'auto', flex: 1, paddingRight: isCollapsed ? '0' : '4px' }}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.path;
@@ -71,7 +88,7 @@ export default function AdminSidebar() {
               title={isCollapsed ? item.name : undefined}
             >
               <Icon size={20} strokeWidth={isActive ? 2.5 : 2} style={{ flexShrink: 0 }} />
-              {!isCollapsed && <span className={styles.navText}>{item.name}</span>}
+              {!isCollapsed && <span className={styles.navText} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</span>}
             </Link>
           );
         })}
@@ -79,8 +96,8 @@ export default function AdminSidebar() {
 
       <div style={{ marginTop: 'auto', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <Link href="/" className={styles.navLink} style={{ color: '#ef4444' }} title={isCollapsed ? (isGenz ? 'Bounce to Site' : 'Exit to Site') : undefined}>
-           <LogOut size={20} style={{ flexShrink: 0 }} />
-           {!isCollapsed && <span className={styles.navText}>{isGenz ? 'Bounce to Site' : 'Exit to Site'}</span>}
+           <LogOut size={20} strokeWidth={2} style={{ flexShrink: 0 }} />
+           {!isCollapsed && <span className={styles.navText} style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{isGenz ? 'Bounce to Site' : 'Exit to Site'}</span>}
         </Link>
       </div>
     </div>

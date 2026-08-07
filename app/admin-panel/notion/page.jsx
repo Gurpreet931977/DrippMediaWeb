@@ -553,7 +553,16 @@ export default function NotionHubPage() {
         </div>
 
         {/* CENTER PANEL: Main Reader */}
-        <div className="notion-glass-card" style={{
+        <div className={isZenithMode ? "" : "notion-glass-card"} style={isZenithMode ? {
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          background: '#020203',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          overflow: 'hidden'
+        } : {
           height: 'calc(100vh - 180px)',
           overflow: 'hidden',
           display: 'flex',
@@ -563,19 +572,15 @@ export default function NotionHubPage() {
         <div style={{ 
           flex: 1, 
           display: 'flex', 
-          gap: '20px', 
+          flexDirection: 'column',
           height: isZenithMode ? '100vh' : 'calc(100vh - 120px)',
-          position: isZenithMode ? 'fixed' : 'relative',
-          top: isZenithMode ? 0 : 'auto',
-          left: isZenithMode ? 0 : 'auto',
-          width: isZenithMode ? '100vw' : 'auto',
-          zIndex: isZenithMode ? 9999 : 1,
-          background: isZenithMode ? '#020203' : 'transparent',
-          padding: isZenithMode ? '40px' : '0'
+          width: isZenithMode ? '100vw' : '100%',
+          maxWidth: isZenithMode ? '900px' : '100%',
+          padding: isZenithMode ? '60px 40px' : '0'
         }}>
           {selectedItem ? (
-            <div 
-              className="notion-glass-card" 
+              <div 
+              className={isZenithMode ? "" : "notion-glass-card"} 
               ref={contentRef}
               onScroll={handleScroll}
               style={{ 
@@ -585,11 +590,9 @@ export default function NotionHubPage() {
                 overflowY: 'auto',
                 position: 'relative',
                 scrollBehavior: 'smooth',
-                border: isZenithMode ? 'none' : undefined,
-                background: isZenithMode ? 'transparent' : undefined,
-                boxShadow: isZenithMode ? 'none' : undefined,
-                maxWidth: isZenithMode ? '900px' : '100%',
-                margin: isZenithMode ? '0 auto' : '0'
+                width: '100%',
+                overflowWrap: 'break-word',
+                wordWrap: 'break-word'
               }}
             >
               {/* Reading Progress Bar */}
@@ -614,16 +617,16 @@ export default function NotionHubPage() {
               )}
 
               {/* Header Info */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-                  <span style={{ fontSize: '3rem', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))' }}>
+                  <span style={{ fontSize: '3.5rem', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))' }}>
                     {docContent?.page?.icon || selectedItem.icon || '📄'}
                   </span>
                   <div>
-                    <h2 className="notion-font" style={{ fontSize: '2.2rem', fontWeight: 800, margin: '0 0 8px 0', color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+                    <h2 className="notion-font" style={{ fontSize: '2.5rem', fontWeight: 800, margin: '0 0 8px 0', color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                       {docContent?.page?.title || selectedItem.title}
                     </h2>
-                    <p className="notion-font" style={{ fontSize: '0.85rem', color: '#777', margin: 0, fontWeight: 500 }}>
+                    <p className="notion-font" style={{ fontSize: '0.9rem', color: '#777', margin: 0, fontWeight: 500 }}>
                       Last updated: <span style={{ color: '#aaa' }}>{selectedItem.lastEditedTime ? new Date(selectedItem.lastEditedTime).toLocaleString() : 'N/A'}</span>
                     </p>
                   </div>
