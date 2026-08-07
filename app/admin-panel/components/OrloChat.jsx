@@ -408,7 +408,14 @@ export default function OrloChat() {
         if (!isOpen) {
           setIsOpen(true);
         }
-        setInput(e.detail);
+        if (typeof e.detail === 'string') {
+          setInput(e.detail);
+        } else {
+          setInput(e.detail.text || '');
+          if (e.detail.blockId) {
+            window._notionContext = { blockId: e.detail.blockId };
+          }
+        }
       }
     };
     window.addEventListener('ORLO_QUICK_ACTION', handleQuickAction);
@@ -703,6 +710,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           context: currentContext, 
           systemContext: systemContext,
           formContext: formContext,
+          notionContext: window._notionContext || {},
           currentDate: new Date().toString(),
           model: selectedModel,
           isGenz: isGenz

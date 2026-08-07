@@ -28,6 +28,7 @@ export default function NotionHubPage() {
   // Floating Toolbar State
   const [selectionRect, setSelectionRect] = useState(null);
   const [selectedText, setSelectedText] = useState('');
+  const [selectedBlockId, setSelectedBlockId] = useState(null);
 
   // Subpage Creation State
   const [showSubpageInput, setShowSubpageInput] = useState(false);
@@ -142,6 +143,7 @@ export default function NotionHubPage() {
       if (!selection || selection.isCollapsed) {
         setSelectionRect(null);
         setSelectedText('');
+        setSelectedBlockId(null);
         return;
       }
       
@@ -149,20 +151,30 @@ export default function NotionHubPage() {
       if (!text) {
         setSelectionRect(null);
         setSelectedText('');
+        setSelectedBlockId(null);
         return;
       }
 
       if (contentRef.current && contentRef.current.contains(selection.anchorNode)) {
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
+        
+        let blockId = null;
+        const blockElement = selection.anchorNode?.parentElement?.closest('[id^="block-"]');
+        if (blockElement) {
+          blockId = blockElement.id.replace('block-', '');
+        }
+
         setSelectionRect({
           top: rect.top,
           left: rect.left + rect.width / 2,
         });
         setSelectedText(text);
+        setSelectedBlockId(blockId);
       } else {
         setSelectionRect(null);
         setSelectedText('');
+        setSelectedBlockId(null);
       }
     };
 
@@ -428,16 +440,32 @@ export default function NotionHubPage() {
             animation: 'slideUpFade 0.2s ease-out'
           }}>
             <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
-              onClick={() => console.log('AI action for:', selectedText)}
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
+                  detail: { text: `Please explain this Notion text: "${selectedText}"`, blockId: selectedBlockId, intent: 'notion_edit' }
+                }));
+              }}
             >
               <Sparkles size={14} style={{ display: 'inline', marginRight: '4px', color: '#ebd73f' }} /> Ask AI
             </button>
             <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-            <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-              <b>B</b>
+            <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
+                  detail: { text: `Please summarize this Notion text: "${selectedText}"`, blockId: selectedBlockId, intent: 'notion_edit' }
+                }));
+              }}
+            >
+              Summarize
             </button>
-            <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, fontStyle: 'italic' }}>
-              I
+            <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, fontStyle: 'italic' }}
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
+                  detail: { text: `Fix the spelling/grammar in this block.`, blockId: selectedBlockId, intent: 'notion_edit' }
+                }));
+              }}
+            >
+              Fix Spelling
             </button>
           </div>
         )}
