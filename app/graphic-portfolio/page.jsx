@@ -2142,7 +2142,9 @@ export default function Page() {
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '35px' }}>
-                  {Array.from(new Set(graphics.flatMap(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean)))).map(cat => (
+                  {Array.from(new Set(graphics.flatMap(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean)))).map((cat, idx) => {
+                      const count = graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(cat)).length;
+                      return (
                       <div key={cat} onClick={() => setActiveCategory(cat)} className="category-folder group" style={{
                           position: 'relative',
                           overflow: 'hidden',
@@ -2210,40 +2212,45 @@ export default function Page() {
                               {cat.split(' ')[0]}
                           </div>
                           
-                          {/* Top Row: Minimal Icon + Count */}
+                          {/* Top Row: Minimal Icon + Folder Sequential Index */}
                           <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
                               <div style={{ color: 'rgba(255,255,255,0.3)', width: '32px', height: '32px' }}>
                                   <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                               </div>
                               <div style={{ 
-                                  fontSize: '0.8rem', 
-                                  fontFamily: 'Clash Display, sans-serif', 
+                                  fontSize: '0.85rem', 
+                                  fontFamily: 'Panchang, sans-serif', 
                                   color: '#ebd73f', 
                                   letterSpacing: '2px', 
-                                  border: '1px solid rgba(235, 215, 63, 0.25)',
+                                  border: '1px solid rgba(235, 215, 63, 0.3)',
                                   padding: '6px 14px',
                                   borderRadius: '40px',
-                                  background: 'rgba(235, 215, 63, 0.05)',
-                                  fontWeight: 500
+                                  background: 'rgba(235, 215, 63, 0.08)',
+                                  fontWeight: 700
                               }}>
-                                  {graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(cat)).length.toString().padStart(2, '0')}
+                                  {(idx + 1).toString().padStart(2, '0')}
                               </div>
                           </div>
 
-                          {/* Bottom Row: Title + Arrow */}
-                          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                              <h3 style={{ 
-                                  fontSize: '2rem', 
-                                  margin: 0, 
-                                  color: '#ffffff', 
-                                  letterSpacing: '1.5px', 
-                                  textTransform: 'uppercase', 
-                                  fontFamily: 'Panchang, sans-serif',
-                                  lineHeight: '1.15',
-                                  textShadow: '0 4px 20px rgba(0,0,0,0.8)'
-                              }}>
-                                  {cat}
-                              </h3>
+                          {/* Bottom Row: Title + Project Count + Arrow */}
+                          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                              <div>
+                                  <div style={{ fontSize: '0.7rem', color: '#ebd73f', letterSpacing: '2px', fontFamily: 'Clash Display, sans-serif', textTransform: 'uppercase', marginBottom: '6px', fontWeight: 600 }}>
+                                      {count} {count === 1 ? 'PROJECT' : 'PROJECTS'}
+                                  </div>
+                                  <h3 style={{ 
+                                      fontSize: '2rem', 
+                                      margin: 0, 
+                                      color: '#ffffff', 
+                                      letterSpacing: '1.5px', 
+                                      textTransform: 'uppercase', 
+                                      fontFamily: 'Panchang, sans-serif',
+                                      lineHeight: '1.15',
+                                      textShadow: '0 4px 20px rgba(0,0,0,0.8)'
+                                  }}>
+                                      {cat}
+                                  </h3>
+                              </div>
                               
                               {/* Sleek Arrow */}
                               <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
@@ -2267,7 +2274,8 @@ export default function Page() {
                               </div>
                           </div>
                       </div>
-                  ))}
+                      );
+                  })}
               </div>
           </div>
       ) : (
