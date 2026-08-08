@@ -133,6 +133,7 @@ export default function NotionHubPage() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const contentRef = useRef(null);
   const searchInputRef = useRef(null);
+  const latestPageIdRef = useRef(null);
   const savedRangeRef = useRef(null);
 
   // Zenith Mode State
@@ -221,20 +222,26 @@ export default function NotionHubPage() {
     }
 
     try {
+      latestPageIdRef.current = pageId;
       const res = await fetch(`/api/admin/notion?action=blocks&pageId=${pageId}`);
       const data = await res.json();
 
-      if (res.ok && data.success) {
-        setDocContent(data);
-        localStorage.setItem(cacheKey, JSON.stringify(data));
-      } else {
-        if (!cachedData) setDocContent(null);
+      // Only update if this is still the active page
+      if (latestPageIdRef.current === pageId) {
+        if (res.ok && data.success) {
+          setDocContent(data);
+          localStorage.setItem(cacheKey, JSON.stringify(data));
+        } else {
+          if (!cachedData) setDocContent(null);
+        }
       }
     } catch (err) {
       console.error('Fetch Page Content Error:', err);
-      if (!cachedData) setDocContent(null);
+      if (latestPageIdRef.current === pageId && !cachedData) setDocContent(null);
     } finally {
-      setContentLoading(false);
+      if (latestPageIdRef.current === pageId) {
+        setContentLoading(false);
+      }
     }
   }, []);
 
@@ -292,6 +299,29 @@ export default function NotionHubPage() {
         if (blockEl) {
           const richTextArray = parseHTMLToNotion(blockEl);
           const plainText = richTextArray.map(r => r.text.content).join('');
+          
+          // Optimistic UI and Cache update
+          setDocContent(prev => {
+            if (!prev || !prev.blocks) return prev;
+            const newBlocks = prev.blocks.map(b => {
+              if (b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, '')) {
+                return {
+                  ...b,
+                  [blockType]: {
+                    ...b[blockType],
+                    rich_text: richTextArray
+                  }
+                };
+              }
+              return b;
+            });
+            const newData = { ...prev, blocks: newBlocks };
+            if (selectedItem?.id) {
+              localStorage.setItem(`notion_page_${selectedItem.id}`, JSON.stringify(newData));
+            }
+            return newData;
+          });
+
           fetch('/api/admin/notion/update', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -452,6 +482,29 @@ export default function NotionHubPage() {
       console.error(err);
     }
   };
+
+  const handleUpdateBlock = useCallback((blockId, type, content, richTextArray, checked) => {
+    setDocContent(prev => {
+      if (!prev || !prev.blocks) return prev;
+      const newBlocks = prev.blocks.map(b => {
+        if (b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, '')) {
+          const updatedBlock = { ...b };
+          if (type === 'to_do') {
+            updatedBlock.to_do = { ...b.to_do, checked: checked !== undefined ? checked : b.to_do?.checked };
+            if (richTextArray) updatedBlock.to_do.rich_text = richTextArray;
+            else if (content !== undefined) updatedBlock.to_do.rich_text = [{ text: { content } }];
+          } else if (type && updatedBlock[type]) {
+            updatedBlock[type] = { ...updatedBlock[type], rich_text: richTextArray || [{ text: { content } }] };
+          }
+          return updatedBlock;
+        }
+        return b;
+      });
+      const newData = { ...prev, blocks: newBlocks };
+      if (selectedItem?.id) localStorage.setItem(`notion_page_${selectedItem.id}`, JSON.stringify(newData));
+      return newData;
+    });
+  }, [selectedItem]);
 
   useEffect(() => {
     const handleSelection = () => {
@@ -1576,7 +1629,13 @@ export default function NotionHubPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '60px' }}>
                   {sortedBlocks.map((block, i) => (
                     <div key={block.id} id={`block-${block.id}`} data-block-type={block.type} className="block-enter" style={{ position: 'relative', animationDelay: `${Math.min(i * 0.03, 1)}s` }}>
-                      <NotionBlockRenderer block={block} setSelectedItem={setSelectedItem} onDeleteBlock={handleDeleteBlock} onInsertBlockAfter={handleInsertBlockAfter} />
+                      <NotionBlockRenderer 
+                        block={block} 
+                        setSelectedItem={setSelectedItem} 
+                        onDeleteBlock={handleDeleteBlock} 
+                        onInsertBlockAfter={handleInsertBlockAfter}
+                        onUpdateBlock={handleUpdateBlock} 
+                      />
                     </div>
                   ))}
                   
@@ -1811,12 +1870,22 @@ function applyDesignerPreset(presetName, range) {
   if (!range) return;
   if (range.collapsed) return;
   
+  // If the selection is purely inside a text node that belongs to a preset span,
+  // we must expand the range to encompass the entire span so it can be extracted and cleaned.
+  let parent = range.commonAncestorContainer;
+  if (parent.nodeType === 3) parent = parent.parentNode;
+  const presetSpan = parent.closest('span[data-notion-color], span[class*="preset-"]');
+  
+  if (presetSpan) {
+    range.selectNode(presetSpan);
+  }
+  
   let fragment = range.extractContents();
   
   // Clean up any existing preset spans from the selection to prevent stacking
   const tempDiv = document.createElement('div');
   tempDiv.appendChild(fragment);
-  const spans = tempDiv.querySelectorAll('span[data-notion-color], span[class^="preset-"]');
+  const spans = tempDiv.querySelectorAll('span[data-notion-color], span[class*="preset-"]');
   spans.forEach(span => {
       while (span.firstChild) {
           span.parentNode.insertBefore(span.firstChild, span);
@@ -1885,7 +1954,7 @@ function applyDesignerPreset(presetName, range) {
 }
 
 // --- Inline Editing Components ---
-function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter }) {
+function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter, onUpdateBlock }) {
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const tagRef = useRef(null);
@@ -1910,6 +1979,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     
     setIsSaving(true);
     setLocalText(rawHTML);
+    if (onUpdateBlock) onUpdateBlock(blockId, type, plainText, richTextArray);
     try {
       await fetch('/api/admin/notion/update', {
         method: 'PATCH',
@@ -1976,7 +2046,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
         <button 
           className="blockDeleteBtn"
           onClick={() => onDeleteBlock(blockId)}
-          style={{ position: 'absolute', right: '-45px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px 8px 8px 24px', display: 'flex', alignItems: 'center' }}
+          style={{ position: 'absolute', right: '-28px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px 8px 8px 16px', display: 'flex', alignItems: 'center' }}
           onMouseOver={e => e.currentTarget.style.color = '#fff'}
           onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
           title="Delete Block"
@@ -1989,7 +2059,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   );
 }
 
-function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlockAfter }) {
+function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlockAfter, onUpdateBlock }) {
   const [isChecked, setIsChecked] = useState(block.to_do?.checked);
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -2000,6 +2070,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
     const newChecked = !isChecked;
     setIsChecked(newChecked);
     setIsSaving(true);
+    if (onUpdateBlock) onUpdateBlock(block.id, 'to_do', undefined, undefined, newChecked);
     try {
       await fetch('/api/admin/notion/update', {
         method: 'PATCH',
@@ -2019,6 +2090,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
     
     setIsSaving(true);
     setLocalText(newText);
+    if (onUpdateBlock) onUpdateBlock(block.id, 'to_do', newText, undefined, isChecked);
     try {
       await fetch('/api/admin/notion/update', {
         method: 'PATCH',
@@ -2084,7 +2156,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
         <button 
           className="blockDeleteBtn"
           onClick={() => onDeleteBlock(block.id)}
-          style={{ position: 'absolute', right: '-45px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px 8px 8px 24px', display: 'flex', alignItems: 'center' }}
+          style={{ position: 'absolute', right: '-28px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px 8px 8px 16px', display: 'flex', alignItems: 'center' }}
           onMouseOver={e => e.currentTarget.style.color = '#fff'}
           onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
           title="Delete Block"
@@ -2098,7 +2170,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
 }
 
 // Block Renderer Sub-component
-function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBlockAfter }) {
+function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBlockAfter, onUpdateBlock }) {
   const [toggleOpen, setToggleOpen] = useState(false);
 
   const renderRichText = (richTextArr) => {
@@ -2158,8 +2230,7 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
           blockId={block.id} type="heading_1" initialRichTextArr={block.heading_1?.rich_text} renderRichText={renderRichText}
           tagName="h1" className="notion-font" style={{ fontSize: '1.8rem', fontWeight: 800, margin: '32px 0 12px 0', color: '#ebd73f', letterSpacing: '-0.02em' }}
           emptyPlaceholder="Untitled Heading 1"
-          onDeleteBlock={onDeleteBlock}
-          onInsertBlockAfter={onInsertBlockAfter}
+          onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
         />
       );
 
@@ -2167,10 +2238,9 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
       return (
         <EditableTextBlock
           blockId={block.id} type="heading_2" initialRichTextArr={block.heading_2?.rich_text} renderRichText={renderRichText}
-          tagName="h2" className="notion-font" style={{ fontSize: '1.4rem', fontWeight: 700, margin: '24px 0 10px 0', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '8px' }}
+          tagName="h2" className="notion-font" style={{ fontSize: '1.5rem', fontWeight: 700, margin: '28px 0 10px 0', color: '#eee' }}
           emptyPlaceholder="Untitled Heading 2"
-          onDeleteBlock={onDeleteBlock}
-          onInsertBlockAfter={onInsertBlockAfter}
+          onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
         />
       );
 
@@ -2178,10 +2248,9 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
       return (
         <EditableTextBlock
           blockId={block.id} type="heading_3" initialRichTextArr={block.heading_3?.rich_text} renderRichText={renderRichText}
-          tagName="h3" className="notion-font" style={{ fontSize: '1.15rem', fontWeight: 600, margin: '16px 0 8px 0', color: '#ddd' }}
+          tagName="h3" className="notion-font" style={{ fontSize: '1.25rem', fontWeight: 600, margin: '24px 0 8px 0', color: '#ccc' }}
           emptyPlaceholder="Untitled Heading 3"
-          onDeleteBlock={onDeleteBlock}
-          onInsertBlockAfter={onInsertBlockAfter}
+          onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
         />
       );
 
@@ -2189,35 +2258,62 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
       return (
         <EditableTextBlock
           blockId={block.id} type="paragraph" initialRichTextArr={block.paragraph?.rich_text} renderRichText={renderRichText}
-          tagName="p" className="notion-font" style={{ fontSize: '1.05rem', lineHeight: 1.7, color: '#f0f0f0', margin: '4px 0 16px 0', letterSpacing: '0.01em' }}
-          emptyPlaceholder="Type something..."
-          onDeleteBlock={onDeleteBlock}
-          onInsertBlockAfter={onInsertBlockAfter}
+          tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', margin: '4px 0', minHeight: '1.6rem' }}
+          emptyPlaceholder="Type '/' for commands"
+          onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
+        />
+      );
+
+    case 'quote':
+      return (
+        <EditableTextBlock
+          blockId={block.id} type="quote" initialRichTextArr={block.quote?.rich_text} renderRichText={renderRichText}
+          tagName="blockquote" className="notion-font" 
+          style={{ fontSize: '1.1rem', fontStyle: 'italic', color: '#ebd73f', margin: '16px 0', padding: '12px 20px', borderLeft: '3px solid #ebd73f', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '0 8px 8px 0' }}
+          emptyPlaceholder="Empty quote"
+          onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
+        />
+      );
+
+    case 'code':
+      return (
+        <EditableTextBlock
+          blockId={block.id} type="code" initialRichTextArr={block.code?.rich_text} renderRichText={renderRichText}
+          tagName="pre" className="notion-font" 
+          style={{ fontFamily: 'monospace', fontSize: '0.9rem', color: '#eee', margin: '16px 0', padding: '16px', background: '#111', borderRadius: '8px', overflowX: 'auto', border: '1px solid #333' }}
+          emptyPlaceholder="Code snippet..."
+          onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
         />
       );
 
     case 'bulleted_list_item':
       return (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '8px', marginBottom: '8px' }}>
-          <span style={{ color: '#ebd73f', fontSize: '1.2rem', lineHeight: '1.5rem', userSelect: 'none' }}>•</span>
-          <div className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.7, color: '#b3b3b3' }}>
-            {renderRichText(block.bulleted_list_item?.rich_text)}
-          </div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', margin: '4px 0', paddingLeft: '8px' }}>
+          <span style={{ color: '#ebd73f', marginTop: '4px', fontSize: '1.2rem', lineHeight: 1 }}>•</span>
+          <EditableTextBlock
+            blockId={block.id} type="bulleted_list_item" initialRichTextArr={block.bulleted_list_item?.rich_text} renderRichText={renderRichText}
+            tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', flex: 1 }}
+            emptyPlaceholder="List item"
+            onDeleteBlock={onDeleteBlock} onInsertBlockAfter={(id) => onInsertBlockAfter(id, 'bulleted_list_item')} onUpdateBlock={onUpdateBlock}
+          />
         </div>
       );
 
     case 'numbered_list_item':
       return (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '8px', marginBottom: '8px' }}>
-          <span className="notion-font" style={{ color: '#ebd73f', fontSize: '0.95rem', fontWeight: 700, marginTop: '2px', userSelect: 'none' }}>#</span>
-          <div className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.7, color: '#b3b3b3' }}>
-            {renderRichText(block.numbered_list_item?.rich_text)}
-          </div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', margin: '4px 0', paddingLeft: '8px' }}>
+          <span style={{ color: '#ebd73f', marginTop: '2px', fontSize: '0.9rem', fontWeight: 600 }}>1.</span>
+          <EditableTextBlock
+            blockId={block.id} type="numbered_list_item" initialRichTextArr={block.numbered_list_item?.rich_text} renderRichText={renderRichText}
+            tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', flex: 1 }}
+            emptyPlaceholder="Numbered item"
+            onDeleteBlock={onDeleteBlock} onInsertBlockAfter={(id) => onInsertBlockAfter(id, 'numbered_list_item')} onUpdateBlock={onUpdateBlock}
+          />
         </div>
       );
 
     case 'to_do':
-      return <EditableTodoBlock block={block} renderRichText={renderRichText} onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} />;
+      return <EditableTodoBlock block={block} renderRichText={renderRichText} onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock} />;
 
     case 'callout':
       return (

@@ -206,15 +206,7 @@ export default function OrloChat() {
         return;
       }
 
-      // Explicitly request microphone access first to prevent silent failures/flashing
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Release the stream immediately since SpeechRecognition will request its own
-        stream.getTracks().forEach(track => track.stop());
-      } catch (err) {
-        showToast('Microphone access denied. Please allow mic access in your browser settings.');
-        return;
-      }
+      // SpeechRecognition natively handles its own microphone permissions.
 
       try {
         const recognition = new SpeechRecognition();
@@ -1307,6 +1299,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
 
       {isOpen && (
         <div className="chat-container" ref={chatRef}>
+          {toastMessage && <div className="toast-msg">{toastMessage}</div>}
           <div style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
           <div className="chat-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1477,7 +1470,6 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
               zIndex: 10
             }}
           >
-            {toastMessage && <div className="toast-msg">{toastMessage}</div>}
             <div className="profile-header-bar">
               <button onClick={() => setShowProfile(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 0 }}>
                 <ArrowLeft size={24} />
