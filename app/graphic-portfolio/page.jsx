@@ -2010,7 +2010,8 @@ export default function Page() {
                           flexDirection: 'column',
                           alignItems: 'flex-start',
                           justifyContent: 'space-between',
-                          minHeight: '280px',
+                          gap: '30px',
+                          minHeight: '320px',
                           boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
                           backdropFilter: 'blur(20px)',
                           WebkitBackdropFilter: 'blur(20px)'
