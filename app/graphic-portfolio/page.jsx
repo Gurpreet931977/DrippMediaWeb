@@ -2009,51 +2009,76 @@ export default function Page() {
       </svg>
     </div>
 
-    {/* Floating Circular Glass Loupe Magnifier */}
+    {/* Floating Luxury Optical HUD Magnifier Lens */}
     <div 
       id="magnifier-lens"
       style={{
         position: 'fixed',
-        width: '180px',
-        height: '180px',
+        width: '200px',
+        height: '200px',
         borderRadius: '50%',
-        border: '2px solid #ebd73f',
-        boxShadow: '0 0 25px rgba(235, 215, 63, 0.5), inset 0 0 15px rgba(235, 215, 63, 0.25), 0 15px 35px rgba(0,0,0,0.85)',
+        border: '2.5px solid #ebd73f',
+        boxShadow: '0 0 35px rgba(235, 215, 63, 0.65), inset 0 0 25px rgba(235, 215, 63, 0.3), 0 25px 60px rgba(0,0,0,0.9)',
         pointerEvents: 'none',
         opacity: 0,
+        transform: 'scale(0.85)',
         zIndex: 9500,
-        transition: 'opacity 0.2s ease, transform 0.05s ease-out',
+        transition: 'opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         overflow: 'hidden',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: '#0a0a0a'
+        backgroundColor: '#111'
       }}
     >
-      {/* Specular glass reflection & reticle center dot */}
+      {/* Specular curved glass reflection */}
       <div 
         style={{
           position: 'absolute',
           inset: 0,
           borderRadius: '50%',
-          background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.25) 0%, rgba(235,215,63,0.08) 45%, transparent 70%)',
-          border: '1px solid rgba(255,255,255,0.3)',
-          boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.3)',
-          pointerEvents: 'none'
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(235,215,63,0.12) 35%, transparent 65%)',
+          border: '1px solid rgba(255,255,255,0.35)',
+          boxShadow: 'inset 0 3px 6px rgba(255,255,255,0.4)',
+          pointerEvents: 'none',
+          zIndex: 3
         }}
       />
+      {/* Dashed inner HUD ring */}
+      <div 
+        style={{
+          position: 'absolute',
+          inset: '8px',
+          borderRadius: '50%',
+          border: '1px dashed rgba(235, 215, 63, 0.5)',
+          pointerEvents: 'none',
+          zIndex: 4
+        }}
+      />
+      {/* Center Target Reticle */}
       <div 
         style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '6px',
-          height: '6px',
+          width: '12px',
+          height: '12px',
           borderRadius: '50%',
-          backgroundColor: '#ebd73f',
-          boxShadow: '0 0 8px #ebd73f',
-          pointerEvents: 'none'
+          border: '1px solid rgba(235, 215, 63, 0.8)',
+          boxShadow: '0 0 10px #ebd73f',
+          display: 'flex',
+          alignItems: 'center',
+          justify-content: 'center',
+          pointerEvents: 'none',
+          zIndex: 5
         }}
-      />
+      >
+        <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#ebd73f' }} />
+      </div>
+      {/* Cardinal HUD micro ticks */}
+      <div style={{ position: 'absolute', top: '4px', left: '50%', transform: 'translateX(-50%)', width: '2px', height: '6px', background: '#ebd73f', zIndex: 5, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '4px', left: '50%', transform: 'translateX(-50%)', width: '2px', height: '6px', background: '#ebd73f', zIndex: 5, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', left: '4px', top: '50%', transform: 'translateY(-50%)', width: '6px', height: '2px', background: '#ebd73f', zIndex: 5, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', width: '6px', height: '2px', background: '#ebd73f', zIndex: 5, pointerEvents: 'none' }} />
     </div>
 
       <div 
@@ -2077,11 +2102,20 @@ export default function Page() {
             const slider = document.getElementById('magnify-slider');
             const zoomLevel = slider ? parseFloat(slider.value) : 2.5;
 
-            const lensRadius = 90;
+            const lensSize = 200;
+            const lensRadius = 100;
             const bgW = rect.width * zoomLevel;
             const bgH = rect.height * zoomLevel;
-            const bgX = -(relX * zoomLevel - lensRadius);
-            const bgY = -(relY * zoomLevel - lensRadius);
+
+            const rawBgX = -(relX * zoomLevel - lensRadius);
+            const rawBgY = -(relY * zoomLevel - lensRadius);
+
+            // Clamp background offset to guarantee 100% full-bleed image coverage without black cutoffs
+            const minBgX = bgW > lensSize ? -(bgW - lensSize) : 0;
+            const bgX = Math.max(minBgX, Math.min(0, rawBgX));
+
+            const minBgY = bgH > lensSize ? -(bgH - lensSize) : 0;
+            const bgY = Math.max(minBgY, Math.min(0, rawBgY));
 
             lens.style.left = `${clientX - lensRadius}px`;
             lens.style.top = `${clientY - lensRadius}px`;
@@ -2089,10 +2123,14 @@ export default function Page() {
             lens.style.backgroundSize = `${bgW}px ${bgH}px`;
             lens.style.backgroundPosition = `${bgX}px ${bgY}px`;
             lens.style.opacity = '1';
+            lens.style.transform = 'scale(1)';
         }}
         onMouseLeave={() => {
             const lens = document.getElementById('magnifier-lens');
-            if (lens) lens.style.opacity = '0';
+            if (lens) {
+                lens.style.opacity = '0';
+                lens.style.transform = 'scale(0.85)';
+            }
         }}
       >
         <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', position: 'relative' }}>
@@ -2137,17 +2175,28 @@ export default function Page() {
                   const img = document.getElementById('specific-img');
                   const lens = document.getElementById('magnifier-lens');
                   if (img && lens && lens.style.opacity === '1') {
-                      const lastX = parseFloat(lens.style.left) + 90;
-                      const lastY = parseFloat(lens.style.top) + 90;
+                      const lastX = parseFloat(lens.style.left) + 100;
+                      const lastY = parseFloat(lens.style.top) + 100;
                       if (!isNaN(lastX) && !isNaN(lastY)) {
                           const rect = img.getBoundingClientRect();
                           if (rect.width > 0 && rect.height > 0) {
-                              let relX = Math.max(0, Math.min(rect.width, lastX - rect.left));
-                              let relY = Math.max(0, Math.min(rect.height, lastY - rect.top));
+                              let relX = lastX - rect.left;
+                              let relY = lastY - rect.top;
+                              relX = Math.max(0, Math.min(rect.width, relX));
+                              relY = Math.max(0, Math.min(rect.height, relY));
+
+                              const lensSize = 200;
+                              const lensRadius = 100;
                               const bgW = rect.width * sliderVal;
                               const bgH = rect.height * sliderVal;
-                              const bgX = -(relX * sliderVal - 90);
-                              const bgY = -(relY * sliderVal - 90);
+                              const rawBgX = -(relX * sliderVal - lensRadius);
+                              const rawBgY = -(relY * sliderVal - lensRadius);
+
+                              const minBgX = bgW > lensSize ? -(bgW - lensSize) : 0;
+                              const bgX = Math.max(minBgX, Math.min(0, rawBgX));
+                              const minBgY = bgH > lensSize ? -(bgH - lensSize) : 0;
+                              const bgY = Math.max(minBgY, Math.min(0, rawBgY));
+
                               lens.style.backgroundSize = `${bgW}px ${bgH}px`;
                               lens.style.backgroundPosition = `${bgX}px ${bgY}px`;
                           }
