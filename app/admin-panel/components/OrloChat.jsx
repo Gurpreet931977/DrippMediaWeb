@@ -170,6 +170,7 @@ export default function OrloChat() {
   const speechBubbleTimeoutRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
+  const [voiceCallTranscript, setVoiceCallTranscript] = useState({ user: '', ai: '' });
 
   // Load chat history and fetch working models from API on mount
   useEffect(() => {
@@ -286,7 +287,7 @@ export default function OrloChat() {
             setIsListening(false);
             setIsProcessingVoice(true);
             try { recognitionRef.current.stop(); } catch(e){}
-            handleSubmit(null, fullText);
+            handleVoiceSubmit(fullText);
           }, 2000);
         };
         
@@ -782,6 +783,84 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       
       window.speechSynthesis.speak(utterance);
     } else {
+      setIsProcessingVoice(false);
+    }
+  };
+
+  const handleVoiceSubmit = async (text) => {
+    const userText = text.trim();
+    if (!userText) {
+      setIsProcessingVoice(false);
+      return;
+    }
+    
+    setInput('');
+    originalInputRef.current = '';
+    setVoiceCallTranscript({ user: userText, ai: '' });
+    setEmotion('thinking');
+
+    try {
+      const currentContext = window._drippEmailContext || {};
+      const systemContext = window._drippSystemContext || {};
+      const formContext = window._drippFormContext || {};
+      
+      const res = await fetch('/api/admin/copilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userPrompt: userText,
+          chatHistory: [], // don't send heavy history for voice, or send a small slice
+          context: currentContext, 
+          systemContext: systemContext,
+          formContext: formContext,
+          notionContext: window._notionContext || {},
+          currentDate: new Date().toString(),
+          model: selectedModel,
+          isGenz: isGenz,
+          isVoiceCall: true
+        })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || 'Failed to process voice command');
+
+      setEmotion('success');
+      setTimeout(() => setEmotion('idle'), 3000);
+
+      let msg = data.replyMessage || data.message || (data.payload && data.payload.replyMessage);
+      if (!msg) {
+         msg = data.intent === 'chat' ? "I'm here!" : "Done.";
+      }
+      
+      setVoiceCallTranscript(prev => ({ ...prev, ai: msg }));
+      speakResponse(msg);
+
+      // Dispatch event to window so forms can pick it up
+      if (data.intent && data.payload) {
+        if (['quote', 'package', 'pmp', 'invoice'].includes(data.intent)) {
+          sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
+        }
+        window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
+        
+        const currentPath = window.location.pathname;
+        const targetPath = (data.intent === 'quote' || data.intent === 'package') ? '/admin-panel/quote' :
+                           data.intent === 'pmp' ? '/admin-panel/package' :
+                           data.intent === 'invoice' ? '/admin-panel/invoice' : null;
+                           
+        if (targetPath && currentPath !== targetPath) {
+          router.push(targetPath);
+        } else if (data.intent === 'portfolio') {
+          if (data.payload.analyzeVideo) {
+            handleVideoAnalysis();
+          } else {
+            window.dispatchEvent(new CustomEvent('UPDATE_PORTFOLIO_FORM', { detail: data.payload }));
+          }
+        }
+      }
+    } catch (e) {
+      setVoiceCallTranscript(prev => ({ ...prev, ai: "Network error on voice call." }));
+      setEmotion('disappointed');
+      setTimeout(() => setEmotion('idle'), 4000);
       setIsProcessingVoice(false);
     }
   };
@@ -1572,8 +1651,10 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
               {isListening 
                 ? (input || "Listening...") 
                 : isProcessingVoice 
-                  ? "Thinking..."
-                  : (messages.length > 0 && messages[messages.length-1].role === 'ai' ? messages[messages.length-1].text : "...")}
+                  ? (voiceCallTranscript.user ? `You: ${voiceCallTranscript.user}` : "Thinking...")
+                  : (isSpeaking && voiceCallTranscript.ai) 
+                    ? `Orlo: ${voiceCallTranscript.ai}`
+                    : (voiceCallTranscript.ai || "...")}
             </div>
           </div>
 

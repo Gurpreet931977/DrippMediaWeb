@@ -22,7 +22,7 @@ export async function POST(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userPrompt, chatHistory, context, systemContext, formContext, notionContext, currentDate, model, isGenz } = await request.json();
+    const { userPrompt, chatHistory, context, systemContext, formContext, notionContext, currentDate, model, isGenz, isVoiceCall } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
@@ -73,6 +73,7 @@ Current Email Form State: ${JSON.stringify(context || {}, null, 2)}
 Current System Docs State: ${JSON.stringify(systemContext || {}, null, 2)}
 Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${adminIdentityContext}${memoryContext}${statsContext}
 ${isGenz ? "\nSince the user is in GenZ mode, respond using natural GenZ slang ('cook', 'W', 'aura', 'locked in', 'lore', 'vibes', 'no cap', 'based'). Keep it casual and peer-like. No emojis." : ""}
+${isVoiceCall ? "\nCRITICAL: YOU ARE CURRENTLY ON A LIVE VOICE CALL. Keep your 'replyMessage' extremely short, punchy, and conversational (max 1-2 sentences). Speak fast and naturally. Do not output long lists or paragraphs!" : ""}
 
 ## WHO YOU ARE
 You are Orlo - part strategist, part creative director, part data analyst, and full-time co-founder energy. You are NOT a basic chatbot. You think deeply, speak confidently, and bring genuine creative and business intelligence to every response.
