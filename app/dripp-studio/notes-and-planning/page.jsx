@@ -11,6 +11,7 @@ import { useGenz } from '../../contexts/GenzContext';
 
 function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUpwards, setOpenUpwards] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -23,11 +24,21 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const toggleOpen = (e) => {
+    e.preventDefault();
+    if (!isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setOpenUpwards(spaceBelow < 250);
+    }
+    setIsOpen(!isOpen);
+  };
+
   return (
     <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-block' }}>
       <button
         className="notion-font"
-        onMouseDown={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
+        onMouseDown={toggleOpen}
         style={{
           background: isOpen ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)' : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%)',
           border: '1px solid rgba(255,255,255,0.08)',
@@ -50,32 +61,37 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
         onMouseOut={e => !isOpen && (e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%)')}
       >
         {label}
-        <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#888', fontSize: '0.55rem', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</div>
+        <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#888', fontSize: '0.55rem', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)', transform: isOpen ? (openUpwards ? 'rotate(0deg)' : 'rotate(180deg)') : (openUpwards ? 'rotate(180deg)' : 'rotate(0deg)') }}>
+          {openUpwards ? '▲' : '▼'}
+        </div>
       </button>
       
       {isOpen && (
         <div style={{
           position: 'absolute',
-          top: '100%',
+          top: openUpwards ? 'auto' : '100%',
+          bottom: openUpwards ? '100%' : 'auto',
           left: align === 'left' ? 0 : 'auto',
           right: align === 'right' ? 0 : 'auto',
-          marginTop: '8px',
-          background: 'linear-gradient(135deg, rgba(30, 30, 35, 0.85) 0%, rgba(15, 15, 20, 0.7) 100%)',
+          marginTop: openUpwards ? '0px' : '8px',
+          marginBottom: openUpwards ? '8px' : '0px',
+          background: 'linear-gradient(135deg, rgba(24, 24, 28, 0.95) 0%, rgba(12, 12, 16, 0.98) 100%)',
           backdropFilter: 'blur(30px) saturate(140%)',
           WebkitBackdropFilter: 'blur(30px) saturate(140%)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderTop: '1px solid rgba(255,255,255,0.4)',
-          borderLeft: '1px solid rgba(255,255,255,0.2)',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-          borderRadius: '12px',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderTop: openUpwards ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.4)',
+          borderBottom: openUpwards ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(255,255,255,0.15)',
+          borderRadius: '14px',
           padding: '6px',
-          minWidth: '160px',
-          boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 -1px 2px rgba(255, 255, 255, 0.1), 0 20px 40px rgba(0,0,0,0.5)',
-          zIndex: 10001,
+          minWidth: '165px',
+          maxHeight: '220px',
+          overflowY: 'auto',
+          boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 20px 50px rgba(0,0,0,0.8)',
+          zIndex: 100050,
           display: 'flex',
           flexDirection: 'column',
           gap: '2px',
-          animation: 'slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
+          animation: openUpwards ? 'slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both' : 'slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
           userSelect: 'none',
           WebkitUserSelect: 'none'
         }}>
@@ -95,18 +111,23 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
                 fontWeight: 600,
                 borderRadius: '8px',
                 cursor: 'pointer',
-                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
               }}
               onMouseOver={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)';
+                e.currentTarget.style.color = '#ebd73f';
                 e.currentTarget.style.transform = 'translateX(4px)';
               }}
               onMouseOut={e => {
                 e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = opt.color || '#eee';
                 e.currentTarget.style.transform = 'translateX(0)';
               }}
             >
-              {opt.label}
+              <span>{opt.label}</span>
             </div>
           ))}
         </div>
@@ -197,6 +218,17 @@ export default function NotionHubPage() {
       localStorage.setItem(cacheKey, JSON.stringify({ ...data, items: sortedItems }));
       
       if (sortedItems.length > 0 && !selectedItem && !isSearch) {
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          const targetDocId = params.get('docId');
+          if (targetDocId) {
+            const found = sortedItems.find(i => i.id === targetDocId || i.id.replace(/-/g, '') === targetDocId.replace(/-/g, ''));
+            if (found) {
+              setSelectedItem(found);
+              return;
+            }
+          }
+        }
         setSelectedItem(sortedItems[0]);
       }
     } catch (err) {
@@ -258,6 +290,30 @@ export default function NotionHubPage() {
     }
   }, []);
 
+  // Auto-scroll to target block if blockId URL parameter is provided
+  useEffect(() => {
+    if (typeof window !== 'undefined' && docContent?.blocks) {
+      const params = new URLSearchParams(window.location.search);
+      const targetBlockId = params.get('blockId');
+      if (targetBlockId) {
+        setTimeout(() => {
+          const el = document.getElementById(`block-${targetBlockId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+            el.style.borderRadius = '12px';
+            el.style.boxShadow = '0 0 35px rgba(235, 215, 63, 0.7)';
+            el.style.outline = '2px solid #ebd73f';
+            setTimeout(() => {
+              el.style.boxShadow = 'none';
+              el.style.outline = 'none';
+            }, 3500);
+          }
+        }, 500);
+      }
+    }
+  }, [docContent]);
+
   const toggleFavorite = (e, id) => {
     e.stopPropagation();
     const newFavs = favorites.includes(id) ? favorites.filter(f => f !== id) : [...favorites, id];
@@ -311,7 +367,7 @@ export default function NotionHubPage() {
     if (undoStackRef.current.length > 0) {
       const prevDoc = undoStackRef.current.pop();
       setDocContent(current => {
-        if (current) redoStackRef.current.push(current);
+        if (current) redoStackRef.current.push(JSON.parse(JSON.stringify(current)));
         if (selectedItem?.id) localStorage.setItem(`notion_page_${selectedItem.id}`, JSON.stringify(prevDoc));
         return prevDoc;
       });
@@ -324,7 +380,7 @@ export default function NotionHubPage() {
     if (redoStackRef.current.length > 0) {
       const nextDoc = redoStackRef.current.pop();
       setDocContent(current => {
-        if (current) undoStackRef.current.push(current);
+        if (current) undoStackRef.current.push(JSON.parse(JSON.stringify(current)));
         if (selectedItem?.id) localStorage.setItem(`notion_page_${selectedItem.id}`, JSON.stringify(nextDoc));
         return nextDoc;
       });
@@ -338,21 +394,25 @@ export default function NotionHubPage() {
       if (e.key === 'Escape' && isZenithMode) {
         setIsZenithMode(false);
       }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      if ((e.metaKey || e.ctrlKey) && (e.key?.toLowerCase() === 'k' || e.code === 'KeyK')) {
         e.preventDefault();
         if (searchInputRef.current) {
           searchInputRef.current.focus();
         }
       }
       // Cmd+Z (Undo) and Cmd+Shift+Z / Cmd+Y (Redo)
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+      const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+      const isZ = e.key?.toLowerCase() === 'z' || e.code === 'KeyZ';
+      const isY = e.key?.toLowerCase() === 'y' || e.code === 'KeyY';
+
+      if (isCmdOrCtrl && isZ) {
         e.preventDefault();
         if (e.shiftKey) {
           handleRedo();
         } else {
           handleUndo();
         }
-      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
+      } else if (isCmdOrCtrl && isY) {
         e.preventDefault();
         handleRedo();
       }
@@ -1192,12 +1252,14 @@ export default function NotionHubPage() {
                   const el = document.getElementById(`block-${firstPending.id}`);
                   if (el) {
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    el.style.transition = 'background 0.5s ease-out';
-                    el.style.background = 'rgba(255, 189, 46, 0.2)';
-                    el.style.borderRadius = '8px';
+                    el.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                    el.style.borderRadius = '12px';
+                    el.style.boxShadow = '0 0 35px rgba(235, 215, 63, 0.7)';
+                    el.style.outline = '2px solid #ebd73f';
                     setTimeout(() => {
-                      el.style.background = 'transparent';
-                    }, 1500);
+                      el.style.boxShadow = 'none';
+                      el.style.outline = 'none';
+                    }, 3500);
                   }
                 }
               }}
@@ -2078,11 +2140,11 @@ function applyDesignerPreset(presetName, range) {
   if (!range) return;
   if (range.collapsed) return;
   
-  // If the selection is purely inside a text node that belongs to a preset span,
-  // we must expand the range to encompass the entire span so it can be extracted and cleaned.
+  // If the selection is purely inside a text node that belongs to a preset span or code block,
+  // we must expand the range to encompass the entire wrapper so it can be extracted and cleaned.
   let parent = range.commonAncestorContainer;
   if (parent.nodeType === 3) parent = parent.parentNode;
-  const presetSpan = parent.closest('span[data-notion-color], span[class*="preset-"]');
+  const presetSpan = parent.closest('span[data-notion-color], span[class*="preset-"], code');
   
   if (presetSpan) {
     range.selectNode(presetSpan);
@@ -2090,15 +2152,15 @@ function applyDesignerPreset(presetName, range) {
   
   let fragment = range.extractContents();
   
-  // Clean up any existing preset spans from the selection to prevent stacking
+  // Clean up any existing preset spans or code elements from the selection to prevent stacking
   const tempDiv = document.createElement('div');
   tempDiv.appendChild(fragment);
-  const spans = tempDiv.querySelectorAll('span[data-notion-color], span[class*="preset-"]');
-  spans.forEach(span => {
-      while (span.firstChild) {
-          span.parentNode.insertBefore(span.firstChild, span);
+  const elementsToClean = tempDiv.querySelectorAll('span[data-notion-color], span[class*="preset-"], code');
+  elementsToClean.forEach(el => {
+      while (el.firstChild) {
+          el.parentNode.insertBefore(el.firstChild, el);
       }
-      span.parentNode.removeChild(span);
+      el.parentNode.removeChild(el);
   });
   
   fragment = document.createDocumentFragment();

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FileText, PackagePlus, ShieldCheck, Video, Mail, Settings, Activity, HardDrive, Sparkles, Database, AlertTriangle } from 'lucide-react';
+import { FileText, PackagePlus, ShieldCheck, Video, Mail, Settings, Activity, HardDrive, Sparkles, Database, AlertTriangle, CheckSquare } from 'lucide-react';
 import styles from './admin.module.css';
 import { useGenz } from '../contexts/GenzContext';
 import { useState, useEffect } from 'react';
@@ -9,10 +9,53 @@ import { useState, useEffect } from 'react';
 export default function AdminDashboard() {
   const { isGenz } = useGenz() || { isGenz: false };
   const [currentDate, setCurrentDate] = useState('');
+  const [pendingTasks, setPendingTasks] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     setCurrentDate(date);
+
+    async function loadPendingTasks() {
+      try {
+        const res = await fetch('/api/admin/notion?action=list');
+        const data = await res.json();
+        const items = data.items || [];
+        
+        let allPending = [];
+        for (const item of items) {
+          const cacheKey = `notion_page_${item.id}`;
+          const cached = localStorage.getItem(cacheKey);
+          let pageBlocks = [];
+          if (cached) {
+            try { pageBlocks = JSON.parse(cached).blocks || []; } catch(e){}
+          }
+          if (pageBlocks.length === 0) {
+            try {
+              const bRes = await fetch(`/api/admin/notion?action=blocks&pageId=${item.id}`);
+              const bData = await bRes.json();
+              pageBlocks = bData.blocks || [];
+            } catch(e) {}
+          }
+          
+          const pagePending = pageBlocks
+            .filter(b => b.type === 'to_do' && !b.to_do?.checked)
+            .map(b => ({
+              id: b.id,
+              docId: item.id,
+              docTitle: item.title || 'Untitled Document',
+              text: b.to_do?.rich_text?.map(t => t.plain_text).join('') || 'Untitled Task'
+            }));
+          allPending.push(...pagePending);
+        }
+        
+        setPendingTasks(allPending);
+        setPendingCount(allPending.length);
+      } catch(err) {
+        console.error(err);
+      }
+    }
+    loadPendingTasks();
   }, []);
 
   const featureCards = [
@@ -137,7 +180,89 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        <Link href="/dripp-studio/notes-and-planning" style={{ textDecoration: 'none' }}>
+          <div className={styles.card} style={{ margin: 0, padding: '1.75rem', display: 'flex', alignItems: 'center', gap: '1.5rem', cursor: 'pointer', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(20, 20, 20, 0.8) 100%)' }}>
+            <div style={{ background: 'rgba(235, 215, 63, 0.15)', padding: '1.25rem', borderRadius: '50%', border: '1px solid rgba(235, 215, 63, 0.3)' }}>
+              <CheckSquare size={32} color="#ebd73f" />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1rem', color: '#ebd73f', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Pending Tasks</h3>
+              <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#fff', fontFamily: 'Panchang, sans-serif' }}>{pendingCount} Tasks</p>
+            </div>
+          </div>
+        </Link>
+
       </div>
+
+      {/* Pending Tasks Interactive Section */}
+      {pendingTasks.length > 0 && (
+        <div style={{ marginBottom: '3rem', padding: '2rem', background: 'linear-gradient(180deg, rgba(20, 20, 25, 0.8) 0%, rgba(10, 10, 14, 0.95) 100%)', borderRadius: '20px', border: '1px solid rgba(235, 215, 63, 0.2)', boxShadow: '0 15px 35px rgba(0,0,0,0.6)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ padding: '6px 14px', background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '30px', color: '#ebd73f', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'Panchang, sans-serif', letterSpacing: '1px' }}>
+                {pendingCount} PENDING
+              </div>
+              <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700, color: '#fff', fontFamily: 'Panchang, sans-serif', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                {isGenz ? 'Action Items to Crush' : 'Pending Tasks'}
+              </h2>
+            </div>
+            <Link href="/dripp-studio/notes-and-planning" style={{ color: '#ebd73f', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', fontFamily: 'Clash Display, sans-serif', letterSpacing: '1px' }}>
+              View All Notes →
+            </Link>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
+            {pendingTasks.map((task) => (
+              <Link 
+                key={task.id} 
+                href={`/dripp-studio/notes-and-planning?docId=${task.docId}&blockId=${task.id}`}
+                style={{ textDecoration: 'none' }}
+              >
+                <div style={{ 
+                  padding: '1.25rem', 
+                  background: 'rgba(255, 255, 255, 0.03)', 
+                  border: '1px solid rgba(255, 255, 255, 0.08)', 
+                  borderRadius: '14px', 
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '12px'
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.background = 'rgba(235, 215, 63, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.4)';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = '0 10px 25px rgba(235, 215, 63, 0.15)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <div style={{ width: '18px', height: '18px', borderRadius: '5px', border: '2px solid #ebd73f', background: 'rgba(235, 215, 63, 0.1)', flexShrink: 0, marginTop: '2px' }} />
+                    <span style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 600, lineHeight: 1.5, fontFamily: 'Clash Display, sans-serif' }}>
+                      {task.text}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Clash Display, sans-serif' }}>
+                      📄 {task.docTitle}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: '#ebd73f', fontWeight: 700, letterSpacing: '1px' }}>
+                      Go to Task →
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <div style={{ height: '2px', flex: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.05), transparent)' }}></div>
