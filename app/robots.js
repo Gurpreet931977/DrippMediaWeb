@@ -4,7 +4,7 @@ export default function robots() {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin-panel/', '/api/', '/invoice/'],
+        disallow: ['/dripp-studio/', '/api/', '/invoice/'],
       }
     ],
     sitemap: 'https://www.drippmedia.com/sitemap.xml',

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import gsap from 'gsap';
 import './wiki.css';
-import OrloIcon from '../admin-panel/components/OrloIcon'; // Use the same OrloIcon
+import OrloIcon from '../dripp-studio/components/OrloIcon'; // Use the same OrloIcon
 
 const MagicCursor = () => {
     const cursorRef = useRef(null);
@@ -195,7 +195,7 @@ export default function OrloWikiPage() {
                     <div className="wiki-nav-title">Navigation</div>
                     <ul className="wiki-nav-links">
                         <li><Link href="/">Main Page</Link></li>
-                        <li><Link href="/admin-panel">Admin Panel</Link></li>
+                        <li><Link href="/dripp-studio">Admin Panel</Link></li>
                         <li><Link href="/orlo-export">Green Screen Export</Link></li>
                         <li><a href="#">Recent Changes</a></li>
                         <li><a href="#">Random Article</a></li>

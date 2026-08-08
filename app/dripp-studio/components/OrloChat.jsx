@@ -843,9 +843,9 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
         
         const currentPath = window.location.pathname;
-        const targetPath = (data.intent === 'quote' || data.intent === 'package') ? '/admin-panel/quote' :
-                           data.intent === 'pmp' ? '/admin-panel/package' :
-                           data.intent === 'invoice' ? '/admin-panel/invoice' : null;
+        const targetPath = (data.intent === 'quote' || data.intent === 'package') ? '/dripp-studio/quote' :
+                           data.intent === 'pmp' ? '/dripp-studio/package' :
+                           data.intent === 'invoice' ? '/dripp-studio/invoice' : null;
                            
         if (targetPath && currentPath !== targetPath) {
           router.push(targetPath);
@@ -961,9 +961,9 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
         
         const currentPath = window.location.pathname;
-        const targetPath = (data.intent === 'quote' || data.intent === 'package') ? '/admin-panel/quote' :
-                           data.intent === 'pmp' ? '/admin-panel/package' :
-                           data.intent === 'invoice' ? '/admin-panel/invoice' : null;
+        const targetPath = (data.intent === 'quote' || data.intent === 'package') ? '/dripp-studio/quote' :
+                           data.intent === 'pmp' ? '/dripp-studio/package' :
+                           data.intent === 'invoice' ? '/dripp-studio/invoice' : null;
                            
         if (targetPath && currentPath !== targetPath) {
           router.push(targetPath);

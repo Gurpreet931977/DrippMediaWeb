@@ -2,7 +2,7 @@
  * /api/admin/verify
  *
  * Server-side admin session verification.
- * Replaces the client-side localStorage-based auth bypass in admin-panel/layout.jsx.
+ * Replaces the client-side localStorage-based auth bypass in dripp-studio/layout.jsx.
  *
  * POST { email, token }
  *  - token: a value the client presents (from their dripp_user localStorage or Supabase session)

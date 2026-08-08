@@ -2955,7 +2955,7 @@ export default function Page() {
             </a>
 
             <a
-                href="/admin-panel"
+                href="/dripp-studio"
                 style={{
                     position: 'fixed',
                     bottom: '85px',

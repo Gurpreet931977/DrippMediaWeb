@@ -21,7 +21,7 @@ export default function AdminDashboard() {
       title: isGenz ? 'The Showcase' : 'Portfolio Manager',
       desc: isGenz ? 'Upload videos & graphics straight to the cloud. Keep the feed drippy.' : 'Manage videos, graphics, and case studies. Upload directly to Cloudflare R2.',
       icon: Video,
-      link: '/admin-panel/portfolio',
+      link: '/dripp-studio/portfolio',
       btnText: isGenz ? 'Manage Portfolio' : 'Open Portfolio',
       color: '#ebd73f'
     },
@@ -30,7 +30,7 @@ export default function AdminDashboard() {
       title: isGenz ? 'Pitch Cooker' : 'Quotes & Packages',
       desc: isGenz ? 'Build proposals and custom quotes with AI. Basically a cheat code for pitching.' : 'Build dynamic project proposals, detailed quotations, and customized premium packages.',
       icon: PackagePlus,
-      link: '/admin-panel/quote',
+      link: '/dripp-studio/quote',
       btnText: isGenz ? 'Drop Quote' : 'Create New Quote',
       color: '#3b82f6'
     },
@@ -39,7 +39,7 @@ export default function AdminDashboard() {
       title: isGenz ? 'Bag Securer' : 'Quick Invoice',
       desc: isGenz ? 'Generate a professional invoice in seconds. Drop the PDF and secure the bag.' : 'Generate a professional, branded invoice in seconds. Seamlessly export to PDF.',
       icon: FileText,
-      link: '/admin-panel/invoice',
+      link: '/dripp-studio/invoice',
       btnText: isGenz ? 'Drop Invoice' : 'Create Invoice',
       color: '#10b981'
     },
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
       title: isGenz ? 'Masterplan Maker' : 'PMP Maker',
       desc: isGenz ? 'Build masterplans and package generation. Big moves only.' : 'Generate comprehensive masterplans and package offerings for clients.',
       icon: Sparkles,
-      link: '/admin-panel/package',
+      link: '/dripp-studio/package',
       btnText: isGenz ? 'Build PMP' : 'Open PMP Maker',
       color: '#a855f7'
     },
@@ -57,7 +57,7 @@ export default function AdminDashboard() {
       title: isGenz ? 'Mail Blaster' : 'Email Campaigns',
       desc: isGenz ? 'Blast out the newsletters. Let them know what\'s good.' : 'Administer marketing campaigns and send mass emails to your clients.',
       icon: Mail,
-      link: '/admin-panel/email',
+      link: '/dripp-studio/email',
       btnText: isGenz ? 'Send Blast' : 'Open Campaigns',
       color: '#f43f5e'
     },
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
       title: isGenz ? 'The Engine' : 'System Settings',
       desc: isGenz ? 'Configure the vibes. Toggle GenZ mode and check storage.' : 'Configure local storage, DB settings, security, and application modes.',
       icon: Settings,
-      link: '/admin-panel/system',
+      link: '/dripp-studio/system',
       btnText: isGenz ? 'Pop Hood' : 'System Hub',
       color: '#8b5cf6'
     },
@@ -75,7 +75,7 @@ export default function AdminDashboard() {
       title: isGenz ? 'Brain Dump' : 'Document Hub',
       desc: isGenz ? 'Syncs with your workspace. Edit blocks, drop presets, stay organized.' : 'Direct integration with your workspace. View, edit, and manage documents natively.',
       icon: Database,
-      link: '/admin-panel/notion',
+      link: '/dripp-studio/notes-and-planning',
       btnText: isGenz ? 'Enter Hub' : 'Open Hub',
       color: '#f97316'
     },
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
       title: isGenz ? 'The Fixer' : 'Error Logs',
       desc: isGenz ? 'See what\'s broken and fix it before anyone notices.' : 'Monitor application health, track system errors, and view detailed logs.',
       icon: AlertTriangle,
-      link: '/admin-panel/errors',
+      link: '/dripp-studio/errors',
       btnText: isGenz ? 'Check Logs' : 'View Errors',
       color: '#ef4444'
     }

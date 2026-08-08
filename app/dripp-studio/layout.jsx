@@ -306,7 +306,7 @@ export default function AdminLayout({ children }) {
       <main key={pathname} className={styles.mainContent} style={{ flex: 1, padding: '40px', overflowY: 'auto', position: 'relative' }}>
         {children}
         
-        {unreadErrorsCount > 0 && pathname !== '/admin-panel/errors' && (
+        {unreadErrorsCount > 0 && pathname !== '/dripp-studio/errors' && (
           <div style={{
             position: 'fixed',
             bottom: '30px',
@@ -341,7 +341,7 @@ export default function AdminLayout({ children }) {
               </p>
               <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                 <button 
-                  onClick={() => router.push('/admin-panel/errors')}
+                  onClick={() => router.push('/dripp-studio/errors')}
                   style={{
                     background: 'none', border: 'none', color: '#ebd73f', padding: 0,
                     fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline'

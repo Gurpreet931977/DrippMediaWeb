@@ -24,15 +24,15 @@ export default function AdminSidebar() {
   };
 
   const navItems = [
-    { name: isGenz ? 'Main Base' : 'Dashboard', path: '/admin-panel', icon: LayoutDashboard },
-    { name: isGenz ? 'Brain Vault' : 'Notes & Planning', path: '/admin-panel/notion', icon: BookOpen },
-    { name: isGenz ? 'Bag Securer' : 'Invoice Maker', path: '/admin-panel/invoice', icon: FileText },
-    { name: isGenz ? 'Pitch Cooker' : 'Quotes & Packages', path: '/admin-panel/quote', icon: PackagePlus },
-    { name: isGenz ? 'Masterplan Maker' : 'PMP Maker', path: '/admin-panel/package', icon: PackagePlus },
-    { name: isGenz ? 'The Showcase' : 'Portfolio Manager', path: '/admin-panel/portfolio', icon: Video },
-    { name: isGenz ? 'Mail Blaster' : 'Email Campaigns', path: '/admin-panel/email', icon: Mail },
-    { name: isGenz ? 'Glitch Radar' : 'Error Logs', path: '/admin-panel/errors', icon: AlertTriangle },
-    { name: isGenz ? 'The Engine' : 'System', path: '/admin-panel/system', icon: Settings },
+    { name: isGenz ? 'Main Base' : 'Dashboard', path: '/dripp-studio', icon: LayoutDashboard },
+    { name: isGenz ? 'Brain Vault' : 'Notes & Planning', path: '/dripp-studio/notes-and-planning', icon: BookOpen },
+    { name: isGenz ? 'Bag Securer' : 'Invoice Maker', path: '/dripp-studio/invoice', icon: FileText },
+    { name: isGenz ? 'Pitch Cooker' : 'Quotes & Packages', path: '/dripp-studio/quote', icon: PackagePlus },
+    { name: isGenz ? 'Masterplan Maker' : 'PMP Maker', path: '/dripp-studio/package', icon: PackagePlus },
+    { name: isGenz ? 'The Showcase' : 'Portfolio Manager', path: '/dripp-studio/portfolio', icon: Video },
+    { name: isGenz ? 'Mail Blaster' : 'Email Campaigns', path: '/dripp-studio/email', icon: Mail },
+    { name: isGenz ? 'Glitch Radar' : 'Error Logs', path: '/dripp-studio/errors', icon: AlertTriangle },
+    { name: isGenz ? 'The Engine' : 'System', path: '/dripp-studio/system', icon: Settings },
   ];
 
   return (

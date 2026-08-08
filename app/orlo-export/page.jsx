@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import OrloIcon from '../admin-panel/components/OrloIcon';
+import OrloIcon from '../dripp-studio/components/OrloIcon';
 import Link from 'next/link';
 
 // --- Color Conversion Helpers ---
