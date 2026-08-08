@@ -272,7 +272,11 @@ export default function OrloChat() {
             currentSegment += event.results[i][0].transcript;
           }
           const prefix = originalInputRef.current ? originalInputRef.current.trim() + ' ' : '';
-          const fullText = prefix + currentSegment;
+          let fullText = prefix + currentSegment;
+          
+          // Fix common mishearings of "Orlo"
+          fullText = fullText.replace(/\b(arlo|or low|are low|orlo)\b/gi, "Orlo");
+          
           setInput(fullText);
 
           // Save final segment to prefix so next spoken sentence appends
@@ -280,7 +284,7 @@ export default function OrloChat() {
             originalInputRef.current = fullText;
           }
 
-          // Auto-submit after 2 seconds of silence
+          // Auto-submit after 1 second of silence for faster conversational feel
           clearTimeout(speechTimeoutRef.current);
           speechTimeoutRef.current = setTimeout(() => {
             shouldListenRef.current = false;
@@ -288,7 +292,7 @@ export default function OrloChat() {
             setIsProcessingVoice(true);
             try { recognitionRef.current.stop(); } catch(e){}
             handleVoiceSubmit(fullText);
-          }, 2000);
+          }, 1000);
         };
         
         recognition.onerror = (event) => {
@@ -744,25 +748,28 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         body: JSON.stringify({ text })
       });
 
-      if (res.ok) {
-        const audioBlob = await res.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        if (audioRef.current) {
-          audioRef.current.pause();
-        }
-        const audio = new Audio(audioUrl);
-        audioRef.current = audio;
-        setIsSpeaking(true);
-        setIsProcessingVoice(false);
-        audio.play();
-        audio.onended = () => {
-          URL.revokeObjectURL(audioUrl);
-          setIsSpeaking(false);
-        };
-        return;
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`TTS API failed: ${res.status} - ${errText}`);
       }
+
+      const audioBlob = await res.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      setIsSpeaking(true);
+      setIsProcessingVoice(false);
+      audio.play();
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        setIsSpeaking(false);
+      };
+      return;
     } catch (err) {
-      console.warn("ElevenLabs TTS failed, falling back to browser TTS", err);
+      console.warn("ElevenLabs TTS failed, falling back to browser TTS:", err.message || err);
     }
 
     // Fallback to browser TTS if API fails or is not configured
