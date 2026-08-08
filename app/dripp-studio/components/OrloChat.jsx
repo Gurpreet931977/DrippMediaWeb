@@ -171,6 +171,8 @@ export default function OrloChat() {
   const [isListening, setIsListening] = useState(false);
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
   const [voiceCallTranscript, setVoiceCallTranscript] = useState({ user: '', ai: '' });
+  const voiceHistoryRef = useRef([]);
+  const autoRelistenRef = useRef(false);
 
   // Load chat history and fetch working models from API on mount
   useEffect(() => {
@@ -773,6 +775,10 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
         setIsSpeaking(false);
+        // Auto-restart listening after Orlo finishes speaking for hands-free flow
+        if (autoRelistenRef.current) {
+          setTimeout(() => toggleListen(), 400);
+        }
       };
       return;
     } catch (err) {
@@ -792,7 +798,13 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       utterance.pitch = 1;
       
       utterance.onstart = () => { setIsSpeaking(true); setIsProcessingVoice(false); };
-      utterance.onend = () => setIsSpeaking(false);
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        // Auto-restart listening after browser TTS finishes
+        if (autoRelistenRef.current) {
+          setTimeout(() => toggleListen(), 400);
+        }
+      };
       utterance.onerror = () => { setIsSpeaking(false); setIsProcessingVoice(false); };
       
       window.speechSynthesis.speak(utterance);
@@ -812,18 +824,51 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
     originalInputRef.current = '';
     setVoiceCallTranscript({ user: userText, ai: '' });
     setEmotion('thinking');
+    autoRelistenRef.current = true;
+
+    // Instant responses for common greetings — no API round-trip needed
+    const lowerText = userText.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+    const greetings = ['hi orlo', 'hey orlo', 'hello orlo', 'hi', 'hey', 'hello', 'yo', 'sup', 'whats up', 'wassup', 'yo orlo', 'good morning', 'good evening', 'good afternoon', 'morning', 'evening'];
+    if (greetings.includes(lowerText)) {
+      const quickReplies = [
+        "Hey hey! What are we cooking up today?",
+        "Oh hey! I'm all ears, what's going on?",
+        "Yeah I'm here! What do you need?",
+        "Hey! Right, so what are we working on?",
+        "What's up! Talk to me, I'm listening.",
+        "Hey there! Alright, what's on your mind?",
+        "Oh nice, you're here! What do you want to dive into?",
+        "Yeah what's good? Let's get into it."
+      ];
+      const msg = quickReplies[Math.floor(Math.random() * quickReplies.length)];
+      setEmotion('success');
+      setTimeout(() => setEmotion('idle'), 3000);
+      setVoiceCallTranscript({ user: userText, ai: msg });
+      voiceHistoryRef.current.push({ role: 'user', text: userText }, { role: 'ai', text: msg });
+      setMessages(prev => [...prev, { role: 'user', text: userText }, { role: 'ai', text: msg }]);
+      speakResponse(msg);
+      return;
+    }
+
+    // Add user message to voice history
+    voiceHistoryRef.current.push({ role: 'user', text: userText });
+    // Also add to the chat panel so conversations are persistent
+    setMessages(prev => [...prev, { role: 'user', text: userText }]);
 
     try {
       const currentContext = window._drippEmailContext || {};
       const systemContext = window._drippSystemContext || {};
       const formContext = window._drippFormContext || {};
       
+      // Send last 6 voice exchanges for conversational continuity
+      const recentVoiceHistory = voiceHistoryRef.current.slice(-12);
+
       const res = await fetch('/api/admin/copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           userPrompt: userText,
-          chatHistory: [], // don't send heavy history for voice, or send a small slice
+          chatHistory: recentVoiceHistory,
           context: currentContext, 
           systemContext: systemContext,
           formContext: formContext,
@@ -846,6 +891,9 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
          msg = data.intent === 'chat' ? "I'm here!" : "Done.";
       }
       
+      // Save AI response to voice history and chat panel
+      voiceHistoryRef.current.push({ role: 'ai', text: msg });
+      setMessages(prev => [...prev, { role: 'ai', text: msg }]);
       setVoiceCallTranscript(prev => ({ ...prev, ai: msg }));
       speakResponse(msg);
 
@@ -872,10 +920,13 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         }
       }
     } catch (e) {
-      setVoiceCallTranscript(prev => ({ ...prev, ai: "Network error on voice call." }));
+      const errMsg = "Sorry, I couldn't process that. Try again.";
+      voiceHistoryRef.current.push({ role: 'ai', text: errMsg });
+      setVoiceCallTranscript(prev => ({ ...prev, ai: errMsg }));
       setEmotion('disappointed');
       setTimeout(() => setEmotion('idle'), 4000);
       setIsProcessingVoice(false);
+      autoRelistenRef.current = false;
     }
   };
 
@@ -1634,6 +1685,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           <div className={`voice-mode-overlay ${(isListening || isProcessingVoice || isSpeaking) ? 'active' : ''}`}>
             <button 
               onClick={() => {
+                autoRelistenRef.current = false;
                 setIsListening(false);
                 setIsProcessingVoice(false);
                 shouldListenRef.current = false;
