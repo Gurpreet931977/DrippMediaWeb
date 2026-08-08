@@ -1997,27 +1997,128 @@ export default function Page() {
           {activeCategory === null ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
                   {Array.from(new Set(graphics.flatMap(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean)))).map(cat => (
-                      <div key={cat} onClick={() => setActiveCategory(cat)} className="category-folder hover-pop-btn" style={{
-                          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '40px 30px', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px'
+                      <div key={cat} onClick={() => setActiveCategory(cat)} className="category-folder group" style={{
+                          position: 'relative',
+                          overflow: 'hidden',
+                          background: 'linear-gradient(145deg, rgba(30, 30, 30, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%)',
+                          border: '1px solid rgba(255,255,255,0.05)',
+                          borderRadius: '24px',
+                          padding: '40px',
+                          cursor: 'pointer',
+                          transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          minHeight: '280px',
+                          boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)'
                       }}
                       onMouseOver={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)';
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                          e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.3)';
-                          e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.4), 0 0 20px rgba(235, 215, 63, 0.1)';
+                          e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                          e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.4)';
+                          e.currentTarget.style.boxShadow = '0 30px 60px rgba(0,0,0,0.6), 0 0 40px rgba(235, 215, 63, 0.15)';
+                          const orb = e.currentTarget.querySelector('.hover-orb');
+                          if(orb) orb.style.opacity = '1';
+                          const arrow = e.currentTarget.querySelector('.hover-arrow');
+                          if(arrow) {
+                              arrow.style.transform = 'translateX(0) scale(1)';
+                              arrow.style.opacity = '1';
+                          }
+                          const iconWrapper = e.currentTarget.querySelector('.icon-wrapper');
+                          if(iconWrapper) {
+                              iconWrapper.style.transform = 'scale(1.1) rotate(-5deg)';
+                              iconWrapper.style.background = 'rgba(235, 215, 63, 0.15)';
+                          }
                       }}
                       onMouseOut={(e) => {
                           e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                          e.currentTarget.style.boxShadow = 'none';
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                          e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.4)';
+                          const orb = e.currentTarget.querySelector('.hover-orb');
+                          if(orb) orb.style.opacity = '0';
+                          const arrow = e.currentTarget.querySelector('.hover-arrow');
+                          if(arrow) {
+                              arrow.style.transform = 'translateX(-10px) scale(0.8)';
+                              arrow.style.opacity = '0';
+                          }
+                          const iconWrapper = e.currentTarget.querySelector('.icon-wrapper');
+                          if(iconWrapper) {
+                              iconWrapper.style.transform = 'scale(1) rotate(0deg)';
+                              iconWrapper.style.background = 'rgba(255, 255, 255, 0.03)';
+                          }
                       }}
                       >
-                          <div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.2) 0%, rgba(212, 188, 28, 0.05) 100%)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(235, 215, 63, 0.2)' }}>
-                              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ebd73f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                          {/* Dynamic Background Glow */}
+                          <div className="hover-orb" style={{
+                              position: 'absolute',
+                              top: '-50%',
+                              right: '-50%',
+                              width: '300px',
+                              height: '300px',
+                              background: 'radial-gradient(circle, rgba(235, 215, 63, 0.15) 0%, transparent 70%)',
+                              opacity: 0,
+                              transition: 'opacity 0.6s ease',
+                              pointerEvents: 'none',
+                              zIndex: 0
+                          }}></div>
+                          
+                          <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div className="icon-wrapper" style={{ 
+                                  width: '64px', height: '64px', 
+                                  background: 'rgba(255, 255, 255, 0.03)', 
+                                  borderRadius: '20px', 
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                                  transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+                              }}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ebd73f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                              </div>
+                              
+                              <div className="hover-arrow" style={{
+                                  width: '40px', height: '40px',
+                                  borderRadius: '50%',
+                                  background: '#ebd73f',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  color: '#111',
+                                  transform: 'translateX(-10px) scale(0.8)',
+                                  opacity: 0,
+                                  transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                              }}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                              </div>
                           </div>
-                          <h3 style={{ fontSize: '1.2rem', margin: 0, color: '#fff', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'Panchang, sans-serif' }}>{cat}</h3>
-                          <span style={{ color: '#888', fontSize: '0.85rem', fontFamily: 'Clash Display, sans-serif' }}>{graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(cat)).length} items</span>
+
+                          <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+                              <span style={{ 
+                                  display: 'inline-block',
+                                  color: '#ebd73f', 
+                                  fontSize: '0.75rem', 
+                                  fontFamily: 'Clash Display, sans-serif',
+                                  letterSpacing: '1.5px',
+                                  textTransform: 'uppercase',
+                                  marginBottom: '12px',
+                                  fontWeight: 600,
+                                  background: 'rgba(235, 215, 63, 0.1)',
+                                  padding: '6px 14px',
+                                  borderRadius: '20px',
+                                  border: '1px solid rgba(235, 215, 63, 0.2)'
+                              }}>
+                                  {graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(cat)).length} Collections
+                              </span>
+                              <h3 style={{ 
+                                  fontSize: '1.6rem', 
+                                  margin: 0, 
+                                  color: '#fff', 
+                                  letterSpacing: '1px', 
+                                  textTransform: 'uppercase', 
+                                  fontFamily: 'Panchang, sans-serif',
+                                  lineHeight: '1.3'
+                              }}>
+                                  {cat}
+                              </h3>
+                          </div>
                       </div>
                   ))}
               </div>
