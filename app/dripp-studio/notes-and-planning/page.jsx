@@ -289,27 +289,8 @@ export default function NotionHubPage() {
           const richTextArray = parseHTMLToNotion(blockEl);
           const plainText = richTextArray.map(r => r.text.content).join('');
           
-          // Optimistic UI and Cache update
-          setDocContent(prev => {
-            if (!prev || !prev.blocks) return prev;
-            const newBlocks = prev.blocks.map(b => {
-              if (b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, '')) {
-                return {
-                  ...b,
-                  [blockType]: {
-                    ...b[blockType],
-                    rich_text: richTextArray
-                  }
-                };
-              }
-              return b;
-            });
-            const newData = { ...prev, blocks: newBlocks };
-            if (selectedItem?.id) {
-              localStorage.setItem(`notion_page_${selectedItem.id}`, JSON.stringify(newData));
-            }
-            return newData;
-          });
+          // Trigger optimistic update in state
+          if (onUpdateBlock) onUpdateBlock(blockId, blockType, plainText, richTextArray);
 
           fetch('/api/admin/notion/update', {
             method: 'PATCH',
@@ -386,18 +367,9 @@ export default function NotionHubPage() {
 
     const targetBlock = docContent.blocks.find(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
     if (!targetBlock) return;
-
     const type = targetBlock.type;
-    
-    // Parse latest DOM HTML if available so newly edited text & presets are captured 100% accurately
-    let richTextArray = targetBlock[type]?.rich_text || [];
-    const blockEl = document.querySelector(`#block-${blockId} [contenteditable="true"]`);
-    if (blockEl) {
-      const parsedFromDom = parseHTMLToNotion(blockEl);
-      if (parsedFromDom && parsedFromDom.length > 0) {
-        richTextArray = parsedFromDom;
-      }
-    }
+    // Clone target block's rich_text array directly from state to preserve clean Notion rich text & presets
+    const richTextArray = JSON.parse(JSON.stringify(targetBlock[type]?.rich_text || []));
     
     // Create optimistic duplicate block with stable _key
     const tempId = `temp-${Date.now()}`;
@@ -2049,23 +2021,27 @@ function parseHTMLToNotion(htmlNode) {
       const annotations = { ...currentAnnotations };
       const tag = node.tagName.toLowerCase();
 
-      if (tag === 'b' || tag === 'strong') annotations.bold = true;
-      if (tag === 'i' || tag === 'em') annotations.italic = true;
-      if (tag === 'u') annotations.underline = true;
-      if (tag === 's' || tag === 'strike' || tag === 'del') annotations.strikethrough = true;
-      if (tag === 'code') annotations.code = true;
+      // Only extract formatting from inline elements, NOT the root wrapper node
+      if (node !== htmlNode) {
+        if (tag === 'b' || tag === 'strong') annotations.bold = true;
+        if (tag === 'i' || tag === 'em') annotations.italic = true;
+        if (tag === 'u') annotations.underline = true;
+        if (tag === 's' || tag === 'strike' || tag === 'del') annotations.strikethrough = true;
+        if (tag === 'code') annotations.code = true;
 
-      // Handle color via data-notion-color attribute or preset class names
-      if (node.hasAttribute && node.hasAttribute('data-notion-color')) {
-        annotations.color = node.getAttribute('data-notion-color');
-      } else if (node.className && typeof node.className === 'string') {
-        if (node.className.includes('preset-gold-shimmer')) annotations.color = 'yellow_background';
-        else if (node.className.includes('preset-neon-pulse')) annotations.color = 'blue_background';
-        else if (node.className.includes('preset-liquid-gradient')) annotations.color = 'purple_background';
-        else if (node.className.includes('preset-glass-morphic')) annotations.color = 'brown_background';
-        else if (node.className.includes('preset-iridescent')) annotations.color = 'pink_background';
-        else if (node.className.includes('preset-redacted')) annotations.color = 'gray_background';
-        else if (node.className.includes('preset-cyber-glitch')) annotations.color = 'red_background';
+        // Handle color via data-notion-color attribute or preset class names
+        if (node.hasAttribute && node.hasAttribute('data-notion-color')) {
+          const colorAttr = node.getAttribute('data-notion-color');
+          if (colorAttr && colorAttr !== 'default') annotations.color = colorAttr;
+        } else if (node.className && typeof node.className === 'string') {
+          if (node.className.includes('preset-gold-shimmer')) annotations.color = 'yellow_background';
+          else if (node.className.includes('preset-neon-pulse')) annotations.color = 'blue_background';
+          else if (node.className.includes('preset-liquid-gradient')) annotations.color = 'purple_background';
+          else if (node.className.includes('preset-glass-morphic')) annotations.color = 'brown_background';
+          else if (node.className.includes('preset-iridescent')) annotations.color = 'pink_background';
+          else if (node.className.includes('preset-redacted')) annotations.color = 'gray_background';
+          else if (node.className.includes('preset-cyber-glitch')) annotations.color = 'red_background';
+        }
       }
 
       // If it's a block level element like DIV or BR that causes a newline, we could inject \n
@@ -2206,12 +2182,9 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   const filteredOptions = MENU_OPTIONS.filter(o => o.label.toLowerCase().includes(slashMenu.filter) || o.type.includes(slashMenu.filter));
 
   useEffect(() => {
-    // Immediately convert React-managed children to an HTML string on mount.
-    // This prevents React from crashing if we manually mutate the DOM later via applyDesignerPreset.
-    if (tagRef.current && localText === null) {
-      setLocalText(tagRef.current.innerHTML);
-    }
-  }, []);
+    // Sync localText when initialRichTextArr updates from parent state (e.g. after preset application)
+    setLocalText(null);
+  }, [initialRichTextArr]);
 
   const rawText = initialRichTextArr?.map(t => t.plain_text).join('') || '';
 
@@ -2224,7 +2197,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     if (plainText === rawText && !rawHTML.includes('<')) return; // Simple diff
     
     setIsSaving(true);
-    setLocalText(rawHTML);
+    setLocalText(null);
     if (onUpdateBlock) onUpdateBlock(blockId, type, plainText, richTextArray);
     try {
       await fetch('/api/admin/notion/update', {
@@ -2432,18 +2405,26 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
     }
   };
 
+  useEffect(() => {
+    // Sync localText when rich_text updates from parent state
+    setLocalText(null);
+  }, [block.to_do?.rich_text]);
+
   const handleBlur = async (e) => {
-    const newText = e.target.innerText;
-    if (newText === (localText || rawText)) return;
+    const rawHTML = e.target.innerHTML;
+    const richTextArray = parseHTMLToNotion(e.target);
+    const plainText = richTextArray.map(r => r.text.content).join('');
+    
+    if (plainText === rawText && !rawHTML.includes('data-notion-color') && !rawHTML.includes('preset-')) return;
     
     setIsSaving(true);
-    setLocalText(newText);
-    if (onUpdateBlock) onUpdateBlock(block.id, 'to_do', newText, undefined, isChecked);
+    setLocalText(null);
+    if (onUpdateBlock) onUpdateBlock(block.id, 'to_do', plainText, richTextArray, isChecked);
     try {
       await fetch('/api/admin/notion/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blockId: block.id, type: 'to_do', content: newText })
+        body: JSON.stringify({ blockId: block.id, type: 'to_do', content: plainText, richTextArray })
       });
     } catch(err) {
       console.error(err);
