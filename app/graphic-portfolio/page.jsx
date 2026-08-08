@@ -2000,125 +2000,125 @@ export default function Page() {
                       <div key={cat} onClick={() => setActiveCategory(cat)} className="category-folder group" style={{
                           position: 'relative',
                           overflow: 'hidden',
-                          background: 'linear-gradient(145deg, rgba(30, 30, 30, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%)',
-                          border: '1px solid rgba(255,255,255,0.05)',
+                          background: 'linear-gradient(180deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.95) 100%)',
+                          border: '1px solid rgba(255,255,255,0.06)',
                           borderRadius: '24px',
-                          padding: '40px',
+                          padding: '35px',
                           cursor: 'pointer',
-                          transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                           display: 'flex',
                           flexDirection: 'column',
-                          alignItems: 'flex-start',
                           justifyContent: 'space-between',
-                          gap: '30px',
-                          minHeight: '320px',
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-                          backdropFilter: 'blur(20px)',
-                          WebkitBackdropFilter: 'blur(20px)'
+                          minHeight: '380px',
+                          boxShadow: '0 20px 40px rgba(0,0,0,0.6), inset 0 1px 10px rgba(255,255,255,0.03)',
                       }}
                       onMouseOver={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
-                          e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.4)';
-                          e.currentTarget.style.boxShadow = '0 30px 60px rgba(0,0,0,0.6), 0 0 40px rgba(235, 215, 63, 0.15)';
-                          const orb = e.currentTarget.querySelector('.hover-orb');
-                          if(orb) orb.style.opacity = '1';
+                          e.currentTarget.style.transform = 'translateY(-10px)';
+                          e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.3)';
+                          e.currentTarget.style.boxShadow = '0 30px 60px rgba(0,0,0,0.8), 0 0 30px rgba(235, 215, 63, 0.1), inset 0 1px 10px rgba(255,255,255,0.08)';
+                          const bgText = e.currentTarget.querySelector('.bg-text');
+                          if(bgText) {
+                              bgText.style.transform = 'scale(1.05) rotate(-2deg)';
+                              bgText.style.color = 'rgba(235, 215, 63, 0.05)';
+                          }
                           const arrow = e.currentTarget.querySelector('.hover-arrow');
                           if(arrow) {
-                              arrow.style.transform = 'translateX(0) scale(1)';
+                              arrow.style.transform = 'translateX(0)';
                               arrow.style.opacity = '1';
-                          }
-                          const iconWrapper = e.currentTarget.querySelector('.icon-wrapper');
-                          if(iconWrapper) {
-                              iconWrapper.style.transform = 'scale(1.1) rotate(-5deg)';
-                              iconWrapper.style.background = 'rgba(235, 215, 63, 0.15)';
+                              arrow.style.color = '#ebd73f';
                           }
                       }}
                       onMouseOut={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
-                          e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.4)';
-                          const orb = e.currentTarget.querySelector('.hover-orb');
-                          if(orb) orb.style.opacity = '0';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                          e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.6), inset 0 1px 10px rgba(255,255,255,0.03)';
+                          const bgText = e.currentTarget.querySelector('.bg-text');
+                          if(bgText) {
+                              bgText.style.transform = 'scale(1) rotate(0deg)';
+                              bgText.style.color = 'rgba(255,255,255,0.02)';
+                          }
                           const arrow = e.currentTarget.querySelector('.hover-arrow');
                           if(arrow) {
-                              arrow.style.transform = 'translateX(-10px) scale(0.8)';
+                              arrow.style.transform = 'translateX(-15px)';
                               arrow.style.opacity = '0';
-                          }
-                          const iconWrapper = e.currentTarget.querySelector('.icon-wrapper');
-                          if(iconWrapper) {
-                              iconWrapper.style.transform = 'scale(1) rotate(0deg)';
-                              iconWrapper.style.background = 'rgba(255, 255, 255, 0.03)';
+                              arrow.style.color = '#fff';
                           }
                       }}
                       >
-                          {/* Dynamic Background Glow */}
-                          <div className="hover-orb" style={{
+                          {/* Giant Background Text / Watermark */}
+                          <div className="bg-text" style={{
                               position: 'absolute',
-                              top: '-50%',
-                              right: '-50%',
-                              width: '300px',
-                              height: '300px',
-                              background: 'radial-gradient(circle, rgba(235, 215, 63, 0.15) 0%, transparent 70%)',
-                              opacity: 0,
-                              transition: 'opacity 0.6s ease',
+                              top: '20px',
+                              right: '-20px',
+                              fontSize: '110px',
+                              fontFamily: 'Panchang, sans-serif',
+                              fontWeight: 800,
+                              color: 'rgba(255,255,255,0.02)',
+                              whiteSpace: 'nowrap',
+                              transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
                               pointerEvents: 'none',
-                              zIndex: 0
-                          }}></div>
+                              zIndex: 0,
+                              lineHeight: 0.8,
+                              transformOrigin: 'top right'
+                          }}>
+                              {cat.split(' ')[0]}
+                          </div>
                           
-                          <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <div className="icon-wrapper" style={{ 
-                                  width: '64px', height: '64px', 
-                                  background: 'rgba(255, 255, 255, 0.03)', 
-                                  borderRadius: '20px', 
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                                  transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
-                              }}>
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ebd73f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                          {/* Top Row: Minimal Icon + Count */}
+                          <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                              <div style={{ color: 'rgba(255,255,255,0.3)', width: '32px', height: '32px' }}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                               </div>
-                              
-                              <div className="hover-arrow" style={{
-                                  width: '40px', height: '40px',
-                                  borderRadius: '50%',
-                                  background: '#ebd73f',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  color: '#111',
-                                  transform: 'translateX(-10px) scale(0.8)',
-                                  opacity: 0,
-                                  transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                              <div style={{ 
+                                  fontSize: '0.8rem', 
+                                  fontFamily: 'Clash Display, sans-serif', 
+                                  color: '#ebd73f', 
+                                  letterSpacing: '2px', 
+                                  border: '1px solid rgba(235, 215, 63, 0.25)',
+                                  padding: '6px 14px',
+                                  borderRadius: '40px',
+                                  background: 'rgba(235, 215, 63, 0.05)',
+                                  fontWeight: 500
                               }}>
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                                  {graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(cat)).length.toString().padStart(2, '0')}
                               </div>
                           </div>
 
-                          <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
-                              <span style={{ 
-                                  display: 'inline-block',
-                                  color: '#ebd73f', 
-                                  fontSize: '0.75rem', 
-                                  fontFamily: 'Clash Display, sans-serif',
-                                  letterSpacing: '1.5px',
-                                  textTransform: 'uppercase',
-                                  marginBottom: '12px',
-                                  fontWeight: 600,
-                                  background: 'rgba(235, 215, 63, 0.1)',
-                                  padding: '6px 14px',
-                                  borderRadius: '20px',
-                                  border: '1px solid rgba(235, 215, 63, 0.2)'
-                              }}>
-                                  {graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(cat)).length} Collections
-                              </span>
+                          {/* Bottom Row: Title + Arrow */}
+                          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
                               <h3 style={{ 
-                                  fontSize: '1.6rem', 
+                                  fontSize: '2rem', 
                                   margin: 0, 
-                                  color: '#fff', 
-                                  letterSpacing: '1px', 
+                                  color: '#ffffff', 
+                                  letterSpacing: '1.5px', 
                                   textTransform: 'uppercase', 
                                   fontFamily: 'Panchang, sans-serif',
-                                  lineHeight: '1.3'
+                                  lineHeight: '1.15',
+                                  textShadow: '0 4px 20px rgba(0,0,0,0.8)'
                               }}>
                                   {cat}
                               </h3>
+                              
+                              {/* Sleek Arrow */}
+                              <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                                  <div className="hover-arrow" style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '12px',
+                                      color: '#fff',
+                                      fontFamily: 'Clash Display, sans-serif',
+                                      fontSize: '0.85rem',
+                                      letterSpacing: '4px',
+                                      textTransform: 'uppercase',
+                                      transform: 'translateX(-15px)',
+                                      opacity: 0,
+                                      transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                                      fontWeight: 600
+                                  }}>
+                                      <span>Explore</span>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                                  </div>
+                              </div>
                           </div>
                       </div>
                   ))}

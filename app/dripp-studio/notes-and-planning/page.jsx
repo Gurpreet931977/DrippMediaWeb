@@ -270,47 +270,6 @@ export default function NotionHubPage() {
   }, [selectedItem, fetchPageContent]);
 
   useEffect(() => {
-    const handleCopilotAction = async (e) => {
-      const data = e.detail;
-      if (data.intent === 'notion_task' && data.payload && docContent?.blocks) {
-        const { action, taskText } = data.payload;
-        if (action && taskText) {
-          // Find the best matching to_do block
-          const target = taskText.toLowerCase().trim();
-          let bestMatch = null;
-          
-          for (const block of docContent.blocks) {
-            if (block.type === 'to_do') {
-              const text = (block.to_do?.rich_text?.map(t => t.plain_text).join('') || '').toLowerCase();
-              if (text.includes(target) || target.includes(text)) {
-                bestMatch = block;
-                break; // exact or substring match
-              }
-            }
-          }
-
-          if (bestMatch) {
-            const checked = action === 'check';
-            handleUpdateBlock(bestMatch.id, 'to_do', undefined, undefined, checked);
-            try {
-              await fetch('/api/admin/notion/update', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ blockId: bestMatch.id, type: 'to_do', checked })
-              });
-            } catch(err) {
-              console.error('Failed to update task via copilot:', err);
-            }
-          }
-        }
-      }
-    };
-    
-    window.addEventListener('copilot-action', handleCopilotAction);
-    return () => window.removeEventListener('copilot-action', handleCopilotAction);
-  }, [docContent, handleUpdateBlock]);
-
-  useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isZenithMode) {
         setIsZenithMode(false);
@@ -572,6 +531,47 @@ export default function NotionHubPage() {
       return newData;
     });
   }, [selectedItem]);
+
+  useEffect(() => {
+    const handleCopilotAction = async (e) => {
+      const data = e.detail;
+      if (data.intent === 'notion_task' && data.payload && docContent?.blocks) {
+        const { action, taskText } = data.payload;
+        if (action && taskText) {
+          // Find the best matching to_do block
+          const target = taskText.toLowerCase().trim();
+          let bestMatch = null;
+          
+          for (const block of docContent.blocks) {
+            if (block.type === 'to_do') {
+              const text = (block.to_do?.rich_text?.map(t => t.plain_text).join('') || '').toLowerCase();
+              if (text.includes(target) || target.includes(text)) {
+                bestMatch = block;
+                break; // exact or substring match
+              }
+            }
+          }
+
+          if (bestMatch) {
+            const checked = action === 'check';
+            handleUpdateBlock(bestMatch.id, 'to_do', undefined, undefined, checked);
+            try {
+              await fetch('/api/admin/notion/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ blockId: bestMatch.id, type: 'to_do', checked })
+              });
+            } catch(err) {
+              console.error('Failed to update task via copilot:', err);
+            }
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('copilot-action', handleCopilotAction);
+    return () => window.removeEventListener('copilot-action', handleCopilotAction);
+  }, [docContent, handleUpdateBlock]);
 
   useEffect(() => {
     const handleSelection = () => {
