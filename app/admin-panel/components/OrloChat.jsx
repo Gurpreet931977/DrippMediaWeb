@@ -158,6 +158,10 @@ export default function OrloChat() {
   const speechTimeoutRef = useRef(null);
   const originalInputRef = useRef('');
   const audioRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const chatBodyRef = useRef(null);
+  const inputRef = useRef(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const typingTimeoutRef = useRef(null);
   const idleTimeoutRef = useRef(null);
