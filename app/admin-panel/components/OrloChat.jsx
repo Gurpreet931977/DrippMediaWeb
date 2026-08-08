@@ -158,14 +158,13 @@ export default function OrloChat() {
   const speechTimeoutRef = useRef(null);
   const originalInputRef = useRef('');
   const audioRef = useRef(null);
-
   const [isSpeaking, setIsSpeaking] = useState(false);
   const typingTimeoutRef = useRef(null);
   const idleTimeoutRef = useRef(null);
   const keypressCountRef = useRef(0);
   const keypressTimeoutRef = useRef(null);
   const speechBubbleTimeoutRef = useRef(null);
-  const speechTimeoutRef = useRef(null);
+  const [isListening, setIsListening] = useState(false);
 
   // Load chat history and fetch working models from API on mount
   useEffect(() => {
@@ -227,11 +226,6 @@ export default function OrloChat() {
       localStorage.removeItem('orlo_chat_history');
     }
   }, [messages]);
-  const recognitionRef = useRef(null);
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-
-  const originalInputRef = useRef('');
 
   useEffect(() => {
     // We only need to check if it's supported here, but instantiation happens on click

@@ -483,14 +483,14 @@ export default function NotionHubPage() {
     }
   };
 
-  const handleConvertToTodo = async (blockId, textContent) => {
+  const handleConvertBlock = async (blockId, targetType, textContent) => {
     try {
       const res = await fetch('/api/admin/notion/append', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           blockId: selectedItem.id, 
-          type: 'to_do', 
+          type: targetType, 
           afterBlockId: blockId, 
           richTextArray: [{ text: { content: textContent } }] 
         })
@@ -1682,7 +1682,7 @@ export default function NotionHubPage() {
                         onDeleteBlock={handleDeleteBlock} 
                         onInsertBlockAfter={handleInsertBlockAfter}
                         onUpdateBlock={handleUpdateBlock} 
-                        onConvertToTodo={handleConvertToTodo}
+                        onConvertBlock={handleConvertBlock}
                       />
                     </div>
                   ))}
@@ -1965,10 +1965,24 @@ function applyDesignerPreset(presetName, range) {
 }
 
 // --- Inline Editing Components ---
-function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter, onUpdateBlock, onConvertToTodo }) {
+function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter, onUpdateBlock, onConvertBlock }) {
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const tagRef = useRef(null);
+  const [slashMenu, setSlashMenu] = useState({ isOpen: false, filter: '', selectedIndex: 0 });
+
+  const MENU_OPTIONS = [
+    { type: 'heading_1', label: 'Heading 1', icon: <Heading1 size={16} /> },
+    { type: 'heading_2', label: 'Heading 2', icon: <Heading2 size={16} /> },
+    { type: 'heading_3', label: 'Heading 3', icon: <Heading3 size={16} /> },
+    { type: 'to_do', label: 'To-do List', icon: <CheckSquare size={16} /> },
+    { type: 'bulleted_list_item', label: 'Bulleted List', icon: <List size={16} /> },
+    { type: 'numbered_list_item', label: 'Numbered List', icon: <ListOrdered size={16} /> },
+    { type: 'quote', label: 'Quote', icon: <Quote size={16} /> },
+    { type: 'code', label: 'Code', icon: <Code size={16} /> }
+  ];
+
+  const filteredOptions = MENU_OPTIONS.filter(o => o.label.toLowerCase().includes(slashMenu.filter) || o.type.includes(slashMenu.filter));
 
   useEffect(() => {
     // Immediately convert React-managed children to an HTML string on mount.
@@ -2005,6 +2019,33 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   };
 
   const handleKeyDown = (e) => {
+    if (slashMenu.isOpen) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSlashMenu(prev => ({ ...prev, selectedIndex: (prev.selectedIndex + 1) % filteredOptions.length }));
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSlashMenu(prev => ({ ...prev, selectedIndex: (prev.selectedIndex - 1 + filteredOptions.length) % filteredOptions.length }));
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const selected = filteredOptions[slashMenu.selectedIndex];
+        if (selected && onConvertBlock) {
+          const textWithoutSlash = e.target.innerText.replace(/^\/[a-zA-Z]*/, '').trim();
+          onConvertBlock(blockId, selected.type, textWithoutSlash);
+        }
+        setSlashMenu({ isOpen: false, filter: '', selectedIndex: 0 });
+        return;
+      }
+      if (e.key === 'Escape') {
+        setSlashMenu(prev => ({ ...prev, isOpen: false }));
+        return;
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) { 
       e.preventDefault(); 
       handleBlur(e);
@@ -2017,6 +2058,17 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
       if (onDeleteBlock) {
         onDeleteBlock(blockId);
       }
+    }
+  };
+
+  const handleKeyUp = (e) => {
+    // Basic slash detection at the start of block
+    const text = e.target.innerText;
+    const match = text.match(/^\/([a-zA-Z]*)$/);
+    if (match) {
+      setSlashMenu(prev => ({ ...prev, isOpen: true, filter: match[1].toLowerCase() }));
+    } else {
+      setSlashMenu(prev => ({ ...prev, isOpen: false }));
     }
   };
 
@@ -2034,6 +2086,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           suppressContentEditableWarning
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
           className={`${className} empty-block`}
           data-placeholder={emptyPlaceholder}
           style={{ ...style, outline: 'none', cursor: 'text' }}
@@ -2046,6 +2099,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           suppressContentEditableWarning
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
           className={`${className} empty-block`}
           data-placeholder={emptyPlaceholder}
           style={{ ...style, outline: 'none', cursor: 'text' }}
@@ -2065,10 +2119,10 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           <Trash2 size={16} />
         </button>
       )}
-      {onConvertToTodo && type !== 'to_do' && (
+      {onConvertBlock && type !== 'to_do' && (
         <button 
           className="blockConvertBtn"
-          onClick={() => onConvertToTodo(blockId, rawText)}
+          onClick={() => onConvertBlock(blockId, 'to_do', rawText)}
           style={{ position: 'absolute', right: '-60px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px 8px 8px 16px', display: 'flex', alignItems: 'center', opacity: 0, transition: 'opacity 0.2s' }}
           onMouseOver={e => e.currentTarget.style.color = '#ebd73f'}
           onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
@@ -2081,6 +2135,53 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
         .blockHoverGroup:hover .blockConvertBtn { opacity: 1 !important; }
       `}} />
       {isSaving && <span style={{ position: 'absolute', right: '-40px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', color: '#ebd73f', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: '10px' }}>Saving</span>}
+      
+      {slashMenu.isOpen && filteredOptions.length > 0 && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: '0',
+          background: '#1a1a1a',
+          border: '1px solid #333',
+          borderRadius: '8px',
+          padding: '8px',
+          minWidth: '220px',
+          zIndex: 50,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+          marginTop: '4px'
+        }}>
+          <div style={{ fontSize: '0.75rem', color: '#888', padding: '4px 8px', marginBottom: '4px', borderBottom: '1px solid #333' }}>
+            Basic blocks
+          </div>
+          {filteredOptions.map((opt, idx) => (
+            <div 
+              key={opt.type}
+              onClick={() => {
+                if (onConvertBlock) {
+                  const textWithoutSlash = (tagRef.current?.innerText || localText || '').replace(/^\/[a-zA-Z]*/, '').trim();
+                  onConvertBlock(blockId, opt.type, textWithoutSlash);
+                }
+                setSlashMenu({ isOpen: false, filter: '', selectedIndex: 0 });
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                background: idx === slashMenu.selectedIndex ? 'rgba(235, 215, 63, 0.15)' : 'transparent',
+                color: idx === slashMenu.selectedIndex ? '#ebd73f' : '#eee',
+                transition: 'background 0.1s'
+              }}
+              onMouseEnter={() => setSlashMenu(prev => ({ ...prev, selectedIndex: idx }))}
+            >
+              <div style={{ color: idx === slashMenu.selectedIndex ? '#ebd73f' : '#888' }}>{opt.icon}</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>{opt.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -2196,7 +2297,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
 }
 
 // Block Renderer Sub-component
-function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBlockAfter, onUpdateBlock, onConvertToTodo }) {
+function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBlockAfter, onUpdateBlock, onConvertBlock }) {
   const [toggleOpen, setToggleOpen] = useState(false);
 
   const renderRichText = (richTextArr) => {
@@ -2292,7 +2393,7 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
           blockId={block.id} type="paragraph" initialRichTextArr={block.paragraph?.rich_text} renderRichText={renderRichText}
           tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', margin: '4px 0', minHeight: '1.6rem' }}
           emptyPlaceholder="Type '/' for commands"
-          onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock} onConvertToTodo={onConvertToTodo}
+          onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock} onConvertBlock={onConvertBlock}
         />
       );
 
