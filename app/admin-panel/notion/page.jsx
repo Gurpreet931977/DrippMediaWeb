@@ -495,13 +495,8 @@ export default function NotionHubPage() {
           const toolbarWidth = toolbarRef.current.offsetWidth || 600;
           const toolbarHeight = toolbarRef.current.offsetHeight || 70;
           
-          // Bulletproof positioning: find where '0px' actually lands to account for any parent transforms
-          toolbarRef.current.style.top = '0px';
-          toolbarRef.current.style.left = '0px';
-          const originRect = toolbarRef.current.getBoundingClientRect();
-          
-          let top = rect.top - originRect.top - toolbarHeight - 15; // 15px gap above
-          let left = rect.left - originRect.left + (rect.width / 2) - (toolbarWidth / 2); // Center horizontally
+          let top = rect.top - toolbarHeight - 15; // 15px gap above
+          let left = rect.left + (rect.width / 2) - (toolbarWidth / 2); // Center horizontally
           
           // Vertically flip to bottom if too high
           if (top < 10) top = rect.bottom + 15;
