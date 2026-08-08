@@ -277,14 +277,24 @@ export default function OrloChat() {
           let fullText = prefix + currentSegment;
           
           // Fix common mishearings of "Orlo" — word-level
-          fullText = fullText.replace(/\b(arlo|or low|are low|orlo|or lo|or no|oral|ore low|ore lo|or lol|oreo|aura low|hora lo|oh low|au lo|o\.r\.l\.o|oar low|all low|aarlo|hello orlo)\b/gi, "Orlo");
+          fullText = fullText.replace(/\b(arlo|or low|are low|orlo|or lo|or no|oral|ore low|ore lo|or lol|oreo|aura low|hora lo|oh low|au lo|o\.r\.l\.o|oar low|all low|aarlo|hello orlo|oru|or u|arrow|ar|arun|orlon|hollow|ollo|olro|url|urlo|orla|orly|olow|allow|aloe|halo|harlow|arloe|orlew|orleau|orloe|orlou|aero|erlo|earl|earlo|our low|hour low|are no|our no|or roll|or hole|auto|otto|polo|rollo|solo|yolo)\b/gi, "Orlo");
           // Phrase-level corrections (multi-word mishearings)
           fullText = fullText.replace(/\bhi or lo\b/gi, "hi Orlo");
           fullText = fullText.replace(/\bhi or no\b/gi, "hi Orlo");
+          fullText = fullText.replace(/\bhi oru\b/gi, "hi Orlo");
+          fullText = fullText.replace(/\bhi arrow\b/gi, "hi Orlo");
+          fullText = fullText.replace(/\bhi ar\b/gi, "hi Orlo");
+          fullText = fullText.replace(/\bhi arun\b/gi, "hi Orlo");
           fullText = fullText.replace(/\bhey or lo\b/gi, "hey Orlo");
           fullText = fullText.replace(/\bhey or no\b/gi, "hey Orlo");
+          fullText = fullText.replace(/\bhey oru\b/gi, "hey Orlo");
+          fullText = fullText.replace(/\bhey arrow\b/gi, "hey Orlo");
+          fullText = fullText.replace(/\bhey ar\b/gi, "hey Orlo");
+          fullText = fullText.replace(/\bhey arun\b/gi, "hey Orlo");
           fullText = fullText.replace(/\bok or lo\b/gi, "ok Orlo");
           fullText = fullText.replace(/\bok or no\b/gi, "ok Orlo");
+          fullText = fullText.replace(/\bok oru\b/gi, "ok Orlo");
+          fullText = fullText.replace(/\bok arrow\b/gi, "ok Orlo");
           
           setInput(fullText);
 
@@ -828,7 +838,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
 
     // Instant responses for common greetings — no API round-trip needed
     const lowerText = userText.toLowerCase().replace(/[^a-z\s]/g, '').trim();
-    const greetings = ['hi orlo', 'hey orlo', 'hello orlo', 'hi', 'hey', 'hello', 'yo', 'sup', 'whats up', 'wassup', 'yo orlo', 'good morning', 'good evening', 'good afternoon', 'morning', 'evening'];
+    const greetings = ['hi orlo', 'hey orlo', 'hello orlo', 'hi', 'hey', 'hello', 'yo', 'sup', 'whats up', 'wassup', 'yo orlo', 'good morning', 'good evening', 'good afternoon', 'morning', 'evening', 'hi oru', 'hey oru', 'hi arrow', 'hey arrow', 'hi ar', 'hey ar', 'hi arun', 'hey arun'];
     if (greetings.includes(lowerText)) {
       const quickReplies = [
         "Hey hey! What are we cooking up today?",
@@ -1625,9 +1635,9 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           position: relative;
           width: 150px;
           height: 150px;
-          background: linear-gradient(135deg, #ebd73f, #ff9933, #ff3366);
+          background: linear-gradient(135deg, #ebd73f, #d4bc1c, #fadb5f);
           border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-          box-shadow: 0 0 50px rgba(255,255,255,0.4), inset 0 0 30px rgba(255,255,255,0.8);
+          box-shadow: 0 0 50px rgba(235, 215, 63, 0.4), inset 0 0 30px rgba(255,255,255,0.8);
           animation: morphGiantShape 3s ease-in-out infinite alternate, spinGiant 10s linear infinite;
           z-index: 2;
         }
@@ -1637,7 +1647,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         }
 
         .giant-orb.listening {
-          background: linear-gradient(135deg, #ebd73f, #ffcc00, #ffaa00);
+          background: linear-gradient(135deg, #ebd73f, #fff3a1, #d4bc1c);
           animation-duration: 2s, 8s;
         }
 
@@ -1724,7 +1734,6 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
               alignItems: 'center',
               gap: '10px'
             }}>
-              <AudioVisualizer active={isListening || isSpeaking} mode={isSpeaking ? 'speaking' : 'listening'} />
               Orlo Live
             </div>
 
