@@ -154,10 +154,12 @@ export default function OrloChat() {
   
   const chatRef = useRef(null);
   const btnRef = useRef(null);
-  const messagesEndRef = useRef(null);
-  const chatBodyRef = useRef(null);
-  const inputRef = useRef(null);
-  const [showScrollDown, setShowScrollDown] = useState(false);
+  const recognitionRef = useRef(null);
+  const speechTimeoutRef = useRef(null);
+  const originalInputRef = useRef('');
+  const audioRef = useRef(null);
+
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const typingTimeoutRef = useRef(null);
   const idleTimeoutRef = useRef(null);
   const keypressCountRef = useRef(0);
@@ -743,8 +745,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
 
       if (res.ok) {
         const audioBlob = await res.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
         const audio = new Audio(audioUrl);
+        audioRef.current = audio;
         setIsSpeaking(true);
         audio.play();
         audio.onended = () => {
@@ -1413,11 +1418,146 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           90% { opacity: 1; transform: translate(-50%, 0); }
           100% { opacity: 0; transform: translate(-50%, -10px); }
         }
+        
+        .voice-mode-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(10, 10, 12, 0.95);
+          backdrop-filter: blur(30px);
+          -webkit-backdrop-filter: blur(30px);
+          z-index: 10000;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          overflow: hidden;
+        }
+        .voice-mode-overlay.active {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .giant-orb-container {
+          position: relative;
+          width: 200px;
+          height: 200px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .giant-orb-glow {
+          position: absolute;
+          width: 280px;
+          height: 280px;
+          background: radial-gradient(circle, rgba(235, 215, 63, 0.6) 0%, rgba(235, 215, 63, 0) 70%);
+          filter: blur(40px);
+          animation: pulseGiantOrb 4s infinite alternate;
+        }
+
+        .giant-orb {
+          position: relative;
+          width: 150px;
+          height: 150px;
+          background: linear-gradient(135deg, #ebd73f, #ff9933, #ff3366);
+          border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+          box-shadow: 0 0 50px rgba(255,255,255,0.4), inset 0 0 30px rgba(255,255,255,0.8);
+          animation: morphGiantShape 3s ease-in-out infinite alternate, spinGiant 10s linear infinite;
+          z-index: 2;
+        }
+
+        .giant-orb-glow.listening {
+          background: radial-gradient(circle, rgba(51, 204, 255, 0.6) 0%, rgba(51, 204, 255, 0) 70%);
+        }
+
+        .giant-orb.listening {
+          background: linear-gradient(135deg, #33ccff, #33ff99, #ebd73f);
+          animation-duration: 2s, 8s;
+        }
+
+        @keyframes pulseGiantOrb {
+          0% { transform: scale(0.8); opacity: 0.5; }
+          100% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        @keyframes morphGiantShape {
+          0% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+          50% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+          100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+        }
+
+        @keyframes spinGiant {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .voice-transcript {
+          position: absolute;
+          bottom: 12%;
+          left: 10%;
+          right: 10%;
+          text-align: center;
+          font-size: 1.4rem;
+          font-weight: 500;
+          color: #fff;
+          line-height: 1.5;
+          text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+          font-family: 'Clash Display', sans-serif;
+          opacity: 0.95;
+          display: -webkit-box;
+          -webkit-line-clamp: 4;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
       `}</style>
 
       {isOpen && (
         <div className="chat-container" ref={chatRef}>
           {toastMessage && <div className="toast-msg">{toastMessage}</div>}
+          
+          {/* Voice Mode Fullscreen Overlay */}
+          <div className={`voice-mode-overlay ${(isListening || isSpeaking) ? 'active' : ''}`}>
+            <button 
+              onClick={() => {
+                setIsListening(false);
+                shouldListenRef.current = false;
+                try { recognitionRef.current?.stop(); } catch(e){}
+                if (window.speechSynthesis) window.speechSynthesis.cancel();
+                if (audioRef.current) {
+                  audioRef.current.pause();
+                  audioRef.current = null;
+                }
+                setIsSpeaking(false);
+              }}
+              style={{
+                position: 'absolute', top: '24px', right: '24px',
+                background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff', width: '40px', height: '40px', borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', zIndex: 10001, transition: 'all 0.2s'
+              }}
+              onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            >
+              <X size={20} />
+            </button>
+            <div className="giant-orb-container">
+              <div className={`giant-orb-glow ${isListening ? 'listening' : ''}`}></div>
+              <div className={`giant-orb ${isListening ? 'listening' : ''}`}></div>
+            </div>
+            <div className="voice-transcript">
+              {isListening 
+                ? (input || "Listening...") 
+                : (messages.length > 0 && messages[messages.length-1].role === 'ai' ? messages[messages.length-1].text : "...")}
+            </div>
+          </div>
+
           <div style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
           <div className="chat-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

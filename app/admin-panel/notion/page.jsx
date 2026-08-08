@@ -483,6 +483,31 @@ export default function NotionHubPage() {
     }
   };
 
+  const handleConvertToTodo = async (blockId, textContent) => {
+    try {
+      const res = await fetch('/api/admin/notion/append', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          blockId: selectedItem.id, 
+          type: 'to_do', 
+          afterBlockId: blockId, 
+          richTextArray: [{ text: { content: textContent } }] 
+        })
+      });
+      if (res.ok) {
+        await fetch('/api/admin/notion/update', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ blockId })
+        });
+        fetchPageContent(selectedItem.id);
+      }
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
   const handleUpdateBlock = useCallback((blockId, type, content, richTextArray, checked) => {
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
@@ -594,11 +619,6 @@ export default function NotionHubPage() {
     setScrollProgress(progress);
   };
 
-  // Extract Table of Contents
-  const tocItems = docContent?.blocks?.filter(b => b.type.startsWith('heading_'))?.map((block, i) => {
-    const text = block[block.type]?.rich_text?.map(t => t.plain_text).join('') || 'Untitled';
-    return { id: block.id, type: block.type, text, index: i };
-  }) || [];
 
   // Filter Items
   const filteredItems = items.filter(item => {
@@ -678,7 +698,34 @@ export default function NotionHubPage() {
         return getText(a).localeCompare(getText(b));
       });
     }
-    return blocks;
+    // Default: group contiguous to-do items and sort them (unchecked first, checked last)
+    const result = [];
+    let currentToDoGroup = [];
+
+    const flushToDoGroup = () => {
+      if (currentToDoGroup.length > 0) {
+        currentToDoGroup.sort((a, b) => {
+          const aChecked = a.to_do?.checked || false;
+          const bChecked = b.to_do?.checked || false;
+          if (aChecked === bChecked) return 0;
+          return aChecked ? 1 : -1;
+        });
+        result.push(...currentToDoGroup);
+        currentToDoGroup = [];
+      }
+    };
+
+    for (const block of blocks) {
+      if (block.type === 'to_do') {
+        currentToDoGroup.push(block);
+      } else {
+        flushToDoGroup();
+        result.push(block);
+      }
+    }
+    flushToDoGroup();
+    
+    return result;
   }, [docContent?.blocks, blockSortBy]);
 
   return (
@@ -1057,10 +1104,10 @@ export default function NotionHubPage() {
         </div>
       </header>
 
-      {/* Main Workspace Layout (Left: Nav, Center: Content, Right: TOC) */}
+      {/* Main Workspace Layout (Left: Nav, Center: Content) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: tocItems.length > 0 ? '340px 1fr 280px' : '340px 1fr',
+        gridTemplateColumns: '340px 1fr',
         gap: '24px',
         padding: '32px 40px',
         flex: 1,
@@ -1635,6 +1682,7 @@ export default function NotionHubPage() {
                         onDeleteBlock={handleDeleteBlock} 
                         onInsertBlockAfter={handleInsertBlockAfter}
                         onUpdateBlock={handleUpdateBlock} 
+                        onConvertToTodo={handleConvertToTodo}
                       />
                     </div>
                   ))}
@@ -1757,44 +1805,7 @@ export default function NotionHubPage() {
         </div>
       </div>
 
-      {/* RIGHT PANEL: Table of Contents (Only visible if doc has headings) */}
-        {tocItems.length > 0 && (
-          <div className="notion-glass-card" style={{
-            padding: '24px',
-            height: 'calc(100vh - 120px)',
-            overflowY: 'auto'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <LayoutList size={18} style={{ color: '#ebd73f' }} />
-              <span className="notion-font" style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                On this page
-              </span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {tocItems.map((item) => {
-                let indent = 0;
-                if (item.type === 'heading_2') indent = 12;
-                if (item.type === 'heading_3') indent = 24;
-                
-                return (
-                  <div
-                    key={item.id}
-                    className="notion-font toc-link"
-                    style={{ marginLeft: `${indent}px` }}
-                    onClick={() => {
-                      const el = document.getElementById(`block-${item.id}`);
-                      if (el && contentRef.current) {
-                        contentRef.current.scrollTo({ top: el.offsetTop - 60, behavior: 'smooth' });
-                      }
-                    }}
-                  >
-                    {item.text}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+
 
       </div>
     </div>
@@ -1954,7 +1965,7 @@ function applyDesignerPreset(presetName, range) {
 }
 
 // --- Inline Editing Components ---
-function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter, onUpdateBlock }) {
+function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter, onUpdateBlock, onConvertToTodo }) {
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const tagRef = useRef(null);
@@ -2054,6 +2065,21 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           <Trash2 size={16} />
         </button>
       )}
+      {onConvertToTodo && type !== 'to_do' && (
+        <button 
+          className="blockConvertBtn"
+          onClick={() => onConvertToTodo(blockId, rawText)}
+          style={{ position: 'absolute', right: '-60px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px 8px 8px 16px', display: 'flex', alignItems: 'center', opacity: 0, transition: 'opacity 0.2s' }}
+          onMouseOver={e => e.currentTarget.style.color = '#ebd73f'}
+          onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+          title="Turn into Checkbox"
+        >
+          <CheckSquare size={16} />
+        </button>
+      )}
+      <style dangerouslySetInnerHTML={{__html: `
+        .blockHoverGroup:hover .blockConvertBtn { opacity: 1 !important; }
+      `}} />
       {isSaving && <span style={{ position: 'absolute', right: '-40px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', color: '#ebd73f', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: '10px' }}>Saving</span>}
     </div>
   );
@@ -2170,7 +2196,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
 }
 
 // Block Renderer Sub-component
-function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBlockAfter, onUpdateBlock }) {
+function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBlockAfter, onUpdateBlock, onConvertToTodo }) {
   const [toggleOpen, setToggleOpen] = useState(false);
 
   const renderRichText = (richTextArr) => {
@@ -2266,7 +2292,7 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
           blockId={block.id} type="paragraph" initialRichTextArr={block.paragraph?.rich_text} renderRichText={renderRichText}
           tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', margin: '4px 0', minHeight: '1.6rem' }}
           emptyPlaceholder="Type '/' for commands"
-          onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
+          onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock} onConvertToTodo={onConvertToTodo}
         />
       );
 
