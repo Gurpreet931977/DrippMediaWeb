@@ -1907,7 +1907,7 @@ function applyDesignerPreset(presetName, range) {
   const span = document.createElement('span');
   
   if (presetName === 'glass') {
-    span.setAttribute('data-notion-color', 'gray_background');
+    span.setAttribute('data-notion-color', 'brown_background');
     span.className = 'preset-glass-morphic';
     span.appendChild(fragment);
     range.insertNode(span);
@@ -1919,7 +1919,7 @@ function applyDesignerPreset(presetName, range) {
     range.insertNode(span);
     return;
   } else if (presetName === 'iridescent') {
-    span.setAttribute('data-notion-color', 'purple_background');
+    span.setAttribute('data-notion-color', 'pink_background');
     span.className = 'preset-iridescent';
     span.appendChild(fragment);
     range.insertNode(span);
@@ -2195,6 +2195,12 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
           className += " preset-liquid-gradient";
         } else if (t.annotations.color === 'gray_background') {
           className += " preset-redacted";
+        } else if (t.annotations.color === 'blue_background') {
+          className += " preset-neon-pulse";
+        } else if (t.annotations.color === 'pink_background') {
+          className += " preset-iridescent";
+        } else if (t.annotations.color === 'brown_background') {
+          className += " preset-glass-morphic";
         } else {
           // Map standard Notion colors to dark theme equivalents roughly
           customStyle.color = t.annotations.color.replace('_background', ''); 
