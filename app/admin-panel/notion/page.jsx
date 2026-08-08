@@ -495,8 +495,13 @@ export default function NotionHubPage() {
           const toolbarWidth = toolbarRef.current.offsetWidth || 600;
           const toolbarHeight = toolbarRef.current.offsetHeight || 70;
           
-          let top = rect.top - toolbarHeight - 15; // 15px gap above
-          let left = rect.left + (rect.width / 2) - (toolbarWidth / 2); // Center horizontally
+          // Bulletproof positioning: find where '0px' actually lands to account for any parent transforms
+          toolbarRef.current.style.top = '0px';
+          toolbarRef.current.style.left = '0px';
+          const originRect = toolbarRef.current.getBoundingClientRect();
+          
+          let top = rect.top - originRect.top - toolbarHeight - 15; // 15px gap above
+          let left = rect.left - originRect.left + (rect.width / 2) - (toolbarWidth / 2); // Center horizontally
           
           // Vertically flip to bottom if too high
           if (top < 10) top = rect.bottom + 15;
@@ -730,6 +735,16 @@ export default function NotionHubPage() {
         @keyframes slideUpFade {
           from { opacity: 0; transform: translateY(15px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .blockHoverGroup .blockDeleteBtn {
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.2s;
+        }
+        .blockHoverGroup:hover .blockDeleteBtn {
+          opacity: 1;
+          pointer-events: auto;
         }
 
         .toc-link {
@@ -1878,7 +1893,6 @@ function applyDesignerPreset(presetName, range) {
 function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter }) {
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const tagRef = useRef(null);
 
   useEffect(() => {
@@ -1934,10 +1948,9 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   
   return (
     <div 
-      style={{ position: 'relative', width: '100%', group: 'true' }} 
+      className="blockHoverGroup"
+      style={{ position: 'relative', width: '100%' }} 
       title="Click to edit"
-      onMouseOver={() => setIsHovered(true)}
-      onMouseOut={() => setIsHovered(false)}
     >
       {localText !== null ? (
         <Tag
@@ -1964,10 +1977,11 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
            {(initialRichTextArr && initialRichTextArr.length > 0) ? renderRichText(initialRichTextArr) : null}
         </Tag>
       )}
-      {isHovered && onDeleteBlock && (
+      {onDeleteBlock && (
         <button 
+          className="blockDeleteBtn"
           onClick={() => onDeleteBlock(blockId)}
-          style={{ position: 'absolute', right: '-35px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+          style={{ position: 'absolute', right: '-45px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px 8px 8px 24px', display: 'flex', alignItems: 'center' }}
           onMouseOver={e => e.currentTarget.style.color = '#fff'}
           onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
           title="Delete Block"
@@ -1984,7 +1998,6 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   const [isChecked, setIsChecked] = useState(block.to_do?.checked);
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const rawText = block.to_do?.rich_text?.map(t => t.plain_text).join('') || '';
 
@@ -2042,9 +2055,8 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
 
   return (
     <div 
+      className="blockHoverGroup"
       style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '4px', marginBottom: '8px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px', borderRadius: '8px', position: 'relative' }}
-      onMouseOver={() => setIsHovered(true)}
-      onMouseOut={() => setIsHovered(false)}
     >
       <span 
         onClick={toggleCheck}
@@ -2073,10 +2085,11 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
       >
         {localText !== null ? localText : renderRichText(block.to_do?.rich_text)}
       </div>
-      {isHovered && onDeleteBlock && (
+      {onDeleteBlock && (
         <button 
+          className="blockDeleteBtn"
           onClick={() => onDeleteBlock(block.id)}
-          style={{ position: 'absolute', right: '-35px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+          style={{ position: 'absolute', right: '-45px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px 8px 8px 24px', display: 'flex', alignItems: 'center' }}
           onMouseOver={e => e.currentTarget.style.color = '#fff'}
           onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
           title="Delete Block"

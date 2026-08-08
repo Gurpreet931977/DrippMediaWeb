@@ -773,3 +773,15 @@
   justify-content: center;
   cursor: pointer;
 }
+
+/* Block Hover Styles */
+.blockHoverGroup .blockDeleteBtn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.blockHoverGroup:hover .blockDeleteBtn {
+  opacity: 1;
+  pointer-events: auto;
+}
