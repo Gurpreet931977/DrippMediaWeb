@@ -1499,29 +1499,40 @@ export default function Page() {
             max-width: 450px;
             background: linear-gradient(135deg, rgba(25, 25, 25, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%);
             backdrop-filter: blur(30px);
-            padding: 45px 40px;
             border-radius: 24px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 20px rgba(255,255,255,0.02);
             position: relative;
+            overflow: hidden;
+            max-height: 80vh;
+        }
+
+        .specific-view-scroll-area {
+            height: 100%;
+            width: 100%;
+            padding: 45px 40px;
             overflow-y: auto;
             overflow-x: hidden;
-            max-height: 80vh;
             scrollbar-width: thin;
             scrollbar-color: rgba(235, 215, 63, 0.3) rgba(255, 255, 255, 0.02);
+            position: relative;
+            z-index: 5;
+            -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
         }
-        .specific-view-info::-webkit-scrollbar {
+
+        .specific-view-scroll-area::-webkit-scrollbar {
             width: 5px;
         }
-        .specific-view-info::-webkit-scrollbar-track {
+        .specific-view-scroll-area::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.02);
             border-radius: 10px;
             margin: 20px 0;
         }
-        .specific-view-info::-webkit-scrollbar-thumb {
+        .specific-view-scroll-area::-webkit-scrollbar-thumb {
             background: rgba(235, 215, 63, 0.3);
             border-radius: 10px;
         }
-        .specific-view-info::-webkit-scrollbar-thumb:hover {
+        .specific-view-scroll-area::-webkit-scrollbar-thumb:hover {
             background: rgba(235, 215, 63, 0.6);
         }
         
@@ -1679,12 +1690,18 @@ export default function Page() {
                 max-height: 60vh;
             }
             .specific-view-info {
-                padding: 35px 25px;
                 max-width: 100%;
                 max-height: none;
                 height: auto;
                 flex: none;
                 overflow: visible;
+            }
+            .specific-view-scroll-area {
+                padding: 35px 25px;
+                height: auto;
+                overflow: visible;
+                -webkit-mask-image: none;
+                mask-image: none;
             }
         }
         
@@ -1949,13 +1966,14 @@ export default function Page() {
             e.currentTarget.style.setProperty('--mouse-y', `-500px`);
           }}
         >
-          <div className="specific-category" id="specific-category">Category</div>
-          <h2 className="specific-title" id="specific-title">Project Title</h2>
-          <h3 className="specific-case-study-heading">THE VISION</h3>
-          <div className="specific-case-study" id="specific-case-study">Case study details...</div>
-          
           {/* Spotlight text glow effect */}
           <div className="text-spotlight"></div>
+          <div className="specific-view-scroll-area">
+            <div className="specific-category" id="specific-category">Category</div>
+            <h2 className="specific-title" id="specific-title">Project Title</h2>
+            <h3 className="specific-case-study-heading">THE VISION</h3>
+            <div className="specific-case-study" id="specific-case-study">Case study details...</div>
+          </div>
         </div>
     </div>
   </div>
