@@ -120,6 +120,7 @@ export default function OrloChat() {
   const keypressCountRef = useRef(0);
   const keypressTimeoutRef = useRef(null);
   const speechBubbleTimeoutRef = useRef(null);
+  const speechTimeoutRef = useRef(null);
 
   // Load chat history and fetch working models from API on mount
   useEffect(() => {
@@ -225,12 +226,22 @@ export default function OrloChat() {
             currentSegment += event.results[i][0].transcript;
           }
           const prefix = originalInputRef.current ? originalInputRef.current.trim() + ' ' : '';
-          setInput(prefix + currentSegment);
+          const fullText = prefix + currentSegment;
+          setInput(fullText);
 
           // Save final segment to prefix so next spoken sentence appends
           if (event.results[0] && event.results[0].isFinal) {
-            originalInputRef.current = prefix + currentSegment;
+            originalInputRef.current = fullText;
           }
+
+          // Auto-submit after 2 seconds of silence
+          clearTimeout(speechTimeoutRef.current);
+          speechTimeoutRef.current = setTimeout(() => {
+            shouldListenRef.current = false;
+            setIsListening(false);
+            try { recognitionRef.current.stop(); } catch(e){}
+            handleSubmit(null, fullText);
+          }, 2000);
         };
         
         recognition.onerror = (event) => {
@@ -270,7 +281,7 @@ export default function OrloChat() {
         recognitionRef.current = recognition;
         recognition.start();
         setIsListening(true);
-        showToast('Listening... Speak now.');
+        // showToast('Listening... Speak now.');
       } catch (err) {
         showToast('Microphone error: Please check your browser permissions.');
         setIsListening(false);
@@ -678,17 +689,56 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
     }
   };
 
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
-    if (!input.trim() || isTyping) return;
+  const speakResponse = async (text) => {
+    try {
+      const res = await fetch('/api/admin/copilot/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
 
-    const userText = input.trim();
+      if (res.ok) {
+        const audioBlob = await res.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+        audio.onended = () => URL.revokeObjectURL(audioUrl);
+        return;
+      }
+    } catch (err) {
+      console.warn("ElevenLabs TTS failed, falling back to browser TTS", err);
+    }
+
+    // Fallback to browser TTS if API fails or is not configured
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        const englishVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Male') || v.name.includes('Google US English'))) || voices.find(v => v.lang.startsWith('en'));
+        if (englishVoice) utterance.voice = englishVoice;
+      }
+      utterance.rate = 1.05;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleSubmit = async (e, overrideText) => {
+    if (e) e.preventDefault();
+    const textToSubmit = overrideText !== undefined ? overrideText : input;
+    if (!textToSubmit.trim() || isTyping) return;
+
+    const userText = textToSubmit.trim();
     const lowerInput = userText.toLowerCase().replace(/[^a-z\s]/g, '').trim();
     setInput('');
+    originalInputRef.current = '';
     
     // Intercept clear chat locally so AI doesn't misinterpret it as a form command
     if (lowerInput === 'clear chat' || lowerInput === 'clearchat' || lowerInput === 'reset chat') {
-      setMessages([{ role: 'ai', text: 'Chat history cleared. My mind is a blank slate!' }]);
+      const msg = 'Chat history cleared. My mind is a blank slate!';
+      setMessages([{ role: 'ai', text: msg }]);
+      speakResponse(msg);
       setIsTyping(false);
       setEmotion('success');
       setTimeout(() => setEmotion('idle'), 2000);
@@ -741,10 +791,14 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       }
 
       if (data.intent === 'clear_chat') {
-        setMessages([{ role: 'ai', text: data.replyMessage || "Chat history cleared. My mind is a blank slate!" }]);
+        const msg = data.replyMessage || "Chat history cleared. My mind is a blank slate!";
+        setMessages([{ role: 'ai', text: msg }]);
+        speakResponse(msg);
       } else {
-        nextMessages.push({ role: 'ai', text: data.replyMessage || "Done. Check your form!" });
+        const msg = data.replyMessage || "Done. Check your form!";
+        nextMessages.push({ role: 'ai', text: msg });
         setMessages(prev => [...prev, ...nextMessages]);
+        speakResponse(msg);
       }
       
       // Dispatch event to window so forms can pick it up
