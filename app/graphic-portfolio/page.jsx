@@ -2235,7 +2235,8 @@ export default function Page() {
                       </div>
                   ))}
               </div>
-          ) : (
+          </div>
+      ) : (
               <div style={{ position: 'relative', zIndex: 1 }}>
                   <div style={{ marginBottom: '35px' }}>
                       <div style={{ 
