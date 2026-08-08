@@ -2012,7 +2012,7 @@ export default function Page() {
           width: '100%', 
           height: '100%', 
           overflowY: 'auto', 
-          padding: '120px 5vw 80px 5vw', 
+          padding: '60px 5vw 60px 5vw', 
           zIndex: 10, 
           background: '#070708',
           position: 'relative'
@@ -2236,17 +2236,25 @@ export default function Page() {
                   ))}
               </div>
           ) : (
-              <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '40px' }}>
-                      <button onClick={() => setActiveCategory(null)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px 24px', borderRadius: '100px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.3s ease', fontFamily: 'Clash Display, sans-serif' }}
-                      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                      onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                      >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                          Back to Folders
-                      </button>
-                      <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#ebd73f', letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'Panchang, sans-serif' }}>{activeCategory}</h2>
-                  </div>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ marginBottom: '35px' }}>
+                      <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '12px', 
+                          color: '#ebd73f', 
+                          fontFamily: 'Clash Display, sans-serif', 
+                          fontSize: '0.8rem', 
+                          letterSpacing: '3px', 
+                          textTransform: 'uppercase',
+                          marginBottom: '8px',
+                          fontWeight: 500
+                      }}>
+                          <span style={{ width: '24px', height: '1px', background: '#ebd73f' }}></span>
+                          CATEGORY ARCHIVE
+                      </div>
+                      <h2 style={{ margin: 0, fontSize: '2.2rem', color: '#ffffff', letterSpacing: '1.5px', textTransform: 'uppercase', fontFamily: 'Panchang, sans-serif' }}>{activeCategory}</h2>
+                  </div>  
                   <div style={{ columnCount: 3, columnGap: '20px' }}>
                       {graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(activeCategory)).map((item, idx) => (
                           <div key={idx} style={{ marginBottom: '20px', breakInside: 'avoid', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: '#111', cursor: 'zoom-in', transition: 'transform 0.3s ease' }}

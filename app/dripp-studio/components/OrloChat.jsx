@@ -1682,6 +1682,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           100% { transform: rotate(360deg); }
         }
 
+        @keyframes pulseRing {
+          0% { transform: scale(0.6); opacity: 0.9; }
+          100% { transform: scale(2.2); opacity: 0; }
+        }
+
         .voice-transcript {
           position: absolute;
           bottom: 12%;
@@ -1738,19 +1743,56 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
             
             <div style={{
               position: 'absolute',
-              top: '30px',
+              top: '32px',
               left: '50%',
               transform: 'translateX(-50%)',
-              color: '#ebd73f',
-              fontFamily: "'Panchang', sans-serif",
-              fontSize: '1.2rem',
-              letterSpacing: '2px',
-              textTransform: 'uppercase',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px'
+              gap: '14px',
+              padding: '8px 24px',
+              background: 'linear-gradient(135deg, rgba(30, 30, 35, 0.75) 0%, rgba(12, 12, 15, 0.9) 100%)',
+              border: '1px solid rgba(235, 215, 63, 0.3)',
+              borderRadius: '50px',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(235, 215, 63, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+              zIndex: 100
             }}>
-              Orlo Live
+              {/* Pulsing Live Dot */}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#ebd73f',
+                  display: 'block',
+                  boxShadow: '0 0 8px #ebd73f'
+                }}></span>
+                <span style={{
+                  position: 'absolute',
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '50%',
+                  border: '1.5px solid #ebd73f',
+                  animation: 'pulseRing 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
+                  opacity: 0.8
+                }}></span>
+              </div>
+
+              {/* Metallic Gold Gradient Text */}
+              <span style={{
+                fontFamily: "'Panchang', sans-serif",
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                letterSpacing: '3px',
+                textTransform: 'uppercase',
+                background: 'linear-gradient(135deg, #ffffff 0%, #ebd73f 60%, #d4bc1c 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 2px 6px rgba(235, 215, 63, 0.25))'
+              }}>
+                ORLO LIVE
+              </span>
             </div>
 
             <div className="giant-orb-container">

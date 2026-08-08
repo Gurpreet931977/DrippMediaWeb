@@ -1,5 +1,6 @@
 import { verifyCookie } from '@/app/lib/adminAuth';
 import { createClient } from '@supabase/supabase-js';
+import { Client as NotionClient } from '@notionhq/client';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -318,8 +319,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
             contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
             tools: [{ googleSearch: {} }],
             generationConfig: {
-                temperature: 0.7,
-                responseMimeType: "application/json"
+                temperature: 0.7
             }
           })
         });
@@ -428,8 +428,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
 
     if (parsed.intent === 'notion_edit' && parsed.payload?.rewrittenContent && notionContext?.blockId) {
       try {
-        const { Client } = require('@notionhq/client');
-        const notionClient = new Client({ auth: process.env.NOTION_API_KEY });
+        const notionClient = new NotionClient({ auth: process.env.NOTION_API_KEY });
         const type = notionContext.type || 'paragraph';
         const content = parsed.payload.rewrittenContent;
         
