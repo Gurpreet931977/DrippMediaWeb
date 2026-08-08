@@ -2067,7 +2067,7 @@ export default function Page() {
           boxShadow: '0 0 10px #ebd73f',
           display: 'flex',
           alignItems: 'center',
-          justify-content: 'center',
+          justifyContent: 'center',
           pointerEvents: 'none',
           zIndex: 5
         }}
