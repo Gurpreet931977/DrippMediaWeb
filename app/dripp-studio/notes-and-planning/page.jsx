@@ -339,6 +339,7 @@ export default function NotionHubPage() {
         toolbarRef.current.style.pointerEvents = 'none';
       }
     }
+  };
   const handleUndo = useCallback(() => {
     if (undoStackRef.current.length > 0) {
       const prevDoc = undoStackRef.current.pop();
