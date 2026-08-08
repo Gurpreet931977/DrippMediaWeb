@@ -48,7 +48,7 @@ export default function AdminSidebar() {
       }}>
         {!isCollapsed && (
           <div className={styles.logo} style={{ marginBottom: 0, fontSize: '1.4rem' }}>
-            {isGenz ? 'DRIPP\nBOSS.' : 'DRIPP\nADMIN.'}
+            {isGenz ? 'DRIPP\nBOSS.' : 'DRIPP\nSTUDIO.'}
           </div>
         )}
         
