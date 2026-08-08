@@ -89,6 +89,49 @@ const PostScene = ({ id, size = 120 }) => {
   );
 };
 
+const AudioVisualizer = ({ active, mode }) => {
+  // mode: 'listening' or 'speaking'
+  const gradient = mode === 'speaking' 
+    ? 'linear-gradient(45deg, #ebd73f, #ff9933, #ff3366)' 
+    : 'linear-gradient(45deg, #33ccff, #ebd73f, #33ff99)';
+
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+      width: '20px',
+      height: '20px',
+      marginLeft: '10px'
+    }}>
+      {/* Outer blurred aura */}
+      <div style={{
+        position: 'absolute',
+        inset: '-6px',
+        borderRadius: '50%',
+        background: gradient,
+        filter: 'blur(6px)',
+        opacity: active ? 0.8 : 0,
+        transition: 'opacity 0.4s ease, background 0.8s ease',
+        animation: active ? 'spinGradient 3s linear infinite' : 'none'
+      }} />
+      
+      {/* Inner morphing core */}
+      <div style={{
+        position: 'relative',
+        width: active ? '14px' : '6px',
+        height: active ? '14px' : '6px',
+        background: '#fff',
+        borderRadius: active ? '40% 60% 70% 30% / 40% 50% 60% 50%' : '50%',
+        transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        animation: active ? 'morphShape 1.5s ease-in-out infinite alternate' : 'none',
+        boxShadow: active ? '0 0 10px rgba(255,255,255,0.9)' : 'none'
+      }} />
+    </div>
+  );
+};
+
 export default function OrloChat() {
   const { isGenz } = useGenz() || { isGenz: false };
   const router = useRouter();
@@ -184,6 +227,7 @@ export default function OrloChat() {
   }, [messages]);
   const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const originalInputRef = useRef('');
 
@@ -701,8 +745,12 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         const audioBlob = await res.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
+        setIsSpeaking(true);
         audio.play();
-        audio.onended = () => URL.revokeObjectURL(audioUrl);
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          setIsSpeaking(false);
+        };
         return;
       }
     } catch (err) {
@@ -720,6 +768,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       }
       utterance.rate = 1.05;
       utterance.pitch = 1;
+      
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -1327,6 +1380,17 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           100% { transform: scale(1.8); opacity: 0; }
         }
         
+        @keyframes spinGradient {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes morphShape {
+          0% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: scale(0.9) rotate(0deg); }
+          50% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; transform: scale(1.1) rotate(90deg); }
+          100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: scale(0.9) rotate(180deg); }
+        }
+        
         .toast-msg {
           position: absolute;
           top: 50px;
@@ -1366,11 +1430,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
               </div>
               <div>
                 <h3 
-                  style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '600', cursor: 'pointer' }}
+                  style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                   onClick={() => setShowProfile(true)}
                   title="View Orlo's Profile"
-                >Orlo</h3>
-                <p style={{ margin: 0, fontSize: '0.75rem', color: '#ebd73f' }}>Online & Ready</p>
+                >Orlo {(isSpeaking || isListening) && <AudioVisualizer active={true} mode={isSpeaking ? 'speaking' : 'listening'} />}</h3>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#ebd73f' }}>{isSpeaking ? 'Speaking...' : isListening ? 'Listening...' : 'Online & Ready'}</p>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
