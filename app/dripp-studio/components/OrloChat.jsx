@@ -1657,6 +1657,25 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
             >
               <X size={20} />
             </button>
+            
+            <div style={{
+              position: 'absolute',
+              top: '30px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              color: '#ebd73f',
+              fontFamily: "'Panchang', sans-serif",
+              fontSize: '1.2rem',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <AudioVisualizer active={isListening || isSpeaking} mode={isSpeaking ? 'speaking' : 'listening'} />
+              Orlo Live
+            </div>
+
             <div className="giant-orb-container">
               <div className={`giant-orb-glow ${isListening ? 'listening' : ''}`}></div>
               <div className={`giant-orb ${isListening ? 'listening' : ''}`}></div>
