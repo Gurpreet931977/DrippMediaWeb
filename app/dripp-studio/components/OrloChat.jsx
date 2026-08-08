@@ -274,8 +274,15 @@ export default function OrloChat() {
           const prefix = originalInputRef.current ? originalInputRef.current.trim() + ' ' : '';
           let fullText = prefix + currentSegment;
           
-          // Fix common mishearings of "Orlo"
-          fullText = fullText.replace(/\b(arlo|or low|are low|orlo)\b/gi, "Orlo");
+          // Fix common mishearings of "Orlo" — word-level
+          fullText = fullText.replace(/\b(arlo|or low|are low|orlo|or lo|or no|oral|ore low|ore lo|or lol|oreo|aura low|hora lo|oh low|au lo|o\.r\.l\.o|oar low|all low|aarlo|hello orlo)\b/gi, "Orlo");
+          // Phrase-level corrections (multi-word mishearings)
+          fullText = fullText.replace(/\bhi or lo\b/gi, "hi Orlo");
+          fullText = fullText.replace(/\bhi or no\b/gi, "hi Orlo");
+          fullText = fullText.replace(/\bhey or lo\b/gi, "hey Orlo");
+          fullText = fullText.replace(/\bhey or no\b/gi, "hey Orlo");
+          fullText = fullText.replace(/\bok or lo\b/gi, "ok Orlo");
+          fullText = fullText.replace(/\bok or no\b/gi, "ok Orlo");
           
           setInput(fullText);
 

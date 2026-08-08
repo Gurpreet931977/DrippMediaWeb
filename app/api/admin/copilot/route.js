@@ -34,7 +34,8 @@ export async function POST(request) {
     let adminIdentityContext = '';
     
     if (supabase) {
-      const { data: memories } = await supabase.from('orlo_memory').select('rule_text, created_at').order('created_at', { ascending: false }).limit(40);
+      const memoryLimit = isVoiceCall ? 10 : 40;
+      const { data: memories } = await supabase.from('orlo_memory').select('rule_text, created_at').order('created_at', { ascending: false }).limit(memoryLimit);
       if (memories && memories.length > 0) {
         // Separate identity memories (name, personal info) from rules
         const identityMemories = memories.filter(m => 
@@ -52,15 +53,17 @@ export async function POST(request) {
         }
       }
       
-      // Get dashboard stats
-      const [
-        { count: quotesCount },
-        { count: packagesCount }
-      ] = await Promise.all([
-        supabase.from('quotes').select('*', { count: 'exact', head: true }),
-        supabase.from('quotes').select('*', { count: 'exact', head: true }).eq('type', 'standalone_pmp')
-      ]);
-      statsContext = `\nCurrent Dashboard Stats (If they ask): Total Quotes Generated: ${quotesCount || 0}, Total Standalone Packages: ${packagesCount || 0}.`;
+      // Skip dashboard stats for voice calls to reduce latency
+      if (!isVoiceCall) {
+        const [
+          { count: quotesCount },
+          { count: packagesCount }
+        ] = await Promise.all([
+          supabase.from('quotes').select('*', { count: 'exact', head: true }),
+          supabase.from('quotes').select('*', { count: 'exact', head: true }).eq('type', 'standalone_pmp')
+        ]);
+        statsContext = `\nCurrent Dashboard Stats (If they ask): Total Quotes Generated: ${quotesCount || 0}, Total Standalone Packages: ${packagesCount || 0}.`;
+      }
     }
 
     const historyText = (chatHistory || [])
@@ -230,43 +233,49 @@ Extract a clean, concise rule. Save it in "learnedRule". Confirm warmly.
 }
 
 ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${userPrompt}"`;
-    // Dynamic model discovery from Google API
-    let verifiedModels = [];
-    try {
-      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-      const listData = await listRes.json();
-      if (listData.models && Array.isArray(listData.models)) {
-        verifiedModels = listData.models
-          .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-          .map(m => m.name.replace('models/', ''));
+    // For voice calls, skip model discovery to save ~1-2s latency
+    let fallbackQueue;
+    if (isVoiceCall) {
+      fallbackQueue = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash'];
+    } else {
+      // Dynamic model discovery from Google API
+      let verifiedModels = [];
+      try {
+        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        const listData = await listRes.json();
+        if (listData.models && Array.isArray(listData.models)) {
+          verifiedModels = listData.models
+            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+            .map(m => m.name.replace('models/', ''));
+        }
+      } catch (e) {
+        console.warn('Failed to query models list from Google:', e);
       }
-    } catch (e) {
-      console.warn('Failed to query models list from Google:', e);
-    }
 
-    const staticDefaults = [
-      'gemini-2.0-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro-latest',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro'
-    ];
+      const staticDefaults = [
+        'gemini-2.0-flash',
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-pro-latest',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro'
+      ];
 
-    function resolveModelName(rawModel) {
-      if (!rawModel) return 'gemini-2.0-flash';
-      if (rawModel.includes('3.6') || rawModel.includes('3.5') || rawModel.includes('2.5')) {
-        return rawModel.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
+      function resolveModelName(rawModel) {
+        if (!rawModel) return 'gemini-2.0-flash';
+        if (rawModel.includes('3.6') || rawModel.includes('3.5') || rawModel.includes('2.5')) {
+          return rawModel.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
+        }
+        return rawModel;
       }
-      return rawModel;
-    }
 
-    const primaryModel = resolveModelName(model);
-    const candidateModels = [
-      primaryModel,
-      ...verifiedModels,
-      ...staticDefaults
-    ];
-    const fallbackQueue = [...new Set(candidateModels)];
+      const primaryModel = resolveModelName(model);
+      const candidateModels = [
+        primaryModel,
+        ...verifiedModels,
+        ...staticDefaults
+      ];
+      fallbackQueue = [...new Set(candidateModels)];
+    }
 
     let lastError = null;
     let data = null;
