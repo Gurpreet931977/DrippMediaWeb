@@ -1501,6 +1501,15 @@ export default function Page() {
             opacity: 1;
             pointer-events: auto;
         }
+
+        /* Hide standard small yellow custom cursor dot when modal overlay is open to avoid cursor doubling */
+        .specific-view-overlay.active ~ #cursor,
+        .specific-view-overlay.active ~ .cursor,
+        body:has(#specific-view.active) #cursor,
+        body:has(#specific-view.active) .cursor {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
         
         .specific-view-content-wrapper {
             display: flex;
@@ -1512,13 +1521,21 @@ export default function Page() {
             max-width: 1400px;
         }
 
+        .specific-view-overlay.active,
+        .specific-view-content-wrapper,
+        .specific-view-img-container,
+        .specific-view-img,
+        .specific-view-info,
+        .specific-view-scroll-area {
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64' fill='none'><circle cx='26' cy='26' r='18' stroke='%23ebd73f' stroke-width='3.5' fill='rgba(235, 215, 63, 0.22)' filter='drop-shadow(0 0 10px rgba(235,215,63,0.95))'/><circle cx='26' cy='26' r='8' stroke='rgba(255,255,255,0.75)' stroke-width='1.5' stroke-dasharray='4 2'/><path d='M17 19C17 15.5 19.5 13 23 13' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round'/><line x1='38' y1='38' x2='56' y2='56' stroke='%23ebd73f' stroke-width='7' stroke-linecap='round' filter='drop-shadow(0 0 6px rgba(235,215,63,0.85))'/><line x1='38' y1='38' x2='56' y2='56' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round'/></svg>") 26 26, zoom-in !important;
+        }
+
         .specific-view-img-container {
             flex: 2;
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100%;
-            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44' fill='none'><circle cx='18' cy='18' r='12' stroke='%23ebd73f' stroke-width='2.5' fill='rgba(235, 215, 63, 0.16)' filter='drop-shadow(0 0 8px rgba(235,215,63,0.9))'/><circle cx='18' cy='18' r='6' stroke='rgba(255,255,255,0.6)' stroke-width='1.2' stroke-dasharray='3 2'/><path d='M13 15C13 13.2 14.2 12 16 12' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/><line x1='26' y1='26' x2='38' y2='38' stroke='%23ebd73f' stroke-width='4.5' stroke-linecap='round' filter='drop-shadow(0 0 4px rgba(235,215,63,0.7))'/><line x1='26' y1='26' x2='38' y2='38' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/></svg>") 18 18, zoom-in !important;
         }
 
         .specific-view-img {
@@ -1531,7 +1548,6 @@ export default function Page() {
             transform: scale(0.85) translateY(20px);
             opacity: 0;
             transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
-            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44' fill='none'><circle cx='18' cy='18' r='12' stroke='%23ebd73f' stroke-width='2.5' fill='rgba(235, 215, 63, 0.16)' filter='drop-shadow(0 0 8px rgba(235,215,63,0.9))'/><circle cx='18' cy='18' r='6' stroke='rgba(255,255,255,0.6)' stroke-width='1.2' stroke-dasharray='3 2'/><path d='M13 15C13 13.2 14.2 12 16 12' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/><line x1='26' y1='26' x2='38' y2='38' stroke='%23ebd73f' stroke-width='4.5' stroke-linecap='round' filter='drop-shadow(0 0 4px rgba(235,215,63,0.7))'/><line x1='26' y1='26' x2='38' y2='38' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/></svg>") 18 18, zoom-in !important;
         }
 
         .specific-view-overlay.active .specific-view-img {
@@ -1971,7 +1987,38 @@ export default function Page() {
         <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     </div>
-      <div className="specific-view-content-wrapper">
+      <div 
+        className="specific-view-content-wrapper"
+        onMouseMove={(e) => {
+            const img = document.getElementById('specific-img');
+            const imgContainer = e.currentTarget.querySelector('.specific-view-img-container');
+            if (!img || !imgContainer) return;
+            
+            const rect = imgContainer.getBoundingClientRect();
+            let x = (e.clientX - rect.left) / rect.width;
+            let y = (e.clientY - rect.top) / rect.height;
+            
+            x = Math.max(0, Math.min(1, x));
+            y = Math.max(0, Math.min(1, y));
+            
+            const slider = document.getElementById('magnify-slider');
+            const zoomLevel = slider ? parseFloat(slider.value) : 2.5;
+            
+            img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+            img.style.transform = `scale(${zoomLevel})`;
+        }}
+        onMouseLeave={() => {
+            const img = document.getElementById('specific-img');
+            if (img) {
+                img.style.transform = 'scale(1)';
+                setTimeout(() => {
+                    if (img.style.transform === 'scale(1)') {
+                        img.style.transformOrigin = 'center center';
+                    }
+                }, 400);
+            }
+        }}
+      >
         <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', position: 'relative' }}>
           <div 
             className="specific-view-img-container"
@@ -1979,35 +2026,11 @@ export default function Page() {
               flex: 'none',
               position: 'relative',
               overflow: 'hidden', 
-              cursor: 'zoom-in', 
               borderRadius: '16px', 
               boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
               display: 'inline-flex',
               maxWidth: '100%',
               maxHeight: '100%'
-            }}
-            onMouseMove={(e) => {
-                const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-                const x = (e.clientX - left) / width;
-                const y = (e.clientY - top) / height;
-                const img = e.currentTarget.querySelector('img');
-                const slider = document.getElementById('magnify-slider');
-                const zoomLevel = slider ? slider.value : 1.5;
-                if(img) {
-                    img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-                    img.style.transform = `scale(${zoomLevel})`;
-                }
-            }}
-            onMouseLeave={(e) => {
-                const img = e.currentTarget.querySelector('img');
-                if(img) {
-                    img.style.transform = 'scale(1)';
-                    setTimeout(() => {
-                        if (img.style.transform === 'scale(1)') {
-                            img.style.transformOrigin = 'center center';
-                        }
-                    }, 400);
-                }
             }}
           >
             <img 
@@ -2023,16 +2046,23 @@ export default function Page() {
             />
           </div>
           
-          <div style={{ position: 'absolute', bottom: '0px', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(15,15,15,0.85)', padding: '10px 25px', borderRadius: '40px', backdropFilter: 'blur(20px)', border: '1px solid rgba(235, 215, 63, 0.2)', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', zIndex: 10 }}>
+          <div style={{ position: 'absolute', bottom: '0px', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(15,15,15,0.85)', padding: '10px 25px', borderRadius: '40px', backdropFilter: 'blur(20px)', border: '1px solid rgba(235, 215, 63, 0.2)', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', zIndex: 10, cursor: 'default' }}>
             <span style={{ color: '#ebd73f', fontSize: '0.75rem', fontFamily: 'Panchang, sans-serif', letterSpacing: '2px', textTransform: 'uppercase' }}>Zoom Power</span>
             <input 
               type="range" 
               id="magnify-slider"
-              min="1.2" 
-              max="4.0" 
+              min="1.5" 
+              max="5.0" 
               step="0.1" 
-              defaultValue="1.5"
-              style={{ width: '120px', cursor: 'pointer', accentColor: '#ebd73f' }}
+              defaultValue="2.5"
+              style={{ width: '130px', cursor: 'pointer', accentColor: '#ebd73f' }}
+              onInput={(e) => {
+                  const val = parseFloat(e.target.value);
+                  const img = document.getElementById('specific-img');
+                  if (img) {
+                      img.style.transform = `scale(${val})`;
+                  }
+              }}
             />
           </div>
         </div>
