@@ -327,8 +327,6 @@ export default function Page() {
                 // Click to close via "X" button
                 document.getElementById('close-specific').addEventListener('click', () => {
                     document.getElementById('specific-view').classList.remove('active');
-                    const lens = document.getElementById('magnifier-lens');
-                    if (lens) lens.style.opacity = '0';
                 });
 
                 // Click to close via clicking anywhere on the blank background overlay
@@ -339,8 +337,6 @@ export default function Page() {
                                       e.target.closest('.close-specific-view');
                     if (!isContent) {
                         document.getElementById('specific-view').classList.remove('active');
-                        const lens = document.getElementById('magnifier-lens');
-                        if (lens) lens.style.opacity = '0';
                     }
                 });
 
@@ -1476,16 +1472,6 @@ export default function Page() {
         }
 
         /* Specific View overlay for Double Click */
-        /* Hide floating guidelines when Specific View overlay is open */
-        .specific-view-overlay.active ~ .features-list,
-        .specific-view-overlay.active ~ * .features-list,
-        body:has(#specific-view.active) .features-list {
-            opacity: 0 !important;
-            pointer-events: none !important;
-            transform: translateY(-15px) scale(0.95) !important;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        }
-
         .specific-view-overlay {
             position: fixed;
             inset: 0;
@@ -1505,39 +1491,6 @@ export default function Page() {
             opacity: 1;
             pointer-events: auto;
         }
-
-        /* Minimal Modern Magnifier DOM Cursor when Modal Overlay is Active */
-        .specific-view-overlay.active ~ #cursor,
-        .specific-view-overlay.active ~ .cursor,
-        body:has(#specific-view.active) #cursor,
-        body:has(#specific-view.active) .cursor {
-            opacity: 1 !important;
-            width: 38px !important;
-            height: 38px !important;
-            border: 2px solid #ebd73f !important;
-            background: rgba(235, 215, 63, 0.14) !important;
-            backdrop-filter: blur(4px) !important;
-            border-radius: 50% !important;
-            box-shadow: 0 0 16px rgba(235, 215, 63, 0.4), inset 0 0 10px rgba(235, 215, 63, 0.2) !important;
-            transition: width 0.2s ease, height 0.2s ease, background-color 0.2s ease !important;
-        }
-
-        /* Sleek minimal center reticle dot */
-        .specific-view-overlay.active ~ #cursor::after,
-        .specific-view-overlay.active ~ .cursor::after,
-        body:has(#specific-view.active) #cursor::after,
-        body:has(#specific-view.active) .cursor::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 4px;
-            height: 4px;
-            transform: translate(-50%, -50%);
-            background-color: #ebd73f;
-            border-radius: 50%;
-            box-shadow: 0 0 6px #ebd73f;
-        }
         
         .specific-view-content-wrapper {
             display: flex;
@@ -1547,15 +1500,6 @@ export default function Page() {
             height: 90vh;
             gap: 40px;
             max-width: 1400px;
-        }
-
-        .specific-view-overlay.active,
-        .specific-view-content-wrapper,
-        .specific-view-img-container,
-        .specific-view-img,
-        .specific-view-info,
-        .specific-view-scroll-area {
-            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'><circle cx='13' cy='13' r='8' stroke='%23ebd73f' stroke-width='2' fill='rgba(235, 215, 63, 0.15)'/><circle cx='13' cy='13' r='2' fill='%23ebd73f'/><line x1='19' y1='19' x2='26' y2='26' stroke='%23ebd73f' stroke-width='2.5' stroke-linecap='round'/></svg>") 13 13, zoom-in !important;
         }
 
         .specific-view-img-container {
@@ -1590,13 +1534,12 @@ export default function Page() {
             justify-content: flex-start;
             opacity: 0;
             transform: translateX(40px);
-            transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
             max-width: 450px;
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.75) 0%, rgba(10, 10, 10, 0.9) 100%);
-            backdrop-filter: blur(25px);
+            background: linear-gradient(135deg, rgba(25, 25, 25, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%);
+            backdrop-filter: blur(30px);
             border-radius: 24px;
-            border: 1px solid rgba(235, 215, 63, 0.15);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 20px rgba(255,255,255,0.02);
             position: relative;
             overflow: hidden;
             max-height: 80vh;
@@ -1633,35 +1576,41 @@ export default function Page() {
             background: rgba(235, 215, 63, 0.6);
         }
         
-        /* Smooth interactive glowing border without blocky mask artifacts */
+        /* The dynamic interactive glowing border */
         .specific-view-info::before {
             content: "";
             position: absolute;
             inset: 0;
             border-radius: 24px; 
-            padding: 1px;
+            padding: 1px; /* Border thickness */
             background: radial-gradient(
-                350px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), 
-                rgba(235, 215, 63, 0.35), 
-                transparent 60%
+                400px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), 
+                rgba(235, 215, 63, 0.6), 
+                rgba(255, 255, 255, 0.05) 40%
             );
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
             z-index: 2;
             pointer-events: none;
+            transition: background 0.3s ease;
         }
 
-        /* Ambient floating glow orb */
+        /* The glowing orb behind the content */
         .specific-view-info::after {
             content: '';
             position: absolute;
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(235, 215, 63, 0.08) 0%, transparent 70%);
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(235, 215, 63, 0.12) 0%, rgba(212, 188, 28, 0.05) 40%, transparent 70%);
             top: -50px;
             left: -50px;
-            z-index: 0;
+            z-index: -1;
             animation: floatOrb 8s infinite alternate ease-in-out;
             pointer-events: none;
-            filter: blur(30px);
+            filter: blur(40px);
         }
 
         @keyframes floatOrb {
@@ -1670,17 +1619,19 @@ export default function Page() {
             100% { transform: translate(-40px, 80px) scale(0.8); }
         }
 
-        /* Smooth text spotlight without color-dodge clipping */
+        /* Spotlight that reveals the text brightness when hovered */
         .text-spotlight {
             position: absolute;
             inset: 0;
             background: radial-gradient(
-                350px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), 
-                rgba(235, 215, 63, 0.08), 
-                transparent 65%
+                450px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), 
+                rgba(235, 215, 63, 0.15), 
+                transparent 50%
             );
             pointer-events: none;
-            z-index: 1;
+            z-index: 10;
+            mix-blend-mode: color-dodge;
+            transition: background 0.1s ease;
         }
 
         /* Subtle noise texture for premium frosted glass feel */
@@ -2008,131 +1959,7 @@ export default function Page() {
         <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     </div>
-
-    {/* Floating Luxury Optical HUD Magnifier Lens */}
-    <div 
-      id="magnifier-lens"
-      style={{
-        position: 'fixed',
-        width: '200px',
-        height: '200px',
-        borderRadius: '50%',
-        border: '2.5px solid #ebd73f',
-        boxShadow: '0 0 35px rgba(235, 215, 63, 0.65), inset 0 0 25px rgba(235, 215, 63, 0.3), 0 25px 60px rgba(0,0,0,0.9)',
-        pointerEvents: 'none',
-        opacity: 0,
-        transform: 'scale(0.85)',
-        zIndex: 9500,
-        transition: 'opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-        overflow: 'hidden',
-        backgroundRepeat: 'no-repeat',
-        backgroundColor: '#111'
-      }}
-    >
-      {/* Specular curved glass reflection */}
-      <div 
-        style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(235,215,63,0.12) 35%, transparent 65%)',
-          border: '1px solid rgba(255,255,255,0.35)',
-          boxShadow: 'inset 0 3px 6px rgba(255,255,255,0.4)',
-          pointerEvents: 'none',
-          zIndex: 3
-        }}
-      />
-      {/* Dashed inner HUD ring */}
-      <div 
-        style={{
-          position: 'absolute',
-          inset: '8px',
-          borderRadius: '50%',
-          border: '1px dashed rgba(235, 215, 63, 0.5)',
-          pointerEvents: 'none',
-          zIndex: 4
-        }}
-      />
-      {/* Center Target Reticle */}
-      <div 
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '12px',
-          height: '12px',
-          borderRadius: '50%',
-          border: '1px solid rgba(235, 215, 63, 0.8)',
-          boxShadow: '0 0 10px #ebd73f',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          pointerEvents: 'none',
-          zIndex: 5
-        }}
-      >
-        <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#ebd73f' }} />
-      </div>
-      {/* Cardinal HUD micro ticks */}
-      <div style={{ position: 'absolute', top: '4px', left: '50%', transform: 'translateX(-50%)', width: '2px', height: '6px', background: '#ebd73f', zIndex: 5, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '4px', left: '50%', transform: 'translateX(-50%)', width: '2px', height: '6px', background: '#ebd73f', zIndex: 5, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', left: '4px', top: '50%', transform: 'translateY(-50%)', width: '6px', height: '2px', background: '#ebd73f', zIndex: 5, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', width: '6px', height: '2px', background: '#ebd73f', zIndex: 5, pointerEvents: 'none' }} />
-    </div>
-
-      <div 
-        className="specific-view-content-wrapper"
-        onMouseMove={(e) => {
-            const img = document.getElementById('specific-img');
-            const lens = document.getElementById('magnifier-lens');
-            if (!img || !lens || !img.src) return;
-
-            const rect = img.getBoundingClientRect();
-            if (rect.width === 0 || rect.height === 0) return;
-
-            const clientX = e.clientX;
-            const clientY = e.clientY;
-
-            let relX = clientX - rect.left;
-            let relY = clientY - rect.top;
-            relX = Math.max(0, Math.min(rect.width, relX));
-            relY = Math.max(0, Math.min(rect.height, relY));
-
-            const slider = document.getElementById('magnify-slider');
-            const zoomLevel = slider ? parseFloat(slider.value) : 2.5;
-
-            const lensSize = 200;
-            const lensRadius = 100;
-            const bgW = rect.width * zoomLevel;
-            const bgH = rect.height * zoomLevel;
-
-            const rawBgX = -(relX * zoomLevel - lensRadius);
-            const rawBgY = -(relY * zoomLevel - lensRadius);
-
-            // Clamp background offset to guarantee 100% full-bleed image coverage without black cutoffs
-            const minBgX = bgW > lensSize ? -(bgW - lensSize) : 0;
-            const bgX = Math.max(minBgX, Math.min(0, rawBgX));
-
-            const minBgY = bgH > lensSize ? -(bgH - lensSize) : 0;
-            const bgY = Math.max(minBgY, Math.min(0, rawBgY));
-
-            lens.style.left = `${clientX - lensRadius}px`;
-            lens.style.top = `${clientY - lensRadius}px`;
-            lens.style.backgroundImage = `url("${img.src}")`;
-            lens.style.backgroundSize = `${bgW}px ${bgH}px`;
-            lens.style.backgroundPosition = `${bgX}px ${bgY}px`;
-            lens.style.opacity = '1';
-            lens.style.transform = 'scale(1)';
-        }}
-        onMouseLeave={() => {
-            const lens = document.getElementById('magnifier-lens');
-            if (lens) {
-                lens.style.opacity = '0';
-                lens.style.transform = 'scale(0.85)';
-            }
-        }}
-      >
+      <div className="specific-view-content-wrapper">
         <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', position: 'relative' }}>
           <div 
             className="specific-view-img-container"
@@ -2140,11 +1967,35 @@ export default function Page() {
               flex: 'none',
               position: 'relative',
               overflow: 'hidden', 
+              cursor: 'zoom-in', 
               borderRadius: '16px', 
               boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
               display: 'inline-flex',
               maxWidth: '100%',
               maxHeight: '100%'
+            }}
+            onMouseMove={(e) => {
+                const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+                const x = (e.clientX - left) / width;
+                const y = (e.clientY - top) / height;
+                const img = e.currentTarget.querySelector('img');
+                const slider = document.getElementById('magnify-slider');
+                const zoomLevel = slider ? slider.value : 1.5;
+                if(img) {
+                    img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+                    img.style.transform = `scale(${zoomLevel})`;
+                }
+            }}
+            onMouseLeave={(e) => {
+                const img = e.currentTarget.querySelector('img');
+                if(img) {
+                    img.style.transform = 'scale(1)';
+                    setTimeout(() => {
+                        if (img.style.transform === 'scale(1)') {
+                            img.style.transformOrigin = 'center center';
+                        }
+                    }, 400);
+                }
             }}
           >
             <img 
@@ -2152,7 +2003,7 @@ export default function Page() {
               className="specific-view-img" 
               id="specific-img" 
               alt="Specific View" 
-              style={{ maxWidth: '100%', maxHeight: '100%', display: 'block', borderRadius: '16px' }}
+              style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', maxWidth: '100%', maxHeight: '100%', display: 'block' }}
               onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
@@ -2160,49 +2011,16 @@ export default function Page() {
             />
           </div>
           
-          <div style={{ position: 'absolute', bottom: '0px', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(15,15,15,0.85)', padding: '10px 25px', borderRadius: '40px', backdropFilter: 'blur(20px)', border: '1px solid rgba(235, 215, 63, 0.2)', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', zIndex: 10, cursor: 'default' }}>
+          <div style={{ position: 'absolute', bottom: '0px', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(15,15,15,0.85)', padding: '10px 25px', borderRadius: '40px', backdropFilter: 'blur(20px)', border: '1px solid rgba(235, 215, 63, 0.2)', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', zIndex: 10 }}>
             <span style={{ color: '#ebd73f', fontSize: '0.75rem', fontFamily: 'Panchang, sans-serif', letterSpacing: '2px', textTransform: 'uppercase' }}>Zoom Power</span>
             <input 
               type="range" 
               id="magnify-slider"
-              min="1.5" 
-              max="5.0" 
+              min="1.2" 
+              max="4.0" 
               step="0.1" 
-              defaultValue="2.5"
-              style={{ width: '130px', cursor: 'pointer', accentColor: '#ebd73f' }}
-              onInput={(e) => {
-                  const sliderVal = parseFloat(e.target.value);
-                  const img = document.getElementById('specific-img');
-                  const lens = document.getElementById('magnifier-lens');
-                  if (img && lens && lens.style.opacity === '1') {
-                      const lastX = parseFloat(lens.style.left) + 100;
-                      const lastY = parseFloat(lens.style.top) + 100;
-                      if (!isNaN(lastX) && !isNaN(lastY)) {
-                          const rect = img.getBoundingClientRect();
-                          if (rect.width > 0 && rect.height > 0) {
-                              let relX = lastX - rect.left;
-                              let relY = lastY - rect.top;
-                              relX = Math.max(0, Math.min(rect.width, relX));
-                              relY = Math.max(0, Math.min(rect.height, relY));
-
-                              const lensSize = 200;
-                              const lensRadius = 100;
-                              const bgW = rect.width * sliderVal;
-                              const bgH = rect.height * sliderVal;
-                              const rawBgX = -(relX * sliderVal - lensRadius);
-                              const rawBgY = -(relY * sliderVal - lensRadius);
-
-                              const minBgX = bgW > lensSize ? -(bgW - lensSize) : 0;
-                              const bgX = Math.max(minBgX, Math.min(0, rawBgX));
-                              const minBgY = bgH > lensSize ? -(bgH - lensSize) : 0;
-                              const bgY = Math.max(minBgY, Math.min(0, rawBgY));
-
-                              lens.style.backgroundSize = `${bgW}px ${bgH}px`;
-                              lens.style.backgroundPosition = `${bgX}px ${bgY}px`;
-                          }
-                      }
-                  }
-              }}
+              defaultValue="1.5"
+              style={{ width: '120px', cursor: 'pointer', accentColor: '#ebd73f' }}
             />
           </div>
         </div>
