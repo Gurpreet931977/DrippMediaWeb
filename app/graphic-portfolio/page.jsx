@@ -1834,6 +1834,18 @@ export default function Page() {
             box-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
             /* Ethereal glow in space */
         }
+
+        @keyframes ambientFloat1 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(80px, 60px) scale(1.2); }
+            100% { transform: translate(-40px, 100px) scale(0.9); }
+        }
+
+        @keyframes ambientFloat2 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-100px, -80px) scale(1.3); }
+            100% { transform: translate(50px, -40px) scale(0.85); }
+        }
     ` }} />
 
       <div>
@@ -1993,34 +2005,109 @@ export default function Page() {
     </div>
     
     {isListViewActive && (
-      <div className="react-list-view-container" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflowY: 'auto', padding: '120px 5vw', zIndex: 10, backgroundColor: '#050505' }}>
-        
-        {/* Advanced Background Layers */}
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-            {/* Animated Ambient Glows */}
-            <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '70vw', height: '70vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.035) 0%, transparent 60%)', filter: 'blur(80px)', animation: 'floatGlow 20s infinite alternate ease-in-out' }}></div>
-            <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '60vw', height: '60vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.025) 0%, transparent 60%)', filter: 'blur(80px)', animation: 'floatGlow 25s infinite alternate-reverse ease-in-out' }}></div>
-            
-            {/* Architectural Grid Pattern */}
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)', backgroundSize: '60px 60px' }}></div>
-            
-            {/* Cinematic Noise Overlay */}
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.25, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
-        </div>
+      <div className="react-list-view-container" style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
+          overflowY: 'auto', 
+          padding: '120px 5vw 80px 5vw', 
+          zIndex: 10, 
+          background: '#070708',
+          position: 'relative'
+      }}
+      onMouseMove={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          e.currentTarget.style.setProperty('--list-mouse-x', `${x}px`);
+          e.currentTarget.style.setProperty('--list-mouse-y', `${y}px`);
+      }}
+      >
+          {/* Architectural Subtle Grid Pattern */}
+          <div style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundImage: `
+                linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px)
+              `,
+              backgroundSize: '65px 65px',
+              pointerEvents: 'none',
+              zIndex: 0
+          }}></div>
 
-        {/* Global Keyframes for Background Animations */}
-        <style dangerouslySetInnerHTML={{ __html: `
-            @keyframes floatGlow {
-                0% { transform: translate(0, 0) scale(1); }
-                50% { transform: translate(5%, 10%) scale(1.1); }
-                100% { transform: translate(-5%, -5%) scale(0.9); }
-            }
-        `}} />
+          {/* Dynamic Interactive Mouse Light Glow */}
+          <div style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'radial-gradient(650px circle at var(--list-mouse-x, 50%) var(--list-mouse-y, 30%), rgba(235, 215, 63, 0.07), transparent 75%)',
+              pointerEvents: 'none',
+              zIndex: 0,
+              transition: 'background 0.15s ease-out'
+          }}></div>
 
-        {/* Content Wrapper */}
-        <div style={{ position: 'relative', zIndex: 1 }}>
+          {/* Floating Ambient Glowing Light Orbs */}
+          <div style={{
+              position: 'fixed',
+              top: '5%',
+              left: '10%',
+              width: '550px',
+              height: '550px',
+              background: 'radial-gradient(circle, rgba(235, 215, 63, 0.09) 0%, rgba(212, 188, 28, 0.02) 50%, transparent 70%)',
+              filter: 'blur(110px)',
+              pointerEvents: 'none',
+              zIndex: 0,
+              animation: 'ambientFloat1 16s ease-in-out infinite alternate'
+          }}></div>
+
+          <div style={{
+              position: 'fixed',
+              bottom: '5%',
+              right: '8%',
+              width: '650px',
+              height: '650px',
+              background: 'radial-gradient(circle, rgba(255, 200, 50, 0.06) 0%, rgba(80, 60, 10, 0.02) 50%, transparent 70%)',
+              filter: 'blur(130px)',
+              pointerEvents: 'none',
+              zIndex: 0,
+              animation: 'ambientFloat2 20s ease-in-out infinite alternate'
+          }}></div>
+
           {activeCategory === null ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                  {/* Category Section Header */}
+                  <div style={{ marginBottom: '45px' }}>
+                      <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '12px', 
+                          color: '#ebd73f', 
+                          fontFamily: 'Clash Display, sans-serif', 
+                          fontSize: '0.8rem', 
+                          letterSpacing: '3px', 
+                          textTransform: 'uppercase',
+                          marginBottom: '12px',
+                          fontWeight: 500
+                      }}>
+                          <span style={{ width: '24px', height: '1px', background: '#ebd73f' }}></span>
+                          01 / ARCHIVES & CATEGORIES
+                      </div>
+                      <h1 style={{ 
+                          fontFamily: 'Panchang, sans-serif', 
+                          fontSize: '2.4rem', 
+                          color: '#ffffff', 
+                          margin: 0, 
+                          letterSpacing: '2px', 
+                          textTransform: 'uppercase',
+                          lineHeight: '1.2' 
+                      }}>
+                          EXPLORE COLLECTIONS
+                      </h1>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '35px' }}>
                   {Array.from(new Set(graphics.flatMap(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean)))).map(cat => (
                       <div key={cat} onClick={() => setActiveCategory(cat)} className="category-folder group" style={{
                           position: 'relative',
@@ -2199,7 +2286,6 @@ export default function Page() {
                   </div>
               </div>
           )}
-        </div>
       </div>
     )}
   </div>
