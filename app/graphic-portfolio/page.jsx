@@ -1080,65 +1080,52 @@ export default function Page() {
         .features-list {
             position: fixed;
             top: 30px;
-            right: 40px;
+            right: 35px;
             z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            align-items: flex-end;
+            gap: 10px;
             font-family: 'Clash Display', sans-serif;
             font-size: 0.75rem;
             letter-spacing: 1.5px;
             text-transform: uppercase;
-            text-align: right;
             pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .feature-item {
             display: inline-flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 14px;
+            gap: 10px;
+            width: fit-content;
             pointer-events: auto;
             cursor: pointer;
-            background: rgba(10, 10, 12, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(12, 12, 14, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            padding: 7px 8px 7px 20px;
-            border-radius: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 5px 6px 5px 14px;
+            border-radius: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             color: #ffffff;
             font-weight: 500;
         }
 
-        /* GenZ Mode Dynamic Style Injection */
-        .features-list.genz-mode .feature-item {
-            background: rgba(18, 12, 35, 0.85);
-            border: 1px solid rgba(235, 215, 63, 0.4);
-            box-shadow: 0 10px 35px rgba(110, 40, 240, 0.3), 0 0 20px rgba(235, 215, 63, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-        }
-
-        .features-list.genz-mode .feature-key {
-            background: linear-gradient(135deg, #ebd73f 0%, #00f2fe 100%);
-            color: #000000 !important;
-            box-shadow: 0 0 15px rgba(235, 215, 63, 0.6);
-        }
-
         .feature-item:hover {
-            background: rgba(20, 20, 28, 0.95);
-            border-color: rgba(235, 215, 63, 0.6);
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(235, 215, 63, 0.25);
+            background: rgba(22, 22, 28, 0.95);
+            border-color: rgba(235, 215, 63, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(235, 215, 63, 0.2);
         }
 
         .feature-item > span:first-child {
             color: rgba(255, 255, 255, 0.95);
             font-weight: 600;
-            letter-spacing: 1.5px;
-            font-size: 0.75rem;
-            transition: color 0.3s;
+            letter-spacing: 1.2px;
+            font-size: 0.72rem;
+            white-space: nowrap;
         }
 
         .feature-item.hidden {
@@ -1150,17 +1137,17 @@ export default function Page() {
         .feature-key {
             background: linear-gradient(135deg, #ebd73f 0%, #d4bc1c 100%);
             color: #000000 !important;
-            padding: 6px 14px;
-            border-radius: 30px;
+            padding: 5px 12px;
+            border-radius: 20px;
             font-family: 'Panchang', sans-serif;
-            font-size: 0.65rem;
+            font-size: 0.62rem;
             font-weight: 700;
-            letter-spacing: 1.2px;
-            box-shadow: 0 4px 15px rgba(235, 215, 63, 0.3);
+            letter-spacing: 1px;
+            box-shadow: 0 2px 10px rgba(235, 215, 63, 0.3);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
         .feature-key span {
@@ -1942,19 +1929,19 @@ export default function Page() {
       </svg>
     </div>
   </div>
-  <div className={`features-list ${isGenz ? 'genz-mode' : ''}`}>
+  <div className="features-list">
     <div className="feature-item" id="list-view-helper">
-      <span>{isGenz ? 'FEED MODE ⚡' : 'LIST VIEW'}</span>
+      <span>{isGenz ? 'Feed View' : 'List View'}</span>
       <span className="feature-key">
-        <span className="desktop-text">{isGenz ? 'ENTER ↵' : 'ENTER'}</span>
-        <span className="mobile-text">TAP</span>
+        <span className="desktop-text">Enter</span>
+        <span className="mobile-text">Tap</span>
       </span>
     </div>
     <div className="feature-item">
-      <span>{isGenz ? 'ENHANCE 🔮' : 'SPECIFIC VIEW'}</span>
+      <span>{isGenz ? 'Enhance' : 'Specific View'}</span>
       <span className="feature-key">
-        <span className="desktop-text">{isGenz ? '2X CLICK ⚡' : 'DOUBLE CLICK'}</span>
-        <span className="mobile-text">2X TAP</span>
+        <span className="desktop-text">{isGenz ? '2x Click' : 'Double Click'}</span>
+        <span className="mobile-text">{isGenz ? '2x Tap' : 'Double Tap'}</span>
       </span>
     </div>
   </div>
