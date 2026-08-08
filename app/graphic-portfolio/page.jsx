@@ -1504,7 +1504,7 @@ export default function Page() {
             position: relative;
             overflow: hidden;
             max-height: 80vh;
-            margin-right: 60px;
+            margin-right: 90px;
         }
 
         .specific-view-scroll-area {
@@ -1781,27 +1781,30 @@ export default function Page() {
             position: absolute;
             top: 40px;
             right: 50px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: var(--pure-white);
-            font-family: 'Panchang', sans-serif;
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
             cursor: pointer;
             pointer-events: auto;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px 24px;
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(20, 20, 20, 0.4);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
         .close-specific-view:hover {
             color: var(--brand-yellow);
             background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(235, 215, 63, 0.3);
-            transform: translateY(-2px);
+            border-color: rgba(235, 215, 63, 0.4);
+            transform: scale(1.08) rotate(90deg);
+            box-shadow: 0 4px 25px rgba(235, 215, 63, 0.15);
         }
 
         /* Space Background Canvas */
@@ -1889,7 +1892,11 @@ export default function Page() {
   </div>
 
   <div className="specific-view-overlay" id="specific-view">
-    <div className="close-specific-view" id="close-specific">Close ×</div>
+    <div className="close-specific-view" id="close-specific" title="Close (Esc)">
+      <svg width="16" height="16" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </div>
       <div className="specific-view-content-wrapper">
         <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', position: 'relative' }}>
           <div 
