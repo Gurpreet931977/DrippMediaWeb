@@ -1504,6 +1504,7 @@ export default function Page() {
             position: relative;
             overflow: hidden;
             max-height: 80vh;
+            margin-right: 60px;
         }
 
         .specific-view-scroll-area {
@@ -1695,6 +1696,7 @@ export default function Page() {
                 height: auto;
                 flex: none;
                 overflow: visible;
+                margin-right: 0;
             }
             .specific-view-scroll-area {
                 padding: 35px 25px;
