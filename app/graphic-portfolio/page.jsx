@@ -1505,13 +1505,24 @@ export default function Page() {
             position: relative;
             overflow-y: auto;
             overflow-x: hidden;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
             max-height: 80vh;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(235, 215, 63, 0.3) rgba(255, 255, 255, 0.02);
         }
-        
         .specific-view-info::-webkit-scrollbar {
-            display: none;
+            width: 5px;
+        }
+        .specific-view-info::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .specific-view-info::-webkit-scrollbar-thumb {
+            background: rgba(235, 215, 63, 0.3);
+            border-radius: 10px;
+        }
+        .specific-view-info::-webkit-scrollbar-thumb:hover {
+            background: rgba(235, 215, 63, 0.6);
         }
         
         /* The dynamic interactive glowing border */
@@ -1671,6 +1682,8 @@ export default function Page() {
                 padding: 35px 25px;
                 max-width: 100%;
                 max-height: none;
+                height: auto;
+                flex: none;
                 overflow: visible;
             }
         }
