@@ -5,7 +5,7 @@ import {
   BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, 
   FileText, Database, CheckSquare, Sparkles, Info, LayoutList, Plus, Maximize2, Minimize2, Star,
   List, ListOrdered, Type, Heading1, Heading2, Heading3, Quote, Code, ToggleLeft,
-  Home, Command, Activity, CheckCircle2, AlertCircle, Trash2, Undo2, Redo2
+  Home, Command, Activity, CheckCircle2, AlertCircle, Trash2, Undo2, Redo2, Copy
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
 
@@ -141,6 +141,8 @@ export default function NotionHubPage() {
 
   // Floating Toolbar Ref (Used instead of state to prevent selection loss on re-render)
   const toolbarRef = useRef(null);
+  const undoStackRef = useRef([]);
+  const redoStackRef = useRef([]);
 
   // Subpage Creation State
   const [showSubpageInput, setShowSubpageInput] = useState(false);
@@ -336,6 +338,98 @@ export default function NotionHubPage() {
         toolbarRef.current.style.transform = 'scale(0.95) translateY(5px)';
         toolbarRef.current.style.pointerEvents = 'none';
       }
+    }
+  const handleUndo = useCallback(() => {
+    if (undoStackRef.current.length > 0) {
+      const prevDoc = undoStackRef.current.pop();
+      setDocContent(current => {
+        if (current) redoStackRef.current.push(current);
+        if (selectedItem?.id) localStorage.setItem(`notion_page_${selectedItem.id}`, JSON.stringify(prevDoc));
+        return prevDoc;
+      });
+    } else {
+      try { document.execCommand('undo'); } catch(e) {}
+    }
+  }, [selectedItem]);
+
+  const handleRedo = useCallback(() => {
+    if (redoStackRef.current.length > 0) {
+      const nextDoc = redoStackRef.current.pop();
+      setDocContent(current => {
+        if (current) undoStackRef.current.push(current);
+        if (selectedItem?.id) localStorage.setItem(`notion_page_${selectedItem.id}`, JSON.stringify(nextDoc));
+        return nextDoc;
+      });
+    } else {
+      try { document.execCommand('redo'); } catch(e) {}
+    }
+  }, [selectedItem]);
+
+  const handleDuplicateBlock = async () => {
+    const blockId = toolbarRef.current?.dataset.blockId;
+    if (!blockId || !selectedItem?.id || !docContent?.blocks) return;
+
+    const targetBlock = docContent.blocks.find(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
+    if (!targetBlock) return;
+
+    const type = targetBlock.type;
+    const richTextArray = targetBlock[type]?.rich_text || [];
+    
+    // Create optimistic duplicate block
+    const tempId = `temp-${Date.now()}`;
+    const duplicateBlock = {
+      id: tempId,
+      type,
+      [type]: {
+        rich_text: JSON.parse(JSON.stringify(richTextArray)),
+        ...(type === 'to_do' ? { checked: targetBlock.to_do?.checked || false } : {})
+      }
+    };
+
+    // Save history before modifying
+    if (docContent) undoStackRef.current.push(docContent);
+
+    // Insert duplicate immediately after targetBlock in local state
+    setDocContent(prev => {
+      if (!prev || !prev.blocks) return prev;
+      const idx = prev.blocks.findIndex(b => b.id === targetBlock.id);
+      if (idx === -1) return prev;
+      const updated = [...prev.blocks];
+      updated.splice(idx + 1, 0, duplicateBlock);
+      return { ...prev, blocks: updated };
+    });
+
+    // Hide toolbar
+    if (toolbarRef.current) {
+      toolbarRef.current.style.opacity = '0';
+      toolbarRef.current.style.pointerEvents = 'none';
+    }
+
+    // Call API to persist duplicate to Notion
+    try {
+      const res = await fetch('/api/admin/notion/append', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blockId: selectedItem.id,
+          type,
+          afterBlockId: targetBlock.id,
+          richTextArray
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const createdId = data.response?.results?.[0]?.id;
+        if (createdId) {
+          setDocContent(prev => {
+            if (!prev || !prev.blocks) return prev;
+            const updated = prev.blocks.map(b => b.id === tempId ? { ...b, id: createdId } : b);
+            return { ...prev, blocks: updated };
+          });
+        }
+      }
+    } catch(err) {
+      console.error('Failed to duplicate block:', err);
     }
   };
 
@@ -1215,11 +1309,11 @@ export default function NotionHubPage() {
 
           <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
 
-          {/* Undo / Redo */}
+          {/* Undo / Redo / Duplicate */}
           <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 8px', borderRadius: '8px', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
             onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
             onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-            onMouseDown={(e) => { e.preventDefault(); document.execCommand('undo'); }}
+            onMouseDown={(e) => { e.preventDefault(); handleUndo(); }}
             title="Undo"
           >
             <Undo2 size={16} />
@@ -1227,10 +1321,19 @@ export default function NotionHubPage() {
           <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 8px', borderRadius: '8px', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
             onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
             onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-            onMouseDown={(e) => { e.preventDefault(); document.execCommand('redo'); }}
+            onMouseDown={(e) => { e.preventDefault(); handleRedo(); }}
             title="Redo"
           >
             <Redo2 size={16} />
+          </button>
+          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+            onMouseDown={(e) => { e.preventDefault(); handleDuplicateBlock(); }}
+            title="Duplicate Block"
+          >
+            <Copy size={14} />
+            <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Duplicate</span>
           </button>
 
           <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
