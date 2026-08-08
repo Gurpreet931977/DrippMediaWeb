@@ -1472,6 +1472,16 @@ export default function Page() {
         }
 
         /* Specific View overlay for Double Click */
+        /* Hide floating guidelines when Specific View overlay is open */
+        .specific-view-overlay.active ~ .features-list,
+        .specific-view-overlay.active ~ * .features-list,
+        body:has(#specific-view.active) .features-list {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(-15px) scale(0.95) !important;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+
         .specific-view-overlay {
             position: fixed;
             inset: 0;
@@ -1508,6 +1518,7 @@ export default function Page() {
             align-items: center;
             justify-content: center;
             height: 100%;
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44' fill='none'><circle cx='18' cy='18' r='12' stroke='%23ebd73f' stroke-width='2.5' fill='rgba(235, 215, 63, 0.16)' filter='drop-shadow(0 0 8px rgba(235,215,63,0.9))'/><circle cx='18' cy='18' r='6' stroke='rgba(255,255,255,0.6)' stroke-width='1.2' stroke-dasharray='3 2'/><path d='M13 15C13 13.2 14.2 12 16 12' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/><line x1='26' y1='26' x2='38' y2='38' stroke='%23ebd73f' stroke-width='4.5' stroke-linecap='round' filter='drop-shadow(0 0 4px rgba(235,215,63,0.7))'/><line x1='26' y1='26' x2='38' y2='38' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/></svg>") 18 18, zoom-in !important;
         }
 
         .specific-view-img {
@@ -1520,6 +1531,7 @@ export default function Page() {
             transform: scale(0.85) translateY(20px);
             opacity: 0;
             transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44' fill='none'><circle cx='18' cy='18' r='12' stroke='%23ebd73f' stroke-width='2.5' fill='rgba(235, 215, 63, 0.16)' filter='drop-shadow(0 0 8px rgba(235,215,63,0.9))'/><circle cx='18' cy='18' r='6' stroke='rgba(255,255,255,0.6)' stroke-width='1.2' stroke-dasharray='3 2'/><path d='M13 15C13 13.2 14.2 12 16 12' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/><line x1='26' y1='26' x2='38' y2='38' stroke='%23ebd73f' stroke-width='4.5' stroke-linecap='round' filter='drop-shadow(0 0 4px rgba(235,215,63,0.7))'/><line x1='26' y1='26' x2='38' y2='38' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/></svg>") 18 18, zoom-in !important;
         }
 
         .specific-view-overlay.active .specific-view-img {
