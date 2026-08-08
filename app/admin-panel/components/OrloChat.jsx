@@ -169,6 +169,7 @@ export default function OrloChat() {
   const keypressTimeoutRef = useRef(null);
   const speechBubbleTimeoutRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
+  const [isProcessingVoice, setIsProcessingVoice] = useState(false);
 
   // Load chat history and fetch working models from API on mount
   useEffect(() => {
@@ -283,6 +284,7 @@ export default function OrloChat() {
           speechTimeoutRef.current = setTimeout(() => {
             shouldListenRef.current = false;
             setIsListening(false);
+            setIsProcessingVoice(true);
             try { recognitionRef.current.stop(); } catch(e){}
             handleSubmit(null, fullText);
           }, 2000);
@@ -743,12 +745,14 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
 
       if (res.ok) {
         const audioBlob = await res.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
         if (audioRef.current) {
           audioRef.current.pause();
         }
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
         setIsSpeaking(true);
+        setIsProcessingVoice(false);
         audio.play();
         audio.onended = () => {
           URL.revokeObjectURL(audioUrl);
@@ -772,18 +776,23 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       utterance.rate = 1.05;
       utterance.pitch = 1;
       
-      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onstart = () => { setIsSpeaking(true); setIsProcessingVoice(false); };
       utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+      utterance.onerror = () => { setIsSpeaking(false); setIsProcessingVoice(false); };
       
       window.speechSynthesis.speak(utterance);
+    } else {
+      setIsProcessingVoice(false);
     }
   };
 
   const handleSubmit = async (e, overrideText) => {
     if (e) e.preventDefault();
     const textToSubmit = overrideText !== undefined ? overrideText : input;
-    if (!textToSubmit.trim() || isTyping) return;
+    if (!textToSubmit.trim() || isTyping) {
+      setIsProcessingVoice(false);
+      return;
+    }
 
     const userText = textToSubmit.trim();
     const lowerInput = userText.toLowerCase().replace(/[^a-z\s]/g, '').trim();
@@ -847,11 +856,19 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       }
 
       if (data.intent === 'clear_chat') {
-        const msg = data.replyMessage || "Chat history cleared. My mind is a blank slate!";
+        const msg = data.replyMessage || data.message || "Chat history cleared. My mind is a blank slate!";
         setMessages([{ role: 'ai', text: msg }]);
         speakResponse(msg);
       } else {
-        const msg = data.replyMessage || "Done. Check your form!";
+        let msg = data.replyMessage || data.message || (data.payload && data.payload.replyMessage);
+        
+        // If it's a chat intent, it should NEVER say "Done. Check your form!"
+        if (!msg) {
+           msg = data.intent === 'chat' 
+             ? "I'm not sure what to say to that, but I'm here for you!" 
+             : "Done. Check your form!";
+        }
+        
         nextMessages.push({ role: 'ai', text: msg });
         setMessages(prev => [...prev, ...nextMessages]);
         speakResponse(msg);
@@ -884,6 +901,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       setEmotion('disappointed');
       setTimeout(() => setEmotion('idle'), 4000);
       setMessages(prev => [...prev, { role: 'ai', text: `Error: ${error.message}` }]);
+      setIsProcessingVoice(false);
     } finally {
       setIsTyping(false);
     }
@@ -1471,11 +1489,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         }
 
         .giant-orb-glow.listening {
-          background: radial-gradient(circle, rgba(51, 204, 255, 0.6) 0%, rgba(51, 204, 255, 0) 70%);
+          background: radial-gradient(circle, rgba(235, 215, 63, 0.8) 0%, rgba(255, 204, 0, 0) 70%);
         }
 
         .giant-orb.listening {
-          background: linear-gradient(135deg, #33ccff, #33ff99, #ebd73f);
+          background: linear-gradient(135deg, #ebd73f, #ffcc00, #ffaa00);
           animation-duration: 2s, 8s;
         }
 
@@ -1520,10 +1538,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           {toastMessage && <div className="toast-msg">{toastMessage}</div>}
           
           {/* Voice Mode Fullscreen Overlay */}
-          <div className={`voice-mode-overlay ${(isListening || isSpeaking) ? 'active' : ''}`}>
+          <div className={`voice-mode-overlay ${(isListening || isProcessingVoice || isSpeaking) ? 'active' : ''}`}>
             <button 
               onClick={() => {
                 setIsListening(false);
+                setIsProcessingVoice(false);
                 shouldListenRef.current = false;
                 try { recognitionRef.current?.stop(); } catch(e){}
                 if (window.speechSynthesis) window.speechSynthesis.cancel();
@@ -1552,7 +1571,9 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
             <div className="voice-transcript">
               {isListening 
                 ? (input || "Listening...") 
-                : (messages.length > 0 && messages[messages.length-1].role === 'ai' ? messages[messages.length-1].text : "...")}
+                : isProcessingVoice 
+                  ? "Thinking..."
+                  : (messages.length > 0 && messages[messages.length-1].role === 'ai' ? messages[messages.length-1].text : "...")}
             </div>
           </div>
 
