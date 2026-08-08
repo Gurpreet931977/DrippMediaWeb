@@ -329,9 +329,13 @@ export default function Page() {
                     document.getElementById('specific-view').classList.remove('active');
                 });
 
-                // Click to close via clicking anywhere on the blurred background overlay
+                // Click to close via clicking anywhere on the blank background overlay
                 document.getElementById('specific-view').addEventListener('click', (e) => {
-                    if (e.target.id === 'specific-view' || e.target.classList.contains('specific-view-content-wrapper') || e.target.classList.contains('specific-view-img-container')) {
+                    const isContent = e.target.closest('.specific-view-img-container') || 
+                                      e.target.closest('.specific-view-info') || 
+                                      e.target.closest('#magnify-slider') ||
+                                      e.target.closest('.close-specific-view');
+                    if (!isContent) {
                         document.getElementById('specific-view').classList.remove('active');
                     }
                 });
@@ -1075,18 +1079,16 @@ export default function Page() {
 
         .features-list {
             position: fixed;
-            top: 40px;
-            right: 50px;
-            z-index: 100;
+            top: 30px;
+            right: 40px;
+            z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            font-family: 'Panchang', sans-serif;
-            font-size: 0.6rem;
-            letter-spacing: 2px;
+            gap: 12px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.6);
-            mix-blend-mode: difference;
             text-align: right;
             pointer-events: none;
         }
@@ -1095,10 +1097,32 @@ export default function Page() {
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 12px;
             pointer-events: auto;
             cursor: pointer;
-            transition: opacity 0.5s ease;
+            background: rgba(12, 12, 14, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 6px 8px 6px 16px;
+            border-radius: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .feature-item:hover {
+            background: rgba(20, 20, 25, 0.95);
+            border-color: rgba(235, 215, 63, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(235, 215, 63, 0.2);
+        }
+
+        .feature-item > span:first-child {
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+            letter-spacing: 1.5px;
         }
 
         .feature-item.hidden {
@@ -1107,12 +1131,22 @@ export default function Page() {
         }
 
         .feature-key {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--brand-yellow);
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(235, 215, 63, 0.3);
-            font-weight: 600;
+            background: linear-gradient(135deg, #ebd73f 0%, #d4bc1c 100%);
+            color: #000000 !important;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 10px rgba(235, 215, 63, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-key span {
+            color: #000000 !important;
         }
 
         /* Tripp Sparkle Button (Uiverse JkHuger style via Dripp Brand Colors) */
@@ -2012,7 +2046,7 @@ export default function Page() {
           width: '100%', 
           height: '100%', 
           overflowY: 'auto', 
-          padding: '60px 5vw 60px 5vw', 
+          padding: '105px 5vw 60px 5vw', 
           zIndex: 10, 
           background: '#070708',
           position: 'relative'

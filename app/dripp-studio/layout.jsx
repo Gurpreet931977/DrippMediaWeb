@@ -207,16 +207,31 @@ export default function AdminLayout({ children }) {
         <div className="bg-glow"></div>
         
         <div className="glass-panel">
-          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <h2 style={{ color: '#fff', marginBottom: '8px', fontFamily: "'Panchang', sans-serif", fontSize: '1.8rem', letterSpacing: '1px', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
-              ADMIN <span style={{ color: '#ebd73f' }}>ACCESS</span>
+          <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '48px',
+              height: '48px',
+              borderRadius: '16px',
+              background: 'rgba(235, 215, 63, 0.1)',
+              border: '1px solid rgba(235, 215, 63, 0.25)',
+              marginBottom: '16px',
+              color: '#ebd73f',
+              boxShadow: '0 0 20px rgba(235, 215, 63, 0.15)'
+            }}>
+              <Sparkles size={24} />
+            </div>
+            <h2 style={{ color: '#fff', marginBottom: '8px', fontFamily: "'Panchang', sans-serif", fontSize: '2rem', letterSpacing: '1.5px', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+              DRIPP <span style={{ color: '#ebd73f' }}>STUDIO</span>
             </h2>
-            <p style={{ color: '#888', fontSize: '0.85rem', letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>Dripp Media Control Panel</p>
+            <p style={{ color: '#888', fontSize: '0.8rem', letterSpacing: '3px', textTransform: 'uppercase', margin: 0, fontFamily: "'Clash Display', sans-serif", fontWeight: 500 }}>CREATIVE MANAGEMENT SUITE</p>
           </div>
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
             <div className="input-group">
-              <label style={{ display: 'block', fontSize: '0.75rem', color: '#888', marginBottom: '8px', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 500, marginLeft: '4px' }}>Admin Email</label>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#aaa', marginBottom: '8px', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600, marginLeft: '4px', fontFamily: "'Clash Display', sans-serif" }}>STUDIO EMAIL</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type="email"
@@ -226,13 +241,14 @@ export default function AdminLayout({ children }) {
                   autoFocus
                   placeholder="admin@example.com"
                   className="premium-input"
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
                 />
                 <Mail size={18} className="input-icon" />
               </div>
             </div>
             
             <div className="input-group">
-              <label style={{ display: 'block', fontSize: '0.75rem', color: '#888', marginBottom: '8px', letterSpacing: '1px', textTransform: 'uppercase', fontWeight: 500, marginLeft: '4px' }}>Admin Password</label>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#aaa', marginBottom: '8px', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600, marginLeft: '4px', fontFamily: "'Clash Display', sans-serif" }}>STUDIO PASSWORD</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -241,7 +257,7 @@ export default function AdminLayout({ children }) {
                   required
                   placeholder="••••••••"
                   className="premium-input"
-                  style={{ paddingRight: '48px' }}
+                  style={{ paddingRight: '48px', fontFamily: "'Clash Display', sans-serif" }}
                 />
                 <Lock size={18} className="input-icon" />
                 <button 
@@ -256,7 +272,7 @@ export default function AdminLayout({ children }) {
 
             <div style={{ minHeight: '24px', margin: '4px 0 12px 4px' }}>
               {loginError && (
-                <p style={{ color: '#ff4d4d', fontSize: '0.85rem', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <p style={{ color: '#ff4d4d', fontSize: '0.85rem', margin: 0, display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Clash Display', sans-serif" }}>
                   <span style={{ display: 'inline-block', width: '4px', height: '4px', borderRadius: '50%', background: '#ff4d4d' }}></span>
                   {loginError}
                 </p>
@@ -267,8 +283,9 @@ export default function AdminLayout({ children }) {
               type="submit"
               disabled={loginLoading}
               className="premium-button"
+              style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', letterSpacing: '2px' }}
             >
-              {loginLoading ? 'VERIFYING...' : 'ENTER PANEL'}
+              {loginLoading ? 'VERIFYING...' : 'ENTER STUDIO'}
             </button>
           </form>
         </div>

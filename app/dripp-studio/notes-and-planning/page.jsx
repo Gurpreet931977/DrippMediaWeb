@@ -120,7 +120,7 @@ export default function NotionHubPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('favorites'); // 'favorites', 'all', 'page', 'database'
+  const [filterType, setFilterType] = useState('main'); // 'favorites', 'main', 'page', 'database'
   const [sortBy, setSortBy] = useState('date');
   const [blockSortBy, setBlockSortBy] = useState('manual');
   const [favorites, setFavorites] = useState([]);
@@ -271,21 +271,7 @@ export default function NotionHubPage() {
     }
   }, [selectedItem, fetchPageContent]);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isZenithMode) {
-        setIsZenithMode(false);
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        if (searchInputRef.current) {
-          searchInputRef.current.focus();
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isZenithMode]);
+
 
   const handleApplyPreset = (e) => {
     const presetName = e.target.value;
@@ -366,6 +352,34 @@ export default function NotionHubPage() {
     }
   }, [selectedItem]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isZenithMode) {
+        setIsZenithMode(false);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }
+      // Cmd+Z (Undo) and Cmd+Shift+Z / Cmd+Y (Redo)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isZenithMode, handleUndo, handleRedo]);
+
   const handleDuplicateBlock = async () => {
     const blockId = toolbarRef.current?.dataset.blockId;
     if (!blockId || !selectedItem?.id || !docContent?.blocks) return;
@@ -374,12 +388,23 @@ export default function NotionHubPage() {
     if (!targetBlock) return;
 
     const type = targetBlock.type;
-    const richTextArray = targetBlock[type]?.rich_text || [];
     
-    // Create optimistic duplicate block
+    // Parse latest DOM HTML if available so newly edited text & presets are captured 100% accurately
+    let richTextArray = targetBlock[type]?.rich_text || [];
+    const blockEl = document.querySelector(`#block-${blockId} [contenteditable="true"]`);
+    if (blockEl) {
+      const parsedFromDom = parseHTMLToNotion(blockEl);
+      if (parsedFromDom && parsedFromDom.length > 0) {
+        richTextArray = parsedFromDom;
+      }
+    }
+    
+    // Create optimistic duplicate block with stable _key
     const tempId = `temp-${Date.now()}`;
+    const stableKey = `stable-${Date.now()}-${Math.random()}`;
     const duplicateBlock = {
       id: tempId,
+      _key: stableKey,
       type,
       [type]: {
         rich_text: JSON.parse(JSON.stringify(richTextArray)),
@@ -511,6 +536,11 @@ export default function NotionHubPage() {
   };
 
   const handleDeleteBlock = async (blockId) => {
+    if (docContent) {
+      undoStackRef.current.push(JSON.parse(JSON.stringify(docContent)));
+      if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+      redoStackRef.current = [];
+    }
     // Optimistic UI update
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
@@ -533,9 +563,16 @@ export default function NotionHubPage() {
   const handleInsertBlockAfter = async (currentBlockId, type = 'paragraph') => {
     if (!selectedItem?.id) return;
     
-    // Optimistic UI update to feel instant
+    if (docContent) {
+      undoStackRef.current.push(JSON.parse(JSON.stringify(docContent)));
+      if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+      redoStackRef.current = [];
+    }
+
+    // Optimistic UI update to feel instant with stable _key
     const tempId = `temp-${Date.now()}`;
-    const newBlock = { id: tempId, type, [type]: { rich_text: [] } };
+    const stableKey = `stable-${Date.now()}-${Math.random()}`;
+    const newBlock = { id: tempId, _key: stableKey, type, [type]: { rich_text: [] } };
     
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
@@ -607,6 +644,12 @@ export default function NotionHubPage() {
   const handleUpdateBlock = useCallback((blockId, type, content, richTextArray, checked) => {
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
+      
+      // Save history snapshot before modifying
+      undoStackRef.current.push(JSON.parse(JSON.stringify(prev)));
+      if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+      redoStackRef.current = [];
+
       const newBlocks = prev.blocks.map(b => {
         if (b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, '')) {
           const updatedBlock = { ...b };
@@ -763,10 +806,9 @@ export default function NotionHubPage() {
       return favorites.includes(item.id);
     }
     
-    if (filterType === 'all') {
-      // Hide subpages: if the item's parent is also in the items list, it's a subpage.
+    if (filterType === 'main') {
+      // Main Pages ONLY (exclude subpages whose parent exists in items)
       const parentId = item.parent?.page_id || item.parent?.database_id;
-      // If the parent is a page/database that we fetched, it's a subpage.
       if (parentId) {
         const cleanParentId = String(parentId).replace(/-/g, '');
         if (items.some(i => i && i.id && String(i.id).replace(/-/g, '') === cleanParentId)) {
@@ -775,8 +817,17 @@ export default function NotionHubPage() {
       }
       return true;
     }
+
+    if (filterType === 'page') {
+      // All Pages (including subpages)
+      return item.object === 'page';
+    }
+
+    if (filterType === 'database') {
+      return item.object === 'database';
+    }
     
-    return item.object === filterType;
+    return true;
   }).sort((a, b) => {
     if (sortBy === 'name') {
       return (a.title || '').localeCompare(b.title || '');
@@ -1465,13 +1516,17 @@ export default function NotionHubPage() {
               >
                 <Star size={14} fill={filterType === 'favorites' ? '#ebd73f' : 'transparent'} strokeWidth={2.5} style={{ display: 'block', margin: '2px 0' }} />
               </button>
-              {['all', 'page', 'database'].map((type) => (
+              {[
+                { id: 'main', label: 'Main Pages' },
+                { id: 'page', label: 'All Pages' },
+                { id: 'database', label: 'Databases' }
+              ].map((tab) => (
                 <button
-                  key={type}
-                  className={`notion-font filter-chip ${filterType === type ? 'active' : ''}`}
-                  onClick={() => setFilterType(type)}
+                  key={tab.id}
+                  className={`notion-font filter-chip ${filterType === tab.id ? 'active' : ''}`}
+                  onClick={() => setFilterType(tab.id)}
                 >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}s
+                  {tab.label}
                 </button>
               ))}
             </div>
@@ -1836,7 +1891,7 @@ export default function NotionHubPage() {
               ) : docContent?.blocks?.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '60px' }}>
                   {sortedBlocks.map((block, i) => (
-                    <div key={block.id} id={`block-${block.id}`} data-block-type={block.type} className="block-enter" style={{ position: 'relative', animationDelay: `${Math.min(i * 0.03, 1)}s` }}>
+                    <div key={block._key || block.id} id={`block-${block.id}`} data-block-type={block.type} className="block-enter" style={{ position: 'relative', animationDelay: `${Math.min(i * 0.03, 1)}s` }}>
                       <NotionBlockRenderer 
                         block={block} 
                         setSelectedItem={setSelectedItem} 
@@ -2000,12 +2055,17 @@ function parseHTMLToNotion(htmlNode) {
       if (tag === 's' || tag === 'strike' || tag === 'del') annotations.strikethrough = true;
       if (tag === 'code') annotations.code = true;
 
-      // Handle color via data-notion-color attribute
+      // Handle color via data-notion-color attribute or preset class names
       if (node.hasAttribute && node.hasAttribute('data-notion-color')) {
         annotations.color = node.getAttribute('data-notion-color');
-      } else if (node.style && node.style.color) {
-        // Very basic mapping, Notion API expects specific color strings like 'red', 'blue', etc.
-        // For advanced, you'd map hex to these. We'll stick to basic standard colors if provided.
+      } else if (node.className && typeof node.className === 'string') {
+        if (node.className.includes('preset-gold-shimmer')) annotations.color = 'yellow_background';
+        else if (node.className.includes('preset-neon-pulse')) annotations.color = 'blue_background';
+        else if (node.className.includes('preset-liquid-gradient')) annotations.color = 'purple_background';
+        else if (node.className.includes('preset-glass-morphic')) annotations.color = 'brown_background';
+        else if (node.className.includes('preset-iridescent')) annotations.color = 'pink_background';
+        else if (node.className.includes('preset-redacted')) annotations.color = 'gray_background';
+        else if (node.className.includes('preset-cyber-glitch')) annotations.color = 'red_background';
       }
 
       // If it's a block level element like DIV or BR that causes a newline, we could inject \n
