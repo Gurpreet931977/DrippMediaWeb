@@ -1492,7 +1492,7 @@ export default function Page() {
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             opacity: 0;
             transform: translateX(40px);
             transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
@@ -1503,7 +1503,15 @@ export default function Page() {
             border-radius: 24px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 20px rgba(255,255,255,0.02);
             position: relative;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            max-height: 80vh;
+        }
+        
+        .specific-view-info::-webkit-scrollbar {
+            display: none;
         }
         
         /* The dynamic interactive glowing border */
@@ -1660,7 +1668,10 @@ export default function Page() {
                 max-height: 60vh;
             }
             .specific-view-info {
-                padding: 0 20px;
+                padding: 35px 25px;
+                max-width: 100%;
+                max-height: none;
+                overflow: visible;
             }
         }
         
@@ -1751,6 +1762,7 @@ export default function Page() {
             border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
+            z-index: 100;
         }
 
         .close-specific-view:hover {
