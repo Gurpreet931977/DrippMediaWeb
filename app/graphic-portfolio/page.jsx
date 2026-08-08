@@ -2126,7 +2126,7 @@ export default function Page() {
           }}></div>
 
           {activeCategory === null ? (
-              <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ position: 'relative', zIndex: 1, paddingLeft: '60px' }}>
                   {/* Category Section Header */}
                   <div style={{ marginBottom: '30px', paddingLeft: '0px' }}>
                       <div style={{ 
@@ -2295,7 +2295,7 @@ export default function Page() {
               </div>
           </div>
       ) : (
-              <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ position: 'relative', zIndex: 1, paddingLeft: '60px' }}>
                   <div style={{ marginBottom: '20px', paddingLeft: '0px' }}>
                       <div style={{ 
                           display: 'flex', 
