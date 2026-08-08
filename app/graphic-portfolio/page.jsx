@@ -1993,7 +1993,32 @@ export default function Page() {
     </div>
     
     {isListViewActive && (
-      <div className="react-list-view-container" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflowY: 'auto', padding: '120px 5vw', zIndex: 10, background: '#0a0a0a' }}>
+      <div className="react-list-view-container" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflowY: 'auto', padding: '120px 5vw', zIndex: 10, backgroundColor: '#050505' }}>
+        
+        {/* Advanced Background Layers */}
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+            {/* Animated Ambient Glows */}
+            <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '70vw', height: '70vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.035) 0%, transparent 60%)', filter: 'blur(80px)', animation: 'floatGlow 20s infinite alternate ease-in-out' }}></div>
+            <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '60vw', height: '60vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.025) 0%, transparent 60%)', filter: 'blur(80px)', animation: 'floatGlow 25s infinite alternate-reverse ease-in-out' }}></div>
+            
+            {/* Architectural Grid Pattern */}
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)', backgroundSize: '60px 60px' }}></div>
+            
+            {/* Cinematic Noise Overlay */}
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.25, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+        </div>
+
+        {/* Global Keyframes for Background Animations */}
+        <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes floatGlow {
+                0% { transform: translate(0, 0) scale(1); }
+                50% { transform: translate(5%, 10%) scale(1.1); }
+                100% { transform: translate(-5%, -5%) scale(0.9); }
+            }
+        `}} />
+
+        {/* Content Wrapper */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
           {activeCategory === null ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
                   {Array.from(new Set(graphics.flatMap(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean)))).map(cat => (
@@ -2174,6 +2199,7 @@ export default function Page() {
                   </div>
               </div>
           )}
+        </div>
       </div>
     )}
   </div>
