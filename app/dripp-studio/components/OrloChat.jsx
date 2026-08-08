@@ -170,6 +170,7 @@ export default function OrloChat() {
   const speechBubbleTimeoutRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
+  const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   const [voiceCallTranscript, setVoiceCallTranscript] = useState({ user: '', ai: '' });
   const voiceHistoryRef = useRef([]);
   const autoRelistenRef = useRef(false);
@@ -266,6 +267,7 @@ export default function OrloChat() {
         
         recognition.onstart = () => {
           setIsListening(true);
+          setIsVoiceModeActive(true);
         };
         
         recognition.onresult = (event) => {
@@ -935,8 +937,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       setVoiceCallTranscript(prev => ({ ...prev, ai: errMsg }));
       setEmotion('disappointed');
       setTimeout(() => setEmotion('idle'), 4000);
-      setIsProcessingVoice(false);
-      autoRelistenRef.current = false;
+      speakResponse(errMsg);
     }
   };
 
@@ -1651,6 +1652,20 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           animation-duration: 2s, 8s;
         }
 
+        .mini-orb {
+          width: 22px;
+          height: 22px;
+          background: linear-gradient(135deg, #ebd73f, #d4bc1c, #fadb5f);
+          border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+          box-shadow: 0 0 10px rgba(235, 215, 63, 0.4), inset 0 0 5px rgba(255,255,255,0.8);
+          animation: morphGiantShape 3s ease-in-out infinite alternate, spinGiant 10s linear infinite;
+        }
+
+        .mini-orb.listening {
+          background: linear-gradient(135deg, #ebd73f, #fff3a1, #d4bc1c);
+          animation-duration: 2s, 8s;
+        }
+
         @keyframes pulseGiantOrb {
           0% { transform: scale(0.8); opacity: 0.5; }
           100% { transform: scale(1.2); opacity: 0.8; }
@@ -1692,10 +1707,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           {toastMessage && <div className="toast-msg">{toastMessage}</div>}
           
           {/* Voice Mode Fullscreen Overlay */}
-          <div className={`voice-mode-overlay ${(isListening || isProcessingVoice || isSpeaking) ? 'active' : ''}`}>
+          <div className={`voice-mode-overlay ${isVoiceModeActive ? 'active' : ''}`}>
             <button 
               onClick={() => {
                 autoRelistenRef.current = false;
+                setIsVoiceModeActive(false);
                 setIsListening(false);
                 setIsProcessingVoice(false);
                 shouldListenRef.current = false;
@@ -1847,24 +1863,26 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
             <div className="chat-input-wrapper">
               <div className="mic-btn-container">
                 {isListening && <div className="mic-waves"></div>}
-                <button
-                  type="button"
-                  onClick={toggleListen}
+                <button 
+                  className="copilot-mic-btn" 
+                  title={isListening ? "Stop listening" : "Orlo Live (Voice Mode)"}
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: isListening ? '#ebd73f' : '#888',
                     cursor: 'pointer',
                     padding: '12px 14px',
                     display: 'flex',
                     alignItems: 'center',
-                    transition: 'color 0.3s',
+                    justifyContent: 'center',
                     position: 'relative',
                     zIndex: 2
                   }}
-                  title={isListening ? "Stop Listening" : "Voice Command"}
+                  onClick={() => {
+                    if (!isListening) setIsVoiceModeActive(true);
+                    toggleListen();
+                  }}
                 >
-                  <Mic size={20} className={isListening ? 'pulsing-mic' : ''} />
+                  <div className={`mini-orb ${isListening ? 'listening' : ''}`}></div>
                 </button>
               </div>
               <textarea 
