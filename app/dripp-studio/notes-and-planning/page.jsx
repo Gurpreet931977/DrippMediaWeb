@@ -122,7 +122,7 @@ export default function NotionHubPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('favorites'); // 'favorites', 'all', 'page', 'database'
   const [sortBy, setSortBy] = useState('date');
-  const [blockSortBy, setBlockSortBy] = useState('date');
+  const [blockSortBy, setBlockSortBy] = useState('manual');
   const [favorites, setFavorites] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [docContent, setDocContent] = useState(null);
@@ -463,21 +463,21 @@ export default function NotionHubPage() {
         })
       });
       if (res.ok) {
-        await fetchPageContent(selectedItem.id);
-        // Auto-focus the new block after it loads
-        setTimeout(() => {
-          const blocks = document.querySelectorAll('.block-enter [contenteditable="true"]');
-          let found = false;
-          for (let i = 0; i < blocks.length; i++) {
-            if (blocks[i].closest(`[id="block-${currentBlockId}"]`)) {
-              if (blocks[i+1]) {
-                blocks[i+1].focus();
-                found = true;
+        const data = await res.json();
+        const createdId = data.response?.results?.[0]?.id;
+        if (createdId) {
+          // Swap tempId with the actual Notion block ID without re-fetching page (preserving typed text)
+          setDocContent(prev => {
+            if (!prev || !prev.blocks) return prev;
+            const newBlocks = prev.blocks.map(b => {
+              if (b.id === tempId) {
+                return { ...b, id: createdId };
               }
-              break;
-            }
-          }
-        }, 300);
+              return b;
+            });
+            return { ...prev, blocks: newBlocks };
+          });
+        }
       }
     } catch (err) {
       console.error(err);
@@ -726,11 +726,25 @@ export default function NotionHubPage() {
     
     // Create a copy to sort
     const blocks = [...docContent.blocks];
+
+    const separateChecked = (list) => {
+      const unchecked = [];
+      const checked = [];
+      for (const b of list) {
+        if (b.type === 'to_do' && b.to_do?.checked) {
+          checked.push(b);
+        } else {
+          unchecked.push(b);
+        }
+      }
+      return [...unchecked, ...checked];
+    };
     
     if (blockSortBy === 'date') {
-      return blocks.sort((a, b) => new Date(b.last_edited_time || b.created_time || 0) - new Date(a.last_edited_time || a.created_time || 0));
+      const sorted = blocks.sort((a, b) => new Date(b.last_edited_time || b.created_time || 0) - new Date(a.last_edited_time || a.created_time || 0));
+      return separateChecked(sorted);
     } else if (blockSortBy === 'name') {
-      return blocks.sort((a, b) => {
+      const sorted = blocks.sort((a, b) => {
         const getText = (block) => {
           if (block.type === 'child_page') return block.child_page?.title || '';
           if (block.type === 'child_database') return block.child_database?.title || '';
@@ -739,8 +753,9 @@ export default function NotionHubPage() {
         };
         return getText(a).localeCompare(getText(b));
       });
+      return separateChecked(sorted);
     }
-    // Default: group contiguous to-do items and sort them (unchecked first, checked last)
+    // Default / Manual: group contiguous to-do items and sort them (unchecked first, checked last)
     const result = [];
     let currentToDoGroup = [];
 
