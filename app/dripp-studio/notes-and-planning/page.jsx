@@ -609,82 +609,6 @@ export default function NotionHubPage() {
     }
   };
 
-  const handleTurnInto = async (e) => {
-    const newType = e.target.value;
-    if (!newType) return;
-    
-    const blockId = toolbarRef.current?.dataset.blockId;
-    const currentType = toolbarRef.current?.dataset.blockType;
-    if (!blockId || !currentType || !selectedItem?.id) return;
-
-    if (toolbarRef.current) {
-      toolbarRef.current.style.opacity = '0';
-      toolbarRef.current.style.pointerEvents = 'none';
-    }
-
-    try {
-      let richTextArray = [];
-      const blockEl = document.querySelector(`#block-${blockId} [contenteditable="true"]`);
-      if (blockEl) {
-        richTextArray = parseHTMLToNotion(blockEl);
-      } else {
-        const block = docContent?.blocks?.find(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
-        richTextArray = block?.[currentType]?.rich_text || [];
-      }
-
-      const appendRes = await fetch('/api/admin/notion/append', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          blockId: selectedItem.id,
-          type: newType,
-          afterBlockId: blockId,
-          richTextArray
-        })
-      });
-      
-      const appendData = await appendRes.json();
-      const newBlockId = appendData.response?.results?.[0]?.id || appendData.response?.id;
-
-      if (appendRes.ok) {
-        await fetch('/api/admin/notion/update', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ blockId })
-        });
-      }
-
-      fetchPageContent(selectedItem.id);
-    } catch(err) {
-      console.error(err);
-    }
-  };
-
-  const handleAppendBlock = async (type) => {
-    if (!selectedItem?.id) return;
-    setIsAppendingBlock(true);
-    setShowAddBlockMenu(false);
-    try {
-      const res = await fetch('/api/admin/notion/append', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blockId: selectedItem.id, type })
-      });
-      if (res.ok) {
-        await fetchPageContent(selectedItem.id);
-        if (contentRef.current) {
-           setTimeout(() => {
-             contentRef.current.scrollTo({ top: contentRef.current.scrollHeight, behavior: 'smooth' });
-           }, 300);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsAppendingBlock(false);
-    }
-  };
-
   const handleDeleteBlock = async (blockId) => {
     if (docContent) {
       undoStackRef.current.push(JSON.parse(JSON.stringify(docContent)));
@@ -2744,6 +2668,11 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
 
   const handleKeyDown = (e) => {
     const el = tagRef.current;
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      toggleCheck();
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) { 
       e.preventDefault(); 
       if (el) handleBlur(el);
