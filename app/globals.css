@@ -4188,9 +4188,3 @@ input[type=number] {
   appearance: textfield;
 }
 
-@keyframes pulseGlowDot {
-  0% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 0 0 rgba(235, 215, 63, 0.7); }
-  50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 12px 4px rgba(235, 215, 63, 0.5); }
-  100% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 0 0 rgba(235, 215, 63, 0.7); }
-}
-
