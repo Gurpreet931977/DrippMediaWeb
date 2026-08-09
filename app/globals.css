@@ -212,10 +212,12 @@
         }
 
         .scroll-text {
-            font-size: 0.7rem;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.68rem;
             letter-spacing: 3px;
             text-transform: uppercase;
             font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .scroll-line {
@@ -318,35 +320,45 @@
         h1.brand-name {
             font-family: 'Panchang', sans-serif;
             font-weight: 800;
-            font-size: 8vw;
+            font-size: clamp(3.5rem, 8.5vw, 9.5rem);
             text-transform: uppercase;
-            line-height: 0.8;
+            line-height: 0.85;
             text-align: center;
             letter-spacing: -2px;
             display: flex;
-            gap: 20px;
+            gap: 24px;
+            color: #ffffff;
+            text-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 80px rgba(255, 255, 255, 0.08);
             will-change: transform, opacity;
+            user-select: none;
         }
 
         .brand-name .word {
             display: inline-block;
             will-change: transform, opacity;
+            transition: text-shadow 0.4s ease;
+        }
+        
+        .brand-name .word:hover {
+            text-shadow: 0 0 30px rgba(235, 215, 63, 0.6), 0 0 60px rgba(235, 215, 63, 0.3);
         }
 
         .hero-sub {
-            margin-top: 30px;
+            margin-top: 36px;
             color: var(--brand-yellow);
+            font-family: 'Clash Display', sans-serif;
             font-size: 0.75rem;
             font-weight: 600;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px 28px;
             border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(235, 215, 63, 0.25);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(235, 215, 63, 0.08);
             opacity: 0;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             cursor: none;
         }
@@ -2859,37 +2871,48 @@
             font-weight: 500;
         }
 
-        /* --- NAVBAR STYLES --- */
+        /* --- NAVBAR STYLES (AWWWARDS CYBER DOCK) --- */
         .navbar {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 20px 50px;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(94%, 1280px);
+            padding: 10px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 1000;
-            background: rgba(5, 5, 5, 0.4);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: transform 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+            background: rgba(12, 12, 16, 0.72);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .nav-logo a {
             font-family: 'Panchang', sans-serif;
             font-weight: 800;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             color: var(--pure-white);
             text-decoration: none;
-            letter-spacing: 2px;
+            letter-spacing: 2.5px;
             display: inline-block;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        
+        .nav-logo a:hover {
+            transform: scale(1.05);
+            color: var(--brand-yellow);
         }
 
         .nav-links {
             display: flex;
             list-style: none;
-            gap: 40px;
+            align-items: center;
+            gap: 24px;
         }
 
         .nav-links li {
@@ -2899,32 +2922,39 @@
 
         .nav-link {
             text-decoration: none;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.65);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.72rem;
             font-weight: 500;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             text-transform: uppercase;
-            transition: color 0.3s;
+            transition: all 0.3s ease;
             position: relative;
+            padding: 6px 14px;
+            border-radius: 20px;
         }
 
         .nav-link::after {
             content: '';
             position: absolute;
             width: 0;
-            height: 1px;
-            bottom: -4px;
-            left: 0;
+            height: 2px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
             background-color: var(--brand-yellow);
-            transition: width 0.3s ease;
+            border-radius: 2px;
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 8px var(--brand-yellow);
         }
 
         .nav-link:hover {
             color: var(--pure-white);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .nav-link:hover::after {
-            width: 100%;
+            width: 60%;
         }
 
         /* CREATIVE NAV BUTTON GROUP */
@@ -2934,7 +2964,7 @@
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 99px;
-            padding: 6px;
+            padding: 4px;
             gap: 4px;
             backdrop-filter: blur(10px);
             transition: all 0.4s ease;
