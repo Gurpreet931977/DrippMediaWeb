@@ -609,7 +609,7 @@ export default function NotionHubPage() {
     
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
-      const index = prev.blocks.findIndex(b => b.id === currentBlockId);
+      const index = prev.blocks.findIndex(b => b.id === currentBlockId || b.id.replace(/-/g, '') === currentBlockId.replace(/-/g, ''));
       if (index === -1) return prev;
       
       const newBlocks = [...prev.blocks];
@@ -1265,7 +1265,11 @@ export default function NotionHubPage() {
               onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
               onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
               onClick={() => {
-                const firstPending = docContent?.blocks?.find(b => b.type === 'to_do' && b.to_do?.checked === false);
+                const firstPending = docContent?.blocks?.find(b => {
+                  if (b.type !== 'to_do' || b.to_do?.checked) return false;
+                  const text = (b.to_do?.rich_text?.map(t => t.plain_text || t.text?.content || '').join('') || '').trim();
+                  return text.length > 0;
+                });
                 if (firstPending) {
                   const el = document.getElementById(`block-${firstPending.id}`);
                   if (el) {
@@ -1283,9 +1287,14 @@ export default function NotionHubPage() {
               }}
             >
               {(() => {
-                const pending = docContent?.blocks?.filter(b => b.type === 'to_do' && b.to_do?.checked === false).length || 0;
+                const pendingBlocks = docContent?.blocks?.filter(b => {
+                  if (b.type !== 'to_do' || b.to_do?.checked) return false;
+                  const text = (b.to_do?.rich_text?.map(t => t.plain_text || t.text?.content || '').join('') || '').trim();
+                  return text.length > 0;
+                }) || [];
+                const pending = pendingBlocks.length;
                 if (pending > 0) {
-                  return <><AlertCircle size={14} style={{ color: '#ffbd2e' }} /> <span style={{ color: '#ffbd2e' }}>{pending} Pending Tasks</span></>;
+                  return <><AlertCircle size={14} style={{ color: '#ffbd2e' }} /> <span style={{ color: '#ffbd2e' }}>{pending} {pending === 1 ? 'Pending Task' : 'Pending Tasks'}</span></>;
                 } else if (docContent?.blocks?.length > 0) {
                   return <><CheckCircle2 size={14} style={{ color: '#27c93f' }} /> <span style={{ color: '#27c93f' }}>Synced</span></>;
                 } else {
@@ -2083,6 +2092,7 @@ export default function NotionHubPage() {
 
 // --- Utility: Parse HTML to Notion Rich Text ---
 function parseHTMLToNotion(htmlNode) {
+  if (!htmlNode) return [];
   const richTextArray = [];
   
   function traverse(node, currentAnnotations) {
@@ -2092,6 +2102,7 @@ function parseHTMLToNotion(htmlNode) {
         richTextArray.push({
           type: 'text',
           text: { content: text },
+          plain_text: text,
           annotations: { ...currentAnnotations }
         });
       }
@@ -2127,12 +2138,12 @@ function parseHTMLToNotion(htmlNode) {
 
       // If it's a block level element like DIV or BR that causes a newline, we could inject \n
       if (tag === 'br') {
-        richTextArray.push({ type: 'text', text: { content: '\n' }, annotations: { ...currentAnnotations } });
+        richTextArray.push({ type: 'text', text: { content: '\n' }, plain_text: '\n', annotations: { ...currentAnnotations } });
         return;
       }
       if (tag === 'div' || tag === 'p') {
         if (richTextArray.length > 0 && richTextArray[richTextArray.length-1].text.content !== '\n') {
-          richTextArray.push({ type: 'text', text: { content: '\n' }, annotations: { ...currentAnnotations } });
+          richTextArray.push({ type: 'text', text: { content: '\n' }, plain_text: '\n', annotations: { ...currentAnnotations } });
         }
       }
 
@@ -2151,7 +2162,7 @@ function parseHTMLToNotion(htmlNode) {
     color: 'default'
   });
   
-  return richTextArray.length > 0 ? richTextArray : [{ text: { content: '' } }];
+  return richTextArray.length > 0 ? richTextArray : [{ text: { content: '' }, plain_text: '' }];
 }
 
 // --- Utility: Apply Designer Preset ---
@@ -2247,6 +2258,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const tagRef = useRef(null);
+  const isFocusedRef = useRef(false);
   const [slashMenu, setSlashMenu] = useState({ isOpen: false, filter: '', selectedIndex: 0 });
 
   const MENU_OPTIONS = [
@@ -2263,27 +2275,26 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   const filteredOptions = MENU_OPTIONS.filter(o => o.label.toLowerCase().includes(slashMenu.filter) || o.type.includes(slashMenu.filter));
 
   useEffect(() => {
-    // Sync localText when initialRichTextArr updates from parent state (e.g. after preset application)
-    setLocalText(null);
+    // Only reset localText when not focused to avoid disrupting active editing
+    if (!isFocusedRef.current) {
+      setLocalText(null);
+    }
   }, [initialRichTextArr]);
 
-  const rawText = initialRichTextArr?.map(t => t.plain_text).join('') || '';
+  const rawText = initialRichTextArr?.map(t => t.plain_text || t.text?.content || '').join('') || '';
 
-  const handleInput = (e) => {
-    const el = tagRef.current || e?.currentTarget || e?.target;
-    if (!el) return;
-    const richTextArray = parseHTMLToNotion(el);
-    const plainText = richTextArray.map(r => r.text.content).join('');
-    if (onUpdateBlock) onUpdateBlock(blockId, type, plainText, richTextArray);
+  const handleFocus = () => {
+    isFocusedRef.current = true;
   };
 
-  const handleBlur = async (e) => {
-    const el = tagRef.current || e?.currentTarget || e?.target;
+  const handleBlur = async (targetNode) => {
+    isFocusedRef.current = false;
+    const el = (targetNode && targetNode.nodeType === 1 ? targetNode : null) || tagRef.current;
     if (!el) return;
     const rawHTML = el.innerHTML;
     // We parse the DOM node itself
     const richTextArray = parseHTMLToNotion(el);
-    const plainText = richTextArray.map(r => r.text.content).join('');
+    const plainText = richTextArray.map(r => r.plain_text || r.text?.content || '').join('');
     
     if (plainText === rawText && !rawHTML.includes('<')) return; // Simple diff
     
@@ -2304,7 +2315,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   };
 
   const handleKeyDown = (e) => {
-    const el = tagRef.current || e?.currentTarget || e?.target;
+    const el = tagRef.current || e?.currentTarget;
     if (slashMenu.isOpen) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -2334,7 +2345,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
 
     if (e.key === 'Enter' && !e.shiftKey) { 
       e.preventDefault(); 
-      handleBlur(e);
+      if (tagRef.current) handleBlur(tagRef.current);
       if (onInsertBlockAfter) {
         onInsertBlockAfter(blockId, 'paragraph');
       }
@@ -2348,7 +2359,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   };
 
   const handleKeyUp = (e) => {
-    const el = tagRef.current || e?.currentTarget || e?.target;
+    const el = tagRef.current || e?.currentTarget;
     if (!el) return;
     const text = el.innerText;
     const match = text.match(/^\/([a-zA-Z]*)$/);
@@ -2369,11 +2380,12 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     >
       {localText !== null ? (
         <Tag
+          ref={tagRef}
           data-block-id={blockId}
           contentEditable
           suppressContentEditableWarning
-          onInput={handleInput}
-          onBlur={handleBlur}
+          onFocus={handleFocus}
+          onBlur={() => handleBlur(tagRef.current)}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           className={`${className} empty-block`}
@@ -2387,8 +2399,8 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           data-block-id={blockId}
           contentEditable
           suppressContentEditableWarning
-          onInput={handleInput}
-          onBlur={handleBlur}
+          onFocus={handleFocus}
+          onBlur={() => handleBlur(tagRef.current)}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           className={`${className} empty-block`}
@@ -2482,8 +2494,9 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const tagRef = useRef(null);
+  const isFocusedRef = useRef(false);
 
-  const rawText = block.to_do?.rich_text?.map(t => t.plain_text).join('') || '';
+  const rawText = block.to_do?.rich_text?.map(t => t.plain_text || t.text?.content || '').join('') || '';
 
   const toggleCheck = async () => {
     const newChecked = !isChecked;
@@ -2504,24 +2517,23 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   };
 
   useEffect(() => {
-    // Sync localText when rich_text updates from parent state
-    setLocalText(null);
+    // Only reset localText when element is not focused
+    if (!isFocusedRef.current) {
+      setLocalText(null);
+    }
   }, [block.to_do?.rich_text]);
 
-  const handleInput = (e) => {
-    const el = tagRef.current || e?.currentTarget || e?.target;
-    if (!el) return;
-    const richTextArray = parseHTMLToNotion(el);
-    const plainText = richTextArray.map(r => r.text.content).join('');
-    if (onUpdateBlock) onUpdateBlock(block.id, 'to_do', plainText, richTextArray, isChecked);
+  const handleFocus = () => {
+    isFocusedRef.current = true;
   };
 
-  const handleBlur = async (e) => {
-    const el = tagRef.current || e?.currentTarget || e?.target;
+  const handleBlur = async (targetNode) => {
+    isFocusedRef.current = false;
+    const el = (targetNode && targetNode.nodeType === 1 ? targetNode : null) || tagRef.current;
     if (!el) return;
     const rawHTML = el.innerHTML;
     const richTextArray = parseHTMLToNotion(el);
-    const plainText = richTextArray.map(r => r.text.content).join('');
+    const plainText = richTextArray.map(r => r.plain_text || r.text?.content || '').join('');
     
     if (plainText === rawText && !rawHTML.includes('data-notion-color') && !rawHTML.includes('preset-')) return;
     
@@ -2542,10 +2554,10 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   };
 
   const handleKeyDown = (e) => {
-    const el = tagRef.current || e?.currentTarget || e?.target;
+    const el = tagRef.current;
     if (e.key === 'Enter' && !e.shiftKey) { 
       e.preventDefault(); 
-      handleBlur(e);
+      if (el) handleBlur(el);
       if (onInsertBlockAfter) {
         onInsertBlockAfter(block.id, 'to_do');
       }
@@ -2581,8 +2593,8 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
         className="notion-font"
         contentEditable
         suppressContentEditableWarning
-        onInput={handleInput}
-        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onBlur={() => handleBlur(tagRef.current)}
         onKeyDown={handleKeyDown}
         style={{
           fontSize: '1rem', lineHeight: 1.6,
@@ -2648,6 +2660,8 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
         }
       }
 
+      const textContent = t.plain_text || t.text?.content || '';
+
       if (t.href) {
         return (
           <a
@@ -2658,13 +2672,13 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
             className={className}
             style={{ ...customStyle, color: '#ebd73f', textDecoration: 'underline', textUnderlineOffset: '4px' }}
           >
-            {t.plain_text}
+            {textContent}
           </a>
         );
       }
       return (
         <span key={idx} className={className} style={customStyle} data-notion-color={t.annotations?.color}>
-          {t.plain_text}
+          {textContent}
         </span>
       );
     });
