@@ -602,9 +602,10 @@ export default function NotionHubPage() {
     }
 
     // Optimistic UI update to feel instant with stable _key
+    const nowIso = new Date().toISOString();
     const tempId = `temp-${Date.now()}`;
     const stableKey = `stable-${Date.now()}-${Math.random()}`;
-    const newBlock = { id: tempId, _key: stableKey, type, [type]: { rich_text: [] } };
+    const newBlock = { id: tempId, _key: stableKey, type, last_edited_time: nowIso, created_time: nowIso, [type]: { rich_text: [] } };
     
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
@@ -698,9 +699,10 @@ export default function NotionHubPage() {
       if (undoStackRef.current.length > 50) undoStackRef.current.shift();
       redoStackRef.current = [];
 
+      const nowIso = new Date().toISOString();
       const newBlocks = prev.blocks.map(b => {
         if (b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, '')) {
-          const updatedBlock = { ...b };
+          const updatedBlock = { ...b, last_edited_time: nowIso };
           if (type === 'to_do') {
             updatedBlock.to_do = { ...b.to_do, checked: checked !== undefined ? checked : b.to_do?.checked };
             if (richTextArray) updatedBlock.to_do.rich_text = richTextArray;
@@ -1778,8 +1780,9 @@ export default function NotionHubPage() {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <FocusSafeDropdown 
-                    label={`Sort: ${blockSortBy === 'name' ? 'Name' : 'Date'}`}
+                    label={`Sort: ${blockSortBy === 'name' ? 'Name' : blockSortBy === 'date' ? 'Date' : 'Manual'}`}
                     options={[
+                      { label: 'Manual (Default)', value: 'manual' },
                       { label: 'Date (Last Updated)', value: 'date' },
                       { label: 'Name (A-Z)', value: 'name' }
                     ]}
@@ -2266,6 +2269,14 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
 
   const rawText = initialRichTextArr?.map(t => t.plain_text).join('') || '';
 
+  const handleInput = (e) => {
+    const el = tagRef.current || e?.currentTarget || e?.target;
+    if (!el) return;
+    const richTextArray = parseHTMLToNotion(el);
+    const plainText = richTextArray.map(r => r.text.content).join('');
+    if (onUpdateBlock) onUpdateBlock(blockId, type, plainText, richTextArray);
+  };
+
   const handleBlur = async (e) => {
     const el = tagRef.current || e?.currentTarget || e?.target;
     if (!el) return;
@@ -2361,6 +2372,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           data-block-id={blockId}
           contentEditable
           suppressContentEditableWarning
+          onInput={handleInput}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
@@ -2375,6 +2387,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           data-block-id={blockId}
           contentEditable
           suppressContentEditableWarning
+          onInput={handleInput}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
@@ -2495,6 +2508,14 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
     setLocalText(null);
   }, [block.to_do?.rich_text]);
 
+  const handleInput = (e) => {
+    const el = tagRef.current || e?.currentTarget || e?.target;
+    if (!el) return;
+    const richTextArray = parseHTMLToNotion(el);
+    const plainText = richTextArray.map(r => r.text.content).join('');
+    if (onUpdateBlock) onUpdateBlock(block.id, 'to_do', plainText, richTextArray, isChecked);
+  };
+
   const handleBlur = async (e) => {
     const el = tagRef.current || e?.currentTarget || e?.target;
     if (!el) return;
@@ -2560,6 +2581,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
         className="notion-font"
         contentEditable
         suppressContentEditableWarning
+        onInput={handleInput}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         style={{
