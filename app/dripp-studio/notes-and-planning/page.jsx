@@ -321,13 +321,35 @@ export default function NotionHubPage() {
     localStorage.setItem('notion_favorites', JSON.stringify(newFavs));
   };
 
-  useEffect(() => {
-    if (selectedItem?.id) {
-      fetchPageContent(selectedItem.id);
-    }
-  }, [selectedItem, fetchPageContent]);
+  const handleUpdateBlock = useCallback((blockId, type, content, richTextArray, checked) => {
+    setDocContent(prev => {
+      if (!prev || !prev.blocks) return prev;
+      
+      // Save history snapshot before modifying
+      undoStackRef.current.push(JSON.parse(JSON.stringify(prev)));
+      if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+      redoStackRef.current = [];
 
-
+      const nowIso = new Date().toISOString();
+      const newBlocks = prev.blocks.map(b => {
+        if (b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, '')) {
+          const updatedBlock = { ...b, last_edited_time: nowIso };
+          if (type === 'to_do') {
+            updatedBlock.to_do = { ...b.to_do, checked: checked !== undefined ? checked : b.to_do?.checked };
+            if (richTextArray) updatedBlock.to_do.rich_text = richTextArray;
+            else if (content !== undefined) updatedBlock.to_do.rich_text = [{ text: { content } }];
+          } else if (type && updatedBlock[type]) {
+            updatedBlock[type] = { ...updatedBlock[type], rich_text: richTextArray || [{ text: { content } }] };
+          }
+          return updatedBlock;
+        }
+        return b;
+      });
+      const newData = { ...prev, blocks: newBlocks };
+      if (selectedItem?.id) localStorage.setItem(`notion_page_${selectedItem.id}`, JSON.stringify(newData));
+      return newData;
+    });
+  }, [selectedItem]);
 
   const handleApplyPreset = (e) => {
     const presetName = e.target.value;
@@ -787,35 +809,7 @@ export default function NotionHubPage() {
     }
   };
 
-  const handleUpdateBlock = useCallback((blockId, type, content, richTextArray, checked) => {
-    setDocContent(prev => {
-      if (!prev || !prev.blocks) return prev;
-      
-      // Save history snapshot before modifying
-      undoStackRef.current.push(JSON.parse(JSON.stringify(prev)));
-      if (undoStackRef.current.length > 50) undoStackRef.current.shift();
-      redoStackRef.current = [];
 
-      const nowIso = new Date().toISOString();
-      const newBlocks = prev.blocks.map(b => {
-        if (b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, '')) {
-          const updatedBlock = { ...b, last_edited_time: nowIso };
-          if (type === 'to_do') {
-            updatedBlock.to_do = { ...b.to_do, checked: checked !== undefined ? checked : b.to_do?.checked };
-            if (richTextArray) updatedBlock.to_do.rich_text = richTextArray;
-            else if (content !== undefined) updatedBlock.to_do.rich_text = [{ text: { content } }];
-          } else if (type && updatedBlock[type]) {
-            updatedBlock[type] = { ...updatedBlock[type], rich_text: richTextArray || [{ text: { content } }] };
-          }
-          return updatedBlock;
-        }
-        return b;
-      });
-      const newData = { ...prev, blocks: newBlocks };
-      if (selectedItem?.id) localStorage.setItem(`notion_page_${selectedItem.id}`, JSON.stringify(newData));
-      return newData;
-    });
-  }, [selectedItem]);
 
   useEffect(() => {
     const handleCopilotAction = async (e) => {
@@ -2266,16 +2260,6 @@ function parseHTMLToNotion(htmlNode) {
 function applyDesignerPreset(presetName, range) {
   if (!range) return;
   if (range.collapsed) return;
-  
-  // If the selection is purely inside a text node that belongs to a preset span or code block,
-  // we must expand the range to encompass the entire wrapper so it can be extracted and cleaned.
-  let parent = range.commonAncestorContainer;
-  if (parent.nodeType === 3) parent = parent.parentNode;
-  const presetSpan = parent.closest('span[data-notion-color], span[class*="preset-"], code');
-  
-  if (presetSpan) {
-    range.selectNode(presetSpan);
-  }
   
   let fragment = range.extractContents();
   
