@@ -364,6 +364,14 @@ export default function Page() {
                 }
 
                 window.addEventListener('keydown', (e) => {
+                    // Escape: Close Specific View
+                    if (e.code === 'Escape') {
+                        const sv = document.getElementById('specific-view');
+                        if (sv && sv.classList.contains('active')) {
+                            sv.classList.remove('active');
+                        }
+                    }
+
                     // M: Toggle Space Mode
                     if (e.code === 'KeyM') {
                         e.preventDefault();
@@ -1075,6 +1083,15 @@ export default function Page() {
 
         .drag-instruction.hidden {
             opacity: 0 !important;
+        }
+
+        body:has(#specific-view.active) .features-list,
+        body:has(#portfolio-showcase.list-view-mode) .features-list,
+        .features-list.hidden {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            visibility: hidden !important;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
         .features-list {
@@ -1929,7 +1946,7 @@ export default function Page() {
       </svg>
     </div>
   </div>
-  <div className="features-list">
+  <div className={`features-list ${isListViewActive ? 'hidden' : ''}`}>
     <div className="feature-item" id="list-view-helper">
       <span>{isGenz ? 'Feed View' : 'List View'}</span>
       <span className="feature-key">

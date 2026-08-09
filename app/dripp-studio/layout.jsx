@@ -5,7 +5,7 @@ import AdminSidebar from './components/AdminSidebar';
 import OrloChat from './components/OrloChat';
 import styles from './admin.module.css';
 import { useRouter, usePathname } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, AlertTriangle, X, RefreshCw } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertTriangle, X, RefreshCw, Sparkles } from 'lucide-react';
 import { useErrorLog } from '../contexts/ErrorLogContext';
 
 export default function AdminLayout({ children }) {
