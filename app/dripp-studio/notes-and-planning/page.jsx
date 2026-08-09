@@ -616,6 +616,22 @@ export default function NotionHubPage() {
       return { ...prev, blocks: newBlocks };
     });
 
+    // Auto-focus the newly created block element
+    setTimeout(() => {
+      const newEl = document.querySelector(`[data-block-id="${tempId}"]`) || document.querySelector(`#block-${tempId} [contenteditable]`);
+      if (newEl) {
+        newEl.focus();
+        try {
+          const sel = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(newEl);
+          range.collapse(true);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        } catch(err) {}
+      }
+    }, 60);
+
     try {
       const res = await fetch('/api/admin/notion/append', {
         method: 'POST',
@@ -2251,9 +2267,11 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   const rawText = initialRichTextArr?.map(t => t.plain_text).join('') || '';
 
   const handleBlur = async (e) => {
-    const rawHTML = e.target.innerHTML;
+    const el = tagRef.current || e?.currentTarget || e?.target;
+    if (!el) return;
+    const rawHTML = el.innerHTML;
     // We parse the DOM node itself
-    const richTextArray = parseHTMLToNotion(e.target);
+    const richTextArray = parseHTMLToNotion(el);
     const plainText = richTextArray.map(r => r.text.content).join('');
     
     if (plainText === rawText && !rawHTML.includes('<')) return; // Simple diff
@@ -2275,6 +2293,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   };
 
   const handleKeyDown = (e) => {
+    const el = tagRef.current || e?.currentTarget || e?.target;
     if (slashMenu.isOpen) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -2290,7 +2309,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
         e.preventDefault();
         const selected = filteredOptions[slashMenu.selectedIndex];
         if (selected && onConvertBlock) {
-          const textWithoutSlash = e.target.innerText.replace(/^\/[a-zA-Z]*/, '').trim();
+          const textWithoutSlash = (el?.innerText || '').replace(/^\/[a-zA-Z]*/, '').trim();
           onConvertBlock(blockId, selected.type, textWithoutSlash);
         }
         setSlashMenu({ isOpen: false, filter: '', selectedIndex: 0 });
@@ -2309,7 +2328,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
         onInsertBlockAfter(blockId, 'paragraph');
       }
     }
-    if (e.key === 'Backspace' && e.target.innerText.trim() === '') {
+    if (e.key === 'Backspace' && el && el.innerText.trim() === '') {
       e.preventDefault();
       if (onDeleteBlock) {
         onDeleteBlock(blockId);
@@ -2318,8 +2337,9 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   };
 
   const handleKeyUp = (e) => {
-    // Basic slash detection at the start of block
-    const text = e.target.innerText;
+    const el = tagRef.current || e?.currentTarget || e?.target;
+    if (!el) return;
+    const text = el.innerText;
     const match = text.match(/^\/([a-zA-Z]*)$/);
     if (match) {
       setSlashMenu(prev => ({ ...prev, isOpen: true, filter: match[1].toLowerCase() }));
@@ -2338,6 +2358,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     >
       {localText !== null ? (
         <Tag
+          data-block-id={blockId}
           contentEditable
           suppressContentEditableWarning
           onBlur={handleBlur}
@@ -2351,6 +2372,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
       ) : (
         <Tag
           ref={tagRef}
+          data-block-id={blockId}
           contentEditable
           suppressContentEditableWarning
           onBlur={handleBlur}
@@ -2446,6 +2468,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   const [isChecked, setIsChecked] = useState(block.to_do?.checked);
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const tagRef = useRef(null);
 
   const rawText = block.to_do?.rich_text?.map(t => t.plain_text).join('') || '';
 
@@ -2473,8 +2496,10 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   }, [block.to_do?.rich_text]);
 
   const handleBlur = async (e) => {
-    const rawHTML = e.target.innerHTML;
-    const richTextArray = parseHTMLToNotion(e.target);
+    const el = tagRef.current || e?.currentTarget || e?.target;
+    if (!el) return;
+    const rawHTML = el.innerHTML;
+    const richTextArray = parseHTMLToNotion(el);
     const plainText = richTextArray.map(r => r.text.content).join('');
     
     if (plainText === rawText && !rawHTML.includes('data-notion-color') && !rawHTML.includes('preset-')) return;
@@ -2496,6 +2521,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   };
 
   const handleKeyDown = (e) => {
+    const el = tagRef.current || e?.currentTarget || e?.target;
     if (e.key === 'Enter' && !e.shiftKey) { 
       e.preventDefault(); 
       handleBlur(e);
@@ -2503,7 +2529,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
         onInsertBlockAfter(block.id, 'to_do');
       }
     }
-    if (e.key === 'Backspace' && e.target.innerText.trim() === '') {
+    if (e.key === 'Backspace' && el && el.innerText.trim() === '') {
       e.preventDefault();
       if (onDeleteBlock) {
         onDeleteBlock(block.id);
@@ -2529,6 +2555,8 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
         {isChecked && <CheckSquare size={14} strokeWidth={3} />}
       </span>
       <div 
+        ref={tagRef}
+        data-block-id={block.id}
         className="notion-font"
         contentEditable
         suppressContentEditableWarning
