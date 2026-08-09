@@ -2338,6 +2338,54 @@ function applyDesignerPreset(presetName, range) {
   range.insertNode(span);
 }
 
+// --- Utility: Render Notion Rich Text to HTML String ---
+function renderRichTextToHTML(richTextArr) {
+  if (!richTextArr || richTextArr.length === 0) return '';
+  return richTextArr.map((t) => {
+    let className = "notion-font";
+    let styleStr = "";
+    if (t.annotations?.bold) styleStr += "font-weight:800;";
+    if (t.annotations?.italic) styleStr += "font-style:italic;";
+    if (t.annotations?.strikethrough) styleStr += "text-decoration:line-through;";
+    if (t.annotations?.underline) styleStr += "text-decoration:underline;";
+    
+    if (t.annotations?.color && t.annotations.color !== 'default') {
+      if (t.annotations.color === 'red_background') {
+        className += " preset-cyber-glitch";
+      } else if (t.annotations.color === 'green_background') {
+        styleStr += "color:#52c41a;background-color:rgba(82, 196, 26, 0.2);";
+      } else if (t.annotations.color === 'yellow_background') {
+        className += " preset-gold-shimmer";
+      } else if (t.annotations.color === 'purple_background') {
+        className += " preset-liquid-gradient";
+      } else if (t.annotations.color === 'gray_background') {
+        className += " preset-redacted";
+      } else if (t.annotations.color === 'blue_background') {
+        className += " preset-neon-pulse";
+      } else if (t.annotations.color === 'pink_background') {
+        className += " preset-iridescent";
+      } else if (t.annotations.color === 'brown_background') {
+        className += " preset-glass-morphic";
+      } else {
+        styleStr += `color:${t.annotations.color.replace('_background', '')};`;
+      }
+    }
+
+    const textContent = t.plain_text || t.text?.content || '';
+    const escapedText = textContent
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    const colorAttr = t.annotations?.color ? ` data-notion-color="${t.annotations.color}"` : '';
+
+    if (t.href) {
+      return `<a href="${t.href}" target="_blank" rel="noopener noreferrer" class="${className}" style="${styleStr}color:#ebd73f;text-decoration:underline;text-underline-offset:4px;">${escapedText}</a>`;
+    }
+    return `<span class="${className}" style="${styleStr}"${colorAttr}>${escapedText}</span>`;
+  }).join('');
+}
+
 // --- Inline Editing Components ---
 function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter, onUpdateBlock, onConvertBlock }) {
   const [localText, setLocalText] = useState(null);
@@ -2365,8 +2413,12 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
 
   const rawText = initialRichTextArr?.map(t => t.plain_text || t.text?.content || '').join('') || '';
 
-  const handleFocus = () => {
+  const handleFocus = (e) => {
     isFocusedRef.current = true;
+    const el = tagRef.current || e?.currentTarget;
+    if (el) {
+      el.dataset.focusHtml = el.innerHTML;
+    }
   };
 
   const handleBlur = async (targetNode) => {
@@ -2374,11 +2426,14 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     const el = (targetNode && targetNode.nodeType === 1 ? targetNode : null) || tagRef.current;
     if (!el) return;
     const rawHTML = el.innerHTML;
+    const focusHtml = el.dataset.focusHtml;
+    
     // We parse the DOM node itself
     const richTextArray = parseHTMLToNotion(el);
     const plainText = richTextArray.map(r => r.plain_text || r.text?.content || '').join('');
     
-    if (plainText === rawText && !rawHTML.includes('<')) return; // Simple diff
+    // If exact HTML matches what we had on focus, no changes were made.
+    if (focusHtml === rawHTML) return;
     
     el.innerHTML = '';
     setLocalText(null);
@@ -2461,6 +2516,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   };
 
   const Tag = tagName;
+  const htmlContent = renderRichTextToHTML(initialRichTextArr);
   
   return (
     <div 
@@ -2468,40 +2524,21 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
       style={{ position: 'relative', width: '100%' }} 
       title="Click to edit"
     >
-      {localText !== null ? (
-        <Tag
-          ref={tagRef}
-          data-block-id={blockId}
-          contentEditable
-          suppressContentEditableWarning
-          onFocus={handleFocus}
-          onBlur={() => handleBlur(tagRef.current)}
-          onKeyDown={handleKeyDown}
-          onKeyUp={handleKeyUp}
-          onPaste={handlePaste}
-          className={`${className} empty-block`}
-          data-placeholder={emptyPlaceholder}
-          style={{ ...style, outline: 'none', cursor: 'text' }}
-          dangerouslySetInnerHTML={{ __html: localText }}
-        />
-      ) : (
-        <Tag
-          ref={tagRef}
-          data-block-id={blockId}
-          contentEditable
-          suppressContentEditableWarning
-          onFocus={handleFocus}
-          onBlur={() => handleBlur(tagRef.current)}
-          onKeyDown={handleKeyDown}
-          onKeyUp={handleKeyUp}
-          onPaste={handlePaste}
-          className={`${className} empty-block`}
-          data-placeholder={emptyPlaceholder}
-          style={{ ...style, outline: 'none', cursor: 'text' }}
-        >
-           {(initialRichTextArr && initialRichTextArr.length > 0) ? renderRichText(initialRichTextArr) : null}
-        </Tag>
-      )}
+      <Tag
+        ref={tagRef}
+        data-block-id={blockId}
+        contentEditable
+        suppressContentEditableWarning
+        onFocus={handleFocus}
+        onBlur={() => handleBlur(tagRef.current)}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onPaste={handlePaste}
+        className={`${className} empty-block`}
+        data-placeholder={emptyPlaceholder}
+        style={{ ...style, outline: 'none', cursor: 'text' }}
+        dangerouslySetInnerHTML={{ __html: htmlContent }}
+      />
       {onDeleteBlock && (
         <button 
           className="blockDeleteBtn"
@@ -2616,8 +2653,12 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
     setLocalText(null);
   }, [block.to_do?.rich_text]);
 
-  const handleFocus = () => {
+  const handleFocus = (e) => {
     isFocusedRef.current = true;
+    const el = tagRef.current || e?.currentTarget;
+    if (el) {
+      el.dataset.focusHtml = el.innerHTML;
+    }
   };
 
   const handleBlur = async (targetNode) => {
@@ -2625,10 +2666,12 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
     const el = (targetNode && targetNode.nodeType === 1 ? targetNode : null) || tagRef.current;
     if (!el) return;
     const rawHTML = el.innerHTML;
+    const focusHtml = el.dataset.focusHtml;
     const richTextArray = parseHTMLToNotion(el);
     const plainText = richTextArray.map(r => r.plain_text || r.text?.content || '').join('');
     
-    if (plainText === rawText && !rawHTML.includes('data-notion-color') && !rawHTML.includes('preset-')) return;
+    // If exact HTML matches what we had on focus, no changes were made.
+    if (focusHtml === rawHTML) return;
     
     el.innerHTML = '';
     setLocalText(null);
@@ -2709,9 +2752,8 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
           textDecoration: isChecked ? 'line-through' : 'none',
           transition: 'color 0.2s', outline: 'none', cursor: 'text', flex: 1
         }}
-      >
-        {localText !== null ? localText : renderRichText(block.to_do?.rich_text)}
-      </div>
+        dangerouslySetInnerHTML={{ __html: renderRichTextToHTML(block.to_do?.rich_text) }}
+      />
       {onDeleteBlock && (
         <button 
           className="blockDeleteBtn"
