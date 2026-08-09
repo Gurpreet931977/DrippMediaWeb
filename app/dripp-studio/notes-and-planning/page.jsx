@@ -343,10 +343,10 @@ export default function NotionHubPage() {
         const blockEl = document.querySelector(`#block-${blockId} [contenteditable="true"]`);
         if (blockEl) {
           const richTextArray = parseHTMLToNotion(blockEl);
-          const plainText = richTextArray.map(r => r.text.content).join('');
+          const plainText = richTextArray.map(r => r.plain_text || r.text?.content || '').join('');
           
           // Trigger optimistic update in state
-          if (onUpdateBlock) onUpdateBlock(blockId, blockType, plainText, richTextArray);
+          handleUpdateBlock(blockId, blockType, plainText, richTextArray);
 
           fetch('/api/admin/notion/update', {
             method: 'PATCH',
@@ -361,6 +361,124 @@ export default function NotionHubPage() {
         toolbarRef.current.style.transform = 'scale(0.95) translateY(5px)';
         toolbarRef.current.style.pointerEvents = 'none';
       }
+    }
+  };
+
+  const handleTurnInto = async (e) => {
+    const newType = e.target.value;
+    if (!newType) return;
+    
+    const blockId = toolbarRef.current?.dataset.blockId;
+    const currentType = toolbarRef.current?.dataset.blockType;
+    if (!blockId || !currentType || !selectedItem?.id) return;
+
+    if (toolbarRef.current) {
+      toolbarRef.current.style.opacity = '0';
+      toolbarRef.current.style.pointerEvents = 'none';
+    }
+
+    let richTextArray = [];
+    const blockEl = document.querySelector(`#block-${blockId} [contenteditable="true"]`);
+    if (blockEl) {
+      richTextArray = parseHTMLToNotion(blockEl);
+    } else {
+      const block = docContent?.blocks?.find(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
+      richTextArray = block?.[currentType]?.rich_text || [];
+    }
+
+    const nowIso = new Date().toISOString();
+    // Optimistic UI update
+    setDocContent(prev => {
+      if (!prev || !prev.blocks) return prev;
+      const index = prev.blocks.findIndex(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
+      if (index === -1) return prev;
+      const updated = [...prev.blocks];
+      updated[index] = {
+        ...updated[index],
+        type: newType,
+        last_edited_time: nowIso,
+        [newType]: newType === 'to_do' ? { rich_text: richTextArray, checked: false } : { rich_text: richTextArray }
+      };
+      return { ...prev, blocks: updated };
+    });
+
+    try {
+      const appendRes = await fetch('/api/admin/notion/append', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blockId: selectedItem.id,
+          type: newType,
+          afterBlockId: blockId,
+          richTextArray
+        })
+      });
+      
+      const appendData = await appendRes.json();
+      const newBlockId = appendData.response?.results?.[0]?.id || appendData.response?.id;
+
+      if (appendRes.ok) {
+        await fetch('/api/admin/notion/update', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ blockId })
+        });
+        if (newBlockId) {
+          setDocContent(prev => {
+            if (!prev || !prev.blocks) return prev;
+            const updated = prev.blocks.map(b => (b.id === blockId ? { ...b, id: newBlockId } : b));
+            return { ...prev, blocks: updated };
+          });
+        }
+      }
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
+  const handleAppendBlock = async (type) => {
+    if (!selectedItem?.id) return;
+    setIsAppendingBlock(true);
+    setShowAddBlockMenu(false);
+
+    const nowIso = new Date().toISOString();
+    const tempId = `temp-${Date.now()}`;
+    const stableKey = `stable-${Date.now()}-${Math.random()}`;
+    const newBlock = { id: tempId, _key: stableKey, type, last_edited_time: nowIso, created_time: nowIso, [type]: { rich_text: [] } };
+
+    // Optimistic UI update
+    setDocContent(prev => {
+      if (!prev) return { blocks: [newBlock] };
+      return { ...prev, blocks: [...(prev.blocks || []), newBlock] };
+    });
+
+    if (contentRef.current) {
+      setTimeout(() => {
+        contentRef.current.scrollTo({ top: contentRef.current.scrollHeight, behavior: 'smooth' });
+      }, 50);
+    }
+
+    try {
+      const res = await fetch('/api/admin/notion/append', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockId: selectedItem.id, type })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const createdId = data.response?.results?.[0]?.id;
+        if (createdId) {
+          setDocContent(prev => {
+            if (!prev || !prev.blocks) return prev;
+            const updated = prev.blocks.map(b => b.id === tempId ? { ...b, id: createdId } : b);
+            return { ...prev, blocks: updated };
+          });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAppendingBlock(false);
     }
   };
   const handleUndo = useCallback(() => {
@@ -573,6 +691,15 @@ export default function NotionHubPage() {
       if (undoStackRef.current.length > 50) undoStackRef.current.shift();
       redoStackRef.current = [];
     }
+
+    let prevBlockId = null;
+    if (docContent?.blocks) {
+      const idx = docContent.blocks.findIndex(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
+      if (idx > 0) {
+        prevBlockId = docContent.blocks[idx - 1].id;
+      }
+    }
+
     // Optimistic UI update
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
@@ -581,6 +708,24 @@ export default function NotionHubPage() {
         blocks: prev.blocks.filter(b => b.id !== blockId && b.id.replace(/-/g, '') !== blockId.replace(/-/g, ''))
       };
     });
+
+    if (prevBlockId) {
+      setTimeout(() => {
+        const prevEl = document.querySelector(`[data-block-id="${prevBlockId}"]`) || document.querySelector(`#block-${prevBlockId} [contenteditable]`);
+        if (prevEl) {
+          prevEl.focus();
+          try {
+            const sel = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(prevEl);
+            range.collapse(false);
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+          } catch(err) {}
+        }
+      }, 50);
+    }
+
     try {
       await fetch('/api/admin/notion/update', {
         method: 'DELETE',
@@ -972,7 +1117,7 @@ export default function NotionHubPage() {
         const getText = (block) => {
           if (block.type === 'child_page') return block.child_page?.title || '';
           if (block.type === 'child_database') return block.child_database?.title || '';
-          if (block[block.type]?.rich_text) return block[block.type].rich_text.map(t => t.plain_text).join('');
+          if (block[block.type]?.rich_text) return block[block.type].rich_text.map(t => t.plain_text || t.text?.content || '').join('');
           return '';
         };
         return getText(a).localeCompare(getText(b));
@@ -2326,8 +2471,10 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     
     if (plainText === rawText && !rawHTML.includes('<')) return; // Simple diff
     
-    setIsSaving(true);
+    el.innerHTML = '';
     setLocalText(null);
+
+    setIsSaving(true);
     if (onUpdateBlock) onUpdateBlock(blockId, type, plainText, richTextArray);
     try {
       await fetch('/api/admin/notion/update', {
@@ -2386,6 +2533,12 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     }
   };
 
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  };
+
   const handleKeyUp = (e) => {
     const el = tagRef.current || e?.currentTarget;
     if (!el) return;
@@ -2416,6 +2569,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           onBlur={() => handleBlur(tagRef.current)}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
+          onPaste={handlePaste}
           className={`${className} empty-block`}
           data-placeholder={emptyPlaceholder}
           style={{ ...style, outline: 'none', cursor: 'text' }}
@@ -2431,6 +2585,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           onBlur={() => handleBlur(tagRef.current)}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
+          onPaste={handlePaste}
           className={`${className} empty-block`}
           data-placeholder={emptyPlaceholder}
           style={{ ...style, outline: 'none', cursor: 'text' }}
@@ -2569,8 +2724,10 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
     
     if (plainText === rawText && !rawHTML.includes('data-notion-color') && !rawHTML.includes('preset-')) return;
     
-    setIsSaving(true);
+    el.innerHTML = '';
     setLocalText(null);
+
+    setIsSaving(true);
     if (onUpdateBlock) onUpdateBlock(block.id, 'to_do', plainText, richTextArray, isChecked);
     try {
       await fetch('/api/admin/notion/update', {
@@ -2602,6 +2759,12 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
     }
   };
 
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  };
+
   return (
     <div 
       className="blockHoverGroup"
@@ -2628,6 +2791,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
         onFocus={handleFocus}
         onBlur={() => handleBlur(tagRef.current)}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
         style={{
           fontSize: '1rem', lineHeight: 1.6,
           color: isChecked ? '#666' : '#eee',
