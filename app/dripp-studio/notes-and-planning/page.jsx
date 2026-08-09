@@ -367,6 +367,9 @@ export default function NotionHubPage() {
           const richTextArray = parseHTMLToNotion(blockEl);
           const plainText = richTextArray.map(r => r.plain_text || r.text?.content || '').join('');
           
+          // Clear direct DOM nodes before React state update reconciles VDOM
+          blockEl.innerHTML = '';
+
           // Trigger optimistic update in state
           handleUpdateBlock(blockId, blockType, plainText, richTextArray);
 
@@ -403,6 +406,7 @@ export default function NotionHubPage() {
     const blockEl = document.querySelector(`#block-${blockId} [contenteditable="true"]`);
     if (blockEl) {
       richTextArray = parseHTMLToNotion(blockEl);
+      blockEl.innerHTML = '';
     } else {
       const block = docContent?.blocks?.find(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
       richTextArray = block?.[currentType]?.rich_text || [];
@@ -2356,10 +2360,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   const filteredOptions = MENU_OPTIONS.filter(o => o.label.toLowerCase().includes(slashMenu.filter) || o.type.includes(slashMenu.filter));
 
   useEffect(() => {
-    // Only reset localText when not focused to avoid disrupting active editing
-    if (!isFocusedRef.current) {
-      setLocalText(null);
-    }
+    setLocalText(null);
   }, [initialRichTextArr]);
 
   const rawText = initialRichTextArr?.map(t => t.plain_text || t.text?.content || '').join('') || '';
@@ -2612,10 +2613,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   }, [block.to_do?.checked]);
 
   useEffect(() => {
-    // Only reset localText when element is not focused
-    if (!isFocusedRef.current) {
-      setLocalText(null);
-    }
+    setLocalText(null);
   }, [block.to_do?.rich_text]);
 
   const handleFocus = () => {
