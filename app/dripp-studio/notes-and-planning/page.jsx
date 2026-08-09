@@ -2342,6 +2342,7 @@ function applyDesignerPreset(presetName, range) {
 function renderRichTextToHTML(richTextArr) {
   if (!richTextArr || richTextArr.length === 0) return '';
   return richTextArr.map((t) => {
+    if (!t || typeof t !== 'object') return '';
     let className = "notion-font";
     let styleStr = "";
     if (t.annotations?.bold) styleStr += "font-weight:800;";
@@ -2366,13 +2367,13 @@ function renderRichTextToHTML(richTextArr) {
         className += " preset-iridescent";
       } else if (t.annotations.color === 'brown_background') {
         className += " preset-glass-morphic";
-      } else {
+      } else if (typeof t.annotations.color === 'string') {
         styleStr += `color:${t.annotations.color.replace('_background', '')};`;
       }
     }
 
     const textContent = t.plain_text || t.text?.content || '';
-    const escapedText = textContent
+    const escapedText = String(textContent)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");

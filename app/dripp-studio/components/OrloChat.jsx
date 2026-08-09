@@ -958,7 +958,6 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
     if (lowerInput === 'clear chat' || lowerInput === 'clearchat' || lowerInput === 'reset chat') {
       const msg = 'Chat history cleared. My mind is a blank slate!';
       setMessages([{ role: 'ai', text: msg }]);
-      speakResponse(msg);
       setIsTyping(false);
       setEmotion('success');
       setTimeout(() => setEmotion('idle'), 2000);
@@ -1013,7 +1012,6 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       if (data.intent === 'clear_chat') {
         const msg = data.replyMessage || data.message || "Chat history cleared. My mind is a blank slate!";
         setMessages([{ role: 'ai', text: msg }]);
-        speakResponse(msg);
       } else {
         let msg = data.replyMessage || data.message || (data.payload && data.payload.replyMessage);
         
@@ -1026,7 +1024,6 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         
         nextMessages.push({ role: 'ai', text: msg });
         setMessages(prev => [...prev, ...nextMessages]);
-        speakResponse(msg);
       }
       
       // Dispatch event to window so forms can pick it up
