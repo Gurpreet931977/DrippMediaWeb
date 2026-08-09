@@ -596,17 +596,6 @@ export default function Page() {
                 }
                 this.ctx.stroke();
 
-                // Ambient Brand Glow around Cursor
-                let cursorGlow = this.ctx.createRadialGradient(
-                    this.mouse.x, this.mouse.y, 0,
-                    this.mouse.x, this.mouse.y, 320
-                );
-                cursorGlow.addColorStop(0, 'rgba(235, 215, 63, 0.08)');
-                cursorGlow.addColorStop(0.5, 'rgba(235, 215, 63, 0.02)');
-                cursorGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                this.ctx.fillStyle = cursorGlow;
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
                 // Interpolate Fog Gradient
                 let gradient = this.ctx.createRadialGradient(
                     this.mouse.x, this.mouse.y, 50,
@@ -2936,30 +2925,26 @@ export default function Page() {
                     bottom: '30px',
                     right: '30px',
                     zIndex: 9999,
-                    backgroundColor: 'rgba(235, 215, 63, 0.12)',
-                    border: '1px solid rgba(235, 215, 63, 0.4)',
+                    backgroundColor: 'rgba(235, 215, 63, 0.1)',
+                    border: '1px solid rgba(235, 215, 63, 0.5)',
                     color: '#ebd73f',
-                    padding: '8px 20px',
+                    padding: '10px 20px',
                     borderRadius: '30px',
                     cursor: 'pointer',
                     fontFamily: "'Clash Display', sans-serif",
                     textDecoration: 'none',
                     textTransform: 'uppercase',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    letterSpacing: '1.5px',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(235, 215, 63, 0.15)',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
+                    fontSize: '0.8rem',
+                    boxShadow: '0 0 15px rgba(235, 215, 63, 0.2)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                    transition: 'all 0.3s ease'
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(235, 215, 63, 0.25)'; e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)'; e.currentTarget.style.boxShadow = '0 15px 35px rgba(235, 215, 63, 0.3)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(235, 215, 63, 0.12)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.5)'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(235, 215, 63, 0.2)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(235, 215, 63, 0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
             >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
                     <line x1="6" y1="12" x2="10" y2="12"></line>
                     <line x1="8" y1="10" x2="8" y2="14"></line>
@@ -2973,33 +2958,28 @@ export default function Page() {
                 href="/dripp-studio"
                 style={{
                     position: 'fixed',
-                    bottom: '80px',
+                    bottom: '85px',
                     right: '30px',
                     zIndex: 9999,
-                    backgroundColor: 'rgba(15, 15, 20, 0.75)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    color: 'rgba(255, 255, 255, 0.85)',
-                    padding: '8px 20px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: 'rgba(255,255,255,0.7)',
+                    padding: '10px 20px',
                     borderRadius: '30px',
                     cursor: 'pointer',
                     fontFamily: "'Clash Display', sans-serif",
                     textTransform: 'uppercase',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    letterSpacing: '1.5px',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
+                    fontSize: '0.8rem',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                    transition: 'all 0.3s ease',
                     textDecoration: 'none'
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(15, 15, 20, 0.75)'; e.currentTarget.style.color = 'rgba(255, 255, 255, 0.85)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; e.currentTarget.style.transform = 'scale(1)'; }}
             >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                 </svg>
                 Dripp Studio
