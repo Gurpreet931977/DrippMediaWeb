@@ -666,6 +666,25 @@ export default function NotionHubPage() {
   };
 
   const handleConvertBlock = async (blockId, targetType, textContent) => {
+    if (!selectedItem?.id) return;
+    const richTextArray = [{ type: 'text', text: { content: textContent }, plain_text: textContent }];
+    const nowIso = new Date().toISOString();
+
+    // Optimistic UI update
+    setDocContent(prev => {
+      if (!prev || !prev.blocks) return prev;
+      const index = prev.blocks.findIndex(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
+      if (index === -1) return prev;
+      const newBlocks = [...prev.blocks];
+      newBlocks[index] = {
+        ...newBlocks[index],
+        type: targetType,
+        last_edited_time: nowIso,
+        [targetType]: targetType === 'to_do' ? { rich_text: richTextArray, checked: false } : { rich_text: richTextArray }
+      };
+      return { ...prev, blocks: newBlocks };
+    });
+
     try {
       const res = await fetch('/api/admin/notion/append', {
         method: 'POST',
@@ -674,16 +693,25 @@ export default function NotionHubPage() {
           blockId: selectedItem.id, 
           type: targetType, 
           afterBlockId: blockId, 
-          richTextArray: [{ text: { content: textContent } }] 
+          richTextArray 
         })
       });
       if (res.ok) {
+        const data = await res.json();
+        const createdId = data.response?.results?.[0]?.id;
+        // Delete old block and swap with new created block
         await fetch('/api/admin/notion/update', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ blockId })
         });
-        fetchPageContent(selectedItem.id);
+        if (createdId) {
+          setDocContent(prev => {
+            if (!prev || !prev.blocks) return prev;
+            const newBlocks = prev.blocks.map(b => (b.id === blockId ? { ...b, id: createdId } : b));
+            return { ...prev, blocks: newBlocks };
+          });
+        }
       }
     } catch(err) {
       console.error(err);
@@ -732,7 +760,7 @@ export default function NotionHubPage() {
           
           for (const block of docContent.blocks) {
             if (block.type === 'to_do') {
-              const text = (block.to_do?.rich_text?.map(t => t.plain_text).join('') || '').toLowerCase();
+              const text = (block.to_do?.rich_text?.map(t => t.plain_text || t.text?.content || '').join('') || '').toLowerCase();
               if (text.includes(target) || target.includes(text)) {
                 bestMatch = block;
                 break; // exact or substring match
@@ -2515,6 +2543,10 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
       setIsSaving(false);
     }
   };
+
+  useEffect(() => {
+    setIsChecked(block.to_do?.checked || false);
+  }, [block.to_do?.checked]);
 
   useEffect(() => {
     // Only reset localText when element is not focused
