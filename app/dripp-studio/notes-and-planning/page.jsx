@@ -288,6 +288,13 @@ export default function NotionHubPage() {
     }
   }, []);
 
+  // CRITICAL FIX: Actually fetch the content when a document is selected!
+  useEffect(() => {
+    if (selectedItem?.id) {
+      fetchPageContent(selectedItem.id);
+    }
+  }, [selectedItem, fetchPageContent]);
+
   useEffect(() => {
     fetchNotionItems();
     
