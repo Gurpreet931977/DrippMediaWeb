@@ -578,7 +578,7 @@ export default function NotionHubPage() {
       if (!prev || !prev.blocks) return prev;
       return {
         ...prev,
-        blocks: prev.blocks.filter(b => b.id !== blockId)
+        blocks: prev.blocks.filter(b => b.id !== blockId && b.id.replace(/-/g, '') !== blockId.replace(/-/g, ''))
       };
     });
     try {
@@ -2544,7 +2544,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
       await fetch('/api/admin/notion/update', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blockId: block.id, type: 'to_do', content: plainText, richTextArray })
+        body: JSON.stringify({ blockId: block.id, type: 'to_do', content: plainText, richTextArray, checked: isChecked })
       });
     } catch(err) {
       console.error(err);

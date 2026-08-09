@@ -22,10 +22,11 @@ export async function PATCH(request) {
 
     if (type === 'to_do') {
       payload = {
-        to_do: {
-          checked: checked !== undefined ? checked : false
-        }
+        to_do: {}
       };
+      if (checked !== undefined) {
+        payload.to_do.checked = checked;
+      }
       if (richTextArray) {
          payload.to_do.rich_text = richTextArray;
       } else if (content !== undefined) {
