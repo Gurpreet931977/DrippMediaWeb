@@ -244,13 +244,21 @@ export default function NotionHubPage() {
     setScrollProgress(0);
     
     const cacheKey = `notion_page_${pageId}`;
-    const cachedData = localStorage.getItem(cacheKey);
+    const cachedRaw = localStorage.getItem(cacheKey);
+    let cachedData = null;
     
-    if (cachedData) {
+    if (cachedRaw) {
       try {
-        setDocContent(JSON.parse(cachedData));
+        const parsed = JSON.parse(cachedRaw);
+        // Only use cache if it has actual blocks — prevents corrupted cache from showing "Empty Document"
+        if (parsed && parsed.blocks && parsed.blocks.length > 0) {
+          cachedData = parsed;
+          setDocContent(parsed);
+        }
       } catch(e) {}
-    } else {
+    }
+    
+    if (!cachedData) {
       setContentLoading(true);
       setDocContent(null);
     }
@@ -2435,9 +2443,6 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     
     // If exact HTML matches what we had on focus, no changes were made.
     if (focusHtml === rawHTML) return;
-    
-    el.innerHTML = '';
-    setLocalText(null);
 
     setIsSaving(true);
     if (onUpdateBlock) onUpdateBlock(blockId, type, plainText, richTextArray);
@@ -2673,9 +2678,6 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
     
     // If exact HTML matches what we had on focus, no changes were made.
     if (focusHtml === rawHTML) return;
-    
-    el.innerHTML = '';
-    setLocalText(null);
 
     setIsSaving(true);
     if (onUpdateBlock) onUpdateBlock(block.id, 'to_do', plainText, richTextArray, isChecked);
