@@ -2226,23 +2226,157 @@ export default function Page() {
     <div className="scroll-text">Keep Scrolling</div>
     <div className="scroll-line" />
   </div>
-  <canvas id="maze-canvas" />
-  <section className="hero" id="home">
-    <h1 className="brand-name">
-      <span className="word" id="word1">DRIPP</span>
-      <span className="word" id="word2">MEDIA</span>
+  <section className="hero" id="home" style={{ position: 'relative', overflow: 'hidden' }}>
+    {/* Ambient Glow Backdrop */}
+    <div style={{
+      position: 'absolute',
+      width: '60vw',
+      height: '60vw',
+      maxWidth: '650px',
+      maxHeight: '650px',
+      background: 'radial-gradient(circle, rgba(235, 215, 63, 0.16) 0%, transparent 70%)',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      pointerEvents: 'none',
+      zIndex: 1,
+      filter: 'blur(50px)',
+      opacity: 0.85
+    }} />
+
+    {/* Live Status Badge */}
+    <div className="hero-status-badge" style={{
+      zIndex: 2,
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '10px',
+      padding: '8px 20px',
+      borderRadius: '999px',
+      background: 'rgba(255, 255, 255, 0.03)',
+      border: '1px solid rgba(235, 215, 63, 0.3)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      marginBottom: '20px',
+      cursor: 'pointer',
+      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+      boxShadow: '0 0 20px rgba(0,0,0,0.5)'
+    }}>
+      <span style={{
+        width: '8px',
+        height: '8px',
+        borderRadius: '50%',
+        background: 'var(--brand-yellow)',
+        boxShadow: '0 0 10px var(--brand-yellow)',
+        animation: 'pulseGlowDot 2s infinite'
+      }} />
+      <span style={{
+        fontFamily: "'Clash Display', sans-serif",
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        letterSpacing: '2.5px',
+        color: '#FFFFFF',
+        textTransform: 'uppercase'
+      }}>
+        [● LIVE] CREATIVE STUDIO & PRODUCTION HOUSE
+      </span>
+    </div>
+
+    {/* Main Headline */}
+    <h1 className="brand-name" style={{ zIndex: 2 }}>
+      <span className="word" id="word1" style={{ fontFamily: "'Panchang', sans-serif", color: '#FFFFFF' }}>DRIPP</span>
+      <span className="word" id="word2" style={{ fontFamily: "'Panchang', sans-serif", color: 'var(--brand-yellow)', textShadow: '0 0 35px rgba(235, 215, 63, 0.45)' }}>MEDIA</span>
     </h1>
-    <div className="hero-sub tooltip-container">
-      We are a creative agency
-      <div className="creative-tooltip">
-        <div className="tooltip-sparkle s1" />
-        <div className="tooltip-sparkle s2" />
-        <div className="tooltip-sparkle s3" />
-        Think of us as a team of artists, builders, and storytellers who make cool things for the internet and
-        beyond!
-      </div>
+
+    {/* Sub-heading Ticker */}
+    <div style={{
+      zIndex: 2,
+      marginTop: '16px',
+      marginBottom: '32px',
+      fontFamily: "'Clash Display', sans-serif",
+      fontSize: 'clamp(0.85rem, 1.8vw, 1.15rem)',
+      fontWeight: 500,
+      letterSpacing: '3px',
+      color: 'rgba(255, 255, 255, 0.7)',
+      textTransform: 'uppercase',
+      textAlign: 'center'
+    }}>
+      Branding • Digital Production • Gen-Z Experiences
+    </div>
+
+    {/* Hero Action CTA Group */}
+    <div className="hero-cta-group" style={{
+      zIndex: 2,
+      display: 'flex',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: '16px',
+      marginTop: '8px'
+    }}>
+      <a href="#work" className="hero-primary-btn" style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '14px 28px',
+        borderRadius: '30px',
+        background: 'var(--brand-yellow)',
+        color: '#000000',
+        fontFamily: "'Panchang', sans-serif",
+        fontSize: '0.75rem',
+        fontWeight: 700,
+        letterSpacing: '1.5px',
+        textTransform: 'uppercase',
+        textDecoration: 'none',
+        boxShadow: '0 0 25px rgba(235, 215, 63, 0.4)',
+        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
+        e.currentTarget.style.boxShadow = '0 0 35px rgba(235, 215, 63, 0.7)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0) scale(1)';
+        e.currentTarget.style.boxShadow = '0 0 25px rgba(235, 215, 63, 0.4)';
+      }}
+      >
+        EXPLORE SHOWREEL ▷
+      </a>
+
+      <a href="#services" className="hero-secondary-btn" style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '14px 28px',
+        borderRadius: '30px',
+        background: 'rgba(255, 255, 255, 0.04)',
+        border: '1px solid rgba(235, 215, 63, 0.3)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        color: '#FFFFFF',
+        fontFamily: "'Clash Display', sans-serif",
+        fontSize: '0.8rem',
+        fontWeight: 600,
+        letterSpacing: '2px',
+        textTransform: 'uppercase',
+        textDecoration: 'none',
+        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'rgba(235, 215, 63, 0.12)';
+        e.currentTarget.style.borderColor = 'var(--brand-yellow)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+        e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.3)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+      >
+        OUR SERVICES ↓
+      </a>
     </div>
   </section>
+  <canvas id="maze-canvas" />
   {/* --- MODERN CREATIVE CARDS SECTION --- */}
   <section className="portfolio" id="work">
     <div className="portfolio-title-container">
