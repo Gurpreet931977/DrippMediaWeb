@@ -79,7 +79,7 @@ Current Date/Time: ${currentDate || new Date().toISOString()}
 Current Email Form State: ${JSON.stringify(context || {}, null, 2)}
 Current System Docs State: ${JSON.stringify(systemContext || {}, null, 2)}
 Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${adminIdentityContext}${memoryContext}${statsContext}
-${isGenz ? "\nSince the user is in GenZ mode, respond using natural GenZ slang ('cook', 'W', 'aura', 'locked in', 'lore', 'vibes', 'no cap', 'based'). Keep it casual and peer-like. No emojis." : ""}
+${isGenz ? "\nsince the user is in genz mode, respond using natural genz slang ('cook', 'w', 'aura', 'locked in', 'lore', 'vibes', 'no cap', 'based'). keep it casual and peer-like. no emojis." : ""}
 ${isVoiceCall ? `
 CRITICAL: YOU ARE ON A LIVE VOICE CALL (Orlo Live). This is a real-time spoken conversation, NOT a text chat.
 

@@ -1049,9 +1049,9 @@ export default function InvoiceMaker() {
     
       <div className={styles.headerTop}>
         <div>
-          <div className={styles.genzPill}>{isGenz ? 'GEN-Z' : 'INVOICE'}</div>
+          <div className={styles.genzPill}>{isGenz ? 'gen-z' : 'INVOICE'}</div>
           <h1 className={styles.titleModern}>PREMIUM <span className={styles.titleHighlight}>INVOICE</span> MAKER</h1>
-          <p className={styles.subtitleModern}>{isGenz ? 'Drop receipts with payment links so you can get that bread.' : 'Generate premium, secure invoices with integrated payment codes.'}</p>
+          <p className={styles.subtitleModern}>{isGenz ? 'drop receipts and get that bread.' : 'Generate premium, secure invoices with integrated payment codes.'}</p>
         </div>
         <div className={styles.headerActions}>
            <button onClick={generatePDF} className={styles.btnModernSecondary}>
@@ -1071,10 +1071,10 @@ export default function InvoiceMaker() {
           {/* Smart Paste Section */}
           <div className={styles.smartPasteCard}>
             <h3 style={{ marginBottom: '10px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Search size={20} /> {isGenz ? 'AI Brain dump' : 'AI Smart Paste'}
+              <Search size={20} /> {isGenz ? 'ai brain dump' : 'AI Smart Paste'}
             </h3>
             <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '15px', lineHeight: 1.4 }}>
-              {isGenz ? 'Yap about your project here. AI will clutch up and organize the lore.' : 'Paste unstructured project details here. We\'ll extract the client name, contact info, and line items automatically.'}
+              {isGenz ? 'yap about your project here. ai will organize it.' : 'Paste unstructured project details here. We\'ll extract the client name, contact info, and line items automatically.'}
             </p>
             <textarea 
               value={smartText} 
@@ -1091,9 +1091,9 @@ export default function InvoiceMaker() {
                 ) : isAutoFillSuccess ? (
                    <><div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #000', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} /> Filling form...</>
                 ) : isAutoFillDone ? (
-                   <><CheckCircle2 size={18} color="#000" /> {isGenz ? 'W' : 'Success!'}</>
+                   <><CheckCircle2 size={18} color="#000" /> {isGenz ? 'w' : 'Success!'}</>
                 ) : (
-                   isGenz ? 'Cook Invoice' : 'Auto-Fill Invoice'
+                   isGenz ? 'cook invoice' : 'Auto-Fill Invoice'
                 )}
               </button>
               <button onClick={handleClearForm} className={styles.btnDanger} style={{ padding: '10px 20px', borderRadius: '8px' }}>

@@ -707,16 +707,16 @@ export default function Page() {
   <a href="/video-portfolio" className="nav-back"><i className="uil uil-arrow-left" /></a>
   <div className="cursor" id="cursor" />
   <div className="header">
-    <h1>Long Form <span>{isGenz ? 'Lore' : 'Cinematics'}</span></h1>
-    <p>{isGenz ? 'Deep dives, lore videos, and 10/10 drops tailored to farm engagement.' : 'Documentaries, Commercials, and High-Retention YouTube Videos tailored to the algorithm.'}</p>
+    <h1>Long Form <span>{isGenz ? 'lore' : 'Cinematics'}</span></h1>
+    <p>{isGenz ? 'deep dives, lore videos, and 10/10 drops tailored to farm engagement.' : 'Documentaries, Commercials, and High-Retention YouTube Videos tailored to the algorithm.'}</p>
   </div>
   {/* Category Filters mimicking YouTube */}
   <div className="filters">
-    <div className="filter-btn active">{isGenz ? 'All Lore' : 'All Work'}</div>
-    <div className="filter-btn">{isGenz ? 'Lore' : 'Documentary'}</div>
-    <div className="filter-btn">{isGenz ? 'Brand Deals' : 'Commercial'}</div>
-    <div className="filter-btn">{isGenz ? 'YT Core' : 'YouTube Format'}</div>
-    <div className="filter-btn">{isGenz ? 'Vibes' : 'Music Videos'}</div>
+    <div className="filter-btn active">{isGenz ? 'all lore' : 'All Work'}</div>
+    <div className="filter-btn">{isGenz ? 'lore' : 'Documentary'}</div>
+    <div className="filter-btn">{isGenz ? 'brand deals' : 'Commercial'}</div>
+    <div className="filter-btn">{isGenz ? 'yt core' : 'YouTube Format'}</div>
+    <div className="filter-btn">{isGenz ? 'vibes' : 'Music Videos'}</div>
   </div>
   <div className="grid-container">
     {videos.map((video, index) => (

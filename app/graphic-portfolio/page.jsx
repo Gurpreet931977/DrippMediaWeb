@@ -1948,22 +1948,22 @@ export default function Page() {
   </div>
   <div className={`features-list ${isListViewActive ? 'hidden' : ''}`}>
     <div className="feature-item" id="list-view-helper">
-      <span>{isGenz ? 'Feed View' : 'List View'}</span>
+      <span>{isGenz ? 'feed view' : 'List View'}</span>
       <span className="feature-key">
         <span className="desktop-text">Enter</span>
         <span className="mobile-text">Tap</span>
       </span>
     </div>
     <div className="feature-item">
-      <span>{isGenz ? 'Enhance' : 'Specific View'}</span>
+      <span>{isGenz ? 'enhance' : 'Specific View'}</span>
       <span className="feature-key">
-        <span className="desktop-text">{isGenz ? '2x Click' : 'Double Click'}</span>
-        <span className="mobile-text">{isGenz ? '2x Tap' : 'Double Tap'}</span>
+        <span className="desktop-text">{isGenz ? '2x click' : 'Double Click'}</span>
+        <span className="mobile-text">{isGenz ? '2x tap' : 'Double Tap'}</span>
       </span>
     </div>
   </div>
   <div className="cursor" id="cursor" />
-  <div className="drag-instruction" id="drag-msg">{isGenz ? 'Swipe / Scroll to Explore' : 'Drag / Scroll to Explore'}</div>
+  <div className="drag-instruction" id="drag-msg">{isGenz ? 'swipe / scroll to explore' : 'Drag / Scroll to Explore'}</div>
   
   <div className="infinite-zoom-controls" id="infinite-zoom-controls" style={{ opacity: isListViewActive ? 0 : 1, pointerEvents: isListViewActive ? 'none' : 'auto' }}>
       <button className="zoom-btn" id="zoom-out-btn" title="Zoom Out">−</button>

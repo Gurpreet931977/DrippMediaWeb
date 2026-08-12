@@ -61,74 +61,74 @@ export default function AdminDashboard() {
   const featureCards = [
     {
       id: 'portfolio',
-      title: isGenz ? 'The Showcase' : 'Portfolio Manager',
-      desc: isGenz ? 'Upload videos & graphics straight to the cloud. Keep the feed drippy.' : 'Manage videos, graphics, and case studies. Upload directly to Cloudflare R2.',
+      title: isGenz ? 'the showcase' : 'Portfolio Manager',
+      desc: isGenz ? 'upload videos & graphics straight to the cloud. keep the feed drippy.' : 'Manage videos, graphics, and case studies. Upload directly to Cloudflare R2.',
       icon: Video,
       link: '/dripp-studio/portfolio',
-      btnText: isGenz ? 'Manage Portfolio' : 'Open Portfolio',
+      btnText: isGenz ? 'manage portfolio' : 'Open Portfolio',
       color: '#ebd73f'
     },
     {
       id: 'quote',
-      title: isGenz ? 'Pitch Cooker' : 'Quotes & Packages',
-      desc: isGenz ? 'Build proposals and custom quotes with AI. Basically a cheat code for pitching.' : 'Build dynamic project proposals, detailed quotations, and customized premium packages.',
+      title: isGenz ? 'cook a pitch' : 'Quotes & Packages',
+      desc: isGenz ? 'build proposals and custom quotes with ai. basically a cheat code for pitching.' : 'Build dynamic project proposals, detailed quotations, and customized premium packages.',
       icon: PackagePlus,
       link: '/dripp-studio/quote',
-      btnText: isGenz ? 'Drop Quote' : 'Create New Quote',
+      btnText: isGenz ? 'drop quote' : 'Create New Quote',
       color: '#3b82f6'
     },
     {
       id: 'invoice',
-      title: isGenz ? 'Bag Securer' : 'Quick Invoice',
-      desc: isGenz ? 'Generate a professional invoice in seconds. Drop the PDF and secure the bag.' : 'Generate a professional, branded invoice in seconds. Seamlessly export to PDF.',
+      title: isGenz ? 'get paid' : 'Quick Invoice',
+      desc: isGenz ? 'generate a professional invoice in seconds. drop the pdf and secure the bag.' : 'Generate a professional, branded invoice in seconds. Seamlessly export to PDF.',
       icon: FileText,
       link: '/dripp-studio/invoice',
-      btnText: isGenz ? 'Drop Invoice' : 'Create Invoice',
+      btnText: isGenz ? 'drop invoice' : 'Create Invoice',
       color: '#10b981'
     },
     {
       id: 'package',
-      title: isGenz ? 'Masterplan Maker' : 'PMP Maker',
-      desc: isGenz ? 'Build masterplans and package generation. Big moves only.' : 'Generate comprehensive masterplans and package offerings for clients.',
+      title: isGenz ? "masterplans" : 'PMP Maker',
+      desc: isGenz ? 'build masterplans and package generation. big moves only.' : 'Generate comprehensive masterplans and package offerings for clients.',
       icon: Sparkles,
       link: '/dripp-studio/package',
-      btnText: isGenz ? 'Build PMP' : 'Open PMP Maker',
+      btnText: isGenz ? 'build pmp' : 'Open PMP Maker',
       color: '#a855f7'
     },
     {
       id: 'email',
-      title: isGenz ? 'Mail Blaster' : 'Email Campaigns',
-      desc: isGenz ? 'Blast out the newsletters. Let them know what\'s good.' : 'Administer marketing campaigns and send mass emails to your clients.',
+      title: isGenz ? 'email blasts' : 'Email Campaigns',
+      desc: isGenz ? 'blast out the newsletters. let them know what\'s good.' : 'Administer marketing campaigns and send mass emails to your clients.',
       icon: Mail,
       link: '/dripp-studio/email',
-      btnText: isGenz ? 'Send Blast' : 'Open Campaigns',
+      btnText: isGenz ? 'send blast' : 'Open Campaigns',
       color: '#f43f5e'
     },
     {
       id: 'system',
-      title: isGenz ? 'The Engine' : 'System Settings',
-      desc: isGenz ? 'Configure the vibes. Toggle GenZ mode and check storage.' : 'Configure local storage, DB settings, security, and application modes.',
+      title: isGenz ? 'the engine' : 'System Settings',
+      desc: isGenz ? 'configure the vibes. toggle genz mode and check storage.' : 'Configure local storage, DB settings, security, and application modes.',
       icon: Settings,
       link: '/dripp-studio/system',
-      btnText: isGenz ? 'Pop Hood' : 'System Hub',
+      btnText: isGenz ? 'pop hood' : 'System Hub',
       color: '#8b5cf6'
     },
     {
       id: 'notion',
-      title: isGenz ? 'Brain Dump' : 'Document Hub',
-      desc: isGenz ? 'Syncs with your workspace. Edit blocks, drop presets, stay organized.' : 'Direct integration with your workspace. View, edit, and manage documents natively.',
+      title: isGenz ? 'brain dump' : 'Document Hub',
+      desc: isGenz ? 'syncs with your workspace. edit blocks, drop presets, stay organized.' : 'Direct integration with your workspace. View, edit, and manage documents natively.',
       icon: Database,
       link: '/dripp-studio/notes-and-planning',
-      btnText: isGenz ? 'Enter Hub' : 'Open Hub',
+      btnText: isGenz ? 'enter hub' : 'Open Hub',
       color: '#f97316'
     },
     {
       id: 'errors',
-      title: isGenz ? 'The Fixer' : 'Error Logs',
-      desc: isGenz ? 'See what\'s broken and fix it before anyone notices.' : 'Monitor application health, track system errors, and view detailed logs.',
+      title: isGenz ? 'the fixer' : 'Error Logs',
+      desc: isGenz ? 'see what\'s broken and fix it before anyone notices.' : 'Monitor application health, track system errors, and view detailed logs.',
       icon: AlertTriangle,
       link: '/dripp-studio/errors',
-      btnText: isGenz ? 'Check Logs' : 'View Errors',
+      btnText: isGenz ? 'check logs' : 'View Errors',
       color: '#ef4444'
     }
   ];
@@ -138,12 +138,12 @@ export default function AdminDashboard() {
       {/* Hero Header */}
       <div className={styles.header} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '2rem' }}>
         <div>
-          <h1 className={styles.title} style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>{isGenz ? 'Main Character Energy' : 'Dashboard Overview'}</h1>
-          <p className={styles.subtitle} style={{ fontSize: '1.15rem' }}>{isGenz ? `Welcome back, boss. Today is ${currentDate}.` : `Welcome to the Admin Hub. Today is ${currentDate}.`}</p>
+          <h1 className={styles.title} style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>{isGenz ? 'main character energy' : 'Dashboard Overview'}</h1>
+          <p className={styles.subtitle} style={{ fontSize: '1.15rem' }}>{isGenz ? `welcome back, boss. today is ${currentdate}.` : `Welcome to the Admin Hub. Today is ${currentDate}.`}</p>
         </div>
         <div style={{ padding: '0.75rem 1.25rem', background: 'rgba(235, 215, 63, 0.1)', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', fontSize: '0.85rem', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ebd73f', boxShadow: '0 0 10px #ebd73f' }}></div>
-          {isGenz ? 'Vibe Check: Passed' : 'Admin Level: Super'}
+          {isGenz ? 'vibe check: passed' : 'Admin Level: Super'}
         </div>
       </div>
 
@@ -203,7 +203,7 @@ export default function AdminDashboard() {
                 {pendingCount} PENDING
               </div>
               <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700, color: '#fff', fontFamily: 'Panchang, sans-serif', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                {isGenz ? 'Action Items to Crush' : 'Pending Tasks'}
+                {isGenz ? 'action items to crush' : 'Pending Tasks'}
               </h2>
             </div>
             <Link href="/dripp-studio/notes-and-planning" style={{ color: '#ebd73f', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', fontFamily: 'Clash Display, sans-serif', letterSpacing: '1px' }}>
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <div style={{ height: '2px', flex: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.05), transparent)' }}></div>
         <h2 style={{ fontSize: '1.6rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#fff', fontFamily: 'Panchang, sans-serif' }}>
-          {isGenz ? 'The Toolkit' : 'Core Tools'}
+          {isGenz ? 'the toolkit' : 'Core Tools'}
         </h2>
         <div style={{ height: '2px', flex: 1, background: 'linear-gradient(270deg, rgba(255,255,255,0.05), transparent)' }}></div>
       </div>
@@ -340,11 +340,10 @@ export default function AdminDashboard() {
         
         <div style={{ position: 'relative', zIndex: 1 }}>
           <h2 style={{ fontSize: '2.2rem', fontWeight: '700', fontFamily: 'Panchang, sans-serif', marginBottom: '1.5rem', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            {isGenz ? 'The Command Center' : 'System Capabilities'}
+            {isGenz ? 'the command center' : 'System Capabilities'}
           </h2>
           <p style={{ fontSize: '1.15rem', color: '#aaa', lineHeight: '1.8', maxWidth: '800px', marginBottom: '3rem' }}>
-            {isGenz 
-              ? 'This isn\'t just a dashboard, it\'s the whole operating system. From dropping invoices to blasting emails, managing the portfolio, and cooking up quotes with AI. Everything you need to run the empire is right here.' 
+            {isGenz ? 'this isn\'t just a dashboard, it\'s the whole operating system. From dropping invoices to blasting emails, managing the portfolio, and cooking up quotes with AI. Everything you need to run the empire is right here.' 
               : 'The Admin Panel is a centralized hub designed to streamline operations. It provides powerful tools for content management, financial operations, marketing campaigns, and system administration, all seamlessly integrated into one unified interface.'}
           </p>
           

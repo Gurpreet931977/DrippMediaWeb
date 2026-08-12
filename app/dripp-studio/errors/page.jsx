@@ -71,8 +71,8 @@ export default function ErrorLogsPage() {
   return (
     <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '1200px', margin: '0 auto', paddingBottom: '50px' }}>
       <div className={styles.header}>
-        <h1 className={styles.title}>{isGenz ? 'GLITCH' : 'ERROR'} <span style={{ color: '#ff4d4d' }}>{isGenz ? 'RADAR' : 'LOGS'}</span></h1>
-        <p className={styles.subtitle}>{isGenz ? 'Catching every vibe kill in the system.' : 'Global interceptor for critical and minor application failures.'}</p>
+        <h1 className={styles.title}>{isGenz ? 'glitch' : 'ERROR'} <span style={{ color: '#ff4d4d' }}>{isGenz ? 'radar' : 'LOGS'}</span></h1>
+        <p className={styles.subtitle}>{isGenz ? 'catching every vibe kill in the system.' : 'Global interceptor for critical and minor application failures.'}</p>
       </div>
 
       {/* Stats Row */}

@@ -24,15 +24,15 @@ export default function AdminSidebar() {
   };
 
   const navItems = [
-    { name: isGenz ? 'Main Base' : 'Dashboard', path: '/dripp-studio', icon: LayoutDashboard },
-    { name: isGenz ? 'Brain Vault' : 'Notes & Planning', path: '/dripp-studio/notes-and-planning', icon: BookOpen },
-    { name: isGenz ? 'Bag Securer' : 'Invoice Maker', path: '/dripp-studio/invoice', icon: FileText },
-    { name: isGenz ? 'Pitch Cooker' : 'Quotes & Packages', path: '/dripp-studio/quote', icon: PackagePlus },
-    { name: isGenz ? 'Masterplan Maker' : 'PMP Maker', path: '/dripp-studio/package', icon: PackagePlus },
-    { name: isGenz ? 'The Showcase' : 'Portfolio Manager', path: '/dripp-studio/portfolio', icon: Video },
-    { name: isGenz ? 'Mail Blaster' : 'Email Campaigns', path: '/dripp-studio/email', icon: Mail },
-    { name: isGenz ? 'Glitch Radar' : 'Error Logs', path: '/dripp-studio/errors', icon: AlertTriangle },
-    { name: isGenz ? 'The Engine' : 'System', path: '/dripp-studio/system', icon: Settings },
+    { name: isGenz ? 'main base' : 'Dashboard', path: '/dripp-studio', icon: LayoutDashboard },
+    { name: isGenz ? 'brain dump' : 'Notes & Planning', path: '/dripp-studio/notes-and-planning', icon: BookOpen },
+    { name: isGenz ? 'get paid' : 'Invoice Maker', path: '/dripp-studio/invoice', icon: FileText },
+    { name: isGenz ? 'cook a pitch' : 'Quotes & Packages', path: '/dripp-studio/quote', icon: PackagePlus },
+    { name: isGenz ? "masterplans" : 'PMP Maker', path: '/dripp-studio/package', icon: PackagePlus },
+    { name: isGenz ? 'the showcase' : 'Portfolio Manager', path: '/dripp-studio/portfolio', icon: Video },
+    { name: isGenz ? 'email blasts' : 'Email Campaigns', path: '/dripp-studio/email', icon: Mail },
+    { name: isGenz ? 'glitches' : 'Error Logs', path: '/dripp-studio/errors', icon: AlertTriangle },
+    { name: isGenz ? 'the engine' : 'System', path: '/dripp-studio/system', icon: Settings },
   ];
 
   return (
@@ -48,7 +48,7 @@ export default function AdminSidebar() {
       }}>
         {!isCollapsed && (
           <div className={styles.logo} style={{ marginBottom: 0, fontSize: '1.4rem' }}>
-            {isGenz ? 'DRIPP\nBOSS.' : 'DRIPP\nSTUDIO.'}
+            {isGenz ? 'dripp\nboss.' : 'DRIPP\nSTUDIO.'}
           </div>
         )}
         
@@ -96,9 +96,9 @@ export default function AdminSidebar() {
       </nav>
 
       <div style={{ marginTop: 'auto', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <Link href="/" className={styles.navLink} style={{ color: '#ef4444' }} title={isCollapsed ? (isGenz ? 'Bounce to Site' : 'Exit to Site') : undefined}>
+        <Link href="/" className={styles.navLink} style={{ color: '#ef4444' }} title={isCollapsed ? (isGenz ? 'bounce to site' : 'Exit to Site') : undefined}>
            <LogOut size={20} strokeWidth={2} style={{ flexShrink: 0 }} />
-           {!isCollapsed && <span className={styles.navText} style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{isGenz ? 'Bounce to Site' : 'Exit to Site'}</span>}
+           {!isCollapsed && <span className={styles.navText} style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{isGenz ? 'bounce to site' : 'Exit to Site'}</span>}
         </Link>
       </div>
     </div>

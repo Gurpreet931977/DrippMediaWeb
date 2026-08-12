@@ -22,8 +22,8 @@ export default function SystemPage() {
   return (
     <div style={{ animation: 'fadeIn 0.5s ease', maxWidth: '1200px', margin: '0 auto' }}>
       <div className={styles.header}>
-        <h1 className={styles.title}>{isGenz ? 'SYSTEM' : 'SYSTEM'} <span style={{ color: '#ebd73f' }}>{isGenz ? 'LAB' : 'WORKSPACE'}</span></h1>
-        <p className={styles.subtitle}>{isGenz ? 'Cook up some essential docs.' : 'Generate critical operational documents and messages'}</p>
+        <h1 className={styles.title}>{isGenz ? 'system' : 'SYSTEM'} <span style={{ color: '#ebd73f' }}>{isGenz ? 'lab' : 'WORKSPACE'}</span></h1>
+        <p className={styles.subtitle}>{isGenz ? 'cook up some essential docs.' : 'Generate critical operational documents and messages'}</p>
       </div>
 
       <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px', overflowX: 'auto' }}>

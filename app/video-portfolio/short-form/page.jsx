@@ -413,7 +413,7 @@ export default function Page() {
                     <div class="panel-glow"></div>
                     <div class="panel-header">
                         <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                        <h4>${isGenz ? 'The Lore' : 'Case Study'}</h4>
+                        <h4>${isGenz ? 'lore' : 'Case Study'}</h4>
                     </div>
                     <p style="font-size: 0.95rem; line-height: 1.6; color: rgba(255,255,255,0.85);">${caseStudy.replace(/\n/g, '<br>')}</p>
                 </div>
@@ -483,8 +483,8 @@ export default function Page() {
 
                     <div class="case-study-sheet comments-sheet">
                         <div class="comments-header">
-                            <h3 class="sheet-title-mobile">${isGenz ? 'The Lore' : 'Case Study'}</h3>
-                            <h3 class="sheet-title-pc">${isGenz ? 'The Aesthetic' : 'Creative Vision'}</h3>
+                            <h3 class="sheet-title-mobile">${isGenz ? 'lore' : 'Case Study'}</h3>
+                            <h3 class="sheet-title-pc">${isGenz ? 'the aesthetic' : 'Creative Vision'}</h3>
                             <button class="close-comments" onclick="closeComments(this)">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                             </button>
@@ -504,14 +504,14 @@ export default function Page() {
                     <!-- Custom Share Sheet -->
                     <div class="share-sheet">
                         <div class="comments-header">
-                            <h3>${isGenz ? 'Plug It' : 'Share'}</h3>
+                            <h3>${isGenz ? 'plug it' : 'Share'}</h3>
                             <button class="close-comments" onclick="closeShare(this)">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                             </button>
                         </div>
                         <div class="share-link-box">
-                            <div class="share-link-text" data-link="">${isGenz ? 'Cooking link...' : 'Generating link...'}</div>
-                            <button class="copy-link-btn" onclick="copyShareLink(this)">${isGenz ? 'Copied' : 'Copy'}</button>
+                            <div class="share-link-text" data-link="">${isGenz ? 'cooking link...' : 'Generating link...'}</div>
+                            <button class="copy-link-btn" onclick="copyShareLink(this)">${isGenz ? 'copied' : 'Copy'}</button>
                         </div>
                         <div class="share-options">
                             <a href="#" class="share-option-btn" onclick="event.preventDefault(); window.open('https://wa.me/?text=Check out this awesome Dripp Media video! ' + encodeURIComponent(this.closest('.share-sheet').querySelector('.share-link-text').dataset.link));">
@@ -2230,9 +2230,9 @@ export default function Page() {
   <a href="/video-portfolio" className="nav-back"><i className="uil uil-arrow-left" /></a>
   
   <div className="short-form-category-switcher">
-     <button className="sf-cat-btn" data-cat="Videography" onClick={(e) => window.changeCategory('Videography')}>{isGenz ? 'POV' : 'Videography'}</button>
-     <button className="sf-cat-btn" data-cat="Editing" onClick={(e) => window.changeCategory('Editing')}>{isGenz ? 'The Edits' : 'Editing'}</button>
-     <button className="sf-cat-btn" data-cat="Both" onClick={(e) => window.changeCategory('Both')}>{isGenz ? 'Full Send' : 'Both'}</button>
+     <button className="sf-cat-btn" data-cat="Videography" onClick={(e) => window.changeCategory('Videography')}>{isGenz ? 'pov' : 'Videography'}</button>
+     <button className="sf-cat-btn" data-cat="Editing" onClick={(e) => window.changeCategory('Editing')}>{isGenz ? 'the edits' : 'Editing'}</button>
+     <button className="sf-cat-btn" data-cat="Both" onClick={(e) => window.changeCategory('Both')}>{isGenz ? 'full send' : 'Both'}</button>
   </div>
 
   <div className="cursor" id="cursor" />
@@ -2289,7 +2289,7 @@ export default function Page() {
           }
       ` }} />
       <div className="premium-spinner"></div>
-      <span className="premium-pulse-text">{isGenz ? 'Cooking' : 'Loading'}</span>
+      <span className="premium-pulse-text">{isGenz ? 'cooking' : 'Loading'}</span>
   </div>
 
   <div className="reels-container" id="reelsContainer">
