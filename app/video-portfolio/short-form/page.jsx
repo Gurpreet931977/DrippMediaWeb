@@ -942,9 +942,9 @@ export default function Page() {
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
-            max-width: 400px;
+            width: min(350px, 92vw);
             height: 44px;
             padding: 5px;
         }
@@ -952,12 +952,14 @@ export default function Page() {
         .sf-cat-btn-container {
             display: flex;
             gap: 5px;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             white-space: nowrap;
+            width: 100%;
+            justify-content: center;
         }
 
         .short-form-category-switcher.contracted {
-            max-width: 50px;
+            width: 50px;
             height: 6px;
             border-radius: 3px;
             padding: 0;
@@ -971,10 +973,11 @@ export default function Page() {
         .short-form-category-switcher.contracted .sf-cat-btn-container {
             opacity: 0;
             pointer-events: none;
+            transform: scale(0.85);
         }
 
         .short-form-category-switcher.contracted:hover {
-            max-width: 400px;
+            width: min(350px, 92vw);
             height: 44px;
             border-radius: 20px;
             padding: 5px;
@@ -987,7 +990,8 @@ export default function Page() {
         .short-form-category-switcher.contracted:hover .sf-cat-btn-container {
             opacity: 1;
             pointer-events: all;
-            transition-delay: 0.2s;
+            transform: scale(1);
+            transition-delay: 0.15s;
         }
         body.clean-mode-active .short-form-category-switcher,
         body.clean-mode-active .nav-back {
