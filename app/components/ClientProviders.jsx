@@ -155,18 +155,18 @@ function GlobalGenzToggle() {
 
         if (minDist === distLeft) {
             targetX = 3 - window.innerWidth / 2;
-            targetY = Math.max(0, Math.min(position.y, window.innerHeight - 60));
+            targetY = Math.max(7, Math.min(position.y, window.innerHeight - 53));
             edge = 'left';
         } else if (minDist === distRight) {
             targetX = (window.innerWidth - 3) - window.innerWidth / 2;
-            targetY = Math.max(0, Math.min(position.y, window.innerHeight - 60));
+            targetY = Math.max(7, Math.min(position.y, window.innerHeight - 53));
             edge = 'right';
         } else if (minDist === distTop) {
-            targetY = -17; 
+            targetY = -20; 
             targetX = Math.max(30 - window.innerWidth / 2, Math.min(position.x, window.innerWidth / 2 - 30));
             edge = 'top';
         } else {
-            targetY = window.innerHeight - 23;
+            targetY = window.innerHeight - 26;
             targetX = Math.max(30 - window.innerWidth / 2, Math.min(position.x, window.innerWidth / 2 - 30));
             edge = 'bottom';
         }
