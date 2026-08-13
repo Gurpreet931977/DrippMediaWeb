@@ -1,11 +1,20 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGenz } from '../../contexts/GenzContext';
 
 export default function Page() {
   const { isGenz } = useGenz() || { isGenz: false };
+  const [isContracted, setIsContracted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        setIsContracted(true);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     // Register GSAP
 
@@ -926,15 +935,82 @@ export default function Page() {
             transform: translateX(-50%);
             z-index: 9999;
             display: flex;
-            gap: 5px;
+            align-items: center;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 5px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+            max-width: 400px;
+            height: 44px;
+            padding: 5px;
+        }
+
+        .sf-cat-btn-container {
+            display: flex;
+            gap: 5px;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .sf-cat-icon {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ebd73f;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .sf-cat-icon svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.5s ease;
+        }
+
+        .short-form-category-switcher.contracted {
+            max-width: 44px;
+            border-radius: 22px;
+            padding: 0;
+            cursor: pointer;
+        }
+        
+        .short-form-category-switcher.contracted .sf-cat-btn-container {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .short-form-category-switcher.contracted .sf-cat-icon {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .short-form-category-switcher.contracted:hover {
+            max-width: 400px;
+            border-radius: 20px;
+            padding: 5px;
+        }
+
+        .short-form-category-switcher.contracted:hover .sf-cat-btn-container {
+            opacity: 1;
+            pointer-events: all;
+            transition-delay: 0.2s;
+        }
+
+        .short-form-category-switcher.contracted:hover .sf-cat-icon {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.5);
         }
 
         body.clean-mode-active .short-form-category-switcher,
@@ -2229,10 +2305,17 @@ export default function Page() {
   {/* GSAP */}
   <a href="/video-portfolio" className="nav-back"><i className="uil uil-arrow-left" /></a>
   
-  <div className="short-form-category-switcher">
-     <button className="sf-cat-btn" data-cat="Videography" onClick={(e) => window.changeCategory('Videography')}>{isGenz ? 'pov' : 'Videography'}</button>
-     <button className="sf-cat-btn" data-cat="Editing" onClick={(e) => window.changeCategory('Editing')}>{isGenz ? 'the edits' : 'Editing'}</button>
-     <button className="sf-cat-btn" data-cat="Both" onClick={(e) => window.changeCategory('Both')}>{isGenz ? 'full send' : 'Both'}</button>
+  <div className={`short-form-category-switcher ${isContracted ? 'contracted' : ''}`}>
+     <div className="sf-cat-btn-container">
+         <button className="sf-cat-btn" data-cat="Videography" onClick={(e) => window.changeCategory('Videography')}>{isGenz ? 'pov' : 'Videography'}</button>
+         <button className="sf-cat-btn" data-cat="Editing" onClick={(e) => window.changeCategory('Editing')}>{isGenz ? 'the edits' : 'Editing'}</button>
+         <button className="sf-cat-btn" data-cat="Both" onClick={(e) => window.changeCategory('Both')}>{isGenz ? 'full send' : 'Both'}</button>
+     </div>
+     <div className="sf-cat-icon">
+         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+         </svg>
+     </div>
   </div>
 
   <div className="cursor" id="cursor" />
