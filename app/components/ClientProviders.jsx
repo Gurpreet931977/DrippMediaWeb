@@ -187,6 +187,41 @@ function GlobalGenzToggle() {
     };
   }, [isDragging, position.x, position.y]);
   
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window === 'undefined') return;
+      
+      setPosition(prev => {
+          let newX = prev.x;
+          let newY = prev.y;
+
+          if (isSnapped) {
+            if (snapCorner === 'left') {
+                newX = 3 - window.innerWidth / 2;
+                newY = Math.max(7, Math.min(prev.y, window.innerHeight - 53));
+            } else if (snapCorner === 'right') {
+                newX = (window.innerWidth - 3) - window.innerWidth / 2;
+                newY = Math.max(7, Math.min(prev.y, window.innerHeight - 53));
+            } else if (snapCorner === 'top') {
+                newY = -20;
+                newX = Math.max(30 - window.innerWidth / 2, Math.min(prev.x, window.innerWidth / 2 - 30));
+            } else if (snapCorner === 'bottom') {
+                newY = window.innerHeight - 26;
+                newX = Math.max(30 - window.innerWidth / 2, Math.min(prev.x, window.innerWidth / 2 - 30));
+            }
+          } else {
+            newX = Math.max(30 - window.innerWidth / 2, Math.min(prev.x, window.innerWidth / 2 - 30));
+            newY = Math.max(-20, Math.min(prev.y, window.innerHeight - 40)); 
+          }
+          
+          return (newX !== prev.x || newY !== prev.y) ? { x: newX, y: newY } : prev;
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isSnapped, snapCorner]);
+
   if (!isLoaded) return null; // Prevent hydration mismatch
 
   const handleToggle = () => {
