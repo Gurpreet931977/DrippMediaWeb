@@ -17,6 +17,19 @@ function GlobalGenzToggle() {
   const dragStartCoords = React.useRef({ x: 0, y: 0 });
   const hasMovedRef = React.useRef(false);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        if (typeof window !== 'undefined' && !hasMovedRef.current) {
+            let targetY = 20;
+            let targetX = (window.innerWidth - 40) - window.innerWidth / 2;
+            setPosition({ x: targetX, y: targetY });
+            setIsSnapped(true);
+            setSnapCorner('top-right');
+        }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
     setIsDragging(true);
@@ -60,25 +73,17 @@ function GlobalGenzToggle() {
       if (typeof window !== 'undefined') {
         const centerX = window.innerWidth / 2 + position.x;
         const centerY = 20 + position.y;
-        const edgeThreshold = 150;
         
-        const isLeft = centerX < edgeThreshold;
-        const isRight = centerX > window.innerWidth - edgeThreshold;
-        const isTop = centerY < edgeThreshold;
-        const isBottom = centerY > window.innerHeight - edgeThreshold;
+        const isLeft = centerX < window.innerWidth / 2;
+        const isTop = centerY < window.innerHeight / 2;
 
-        if ((isLeft || isRight) && (isTop || isBottom)) {
-            let targetY = isTop ? 20 : (window.innerHeight - 40) - 20;
-            let targetX = isLeft ? 40 - window.innerWidth / 2 : (window.innerWidth - 40) - window.innerWidth / 2;
-            let corner = (isTop ? 'top-' : 'bottom-') + (isLeft ? 'left' : 'right');
-            
-            setPosition({ x: targetX, y: targetY });
-            setIsSnapped(true);
-            setSnapCorner(corner);
-        } else {
-            setIsSnapped(false);
-            setSnapCorner(null);
-        }
+        let targetY = isTop ? 20 : (window.innerHeight - 40) - 20;
+        let targetX = isLeft ? 40 - window.innerWidth / 2 : (window.innerWidth - 40) - window.innerWidth / 2;
+        let corner = (isTop ? 'top-' : 'bottom-') + (isLeft ? 'left' : 'right');
+        
+        setPosition({ x: targetX, y: targetY });
+        setIsSnapped(true);
+        setSnapCorner(corner);
       }
     };
 
@@ -114,25 +119,17 @@ function GlobalGenzToggle() {
       if (typeof window !== 'undefined') {
         const centerX = window.innerWidth / 2 + position.x;
         const centerY = 20 + position.y;
-        const edgeThreshold = 150;
         
-        const isLeft = centerX < edgeThreshold;
-        const isRight = centerX > window.innerWidth - edgeThreshold;
-        const isTop = centerY < edgeThreshold;
-        const isBottom = centerY > window.innerHeight - edgeThreshold;
+        const isLeft = centerX < window.innerWidth / 2;
+        const isTop = centerY < window.innerHeight / 2;
 
-        if ((isLeft || isRight) && (isTop || isBottom)) {
-            let targetY = isTop ? 20 : (window.innerHeight - 40) - 20;
-            let targetX = isLeft ? 40 - window.innerWidth / 2 : (window.innerWidth - 40) - window.innerWidth / 2;
-            let corner = (isTop ? 'top-' : 'bottom-') + (isLeft ? 'left' : 'right');
-            
-            setPosition({ x: targetX, y: targetY });
-            setIsSnapped(true);
-            setSnapCorner(corner);
-        } else {
-            setIsSnapped(false);
-            setSnapCorner(null);
-        }
+        let targetY = isTop ? 20 : (window.innerHeight - 40) - 20;
+        let targetX = isLeft ? 40 - window.innerWidth / 2 : (window.innerWidth - 40) - window.innerWidth / 2;
+        let corner = (isTop ? 'top-' : 'bottom-') + (isLeft ? 'left' : 'right');
+        
+        setPosition({ x: targetX, y: targetY });
+        setIsSnapped(true);
+        setSnapCorner(corner);
       }
     };
 
