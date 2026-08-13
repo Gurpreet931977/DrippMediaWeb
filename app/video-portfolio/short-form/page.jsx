@@ -956,49 +956,32 @@ export default function Page() {
             white-space: nowrap;
         }
 
-        .sf-cat-icon {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ebd73f;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s ease;
-        }
-
-        .sf-cat-icon svg {
-            width: 20px;
-            height: 20px;
-            transition: transform 0.5s ease;
-        }
-
         .short-form-category-switcher.contracted {
-            max-width: 44px;
-            border-radius: 22px;
+            max-width: 50px;
+            height: 6px;
+            border-radius: 3px;
             padding: 0;
+            background: rgba(255, 255, 255, 0.6);
+            border: none;
+            opacity: 0.2;
             cursor: pointer;
+            box-shadow: none;
         }
         
         .short-form-category-switcher.contracted .sf-cat-btn-container {
             opacity: 0;
             pointer-events: none;
         }
-        
-        .short-form-category-switcher.contracted .sf-cat-icon {
-            opacity: 1;
-            pointer-events: all;
-        }
 
         .short-form-category-switcher.contracted:hover {
             max-width: 400px;
+            height: 44px;
             border-radius: 20px;
             padding: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 1;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .short-form-category-switcher.contracted:hover .sf-cat-btn-container {
@@ -1006,13 +989,6 @@ export default function Page() {
             pointer-events: all;
             transition-delay: 0.2s;
         }
-
-        .short-form-category-switcher.contracted:hover .sf-cat-icon {
-            opacity: 0;
-            pointer-events: none;
-            transform: translate(-50%, -50%) scale(0.5);
-        }
-
         body.clean-mode-active .short-form-category-switcher,
         body.clean-mode-active .nav-back {
             opacity: 0;
@@ -2310,11 +2286,6 @@ export default function Page() {
          <button className="sf-cat-btn" data-cat="Videography" onClick={(e) => window.changeCategory('Videography')}>{isGenz ? 'pov' : 'Videography'}</button>
          <button className="sf-cat-btn" data-cat="Editing" onClick={(e) => window.changeCategory('Editing')}>{isGenz ? 'the edits' : 'Editing'}</button>
          <button className="sf-cat-btn" data-cat="Both" onClick={(e) => window.changeCategory('Both')}>{isGenz ? 'full send' : 'Both'}</button>
-     </div>
-     <div className="sf-cat-icon">
-         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-         </svg>
      </div>
   </div>
 
