@@ -20,11 +20,11 @@ function GlobalGenzToggle() {
   useEffect(() => {
     const timer = setTimeout(() => {
         if (typeof window !== 'undefined' && !hasMovedRef.current) {
-            let targetY = 20;
-            let targetX = (window.innerWidth - 40) - window.innerWidth / 2;
+            let targetY = 0; // Top edge
+            let targetX = 0; // Centered
             setPosition({ x: targetX, y: targetY });
             setIsSnapped(true);
-            setSnapCorner('top-right');
+            setSnapCorner('top');
         }
     }, 4000);
     return () => clearTimeout(timer);
@@ -74,16 +74,38 @@ function GlobalGenzToggle() {
         const centerX = window.innerWidth / 2 + position.x;
         const centerY = 20 + position.y;
         
-        const isLeft = centerX < window.innerWidth / 2;
-        const isTop = centerY < window.innerHeight / 2;
+        const distLeft = centerX;
+        const distRight = window.innerWidth - centerX;
+        const distTop = centerY;
+        const distBottom = window.innerHeight - centerY;
 
-        let targetY = isTop ? 20 : (window.innerHeight - 40) - 20;
-        let targetX = isLeft ? 40 - window.innerWidth / 2 : (window.innerWidth - 40) - window.innerWidth / 2;
-        let corner = (isTop ? 'top-' : 'bottom-') + (isLeft ? 'left' : 'right');
+        const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+
+        let targetX = position.x;
+        let targetY = position.y;
+        let edge = '';
+
+        if (minDist === distLeft) {
+            targetX = 3 - window.innerWidth / 2;
+            targetY = Math.max(0, Math.min(position.y, window.innerHeight - 60));
+            edge = 'left';
+        } else if (minDist === distRight) {
+            targetX = (window.innerWidth - 3) - window.innerWidth / 2;
+            targetY = Math.max(0, Math.min(position.y, window.innerHeight - 60));
+            edge = 'right';
+        } else if (minDist === distTop) {
+            targetY = -17; 
+            targetX = Math.max(30 - window.innerWidth / 2, Math.min(position.x, window.innerWidth / 2 - 30));
+            edge = 'top';
+        } else {
+            targetY = window.innerHeight - 23;
+            targetX = Math.max(30 - window.innerWidth / 2, Math.min(position.x, window.innerWidth / 2 - 30));
+            edge = 'bottom';
+        }
         
         setPosition({ x: targetX, y: targetY });
         setIsSnapped(true);
-        setSnapCorner(corner);
+        setSnapCorner(edge);
       }
     };
 
@@ -120,16 +142,38 @@ function GlobalGenzToggle() {
         const centerX = window.innerWidth / 2 + position.x;
         const centerY = 20 + position.y;
         
-        const isLeft = centerX < window.innerWidth / 2;
-        const isTop = centerY < window.innerHeight / 2;
+        const distLeft = centerX;
+        const distRight = window.innerWidth - centerX;
+        const distTop = centerY;
+        const distBottom = window.innerHeight - centerY;
 
-        let targetY = isTop ? 20 : (window.innerHeight - 40) - 20;
-        let targetX = isLeft ? 40 - window.innerWidth / 2 : (window.innerWidth - 40) - window.innerWidth / 2;
-        let corner = (isTop ? 'top-' : 'bottom-') + (isLeft ? 'left' : 'right');
+        const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+
+        let targetX = position.x;
+        let targetY = position.y;
+        let edge = '';
+
+        if (minDist === distLeft) {
+            targetX = 3 - window.innerWidth / 2;
+            targetY = Math.max(0, Math.min(position.y, window.innerHeight - 60));
+            edge = 'left';
+        } else if (minDist === distRight) {
+            targetX = (window.innerWidth - 3) - window.innerWidth / 2;
+            targetY = Math.max(0, Math.min(position.y, window.innerHeight - 60));
+            edge = 'right';
+        } else if (minDist === distTop) {
+            targetY = -17; 
+            targetX = Math.max(30 - window.innerWidth / 2, Math.min(position.x, window.innerWidth / 2 - 30));
+            edge = 'top';
+        } else {
+            targetY = window.innerHeight - 23;
+            targetX = Math.max(30 - window.innerWidth / 2, Math.min(position.x, window.innerWidth / 2 - 30));
+            edge = 'bottom';
+        }
         
         setPosition({ x: targetX, y: targetY });
         setIsSnapped(true);
-        setSnapCorner(corner);
+        setSnapCorner(edge);
       }
     };
 
@@ -245,6 +289,7 @@ function GlobalGenzToggle() {
                 padding: (isSnapped && !isHovered) ? '0' : '6px 14px',
                 width: (isSnapped && !isHovered) ? '60px' : 'auto',
                 height: (isSnapped && !isHovered) ? '6px' : '28px',
+                transform: (isSnapped && !isHovered && ['left', 'right'].includes(snapCorner)) ? 'rotate(90deg)' : 'rotate(0deg)',
                 fontFamily: "'Clash Display', sans-serif",
                 fontSize: '0.65rem',
                 fontWeight: 500,
@@ -275,7 +320,7 @@ function GlobalGenzToggle() {
             }}
             onMouseLeave={(e) => {
                if (!isDragging) {
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.transform = (isSnapped && ['left', 'right'].includes(snapCorner)) ? 'rotate(90deg)' : 'rotate(0deg)';
                   if (!isGenz) {
                       e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
                       e.currentTarget.style.color = 'rgba(255,255,255,0.5)';

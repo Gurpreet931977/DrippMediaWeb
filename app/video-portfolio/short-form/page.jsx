@@ -11,7 +11,7 @@ export default function Page() {
   useEffect(() => {
     const timer = setTimeout(() => {
         setIsContracted(true);
-    }, 10000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
