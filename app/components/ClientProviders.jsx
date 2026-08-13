@@ -10,6 +10,9 @@ function GlobalGenzToggle() {
 
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isSnapped, setIsSnapped] = useState(false);
+  const [snapCorner, setSnapCorner] = useState(null);
+  const [isHovered, setIsHovered] = useState(false);
   const dragRef = React.useRef({ startX: 0, startY: 0 });
   const dragStartCoords = React.useRef({ x: 0, y: 0 });
   const hasMovedRef = React.useRef(false);
@@ -17,6 +20,8 @@ function GlobalGenzToggle() {
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
     setIsDragging(true);
+    setIsSnapped(false);
+    setSnapCorner(null);
     hasMovedRef.current = false;
     dragStartCoords.current = { x: e.clientX, y: e.clientY };
     dragRef.current.startX = e.clientX - position.x;
@@ -26,6 +31,8 @@ function GlobalGenzToggle() {
   const handleTouchStart = (e) => {
     if (e.touches.length !== 1) return;
     setIsDragging(true);
+    setIsSnapped(false);
+    setSnapCorner(null);
     hasMovedRef.current = false;
     const touch = e.touches[0];
     dragStartCoords.current = { x: touch.clientX, y: touch.clientY };
@@ -48,6 +55,31 @@ function GlobalGenzToggle() {
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      
+      // Snap Logic
+      if (typeof window !== 'undefined') {
+        const centerX = window.innerWidth / 2 + position.x;
+        const centerY = 20 + position.y;
+        const edgeThreshold = 150;
+        
+        const isLeft = centerX < edgeThreshold;
+        const isRight = centerX > window.innerWidth - edgeThreshold;
+        const isTop = centerY < edgeThreshold;
+        const isBottom = centerY > window.innerHeight - edgeThreshold;
+
+        if ((isLeft || isRight) && (isTop || isBottom)) {
+            let targetY = isTop ? 20 : (window.innerHeight - 40) - 20;
+            let targetX = isLeft ? 40 - window.innerWidth / 2 : (window.innerWidth - 40) - window.innerWidth / 2;
+            let corner = (isTop ? 'top-' : 'bottom-') + (isLeft ? 'left' : 'right');
+            
+            setPosition({ x: targetX, y: targetY });
+            setIsSnapped(true);
+            setSnapCorner(corner);
+        } else {
+            setIsSnapped(false);
+            setSnapCorner(null);
+        }
+      }
     };
 
     if (isDragging) {
@@ -58,7 +90,7 @@ function GlobalGenzToggle() {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging, position.x, position.y]);
 
   useEffect(() => {
     const handleTouchMove = (e) => {
@@ -77,6 +109,31 @@ function GlobalGenzToggle() {
 
     const handleTouchEnd = () => {
       setIsDragging(false);
+      
+      // Snap Logic
+      if (typeof window !== 'undefined') {
+        const centerX = window.innerWidth / 2 + position.x;
+        const centerY = 20 + position.y;
+        const edgeThreshold = 150;
+        
+        const isLeft = centerX < edgeThreshold;
+        const isRight = centerX > window.innerWidth - edgeThreshold;
+        const isTop = centerY < edgeThreshold;
+        const isBottom = centerY > window.innerHeight - edgeThreshold;
+
+        if ((isLeft || isRight) && (isTop || isBottom)) {
+            let targetY = isTop ? 20 : (window.innerHeight - 40) - 20;
+            let targetX = isLeft ? 40 - window.innerWidth / 2 : (window.innerWidth - 40) - window.innerWidth / 2;
+            let corner = (isTop ? 'top-' : 'bottom-') + (isLeft ? 'left' : 'right');
+            
+            setPosition({ x: targetX, y: targetY });
+            setIsSnapped(true);
+            setSnapCorner(corner);
+        } else {
+            setIsSnapped(false);
+            setSnapCorner(null);
+        }
+      }
     };
 
     if (isDragging) {
@@ -87,7 +144,7 @@ function GlobalGenzToggle() {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isDragging]);
+  }, [isDragging, position.x, position.y]);
   
   if (!isLoaded) return null; // Prevent hydration mismatch
 
@@ -169,23 +226,28 @@ function GlobalGenzToggle() {
       <div 
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         style={{
           position: 'fixed',
           top: '20px',
           left: '50%',
           transform: `translateX(-50%) translate(${position.x}px, ${position.y}px)`,
           zIndex: 99999,
-          touchAction: 'none'
+          touchAction: 'none',
+          transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
         <button 
             onClick={handleToggle}
             style={{
-                background: isGenz ? 'var(--brand-yellow)' : 'rgba(255, 255, 255, 0.03)',
-                color: isGenz ? '#000' : 'rgba(255,255,255,0.5)',
-                border: `1px solid ${isGenz ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.08)'}`,
-                borderRadius: '30px',
-                padding: '6px 14px',
+                background: (isSnapped && !isHovered) ? 'var(--brand-yellow)' : (isGenz ? 'var(--brand-yellow)' : 'rgba(255, 255, 255, 0.03)'),
+                color: (isSnapped && !isHovered) ? 'transparent' : (isGenz ? '#000' : 'rgba(255,255,255,0.5)'),
+                border: (isSnapped && !isHovered) ? '1px solid transparent' : `1px solid ${isGenz ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.08)'}`,
+                borderRadius: (isSnapped && !isHovered) ? '3px' : '30px',
+                padding: (isSnapped && !isHovered) ? '0' : '6px 14px',
+                width: (isSnapped && !isHovered) ? '60px' : 'auto',
+                height: (isSnapped && !isHovered) ? '6px' : '28px',
                 fontFamily: "'Clash Display', sans-serif",
                 fontSize: '0.65rem',
                 fontWeight: 500,
@@ -194,16 +256,18 @@ function GlobalGenzToggle() {
                 textTransform: 'uppercase',
                 letterSpacing: '2px',
                 whiteSpace: 'nowrap',
-                boxShadow: isGenz ? '0 0 20px rgba(235, 215, 63, 0.4), inset 0 0 8px rgba(255,255,255,0.4)' : '0 4px 15px rgba(0,0,0,0.3)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
+                boxShadow: (isSnapped && !isHovered) ? 'none' : (isGenz ? '0 0 20px rgba(235, 215, 63, 0.4), inset 0 0 8px rgba(255,255,255,0.4)' : '0 4px 15px rgba(0,0,0,0.3)'),
+                backdropFilter: (isSnapped && !isHovered) ? 'none' : 'blur(12px)',
+                WebkitBackdropFilter: (isSnapped && !isHovered) ? 'none' : 'blur(12px)',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '8px',
-                userSelect: 'none'
+                userSelect: 'none',
+                overflow: 'hidden'
             }}
             onMouseEnter={(e) => {
-               if (!isDragging) {
+               if (!isDragging && (!isSnapped || isHovered)) {
                   e.currentTarget.style.transform = 'scale(1.05)';
                   if (!isGenz) {
                       e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
@@ -229,9 +293,11 @@ function GlobalGenzToggle() {
                 borderRadius: '50%',
                 background: isGenz ? '#000' : 'rgba(255,255,255,0.3)',
                 boxShadow: isGenz ? '0 0 5px rgba(0,0,0,0.5)' : 'none',
-                transition: 'all 0.5s ease'
+                transition: 'all 0.5s ease',
+                opacity: (isSnapped && !isHovered) ? 0 : 1,
+                flexShrink: 0
             }} />
-            GEN-Z
+            <span style={{ opacity: (isSnapped && !isHovered) ? 0 : 1, transition: 'opacity 0.3s ease' }}>GEN-Z</span>
         </button>
       </div>
     </>
