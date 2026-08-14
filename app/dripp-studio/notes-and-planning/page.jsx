@@ -1234,14 +1234,15 @@ export default function NotionHubPage() {
             gap: 10px !important;
           }
 
-          .notes-catalog-column {
-            display: ${mobileView === 'catalog' ? 'flex' : 'none'} !important;
-            height: calc(100vh - 150px) !important;
+          .notes-catalog-column.mobile-col-hidden,
+          .notes-reader-column.mobile-col-hidden {
+            display: none !important;
           }
 
-          .notes-reader-column {
-            display: ${mobileView === 'reader' ? 'flex' : 'none'} !important;
-            height: calc(100vh - 150px) !important;
+          .notes-catalog-column.mobile-col-active,
+          .notes-reader-column.mobile-col-active {
+            display: flex !important;
+            height: calc(100vh - 135px) !important;
           }
 
           .mobile-tab-bar {
@@ -1284,8 +1285,14 @@ export default function NotionHubPage() {
             padding: 20px 16px !important;
           }
 
-          .mobile-block-touch-actions {
+          .mobile-editor-topbar {
             display: flex !important;
+          }
+
+          .notes-floating-toolbar {
+            max-width: 92vw !important;
+            overflow-x: auto !important;
+            scrollbar-width: none !important;
           }
         }
 
@@ -1645,7 +1652,7 @@ export default function NotionHubPage() {
         </div>
         
         {/* LEFT PANEL: Document Catalog */}
-        <div className="notion-glass-card notes-catalog-column" style={{
+        <div className={`notion-glass-card notes-catalog-column ${mobileView === 'catalog' ? 'mobile-col-active' : 'mobile-col-hidden'}`} style={{
           display: 'flex',
           flexDirection: 'column',
           height: 'calc(100vh - 120px)',
@@ -1779,7 +1786,7 @@ export default function NotionHubPage() {
         </div>
 
         {/* CENTER/RIGHT PANEL: Main Reader & Editor */}
-        <div className={`notes-reader-column ${isZenithMode ? "" : "notion-glass-card"}`} style={isZenithMode ? {
+        <div className={`notes-reader-column ${isZenithMode ? "" : "notion-glass-card"} ${mobileView === 'reader' ? 'mobile-col-active' : 'mobile-col-hidden'}`} style={isZenithMode ? {
           position: 'fixed',
           inset: 0,
           zIndex: 9999,
@@ -1829,6 +1836,55 @@ export default function NotionHubPage() {
                   <div style={{ width: `${scrollProgress}%`, height: '100%', background: '#ebd73f', transition: 'width 0.1s ease-out', boxShadow: '0 0 10px #ebd73f' }} />
                 </div>
               )}
+
+              {/* Mobile Dedicated Back & Quick Action Topbar */}
+              <div className="mobile-editor-topbar" style={{ display: 'none', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '14px', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <button
+                  type="button"
+                  onClick={() => setMobileView('catalog')}
+                  className="notion-font"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(235, 215, 63, 0.12)',
+                    border: '1px solid rgba(235, 215, 63, 0.3)',
+                    borderRadius: '10px',
+                    color: '#ebd73f',
+                    padding: '8px 14px',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    touchAction: 'manipulation'
+                  }}
+                >
+                  <ChevronLeft size={18} />
+                  <span>All Notes</span>
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddBlockMenu(!showAddBlockMenu)}
+                    className="notion-font"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: showAddBlockMenu ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255, 255, 255, 0.06)',
+                      border: `1px solid ${showAddBlockMenu ? '#ebd73f' : 'rgba(255, 255, 255, 0.12)'}`,
+                      borderRadius: '10px',
+                      color: showAddBlockMenu ? '#ebd73f' : '#fff',
+                      padding: '8px 12px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Plus size={16} /> Block
+                  </button>
+                </div>
+              </div>
 
               {/* Cover Image */}
               {docContent?.page?.cover && (

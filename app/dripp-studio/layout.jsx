@@ -202,6 +202,31 @@ export default function AdminLayout({ children }) {
             box-shadow: none;
             transform: none;
           }
+          @media (max-width: 1024px) {
+            .glass-panel {
+              padding: 32px 20px !important;
+              width: 90vw !important;
+              max-width: 92vw !important;
+              border-radius: 20px !important;
+              margin: 0 16px !important;
+            }
+            .login-hero-title {
+              font-size: clamp(1.35rem, 5.5vw, 2rem) !important;
+              letter-spacing: 1px !important;
+            }
+            .premium-input {
+              padding: 14px 14px 14px 44px !important;
+              font-size: 0.9rem !important;
+            }
+            .premium-button {
+              padding: 15px !important;
+              min-height: 48px !important;
+            }
+            .bg-glow {
+              width: 320px !important;
+              height: 320px !important;
+            }
+          }
         `}</style>
         
         <div className="bg-glow"></div>
@@ -223,7 +248,7 @@ export default function AdminLayout({ children }) {
             }}>
               <Sparkles size={24} />
             </div>
-            <h2 style={{ color: '#fff', marginBottom: '8px', fontFamily: "'Panchang', sans-serif", fontSize: '2rem', letterSpacing: '1.5px', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+            <h2 className="login-hero-title" style={{ color: '#fff', marginBottom: '8px', fontFamily: "'Panchang', sans-serif", fontSize: '2rem', letterSpacing: '1.5px', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
               DRIPP <span style={{ color: '#ebd73f' }}>STUDIO</span>
             </h2>
             <p style={{ color: '#888', fontSize: '0.8rem', letterSpacing: '3px', textTransform: 'uppercase', margin: 0, fontFamily: "'Clash Display', sans-serif", fontWeight: 500 }}>CREATIVE MANAGEMENT SUITE</p>
