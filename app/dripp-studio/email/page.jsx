@@ -295,7 +295,30 @@ export default function EmailCampaignsPage() {
         <p className={styles.subtitle}>Craft and launch premium email experiences to your audience.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '2rem', alignItems: 'start' }}>
+      <style jsx>{`
+        .email-main-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 350px;
+          gap: 2rem;
+          align-items: start;
+        }
+        .email-audience-btns {
+          display: flex;
+          gap: 1rem;
+        }
+        @media (max-width: 1024px) {
+          .email-main-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1.5rem !important;
+          }
+          .email-audience-btns {
+            flex-direction: column !important;
+            gap: 0.75rem !important;
+          }
+        }
+      `}</style>
+      
+      <div className="email-main-grid">
         {/* Main Form */}
         <div className={styles.interactiveCard} style={{ padding: '2.5rem' }}>
           <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -305,7 +328,7 @@ export default function EmailCampaignsPage() {
               <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#ebd73f' }}>
                 <Users size={18} /> Target Audience
               </label>
-              <div style={{ display: 'flex', gap: '1rem' }}>
+              <div className="email-audience-btns">
                 <button
                   type="button"
                   onClick={() => setIsBroadcast(false)}

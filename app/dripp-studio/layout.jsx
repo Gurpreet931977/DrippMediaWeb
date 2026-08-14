@@ -320,7 +320,7 @@ export default function AdminLayout({ children }) {
         }
       `}</style>
       <AdminSidebar />
-      <main key={pathname} className={styles.mainContent} style={{ flex: 1, padding: '40px', overflowY: 'auto', position: 'relative' }}>
+      <main key={pathname} className={styles.mainContent} style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
         {children}
         
         {unreadErrorsCount > 0 && pathname !== '/dripp-studio/errors' && (

@@ -2,12 +2,19 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
-  BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, 
+  BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, ChevronLeft,
   FileText, Database, CheckSquare, Sparkles, Info, LayoutList, Plus, Maximize2, Minimize2, Star,
   List, ListOrdered, Type, Heading1, Heading2, Heading3, Quote, Code, ToggleLeft,
-  Home, Command, Activity, CheckCircle2, AlertCircle, Trash2, Undo2, Redo2, Copy
+  Home, Command, Activity, CheckCircle2, AlertCircle, Trash2, Undo2, Redo2, Copy, MoreHorizontal, Layers
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
+import { 
+  LottieCheck, 
+  LottiePulse, 
+  LottieSparkles, 
+  LottieStar, 
+  LottieEmptyState 
+} from '../components/LottieMicroAnimations';
 
 function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -55,7 +62,8 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          height: '100%'
+          height: '100%',
+          fontFamily: "'Clash Display', sans-serif"
         }}
         onMouseOver={e => !isOpen && (e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)')}
         onMouseOut={e => !isOpen && (e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%)')}
@@ -75,7 +83,7 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
           right: align === 'right' ? 0 : 'auto',
           marginTop: openUpwards ? '0px' : '8px',
           marginBottom: openUpwards ? '8px' : '0px',
-          background: 'linear-gradient(135deg, rgba(24, 24, 28, 0.95) 0%, rgba(12, 12, 16, 0.98) 100%)',
+          background: 'linear-gradient(135deg, rgba(24, 24, 28, 0.98) 0%, rgba(12, 12, 16, 0.98) 100%)',
           backdropFilter: 'blur(30px) saturate(140%)',
           WebkitBackdropFilter: 'blur(30px) saturate(140%)',
           border: '1px solid rgba(255,255,255,0.12)',
@@ -93,7 +101,8 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
           gap: '2px',
           animation: openUpwards ? 'slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both' : 'slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
           userSelect: 'none',
-          WebkitUserSelect: 'none'
+          WebkitUserSelect: 'none',
+          fontFamily: "'Clash Display', sans-serif"
         }}>
           {options.map((opt, i) => (
             <div
@@ -114,7 +123,8 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
                 transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                fontFamily: "'Clash Display', sans-serif"
               }}
               onMouseOver={e => {
                 e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)';
@@ -149,6 +159,9 @@ export default function NotionHubPage() {
   const [docContent, setDocContent] = useState(null);
   const [contentLoading, setContentLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Mobile View Navigation State: 'catalog' | 'reader'
+  const [mobileView, setMobileView] = useState('catalog');
   
   // Scroll progress for the viewer
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -160,7 +173,7 @@ export default function NotionHubPage() {
   // Zenith Mode State
   const [isZenithMode, setIsZenithMode] = useState(false);
 
-  // Floating Toolbar Ref (Used instead of state to prevent selection loss on re-render)
+  // Floating Toolbar Ref
   const toolbarRef = useRef(null);
   const undoStackRef = useRef([]);
   const redoStackRef = useRef([]);
@@ -169,11 +182,6 @@ export default function NotionHubPage() {
   const [showSubpageInput, setShowSubpageInput] = useState(false);
   const [subpageTitle, setSubpageTitle] = useState('');
   const [isCreatingSubpage, setIsCreatingSubpage] = useState(false);
-
-  // New Root Page State
-  const [showNewPageInput, setShowNewPageInput] = useState(false);
-  const [newPageTitle, setNewPageTitle] = useState('');
-  const [isCreatingNewPage, setIsCreatingNewPage] = useState(false);
 
   // Block Insertion State
   const [isAppendingBlock, setIsAppendingBlock] = useState(false);
@@ -193,7 +201,6 @@ export default function NotionHubPage() {
         if (parsed.items && parsed.items.length > 0 && !selectedItem && !isSearch) {
           setSelectedItem(parsed.items[0]);
         }
-        // Don't set loading true if we have cache, just fetch quietly
       } catch(e) {}
     } else {
       setLoading(true);
@@ -225,6 +232,7 @@ export default function NotionHubPage() {
             const found = sortedItems.find(i => i.id === targetDocId || i.id.replace(/-/g, '') === targetDocId.replace(/-/g, ''));
             if (found) {
               setSelectedItem(found);
+              setMobileView('reader');
               return;
             }
           }
@@ -250,7 +258,6 @@ export default function NotionHubPage() {
     if (cachedRaw) {
       try {
         const parsed = JSON.parse(cachedRaw);
-        // Only use cache if it has actual blocks — prevents corrupted cache from showing "Empty Document"
         if (parsed && parsed.blocks && parsed.blocks.length > 0) {
           cachedData = parsed;
           setDocContent(parsed);
@@ -288,7 +295,6 @@ export default function NotionHubPage() {
     }
   }, []);
 
-  // CRITICAL FIX: Actually fetch the content when a document is selected!
   useEffect(() => {
     if (selectedItem?.id) {
       fetchPageContent(selectedItem.id);
@@ -298,7 +304,6 @@ export default function NotionHubPage() {
   useEffect(() => {
     fetchNotionItems();
     
-    // Load favorites from local storage
     const savedFavs = localStorage.getItem('notion_favorites');
     if (savedFavs) {
       try { setFavorites(JSON.parse(savedFavs)); } catch(e) {}
@@ -311,6 +316,7 @@ export default function NotionHubPage() {
       const params = new URLSearchParams(window.location.search);
       const targetBlockId = params.get('blockId');
       if (targetBlockId) {
+        setMobileView('reader');
         setTimeout(() => {
           const el = document.getElementById(`block-${targetBlockId}`);
           if (el) {
@@ -330,7 +336,7 @@ export default function NotionHubPage() {
   }, [docContent]);
 
   const toggleFavorite = (e, id) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     const newFavs = favorites.includes(id) ? favorites.filter(f => f !== id) : [...favorites, id];
     setFavorites(newFavs);
     localStorage.setItem('notion_favorites', JSON.stringify(newFavs));
@@ -340,7 +346,6 @@ export default function NotionHubPage() {
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
       
-      // Save history snapshot before modifying
       undoStackRef.current.push(JSON.parse(JSON.stringify(prev)));
       if (undoStackRef.current.length > 50) undoStackRef.current.shift();
       redoStackRef.current = [];
@@ -382,10 +387,7 @@ export default function NotionHubPage() {
           const richTextArray = parseHTMLToNotion(blockEl);
           const plainText = richTextArray.map(r => r.plain_text || r.text?.content || '').join('');
           
-          // Clear direct DOM nodes before React state update reconciles VDOM
           blockEl.innerHTML = '';
-
-          // Trigger optimistic update in state
           handleUpdateBlock(blockId, blockType, plainText, richTextArray);
 
           fetch('/api/admin/notion/update', {
@@ -428,7 +430,6 @@ export default function NotionHubPage() {
     }
 
     const nowIso = new Date().toISOString();
-    // Optimistic UI update
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
       const index = prev.blocks.findIndex(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
@@ -487,7 +488,6 @@ export default function NotionHubPage() {
     const stableKey = `stable-${Date.now()}-${Math.random()}`;
     const newBlock = { id: tempId, _key: stableKey, type, last_edited_time: nowIso, created_time: nowIso, [type]: { rich_text: [] } };
 
-    // Optimistic UI update
     setDocContent(prev => {
       if (!prev) return { blocks: [newBlock] };
       return { ...prev, blocks: [...(prev.blocks || []), newBlock] };
@@ -522,6 +522,7 @@ export default function NotionHubPage() {
       setIsAppendingBlock(false);
     }
   };
+
   const handleUndo = useCallback(() => {
     if (undoStackRef.current.length > 0) {
       const prevDoc = undoStackRef.current.pop();
@@ -559,7 +560,6 @@ export default function NotionHubPage() {
           searchInputRef.current.focus();
         }
       }
-      // Cmd+Z (Undo) and Cmd+Shift+Z / Cmd+Y (Redo)
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
       const isZ = e.key?.toLowerCase() === 'z' || e.code === 'KeyZ';
       const isY = e.key?.toLowerCase() === 'y' || e.code === 'KeyY';
@@ -587,10 +587,8 @@ export default function NotionHubPage() {
     const targetBlock = docContent.blocks.find(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
     if (!targetBlock) return;
     const type = targetBlock.type;
-    // Clone target block's rich_text array directly from state to preserve clean Notion rich text & presets
     const richTextArray = JSON.parse(JSON.stringify(targetBlock[type]?.rich_text || []));
     
-    // Create optimistic duplicate block with stable _key
     const tempId = `temp-${Date.now()}`;
     const stableKey = `stable-${Date.now()}-${Math.random()}`;
     const duplicateBlock = {
@@ -603,10 +601,8 @@ export default function NotionHubPage() {
       }
     };
 
-    // Save history before modifying
     if (docContent) undoStackRef.current.push(docContent);
 
-    // Insert duplicate immediately after targetBlock in local state
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
       const idx = prev.blocks.findIndex(b => b.id === targetBlock.id);
@@ -616,13 +612,11 @@ export default function NotionHubPage() {
       return { ...prev, blocks: updated };
     });
 
-    // Hide toolbar
     if (toolbarRef.current) {
       toolbarRef.current.style.opacity = '0';
       toolbarRef.current.style.pointerEvents = 'none';
     }
 
-    // Call API to persist duplicate to Notion
     try {
       const res = await fetch('/api/admin/notion/append', {
         method: 'POST',
@@ -665,7 +659,6 @@ export default function NotionHubPage() {
       }
     }
 
-    // Optimistic UI update
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
       return {
@@ -711,7 +704,6 @@ export default function NotionHubPage() {
       redoStackRef.current = [];
     }
 
-    // Optimistic UI update to feel instant with stable _key
     const nowIso = new Date().toISOString();
     const tempId = `temp-${Date.now()}`;
     const stableKey = `stable-${Date.now()}-${Math.random()}`;
@@ -727,7 +719,6 @@ export default function NotionHubPage() {
       return { ...prev, blocks: newBlocks };
     });
 
-    // Auto-focus the newly created block element
     setTimeout(() => {
       const newEl = document.querySelector(`[data-block-id="${tempId}"]`) || document.querySelector(`#block-${tempId} [contenteditable]`);
       if (newEl) {
@@ -757,7 +748,6 @@ export default function NotionHubPage() {
         const data = await res.json();
         const createdId = data.response?.results?.[0]?.id;
         if (createdId) {
-          // Swap tempId with the actual Notion block ID without re-fetching page (preserving typed text)
           setDocContent(prev => {
             if (!prev || !prev.blocks) return prev;
             const newBlocks = prev.blocks.map(b => {
@@ -780,7 +770,6 @@ export default function NotionHubPage() {
     const richTextArray = [{ type: 'text', text: { content: textContent }, plain_text: textContent }];
     const nowIso = new Date().toISOString();
 
-    // Optimistic UI update
     setDocContent(prev => {
       if (!prev || !prev.blocks) return prev;
       const index = prev.blocks.findIndex(b => b.id === blockId || b.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
@@ -809,7 +798,6 @@ export default function NotionHubPage() {
       if (res.ok) {
         const data = await res.json();
         const createdId = data.response?.results?.[0]?.id;
-        // Delete old block and swap with new created block
         await fetch('/api/admin/notion/update', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
@@ -828,15 +816,12 @@ export default function NotionHubPage() {
     }
   };
 
-
-
   useEffect(() => {
     const handleCopilotAction = async (e) => {
       const data = e.detail;
       if (data.intent === 'notion_task' && data.payload && docContent?.blocks) {
         const { action, taskText } = data.payload;
         if (action && taskText) {
-          // Find the best matching to_do block
           const target = taskText.toLowerCase().trim();
           let bestMatch = null;
           
@@ -845,7 +830,7 @@ export default function NotionHubPage() {
               const text = (block.to_do?.rich_text?.map(t => t.plain_text || t.text?.content || '').join('') || '').toLowerCase();
               if (text.includes(target) || target.includes(text)) {
                 bestMatch = block;
-                break; // exact or substring match
+                break;
               }
             }
           }
@@ -907,27 +892,35 @@ export default function NotionHubPage() {
         }
 
         if (toolbarRef.current) {
-          // Temporarily make visible to get accurate dimensions if it was 0
-          const wasPointerEvents = toolbarRef.current.style.pointerEvents;
+          const isMobile = window.innerWidth <= 1024;
           
-          const toolbarWidth = toolbarRef.current.offsetWidth || 600;
-          const toolbarHeight = toolbarRef.current.offsetHeight || 70;
-          
-          let top = rect.top - toolbarHeight - 15; // 15px gap above
-          let left = rect.left + (rect.width / 2) - (toolbarWidth / 2); // Center horizontally
-          
-          // Vertically flip to bottom if too high
-          if (top < 10) top = rect.bottom + 15;
-          
-          // Horizontally clamp to screen edges
-          if (left < 10) {
-            left = 10;
-          } else if (left + toolbarWidth > window.innerWidth - 10) {
-            left = window.innerWidth - toolbarWidth - 10;
+          if (isMobile) {
+            // On mobile, position docked above keyboard or at bottom
+            toolbarRef.current.style.top = 'auto';
+            toolbarRef.current.style.bottom = '20px';
+            toolbarRef.current.style.left = '8px';
+            toolbarRef.current.style.right = '8px';
+            toolbarRef.current.style.width = 'auto';
+          } else {
+            const toolbarWidth = toolbarRef.current.offsetWidth || 600;
+            const toolbarHeight = toolbarRef.current.offsetHeight || 70;
+            
+            let top = rect.top - toolbarHeight - 15;
+            let left = rect.left + (rect.width / 2) - (toolbarWidth / 2);
+            
+            if (top < 10) top = rect.bottom + 15;
+            if (left < 10) {
+              left = 10;
+            } else if (left + toolbarWidth > window.innerWidth - 10) {
+              left = window.innerWidth - toolbarWidth - 10;
+            }
+            
+            toolbarRef.current.style.top = `${top}px`;
+            toolbarRef.current.style.bottom = 'auto';
+            toolbarRef.current.style.left = `${left}px`;
+            toolbarRef.current.style.right = 'auto';
           }
-          
-          toolbarRef.current.style.top = `${top}px`;
-          toolbarRef.current.style.left = `${left}px`;
+
           toolbarRef.current.style.opacity = '1';
           toolbarRef.current.style.transform = 'scale(1) translateY(0)';
           toolbarRef.current.style.pointerEvents = 'auto';
@@ -959,7 +952,6 @@ export default function NotionHubPage() {
     setScrollProgress(progress);
   };
 
-
   // Filter Items
   const filteredItems = items.filter(item => {
     if (filterType === 'favorites') {
@@ -967,7 +959,6 @@ export default function NotionHubPage() {
     }
     
     if (filterType === 'main') {
-      // Main Pages ONLY (exclude subpages whose parent exists in items)
       const parentId = item.parent?.page_id || item.parent?.database_id;
       if (parentId) {
         const cleanParentId = String(parentId).replace(/-/g, '');
@@ -979,7 +970,6 @@ export default function NotionHubPage() {
     }
 
     if (filterType === 'page') {
-      // All Pages (including subpages)
       return item.object === 'page';
     }
 
@@ -1012,7 +1002,6 @@ export default function NotionHubPage() {
         if (found) {
           current = found;
         } else {
-          // If parent is not loaded in items, add a generic parent so user can still navigate up
           current = {
             id: parentId,
             title: 'Parent Page',
@@ -1030,7 +1019,6 @@ export default function NotionHubPage() {
   const sortedBlocks = React.useMemo(() => {
     if (!docContent?.blocks) return [];
     
-    // Create a copy to sort
     const blocks = [...docContent.blocks];
 
     const separateChecked = (list) => {
@@ -1061,7 +1049,7 @@ export default function NotionHubPage() {
       });
       return separateChecked(sorted);
     }
-    // Default / Manual: group contiguous to-do items and sort them (unchecked first, checked last)
+    
     const result = [];
     let currentToDoGroup = [];
 
@@ -1102,7 +1090,7 @@ export default function NotionHubPage() {
     }}>
       <style>{`
         ::selection {
-          background: rgba(235, 215, 63, 0.4); /* Yellow highlight */
+          background: rgba(235, 215, 63, 0.4);
           color: #fff;
         }
         ::-moz-selection {
@@ -1111,7 +1099,11 @@ export default function NotionHubPage() {
         }
         
         .notion-font {
-          font-family: 'Clash Display', 'Panchang', sans-serif !important;
+          font-family: 'Clash Display', sans-serif !important;
+        }
+
+        .notion-font-heading {
+          font-family: 'Panchang', sans-serif !important;
         }
 
         .empty-block:empty::before,
@@ -1125,19 +1117,20 @@ export default function NotionHubPage() {
         .empty-block:focus::before {
           color: rgba(255, 255, 255, 0.4);
         }
+        
         /* Custom Scrollbars */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(235, 215, 63, 0.2); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(235, 215, 63, 0.5); }
 
         .notion-glass-card {
-          background: rgba(12, 12, 16, 0.6);
+          background: rgba(12, 12, 16, 0.7);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
-          border: 1px solid rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.05);
           border-radius: 20px;
-          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
           position: relative;
         }
         
@@ -1150,15 +1143,19 @@ export default function NotionHubPage() {
           background: transparent;
           cursor: pointer;
           display: flex;
-          alignItems: center;
+          align-items: center;
           gap: 14px;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
           outline: none;
+          touch-action: manipulation;
+        }
+        .notion-item-btn:active {
+          transform: scale(0.98);
         }
         .notion-item-active {
           background: rgba(235, 215, 63, 0.08) !important;
-          border-color: rgba(235, 215, 63, 0.2) !important;
-          box-shadow: 0 8px 24px rgba(235, 215, 63, 0.05);
+          border-color: rgba(235, 215, 63, 0.25) !important;
+          box-shadow: 0 8px 24px rgba(235, 215, 63, 0.06);
         }
         .notion-item-btn:hover:not(.notion-item-active) {
           background: rgba(255, 255, 255, 0.03);
@@ -1167,15 +1164,18 @@ export default function NotionHubPage() {
         }
 
         .filter-chip {
-          padding: 6px 14px;
+          padding: 8px 14px;
           border-radius: 30px;
-          font-size: 0.75rem;
+          font-size: 0.78rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
           border: 1px solid rgba(255, 255, 255, 0.1);
           background: transparent;
           color: #888;
+          white-space: nowrap;
+          touch-action: manipulation;
+          font-family: 'Clash Display', sans-serif;
         }
         .filter-chip.active {
           background: rgba(235, 215, 63, 0.15);
@@ -1188,10 +1188,10 @@ export default function NotionHubPage() {
         }
 
         .block-enter {
-          animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+          animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
         @keyframes slideUpFade {
-          from { opacity: 0; transform: translateY(15px); }
+          from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
         
@@ -1205,28 +1205,89 @@ export default function NotionHubPage() {
           pointer-events: auto;
         }
 
-        .toc-link {
-          display: block;
-          padding: 6px 12px;
-          color: #666;
-          text-decoration: none;
-          font-size: 0.8rem;
-          border-left: 2px solid transparent;
-          transition: all 0.2s;
-          cursor: pointer;
+        /* Desktop & Mobile Responsive Styles */
+        .notes-workspace-grid {
+          display: grid;
+          grid-template-columns: 340px 1fr;
+          gap: 24px;
+          padding: 24px 32px;
+          flex: 1;
+          max-width: 1800px;
+          margin: 0 auto;
+          width: 100%;
+          box-sizing: border-box;
         }
-        .toc-link:hover {
-          color: #ebd73f;
-          border-left-color: #ebd73f;
-          background: rgba(235, 215, 63, 0.05);
+
+        .mobile-tab-bar {
+          display: none;
         }
-        
-        .shimmer {
-          background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite linear;
+
+        @media (max-width: 1024px) {
+          .notes-workspace-grid {
+            grid-template-columns: 1fr !important;
+            padding: 8px 6px !important;
+            gap: 12px !important;
+          }
+
+          .notes-header-top {
+            padding: 12px 14px !important;
+            gap: 10px !important;
+          }
+
+          .notes-catalog-column {
+            display: ${mobileView === 'catalog' ? 'flex' : 'none'} !important;
+            height: calc(100vh - 150px) !important;
+          }
+
+          .notes-reader-column {
+            display: ${mobileView === 'reader' ? 'flex' : 'none'} !important;
+            height: calc(100vh - 150px) !important;
+          }
+
+          .mobile-tab-bar {
+            display: flex;
+            align-items: center;
+            background: rgba(16, 16, 20, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 4px;
+            margin: 6px 8px;
+            gap: 4px;
+          }
+
+          .mobile-tab-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'Clash Display', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+
+          .mobile-tab-btn.active {
+            background: rgba(235, 215, 63, 0.15);
+            color: #ebd73f;
+            border: 1px solid rgba(235, 215, 63, 0.3);
+          }
+
+          .notes-reader-pad {
+            padding: 20px 16px !important;
+          }
+
+          .mobile-block-touch-actions {
+            display: flex !important;
+          }
         }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         /* 10X Designer Presets */
         .preset-glass-morphic {
@@ -1238,11 +1299,6 @@ export default function NotionHubPage() {
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
           font-weight: 600;
           transition: all 0.3s ease;
-        }
-        .preset-glass-morphic:hover {
-          background: rgba(255, 255, 255, 0.1);
-          border-color: rgba(255, 255, 255, 0.3);
-          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2);
         }
 
         .preset-neon-pulse {
@@ -1313,51 +1369,81 @@ export default function NotionHubPage() {
           color: #fff;
           user-select: auto;
         }
+
+        .shimmer {
+          background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite linear;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
       `}</style>
 
       {/* Top Header */}
-      <header style={{
-        padding: '16px 40px',
+      <header className="notes-header-top" style={{
+        padding: '14px 32px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '16px',
-        background: 'rgba(5, 5, 8, 0.7)',
-        backdropFilter: 'blur(12px)',
+        background: 'rgba(5, 5, 8, 0.85)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         position: 'sticky',
         top: 0,
         zIndex: 50
       }}>
-        {/* Dynamic Breadcrumbs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Dynamic Breadcrumbs & Mobile Back Navigation */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden' }}>
+          {mobileView === 'reader' && (
+            <button
+              onClick={() => setMobileView('catalog')}
+              className="notion-font"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '6px 10px',
+                background: 'rgba(235, 215, 63, 0.12)',
+                border: '1px solid rgba(235, 215, 63, 0.25)',
+                borderRadius: '8px',
+                color: '#ebd73f',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                marginRight: '4px'
+              }}
+            >
+              <ChevronLeft size={16} /> Catalog
+            </button>
+          )}
+
           <button 
-            onClick={() => setSelectedItem(null)}
+            onClick={() => { setSelectedItem(null); setMobileView('catalog'); }}
             className="notion-font"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: selectedItem ? '#888' : '#ebd73f', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500, transition: 'color 0.2s' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: selectedItem ? '#888' : '#ebd73f', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600, transition: 'color 0.2s', whiteSpace: 'nowrap' }}
             onMouseOver={e => e.currentTarget.style.color = '#ebd73f'}
             onMouseOut={e => e.currentTarget.style.color = selectedItem ? '#888' : '#ebd73f'}
           >
             <Home size={14} /> Catalog
           </button>
           
-          {selectedItem && getBreadcrumbs(selectedItem).map((crumb, idx, arr) => (
+          {selectedItem && getBreadcrumbs(selectedItem).slice(-2).map((crumb, idx, arr) => (
             <React.Fragment key={crumb.id}>
-              <ChevronRight size={14} style={{ color: '#555' }} />
+              <ChevronRight size={14} style={{ color: '#555', flexShrink: 0 }} />
               {idx === arr.length - 1 ? (
-                <span className="notion-font" style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {crumb.object === 'database' ? <Database size={14} style={{ color: '#ebd73f' }} /> : <FileText size={14} style={{ color: '#ebd73f' }} />}
-                  {crumb.title}
+                <span className="notion-font" style={{ color: '#fff', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {crumb.object === 'database' ? <Database size={14} style={{ color: '#ebd73f', flexShrink: 0 }} /> : <FileText size={14} style={{ color: '#ebd73f', flexShrink: 0 }} />}
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{crumb.title}</span>
                 </span>
               ) : (
                 <button 
-                  onClick={() => setSelectedItem(crumb)}
+                  onClick={() => { setSelectedItem(crumb); setMobileView('reader'); }}
                   className="notion-font"
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500, transition: 'color 0.2s', padding: 0 }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 500, transition: 'color 0.2s', padding: 0, whiteSpace: 'nowrap' }}
                   onMouseOver={e => e.currentTarget.style.color = '#ebd73f'}
                   onMouseOut={e => e.currentTarget.style.color = '#888'}
                 >
-                  {crumb.object === 'database' ? <Database size={14} style={{ color: '#888' }} /> : <FileText size={14} style={{ color: '#888' }} />}
                   {crumb.title}
                 </button>
               )}
@@ -1365,37 +1451,11 @@ export default function NotionHubPage() {
           ))}
         </div>
 
-        {/* Omnibar & Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {/* Workspace Pulse */}
+        {/* Omnibar & Status Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Workspace Pulse Indicator */}
           {selectedItem && (
-            <button 
-              className="notion-font" 
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', outline: 'none' }}
-              onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-              onClick={() => {
-                const firstPending = docContent?.blocks?.find(b => {
-                  if (b.type !== 'to_do' || b.to_do?.checked) return false;
-                  const text = (b.to_do?.rich_text?.map(t => t.plain_text || t.text?.content || '').join('') || '').trim();
-                  return text.length > 0;
-                });
-                if (firstPending) {
-                  const el = document.getElementById(`block-${firstPending.id}`);
-                  if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    el.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
-                    el.style.borderRadius = '12px';
-                    el.style.boxShadow = '0 0 35px rgba(235, 215, 63, 0.7)';
-                    el.style.outline = '2px solid #ebd73f';
-                    setTimeout(() => {
-                      el.style.boxShadow = 'none';
-                      el.style.outline = 'none';
-                    }, 3500);
-                  }
-                }
-              }}
-            >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, color: '#aaa' }}>
               {(() => {
                 const pendingBlocks = docContent?.blocks?.filter(b => {
                   if (b.type !== 'to_do' || b.to_do?.checked) return false;
@@ -1404,120 +1464,98 @@ export default function NotionHubPage() {
                 }) || [];
                 const pending = pendingBlocks.length;
                 if (pending > 0) {
-                  return <><AlertCircle size={14} style={{ color: '#ffbd2e' }} /> <span style={{ color: '#ffbd2e' }}>{pending} {pending === 1 ? 'Pending Task' : 'Pending Tasks'}</span></>;
+                  return <><LottiePulse status="pending" size={14} /><span style={{ color: '#ebd73f' }}>{pending} Pending</span></>;
                 } else if (docContent?.blocks?.length > 0) {
-                  return <><CheckCircle2 size={14} style={{ color: '#27c93f' }} /> <span style={{ color: '#27c93f' }}>Synced</span></>;
+                  return <><LottiePulse status="synced" size={14} /><span style={{ color: '#27c93f' }}>Synced</span></>;
                 } else {
-                  return <><Activity size={14} style={{ color: '#888' }} /> <span style={{ color: '#888' }}>Ready</span></>;
+                  return <><LottiePulse status="ready" size={14} /><span>Ready</span></>;
                 }
               })()}
-            </button>
+            </div>
           )}
 
-          {/* Orlo Omnibar */}
-          <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '340px' }}>
-            <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#999', zIndex: 2 }} />
-            <input
-              ref={searchInputRef}
-              type="text"
-              className="notion-font"
-              placeholder="Search or type a command..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 48px 10px 42px',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '10px',
-                color: '#fff',
-                fontSize: '0.85rem',
-                outline: 'none',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
-              }}
-              onFocus={(e) => { 
-                e.target.style.background = 'rgba(235, 215, 63, 0.05)'; 
-                e.target.style.borderColor = 'rgba(235, 215, 63, 0.3)'; 
-                e.target.style.width = '380px';
-              }}
-              onBlur={(e) => { 
-                e.target.style.background = 'rgba(255, 255, 255, 0.03)'; 
-                e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'; 
-                e.target.style.width = '100%';
-              }}
-            />
-            <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '2px', pointerEvents: 'none' }}>
-              <kbd style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '2px 4px', fontSize: '0.65rem', color: '#aaa', fontFamily: 'monospace' }}>⌘</kbd>
-              <kbd style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '2px 4px', fontSize: '0.65rem', color: '#aaa', fontFamily: 'monospace' }}>K</kbd>
-            </div>
-          </form>
-
+          {/* Quick Refresh */}
           <button
             onClick={() => fetchNotionItems(searchQuery)}
             disabled={loading}
             className="notion-font"
             style={{
-              padding: '10px 12px',
-              background: 'rgba(255, 255, 255, 0.03)',
+              padding: '8px 10px',
+              background: 'rgba(255, 255, 255, 0.04)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '10px',
+              borderRadius: '8px',
               color: '#fff',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              touchAction: 'manipulation'
             }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)'}
+            title="Refresh Notes"
           >
-            <RefreshCw size={16} className={loading ? 'notion-pulse' : ''} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
             <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
           </button>
         </div>
       </header>
 
-      {/* Main Workspace Layout (Left: Nav, Center: Content) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '340px 1fr',
-        gap: '24px',
-        padding: '32px 40px',
-        flex: 1,
-        maxWidth: '1800px',
-        margin: '0 auto',
-        width: '100%'
-      }}>
+      {/* Mobile Segmented Control Tab Bar (Visible on <= 1024px) */}
+      <div className="mobile-tab-bar">
+        <button
+          type="button"
+          onClick={() => setMobileView('catalog')}
+          className={`mobile-tab-btn ${mobileView === 'catalog' ? 'active' : ''}`}
+        >
+          <BookOpen size={16} />
+          <span>Catalog ({filteredItems.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (selectedItem) setMobileView('reader');
+          }}
+          disabled={!selectedItem}
+          className={`mobile-tab-btn ${mobileView === 'reader' ? 'active' : ''}`}
+          style={{ opacity: selectedItem ? 1 : 0.4 }}
+        >
+          <FileText size={16} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {selectedItem?.title || 'Note Editor'}
+          </span>
+        </button>
+      </div>
+
+      {/* Main Workspace Layout (Desktop: 2-Col Grid / Mobile: Tabbed Switcher) */}
+      <div className="notes-workspace-grid">
         
-        {/* Floating Toolbar */}
-        <div ref={toolbarRef} style={{
+        {/* Floating Selection Toolbar */}
+        <div ref={toolbarRef} className="notes-floating-toolbar" style={{
           position: 'fixed',
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)',
+          background: 'linear-gradient(135deg, rgba(26, 26, 32, 0.96) 0%, rgba(12, 12, 16, 0.98) 100%)',
           backdropFilter: 'blur(30px) saturate(140%)',
           WebkitBackdropFilter: 'blur(30px) saturate(140%)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.12)',
           borderTop: '1px solid rgba(255,255,255,0.4)',
-          borderLeft: '1px solid rgba(255,255,255,0.2)',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
           borderRadius: '16px',
-          padding: '8px 10px',
+          padding: '8px 12px',
           display: 'flex',
-          flexWrap: 'wrap',
+          flexWrap: 'nowrap',
           alignItems: 'center',
           gap: '8px',
           zIndex: 10000,
-          boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 -1px 2px rgba(255, 255, 255, 0.1), 0 20px 40px rgba(0,0,0,0.5)',
+          boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 20px 40px rgba(0,0,0,0.7)',
           opacity: 0,
           transform: 'scale(0.95) translateY(5px)',
           pointerEvents: 'none',
-          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
           maxWidth: 'calc(100vw - 20px)',
           userSelect: 'none',
           WebkitUserSelect: 'none'
         }}>
 
-          {/* Turn Into */}
           <FocusSafeDropdown 
             label="Turn Into"
             options={[
@@ -1530,69 +1568,54 @@ export default function NotionHubPage() {
             onChange={(val) => handleTurnInto({ target: { value: val } })}
           />
 
-          <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
+          <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.12)', margin: '0 2px' }} />
 
           {/* Undo / Redo / Duplicate */}
-          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 8px', borderRadius: '8px', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center' }}
             onMouseDown={(e) => { e.preventDefault(); handleUndo(); }}
             title="Undo"
           >
             <Undo2 size={16} />
           </button>
-          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 8px', borderRadius: '8px', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center' }}
             onMouseDown={(e) => { e.preventDefault(); handleRedo(); }}
             title="Redo"
           >
             <Redo2 size={16} />
           </button>
-          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
             onMouseDown={(e) => { e.preventDefault(); handleDuplicateBlock(); }}
             title="Duplicate Block"
           >
             <Copy size={14} />
-            <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Duplicate</span>
           </button>
 
-          <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
+          <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.12)', margin: '0 2px' }} />
 
-          {/* Formatting Tools */}
-          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 800, transition: 'all 0.2s' }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+          {/* Formatting */}
+          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 8px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 800 }}
             onMouseDown={(e) => { e.preventDefault(); document.execCommand('bold'); }}
             title="Bold"
           >
             B
           </button>
-          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px', fontSize: '0.9rem', fontStyle: 'italic', fontFamily: 'serif', transition: 'all 0.2s' }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 8px', borderRadius: '8px', fontSize: '0.9rem', fontStyle: 'italic', fontFamily: 'serif' }}
             onMouseDown={(e) => { e.preventDefault(); document.execCommand('italic'); }}
             title="Italic"
           >
             I
           </button>
-          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px', fontSize: '0.9rem', textDecoration: 'line-through', transition: 'all 0.2s' }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 8px', borderRadius: '8px', fontSize: '0.9rem', textDecoration: 'line-through' }}
             onMouseDown={(e) => { e.preventDefault(); document.execCommand('strikeThrough'); }}
             title="Strikethrough"
           >
             S
           </button>
 
-          <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
+          <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.12)', margin: '0 2px' }} />
 
           {/* AI Tools */}
-          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-            onMouseOver={e => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)'; e.currentTarget.style.color = '#ebd73f'; }}
-            onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
+          <button className="notion-font" style={{ background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.25)', color: '#ebd73f', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={() => {
               const text = window.getSelection().toString().trim();
               const blockId = toolbarRef.current?.dataset.blockId;
@@ -1602,46 +1625,11 @@ export default function NotionHubPage() {
               }));
             }}
           >
-            <Sparkles size={14} style={{ display: 'inline', marginRight: '6px', marginBottom: '-2px' }} /> Ask Orlo
-          </button>
-          
-          <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-          
-          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#ccc', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-            onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
-            onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#ccc'; }}
-            onClick={() => {
-              const text = window.getSelection().toString().trim();
-              const blockId = toolbarRef.current?.dataset.blockId;
-              const blockType = toolbarRef.current?.dataset.blockType;
-              window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
-                detail: { text: `Please summarize this text: "${text}"`, blockId, blockType, intent: 'notion_edit' }
-              }));
-            }}
-          >
-            Summarize
-          </button>
-          
-          <button className="notion-font" style={{ background: 'transparent', border: 'none', color: '#ccc', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, fontStyle: 'italic', transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-            onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
-            onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#ccc'; }}
-            onClick={() => {
-              const text = window.getSelection().toString().trim();
-              const blockId = toolbarRef.current?.dataset.blockId;
-              const blockType = toolbarRef.current?.dataset.blockType;
-              window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
-                detail: { text: `Fix the spelling/grammar in this block.`, blockId, blockType, intent: 'notion_edit' }
-              }));
-            }}
-          >
-            Fix Spelling
+            <LottieSparkles size={14} /> Ask Orlo
           </button>
 
-          <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 4px' }} />
-
-          {/* Designer Presets */}
           <FocusSafeDropdown 
-            label="Default"
+            label="Presets"
             options={[
               { label: 'Default', value: '' },
               { label: 'Glass Text', value: 'glass' },
@@ -1657,15 +1645,15 @@ export default function NotionHubPage() {
         </div>
         
         {/* LEFT PANEL: Document Catalog */}
-        <div className="notion-glass-card" style={{
+        <div className="notion-glass-card notes-catalog-column" style={{
           display: 'flex',
           flexDirection: 'column',
           height: 'calc(100vh - 120px)',
           overflow: 'hidden'
         }}>
-          {/* Filters */}
-          <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          {/* Catalog Search & Filters Header */}
+          <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <span className="notion-font" style={{ fontSize: '0.8rem', fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 Catalog ({filteredItems.length})
               </span>
@@ -1679,13 +1667,41 @@ export default function NotionHubPage() {
                 onChange={(val) => setSortBy(val)}
               />
             </div>
+
+            {/* Responsive Search Input */}
+            <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '100%', marginBottom: '12px' }}>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#888', zIndex: 2 }} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="notion-font"
+                placeholder="Search notes or plans..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px 10px 38px',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '10px',
+                  color: '#fff',
+                  fontSize: '0.85rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  fontFamily: "'Clash Display', sans-serif"
+                }}
+              />
+            </form>
             
-            <div style={{ display: 'flex', gap: '8px' }}>
+            {/* Horizontal Momentum Filter Chips */}
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
               <button
                 className={`notion-font filter-chip ${filterType === 'favorites' ? 'active' : ''}`}
                 onClick={() => setFilterType('favorites')}
+                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
               >
-                <Star size={14} fill={filterType === 'favorites' ? '#ebd73f' : 'transparent'} strokeWidth={2.5} style={{ display: 'block', margin: '2px 0' }} />
+                <Star size={14} fill={filterType === 'favorites' ? '#ebd73f' : 'transparent'} strokeWidth={2.5} />
+                <span>Favs</span>
               </button>
               {[
                 { id: 'main', label: 'Main Pages' },
@@ -1703,30 +1719,30 @@ export default function NotionHubPage() {
             </div>
           </div>
 
-          {/* List */}
-          <div style={{ overflowY: 'auto', flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {/* Catalog Document List */}
+          <div style={{ overflowY: 'auto', flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {loading && items.length === 0 ? (
-              Array.from({ length: 6 }).map((_, i) => (
+              Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="shimmer" style={{ height: '64px', borderRadius: '14px', marginBottom: '8px' }} />
               ))
             ) : filteredItems.length === 0 ? (
-              <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-                <Info size={32} style={{ color: '#ebd73f', margin: '0 auto 16px auto', opacity: 0.8 }} />
-                <h4 className="notion-font" style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>No Documents Found</h4>
-                <p className="notion-font" style={{ fontSize: '0.8rem', color: '#777', lineHeight: 1.6 }}>
-                  Adjust your filters or ensure pages are shared with the integration.
-                </p>
-              </div>
+              <LottieEmptyState 
+                title="No Notes Found" 
+                subtitle="Try adjusting your filter or create a new page."
+              />
             ) : (
               filteredItems.map((item) => {
                 const isSelected = selectedItem?.id === item.id;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setSelectedItem(item)}
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setMobileView('reader');
+                    }}
                     className={`notion-font notion-item-btn ${isSelected ? 'notion-item-active' : ''}`}
                   >
-                    <span style={{ fontSize: '1.4rem', display: 'flex', alignItems: 'center', opacity: isSelected ? 1 : 0.7 }}>
+                    <span style={{ fontSize: '1.4rem', display: 'flex', alignItems: 'center', opacity: isSelected ? 1 : 0.75, flexShrink: 0 }}>
                       {item.icon || (item.object === 'database' ? '🗃️' : '📄')}
                     </span>
                     <div style={{ overflow: 'hidden', flex: 1, textAlign: 'left' }}>
@@ -1737,27 +1753,24 @@ export default function NotionHubPage() {
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        marginBottom: '4px'
+                        marginBottom: '3px',
+                        fontFamily: "'Clash Display', sans-serif"
                       }}>
                         {item.title}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: '#666', fontWeight: 500, letterSpacing: '0.02em' }}>
-                        {item.lastEditedTime ? new Date(item.lastEditedTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'} 
+                      <div style={{ fontSize: '0.72rem', color: '#777', fontWeight: 500 }}>
+                        {item.lastEditedTime ? new Date(item.lastEditedTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Recent'} 
                         {' • '} <span style={{ textTransform: 'capitalize' }}>{item.object}</span>
                       </div>
                     </div>
-                    <button 
-                      onClick={(e) => toggleFavorite(e, item.id)}
-                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}
-                    >
-                      <Star 
-                        size={16} 
-                        fill={favorites.includes(item.id) ? '#ebd73f' : 'transparent'} 
-                        color={favorites.includes(item.id) ? '#ebd73f' : '#666'} 
-                        style={{ opacity: isSelected || favorites.includes(item.id) ? 1 : 0.4 }}
-                      />
-                    </button>
-                    <ChevronRight size={16} style={{ color: isSelected ? '#ebd73f' : '#444', transform: isSelected ? 'translateX(2px)' : 'none', transition: 'transform 0.2s' }} />
+
+                    <LottieStar
+                      isFavorite={favorites.includes(item.id)}
+                      onToggle={(e) => toggleFavorite(e, item.id)}
+                      size={18}
+                    />
+
+                    <ChevronRight size={16} style={{ color: isSelected ? '#ebd73f' : '#444', transform: isSelected ? 'translateX(2px)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
                   </button>
                 );
               })
@@ -1765,8 +1778,8 @@ export default function NotionHubPage() {
           </div>
         </div>
 
-        {/* CENTER PANEL: Main Reader */}
-        <div className={isZenithMode ? "" : "notion-glass-card"} style={isZenithMode ? {
+        {/* CENTER/RIGHT PANEL: Main Reader & Editor */}
+        <div className={`notes-reader-column ${isZenithMode ? "" : "notion-glass-card"}`} style={isZenithMode ? {
           position: 'fixed',
           inset: 0,
           zIndex: 9999,
@@ -1789,11 +1802,11 @@ export default function NotionHubPage() {
           height: isZenithMode ? '100vh' : 'calc(100vh - 120px)',
           width: isZenithMode ? '100vw' : '100%',
           maxWidth: isZenithMode ? '900px' : '100%',
-          padding: isZenithMode ? '60px 0 0 0' : '0'
+          padding: isZenithMode ? '40px 0 0 0' : '0'
         }}>
           {selectedItem ? (
-              <div 
-              className={isZenithMode ? "" : "notion-glass-card"} 
+            <div 
+              className={`notes-reader-pad ${isZenithMode ? "" : "notion-glass-card"}`} 
               ref={contentRef}
               onScroll={handleScroll}
               style={{ 
@@ -1806,7 +1819,8 @@ export default function NotionHubPage() {
                 width: '100%',
                 overflowWrap: 'break-word',
                 wordWrap: 'break-word',
-                padding: '40px'
+                padding: '36px 40px',
+                boxSizing: 'border-box'
               }}
             >
               {/* Reading Progress Bar */}
@@ -1819,85 +1833,68 @@ export default function NotionHubPage() {
               {/* Cover Image */}
               {docContent?.page?.cover && (
                 <div style={{
-                  height: '180px',
+                  height: '160px',
                   width: '100%',
                   borderRadius: '16px',
                   backgroundImage: `url(${docContent.page.cover})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  marginBottom: '32px',
+                  marginBottom: '24px',
                   boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
                 }} />
               )}
 
-              {/* Header Info */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-                  <span style={{ fontSize: '3.5rem', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))' }}>
+              {/* Document Header Info & Action Controls */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0, flex: 1 }}>
+                  <span style={{ fontSize: '3rem', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))', flexShrink: 0 }}>
                     {docContent?.page?.icon || selectedItem.icon || '📄'}
                   </span>
-                  <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <h1 
-                      className="notion-font" 
-                      contentEditable
-                      suppressContentEditableWarning
-                      style={{ fontSize: '2.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', outline: 'none' }}
-                      onBlur={async (e) => {
-                        const newTitle = e.target.innerText.trim();
-                        if (newTitle && newTitle !== (docContent?.page?.title || selectedItem.title)) {
-                          // Optimistic update
-                          setSelectedItem(prev => ({ ...prev, title: newTitle }));
-                          setItems(prevItems => prevItems.map(item => item.id === selectedItem.id ? { ...item, title: newTitle } : item));
-                          if (docContent?.page) setDocContent(prev => ({ ...prev, page: { ...prev.page, title: newTitle } }));
-                          
-                          // API call
-                          fetch('/api/admin/notion/update', {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ blockId: selectedItem.id, type: selectedItem.object || 'page', content: newTitle })
-                          });
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          e.target.blur();
-                        }
-                      }}
-                    >
-                      {docContent?.page?.title || selectedItem.title}
-                    </h1>
-                    <button 
-                      onClick={(e) => toggleFavorite(e, selectedItem.id)}
-                      style={{ 
-                        background: 'transparent', 
-                        border: 'none', 
-                        cursor: 'pointer', 
-                        padding: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '50%',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                      onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <Star 
-                        size={24} 
-                        fill={favorites.includes(selectedItem.id) ? '#ebd73f' : 'transparent'} 
-                        color={favorites.includes(selectedItem.id) ? '#ebd73f' : '#888'} 
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <h1 
+                        className="notion-font" 
+                        contentEditable
+                        suppressContentEditableWarning
+                        style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', outline: 'none', fontFamily: "'Panchang', sans-serif" }}
+                        onBlur={async (e) => {
+                          const newTitle = e.target.innerText.trim();
+                          if (newTitle && newTitle !== (docContent?.page?.title || selectedItem.title)) {
+                            setSelectedItem(prev => ({ ...prev, title: newTitle }));
+                            setItems(prevItems => prevItems.map(item => item.id === selectedItem.id ? { ...item, title: newTitle } : item));
+                            if (docContent?.page) setDocContent(prev => ({ ...prev, page: { ...prev.page, title: newTitle } }));
+                            
+                            fetch('/api/admin/notion/update', {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ blockId: selectedItem.id, type: selectedItem.object || 'page', content: newTitle })
+                            });
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            e.target.blur();
+                          }
+                        }}
+                      >
+                        {docContent?.page?.title || selectedItem.title}
+                      </h1>
+
+                      <LottieStar
+                        isFavorite={favorites.includes(selectedItem.id)}
+                        onToggle={(e) => toggleFavorite(e, selectedItem.id)}
+                        size={22}
                       />
-                    </button>
-                  </div>
-                    <p className="notion-font" style={{ fontSize: '0.9rem', color: '#777', margin: 0, fontWeight: 500 }}>
-                      Last updated: <span style={{ color: '#aaa' }}>{selectedItem.lastEditedTime ? new Date(selectedItem.lastEditedTime).toLocaleString() : 'N/A'}</span>
+                    </div>
+                    <p className="notion-font" style={{ fontSize: '0.82rem', color: '#777', margin: '4px 0 0 0', fontWeight: 500 }}>
+                      Updated: <span style={{ color: '#aaa' }}>{selectedItem.lastEditedTime ? new Date(selectedItem.lastEditedTime).toLocaleDateString() : 'Recent'}</span>
                     </p>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {/* Toolbar Buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <FocusSafeDropdown 
                     label={`Sort: ${blockSortBy === 'name' ? 'Name' : blockSortBy === 'date' ? 'Date' : 'Manual'}`}
                     options={[
@@ -1909,7 +1906,7 @@ export default function NotionHubPage() {
                   />
 
                   {showSubpageInput ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <input 
                         type="text" 
                         autoFocus
@@ -1930,7 +1927,7 @@ export default function NotionHubPage() {
                                 setShowSubpageInput(false);
                                 setSubpageTitle('');
                                 fetchPageContent(selectedItem.id);
-                                fetchNotionItems(); // Refresh catalog to see new subpage at top
+                                fetchNotionItems();
                               }
                             } catch (err) {
                               console.error(err);
@@ -1943,7 +1940,7 @@ export default function NotionHubPage() {
                           }
                         }}
                         className="notion-font"
-                        style={{ background: 'transparent', border: 'none', color: '#fff', padding: '4px 8px', outline: 'none', width: '150px', fontSize: '0.85rem' }}
+                        style={{ background: 'transparent', border: 'none', color: '#fff', padding: '4px 8px', outline: 'none', width: '130px', fontSize: '0.85rem' }}
                       />
                       {!isCreatingSubpage ? (
                         <button 
@@ -1968,9 +1965,7 @@ export default function NotionHubPage() {
                               setIsCreatingSubpage(false);
                             }
                           }}
-                          style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
-                          onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-                          onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                          style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                         >
                           <ChevronRight size={14} />
                         </button>
@@ -1983,47 +1978,41 @@ export default function NotionHubPage() {
                       onClick={() => setShowSubpageInput(true)}
                       className="notion-font"
                       style={{
-                        padding: '10px 16px',
+                        padding: '8px 12px',
                         background: 'rgba(255, 255, 255, 0.05)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '10px',
+                        borderRadius: '8px',
                         color: '#fff',
-                        fontSize: '0.85rem',
+                        fontSize: '0.82rem',
                         fontWeight: 600,
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        transition: 'all 0.2s'
+                        gap: '6px'
                       }}
-                      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
-                      onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                     >
-                      <Plus size={16} /> Subpage
+                      <Plus size={15} /> Subpage
                     </button>
                   )}
 
                   <button
                     onClick={() => setIsZenithMode(!isZenithMode)}
-                    title={isZenithMode ? "Exit Focus Mode (Esc)" : "Enter Zenith Focus Mode"}
+                    title={isZenithMode ? "Exit Focus Mode (Esc)" : "Zenith Focus Mode"}
                     className="notion-font"
                     style={{
-                      padding: '10px 14px',
+                      padding: '8px 12px',
                       background: isZenithMode ? 'rgba(235, 215, 63, 0.15)' : 'rgba(255, 255, 255, 0.05)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       borderColor: isZenithMode ? 'rgba(235, 215, 63, 0.3)' : 'rgba(255,255,255,0.1)',
-                      borderRadius: '10px',
+                      borderRadius: '8px',
                       color: isZenithMode ? '#ebd73f' : '#fff',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.2s'
+                      justifyContent: 'center'
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.background = isZenithMode ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255, 255, 255, 0.1)'}
-                    onMouseOut={(e) => e.currentTarget.style.background = isZenithMode ? 'rgba(235, 215, 63, 0.15)' : 'rgba(255, 255, 255, 0.05)'}
                   >
-                    {isZenithMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                    {isZenithMode ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
                   </button>
 
                   <a
@@ -2031,42 +2020,41 @@ export default function NotionHubPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="notion-font"
-                    title="Open Document"
+                    title="Open in Notion"
                     style={{
-                      padding: '10px 14px',
+                      padding: '8px 12px',
                       background: 'rgba(255, 255, 255, 0.05)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '10px',
+                      borderRadius: '8px',
                       color: '#fff',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.2s',
+                      justifyContent: 'center'
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
-                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                   >
-                    <ExternalLink size={16} />
+                    <ExternalLink size={15} />
                   </a>
                 </div>
               </div>
 
-              {/* Rendered Content */}
+              {/* Rendered Content Blocks */}
               {contentLoading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '40px' }}>
-                  <div className="shimmer block-enter" style={{ height: '40px', width: '60%', borderRadius: '8px' }} />
-                  <div className="shimmer block-enter" style={{ height: '20px', width: '100%', borderRadius: '4px', animationDelay: '0.1s' }} />
-                  <div className="shimmer block-enter" style={{ height: '20px', width: '90%', borderRadius: '4px', animationDelay: '0.2s' }} />
-                  <div className="shimmer block-enter" style={{ height: '20px', width: '95%', borderRadius: '4px', animationDelay: '0.3s' }} />
-                  <div className="shimmer block-enter" style={{ height: '100px', width: '100%', borderRadius: '12px', marginTop: '20px', animationDelay: '0.4s' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '20px' }}>
+                  <div className="shimmer block-enter" style={{ height: '36px', width: '50%', borderRadius: '8px' }} />
+                  <div className="shimmer block-enter" style={{ height: '20px', width: '100%', borderRadius: '4px' }} />
+                  <div className="shimmer block-enter" style={{ height: '20px', width: '85%', borderRadius: '4px' }} />
+                  <div className="shimmer block-enter" style={{ height: '20px', width: '92%', borderRadius: '4px' }} />
                 </div>
               ) : docContent?.blocks?.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '60px' }}>
                   {sortedBlocks.map((block, i) => (
-                    <div key={block._key || block.id} id={`block-${block.id}`} data-block-type={block.type} className="block-enter" style={{ position: 'relative', animationDelay: `${Math.min(i * 0.03, 1)}s` }}>
+                    <div key={block._key || block.id} id={`block-${block.id}`} data-block-type={block.type} className="block-enter" style={{ position: 'relative', animationDelay: `${Math.min(i * 0.02, 0.5)}s` }}>
                       <NotionBlockRenderer 
                         block={block} 
-                        setSelectedItem={setSelectedItem} 
+                        setSelectedItem={(item) => {
+                          setSelectedItem(item);
+                          setMobileView('reader');
+                        }}
                         onDeleteBlock={handleDeleteBlock} 
                         onInsertBlockAfter={handleInsertBlockAfter}
                         onUpdateBlock={handleUpdateBlock} 
@@ -2075,13 +2063,13 @@ export default function NotionHubPage() {
                     </div>
                   ))}
                   
-                  {/* + Add Block UI */}
+                  {/* Insert Block Trigger */}
                   <div style={{ position: 'relative', marginTop: '16px' }}>
                     {showAddBlockMenu ? (
-                      <div className="notion-glass-card block-enter" style={{ padding: '8px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px', border: '1px solid rgba(235, 215, 63, 0.3)' }}>
+                      <div className="notion-glass-card block-enter" style={{ padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', border: '1px solid rgba(235, 215, 63, 0.3)' }}>
                         <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', marginBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                           <span className="notion-font" style={{ fontSize: '0.75rem', fontWeight: 600, color: '#aaa', textTransform: 'uppercase' }}>Insert Block</span>
-                          <button onClick={() => setShowAddBlockMenu(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}>×</button>
+                          <button onClick={() => setShowAddBlockMenu(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '1.1rem' }}>×</button>
                         </div>
                         {[
                           { type: 'paragraph', icon: <Type size={14}/>, label: 'Text' },
@@ -2100,7 +2088,7 @@ export default function NotionHubPage() {
                             disabled={isAppendingBlock}
                             onClick={() => handleAppendBlock(opt.type)}
                             className="notion-font"
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(255,255,255,0.03)', border: 'none', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'background 0.2s' }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'background 0.2s', touchAction: 'manipulation' }}
                             onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                             onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
                           >
@@ -2113,70 +2101,24 @@ export default function NotionHubPage() {
                       <button 
                         onClick={() => setShowAddBlockMenu(true)}
                         className="notion-font block-enter"
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '8px', color: '#888', cursor: 'pointer', width: '100%', transition: 'all 0.2s', marginTop: '8px' }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '10px', color: '#888', cursor: 'pointer', width: '100%', transition: 'all 0.2s', marginTop: '8px', touchAction: 'manipulation' }}
                         onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.4)'; }}
                         onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#888'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
                       >
                         <Plus size={16} />
-                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Add a block</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Add a block</span>
                         {isAppendingBlock && <RefreshCw size={14} className="spin" style={{ marginLeft: 'auto' }} />}
                       </button>
                     )}
                   </div>
                 </div>
               ) : (
-                <div style={{ padding: '60px 40px', textAlign: 'center', color: '#555', background: 'rgba(255,255,255,0.01)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.05)' }} className="notion-font">
-                  <Database size={48} style={{ color: '#444', marginBottom: '20px' }} />
-                  <h3 style={{ fontSize: '1.2rem', color: '#888', margin: '0 0 10px 0' }}>Empty Document</h3>
-                  <p style={{ margin: '0 0 20px 0', fontSize: '0.9rem' }}>This page has no content blocks or could not be fully read.</p>
-                  
-                  {/* + Add Block for empty docs */}
-                  {showAddBlockMenu ? (
-                    <div className="notion-glass-card block-enter" style={{ padding: '8px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px', border: '1px solid rgba(235, 215, 63, 0.3)', textAlign: 'left' }}>
-                      <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', marginBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                        <span className="notion-font" style={{ fontSize: '0.75rem', fontWeight: 600, color: '#aaa', textTransform: 'uppercase' }}>Insert Block</span>
-                        <button onClick={() => setShowAddBlockMenu(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}>×</button>
-                      </div>
-                      {[
-                        { type: 'paragraph', icon: <Type size={14}/>, label: 'Text' },
-                        { type: 'to_do', icon: <CheckSquare size={14}/>, label: 'To-Do List' },
-                        { type: 'toggle', icon: <ToggleLeft size={14}/>, label: 'Toggle List' },
-                        { type: 'bulleted_list_item', icon: <List size={14}/>, label: 'Bulleted List' },
-                        { type: 'numbered_list_item', icon: <ListOrdered size={14}/>, label: 'Numbered List' },
-                        { type: 'heading_1', icon: <Heading1 size={14}/>, label: 'Heading 1' },
-                        { type: 'heading_2', icon: <Heading2 size={14}/>, label: 'Heading 2' },
-                        { type: 'heading_3', icon: <Heading3 size={14}/>, label: 'Heading 3' },
-                        { type: 'quote', icon: <Quote size={14}/>, label: 'Quote' },
-                        { type: 'code', icon: <Code size={14}/>, label: 'Code' },
-                      ].map(opt => (
-                        <button
-                          key={opt.type}
-                          disabled={isAppendingBlock}
-                          onClick={() => handleAppendBlock(opt.type)}
-                          className="notion-font"
-                          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(255,255,255,0.03)', border: 'none', borderRadius: '6px', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'background 0.2s' }}
-                          onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                          onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-                        >
-                          <span style={{ color: '#ebd73f' }}>{opt.icon}</span>
-                          <span style={{ fontSize: '0.85rem' }}>{opt.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <button 
-                      onClick={() => setShowAddBlockMenu(true)}
-                      className="notion-font"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '8px', color: '#ebd73f', cursor: 'pointer', transition: 'all 0.2s' }}
-                      onMouseOver={e => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.2)'}
-                      onMouseOut={e => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
-                    >
-                      <Plus size={16} />
-                      <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Create First Block</span>
-                      {isAppendingBlock && <RefreshCw size={14} className="spin" />}
-                    </button>
-                  )}
-                </div>
+                <LottieEmptyState 
+                  title="Empty Document" 
+                  subtitle="This document has no content blocks yet. Create your first block below."
+                  actionLabel="+ Create First Block"
+                  onAction={() => handleAppendBlock('paragraph')}
+                />
               )}
             </div>
           ) : (
@@ -2184,16 +2126,14 @@ export default function NotionHubPage() {
               <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(235, 215, 63, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto' }}>
                 <BookOpen size={40} style={{ color: '#ebd73f' }} />
               </div>
-              <h3 className="notion-font" style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 12px 0', color: '#fff' }}>Select a Document</h3>
-              <p className="notion-font" style={{ fontSize: '0.9rem', color: '#888', lineHeight: 1.6 }}>
-                Choose any note, database, or business plan from the catalog on the left to read its live contents with a premium viewing experience.
+              <h3 className="notion-font" style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 12px 0', color: '#fff', fontFamily: "'Panchang', sans-serif" }}>Select a Document</h3>
+              <p className="notion-font" style={{ fontSize: '0.9rem', color: '#888', lineHeight: 1.6, fontFamily: "'Clash Display', sans-serif" }}>
+                Choose any note, database, or plan from the catalog to read and edit live blocks.
               </p>
             </div>
           )}
         </div>
       </div>
-
-
 
       </div>
     </div>
@@ -2206,7 +2146,7 @@ function parseHTMLToNotion(htmlNode) {
   const richTextArray = [];
   
   function traverse(node, currentAnnotations) {
-    if (node.nodeType === 3) { // Node.TEXT_NODE
+    if (node.nodeType === 3) {
       const text = node.textContent;
       if (text !== '') {
         richTextArray.push({
@@ -2219,11 +2159,10 @@ function parseHTMLToNotion(htmlNode) {
       return;
     }
 
-    if (node.nodeType === 1) { // Node.ELEMENT_NODE
+    if (node.nodeType === 1) {
       const annotations = { ...currentAnnotations };
       const tag = node.tagName.toLowerCase();
 
-      // Only extract formatting from inline elements, NOT the root wrapper node
       if (node !== htmlNode) {
         if (tag === 'b' || tag === 'strong') annotations.bold = true;
         if (tag === 'i' || tag === 'em') annotations.italic = true;
@@ -2231,7 +2170,6 @@ function parseHTMLToNotion(htmlNode) {
         if (tag === 's' || tag === 'strike' || tag === 'del') annotations.strikethrough = true;
         if (tag === 'code') annotations.code = true;
 
-        // Handle color via data-notion-color attribute or preset class names
         if (node.hasAttribute && node.hasAttribute('data-notion-color')) {
           const colorAttr = node.getAttribute('data-notion-color');
           if (colorAttr && colorAttr !== 'default') annotations.color = colorAttr;
@@ -2242,11 +2180,9 @@ function parseHTMLToNotion(htmlNode) {
           else if (node.className.includes('preset-glass-morphic')) annotations.color = 'brown_background';
           else if (node.className.includes('preset-iridescent')) annotations.color = 'pink_background';
           else if (node.className.includes('preset-redacted')) annotations.color = 'gray_background';
-          else if (node.className.includes('preset-cyber-glitch')) annotations.color = 'red_background';
         }
       }
 
-      // If it's a block level element like DIV or BR that causes a newline, we could inject \n
       if (tag === 'br') {
         richTextArray.push({ type: 'text', text: { content: '\n' }, plain_text: '\n', annotations: { ...currentAnnotations } });
         return;
@@ -2282,7 +2218,6 @@ function applyDesignerPreset(presetName, range) {
   
   let fragment = range.extractContents();
   
-  // Clean up any existing preset spans or code elements from the selection to prevent stacking
   const tempDiv = document.createElement('div');
   tempDiv.appendChild(fragment);
   const elementsToClean = tempDiv.querySelectorAll('span[data-notion-color], span[class*="preset-"], code');
@@ -2298,7 +2233,6 @@ function applyDesignerPreset(presetName, range) {
       fragment.appendChild(tempDiv.firstChild);
   }
 
-  // If Default (empty string), just insert the cleaned fragment without wrapping
   if (!presetName) {
       range.insertNode(fragment);
       return;
@@ -2322,15 +2256,6 @@ function applyDesignerPreset(presetName, range) {
     span.setAttribute('data-notion-color', 'pink_background');
     span.className = 'preset-iridescent';
     span.appendChild(fragment);
-    range.insertNode(span);
-    return;
-  } else if (presetName === 'success') {
-    span.setAttribute('data-notion-color', 'green_background');
-    span.style.color = '#52c41a';
-    span.style.backgroundColor = 'rgba(82, 196, 26, 0.2)';
-    const b = document.createElement('b');
-    b.appendChild(fragment);
-    span.appendChild(b);
     range.insertNode(span);
     return;
   } else if (presetName === 'highlight') {
@@ -2367,7 +2292,7 @@ function renderRichTextToHTML(richTextArr) {
     
     if (t.annotations?.color && t.annotations.color !== 'default') {
       if (t.annotations.color === 'red_background') {
-        className += " preset-cyber-glitch";
+        styleStr += "color:#ff4d4d;background:rgba(255,77,77,0.15);padding:2px 4px;border-radius:4px;";
       } else if (t.annotations.color === 'green_background') {
         styleStr += "color:#52c41a;background-color:rgba(82, 196, 26, 0.2);";
       } else if (t.annotations.color === 'yellow_background') {
@@ -2402,13 +2327,14 @@ function renderRichTextToHTML(richTextArr) {
   }).join('');
 }
 
-// --- Inline Editing Components ---
-function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter, onUpdateBlock, onConvertBlock }) {
+// --- Inline Editing Text Block ---
+function EditableTextBlock({ blockId, type, initialRichTextArr, tagName, className, style, emptyPlaceholder, onDeleteBlock, onInsertBlockAfter, onUpdateBlock, onConvertBlock }) {
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const tagRef = useRef(null);
   const isFocusedRef = useRef(false);
   const [slashMenu, setSlashMenu] = useState({ isOpen: false, filter: '', selectedIndex: 0 });
+  const [showMobileActions, setShowMobileActions] = useState(false);
 
   const MENU_OPTIONS = [
     { type: 'heading_1', label: 'Heading 1', icon: <Heading1 size={16} /> },
@@ -2444,11 +2370,9 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     const rawHTML = el.innerHTML;
     const focusHtml = el.dataset.focusHtml;
     
-    // We parse the DOM node itself
     const richTextArray = parseHTMLToNotion(el);
     const plainText = richTextArray.map(r => r.plain_text || r.text?.content || '').join('');
     
-    // If exact HTML matches what we had on focus, no changes were made.
     if (focusHtml === rawHTML) return;
 
     setIsSaving(true);
@@ -2535,7 +2459,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
     <div 
       className="blockHoverGroup"
       style={{ position: 'relative', width: '100%' }} 
-      title="Click to edit"
+      title="Tap to edit"
     >
       <Tag
         ref={tagRef}
@@ -2549,9 +2473,11 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
         onPaste={handlePaste}
         className={`${className} empty-block`}
         data-placeholder={emptyPlaceholder}
-        style={{ ...style, outline: 'none', cursor: 'text' }}
+        style={{ ...style, outline: 'none', cursor: 'text', fontFamily: tagName.startsWith('h') ? "'Panchang', sans-serif" : "'Clash Display', sans-serif" }}
         dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
+      
+      {/* Desktop Hover Delete */}
       {onDeleteBlock && (
         <button 
           className="blockDeleteBtn"
@@ -2564,21 +2490,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           <Trash2 size={16} />
         </button>
       )}
-      {onConvertBlock && type !== 'to_do' && (
-        <button 
-          className="blockConvertBtn"
-          onClick={() => onConvertBlock(blockId, 'to_do', rawText)}
-          style={{ position: 'absolute', right: '-60px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px 8px 8px 16px', display: 'flex', alignItems: 'center', opacity: 0, transition: 'opacity 0.2s' }}
-          onMouseOver={e => e.currentTarget.style.color = '#ebd73f'}
-          onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
-          title="Turn into Checkbox"
-        >
-          <CheckSquare size={16} />
-        </button>
-      )}
-      <style dangerouslySetInnerHTML={{__html: `
-        .blockHoverGroup:hover .blockConvertBtn { opacity: 1 !important; }
-      `}} />
+
       {isSaving && <span style={{ position: 'absolute', right: '-40px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', color: '#ebd73f', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: '10px' }}>Saving</span>}
       
       {slashMenu.isOpen && filteredOptions.length > 0 && (
@@ -2595,7 +2507,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
           boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
           marginTop: '4px'
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#888', padding: '4px 8px', marginBottom: '4px', borderBottom: '1px solid #333' }}>
+          <div style={{ fontSize: '0.75rem', color: '#888', padding: '4px 8px', marginBottom: '4px', borderBottom: '1px solid #333', fontFamily: "'Clash Display', sans-serif" }}>
             Basic blocks
           </div>
           {filteredOptions.map((opt, idx) => (
@@ -2617,9 +2529,9 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
                 cursor: 'pointer',
                 background: idx === slashMenu.selectedIndex ? 'rgba(235, 215, 63, 0.15)' : 'transparent',
                 color: idx === slashMenu.selectedIndex ? '#ebd73f' : '#eee',
-                transition: 'background 0.1s'
+                transition: 'background 0.1s',
+                fontFamily: "'Clash Display', sans-serif"
               }}
-              onMouseEnter={() => setSlashMenu(prev => ({ ...prev, selectedIndex: idx }))}
             >
               <div style={{ color: idx === slashMenu.selectedIndex ? '#ebd73f' : '#888' }}>{opt.icon}</div>
               <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>{opt.label}</div>
@@ -2631,7 +2543,8 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, renderRichText, 
   );
 }
 
-function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlockAfter, onUpdateBlock }) {
+// --- Inline Editing To-Do Block with Lottie ---
+function EditableTodoBlock({ block, onDeleteBlock, onInsertBlockAfter, onUpdateBlock }) {
   const [isChecked, setIsChecked] = useState(block.to_do?.checked);
   const [localText, setLocalText] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -2683,7 +2596,6 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
     const richTextArray = parseHTMLToNotion(el);
     const plainText = richTextArray.map(r => r.plain_text || r.text?.content || '').join('');
     
-    // If exact HTML matches what we had on focus, no changes were made.
     if (focusHtml === rawHTML) return;
 
     setIsSaving(true);
@@ -2732,20 +2644,14 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   return (
     <div 
       className="blockHoverGroup"
-      style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '4px', marginBottom: '8px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px', borderRadius: '8px', position: 'relative' }}
+      style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', paddingLeft: '4px', marginBottom: '8px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px 8px', borderRadius: '10px', position: 'relative' }}
     >
-      <span 
-        onClick={toggleCheck}
-        style={{
-          width: '20px', height: '20px', borderRadius: '6px',
-          border: isChecked ? '2px solid #ebd73f' : '2px solid #555',
-          background: isChecked ? 'rgba(235, 215, 63, 0.15)' : 'rgba(0,0,0,0.3)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#ebd73f', marginTop: '2px', flexShrink: 0, cursor: 'pointer'
-        }}
-      >
-        {isChecked && <CheckSquare size={14} strokeWidth={3} />}
-      </span>
+      <LottieCheck
+        checked={isChecked}
+        onToggle={toggleCheck}
+        size={22}
+      />
+      
       <div 
         ref={tagRef}
         data-block-id={block.id}
@@ -2757,13 +2663,15 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
         style={{
-          fontSize: '1rem', lineHeight: 1.6,
-          color: isChecked ? '#666' : '#eee',
+          fontSize: '0.98rem', lineHeight: 1.6,
+          color: isChecked ? '#777' : '#eee',
           textDecoration: isChecked ? 'line-through' : 'none',
-          transition: 'color 0.2s', outline: 'none', cursor: 'text', flex: 1
+          transition: 'all 0.2s', outline: 'none', cursor: 'text', flex: 1,
+          fontFamily: "'Clash Display', sans-serif"
         }}
         dangerouslySetInnerHTML={{ __html: renderRichTextToHTML(block.to_do?.rich_text) }}
       />
+
       {onDeleteBlock && (
         <button 
           className="blockDeleteBtn"
@@ -2781,7 +2689,7 @@ function EditableTodoBlock({ block, renderRichText, onDeleteBlock, onInsertBlock
   );
 }
 
-// Block Renderer Sub-component
+// Block Renderer
 function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBlockAfter, onUpdateBlock, onConvertBlock }) {
   const [toggleOpen, setToggleOpen] = useState(false);
 
@@ -2797,10 +2705,15 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
       
       if (t.annotations?.color && t.annotations.color !== 'default') {
         if (t.annotations.color === 'red_background') {
-          className += " preset-cyber-glitch";
+          customStyle.color = '#ff4d4d';
+          customStyle.backgroundColor = 'rgba(255, 77, 77, 0.15)';
+          customStyle.padding = '2px 6px';
+          customStyle.borderRadius = '4px';
         } else if (t.annotations.color === 'green_background') {
           customStyle.color = '#52c41a';
           customStyle.backgroundColor = 'rgba(82, 196, 26, 0.2)';
+          customStyle.padding = '2px 6px';
+          customStyle.borderRadius = '4px';
         } else if (t.annotations.color === 'yellow_background') {
           className += " preset-gold-shimmer";
         } else if (t.annotations.color === 'purple_background') {
@@ -2814,7 +2727,6 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
         } else if (t.annotations.color === 'brown_background') {
           className += " preset-glass-morphic";
         } else {
-          // Map standard Notion colors to dark theme equivalents roughly
           customStyle.color = t.annotations.color.replace('_background', ''); 
         }
       }
@@ -2829,14 +2741,14 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
             target="_blank"
             rel="noopener noreferrer"
             className={className}
-            style={{ ...customStyle, color: '#ebd73f', textDecoration: 'underline', textUnderlineOffset: '4px' }}
+            style={{ ...customStyle, color: '#ebd73f', textDecoration: 'underline', textUnderlineOffset: '4px', fontFamily: "'Clash Display', sans-serif" }}
           >
             {textContent}
           </a>
         );
       }
       return (
-        <span key={idx} className={className} style={customStyle} data-notion-color={t.annotations?.color}>
+        <span key={idx} className={className} style={{ ...customStyle, fontFamily: "'Clash Display', sans-serif" }} data-notion-color={t.annotations?.color}>
           {textContent}
         </span>
       );
@@ -2847,8 +2759,8 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
     case 'heading_1':
       return (
         <EditableTextBlock
-          blockId={block.id} type="heading_1" initialRichTextArr={block.heading_1?.rich_text} renderRichText={renderRichText}
-          tagName="h1" className="notion-font" style={{ fontSize: '1.8rem', fontWeight: 800, margin: '32px 0 12px 0', color: '#ebd73f', letterSpacing: '-0.02em' }}
+          blockId={block.id} type="heading_1" initialRichTextArr={block.heading_1?.rich_text}
+          tagName="h1" className="notion-font" style={{ fontSize: '1.75rem', fontWeight: 800, margin: '28px 0 10px 0', color: '#ebd73f', letterSpacing: '-0.02em', fontFamily: "'Panchang', sans-serif" }}
           emptyPlaceholder="Untitled Heading 1"
           onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
         />
@@ -2857,8 +2769,8 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
     case 'heading_2':
       return (
         <EditableTextBlock
-          blockId={block.id} type="heading_2" initialRichTextArr={block.heading_2?.rich_text} renderRichText={renderRichText}
-          tagName="h2" className="notion-font" style={{ fontSize: '1.5rem', fontWeight: 700, margin: '28px 0 10px 0', color: '#eee' }}
+          blockId={block.id} type="heading_2" initialRichTextArr={block.heading_2?.rich_text}
+          tagName="h2" className="notion-font" style={{ fontSize: '1.45rem', fontWeight: 700, margin: '24px 0 8px 0', color: '#eee', fontFamily: "'Panchang', sans-serif" }}
           emptyPlaceholder="Untitled Heading 2"
           onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
         />
@@ -2867,8 +2779,8 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
     case 'heading_3':
       return (
         <EditableTextBlock
-          blockId={block.id} type="heading_3" initialRichTextArr={block.heading_3?.rich_text} renderRichText={renderRichText}
-          tagName="h3" className="notion-font" style={{ fontSize: '1.25rem', fontWeight: 600, margin: '24px 0 8px 0', color: '#ccc' }}
+          blockId={block.id} type="heading_3" initialRichTextArr={block.heading_3?.rich_text}
+          tagName="h3" className="notion-font" style={{ fontSize: '1.2rem', fontWeight: 600, margin: '20px 0 6px 0', color: '#ccc', fontFamily: "'Panchang', sans-serif" }}
           emptyPlaceholder="Untitled Heading 3"
           onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
         />
@@ -2877,8 +2789,8 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
     case 'paragraph':
       return (
         <EditableTextBlock
-          blockId={block.id} type="paragraph" initialRichTextArr={block.paragraph?.rich_text} renderRichText={renderRichText}
-          tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', margin: '4px 0', minHeight: '1.6rem' }}
+          blockId={block.id} type="paragraph" initialRichTextArr={block.paragraph?.rich_text}
+          tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', margin: '4px 0', minHeight: '1.6rem', fontFamily: "'Clash Display', sans-serif" }}
           emptyPlaceholder="Type '/' for commands"
           onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock} onConvertBlock={onConvertBlock}
         />
@@ -2887,9 +2799,9 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
     case 'quote':
       return (
         <EditableTextBlock
-          blockId={block.id} type="quote" initialRichTextArr={block.quote?.rich_text} renderRichText={renderRichText}
+          blockId={block.id} type="quote" initialRichTextArr={block.quote?.rich_text}
           tagName="blockquote" className="notion-font" 
-          style={{ fontSize: '1.1rem', fontStyle: 'italic', color: '#ebd73f', margin: '16px 0', padding: '12px 20px', borderLeft: '3px solid #ebd73f', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '0 8px 8px 0' }}
+          style={{ fontSize: '1.05rem', fontStyle: 'italic', color: '#ebd73f', margin: '14px 0', padding: '12px 18px', borderLeft: '3px solid #ebd73f', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '0 8px 8px 0', fontFamily: "'Clash Display', sans-serif" }}
           emptyPlaceholder="Empty quote"
           onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
         />
@@ -2898,9 +2810,9 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
     case 'code':
       return (
         <EditableTextBlock
-          blockId={block.id} type="code" initialRichTextArr={block.code?.rich_text} renderRichText={renderRichText}
+          blockId={block.id} type="code" initialRichTextArr={block.code?.rich_text}
           tagName="pre" className="notion-font" 
-          style={{ fontFamily: 'monospace', fontSize: '0.9rem', color: '#eee', margin: '16px 0', padding: '16px', background: '#111', borderRadius: '8px', overflowX: 'auto', border: '1px solid #333' }}
+          style={{ fontSize: '0.9rem', color: '#a3f08c', margin: '14px 0', padding: '16px', background: '#0a0a0e', borderRadius: '10px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.08)', fontFamily: "'Clash Display', monospace" }}
           emptyPlaceholder="Code snippet..."
           onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
         />
@@ -2911,8 +2823,8 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', margin: '4px 0', paddingLeft: '8px' }}>
           <span style={{ color: '#ebd73f', marginTop: '4px', fontSize: '1.2rem', lineHeight: 1 }}>•</span>
           <EditableTextBlock
-            blockId={block.id} type="bulleted_list_item" initialRichTextArr={block.bulleted_list_item?.rich_text} renderRichText={renderRichText}
-            tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', flex: 1 }}
+            blockId={block.id} type="bulleted_list_item" initialRichTextArr={block.bulleted_list_item?.rich_text}
+            tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', flex: 1, fontFamily: "'Clash Display', sans-serif" }}
             emptyPlaceholder="List item"
             onDeleteBlock={onDeleteBlock} onInsertBlockAfter={(id) => onInsertBlockAfter(id, 'bulleted_list_item')} onUpdateBlock={onUpdateBlock}
           />
@@ -2922,10 +2834,10 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
     case 'numbered_list_item':
       return (
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', margin: '4px 0', paddingLeft: '8px' }}>
-          <span style={{ color: '#ebd73f', marginTop: '2px', fontSize: '0.9rem', fontWeight: 600 }}>1.</span>
+          <span style={{ color: '#ebd73f', marginTop: '2px', fontSize: '0.9rem', fontWeight: 600, fontFamily: "'Panchang', sans-serif" }}>1.</span>
           <EditableTextBlock
-            blockId={block.id} type="numbered_list_item" initialRichTextArr={block.numbered_list_item?.rich_text} renderRichText={renderRichText}
-            tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', flex: 1 }}
+            blockId={block.id} type="numbered_list_item" initialRichTextArr={block.numbered_list_item?.rich_text}
+            tagName="div" className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.6, color: '#eee', flex: 1, fontFamily: "'Clash Display', sans-serif" }}
             emptyPlaceholder="Numbered item"
             onDeleteBlock={onDeleteBlock} onInsertBlockAfter={(id) => onInsertBlockAfter(id, 'numbered_list_item')} onUpdateBlock={onUpdateBlock}
           />
@@ -2933,24 +2845,24 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
       );
 
     case 'to_do':
-      return <EditableTodoBlock block={block} renderRichText={renderRichText} onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock} />;
+      return <EditableTodoBlock block={block} onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock} />;
 
     case 'callout':
       return (
         <div style={{
-          padding: '20px 24px',
+          padding: '16px 20px',
           background: 'linear-gradient(145deg, rgba(235, 215, 63, 0.08) 0%, rgba(235, 215, 63, 0.02) 100%)',
           border: '1px solid rgba(235, 215, 63, 0.2)',
           borderLeft: '4px solid #ebd73f',
           borderRadius: '12px',
           display: 'flex',
           alignItems: 'flex-start',
-          gap: '16px',
-          margin: '16px 0',
+          gap: '14px',
+          margin: '14px 0',
           boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
         }}>
-          <span style={{ fontSize: '1.6rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>{block.callout?.icon?.emoji || '💡'}</span>
-          <div className="notion-font" style={{ fontSize: '1rem', lineHeight: 1.7, color: '#fff', fontWeight: 500 }}>
+          <span style={{ fontSize: '1.5rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>{block.callout?.icon?.emoji || '💡'}</span>
+          <div className="notion-font" style={{ fontSize: '0.98rem', lineHeight: 1.7, color: '#fff', fontWeight: 500, fontFamily: "'Clash Display', sans-serif" }}>
             {renderRichText(block.callout?.rich_text)}
           </div>
         </div>
@@ -2960,7 +2872,7 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
       return (
         <div style={{ 
           background: 'rgba(255,255,255,0.02)', 
-          border: '1px solid rgba(255,255,255,0.05)', 
+          border: '1px solid rgba(255,255,255,0.06)', 
           borderRadius: '12px',
           margin: '8px 0',
           overflow: 'hidden'
@@ -2978,9 +2890,10 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
               alignItems: 'center',
               gap: '10px',
               padding: '12px 16px',
-              fontSize: '1rem',
+              fontSize: '0.98rem',
               fontWeight: 600,
-              textAlign: 'left'
+              textAlign: 'left',
+              fontFamily: "'Clash Display', sans-serif"
             }}
           >
             <ChevronRight size={18} style={{ color: toggleOpen ? '#ebd73f' : '#888', transform: toggleOpen ? 'rotate(90deg)' : 'none', transition: 'all 0.2s' }} />
@@ -2992,9 +2905,9 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
             opacity: toggleOpen ? 1 : 0,
             overflow: 'hidden',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            padding: toggleOpen ? '0 16px 16px 44px' : '0 16px 0 44px'
+            padding: toggleOpen ? '0 16px 16px 40px' : '0 16px 0 40px'
           }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '14px' }}>
               {block.children?.map((child) => (
                 <NotionBlockRenderer key={child.id} block={child} setSelectedItem={setSelectedItem} />
               ))}
@@ -3003,53 +2916,12 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
         </div>
       );
 
-    case 'quote':
-      return (
-        <blockquote style={{
-          borderLeft: '4px solid #ebd73f',
-          margin: '16px 0',
-          padding: '16px 24px',
-          background: 'rgba(255,255,255,0.03)',
-          borderRadius: '0 12px 12px 0',
-          fontSize: '1.1rem',
-          fontStyle: 'italic',
-          color: '#e0e0e0',
-          lineHeight: 1.8
-        }} className="notion-font">
-          {renderRichText(block.quote?.rich_text)}
-        </blockquote>
-      );
-
-    case 'code':
-      return (
-        <div style={{
-          background: '#08080a',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '12px',
-          padding: '16px 20px',
-          margin: '16px 0',
-          fontSize: '0.9rem',
-          color: '#a3f08c', // Terminal green accent
-          overflowX: 'auto',
-          boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)'
-        }} className="notion-font">
-          <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f56' }} />
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffbd2e' }} />
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#27c93f' }} />
-          </div>
-          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}>
-            {block.code?.rich_text?.map(t => t.plain_text).join('')}
-          </pre>
-        </div>
-      );
-
     case 'divider':
       return (
         <div style={{ 
           height: '1px', 
           background: 'linear-gradient(90deg, transparent, rgba(235, 215, 63, 0.3), transparent)', 
-          margin: '32px 0' 
+          margin: '24px 0' 
         }} />
       );
 
@@ -3074,13 +2946,14 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
               borderRadius: '10px', color: '#ebd73f',
               textDecoration: 'none', transition: 'all 0.2s',
               boxShadow: '0 4px 12px rgba(235, 215, 63, 0.05)',
-              cursor: 'pointer', flex: 1, textAlign: 'left'
+              cursor: 'pointer', flex: 1, textAlign: 'left',
+              fontFamily: "'Clash Display', sans-serif"
             }}
             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
             onMouseOut={(e) => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.05)'}
           >
             {isDb ? <Database size={18} /> : <FileText size={18} />}
-            <span className="notion-font" style={{ fontWeight: 600, fontSize: '1rem', flex: 1 }}>
+            <span className="notion-font" style={{ fontWeight: 600, fontSize: '0.95rem', flex: 1, fontFamily: "'Clash Display', sans-serif" }}>
               {childTitle || 'Untitled'}
             </span>
             <ChevronRight size={14} style={{ opacity: 0.7 }} />
@@ -3110,16 +2983,14 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
               onMouseOver={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 e.currentTarget.style.color = '#fff';
-                e.currentTarget.style.transform = 'scale(1.05)';
               }}
               onMouseOut={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
                 e.currentTarget.style.color = '#888';
-                e.currentTarget.style.transform = 'scale(1)';
               }}
               title={`Delete ${isDb ? 'Database' : 'Page'}`}
             >
-              <Trash2 size={18} />
+              <Trash2 size={16} />
             </button>
           )}
         </div>

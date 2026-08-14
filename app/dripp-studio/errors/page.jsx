@@ -75,8 +75,65 @@ export default function ErrorLogsPage() {
         <p className={styles.subtitle}>{isGenz ? 'catching every vibe kill in the system.' : 'Global interceptor for critical and minor application failures.'}</p>
       </div>
 
+      <style jsx>{`
+        .errors-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 20px;
+          margin-bottom: 30px;
+        }
+        .errors-controls-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          gap: 20px;
+          flex-wrap: wrap;
+        }
+        .errors-filter-chips {
+          display: flex;
+          gap: 10px;
+        }
+        .errors-actions-row {
+          display: flex;
+          gap: 15px;
+          flex: 1;
+          justify-content: flex-end;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 1024px) {
+          .errors-stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+            margin-bottom: 20px !important;
+          }
+          .errors-controls-bar {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+          }
+          .errors-filter-chips {
+            width: 100% !important;
+            overflow-x: auto !important;
+            padding-bottom: 4px !important;
+          }
+          .errors-filter-chips button {
+            flex: 1 !important;
+            text-align: center !important;
+            padding: 8px 10px !important;
+          }
+          .errors-actions-row {
+            flex-direction: column !important;
+            width: 100% !important;
+          }
+          .errors-actions-row > div {
+            max-width: 100% !important;
+          }
+        }
+      `}</style>
+
       {/* Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+      <div className="errors-stats-grid">
         <div className={styles.card} style={{ textAlign: 'center', padding: '20px', borderTop: '2px solid #333' }}>
           <div style={{ fontSize: '2.5rem', fontFamily: 'Panchang, sans-serif', color: '#fff', marginBottom: '5px' }}>{stats.total}</div>
           <div style={{ color: '#888', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Captured</div>
@@ -96,8 +153,8 @@ export default function ErrorLogsPage() {
       </div>
 
       {/* Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '20px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '10px' }}>
+      <div className="errors-controls-bar">
+        <div className="errors-filter-chips">
           {['all', 'fatal', 'error', 'warn'].map(level => (
             <button
               key={level}
@@ -117,7 +174,7 @@ export default function ErrorLogsPage() {
           ))}
         </div>
         
-        <div style={{ display: 'flex', gap: '15px', flex: 1, justifyContent: 'flex-end' }}>
+        <div className="errors-actions-row">
           <div style={{ position: 'relative', maxWidth: '300px', width: '100%' }}>
             <Search size={16} color="#888" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             <input 

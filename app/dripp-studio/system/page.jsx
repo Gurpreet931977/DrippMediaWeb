@@ -26,7 +26,43 @@ export default function SystemPage() {
         <p className={styles.subtitle}>{isGenz ? 'cook up some essential docs.' : 'Generate critical operational documents and messages'}</p>
       </div>
 
-      <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px', overflowX: 'auto' }}>
+      <style jsx>{`
+        .system-tabs-bar {
+          display: flex;
+          gap: 15px;
+          margin-bottom: 30px;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          padding-bottom: 20px;
+          overflow-x: auto;
+        }
+        .system-maker-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 30px;
+          align-items: start;
+        }
+        @media (max-width: 1024px) {
+          .system-tabs-bar {
+            gap: 8px;
+            padding-bottom: 12px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+          }
+          .system-tabs-bar::-webkit-scrollbar {
+            display: none;
+          }
+          .system-tabs-bar button {
+            padding: 8px 14px !important;
+            font-size: 0.8rem !important;
+          }
+          .system-maker-grid {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+          }
+        }
+      `}</style>
+
+      <div className="system-tabs-bar">
         {[
           { id: 'onboarding', label: 'Onboarding Doc Maker', icon: FileText },
           { id: 'feedback', label: 'Feedback Form Maker', icon: MessageSquare },
@@ -128,7 +164,7 @@ function OnboardingDocMaker() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignItems: 'start' }}>
+    <div className="system-maker-grid">
       <div className={styles.card}>
         <h3 style={{ marginBottom: '20px', color: '#ebd73f', fontSize: '1.2rem' }}>Onboarding Details</h3>
         
@@ -218,7 +254,7 @@ function FeedbackFormMaker() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignItems: 'start' }}>
+    <div className="system-maker-grid">
       <div className={styles.card}>
         <h3 style={{ marginBottom: '20px', color: '#ebd73f', fontSize: '1.2rem' }}>Feedback Request Details</h3>
         
@@ -322,7 +358,7 @@ function DeliveryDocMaker() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignItems: 'start' }}>
+    <div className="system-maker-grid">
       <div className={styles.card}>
         <h3 style={{ marginBottom: '20px', color: '#ebd73f', fontSize: '1.2rem' }}>Delivery Details</h3>
         
@@ -418,7 +454,7 @@ function AgreementMaker() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignItems: 'start' }}>
+    <div className="system-maker-grid">
       <div className={styles.card}>
         <h3 style={{ marginBottom: '20px', color: '#ebd73f', fontSize: '1.2rem' }}>Agreement Details</h3>
         

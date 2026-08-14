@@ -1697,10 +1697,33 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           text-shadow: 0 4px 20px rgba(0,0,0,0.5);
           font-family: 'Clash Display', sans-serif;
           opacity: 0.95;
-          display: -webkit-box;
-          -webkit-line-clamp: 4;
-          -webkit-box-orient: vertical;
           overflow: hidden;
+        }
+
+        @media (max-width: 1024px) {
+          .copilot-wrapper {
+            bottom: 20px !important;
+            right: 18px !important;
+            z-index: 99998 !important;
+          }
+          .chat-container {
+            bottom: 0 !important;
+            right: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 90vh !important;
+            max-height: 90vh !important;
+            border-radius: 24px 24px 0 0 !important;
+            border-bottom: none !important;
+            border-left: none !important;
+            border-right: none !important;
+            z-index: 999999 !important;
+          }
+          .speech-bubble {
+            max-width: 200px !important;
+            font-size: 0.75rem !important;
+          }
         }
       `}</style>
 

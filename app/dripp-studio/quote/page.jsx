@@ -1063,7 +1063,7 @@ export default function QuoteMaker() {
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px auto', gap: '16px', alignItems: 'center' }}>
+          <div className="quote-share-grid">
             <div>
               <label style={{ display: 'block', fontSize: '0.75rem', color: '#aaa', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
                 Secure Link:
@@ -1113,8 +1113,42 @@ export default function QuoteMaker() {
           </div>
         </div>
       )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
+      <style jsx>{`
+        .quote-share-grid {
+          display: grid;
+          grid-template-columns: 1fr 180px auto;
+          gap: 16px;
+          align-items: center;
+        }
+        .quote-main-grid {
+          display: grid;
+          grid-template-columns: 1fr 350px;
+          gap: 30px;
+          align-items: start;
+        }
+        .quote-pdf-builder-grid {
+          display: grid;
+          grid-template-columns: 280px 1fr;
+          gap: 40px;
+          align-items: stretch;
+        }
+        @media (max-width: 1024px) {
+          .quote-share-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .quote-main-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+          .quote-pdf-builder-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+        }
+      `}</style>
+      
+      <div className="quote-main-grid">
         
         {/* LEFT COLUMN: BUILDER FORM */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1498,7 +1532,7 @@ export default function QuoteMaker() {
               <Layers size={20} /> PDF Pages & Layout
             </h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '40px', alignItems: 'stretch' }}>
+            <div className="quote-pdf-builder-grid">
                {/* Left: Page List */}
                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {pdfPages.map((page, index) => (

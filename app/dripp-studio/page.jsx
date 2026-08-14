@@ -134,21 +134,74 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <style jsx>{`
+        .dashboard-header {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          justify-content: space-between;
+          align-items: flex-end;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          padding-bottom: 2rem;
+        }
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 3rem;
+        }
+        .core-tools-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 2rem;
+        }
+        .capabilities-card {
+          margin-top: 4rem;
+          padding: 3.5rem;
+          background: rgba(255,255,255,0.02);
+          border-radius: 24px;
+          border: 1px solid rgba(255,255,255,0.05);
+          position: relative;
+          overflow: hidden;
+        }
+        @media (max-width: 1024px) {
+          .dashboard-header {
+            flex-direction: column;
+            align-items: flex-start;
+            padding-bottom: 1.25rem;
+            gap: 0.75rem;
+          }
+          .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+          }
+          .core-tools-grid {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+          }
+          .capabilities-card {
+            margin-top: 2rem;
+            padding: 1.5rem !important;
+            border-radius: 16px;
+          }
+        }
+      `}</style>
       {/* Hero Header */}
-      <div className={styles.header} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '2rem' }}>
+      <div className="dashboard-header">
         <div>
-          <h1 className={styles.title} style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>{isGenz ? 'main character energy' : 'Dashboard Overview'}</h1>
-          <p className={styles.subtitle} style={{ fontSize: '1.15rem' }}>{isGenz ? `welcome back, boss. today is ${currentdate}.` : `Welcome to the Admin Hub. Today is ${currentDate}.`}</p>
+          <h1 className={styles.title} style={{ fontSize: 'clamp(1.75rem, 5vw, 3rem)', marginBottom: '0.5rem', fontFamily: "'Panchang', sans-serif" }}>{isGenz ? 'main character energy' : 'Dashboard Overview'}</h1>
+          <p className={styles.subtitle} style={{ fontSize: 'clamp(0.9rem, 3vw, 1.15rem)', fontFamily: "'Clash Display', sans-serif" }}>{isGenz ? `welcome back, boss. today is ${currentDate}.` : `Welcome to the Admin Hub. Today is ${currentDate}.`}</p>
         </div>
-        <div style={{ padding: '0.75rem 1.25rem', background: 'rgba(235, 215, 63, 0.1)', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', fontSize: '0.85rem', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ padding: '0.65rem 1.1rem', background: 'rgba(235, 215, 63, 0.1)', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', fontSize: '0.8rem', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'Panchang', sans-serif" }}>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ebd73f', boxShadow: '0 0 10px #ebd73f' }}></div>
           {isGenz ? 'vibe check: passed' : 'Admin Level: Super'}
         </div>
       </div>
 
       {/* Quick Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+      <div className="stats-grid">
         
         <div className={styles.card} style={{ margin: 0, padding: '1.75rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '1.25rem', borderRadius: '50%' }}>
@@ -273,7 +326,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
+      <div className="core-tools-grid">
         {featureCards.map(card => {
           const Icon = card.icon;
           return (
@@ -334,7 +387,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Admin Panel Capabilities Section */}
-      <div style={{ marginTop: '4rem', padding: '3.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
+      <div className="capabilities-card">
         <div style={{ position: 'absolute', top: 0, right: 0, width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.08) 0%, transparent 70%)', transform: 'translate(30%, -30%)', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', bottom: 0, left: 0, width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%)', transform: 'translate(-30%, 30%)', pointerEvents: 'none' }}></div>
         

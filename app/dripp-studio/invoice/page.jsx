@@ -1063,7 +1063,21 @@ export default function InvoiceMaker() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
+      <style jsx>{`
+        .invoice-main-grid {
+          display: grid;
+          grid-template-columns: 1fr 350px;
+          gap: 30px;
+          align-items: start;
+        }
+        @media (max-width: 1024px) {
+          .invoice-main-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+        }
+      `}</style>
+      <div className="invoice-main-grid">
         
         {/* LEFT COLUMN: BUILDER FORM */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

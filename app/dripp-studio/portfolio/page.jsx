@@ -1272,6 +1272,46 @@ export default function PortfolioManager() {
             visibility: visible;
             transform: translateX(-50%) translateY(0);
         }
+
+        @media (max-width: 1024px) {
+          .portfolio-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+            margin-bottom: 24px !important;
+          }
+          .portfolio-header .tabs {
+            width: 100% !important;
+            display: flex !important;
+            overflow-x: auto !important;
+            padding: 4px !important;
+            box-sizing: border-box !important;
+          }
+          .portfolio-header .tab-btn {
+            flex: 1 !important;
+            justify-content: center !important;
+            padding: 10px 8px !important;
+            font-size: 0.8rem !important;
+            white-space: nowrap !important;
+          }
+          .upload-card {
+            padding: 20px 16px !important;
+            border-radius: 18px !important;
+          }
+          .form-grid {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+          }
+          .upload-popup {
+            width: 92vw !important;
+            max-width: 92vw !important;
+            padding: 24px 18px !important;
+          }
+          .item-card {
+            flex-direction: column !important;
+            padding: 16px !important;
+          }
+        }
       `}</style>
 
       {notification && (

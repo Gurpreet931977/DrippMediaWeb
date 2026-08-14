@@ -324,23 +324,46 @@ export default function PackageMaker() {
         .summary-card {
           background: linear-gradient(135deg, rgba(235, 215, 63, 0.1) 0%, rgba(20, 20, 20, 0.8) 100%);
           border: 1px solid rgba(235, 215, 63, 0.2);
-          border-radius: 24px;
           padding: 32px;
+        }
+        .pmp-share-grid {
+          display: grid;
+          grid-template-columns: 1fr 180px auto;
+          gap: 16px;
+          align-items: center;
+        }
+        .pmp-main-grid {
+          display: grid;
+          grid-template-columns: 1.5fr 1fr;
+          gap: 24px;
+        }
+        @media (max-width: 1024px) {
+          .pmp-share-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .pmp-main-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+          .header-title {
+            font-size: clamp(1.6rem, 5vw, 2.5rem) !important;
+          }
         }
       `}</style>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 className="header-title">PERSONAL <span className="accent-text">MARKETING</span> PLAN</h1>
-          <p style={{ color: '#888', marginTop: '8px' }}>Design a personalized PMP for your clients</p>
+          <p style={{ color: '#888', marginTop: '8px', fontFamily: "'Clash Display', sans-serif" }}>Design a personalized PMP for your clients</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn-secondary" onClick={generatePDF}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', width: '100%', maxWidth: '400px' }}>
+          <button className="btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={generatePDF}>
             <Download size={18} /> Export PDF
           </button>
-          <button className="btn-primary" onClick={generateShareLink} disabled={isGeneratingLink}>
+          <button className="btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={generateShareLink} disabled={isGeneratingLink}>
             {copiedLink ? <CheckCircle2 size={18} /> : <Share2 size={18} />}
-            {copiedLink ? 'LINK & PIN COPIED' : (isGeneratingLink ? 'GENERATING...' : 'SHARE PACKAGE')}
+            {copiedLink ? 'COPIED' : (isGeneratingLink ? 'GENERATING...' : 'SHARE')}
           </button>
         </div>
       </div>
@@ -370,7 +393,7 @@ export default function PackageMaker() {
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px auto', gap: '16px', alignItems: 'center' }}>
+          <div className="pmp-share-grid">
             <div>
               <label style={{ display: 'block', fontSize: '0.75rem', color: '#aaa', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
                 Secure Link:
@@ -428,7 +451,7 @@ export default function PackageMaker() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
+      <div className="pmp-main-grid">
         {/* Editor Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
