@@ -717,23 +717,10 @@ export const emptyDocLottieData = {
 // ----------------------------------------------------
 
 /**
- * Lottie-powered Checkbox
+ * Lottie-powered Checkbox (High-Contrast & Instant Visibility)
  */
-export function LottieCheck({ checked, onToggle, size = 22, disabled = false }) {
-  const lottieRef = useRef(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (lottieRef.current) {
-      if (checked) {
-        lottieRef.current.goToAndPlay(0, true);
-      }
-    }
-  }, [checked]);
+export function LottieCheck({ checked, onToggle, size = 20, disabled = false }) {
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <button
@@ -742,20 +729,23 @@ export function LottieCheck({ checked, onToggle, size = 22, disabled = false }) 
         e.stopPropagation();
         if (!disabled && onToggle) onToggle();
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
-        width: `${Math.max(size + 16, 44)}px`, // minimum 44px touch ergonomics on mobile
-        height: `${Math.max(size + 16, 44)}px`,
+        width: `${Math.max(size + 14, 38)}px`,
+        height: `${Math.max(size + 14, 38)}px`,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         background: 'transparent',
         border: 'none',
         padding: 0,
-        margin: '-8px -4px -8px -8px',
+        margin: '-6px -2px -6px -6px',
         cursor: disabled ? 'default' : 'pointer',
         touchAction: 'manipulation',
         WebkitTapHighlightColor: 'transparent',
-        outline: 'none'
+        outline: 'none',
+        flexShrink: 0
       }}
       title={checked ? "Mark as uncompleted" : "Mark as completed"}
     >
@@ -763,26 +753,40 @@ export function LottieCheck({ checked, onToggle, size = 22, disabled = false }) 
         width: `${size}px`,
         height: `${size}px`,
         borderRadius: '6px',
-        border: checked ? 'none' : '2px solid rgba(255, 255, 255, 0.25)',
-        background: checked ? 'transparent' : 'rgba(0, 0, 0, 0.4)',
+        border: checked 
+          ? '2px solid #ebd73f' 
+          : isHovered ? '2px solid #ebd73f' : '2px solid rgba(255, 255, 255, 0.45)',
+        background: checked 
+          ? 'linear-gradient(135deg, #f5e042 0%, #ebd73f 100%)' 
+          : isHovered ? 'rgba(235, 215, 63, 0.12)' : 'rgba(255, 255, 255, 0.05)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-        boxShadow: checked ? '0 0 14px rgba(235, 215, 63, 0.3)' : 'none',
+        boxShadow: checked 
+          ? '0 0 14px rgba(235, 215, 63, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.6)' 
+          : isHovered ? '0 0 8px rgba(235, 215, 63, 0.25)' : '0 2px 6px rgba(0,0,0,0.3)',
+        transform: isHovered ? 'scale(1.06)' : 'scale(1)',
         position: 'relative'
       }}>
-        {checked && mounted ? (
-          <div style={{ width: `${size + 4}px`, height: `${size + 4}px`, position: 'absolute', pointerEvents: 'none' }}>
-            <Lottie
-              lottieRef={lottieRef}
-              animationData={checkmarkLottieData}
-              loop={false}
-              autoplay={true}
-              style={{ width: '100%', height: '100%' }}
-            />
-          </div>
-        ) : null}
+        {checked && (
+          <svg 
+            width={Math.round(size * 0.65)} 
+            height={Math.round(size * 0.65)} 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="#0a0a0e" 
+            strokeWidth="3.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            style={{ 
+              display: 'block',
+              filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.25))' 
+            }}
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        )}
       </div>
     </button>
   );

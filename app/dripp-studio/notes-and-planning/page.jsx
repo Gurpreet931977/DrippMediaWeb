@@ -5,7 +5,7 @@ import {
   BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, ChevronLeft,
   FileText, Database, CheckSquare, Sparkles, Info, LayoutList, Plus, Maximize2, Minimize2, Star,
   List, ListOrdered, Type, Heading1, Heading2, Heading3, Quote, Code, ToggleLeft,
-  Home, Command, Activity, CheckCircle2, AlertCircle, Trash2, Undo2, Redo2, Copy, MoreHorizontal, Layers
+  Home, Command, Activity, CheckCircle2, AlertCircle, Trash2, Undo2, Redo2, Copy, MoreHorizontal, Layers, X
 } from 'lucide-react';
 import { useGenz } from '../../contexts/GenzContext';
 import { 
@@ -980,6 +980,13 @@ export default function NotionHubPage() {
 
   // Filter Items
   const filteredItems = items.filter(item => {
+    // 1. Real-time Search Query Filter
+    if (searchQuery.trim() && !searchQuery.startsWith('/') && !searchQuery.toLowerCase().startsWith('ai:') && !searchQuery.toLowerCase().startsWith('orlo:')) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchTitle = (item.title || '').toLowerCase().includes(q);
+      if (!matchTitle) return false;
+    }
+
     if (filterType === 'favorites') {
       return favorites.includes(item.id);
     }
@@ -1537,8 +1544,36 @@ export default function NotionHubPage() {
                 e.target.style.boxShadow = 'none';
               }}
             />
-            <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '2px', pointerEvents: 'none' }}>
-              <kbd style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '1px 4px', fontSize: '0.62rem', color: '#aaa', fontFamily: 'monospace' }}>⌘K</kbd>
+            <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSearchQuery('');
+                    fetchNotionItems('');
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#888',
+                    cursor: 'pointer',
+                    padding: '2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseOver={e => e.currentTarget.style.color = '#fff'}
+                  onMouseOut={e => e.currentTarget.style.color = '#888'}
+                  title="Clear search"
+                >
+                  <X size={13} />
+                </button>
+              ) : (
+                <kbd style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '1px 4px', fontSize: '0.62rem', color: '#aaa', fontFamily: 'monospace', pointerEvents: 'none' }}>⌘K</kbd>
+              )}
             </div>
           </form>
 
@@ -1867,7 +1902,6 @@ export default function NotionHubPage() {
             <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '100%', marginBottom: '12px' }}>
               <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#888', zIndex: 2 }} />
               <input
-                ref={searchInputRef}
                 type="text"
                 className="notion-font"
                 placeholder="Search notes or plans..."
@@ -1875,7 +1909,7 @@ export default function NotionHubPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '10px 14px 10px 38px',
+                  padding: '10px 36px 10px 38px',
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '10px',
@@ -1886,6 +1920,37 @@ export default function NotionHubPage() {
                   fontFamily: "'Clash Display', sans-serif"
                 }}
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSearchQuery('');
+                    fetchNotionItems('');
+                  }}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#888',
+                    cursor: 'pointer',
+                    padding: '2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseOver={e => e.currentTarget.style.color = '#fff'}
+                  onMouseOut={e => e.currentTarget.style.color = '#888'}
+                  title="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </form>
             
             {/* Horizontal Momentum Filter Chips */}
@@ -2932,13 +2997,15 @@ function EditableTodoBlock({ block, onDeleteBlock, onInsertBlockAfter, onUpdateB
   return (
     <div 
       className="blockHoverGroup"
-      style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', paddingLeft: '4px', marginBottom: '8px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px 8px', borderRadius: '10px', position: 'relative' }}
+      style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', paddingLeft: '4px', marginBottom: '6px', background: isChecked ? 'rgba(255,255,255,0.02)' : 'transparent', padding: '6px 8px', borderRadius: '10px', position: 'relative' }}
     >
-      <LottieCheck
-        checked={isChecked}
-        onToggle={toggleCheck}
-        size={22}
-      />
+      <div style={{ marginTop: '2px', flexShrink: 0 }}>
+        <LottieCheck
+          checked={isChecked}
+          onToggle={toggleCheck}
+          size={20}
+        />
+      </div>
       
       <div 
         ref={tagRef}
