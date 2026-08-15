@@ -1579,24 +1579,19 @@ export default function NotionHubPage() {
           }
         }
 
-        /* 10X Modern Creative Designer Presets with GPU hardware layer isolation */
-        .preset-gold-shimmer,
-        .preset-neon-pulse,
-        .preset-iridescent,
-        .preset-liquid-gradient,
-        .preset-cyber-lime,
-        .preset-sunset-aura,
-        .preset-frosted-chrome,
-        .preset-hologram-glitch,
-        .preset-laser-crimson,
-        .preset-studio-marker,
-        .preset-matrix-terminal,
-        .preset-aurora-borealis,
-        .preset-subzero-frost,
-        .preset-electric-amethyst,
-        .preset-hazard-warning,
-        .preset-rose-gold,
-        .preset-clay-emboss,
+        /* Elite Creative Designer Presets */
+        .preset-dripp-signature,
+        .preset-glass-pill,
+        .preset-brutalism,
+        .preset-retro-vhs,
+        .preset-redacted,
+        .preset-liquid-chrome,
+        .preset-neon-sign,
+        .preset-ransom-note,
+        .preset-hologram-float,
+        .preset-marker-draw,
+        .preset-3d-extruded,
+        .preset-gold-emboss,
         .preset-kinetic-wave {
           display: inline-block !important;
           vertical-align: baseline;
@@ -1609,240 +1604,164 @@ export default function NotionHubPage() {
           animation-play-state: running !important;
         }
 
-        /* 1. Gold Shimmer: Metallic Gold Linear Sweep */
-        .preset-gold-shimmer {
+        /* 1. Dripp Signature */
+        .preset-dripp-signature {
+          background: #050505;
           color: #ebd73f;
-          font-weight: 700;
-          background: linear-gradient(90deg, rgba(235,215,63,0.15) 0%, rgba(235,215,63,0.45) 50%, rgba(235,215,63,0.15) 100%);
-          background-size: 200% auto;
-          animation: goldShimmer 2.5s linear infinite !important;
-          padding: 2px 8px;
-          border-radius: 6px;
-          border: 1px solid rgba(235, 215, 63, 0.35);
-          box-shadow: 0 0 14px rgba(235, 215, 63, 0.2);
-        }
-        @keyframes goldShimmer {
-          0% { background-position: 0% center; }
-          100% { background-position: 200% center; }
-        }
-
-        /* 2. Neon Pulse: Electric Cyan Tube Glow */
-        .preset-neon-pulse {
-          color: #00f2fe;
-          font-weight: 700;
-          text-shadow: 0 0 8px rgba(0, 242, 254, 0.7), 0 0 18px rgba(0, 242, 254, 0.35);
-          animation: neonPulse 2.5s infinite alternate cubic-bezier(0.4, 0, 0.6, 1) !important;
-          padding: 0 4px;
-        }
-        @keyframes neonPulse {
-          0% { text-shadow: 0 0 4px rgba(0, 242, 254, 0.4), 0 0 8px rgba(0, 242, 254, 0.2); opacity: 0.85; }
-          100% { text-shadow: 0 0 10px rgba(0, 242, 254, 0.95), 0 0 22px rgba(0, 242, 254, 0.6), 0 0 32px rgba(0, 242, 254, 0.3); opacity: 1; }
-        }
-
-        /* 3. Iridescent Prism: 7-Color Rainbow Text */
-        .preset-iridescent {
-          background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
-          background-size: 1800% 1800%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
+          padding: 3px 12px;
+          border-radius: 20px;
           font-weight: 800;
-          animation: iridescentFade 8s ease infinite !important;
-        }
-        @keyframes iridescentFade { 
-          0%{background-position:0% 82%}
-          50%{background-position:100% 19%}
-          100%{background-position:0% 82%}
+          box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.8);
+          border: 1px solid rgba(235, 215, 63, 0.4);
+          position: relative;
+          text-transform: uppercase;
+          letter-spacing: 1px;
         }
 
-        /* 4. Liquid Velvet: Royal Purple Fluid Glass Badge */
-        .preset-liquid-gradient {
-          font-weight: 700;
+        /* 2. Glassmorphic Pill */
+        .preset-glass-pill {
+          background: rgba(255,255,255,0.1);
           color: #fff;
-          background: linear-gradient(270deg, #8a2be2, #4b0082, #9400d3, #8a2be2);
-          background-size: 400% 400%;
-          animation: liquid 4s ease infinite !important;
-          padding: 2px 8px;
-          border-radius: 6px;
-          box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
-          border: 1px solid rgba(138, 43, 226, 0.5);
-        }
-        @keyframes liquid {
-          0% { background-position: 0% 50% }
-          50% { background-position: 100% 50% }
-          100% { background-position: 0% 50% }
+          padding: 2px 10px;
+          border-radius: 50px;
+          font-weight: 600;
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,255,255,0.25);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
 
-        /* 5. Cyber Lime: Acid Green Wireframe Pill */
-        .preset-cyber-lime {
-          color: #a3f08c;
-          font-weight: 700;
-          background: rgba(163, 240, 140, 0.12);
-          border: 1px solid rgba(163, 240, 140, 0.45);
-          border-radius: 6px;
-          padding: 2px 8px;
-          box-shadow: 0 0 14px rgba(163, 240, 140, 0.25);
-          text-shadow: 0 0 6px rgba(163, 240, 140, 0.5);
-        }
-
-        /* 6. Sunset Aura: Warm Peach-Flamingo Sunset Text */
-        .preset-sunset-aura {
-          background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 50%, #ff2a6d 100%);
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          font-weight: 800;
-          filter: drop-shadow(0 2px 8px rgba(255, 126, 95, 0.35));
-        }
-
-        /* 7. Frosted Chrome: Specular Silver Glass Badge */
-        .preset-frosted-chrome {
-          color: #f1f5f9;
-          font-weight: 700;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 100%);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.35);
-          border-radius: 6px;
-          padding: 2px 8px;
-          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
-        }
-
-        /* 8. Holographic Glitch: RGB Chromatic Aberration */
-        .preset-hologram-glitch {
-          color: #ffffff;
-          font-weight: 800;
-          text-shadow: -1.5px 0 #ff007f, 1.5px 0 #00f2fe;
-          animation: glitchShift 2.5s infinite ease-in-out alternate !important;
-          padding: 0 4px;
-          letter-spacing: 0.8px;
-        }
-        @keyframes glitchShift {
-          0% { text-shadow: -1.5px 0 #ff007f, 1.5px 0 #00f2fe; }
-          40% { text-shadow: -2px 0 #ff007f, 2px 0 #00f2fe; }
-          70% { text-shadow: 1.5px 0 #ff007f, -1.5px 0 #00f2fe; }
-          100% { text-shadow: -1.5px 0 #ff007f, 1.5px 0 #00f2fe; }
-        }
-
-        /* 9. Laser Crimson: Red Laser Ray Beam Glow */
-        .preset-laser-crimson {
-          color: #ff2a5f;
-          font-weight: 700;
-          text-shadow: 0 0 8px rgba(255, 42, 95, 0.85), 0 0 20px rgba(255, 42, 95, 0.45);
-          animation: laserPulse 2.5s infinite alternate cubic-bezier(0.4, 0, 0.6, 1) !important;
-          padding: 0 4px;
-        }
-        @keyframes laserPulse {
-          0% { text-shadow: 0 0 4px rgba(255, 42, 95, 0.5), 0 0 8px rgba(255, 42, 95, 0.25); opacity: 0.88; }
-          100% { text-shadow: 0 0 10px rgba(255, 42, 95, 0.95), 0 0 22px rgba(255, 42, 95, 0.65), 0 0 32px rgba(255, 42, 95, 0.35); opacity: 1; }
-        }
-
-        /* 10. Studio Marker: Solid Yellow Physical Highlighter */
-        .preset-studio-marker {
+        /* 3. Brutalism Block */
+        .preset-brutalism {
+          background: #ffffff;
           color: #000000 !important;
-          background: #ffe600;
+          padding: 2px 6px;
+          font-weight: 900;
+          border: 3px solid #000000;
+          box-shadow: 4px 4px 0px #000000;
+          text-transform: uppercase;
+        }
+
+        /* 4. Retro VHS */
+        .preset-retro-vhs {
+          background: repeating-linear-gradient(0deg, #111, #111 2px, #222 2px, #222 4px);
+          color: #fff;
+          padding: 2px 8px;
           font-weight: 800;
-          padding: 2px 8px;
-          border-radius: 3px;
-          box-shadow: 0 0 12px rgba(255, 230, 0, 0.45);
-          text-shadow: none;
+          transform: skewX(-10deg);
+          text-shadow: 2px 0px #ff00ea, -2px 0px #00f0ff;
+          letter-spacing: 1px;
         }
 
-        /* 11. Matrix Terminal: Dark CRT Hacker Screen with Phosphor Green */
-        .preset-matrix-terminal {
-          color: #00ff66 !important;
-          background: #020b04;
-          border: 1px solid rgba(0, 255, 102, 0.5);
-          border-radius: 4px;
-          padding: 2px 8px;
+        /* 5. CIA Redacted */
+        .preset-redacted {
+          background: #000;
+          color: #000 !important;
+          padding: 0px 4px;
           font-weight: 700;
-          letter-spacing: 0.5px;
-          box-shadow: 0 0 12px rgba(0, 255, 102, 0.3), inset 0 0 8px rgba(0, 255, 102, 0.2);
-          text-shadow: 0 0 6px rgba(0, 255, 102, 0.8);
+          transition: all 0.3s ease;
+          border-radius: 2px;
+          cursor: pointer;
+        }
+        .preset-redacted:hover {
+          color: #fff !important;
+          background: #333;
         }
 
-        /* 12. Aurora Borealis: Flowing Teal/Violet Northern Lights */
-        .preset-aurora-borealis {
-          background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 40%, #7f00ff 75%, #ff007f 100%);
-          background-size: 300% 300%;
+        /* 6. Liquid Chrome */
+        .preset-liquid-chrome {
+          background: linear-gradient(180deg, #fff 0%, #aaa 45%, #555 50%, #ddd 55%, #fff 100%);
           -webkit-background-clip: text;
           background-clip: text;
           -webkit-text-fill-color: transparent;
+          font-weight: 900;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        /* 7. Neon Sign */
+        .preset-neon-sign {
+          color: #fff;
           font-weight: 800;
-          animation: auroraFlow 4s ease infinite alternate !important;
-          filter: drop-shadow(0 0 8px rgba(0, 245, 160, 0.45));
-        }
-        @keyframes auroraFlow {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 100% 50%; }
-        }
-
-        /* 13. Sub-Zero Frost: Glacial Ice Frosted Crystal Glass */
-        .preset-subzero-frost {
-          color: #e0f2fe;
-          font-weight: 700;
-          background: rgba(14, 165, 233, 0.2);
-          border: 1px solid rgba(186, 230, 253, 0.6);
-          border-radius: 6px;
-          padding: 2px 8px;
-          box-shadow: 0 0 16px rgba(56, 189, 248, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
-          text-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
-        }
-
-        /* 14. Electric Amethyst: Deep Neon Violet Tube Glow */
-        .preset-electric-amethyst {
-          color: #f0abfc;
-          font-weight: 700;
-          text-shadow: 0 0 8px rgba(217, 70, 239, 0.8), 0 0 20px rgba(168, 85, 247, 0.45);
-          animation: amethystPulse 2.5s infinite alternate cubic-bezier(0.4, 0, 0.6, 1) !important;
-          padding: 0 4px;
-        }
-        @keyframes amethystPulse {
-          0% { text-shadow: 0 0 4px rgba(217, 70, 239, 0.5), 0 0 8px rgba(168, 85, 247, 0.3); opacity: 0.88; }
-          100% { text-shadow: 0 0 10px rgba(217, 70, 239, 0.95), 0 0 22px rgba(168, 85, 247, 0.65), 0 0 32px rgba(217, 70, 239, 0.4); opacity: 1; }
-        }
-
-        /* 15. Hazard Warning: Industrial Caution Badge */
-        .preset-hazard-warning {
-          color: #000000 !important;
-          background: #ffcc00;
-          font-weight: 800;
-          border: 1.5px dashed #000;
-          border-radius: 4px;
-          padding: 2px 8px;
-          box-shadow: 0 0 14px rgba(255, 204, 0, 0.45);
-          text-shadow: none;
-          letter-spacing: 0.4px;
-        }
-
-        /* 16. Rose Gold Luxe: Metallic Copper Foil Gradient */
-        .preset-rose-gold {
-          background: linear-gradient(135deg, #ffe5ec 0%, #fbc2eb 40%, #c084fc 70%, #fde047 100%);
-          background-size: 200% auto;
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          font-weight: 800;
-          animation: roseShimmer 3s linear infinite !important;
-          filter: drop-shadow(0 0 6px rgba(251, 194, 235, 0.45));
-        }
-        @keyframes roseShimmer {
-          0% { background-position: 0% center; }
-          100% { background-position: 200% center; }
-        }
-
-        /* 17. Clay 3D Emboss: Raised Neomorphic Pill */
-        .preset-clay-emboss {
-          color: #ffffff !important;
-          background: #181920;
-          font-weight: 700;
+          -webkit-text-stroke: 1px #ff00ea;
+          text-shadow: 0 0 5px #ff00ea, 0 0 15px #ff00ea, 0 0 30px #ff00ea;
+          padding: 2px 6px;
+          border: 2px solid #ff00ea;
           border-radius: 8px;
-          padding: 3px 10px;
-          box-shadow: 3px 3px 7px rgba(0,0,0,0.8), -2px -2px 5px rgba(255,255,255,0.12), inset 0 1px 1px rgba(255,255,255,0.25);
-          text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+          box-shadow: 0 0 10px rgba(255,0,234,0.4), inset 0 0 10px rgba(255,0,234,0.4);
+          animation: neonFlicker 3s infinite alternate;
+        }
+        @keyframes neonFlicker {
+          0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+          20%, 24%, 55% { opacity: 0.4; }
         }
 
-        /* 18. Kinetic Wave: Undulating Radiant Wave Underline */
+        /* 8. Ransom Note */
+        .preset-ransom-note {
+          background: #f4f1ea;
+          color: #000 !important;
+          padding: 2px 8px;
+          font-weight: 800;
+          transform: rotate(-3deg);
+          box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+          clip-path: polygon(2% 4%, 98% 0%, 96% 95%, 0% 100%);
+          font-family: monospace;
+        }
+
+        /* 9. Hologram Projection */
+        .preset-hologram-float {
+          color: #00ffff;
+          font-weight: 700;
+          opacity: 0.8;
+          text-shadow: 0 0 8px #00ffff;
+          animation: hologramBob 4s ease-in-out infinite;
+          background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,255,255,0.1) 1px, rgba(0,255,255,0.1) 2px);
+          padding: 0 4px;
+        }
+        @keyframes hologramBob {
+          0%, 100% { transform: translateY(0px) translate3d(0,0,0); }
+          50% { transform: translateY(-4px) translate3d(0,0,0); }
+        }
+
+        /* 10. Marker Draw */
+        .preset-marker-draw {
+          color: #000 !important;
+          font-weight: 800;
+          background-image: linear-gradient(#ffe600, #ffe600);
+          background-size: 0% 100%;
+          background-repeat: no-repeat;
+          background-position: left center;
+          padding: 0 4px;
+          transition: background-size 0.5s ease-in-out;
+        }
+        .preset-marker-draw:hover {
+          background-size: 100% 100%;
+        }
+        /* Fallback if not hovered, show full */
+        .preset-marker-draw:not(:hover) {
+          background-size: 100% 100%;
+        }
+
+        /* 11. 3D Extruded */
+        .preset-3d-extruded {
+          color: #fff;
+          font-weight: 900;
+          text-shadow: 1px 1px 0 #ff4500, 2px 2px 0 #ff4500, 3px 3px 0 #ff4500, 4px 4px 0 #ff4500, 5px 5px 0 #ff4500;
+          letter-spacing: 2px;
+          margin-right: 5px; /* space for shadow */
+        }
+
+        /* 12. Gold Foil Emboss */
+        .preset-gold-emboss {
+          background: #1e2124;
+          color: #ebd73f;
+          padding: 3px 10px;
+          border-radius: 4px;
+          font-weight: 700;
+          box-shadow: inset 0 3px 6px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.1);
+          text-shadow: 0 1px 1px rgba(255,255,255,0.2);
+        }
+
+        /* 13. Kinetic Wave */
         .preset-kinetic-wave {
           color: #ffffff;
           font-weight: 700;
@@ -2497,20 +2416,19 @@ export default function NotionHubPage() {
             align="right"
             options={[
               { label: 'Default', value: '' },
-              { label: 'Gold Shimmer', value: 'gold_shimmer' },
-              { label: 'Cyberpunk Glitch', value: 'hologram_glitch' },
-              { label: 'Neon Cyan', value: 'neon_pulse' },
-              { label: 'Studio Highlighter', value: 'studio_marker' },
-              { label: 'Matrix Terminal', value: 'matrix_terminal' },
-              { label: 'Laser Red', value: 'laser_crimson' },
-              { label: 'Sub-Zero Glass', value: 'subzero_frost' },
-              { label: 'Electric Ultraviolet', value: 'electric_amethyst' },
-              { label: 'Hazard Caution', value: 'hazard_warning' },
-              { label: 'Liquid Velvet', value: 'liquid_gradient' },
-              { label: 'Rose Gold Foil', value: 'rose_gold' },
-              { label: 'Rainbow Prism', value: 'iridescent' },
-              { label: 'Clay 3D Emboss', value: 'clay_emboss' },
-              { label: 'Soundwave Underline', value: 'kinetic_wave' }
+              { label: 'Dripp Signature', value: 'dripp_signature' },
+              { label: 'Glassmorphic Pill', value: 'glass_pill' },
+              { label: 'Brutalism Block', value: 'brutalism' },
+              { label: 'Retro VHS', value: 'retro_vhs' },
+              { label: 'CIA Redacted', value: 'redacted' },
+              { label: 'Liquid Chrome', value: 'liquid_chrome' },
+              { label: 'Neon Sign', value: 'neon_sign' },
+              { label: 'Ransom Note', value: 'ransom_note' },
+              { label: 'Hologram Projection', value: 'hologram_float' },
+              { label: 'Marker Draw', value: 'marker_draw' },
+              { label: '3D Extruded', value: 'extruded_3d' },
+              { label: 'Gold Foil Emboss', value: 'gold_emboss' },
+              { label: 'Kinetic Wave', value: 'kinetic_wave' }
             ]}
             onChange={(val) => handleApplyPreset({ target: { value: val } })}
           />
@@ -3273,27 +3191,39 @@ function parseHTMLToNotion(htmlNode) {
 
 // Preset mapping dictionary ensuring 100% unique visual rendering and Notion API compatibility
 const PRESET_MAP = {
-  gold_shimmer: { class: 'preset-gold-shimmer', notion: 'yellow_background' },
-  highlight: { class: 'preset-gold-shimmer', notion: 'yellow_background' },
-  neon_pulse: { class: 'preset-neon-pulse', notion: 'blue_background' },
-  neon: { class: 'preset-neon-pulse', notion: 'blue_background' },
-  hologram_glitch: { class: 'preset-hologram-glitch', notion: 'blue_background' },
-  laser_crimson: { class: 'preset-laser-crimson', notion: 'red_background' },
-  studio_marker: { class: 'preset-studio-marker', notion: 'yellow_background' },
-  matrix_terminal: { class: 'preset-matrix-terminal', notion: 'green_background' },
-  aurora_borealis: { class: 'preset-aurora-borealis', notion: 'blue_background' },
-  subzero_frost: { class: 'preset-subzero-frost', notion: 'blue_background' },
-  electric_amethyst: { class: 'preset-electric-amethyst', notion: 'purple_background' },
-  hazard_warning: { class: 'preset-hazard-warning', notion: 'orange_background' },
-  rose_gold: { class: 'preset-rose-gold', notion: 'pink_background' },
-  clay_emboss: { class: 'preset-clay-emboss', notion: 'gray_background' },
+  dripp_signature: { class: 'preset-dripp-signature', notion: 'yellow_background' },
+  glass_pill: { class: 'preset-glass-pill', notion: 'gray_background' },
+  brutalism: { class: 'preset-brutalism', notion: 'gray_background' },
+  retro_vhs: { class: 'preset-retro-vhs', notion: 'blue_background' },
+  redacted: { class: 'preset-redacted', notion: 'gray_background' },
+  liquid_chrome: { class: 'preset-liquid-chrome', notion: 'gray_background' },
+  neon_sign: { class: 'preset-neon-sign', notion: 'pink_background' },
+  ransom_note: { class: 'preset-ransom-note', notion: 'yellow_background' },
+  hologram_float: { class: 'preset-hologram-float', notion: 'blue_background' },
+  marker_draw: { class: 'preset-marker-draw', notion: 'yellow_background' },
+  extruded_3d: { class: 'preset-3d-extruded', notion: 'orange_background' },
+  gold_emboss: { class: 'preset-gold-emboss', notion: 'yellow_background' },
   kinetic_wave: { class: 'preset-kinetic-wave', notion: 'yellow_background' },
-  iridescent: { class: 'preset-iridescent', notion: 'pink_background' },
-  liquid_gradient: { class: 'preset-liquid-gradient', notion: 'purple_background' },
-  liquid: { class: 'preset-liquid-gradient', notion: 'purple_background' },
-  cyber_lime: { class: 'preset-cyber-lime', notion: 'green_background' },
-  sunset_aura: { class: 'preset-sunset-aura', notion: 'orange_background' },
-  frosted_chrome: { class: 'preset-frosted-chrome', notion: 'gray_background' }
+  // Backward compatibility for old presets (map to defaults/new ones)
+  gold_shimmer: { class: 'preset-gold-emboss', notion: 'yellow_background' },
+  hologram_glitch: { class: 'preset-retro-vhs', notion: 'blue_background' },
+  neon_pulse: { class: 'preset-neon-sign', notion: 'blue_background' },
+  studio_marker: { class: 'preset-marker-draw', notion: 'yellow_background' },
+  matrix_terminal: { class: 'preset-retro-vhs', notion: 'green_background' },
+  laser_crimson: { class: 'preset-neon-sign', notion: 'red_background' },
+  subzero_frost: { class: 'preset-glass-pill', notion: 'blue_background' },
+  electric_amethyst: { class: 'preset-neon-sign', notion: 'purple_background' },
+  hazard_warning: { class: 'preset-brutalism', notion: 'orange_background' },
+  liquid_gradient: { class: 'preset-liquid-chrome', notion: 'purple_background' },
+  rose_gold: { class: 'preset-gold-emboss', notion: 'pink_background' },
+  iridescent: { class: 'preset-hologram-float', notion: 'pink_background' },
+  clay_emboss: { class: 'preset-3d-extruded', notion: 'gray_background' },
+  cyber_lime: { class: 'preset-neon-sign', notion: 'green_background' },
+  sunset_aura: { class: 'preset-gold-emboss', notion: 'orange_background' },
+  frosted_chrome: { class: 'preset-glass-pill', notion: 'gray_background' },
+  highlight: { class: 'preset-gold-emboss', notion: 'yellow_background' },
+  neon: { class: 'preset-neon-sign', notion: 'blue_background' },
+  liquid: { class: 'preset-liquid-chrome', notion: 'purple_background' }
 };
 
 // --- Utility: Apply Designer Preset ---
