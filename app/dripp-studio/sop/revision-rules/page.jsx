@@ -2,9 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useGenz } from '../../../../contexts/GenzContext';
+import { useGenz } from '../../../contexts/GenzContext';
 import { ChevronLeft, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
-import styles from '../../../admin.module.css';
+import styles from '../../admin.module.css';
 
 export default function RevisionRulesPage() {
   const { isGenz } = useGenz() || { isGenz: false };

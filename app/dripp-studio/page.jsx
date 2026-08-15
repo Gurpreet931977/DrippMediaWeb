@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FileText, PackagePlus, ShieldCheck, Video, Mail, Settings, Activity, HardDrive, Sparkles, Database, AlertTriangle, CheckSquare } from 'lucide-react';
+import { FileText, PackagePlus, ShieldCheck, Video, Mail, Settings, Activity, HardDrive, Sparkles, Database, AlertTriangle, CheckSquare, Check, ChevronRight } from 'lucide-react';
 import styles from './admin.module.css';
 import { useGenz } from '../contexts/GenzContext';
 import { useState, useEffect } from 'react';
@@ -11,6 +11,45 @@ export default function AdminDashboard() {
   const [currentDate, setCurrentDate] = useState('');
   const [pendingTasks, setPendingTasks] = useState([]);
   const [pendingCount, setPendingCount] = useState(null);
+  const [completingIds, setCompletingIds] = useState([]);
+
+  const handleToggleTask = async (e, task) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setCompletingIds(prev => [...prev, task.id]);
+    
+    try {
+      await fetch('/api/admin/notion/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockId: task.id, type: 'to_do', checked: true })
+      });
+      
+      const cacheKey = `notion_page_${task.docId}`;
+      const cachedStr = localStorage.getItem(cacheKey);
+      if (cachedStr) {
+        try {
+          const cachedData = JSON.parse(cachedStr);
+          const updatedBlocks = cachedData.blocks?.map(b => 
+            (b.id === task.id || b.id.replace(/-/g, '') === task.id.replace(/-/g, ''))
+              ? { ...b, to_do: { ...b.to_do, checked: true } }
+              : b
+          );
+          localStorage.setItem(cacheKey, JSON.stringify({ ...cachedData, blocks: updatedBlocks }));
+        } catch(e) {}
+      }
+
+      setTimeout(() => {
+        setPendingTasks(prev => prev.filter(t => t.id !== task.id));
+        setPendingCount(prev => Math.max(0, (prev || 1) - 1));
+        setCompletingIds(prev => prev.filter(id => id !== task.id));
+      }, 400);
+    } catch(err) {
+      console.error(err);
+      setCompletingIds(prev => prev.filter(id => id !== task.id));
+    }
+  };
 
   useEffect(() => {
     const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -273,13 +312,23 @@ export default function AdminDashboard() {
         </div>
 
         <Link href="/dripp-studio/notes-and-planning" style={{ textDecoration: 'none' }}>
-          <div className={styles.card} style={{ margin: 0, padding: '1.75rem', display: 'flex', alignItems: 'center', gap: '1.5rem', cursor: 'pointer', border: '1px solid rgba(235, 215, 63, 0.3)', background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(20, 20, 20, 0.8) 100%)' }}>
-            <div style={{ background: 'rgba(235, 215, 63, 0.15)', padding: '1.25rem', borderRadius: '50%', border: '1px solid rgba(235, 215, 63, 0.3)' }}>
-              <CheckSquare size={32} color="#ebd73f" />
+          <div className={styles.card} style={{ 
+            margin: 0, 
+            padding: '1.75rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '1.5rem', 
+            cursor: 'pointer', 
+            border: '1px solid rgba(235, 215, 63, 0.35)', 
+            background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.12) 0%, rgba(20, 20, 26, 0.85) 100%)',
+            boxShadow: '0 8px 30px rgba(235, 215, 63, 0.08)'
+          }}>
+            <div style={{ background: 'rgba(235, 215, 63, 0.18)', padding: '1.25rem', borderRadius: '50%', border: '1px solid rgba(235, 215, 63, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CheckSquare size={30} color="#ebd73f" />
             </div>
             <div>
-              <h3 style={{ fontSize: '1rem', color: '#ebd73f', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Pending Tasks</h3>
-              <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#fff', fontFamily: 'Panchang, sans-serif' }}>{pendingCount === null ? 'Syncing...' : `${pendingCount} Tasks`}</p>
+              <h3 style={{ fontSize: '0.85rem', color: '#ebd73f', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: '700', fontFamily: "'Clash Display', sans-serif" }}>Pending Tasks</h3>
+              <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>{pendingCount === null ? 'Syncing...' : `${pendingCount} Tasks`}</p>
             </div>
           </div>
         </Link>
@@ -287,74 +336,188 @@ export default function AdminDashboard() {
       </div>
 
       {/* Pending Tasks Interactive Section */}
-      {pendingTasks.length > 0 && (
-        <div style={{ marginBottom: '3rem', padding: '2rem', background: 'linear-gradient(180deg, rgba(20, 20, 25, 0.8) 0%, rgba(10, 10, 14, 0.95) 100%)', borderRadius: '20px', border: '1px solid rgba(235, 215, 63, 0.2)', boxShadow: '0 15px 35px rgba(0,0,0,0.6)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ padding: '6px 14px', background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '30px', color: '#ebd73f', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'Panchang, sans-serif', letterSpacing: '1px' }}>
-                {pendingCount === null ? 'SYNCING...' : `${pendingCount} PENDING`}
-              </div>
-              <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700, color: '#fff', fontFamily: 'Panchang, sans-serif', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                {isGenz ? 'action items to crush' : 'Pending Tasks'}
-              </h2>
+      <div style={{ 
+        marginBottom: '3rem', 
+        padding: '2rem 2.25rem', 
+        background: 'linear-gradient(180deg, rgba(24, 24, 30, 0.85) 0%, rgba(12, 12, 16, 0.95) 100%)', 
+        borderRadius: '24px', 
+        border: '1px solid rgba(235, 215, 63, 0.25)', 
+        boxShadow: '0 20px 45px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1.25rem', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              padding: '6px 14px', 
+              background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.18) 0%, rgba(235, 215, 63, 0.06) 100%)', 
+              border: '1px solid rgba(235, 215, 63, 0.45)', 
+              borderRadius: '30px', 
+              color: '#ebd73f', 
+              fontSize: '0.78rem', 
+              fontWeight: 700, 
+              fontFamily: "'Clash Display', sans-serif", 
+              letterSpacing: '1px' 
+            }}>
+              <span style={{ position: 'relative', display: 'flex', height: '8px', width: '8px' }}>
+                <span style={{ animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite', position: 'absolute', display: 'inline-flex', height: '100%', width: '100%', borderRadius: '50%', background: '#ebd73f', opacity: 0.75 }}></span>
+                <span style={{ position: 'relative', display: 'inline-flex', borderRadius: '50%', height: '8px', width: '8px', background: '#ebd73f', boxShadow: '0 0 8px #ebd73f' }}></span>
+              </span>
+              {pendingCount === null ? 'SYNCING...' : `${pendingCount} PENDING`}
             </div>
-            <Link href="/dripp-studio/notes-and-planning" style={{ color: '#ebd73f', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', fontFamily: 'Clash Display, sans-serif', letterSpacing: '1px' }}>
-              View All Notes →
-            </Link>
+            <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700, color: '#fff', fontFamily: "'Panchang', sans-serif", textTransform: 'uppercase', letterSpacing: '1px' }}>
+              {isGenz ? 'action items to crush' : 'Pending Tasks'}
+            </h2>
           </div>
+          <Link 
+            href="/dripp-studio/notes-and-planning" 
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              padding: '8px 16px', 
+              background: 'rgba(235, 215, 63, 0.08)', 
+              border: '1px solid rgba(235, 215, 63, 0.25)', 
+              borderRadius: '10px', 
+              color: '#ebd73f', 
+              fontSize: '0.82rem', 
+              fontWeight: 600, 
+              textDecoration: 'none', 
+              fontFamily: "'Clash Display', sans-serif", 
+              transition: 'all 0.2s ease' 
+            }}
+            onMouseOver={e => {
+              e.currentTarget.style.background = 'rgba(235, 215, 63, 0.16)';
+              e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.5)';
+            }}
+            onMouseOut={e => {
+              e.currentTarget.style.background = 'rgba(235, 215, 63, 0.08)';
+              e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.25)';
+            }}
+          >
+            <span>Open in Workspace</span>
+            <ChevronRight size={15} />
+          </Link>
+        </div>
 
+        {pendingTasks.length === 0 ? (
+          <div style={{ padding: '2rem 1rem', textAlign: 'center', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '16px', border: '1px dashed rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🎉</div>
+            <h4 style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '1.1rem', fontFamily: "'Clash Display', sans-serif", fontWeight: 700 }}>All Caught Up!</h4>
+            <p style={{ margin: 0, color: '#888', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>No pending to-do items found across your studio documents.</p>
+          </div>
+        ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
-            {pendingTasks.map((task) => (
-              <Link 
-                key={task.id} 
-                href={`/dripp-studio/notes-and-planning?docId=${task.docId}&blockId=${task.id}`}
-                style={{ textDecoration: 'none' }}
-              >
-                <div style={{ 
-                  padding: '1.25rem', 
-                  background: 'rgba(255, 255, 255, 0.03)', 
-                  border: '1px solid rgba(255, 255, 255, 0.08)', 
-                  borderRadius: '14px', 
-                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)', 
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '12px'
-                }}
-                onMouseOver={e => {
-                  e.currentTarget.style.background = 'rgba(235, 215, 63, 0.08)';
-                  e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.4)';
-                  e.currentTarget.style.transform = 'translateY(-3px)';
-                  e.currentTarget.style.boxShadow = '0 10px 25px rgba(235, 215, 63, 0.15)';
-                }}
-                onMouseOut={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+            {pendingTasks.map((task) => {
+              const isDone = completingIds.includes(task.id);
+              return (
+                <div 
+                  key={task.id} 
+                  style={{ 
+                    padding: '1.25rem', 
+                    background: isDone ? 'rgba(39, 201, 63, 0.08)' : 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(20, 20, 26, 0.7) 100%)', 
+                    border: `1px solid ${isDone ? 'rgba(39, 201, 63, 0.4)' : 'rgba(255, 255, 255, 0.08)'}`, 
+                    borderRadius: '16px', 
+                    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)', 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '14px',
+                    position: 'relative',
+                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)'
+                  }}
+                  onMouseOver={e => {
+                    if (!isDone) {
+                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(25, 25, 32, 0.85) 100%)';
+                      e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.4)';
+                      e.currentTarget.style.transform = 'translateY(-3px)';
+                      e.currentTarget.style.boxShadow = '0 12px 30px rgba(235, 215, 63, 0.12)';
+                    }
+                  }}
+                  onMouseOut={e => {
+                    if (!isDone) {
+                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(20, 20, 26, 0.7) 100%)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+                    }
+                  }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                    <div style={{ width: '18px', height: '18px', borderRadius: '5px', border: '2px solid #ebd73f', background: 'rgba(235, 215, 63, 0.1)', flexShrink: 0, marginTop: '2px' }} />
-                    <span style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 600, lineHeight: 1.5, fontFamily: 'Clash Display, sans-serif' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={(e) => handleToggleTask(e, task)}
+                      title="Mark as completed"
+                      style={{
+                        width: '22px',
+                        height: '22px',
+                        borderRadius: '6px',
+                        border: `2px solid ${isDone ? '#27c93f' : '#ebd73f'}`,
+                        background: isDone ? '#27c93f' : 'rgba(235, 215, 63, 0.12)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        marginTop: '2px',
+                        padding: 0,
+                        transition: 'all 0.2s ease',
+                        outline: 'none'
+                      }}
+                    >
+                      {isDone && <Check size={14} color="#000" strokeWidth={3} />}
+                    </button>
+                    <span style={{ 
+                      fontSize: '0.96rem', 
+                      color: isDone ? '#777' : '#fff', 
+                      fontWeight: 600, 
+                      lineHeight: 1.5, 
+                      fontFamily: "'Clash Display', sans-serif",
+                      textDecoration: isDone ? 'line-through' : 'none',
+                      transition: 'all 0.2s'
+                    }}>
                       {task.text}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Clash Display, sans-serif' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span style={{ 
+                      fontSize: '0.75rem', 
+                      color: '#999', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px',
+                      fontFamily: "'Clash Display', sans-serif",
+                      background: 'rgba(255,255,255,0.04)',
+                      padding: '3px 8px',
+                      borderRadius: '6px'
+                    }}>
                       📄 {task.docTitle}
                     </span>
-                    <span style={{ fontSize: '0.75rem', color: '#ebd73f', fontWeight: 700, letterSpacing: '1px' }}>
-                      Go to Task →
-                    </span>
+                    <Link 
+                      href={`/dripp-studio/notes-and-planning?docId=${task.docId}&blockId=${task.id}`}
+                      style={{ 
+                        fontSize: '0.75rem', 
+                        color: '#ebd73f', 
+                        fontWeight: 700, 
+                        letterSpacing: '0.5px',
+                        textDecoration: 'none',
+                        fontFamily: "'Clash Display', sans-serif",
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <span>Jump to Doc</span>
+                      <ChevronRight size={13} />
+                    </Link>
                   </div>
                 </div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <div style={{ height: '2px', flex: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.05), transparent)' }}></div>

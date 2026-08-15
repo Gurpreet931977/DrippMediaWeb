@@ -345,7 +345,15 @@ export default function AdminLayout({ children }) {
         }
       `}</style>
       <AdminSidebar />
-      <main key={pathname} className={styles.mainContent} style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
+      <main 
+        key={pathname} 
+        className={pathname?.startsWith('/dripp-studio/notes-and-planning') ? undefined : styles.mainContent} 
+        style={
+          pathname?.startsWith('/dripp-studio/notes-and-planning')
+            ? { flex: 1, height: '100vh', overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column', padding: 0 }
+            : { flex: 1, overflowY: 'auto', position: 'relative' }
+        }
+      >
         {children}
         
         {unreadErrorsCount > 0 && pathname !== '/dripp-studio/errors' && (

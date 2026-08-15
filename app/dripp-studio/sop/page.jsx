@@ -2,9 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useGenz } from '../../../contexts/GenzContext';
+import { useGenz } from '../../contexts/GenzContext';
 import { Book, ChevronRight, FileText, AlertCircle } from 'lucide-react';
-import styles from '../../admin.module.css';
+import styles from '../admin.module.css';
 
 export default function SOPPage() {
   const { isGenz } = useGenz() || { isGenz: false };

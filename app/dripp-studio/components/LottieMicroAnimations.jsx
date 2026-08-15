@@ -844,6 +844,7 @@ export function LottieSparkles({ size = 18, loop = true }) {
  */
 export function LottieStar({ isFavorite, onToggle, size = 20 }) {
   const [mounted, setMounted] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const lottieRef = useRef(null);
 
   useEffect(() => { setMounted(true); }, []);
@@ -858,27 +859,26 @@ export function LottieStar({ isFavorite, onToggle, size = 20 }) {
           lottieRef.current.goToAndPlay(0, true);
         }
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
-        background: 'transparent',
+        background: isHovered ? 'rgba(235, 215, 63, 0.12)' : 'transparent',
         border: 'none',
         cursor: 'pointer',
-        padding: '8px',
+        padding: '6px',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: '50%',
-        transition: 'background 0.2s',
+        borderRadius: '8px',
+        transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
         outline: 'none',
         touchAction: 'manipulation',
-        minWidth: '40px',
-        minHeight: '40px'
+        flexShrink: 0
       }}
-      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-      onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
       title={isFavorite ? "Remove from favorites" : "Add to favorites"}
     >
       {isFavorite && mounted ? (
-        <div style={{ width: `${size + 4}px`, height: `${size + 4}px`, pointerEvents: 'none' }}>
+        <div style={{ width: `${size + 4}px`, height: `${size + 4}px`, pointerEvents: 'none', filter: 'drop-shadow(0 0 6px rgba(235, 215, 63, 0.7))' }}>
           <Lottie
             lottieRef={lottieRef}
             animationData={starBurstLottieData}
@@ -888,7 +888,17 @@ export function LottieStar({ isFavorite, onToggle, size = 20 }) {
           />
         </div>
       ) : (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+        <svg 
+          width={size} 
+          height={size} 
+          viewBox="0 0 24 24" 
+          fill={isHovered ? 'rgba(235, 215, 63, 0.2)' : 'none'} 
+          stroke={isHovered ? '#ebd73f' : 'rgba(255, 255, 255, 0.45)'} 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          style={{ transition: 'all 0.2s ease', transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
+        >
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
         </svg>
       )}
