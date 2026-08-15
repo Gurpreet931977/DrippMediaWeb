@@ -10,7 +10,7 @@ export default function AdminDashboard() {
   const { isGenz } = useGenz() || { isGenz: false };
   const [currentDate, setCurrentDate] = useState('');
   const [pendingTasks, setPendingTasks] = useState([]);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(null);
 
   useEffect(() => {
     const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -18,9 +18,39 @@ export default function AdminDashboard() {
 
     async function loadPendingTasks() {
       try {
+        // 1. Fast sync from cache
+        const cachedListStr = localStorage.getItem('notion_list');
+        if (cachedListStr) {
+          try {
+            const cachedList = JSON.parse(cachedListStr).items || [];
+            let fastPending = [];
+            for (const item of cachedList) {
+              const cachedPageStr = localStorage.getItem(`notion_page_${item.id}`);
+              if (cachedPageStr) {
+                const pageBlocks = JSON.parse(cachedPageStr).blocks || [];
+                const pagePending = pageBlocks
+                  .filter(b => {
+                    if (b.type !== 'to_do' || b.to_do?.checked) return false;
+                    const text = (b.to_do?.rich_text?.map(t => t.plain_text || t.text?.content || '').join('') || '').trim();
+                    return text.length > 0;
+                  })
+                  .map(b => ({
+                    id: b.id, docId: item.id, docTitle: item.title || 'Untitled Document',
+                    text: b.to_do?.rich_text?.map(t => t.plain_text).join('') || 'Untitled Task'
+                  }));
+                fastPending.push(...pagePending);
+              }
+            }
+            setPendingTasks(fastPending);
+            setPendingCount(fastPending.length);
+          } catch(e) {}
+        }
+
+        // 2. Fetch fresh list from network
         const res = await fetch('/api/admin/notion?action=list');
         const data = await res.json();
         const items = data.items || [];
+        localStorage.setItem('notion_list', JSON.stringify({ ...data, items }));
         
         let allPending = [];
         for (const item of items) {
@@ -35,11 +65,18 @@ export default function AdminDashboard() {
               const bRes = await fetch(`/api/admin/notion?action=blocks&pageId=${item.id}`);
               const bData = await bRes.json();
               pageBlocks = bData.blocks || [];
+              if (pageBlocks.length > 0) {
+                localStorage.setItem(cacheKey, JSON.stringify(bData));
+              }
             } catch(e) {}
           }
           
           const pagePending = pageBlocks
-            .filter(b => b.type === 'to_do' && !b.to_do?.checked)
+            .filter(b => {
+              if (b.type !== 'to_do' || b.to_do?.checked) return false;
+              const text = (b.to_do?.rich_text?.map(t => t.plain_text || t.text?.content || '').join('') || '').trim();
+              return text.length > 0;
+            })
             .map(b => ({
               id: b.id,
               docId: item.id,
@@ -47,12 +84,14 @@ export default function AdminDashboard() {
               text: b.to_do?.rich_text?.map(t => t.plain_text).join('') || 'Untitled Task'
             }));
           allPending.push(...pagePending);
+          
+          // Progressive update so it doesn't stay 'Syncing...' or stale for 10 seconds
+          setPendingTasks([...allPending]);
+          setPendingCount(allPending.length);
         }
-        
-        setPendingTasks(allPending);
-        setPendingCount(allPending.length);
       } catch(err) {
         console.error(err);
+        setPendingCount(prev => prev === null ? 0 : prev);
       }
     }
     loadPendingTasks();
@@ -240,7 +279,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h3 style={{ fontSize: '1rem', color: '#ebd73f', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Pending Tasks</h3>
-              <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#fff', fontFamily: 'Panchang, sans-serif' }}>{pendingCount} Tasks</p>
+              <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#fff', fontFamily: 'Panchang, sans-serif' }}>{pendingCount === null ? 'Syncing...' : `${pendingCount} Tasks`}</p>
             </div>
           </div>
         </Link>
@@ -253,7 +292,7 @@ export default function AdminDashboard() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ padding: '6px 14px', background: 'rgba(235, 215, 63, 0.15)', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '30px', color: '#ebd73f', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'Panchang, sans-serif', letterSpacing: '1px' }}>
-                {pendingCount} PENDING
+                {pendingCount === null ? 'SYNCING...' : `${pendingCount} PENDING`}
               </div>
               <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700, color: '#fff', fontFamily: 'Panchang, sans-serif', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 {isGenz ? 'action items to crush' : 'Pending Tasks'}

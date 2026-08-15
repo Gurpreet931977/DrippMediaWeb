@@ -1083,7 +1083,8 @@ export default function NotionHubPage() {
     <div style={{ 
       fontFamily: "'Clash Display', 'Panchang', sans-serif", 
       color: '#fff', 
-      minHeight: '100vh', 
+      height: '100vh',
+      overflow: 'hidden',
       background: '#030305',
       display: 'flex',
       flexDirection: 'column'
@@ -1212,6 +1213,7 @@ export default function NotionHubPage() {
           gap: 24px;
           padding: 24px 32px;
           flex: 1;
+          min-height: 0;
           max-width: 1800px;
           margin: 0 auto;
           width: 100%;
@@ -1242,7 +1244,8 @@ export default function NotionHubPage() {
           .notes-catalog-column.mobile-col-active,
           .notes-reader-column.mobile-col-active {
             display: flex !important;
-            height: calc(100vh - 135px) !important;
+            flex: 1 !important;
+            min-height: 0 !important;
           }
 
           .mobile-tab-bar {
@@ -1655,7 +1658,8 @@ export default function NotionHubPage() {
         <div className={`notion-glass-card notes-catalog-column ${mobileView === 'catalog' ? 'mobile-col-active' : 'mobile-col-hidden'}`} style={{
           display: 'flex',
           flexDirection: 'column',
-          height: 'calc(100vh - 120px)',
+          flex: 1,
+          minHeight: 0,
           overflow: 'hidden'
         }}>
           {/* Catalog Search & Filters Header */}
@@ -1806,7 +1810,8 @@ export default function NotionHubPage() {
           flex: 1, 
           display: 'flex', 
           flexDirection: 'column',
-          height: isZenithMode ? '100vh' : 'calc(100vh - 120px)',
+          minHeight: 0,
+          height: isZenithMode ? '100vh' : 'auto',
           width: isZenithMode ? '100vw' : '100%',
           maxWidth: isZenithMode ? '900px' : '100%',
           padding: isZenithMode ? '40px 0 0 0' : '0'

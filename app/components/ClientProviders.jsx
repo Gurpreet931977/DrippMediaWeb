@@ -16,15 +16,23 @@ function GlobalGenzToggle() {
   const dragRef = React.useRef({ startX: 0, startY: 0 });
   const dragStartCoords = React.useRef({ x: 0, y: 0 });
   const hasMovedRef = React.useRef(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
         if (typeof window !== 'undefined' && !hasMovedRef.current) {
-            let targetY = -20; // Top edge flush
-            let targetX = 0; // Centered
+            let targetY = isMobile ? window.innerHeight - 80 : -20;
+            let targetX = 0;
             setPosition({ x: targetX, y: targetY });
             setIsSnapped(true);
-            setSnapCorner('top');
+            setSnapCorner(isMobile ? 'bottom' : 'top');
         }
     }, 4000);
     return () => clearTimeout(timer);
@@ -300,11 +308,17 @@ function GlobalGenzToggle() {
       )}
 
       <div 
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
+        onMouseDown={isMobile ? undefined : handleMouseDown}
+        onTouchStart={isMobile ? undefined : handleTouchStart}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        style={{
+        style={isMobile ? {
+          position: 'fixed',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 99999,
+        } : {
           position: 'fixed',
           top: '20px',
           left: '50%',
@@ -316,7 +330,29 @@ function GlobalGenzToggle() {
       >
         <button 
             onClick={handleToggle}
-            style={{
+            style={isMobile ? {
+                background: isGenz ? 'var(--brand-yellow)' : 'rgba(20, 20, 20, 0.9)',
+                color: isGenz ? '#000' : 'rgba(255,255,255,0.8)',
+                border: `1px solid ${isGenz ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.15)'}`,
+                borderRadius: '30px',
+                padding: '10px 20px',
+                width: 'auto',
+                height: 'auto',
+                fontFamily: "'Clash Display', sans-serif",
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                boxShadow: isGenz ? '0 0 20px rgba(235, 215, 63, 0.4)' : '0 4px 15px rgba(0,0,0,0.5)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                userSelect: 'none',
+            } : {
                 background: (isSnapped && !isHovered) ? 'var(--brand-yellow)' : (isGenz ? 'var(--brand-yellow)' : 'rgba(255, 255, 255, 0.03)'),
                 color: (isSnapped && !isHovered) ? 'transparent' : (isGenz ? '#000' : 'rgba(255,255,255,0.5)'),
                 border: (isSnapped && !isHovered) ? '1px solid transparent' : `1px solid ${isGenz ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.08)'}`,
@@ -344,6 +380,7 @@ function GlobalGenzToggle() {
                 overflow: 'hidden'
             }}
             onMouseEnter={(e) => {
+               if (isMobile) return;
                if (!isDragging && (!isSnapped || isHovered)) {
                   e.currentTarget.style.transform = 'scale(1.05)';
                   if (!isGenz) {
@@ -354,6 +391,7 @@ function GlobalGenzToggle() {
                }
             }}
             onMouseLeave={(e) => {
+               if (isMobile) return;
                if (!isDragging) {
                   e.currentTarget.style.transform = (isSnapped && ['left', 'right'].includes(snapCorner)) ? 'rotate(90deg)' : 'rotate(0deg)';
                   if (!isGenz) {
@@ -371,10 +409,10 @@ function GlobalGenzToggle() {
                 background: isGenz ? '#000' : 'rgba(255,255,255,0.3)',
                 boxShadow: isGenz ? '0 0 5px rgba(0,0,0,0.5)' : 'none',
                 transition: 'all 0.5s ease',
-                opacity: (isSnapped && !isHovered) ? 0 : 1,
+                opacity: (isSnapped && !isHovered && !isMobile) ? 0 : 1,
                 flexShrink: 0
             }} />
-            <span style={{ opacity: (isSnapped && !isHovered) ? 0 : 1, transition: 'opacity 0.3s ease' }}>GEN-Z</span>
+            <span style={{ opacity: (isSnapped && !isHovered && !isMobile) ? 0 : 1, transition: 'opacity 0.3s ease' }}>GEN-Z</span>
         </button>
       </div>
     </>
