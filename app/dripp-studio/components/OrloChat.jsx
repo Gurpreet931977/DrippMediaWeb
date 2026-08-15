@@ -502,9 +502,14 @@ export default function OrloChat() {
           setInput(e.detail);
         } else {
           setInput(e.detail.text || '');
-          if (e.detail.blockId) {
-            window._notionContext = { blockId: e.detail.blockId, type: e.detail.blockType };
-          }
+          window._notionContext = {
+            ...(window._notionContext || {}),
+            targetBlockId: e.detail.blockId || window._notionContext?.targetBlockId,
+            targetBlockType: e.detail.blockType || window._notionContext?.targetBlockType,
+            selectedText: e.detail.selectedText || window._notionContext?.selectedText,
+            pageId: e.detail.pageId || window._notionContext?.pageId,
+            pageTitle: e.detail.pageTitle || window._notionContext?.pageTitle
+          };
         }
       }
     };
@@ -898,9 +903,9 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       setEmotion('success');
       setTimeout(() => setEmotion('idle'), 3000);
 
-      let msg = data.replyMessage || data.message || (data.payload && data.payload.replyMessage);
+      let msg = data.replyMessage || data.message || (data.payload && data.payload.replyMessage) || data.payload?.rewrittenContent;
       if (!msg) {
-         msg = data.intent === 'chat' ? "I'm here!" : "Done.";
+         msg = data.intent === 'chat' || data.intent === 'notion_edit' ? "Here is what I found for you." : "Done! I've taken care of that.";
       }
       
       // Save AI response to voice history and chat panel
@@ -1015,11 +1020,18 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       } else {
         let msg = data.replyMessage || data.message || (data.payload && data.payload.replyMessage);
         
-        // If it's a chat intent, it should NEVER say "Done. Check your form!"
+        if (!msg && data.payload?.rewrittenContent) {
+          msg = data.payload.rewrittenContent;
+        }
+
         if (!msg) {
-           msg = data.intent === 'chat' 
-             ? "I'm not sure what to say to that, but I'm here for you!" 
-             : "Done. Check your form!";
+          if (data.intent === 'chat' || data.intent === 'notion_edit') {
+            msg = "Here is what I came up with for you!";
+          } else if (['quote', 'package', 'invoice', 'email', 'portfolio'].includes(data.intent)) {
+            msg = "Done! I've updated the form with the requested details.";
+          } else {
+            msg = "Done! I've processed your request.";
+          }
         }
         
         nextMessages.push({ role: 'ai', text: msg });
@@ -1401,6 +1413,9 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           line-height: 1.6;
           box-shadow: 0 8px 24px rgba(0,0,0,0.2);
           animation: slideUpFade 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+          white-space: pre-wrap;
+          word-break: break-word;
+          font-family: 'Clash Display', sans-serif;
         }
         
         @keyframes slideUpFade {

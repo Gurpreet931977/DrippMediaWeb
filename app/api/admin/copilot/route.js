@@ -33,6 +33,29 @@ export async function POST(request) {
     let memoryContext = '';
     let statsContext = '';
     let adminIdentityContext = '';
+    let notionSummary = '';
+
+    if (notionContext && (notionContext.pageTitle || (notionContext.blocks && notionContext.blocks.length > 0) || notionContext.selectedText)) {
+      const pageTitle = notionContext.pageTitle || notionContext.page?.title || notionContext.title || '';
+      const blocks = notionContext.blocks || [];
+      let blockText = '';
+      if (Array.isArray(blocks) && blocks.length > 0) {
+        blockText = blocks.map(b => {
+          const text = b.text || (b[b.type]?.rich_text?.map(r => r.plain_text || r.text?.content || '').join('')) || '';
+          if (!text.trim()) return '';
+          const prefix = b.type === 'to_do' ? `[${b.checked ? 'X' : ' '}] ` : b.type?.startsWith('heading') ? '### ' : '- ';
+          return `${prefix}${text}`;
+        }).filter(Boolean).join('\n');
+      }
+
+      notionSummary = `\n\n## ACTIVE NOTION / STUDIO NOTES DOCUMENT:\nDocument Title: "${pageTitle || 'Untitled Document'}"\n${blockText ? `Document Content:\n${blockText}` : '(Document is currently empty or has no text blocks)'}`;
+      if (notionContext.selectedText) {
+        notionSummary += `\nCurrently Highlighted Text by Admin: "${notionContext.selectedText}"`;
+      }
+      if (notionContext.targetBlockId) {
+        notionSummary += `\nTarget Block ID: ${notionContext.targetBlockId}`;
+      }
+    }
     
     if (supabase) {
       const memoryLimit = isVoiceCall ? 10 : 40;
@@ -78,7 +101,7 @@ You have real-time access to the internet via Google Search. If a user asks you 
 Current Date/Time: ${currentDate || new Date().toISOString()}
 Current Email Form State: ${JSON.stringify(context || {}, null, 2)}
 Current System Docs State: ${JSON.stringify(systemContext || {}, null, 2)}
-Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${adminIdentityContext}${memoryContext}${statsContext}
+Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${notionSummary}${adminIdentityContext}${memoryContext}${statsContext}
 ${isGenz ? "\nsince the user is in genz mode, respond using natural genz slang ('cook', 'w', 'aura', 'locked in', 'lore', 'vibes', 'no cap', 'based'). keep it casual and peer-like. no emojis." : ""}
 ${isVoiceCall ? `
 CRITICAL: YOU ARE ON A LIVE VOICE CALL (Orlo Live). This is a real-time spoken conversation, NOT a text chat.
@@ -161,7 +184,7 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
 
 ## INTENT CLASSIFICATION (MUST classify every message into one of these):
 1. "email" - Write/edit/schedule/personalize an email campaign
-2. "chat" - ANY general conversation, question, idea discussion, creative brainstorm, strategy question, greetings, personal questions. Use this for 90% of interactions that aren't a specific form action.
+2. "chat" - ANY general conversation, document summarization, insight extraction, action item creation, question, idea discussion, creative brainstorm, strategy question, greetings, personal questions. Use this for 90% of interactions that aren't a specific form action.
 3. "learn" - User teaches you a rule or preference to remember
 4. "quote" - Create a client quote/pricing package/proposal
 5. "package" - Standalone PMP or Masterplan strategy
@@ -169,17 +192,21 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
 7. "invoice" - Create a formal invoice
 8. "portfolio" - Fill out the Portfolio Manager form
 9. "clear_chat" - User wants to reset/clear chat history
-10. "notion_edit" - Edit/summarize/rewrite Notion page content
+10. "notion_edit" - Rewrite or replace a specific highlighted block in a Notion/Studio notes page
 11. "notion_task" - Check or uncheck a Notion to-do list task
 
 ## RULES FOR SPECIFIC INTENTS:
 
 **For "chat" intent (MOST COMMON):**
-- THIS IS WHERE YOUR INTELLIGENCE SHINES. Give substantive, thoughtful, specific replies.
-- Answer marketing questions with real expertise. Give creative suggestions with real specifics.
+- THIS IS WHERE YOUR INTELLIGENCE SHINES. Give substantive, thoughtful, specific, beautifully structured replies.
+- When asked to summarize a document, extract key insights, create action items, or analyze notes (like "Summarize key insights and create action items for [Doc Title]"):
+  - Thoroughly read the document from "ACTIVE NOTION / STUDIO NOTES DOCUMENT" above.
+  - Provide a clear, organized breakdown with ### Key Insights and - [ ] Action Items.
+  - Return this FULL detailed summary directly in "replyMessage".
+- Answer marketing and strategy questions with real expertise. Give creative suggestions with real specifics.
 - Reference prior context from Chat History naturally.
-- Your replyMessage should be rich and detailed, like a brilliant colleague would respond, not just 1-2 sentences.
-- NEVER say "Done. Check your form!" for chat responses.
+- Your replyMessage should be rich and detailed, like a brilliant colleague would respond.
+- NEVER say "Done. Check your form!" for chat, summarization, or questions.
 - If they greet you, greet back warmly and ask what they're building today.
 - If they ask a question, ANSWER IT thoroughly.
 
@@ -197,10 +224,10 @@ CRITICAL PRICING: If user says total is 28k, every item's (qty x rate) must sum 
 CRITICAL PMP: If asked to "write pmp" or "generate strategy", create rich multi-phase pmpStrategy.
 
 **For "system_doc" intent:**
-Read the "content" field in System Docs State. Apply user's changes. Return fully rewritten text as "rewrittenContent".
+Read the "content" field in System Docs State. Apply user's changes. Return fully rewritten text as "rewrittenContent", and provide a summary of your changes in "replyMessage".
 
 **For "notion_edit" intent:**
-Read the highlighted text from user's prompt. Improve/rewrite/summarize as requested. Return as "rewrittenContent".
+Read the highlighted text or target block from the Notion Context. Rewrite/improve as requested. Return as "rewrittenContent", and explain what was changed in "replyMessage".
 
 **For "notion_task" intent:**
 Read the user's command and the Notion Context. 
@@ -426,10 +453,11 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       }
     }
 
-    if (parsed.intent === 'notion_edit' && parsed.payload?.rewrittenContent && notionContext?.blockId) {
+    const targetBlockId = notionContext?.targetBlockId || notionContext?.blockId;
+    if (parsed.intent === 'notion_edit' && parsed.payload?.rewrittenContent && targetBlockId) {
       try {
         const notionClient = new NotionClient({ auth: process.env.NOTION_API_KEY });
-        const type = notionContext.type || 'paragraph';
+        const type = notionContext.targetBlockType || notionContext.type || 'paragraph';
         const content = parsed.payload.rewrittenContent;
         
         let blockPayload = {};
@@ -439,16 +467,26 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
               rich_text: [{ text: { content } }]
             }
           };
-          if (type === 'to_do') blockPayload.to_do.checked = false; // simplify
+          if (type === 'to_do') blockPayload.to_do.checked = false;
 
           await notionClient.blocks.update({
-            block_id: notionContext.blockId,
+            block_id: targetBlockId,
             ...blockPayload
           });
         }
       } catch (notionErr) {
         console.error('Failed to live-edit notion block:', notionErr);
-        parsed.replyMessage = "I generated the text, but couldn't auto-save it to Notion due to an API error.";
+      }
+    }
+
+    // Ensure replyMessage is NEVER empty or defaulting to 'check form'
+    if (!parsed.replyMessage || parsed.replyMessage.trim() === '' || parsed.replyMessage.toLowerCase().includes('check your form')) {
+      if (parsed.payload?.rewrittenContent) {
+        parsed.replyMessage = parsed.payload.rewrittenContent;
+      } else if (['quote', 'package', 'invoice', 'email', 'portfolio'].includes(parsed.intent)) {
+        parsed.replyMessage = "Done! I've updated the form with the requested details.";
+      } else {
+        parsed.replyMessage = "Done! I've processed your request.";
       }
     }
 

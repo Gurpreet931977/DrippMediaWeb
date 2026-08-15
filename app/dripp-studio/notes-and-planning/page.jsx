@@ -33,12 +33,13 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
 
   const toggleOpen = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!isOpen && dropdownRef.current) {
       const rect = dropdownRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       setOpenUpwards(spaceBelow < 250);
     }
-    setIsOpen(!isOpen);
+    setIsOpen(prev => !prev);
   };
 
   return (
@@ -309,7 +310,27 @@ export default function NotionHubPage() {
     if (selectedItem?.id) {
       fetchPageContent(selectedItem.id);
     }
-  }, [selectedItem, fetchPageContent]);
+  }, [selectedItem?.id, fetchPageContent]);
+
+  useEffect(() => {
+    if (docContent || selectedItem) {
+      window._notionContext = {
+        pageTitle: docContent?.page?.title || selectedItem?.title || '',
+        pageId: selectedItem?.id || '',
+        blocks: (docContent?.blocks || []).map(b => {
+          const type = b.type;
+          const richText = b[type]?.rich_text || [];
+          const plainText = richText.map(r => r.plain_text || r.text?.content || '').join('');
+          return {
+            id: b.id,
+            type: b.type,
+            text: plainText,
+            checked: b.to_do?.checked
+          };
+        })
+      };
+    }
+  }, [docContent, selectedItem]);
 
   useEffect(() => {
     fetchNotionItems();
@@ -1235,8 +1256,12 @@ export default function NotionHubPage() {
           animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
         @keyframes slideUpFade {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(8px) scale(0.96); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes slideDownFade {
+          from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
         
         .blockHoverGroup .blockDeleteBtn {
@@ -1341,8 +1366,7 @@ export default function NotionHubPage() {
 
           .notes-floating-toolbar {
             max-width: 92vw !important;
-            overflow-x: auto !important;
-            scrollbar-width: none !important;
+            overflow: visible !important;
           }
         }
 
@@ -1596,8 +1620,8 @@ export default function NotionHubPage() {
                   text: selectedItem 
                     ? `Help me brainstorm, summarize, or organize notes for "${selectedItem.title}"` 
                     : 'How can I help you plan, create, and organize your studio notes today?',
-                  intent: 'notion_edit',
-                  blockId: selectedItem?.id
+                  pageId: selectedItem?.id,
+                  pageTitle: selectedItem?.title
                 } 
               }));
             }}
@@ -1765,8 +1789,7 @@ export default function NotionHubPage() {
           pointerEvents: 'none',
           transition: 'opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
           maxWidth: 'calc(100vw - 32px)',
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
+          overflow: 'visible',
           userSelect: 'none',
           WebkitUserSelect: 'none'
         }}>
@@ -1857,7 +1880,14 @@ export default function NotionHubPage() {
               const blockId = toolbarRef.current?.dataset.blockId;
               const blockType = toolbarRef.current?.dataset.blockType;
               window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
-                detail: { text: `Please explain, rewrite, or brainstorm this text: "${text}"`, blockId, blockType, intent: 'notion_edit' }
+                detail: { 
+                  text: `Please explain, rewrite, or brainstorm this text: "${text}"`, 
+                  blockId, 
+                  blockType,
+                  selectedText: text,
+                  pageId: selectedItem?.id,
+                  pageTitle: selectedItem?.title
+                } 
               }));
             }}
             title="Ask Orlo AI Copilot"
@@ -1892,7 +1922,7 @@ export default function NotionHubPage() {
           overflow: 'hidden'
         }}>
           {/* Catalog Search & Filters Header */}
-          <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'relative', zIndex: 50, overflow: 'visible' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <span className="notion-font" style={{ fontSize: '0.8rem', fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 Catalog ({filteredItems.length})
@@ -2370,8 +2400,8 @@ export default function NotionHubPage() {
                       window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', { 
                         detail: { 
                           text: `Summarize key insights and create action items for "${docTitle}":`,
-                          blockId: selectedItem?.id,
-                          intent: 'notion_edit'
+                          pageId: selectedItem?.id,
+                          pageTitle: docTitle
                         } 
                       }));
                     }}
