@@ -146,6 +146,16 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
   );
 }
 
+function formatDDMMYYYY(dateInput) {
+  if (!dateInput) return 'Recent';
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return 'Recent';
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export default function NotionHubPage() {
   const { isGenz } = useGenz() || { isGenz: false };
   const [items, setItems] = useState([]);
@@ -2019,7 +2029,7 @@ export default function NotionHubPage() {
                         {item.title}
                       </div>
                       <div style={{ fontSize: '0.72rem', color: '#777', fontWeight: 500 }}>
-                        {item.lastEditedTime ? new Date(item.lastEditedTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Recent'} 
+                        {formatDDMMYYYY(item.lastEditedTime)} 
                         {' • '} <span style={{ textTransform: 'capitalize' }}>{item.object}</span>
                       </div>
                     </div>
@@ -2162,12 +2172,21 @@ export default function NotionHubPage() {
                     {docContent?.page?.icon || selectedItem.icon || '📄'}
                   </span>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                       <h1 
                         className="notion-font" 
                         contentEditable
                         suppressContentEditableWarning
-                        style={{ fontSize: '2.2rem', fontWeight: 700, margin: 0, letterSpacing: '-0.02em', outline: 'none', fontFamily: "'Clash Display', sans-serif" }}
+                        style={{ 
+                          fontSize: '2.5rem', 
+                          fontWeight: 800, 
+                          margin: 0, 
+                          letterSpacing: '-0.03em', 
+                          outline: 'none', 
+                          fontFamily: "'Clash Display', sans-serif",
+                          color: '#ffffff',
+                          lineHeight: 1.15
+                        }}
                         onBlur={async (e) => {
                           const newTitle = e.target.innerText.trim();
                           if (newTitle && newTitle !== (docContent?.page?.title || selectedItem.title)) {
@@ -2195,17 +2214,55 @@ export default function NotionHubPage() {
                       <LottieStar
                         isFavorite={favorites.includes(selectedItem.id)}
                         onToggle={(e) => toggleFavorite(e, selectedItem.id)}
-                        size={22}
+                        size={24}
                       />
                     </div>
-                    <p className="notion-font" style={{ fontSize: '0.82rem', color: '#777', margin: '4px 0 0 0', fontWeight: 500 }}>
-                      Updated: <span style={{ color: '#aaa' }}>{selectedItem.lastEditedTime ? new Date(selectedItem.lastEditedTime).toLocaleDateString() : 'Recent'}</span>
+                    <p className="notion-font" style={{ fontSize: '0.82rem', color: '#777', margin: '6px 0 0 0', fontWeight: 500 }}>
+                      Updated: <span style={{ color: '#aaa' }}>{formatDDMMYYYY(selectedItem.lastEditedTime || docContent?.page?.lastEditedTime)}</span>
                     </p>
                   </div>
                 </div>
 
                 {/* Toolbar Buttons */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  {/* Dedicated Favorite Star Action Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => toggleFavorite(e, selectedItem.id)}
+                    className="notion-font"
+                    style={{
+                      padding: '8px 14px',
+                      background: favorites.includes(selectedItem.id) ? 'rgba(235, 215, 63, 0.16)' : 'rgba(255, 255, 255, 0.05)',
+                      border: favorites.includes(selectedItem.id) ? '1px solid rgba(235, 215, 63, 0.45)' : '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '8px',
+                      color: favorites.includes(selectedItem.id) ? '#ebd73f' : '#ccc',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontFamily: "'Clash Display', sans-serif",
+                      transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                    }}
+                    onMouseOver={e => {
+                      if (!favorites.includes(selectedItem.id)) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.35)';
+                      }
+                    }}
+                    onMouseOut={e => {
+                      if (!favorites.includes(selectedItem.id)) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                      }
+                    }}
+                    title={favorites.includes(selectedItem.id) ? "Favorited document" : "Add to favorites"}
+                  >
+                    <Star size={15} fill={favorites.includes(selectedItem.id) ? '#ebd73f' : 'transparent'} strokeWidth={2.4} color={favorites.includes(selectedItem.id) ? '#ebd73f' : '#aaa'} />
+                    <span>{favorites.includes(selectedItem.id) ? 'Favorited' : 'Favorite'}</span>
+                  </button>
+
                   <FocusSafeDropdown 
                     label={`Sort: ${blockSortBy === 'name' ? 'Name' : blockSortBy === 'date' ? 'Date' : 'Manual'}`}
                     options={[

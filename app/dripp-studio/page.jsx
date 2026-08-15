@@ -366,7 +366,7 @@ export default function AdminDashboard() {
               </span>
               {pendingCount === null ? 'SYNCING...' : `${pendingCount} PENDING`}
             </div>
-            <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700, color: '#fff', fontFamily: "'Panchang', sans-serif", textTransform: 'uppercase', letterSpacing: '1px' }}>
+            <h2 style={{ margin: 0, fontSize: '1.45rem', fontWeight: 800, color: '#fff', fontFamily: "'Clash Display', sans-serif", letterSpacing: '-0.02em' }}>
               {isGenz ? 'action items to crush' : 'Pending Tasks'}
             </h2>
           </div>

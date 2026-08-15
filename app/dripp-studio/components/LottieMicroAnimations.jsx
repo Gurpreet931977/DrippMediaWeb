@@ -844,14 +844,10 @@ export function LottieSparkles({ size = 18, loop = true }) {
 }
 
 /**
- * Lottie-powered Star Favorite Button
+ * Lottie-powered Star Favorite Button (High-Contrast & Always Visible)
  */
-export function LottieStar({ isFavorite, onToggle, size = 20 }) {
-  const [mounted, setMounted] = useState(false);
+export function LottieStar({ isFavorite, onToggle, size = 22 }) {
   const [isHovered, setIsHovered] = useState(false);
-  const lottieRef = useRef(null);
-
-  useEffect(() => { setMounted(true); }, []);
 
   return (
     <button
@@ -859,53 +855,47 @@ export function LottieStar({ isFavorite, onToggle, size = 20 }) {
       onClick={(e) => {
         e.stopPropagation();
         if (onToggle) onToggle(e);
-        if (lottieRef.current && !isFavorite) {
-          lottieRef.current.goToAndPlay(0, true);
-        }
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        background: isHovered ? 'rgba(235, 215, 63, 0.12)' : 'transparent',
-        border: 'none',
+        background: isFavorite 
+          ? 'rgba(235, 215, 63, 0.16)' 
+          : isHovered ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+        border: isFavorite 
+          ? '1px solid rgba(235, 215, 63, 0.5)' 
+          : isHovered ? '1px solid rgba(235, 215, 63, 0.35)' : '1px solid rgba(255, 255, 255, 0.14)',
         cursor: 'pointer',
         padding: '6px',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: '8px',
+        borderRadius: '10px',
         transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
         outline: 'none',
         touchAction: 'manipulation',
+        boxShadow: isFavorite ? '0 0 12px rgba(235, 215, 63, 0.4)' : 'none',
+        transform: isHovered ? 'scale(1.08)' : 'scale(1)',
         flexShrink: 0
       }}
       title={isFavorite ? "Remove from favorites" : "Add to favorites"}
     >
-      {isFavorite && mounted ? (
-        <div style={{ width: `${size + 4}px`, height: `${size + 4}px`, pointerEvents: 'none', filter: 'drop-shadow(0 0 6px rgba(235, 215, 63, 0.7))' }}>
-          <Lottie
-            lottieRef={lottieRef}
-            animationData={starBurstLottieData}
-            loop={false}
-            autoplay={true}
-            style={{ width: '100%', height: '100%' }}
-          />
-        </div>
-      ) : (
-        <svg 
-          width={size} 
-          height={size} 
-          viewBox="0 0 24 24" 
-          fill={isHovered ? 'rgba(235, 215, 63, 0.2)' : 'none'} 
-          stroke={isHovered ? '#ebd73f' : 'rgba(255, 255, 255, 0.45)'} 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          style={{ transition: 'all 0.2s ease', transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
-        >
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      )}
+      <svg 
+        width={size} 
+        height={size} 
+        viewBox="0 0 24 24" 
+        fill={isFavorite ? '#ebd73f' : isHovered ? 'rgba(235, 215, 63, 0.25)' : 'transparent'} 
+        stroke={isFavorite ? '#ebd73f' : isHovered ? '#ebd73f' : 'rgba(255, 255, 255, 0.65)'} 
+        strokeWidth="2.2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        style={{ 
+          filter: isFavorite ? 'drop-shadow(0 0 6px rgba(235, 215, 63, 0.85))' : 'none',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
     </button>
   );
 }
