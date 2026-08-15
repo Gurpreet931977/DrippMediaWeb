@@ -157,6 +157,61 @@ function formatDDMMYYYY(dateInput) {
   return `${day}/${month}/${year}`;
 }
 
+function highlightSearchTerm(text, query) {
+  if (!text || !query || !query.trim()) return text || '';
+  const q = query.trim();
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = String(text).split(new RegExp(`(${escaped})`, 'gi'));
+  return (
+    <span>
+      {parts.map((part, index) => 
+        part.toLowerCase() === q.toLowerCase() ? (
+          <span key={index} style={{ background: 'rgba(235, 215, 63, 0.35)', color: '#ebd73f', padding: '0 2px', borderRadius: '3px', fontWeight: 700 }}>
+            {part}
+          </span>
+        ) : (
+          part
+        )
+      )}
+    </span>
+  );
+}
+
+function getBlockTypeIcon(type) {
+  switch (type) {
+    case 'to_do':
+      return <CheckSquare size={13} color="#ebd73f" />;
+    case 'heading_1':
+    case 'heading_2':
+    case 'heading_3':
+      return <Type size={13} color="#ebd73f" />;
+    case 'bulleted_list_item':
+      return <List size={13} color="#ebd73f" />;
+    case 'numbered_list_item':
+      return <ListOrdered size={13} color="#ebd73f" />;
+    case 'quote':
+      return <Quote size={13} color="#ebd73f" />;
+    case 'code':
+      return <Code size={13} color="#ebd73f" />;
+    default:
+      return <FileText size={13} color="#aaa" />;
+  }
+}
+
+function getBlockTypeLabel(type) {
+  switch (type) {
+    case 'to_do': return 'To-Do';
+    case 'heading_1': return 'H1';
+    case 'heading_2': return 'H2';
+    case 'heading_3': return 'H3';
+    case 'bulleted_list_item': return 'Bullet';
+    case 'numbered_list_item': return 'Numbered';
+    case 'quote': return 'Quote';
+    case 'code': return 'Code';
+    default: return 'Text';
+  }
+}
+
 export default function NotionHubPage() {
   const { isGenz } = useGenz() || { isGenz: false };
   const [items, setItems] = useState([]);
@@ -197,6 +252,20 @@ export default function NotionHubPage() {
   // Block Insertion State
   const [isAppendingBlock, setIsAppendingBlock] = useState(false);
   const [showAddBlockMenu, setShowAddBlockMenu] = useState(false);
+
+  // Global Search Spotlight State
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(e.target) && searchInputRef.current && !searchInputRef.current.contains(e.target)) {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Fetch shared Notion items
   const fetchNotionItems = useCallback(async (query = '') => {
@@ -582,13 +651,19 @@ export default function NotionHubPage() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isZenithMode) {
-        setIsZenithMode(false);
+      if (e.key === 'Escape') {
+        if (isSearchOpen) {
+          setIsSearchOpen(false);
+        }
+        if (isZenithMode) {
+          setIsZenithMode(false);
+        }
       }
       if ((e.metaKey || e.ctrlKey) && (e.key?.toLowerCase() === 'k' || e.code === 'KeyK')) {
         e.preventDefault();
         if (searchInputRef.current) {
           searchInputRef.current.focus();
+          setIsSearchOpen(true);
         }
       }
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
@@ -978,6 +1053,116 @@ export default function NotionHubPage() {
     return () => document.removeEventListener('selectionchange', handleSelection);
   }, []);
 
+  // Global search across Pages & Blocks
+  const globalSearchResults = React.useMemo(() => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q || q.startsWith('/') || q.startsWith('ai:') || q.startsWith('orlo:')) {
+      return { pages: [], blocks: [] };
+    }
+
+    // 1. Pages matching title
+    const pages = items.filter(item => (item.title || '').toLowerCase().includes(q));
+
+    // 2. Block contents matching text across all cached and active documents
+    const blocks = [];
+    const seenBlockIds = new Set();
+
+    // From current active doc
+    if (docContent?.blocks) {
+      const pageTitle = docContent.page?.title || selectedItem?.title || 'Active Document';
+      const pageId = selectedItem?.id || docContent.page?.id;
+      for (const b of docContent.blocks) {
+        const type = b.type;
+        const richText = b[type]?.rich_text || [];
+        const plainText = richText.map(r => r.plain_text || r.text?.content || '').join('');
+        if (plainText && plainText.toLowerCase().includes(q)) {
+          seenBlockIds.add(b.id);
+          blocks.push({
+            blockId: b.id,
+            pageId: pageId,
+            pageTitle: pageTitle,
+            blockType: b.type,
+            text: plainText,
+            checked: b.to_do?.checked
+          });
+        }
+      }
+    }
+
+    // From all cached docs in localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('notion_page_')) {
+            const pId = key.replace('notion_page_', '');
+            const raw = localStorage.getItem(key);
+            if (raw) {
+              const data = JSON.parse(raw);
+              const pageTitle = data.page?.title || items.find(p => p.id === pId || p.id?.replace(/-/g, '') === pId.replace(/-/g, ''))?.title || 'Document';
+              if (data.blocks && Array.isArray(data.blocks)) {
+                for (const b of data.blocks) {
+                  if (seenBlockIds.has(b.id)) continue;
+                  const type = b.type;
+                  const richText = b[type]?.rich_text || [];
+                  const plainText = richText.map(r => r.plain_text || r.text?.content || '').join('');
+                  if (plainText && plainText.toLowerCase().includes(q)) {
+                    seenBlockIds.add(b.id);
+                    blocks.push({
+                      blockId: b.id,
+                      pageId: pId,
+                      pageTitle: pageTitle,
+                      blockType: b.type,
+                      text: plainText,
+                      checked: b.to_do?.checked
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch(e) {}
+    }
+
+    return { pages: pages.slice(0, 10), blocks: blocks.slice(0, 20) };
+  }, [searchQuery, items, docContent, selectedItem]);
+
+  const handleNavigateToPage = (page) => {
+    setIsSearchOpen(false);
+    setSelectedItem(page);
+    setMobileView('reader');
+  };
+
+  const handleNavigateToBlock = (pageId, blockId) => {
+    setIsSearchOpen(false);
+    setMobileView('reader');
+
+    const targetPage = items.find(i => i.id === pageId || i.id.replace(/-/g, '') === pageId.replace(/-/g, ''));
+    if (targetPage && selectedItem?.id !== targetPage.id) {
+      setSelectedItem(targetPage);
+    }
+
+    const attemptScroll = (attempts = 0) => {
+      const el = document.getElementById(`block-${blockId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+        el.style.borderRadius = '12px';
+        el.style.boxShadow = '0 0 35px rgba(235, 215, 63, 0.7)';
+        el.style.outline = '2px solid #ebd73f';
+        setTimeout(() => {
+          el.style.boxShadow = 'none';
+          el.style.outline = 'none';
+        }, 3500);
+      } else if (attempts < 12) {
+        setTimeout(() => attemptScroll(attempts + 1), 200);
+      }
+    };
+
+    setTimeout(() => attemptScroll(0), 100);
+  };
+
   const handleSearchSubmit = (e) => {
     e?.preventDefault?.();
     const query = (searchQuery || '').trim();
@@ -991,14 +1176,20 @@ export default function NotionHubPage() {
       window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', {
         detail: {
           text: prompt || 'How can I assist you with this workspace?',
-          blockId: selectedItem?.id,
-          intent: 'notion_edit'
+          pageId: selectedItem?.id,
+          pageTitle: selectedItem?.title
         }
       }));
       return;
     }
 
-    fetchNotionItems(query);
+    if (globalSearchResults.pages.length > 0) {
+      handleNavigateToPage(globalSearchResults.pages[0]);
+    } else if (globalSearchResults.blocks.length > 0) {
+      handleNavigateToBlock(globalSearchResults.blocks[0].pageId, globalSearchResults.blocks[0].blockId);
+    } else {
+      fetchNotionItems(query);
+    }
   };
 
   const handleScroll = () => {
@@ -1011,11 +1202,12 @@ export default function NotionHubPage() {
 
   // Filter Items
   const filteredItems = items.filter(item => {
-    // 1. Real-time Search Query Filter
+    // 1. Real-time Search Query Filter (Matches title OR block contents inside this page)
     if (searchQuery.trim() && !searchQuery.startsWith('/') && !searchQuery.toLowerCase().startsWith('ai:') && !searchQuery.toLowerCase().startsWith('orlo:')) {
       const q = searchQuery.toLowerCase().trim();
       const matchTitle = (item.title || '').toLowerCase().includes(q);
-      if (!matchTitle) return false;
+      const matchBlock = globalSearchResults.blocks.some(b => b.pageId === item.id || b.pageId?.replace(/-/g, '') === item.id?.replace(/-/g, ''));
+      if (!matchTitle && !matchBlock) return false;
     }
 
     if (filterType === 'favorites') {
@@ -1372,8 +1564,12 @@ export default function NotionHubPage() {
 
         .header-omnibar {
           display: flex;
-          width: 290px;
-          transition: all 0.25s ease;
+          width: 320px;
+          position: relative;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .header-omnibar:focus-within {
+          width: 440px;
         }
         @media (max-width: 900px) {
           .header-omnibar {
@@ -1552,9 +1748,15 @@ export default function NotionHubPage() {
               ref={searchInputRef}
               type="text"
               className="notion-font"
-              placeholder="Search notes or ask Orlo..."
+              placeholder="Search across all notes & blocks (⌘K)..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => {
+                if (searchQuery.trim()) setIsSearchOpen(true);
+              }}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearchOpen(true);
+              }}
               style={{
                 width: '100%',
                 padding: '8px 58px 8px 34px',
@@ -1571,6 +1773,7 @@ export default function NotionHubPage() {
                 e.target.style.background = 'rgba(235, 215, 63, 0.06)';
                 e.target.style.borderColor = 'rgba(235, 215, 63, 0.4)';
                 e.target.style.boxShadow = '0 0 15px rgba(235, 215, 63, 0.15)';
+                if (searchQuery.trim()) setIsSearchOpen(true);
               }}
               onBlur={(e) => {
                 e.target.style.background = 'rgba(255, 255, 255, 0.04)';
@@ -1585,6 +1788,7 @@ export default function NotionHubPage() {
                   onClick={(e) => {
                     e.preventDefault();
                     setSearchQuery('');
+                    setIsSearchOpen(false);
                     fetchNotionItems('');
                   }}
                   style={{
@@ -1606,9 +1810,209 @@ export default function NotionHubPage() {
                   <X size={13} />
                 </button>
               ) : (
-                <kbd style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '1px 4px', fontSize: '0.62rem', color: '#aaa', fontFamily: 'monospace', pointerEvents: 'none' }}>⌘K</kbd>
+                <kbd style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '1px 4px', fontSize: '0.62rem', color: '#aaa', fontFamily: "'Clash Display', sans-serif", pointerEvents: 'none' }}>⌘K</kbd>
               )}
             </div>
+
+            {/* Global Spotlight Search Dropdown */}
+            {isSearchOpen && searchQuery.trim() && !searchQuery.startsWith('/') && !searchQuery.toLowerCase().startsWith('ai:') && !searchQuery.toLowerCase().startsWith('orlo:') && (
+              <div
+                ref={searchDropdownRef}
+                className="notion-font"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  width: '460px',
+                  maxWidth: 'calc(100vw - 32px)',
+                  background: 'linear-gradient(135deg, rgba(20, 20, 26, 0.98) 0%, rgba(10, 10, 14, 0.98) 100%)',
+                  backdropFilter: 'blur(35px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(35px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderTop: '1px solid rgba(255,255,255,0.4)',
+                  borderRadius: '16px',
+                  padding: '8px',
+                  boxShadow: '0 25px 60px rgba(0,0,0,0.85), 0 0 30px rgba(235, 215, 63, 0.12)',
+                  zIndex: 100050,
+                  maxHeight: '460px',
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  animation: 'slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  fontFamily: "'Clash Display', sans-serif"
+                }}
+              >
+                {/* Spotlight Header Info */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span style={{ fontSize: '0.72rem', color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Search size={12} color="#ebd73f" /> Global Search Results
+                  </span>
+                  <span style={{ fontSize: '0.68rem', background: 'rgba(235, 215, 63, 0.15)', color: '#ebd73f', border: '1px solid rgba(235, 215, 63, 0.3)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                    {globalSearchResults.pages.length + globalSearchResults.blocks.length} found
+                  </span>
+                </div>
+
+                {/* Pages & Databases Section */}
+                {globalSearchResults.pages.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <div style={{ padding: '6px 10px 2px 10px', fontSize: '0.7rem', color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                      Pages & Databases ({globalSearchResults.pages.length})
+                    </div>
+                    {globalSearchResults.pages.map((p) => (
+                      <div
+                        key={p.id}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleNavigateToPage(p);
+                        }}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '10px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '10px',
+                          background: 'rgba(255,255,255,0.02)',
+                          border: '1px solid rgba(255,255,255,0.04)',
+                          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                        }}
+                        onMouseOver={e => {
+                          e.currentTarget.style.background = 'rgba(235, 215, 63, 0.14)';
+                          e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.35)';
+                          e.currentTarget.style.transform = 'translateX(4px)';
+                        }}
+                        onMouseOut={e => {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)';
+                          e.currentTarget.style.transform = 'translateX(0)';
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                          <span style={{ fontSize: '1rem', flexShrink: 0 }}>{p.icon || (p.object === 'database' ? '🗄️' : '📄')}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <span style={{ color: '#fff', fontSize: '0.84rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {highlightSearchTerm(p.title || 'Untitled', searchQuery)}
+                            </span>
+                            <span style={{ color: '#777', fontSize: '0.68rem' }}>
+                              {p.object === 'database' ? 'Database' : 'Page'} • Updated {formatDDMMYYYY(p.lastEditedTime)}
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronRight size={14} color="#666" style={{ flexShrink: 0 }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Blocks & Notes Content Section */}
+                {globalSearchResults.blocks.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
+                    <div style={{ padding: '6px 10px 2px 10px', fontSize: '0.7rem', color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                      Notes & Content Matches ({globalSearchResults.blocks.length})
+                    </div>
+                    {globalSearchResults.blocks.map((b) => (
+                      <div
+                        key={b.blockId}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleNavigateToBlock(b.pageId, b.blockId);
+                        }}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '10px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          gap: '10px',
+                          background: 'rgba(255,255,255,0.02)',
+                          border: '1px solid rgba(255,255,255,0.04)',
+                          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                        }}
+                        onMouseOver={e => {
+                          e.currentTarget.style.background = 'rgba(235, 215, 63, 0.14)';
+                          e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.35)';
+                          e.currentTarget.style.transform = 'translateX(4px)';
+                        }}
+                        onMouseOut={e => {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)';
+                          e.currentTarget.style.transform = 'translateX(0)';
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', minWidth: 0, flex: 1 }}>
+                          <div style={{ marginTop: '2px', flexShrink: 0 }}>
+                            {getBlockTypeIcon(b.blockType)}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                              <span style={{ fontSize: '0.64rem', padding: '1px 5px', borderRadius: '4px', background: 'rgba(255,255,255,0.08)', color: '#bbb', fontWeight: 600 }}>
+                                {getBlockTypeLabel(b.blockType)}
+                              </span>
+                              <span style={{ fontSize: '0.68rem', color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                in <strong style={{ color: '#ccc' }}>{b.pageTitle}</strong>
+                              </span>
+                            </div>
+                            <span style={{ color: '#eee', fontSize: '0.8rem', lineHeight: '1.4', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                              {highlightSearchTerm(b.text, searchQuery)}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, marginTop: '2px' }}>
+                          <span style={{ fontSize: '0.65rem', color: '#ebd73f', fontWeight: 600 }}>Jump</span>
+                          <ChevronRight size={13} color="#ebd73f" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Empty Search State */}
+                {globalSearchResults.pages.length === 0 && globalSearchResults.blocks.length === 0 && (
+                  <div style={{ padding: '24px 16px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                    <Search size={22} color="#555" />
+                    <span style={{ color: '#aaa', fontSize: '0.84rem', fontWeight: 600 }}>
+                      No pages or blocks found matching "{searchQuery}"
+                    </span>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setIsSearchOpen(false);
+                        window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', {
+                          detail: {
+                            text: `Can you help me brainstorm or write notes about "${searchQuery}"?`,
+                            pageId: selectedItem?.id,
+                            pageTitle: selectedItem?.title
+                          }
+                        }));
+                      }}
+                      style={{
+                        marginTop: '6px',
+                        background: 'rgba(235, 215, 63, 0.15)',
+                        border: '1px solid rgba(235, 215, 63, 0.3)',
+                        borderRadius: '8px',
+                        color: '#ebd73f',
+                        padding: '6px 14px',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontFamily: "'Clash Display', sans-serif"
+                      }}
+                    >
+                      <Sparkles size={13} /> Ask Orlo to write about this
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </form>
 
           {/* Ask Orlo AI Copilot Button */}
@@ -2196,84 +2600,84 @@ export default function NotionHubPage() {
               )}
 
               {/* Document Header Info & Action Controls */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0, flex: 1 }}>
-                  <span style={{ fontSize: '3rem', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px', paddingBottom: '20px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)', flexWrap: 'wrap', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: '240px', flex: 1 }}>
+                  <span style={{ fontSize: '2.8rem', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))', flexShrink: 0, lineHeight: 1 }}>
                     {docContent?.page?.icon || selectedItem.icon || '📄'}
                   </span>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                      <h1 
-                        className="notion-font" 
-                        contentEditable
-                        suppressContentEditableWarning
-                        style={{ 
-                          fontSize: '2.5rem', 
-                          fontWeight: 800, 
-                          margin: 0, 
-                          letterSpacing: '-0.03em', 
-                          outline: 'none', 
-                          fontFamily: "'Clash Display', sans-serif",
-                          color: '#ffffff',
-                          lineHeight: 1.15
-                        }}
-                        onBlur={async (e) => {
-                          const newTitle = e.target.innerText.trim();
-                          if (newTitle && newTitle !== (docContent?.page?.title || selectedItem.title)) {
-                            setSelectedItem(prev => ({ ...prev, title: newTitle }));
-                            setItems(prevItems => prevItems.map(item => item.id === selectedItem.id ? { ...item, title: newTitle } : item));
-                            if (docContent?.page) setDocContent(prev => ({ ...prev, page: { ...prev.page, title: newTitle } }));
-                            
-                            fetch('/api/admin/notion/update', {
-                              method: 'PATCH',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ blockId: selectedItem.id, type: selectedItem.object || 'page', content: newTitle })
-                            });
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            e.target.blur();
-                          }
-                        }}
-                      >
-                        {docContent?.page?.title || selectedItem.title}
-                      </h1>
-
-                      <LottieStar
-                        isFavorite={favorites.includes(selectedItem.id)}
-                        onToggle={(e) => toggleFavorite(e, selectedItem.id)}
-                        size={24}
-                      />
+                    <h1 
+                      className="notion-font" 
+                      contentEditable
+                      suppressContentEditableWarning
+                      style={{ 
+                        fontSize: '2.4rem', 
+                        fontWeight: 800, 
+                        margin: 0, 
+                        letterSpacing: '-0.03em', 
+                        outline: 'none', 
+                        fontFamily: "'Clash Display', sans-serif",
+                        color: '#ffffff',
+                        lineHeight: 1.15,
+                        wordBreak: 'break-word'
+                      }}
+                      onBlur={async (e) => {
+                        const newTitle = e.target.innerText.trim();
+                        if (newTitle && newTitle !== (docContent?.page?.title || selectedItem.title)) {
+                          setSelectedItem(prev => ({ ...prev, title: newTitle }));
+                          setItems(prevItems => prevItems.map(item => item.id === selectedItem.id ? { ...item, title: newTitle } : item));
+                          if (docContent?.page) setDocContent(prev => ({ ...prev, page: { ...prev.page, title: newTitle } }));
+                          
+                          fetch('/api/admin/notion/update', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ blockId: selectedItem.id, type: selectedItem.object || 'page', content: newTitle })
+                          });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.target.blur();
+                        }
+                      }}
+                    >
+                      {docContent?.page?.title || selectedItem.title}
+                    </h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                      <p className="notion-font" style={{ fontSize: '0.8rem', color: '#777', margin: 0, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                        Updated: <span style={{ color: '#aaa' }}>{formatDDMMYYYY(selectedItem.lastEditedTime || docContent?.page?.lastEditedTime)}</span>
+                      </p>
+                      <span style={{ color: '#444', fontSize: '0.75rem' }}>•</span>
+                      <span style={{ fontSize: '0.72rem', color: '#888', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px', textTransform: 'capitalize', fontWeight: 600 }}>
+                        {selectedItem.object || 'Page'}
+                      </span>
                     </div>
-                    <p className="notion-font" style={{ fontSize: '0.82rem', color: '#777', margin: '6px 0 0 0', fontWeight: 500 }}>
-                      Updated: <span style={{ color: '#aaa' }}>{formatDDMMYYYY(selectedItem.lastEditedTime || docContent?.page?.lastEditedTime)}</span>
-                    </p>
                   </div>
                 </div>
 
-                {/* Toolbar Buttons */}
+                {/* Toolbar Action Buttons */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  {/* Dedicated Favorite Star Action Button */}
+                  {/* Single Icon-Only Favorite Star Button */}
                   <button
                     type="button"
                     onClick={(e) => toggleFavorite(e, selectedItem.id)}
                     className="notion-font"
                     style={{
-                      padding: '8px 14px',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
                       background: favorites.includes(selectedItem.id) ? 'rgba(235, 215, 63, 0.16)' : 'rgba(255, 255, 255, 0.05)',
                       border: favorites.includes(selectedItem.id) ? '1px solid rgba(235, 215, 63, 0.45)' : '1px solid rgba(255, 255, 255, 0.12)',
-                      borderRadius: '8px',
-                      color: favorites.includes(selectedItem.id) ? '#ebd73f' : '#ccc',
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
+                      color: favorites.includes(selectedItem.id) ? '#ebd73f' : '#aaa',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
+                      justifyContent: 'center',
                       fontFamily: "'Clash Display', sans-serif",
-                      transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                      transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                      boxShadow: favorites.includes(selectedItem.id) ? '0 0 14px rgba(235, 215, 63, 0.22)' : 'none',
+                      flexShrink: 0
                     }}
                     onMouseOver={e => {
                       if (!favorites.includes(selectedItem.id)) {
@@ -2287,10 +2691,14 @@ export default function NotionHubPage() {
                         e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
                       }
                     }}
-                    title={favorites.includes(selectedItem.id) ? "Favorited document" : "Add to favorites"}
+                    title={favorites.includes(selectedItem.id) ? "Favorited (Click to remove)" : "Add to favorites"}
                   >
-                    <Star size={15} fill={favorites.includes(selectedItem.id) ? '#ebd73f' : 'transparent'} strokeWidth={2.4} color={favorites.includes(selectedItem.id) ? '#ebd73f' : '#aaa'} />
-                    <span>{favorites.includes(selectedItem.id) ? 'Favorited' : 'Favorite'}</span>
+                    <Star 
+                      size={17} 
+                      fill={favorites.includes(selectedItem.id) ? '#ebd73f' : 'transparent'} 
+                      strokeWidth={2.4} 
+                      color={favorites.includes(selectedItem.id) ? '#ebd73f' : '#aaa'} 
+                    />
                   </button>
 
                   <FocusSafeDropdown 
@@ -3254,7 +3662,7 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
         <EditableTextBlock
           blockId={block.id} type="code" initialRichTextArr={block.code?.rich_text}
           tagName="pre" className="notion-font" 
-          style={{ fontSize: '0.9rem', color: '#a3f08c', margin: '14px 0', padding: '16px', background: '#0a0a0e', borderRadius: '10px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.08)', fontFamily: "'Clash Display', monospace" }}
+          style={{ fontSize: '0.9rem', color: '#a3f08c', margin: '14px 0', padding: '16px', background: '#0a0a0e', borderRadius: '10px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.08)', fontFamily: "'Clash Display', sans-serif" }}
           emptyPlaceholder="Code snippet..."
           onDeleteBlock={onDeleteBlock} onInsertBlockAfter={onInsertBlockAfter} onUpdateBlock={onUpdateBlock}
         />
