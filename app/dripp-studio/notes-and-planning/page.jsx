@@ -1577,28 +1577,32 @@ export default function NotionHubPage() {
           }
         }
 
-        /* 10X Designer Presets */
-        .preset-glass-morphic {
-          color: #fff;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          border-radius: 6px;
+        /* 10X Modern Creative Designer Presets */
+        .preset-gold-shimmer {
+          color: #ebd73f;
+          font-weight: 700;
+          background: linear-gradient(90deg, rgba(235,215,63,0.15) 0%, rgba(235,215,63,0.45) 50%, rgba(235,215,63,0.15) 100%);
+          background-size: 200% auto;
+          animation: goldShimmer 2.5s linear infinite;
           padding: 2px 8px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-          font-weight: 600;
-          transition: all 0.3s ease;
+          border-radius: 6px;
+          border: 1px solid rgba(235, 215, 63, 0.35);
+          box-shadow: 0 0 14px rgba(235, 215, 63, 0.2);
+        }
+        @keyframes goldShimmer {
+          to { background-position: 200% center; }
         }
 
         .preset-neon-pulse {
-          color: #00e5ff;
+          color: #00f2fe;
           font-weight: 700;
-          text-shadow: 0 0 5px rgba(0, 229, 255, 0.3), 0 0 10px rgba(0, 229, 255, 0.2);
-          animation: neonPulse 3s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
+          text-shadow: 0 0 8px rgba(0, 242, 254, 0.6), 0 0 16px rgba(0, 242, 254, 0.3);
+          animation: neonPulse 2.5s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
           padding: 0 4px;
         }
         @keyframes neonPulse {
-          0% { text-shadow: 0 0 4px rgba(0, 229, 255, 0.4), 0 0 8px rgba(0, 229, 255, 0.2); opacity: 0.8; }
-          100% { text-shadow: 0 0 8px rgba(0, 229, 255, 0.8), 0 0 16px rgba(0, 229, 255, 0.5), 0 0 24px rgba(0, 229, 255, 0.3); opacity: 1; }
+          0% { text-shadow: 0 0 4px rgba(0, 242, 254, 0.4), 0 0 8px rgba(0, 242, 254, 0.2); opacity: 0.85; }
+          100% { text-shadow: 0 0 10px rgba(0, 242, 254, 0.9), 0 0 20px rgba(0, 242, 254, 0.6), 0 0 30px rgba(0, 242, 254, 0.3); opacity: 1; }
         }
 
         .preset-iridescent {
@@ -1617,14 +1621,15 @@ export default function NotionHubPage() {
         }
 
         .preset-liquid-gradient {
-          font-weight: bold;
+          font-weight: 700;
           color: #fff;
           background: linear-gradient(270deg, #8a2be2, #4b0082, #9400d3, #8a2be2);
           background-size: 400% 400%;
           animation: liquid 4s ease infinite;
-          padding: 2px 6px;
+          padding: 2px 8px;
           border-radius: 6px;
-          box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+          box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+          border: 1px solid rgba(138, 43, 226, 0.5);
         }
         @keyframes liquid {
           0% { background-position: 0% 50% }
@@ -1632,30 +1637,58 @@ export default function NotionHubPage() {
           100% { background-position: 0% 50% }
         }
 
-        .preset-gold-shimmer {
-          color: #ebd73f;
-          font-weight: bold;
-          background: linear-gradient(90deg, rgba(235,215,63,0) 0%, rgba(235,215,63,0.3) 50%, rgba(235,215,63,0) 100%);
-          background-size: 200% auto;
-          animation: goldShimmer 2s linear infinite;
-          padding: 2px 6px;
+        .preset-cyber-lime {
+          color: #a3f08c;
+          font-weight: 700;
+          background: rgba(163, 240, 140, 0.12);
+          border: 1px solid rgba(163, 240, 140, 0.35);
           border-radius: 6px;
-        }
-        @keyframes goldShimmer {
-          to { background-position: 200% center; }
+          padding: 2px 8px;
+          box-shadow: 0 0 14px rgba(163, 240, 140, 0.2);
+          text-shadow: 0 0 6px rgba(163, 240, 140, 0.4);
         }
 
-        .preset-redacted {
-          background: #222;
-          color: transparent;
-          user-select: none;
-          transition: all 0.3s ease;
-          border-radius: 4px;
+        .preset-sunset-aura {
+          background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 50%, #ff2a6d 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 800;
+          filter: drop-shadow(0 2px 8px rgba(255, 126, 95, 0.35));
         }
-        .preset-redacted:hover {
-          background: rgba(255, 255, 255, 0.1);
-          color: #fff;
-          user-select: auto;
+
+        .preset-frosted-chrome {
+          color: #f1f5f9;
+          font-weight: 700;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          border-radius: 6px;
+          padding: 2px 8px;
+          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .preset-cosmic-star {
+          background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #7f00ff 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 800;
+          animation: cosmicShift 4s ease infinite alternate;
+        }
+        @keyframes cosmicShift {
+          0% { filter: drop-shadow(0 0 6px rgba(79, 172, 254, 0.4)); }
+          100% { filter: drop-shadow(0 0 14px rgba(127, 0, 255, 0.7)); }
+        }
+
+        .preset-fire-burn {
+          background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 800;
+          filter: drop-shadow(0 0 8px rgba(255, 75, 43, 0.5));
         }
 
         .shimmer {
@@ -2304,13 +2337,16 @@ export default function NotionHubPage() {
             label="Presets"
             align="right"
             options={[
-              { label: 'Default', value: '' },
-              { label: 'Glass Text', value: 'glass' },
-              { label: 'Neon Pulse', value: 'neon' },
-              { label: 'Iridescent', value: 'iridescent' },
-              { label: 'Liquid Gradient', value: 'liquid' },
-              { label: 'Gold Shimmer', value: 'highlight' },
-              { label: 'Classified', value: 'code' }
+              { label: 'Default / Reset', value: '' },
+              { label: '✨ Gold Shimmer', value: 'highlight', color: '#ebd73f' },
+              { label: '⚡ Neon Pulse', value: 'neon', color: '#00f2fe' },
+              { label: '🌈 Iridescent Prism', value: 'iridescent', color: '#ff77e9' },
+              { label: '🔮 Liquid Velvet', value: 'liquid', color: '#c084fc' },
+              { label: '🧪 Cyber Lime', value: 'cyber_lime', color: '#a3f08c' },
+              { label: '🌅 Sunset Aura', value: 'sunset_aura', color: '#feb47b' },
+              { label: '❄️ Frosted Chrome', value: 'frosted_chrome', color: '#e2e8f0' },
+              { label: '🌌 Cosmic Starlight', value: 'cosmic_star', color: '#60a5fa' },
+              { label: '🔥 Molten Flame', value: 'fire_burn', color: '#ff4b2b' }
             ]}
             onChange={(val) => handleApplyPreset({ target: { value: val } })}
           />
@@ -3088,38 +3124,33 @@ function applyDesignerPreset(presetName, range) {
   
   const span = document.createElement('span');
   
-  if (presetName === 'glass') {
-    span.setAttribute('data-notion-color', 'brown_background');
-    span.className = 'preset-glass-morphic';
-    span.appendChild(fragment);
-    range.insertNode(span);
-    return;
+  if (presetName === 'highlight') {
+    span.setAttribute('data-notion-color', 'yellow_background');
+    span.className = 'preset-gold-shimmer';
   } else if (presetName === 'neon') {
     span.setAttribute('data-notion-color', 'blue_background');
     span.className = 'preset-neon-pulse';
-    span.appendChild(fragment);
-    range.insertNode(span);
-    return;
   } else if (presetName === 'iridescent') {
     span.setAttribute('data-notion-color', 'pink_background');
     span.className = 'preset-iridescent';
-    span.appendChild(fragment);
-    range.insertNode(span);
-    return;
-  } else if (presetName === 'highlight') {
-    span.setAttribute('data-notion-color', 'yellow_background');
-    span.className = 'preset-gold-shimmer';
-  } else if (presetName === 'code') {
-    span.setAttribute('data-notion-color', 'gray_background');
-    span.className = 'preset-redacted';
-    const code = document.createElement('code');
-    code.appendChild(fragment);
-    span.appendChild(code);
-    range.insertNode(span);
-    return;
   } else if (presetName === 'liquid') {
     span.setAttribute('data-notion-color', 'purple_background');
     span.className = 'preset-liquid-gradient';
+  } else if (presetName === 'cyber_lime') {
+    span.setAttribute('data-notion-color', 'green_background');
+    span.className = 'preset-cyber-lime';
+  } else if (presetName === 'sunset_aura') {
+    span.setAttribute('data-notion-color', 'orange_background');
+    span.className = 'preset-sunset-aura';
+  } else if (presetName === 'frosted_chrome') {
+    span.setAttribute('data-notion-color', 'gray_background');
+    span.className = 'preset-frosted-chrome';
+  } else if (presetName === 'cosmic_star') {
+    span.setAttribute('data-notion-color', 'blue_background');
+    span.className = 'preset-cosmic-star';
+  } else if (presetName === 'fire_burn') {
+    span.setAttribute('data-notion-color', 'red_background');
+    span.className = 'preset-fire-burn';
   }
   
   span.appendChild(fragment);
@@ -3139,22 +3170,22 @@ function renderRichTextToHTML(richTextArr) {
     if (t.annotations?.underline) styleStr += "text-decoration:underline;";
     
     if (t.annotations?.color && t.annotations.color !== 'default') {
-      if (t.annotations.color === 'red_background') {
-        styleStr += "color:#ff4d4d;background:rgba(255,77,77,0.15);padding:2px 4px;border-radius:4px;";
-      } else if (t.annotations.color === 'green_background') {
-        styleStr += "color:#52c41a;background-color:rgba(82, 196, 26, 0.2);";
-      } else if (t.annotations.color === 'yellow_background') {
+      if (t.annotations.color === 'yellow_background') {
         className += " preset-gold-shimmer";
       } else if (t.annotations.color === 'purple_background') {
         className += " preset-liquid-gradient";
+      } else if (t.annotations.color === 'green_background') {
+        className += " preset-cyber-lime";
+      } else if (t.annotations.color === 'orange_background') {
+        className += " preset-sunset-aura";
       } else if (t.annotations.color === 'gray_background') {
-        className += " preset-redacted";
+        className += " preset-frosted-chrome";
       } else if (t.annotations.color === 'blue_background') {
         className += " preset-neon-pulse";
       } else if (t.annotations.color === 'pink_background') {
         className += " preset-iridescent";
-      } else if (t.annotations.color === 'brown_background') {
-        className += " preset-glass-morphic";
+      } else if (t.annotations.color === 'red_background') {
+        className += " preset-fire-burn";
       } else if (typeof t.annotations.color === 'string') {
         styleStr += `color:${t.annotations.color.replace('_background', '')};`;
       }
