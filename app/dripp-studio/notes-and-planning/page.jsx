@@ -92,8 +92,8 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
           borderBottom: openUpwards ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(255,255,255,0.15)',
           borderRadius: '14px',
           padding: '6px',
-          minWidth: '165px',
-          maxHeight: '220px',
+          minWidth: '175px',
+          maxHeight: '320px',
           overflowY: 'auto',
           boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 20px 50px rgba(0,0,0,0.8)',
           zIndex: 100050,
@@ -116,7 +116,7 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
               }}
               style={{
                 padding: '8px 12px',
-                color: opt.color || '#eee',
+                color: '#fff',
                 fontSize: '0.85rem',
                 fontWeight: 600,
                 borderRadius: '8px',
@@ -134,7 +134,7 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
               }}
               onMouseOut={e => {
                 e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = opt.color || '#eee';
+                e.currentTarget.style.color = '#fff';
                 e.currentTarget.style.transform = 'translateX(0)';
               }}
             >
@@ -230,7 +230,7 @@ export default function NotionHubPage() {
   const [mobileView, setMobileView] = useState('catalog');
   
   // Scroll progress for the viewer
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const progressBarRef = useRef(null);
   const contentRef = useRef(null);
   const searchInputRef = useRef(null);
   const latestPageIdRef = useRef(null);
@@ -329,7 +329,9 @@ export default function NotionHubPage() {
   // Fetch content blocks for selected page
   const fetchPageContent = useCallback(async (pageId) => {
     if (!pageId) return;
-    setScrollProgress(0);
+    if (progressBarRef.current) {
+      progressBarRef.current.style.width = '0%';
+    }
     
     const cacheKey = `notion_page_${pageId}`;
     const cachedRaw = localStorage.getItem(cacheKey);
@@ -1193,11 +1195,11 @@ export default function NotionHubPage() {
   };
 
   const handleScroll = () => {
-    if (!contentRef.current) return;
+    if (!contentRef.current || !progressBarRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = contentRef.current;
     const windowHeight = scrollHeight - clientHeight;
     const progress = windowHeight > 0 ? (scrollTop / windowHeight) * 100 : 0;
-    setScrollProgress(progress);
+    progressBarRef.current.style.width = `${progress}%`;
   };
 
   // Filter Items
@@ -1577,27 +1579,55 @@ export default function NotionHubPage() {
           }
         }
 
-        /* 10X Modern Creative Designer Presets */
+        /* 10X Modern Creative Designer Presets with GPU hardware layer isolation */
+        .preset-gold-shimmer,
+        .preset-neon-pulse,
+        .preset-iridescent,
+        .preset-liquid-gradient,
+        .preset-cyber-lime,
+        .preset-sunset-aura,
+        .preset-frosted-chrome,
+        .preset-hologram-glitch,
+        .preset-laser-crimson,
+        .preset-studio-marker,
+        .preset-matrix-terminal,
+        .preset-aurora-borealis,
+        .preset-subzero-frost,
+        .preset-electric-amethyst,
+        .preset-hazard-warning,
+        .preset-rose-gold {
+          display: inline-block !important;
+          vertical-align: baseline;
+          transform: translate3d(0, 0, 0);
+          -webkit-transform: translate3d(0, 0, 0);
+          will-change: background-position, transform, filter;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          isolation: isolate;
+          animation-play-state: running !important;
+        }
+
         .preset-gold-shimmer {
           color: #ebd73f;
           font-weight: 700;
           background: linear-gradient(90deg, rgba(235,215,63,0.15) 0%, rgba(235,215,63,0.45) 50%, rgba(235,215,63,0.15) 100%);
           background-size: 200% auto;
-          animation: goldShimmer 2.5s linear infinite;
+          animation: goldShimmer 2.5s linear infinite !important;
           padding: 2px 8px;
           border-radius: 6px;
           border: 1px solid rgba(235, 215, 63, 0.35);
           box-shadow: 0 0 14px rgba(235, 215, 63, 0.2);
         }
         @keyframes goldShimmer {
-          to { background-position: 200% center; }
+          0% { background-position: 0% center; }
+          100% { background-position: 200% center; }
         }
 
         .preset-neon-pulse {
           color: #00f2fe;
           font-weight: 700;
           text-shadow: 0 0 8px rgba(0, 242, 254, 0.6), 0 0 16px rgba(0, 242, 254, 0.3);
-          animation: neonPulse 2.5s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
+          animation: neonPulse 2.5s infinite alternate cubic-bezier(0.4, 0, 0.6, 1) !important;
           padding: 0 4px;
         }
         @keyframes neonPulse {
@@ -1612,7 +1642,7 @@ export default function NotionHubPage() {
           background-clip: text;
           -webkit-text-fill-color: transparent;
           font-weight: 800;
-          animation: iridescentFade 8s ease infinite;
+          animation: iridescentFade 8s ease infinite !important;
         }
         @keyframes iridescentFade { 
           0%{background-position:0% 82%}
@@ -1625,7 +1655,7 @@ export default function NotionHubPage() {
           color: #fff;
           background: linear-gradient(270deg, #8a2be2, #4b0082, #9400d3, #8a2be2);
           background-size: 400% 400%;
-          animation: liquid 4s ease infinite;
+          animation: liquid 4s ease infinite !important;
           padding: 2px 8px;
           border-radius: 6px;
           box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
@@ -1669,26 +1699,117 @@ export default function NotionHubPage() {
           box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
-        .preset-cosmic-star {
-          background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #7f00ff 100%);
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
+        .preset-hologram-glitch {
+          color: #ffffff;
           font-weight: 800;
-          animation: cosmicShift 4s ease infinite alternate;
+          text-shadow: -1.5px 0 #ff007f, 1.5px 0 #00f2fe;
+          animation: glitchShift 2.5s infinite ease-in-out alternate !important;
+          padding: 0 4px;
+          letter-spacing: 0.5px;
         }
-        @keyframes cosmicShift {
-          0% { filter: drop-shadow(0 0 6px rgba(79, 172, 254, 0.4)); }
-          100% { filter: drop-shadow(0 0 14px rgba(127, 0, 255, 0.7)); }
+        @keyframes glitchShift {
+          0% { text-shadow: -1.5px 0 #ff007f, 1.5px 0 #00f2fe; }
+          40% { text-shadow: -2px 0 #ff007f, 2px 0 #00f2fe; }
+          70% { text-shadow: 1.5px 0 #ff007f, -1.5px 0 #00f2fe; }
+          100% { text-shadow: -1.5px 0 #ff007f, 1.5px 0 #00f2fe; }
         }
 
-        .preset-fire-burn {
-          background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        .preset-laser-crimson {
+          color: #ff2a5f;
+          font-weight: 700;
+          text-shadow: 0 0 8px rgba(255, 42, 95, 0.8), 0 0 18px rgba(255, 42, 95, 0.4);
+          animation: laserPulse 2.5s infinite alternate cubic-bezier(0.4, 0, 0.6, 1) !important;
+          padding: 0 4px;
+        }
+        @keyframes laserPulse {
+          0% { text-shadow: 0 0 4px rgba(255, 42, 95, 0.5), 0 0 8px rgba(255, 42, 95, 0.25); opacity: 0.88; }
+          100% { text-shadow: 0 0 10px rgba(255, 42, 95, 0.95), 0 0 22px rgba(255, 42, 95, 0.6), 0 0 32px rgba(255, 42, 95, 0.35); opacity: 1; }
+        }
+
+        .preset-studio-marker {
+          color: #050508 !important;
+          background: #ebd73f;
+          font-weight: 800;
+          padding: 2px 7px;
+          border-radius: 4px;
+          box-shadow: 0 0 12px rgba(235, 215, 63, 0.45);
+          text-shadow: none;
+        }
+
+        .preset-matrix-terminal {
+          color: #00ff66 !important;
+          background: rgba(0, 20, 5, 0.88);
+          border: 1px solid rgba(0, 255, 102, 0.45);
+          border-radius: 4px;
+          padding: 2px 8px;
+          font-weight: 700;
+          box-shadow: 0 0 12px rgba(0, 255, 102, 0.25), inset 0 0 6px rgba(0, 255, 102, 0.15);
+          text-shadow: 0 0 6px rgba(0, 255, 102, 0.7);
+        }
+
+        .preset-aurora-borealis {
+          background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 50%, #7f00ff 100%);
+          background-size: 200% 200%;
           -webkit-background-clip: text;
           background-clip: text;
           -webkit-text-fill-color: transparent;
           font-weight: 800;
-          filter: drop-shadow(0 0 8px rgba(255, 75, 43, 0.5));
+          animation: auroraFlow 4s ease infinite alternate !important;
+          filter: drop-shadow(0 0 8px rgba(0, 245, 160, 0.4));
+        }
+        @keyframes auroraFlow {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 100% 50%; }
+        }
+
+        .preset-subzero-frost {
+          color: #e0f2fe;
+          font-weight: 700;
+          background: rgba(14, 165, 233, 0.15);
+          border: 1px solid rgba(186, 230, 253, 0.45);
+          border-radius: 6px;
+          padding: 2px 8px;
+          box-shadow: 0 0 14px rgba(56, 189, 248, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+          text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+        }
+
+        .preset-electric-amethyst {
+          color: #f0abfc;
+          font-weight: 700;
+          text-shadow: 0 0 8px rgba(217, 70, 239, 0.7), 0 0 18px rgba(168, 85, 247, 0.4);
+          animation: amethystPulse 2.5s infinite alternate cubic-bezier(0.4, 0, 0.6, 1) !important;
+          padding: 0 4px;
+        }
+        @keyframes amethystPulse {
+          0% { text-shadow: 0 0 4px rgba(217, 70, 239, 0.5), 0 0 8px rgba(168, 85, 247, 0.3); opacity: 0.88; }
+          100% { text-shadow: 0 0 10px rgba(217, 70, 239, 0.95), 0 0 22px rgba(168, 85, 247, 0.65), 0 0 32px rgba(217, 70, 239, 0.4); opacity: 1; }
+        }
+
+        .preset-hazard-warning {
+          color: #000000 !important;
+          background: #ffcc00;
+          font-weight: 800;
+          border: 1px dashed rgba(0, 0, 0, 0.6);
+          border-radius: 4px;
+          padding: 2px 8px;
+          box-shadow: 0 0 14px rgba(255, 204, 0, 0.45);
+          text-shadow: none;
+          letter-spacing: 0.3px;
+        }
+
+        .preset-rose-gold {
+          background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 50%, #f6d365 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 800;
+          animation: roseShimmer 3s linear infinite !important;
+          filter: drop-shadow(0 0 6px rgba(251, 194, 235, 0.4));
+        }
+        @keyframes roseShimmer {
+          0% { background-position: 0% center; }
+          100% { background-position: 200% center; }
         }
 
         .shimmer {
@@ -2337,16 +2458,23 @@ export default function NotionHubPage() {
             label="Presets"
             align="right"
             options={[
-              { label: 'Default / Reset', value: '' },
-              { label: '✨ Gold Shimmer', value: 'highlight', color: '#ebd73f' },
-              { label: '⚡ Neon Pulse', value: 'neon', color: '#00f2fe' },
-              { label: '🌈 Iridescent Prism', value: 'iridescent', color: '#ff77e9' },
-              { label: '🔮 Liquid Velvet', value: 'liquid', color: '#c084fc' },
-              { label: '🧪 Cyber Lime', value: 'cyber_lime', color: '#a3f08c' },
-              { label: '🌅 Sunset Aura', value: 'sunset_aura', color: '#feb47b' },
-              { label: '❄️ Frosted Chrome', value: 'frosted_chrome', color: '#e2e8f0' },
-              { label: '🌌 Cosmic Starlight', value: 'cosmic_star', color: '#60a5fa' },
-              { label: '🔥 Molten Flame', value: 'fire_burn', color: '#ff4b2b' }
+              { label: 'Default', value: '' },
+              { label: 'Gold Shimmer', value: 'highlight' },
+              { label: 'Neon Pulse', value: 'neon' },
+              { label: 'Holographic Glitch', value: 'hologram_glitch' },
+              { label: 'Laser Crimson', value: 'laser_crimson' },
+              { label: 'Studio Marker', value: 'studio_marker' },
+              { label: 'Iridescent Prism', value: 'iridescent' },
+              { label: 'Liquid Velvet', value: 'liquid' },
+              { label: 'Cyber Lime', value: 'cyber_lime' },
+              { label: 'Sunset Aura', value: 'sunset_aura' },
+              { label: 'Frosted Chrome', value: 'frosted_chrome' },
+              { label: 'Matrix Terminal', value: 'matrix_terminal' },
+              { label: 'Aurora Borealis', value: 'aurora_borealis' },
+              { label: 'Sub-Zero Frost', value: 'subzero_frost' },
+              { label: 'Electric Amethyst', value: 'electric_amethyst' },
+              { label: 'Hazard Warning', value: 'hazard_warning' },
+              { label: 'Rose Gold Luxe', value: 'rose_gold' }
             ]}
             onChange={(val) => handleApplyPreset({ target: { value: val } })}
           />
@@ -2567,8 +2695,11 @@ export default function NotionHubPage() {
             >
               {/* Reading Progress Bar */}
               {selectedItem && (
-                <div style={{ width: '100%', height: '3px', background: 'rgba(255,255,255,0.05)', position: 'absolute', top: 0, left: 0, zIndex: 10 }}>
-                  <div style={{ width: `${scrollProgress}%`, height: '100%', background: '#ebd73f', transition: 'width 0.1s ease-out', boxShadow: '0 0 10px #ebd73f' }} />
+                <div style={{ width: '100%', height: '3px', background: 'rgba(255,255,255,0.05)', position: 'absolute', top: 0, left: 0, zIndex: 10, pointerEvents: 'none' }}>
+                  <div 
+                    ref={progressBarRef}
+                    style={{ width: '0%', height: '100%', background: '#ebd73f', transition: 'width 0.05s ease-out', boxShadow: '0 0 10px #ebd73f' }} 
+                  />
                 </div>
               )}
 
@@ -3059,11 +3190,21 @@ function parseHTMLToNotion(htmlNode) {
           if (colorAttr && colorAttr !== 'default') annotations.color = colorAttr;
         } else if (node.className && typeof node.className === 'string') {
           if (node.className.includes('preset-gold-shimmer')) annotations.color = 'yellow_background';
+          else if (node.className.includes('preset-studio-marker')) annotations.color = 'yellow_background';
+          else if (node.className.includes('preset-hazard-warning')) annotations.color = 'orange_background';
           else if (node.className.includes('preset-neon-pulse')) annotations.color = 'blue_background';
+          else if (node.className.includes('preset-hologram-glitch')) annotations.color = 'blue_background';
+          else if (node.className.includes('preset-subzero-frost')) annotations.color = 'blue_background';
+          else if (node.className.includes('preset-aurora-borealis')) annotations.color = 'blue_background';
+          else if (node.className.includes('preset-laser-crimson')) annotations.color = 'red_background';
           else if (node.className.includes('preset-liquid-gradient')) annotations.color = 'purple_background';
-          else if (node.className.includes('preset-glass-morphic')) annotations.color = 'brown_background';
+          else if (node.className.includes('preset-electric-amethyst')) annotations.color = 'purple_background';
+          else if (node.className.includes('preset-cyber-lime')) annotations.color = 'green_background';
+          else if (node.className.includes('preset-matrix-terminal')) annotations.color = 'green_background';
+          else if (node.className.includes('preset-sunset-aura')) annotations.color = 'orange_background';
+          else if (node.className.includes('preset-frosted-chrome')) annotations.color = 'gray_background';
+          else if (node.className.includes('preset-rose-gold')) annotations.color = 'pink_background';
           else if (node.className.includes('preset-iridescent')) annotations.color = 'pink_background';
-          else if (node.className.includes('preset-redacted')) annotations.color = 'gray_background';
         }
       }
 
@@ -3099,29 +3240,52 @@ function parseHTMLToNotion(htmlNode) {
 function applyDesignerPreset(presetName, range) {
   if (!range) return;
   if (range.collapsed) return;
-  
+
+  // 1. Identify any existing parent preset span containing the range
+  const startEl = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+  const endEl = range.endContainer.nodeType === 1 ? range.endContainer : range.endContainer.parentElement;
+  let parentPreset = startEl?.closest('span[data-notion-color], span[class*="preset-"]') || endEl?.closest('span[data-notion-color], span[class*="preset-"]');
+
+  if (parentPreset) {
+    const selectedText = range.toString().trim();
+    const parentText = parentPreset.textContent.trim();
+    if (selectedText === parentText || range.toString().length >= parentText.length) {
+      range.selectNode(parentPreset);
+    }
+  }
+
+  // 2. Extract contents from range
   let fragment = range.extractContents();
-  
+
+  // 3. Strip all existing nested preset spans and color attributes
   const tempDiv = document.createElement('div');
   tempDiv.appendChild(fragment);
   const elementsToClean = tempDiv.querySelectorAll('span[data-notion-color], span[class*="preset-"], code');
   elementsToClean.forEach(el => {
-      while (el.firstChild) {
-          el.parentNode.insertBefore(el.firstChild, el);
-      }
-      el.parentNode.removeChild(el);
+    while (el.firstChild) {
+      el.parentNode.insertBefore(el.firstChild, el);
+    }
+    el.parentNode.removeChild(el);
   });
-  
+
   fragment = document.createDocumentFragment();
   while (tempDiv.firstChild) {
-      fragment.appendChild(tempDiv.firstChild);
+    fragment.appendChild(tempDiv.firstChild);
   }
 
+  // 4. If Default / Reset (no preset), insert clean unstyled text and unwrap any leftover parent preset
   if (!presetName) {
-      range.insertNode(fragment);
-      return;
+    if (parentPreset && parentPreset.parentNode) {
+      while (parentPreset.firstChild) {
+        parentPreset.parentNode.insertBefore(parentPreset.firstChild, parentPreset);
+      }
+      parentPreset.parentNode.removeChild(parentPreset);
+    }
+    range.insertNode(fragment);
+    return;
   }
-  
+
+  // 5. Create new single preset span
   const span = document.createElement('span');
   
   if (presetName === 'highlight') {
@@ -3130,6 +3294,15 @@ function applyDesignerPreset(presetName, range) {
   } else if (presetName === 'neon') {
     span.setAttribute('data-notion-color', 'blue_background');
     span.className = 'preset-neon-pulse';
+  } else if (presetName === 'hologram_glitch') {
+    span.setAttribute('data-notion-color', 'blue_background');
+    span.className = 'preset-hologram-glitch';
+  } else if (presetName === 'laser_crimson') {
+    span.setAttribute('data-notion-color', 'red_background');
+    span.className = 'preset-laser-crimson';
+  } else if (presetName === 'studio_marker') {
+    span.setAttribute('data-notion-color', 'yellow_background');
+    span.className = 'preset-studio-marker';
   } else if (presetName === 'iridescent') {
     span.setAttribute('data-notion-color', 'pink_background');
     span.className = 'preset-iridescent';
@@ -3145,16 +3318,36 @@ function applyDesignerPreset(presetName, range) {
   } else if (presetName === 'frosted_chrome') {
     span.setAttribute('data-notion-color', 'gray_background');
     span.className = 'preset-frosted-chrome';
-  } else if (presetName === 'cosmic_star') {
+  } else if (presetName === 'matrix_terminal') {
+    span.setAttribute('data-notion-color', 'green_background');
+    span.className = 'preset-matrix-terminal';
+  } else if (presetName === 'aurora_borealis') {
     span.setAttribute('data-notion-color', 'blue_background');
-    span.className = 'preset-cosmic-star';
-  } else if (presetName === 'fire_burn') {
-    span.setAttribute('data-notion-color', 'red_background');
-    span.className = 'preset-fire-burn';
+    span.className = 'preset-aurora-borealis';
+  } else if (presetName === 'subzero_frost') {
+    span.setAttribute('data-notion-color', 'blue_background');
+    span.className = 'preset-subzero-frost';
+  } else if (presetName === 'electric_amethyst') {
+    span.setAttribute('data-notion-color', 'purple_background');
+    span.className = 'preset-electric-amethyst';
+  } else if (presetName === 'hazard_warning') {
+    span.setAttribute('data-notion-color', 'orange_background');
+    span.className = 'preset-hazard-warning';
+  } else if (presetName === 'rose_gold') {
+    span.setAttribute('data-notion-color', 'pink_background');
+    span.className = 'preset-rose-gold';
   }
-  
+
   span.appendChild(fragment);
   range.insertNode(span);
+
+  // If new span ended up nested inside an ancestor preset, unwrap the outer preset around it
+  if (parentPreset && parentPreset.parentNode && parentPreset !== span) {
+    while (parentPreset.firstChild) {
+      parentPreset.parentNode.insertBefore(parentPreset.firstChild, parentPreset);
+    }
+    parentPreset.parentNode.removeChild(parentPreset);
+  }
 }
 
 // --- Utility: Render Notion Rich Text to HTML String ---
@@ -3185,7 +3378,7 @@ function renderRichTextToHTML(richTextArr) {
       } else if (t.annotations.color === 'pink_background') {
         className += " preset-iridescent";
       } else if (t.annotations.color === 'red_background') {
-        className += " preset-fire-burn";
+        className += " preset-laser-crimson";
       } else if (typeof t.annotations.color === 'string') {
         styleStr += `color:${t.annotations.color.replace('_background', '')};`;
       }
