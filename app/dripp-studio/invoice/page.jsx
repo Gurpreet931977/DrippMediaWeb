@@ -325,8 +325,23 @@ export default function InvoiceMaker() {
         parseInvoicePayload(data.payload);
       }
     };
+
+    const handleCopilotUndo = (e) => {
+      const data = e.detail;
+      if (data?.formContext) {
+        const { clientDetails: c, services: s, invoiceDetails: inv } = data.formContext;
+        if (c) setClientDetails(c);
+        if (s) setItems(s);
+        if (inv) setInvoiceDetails(inv);
+      }
+    };
+
     window.addEventListener('copilot-action', handleCopilotAction);
-    return () => window.removeEventListener('copilot-action', handleCopilotAction);
+    window.addEventListener('copilot-undo', handleCopilotUndo);
+    return () => {
+      window.removeEventListener('copilot-action', handleCopilotAction);
+      window.removeEventListener('copilot-undo', handleCopilotUndo);
+    };
   }, []); // ensure we capture latest items to append if needed
 
   useEffect(() => {

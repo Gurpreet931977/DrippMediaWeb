@@ -105,9 +105,34 @@ export default function EmailCampaignsPage() {
         setStatus({ type: 'success', msg: 'Orlo has updated your email settings.' });
       }
     };
+
+    const handleCopilotUndo = (e) => {
+      const data = e.detail;
+      if (data?.emailContext) {
+        const ec = data.emailContext;
+        if (ec.subject !== undefined) setSubject(ec.subject);
+        if (ec.title !== undefined) setTitle(ec.title);
+        if (ec.body !== undefined) setBody(ec.body);
+        if (ec.templateType !== undefined) setTemplateType(ec.templateType);
+        if (ec.isBroadcast !== undefined) setIsBroadcast(ec.isBroadcast);
+        if (ec.isExcluding !== undefined) setIsExcluding(ec.isExcluding);
+        if (ec.specificEmail !== undefined) setSpecificEmail(ec.specificEmail);
+        if (ec.isScheduled !== undefined) setIsScheduled(ec.isScheduled);
+        if (ec.scheduleTime !== undefined) setScheduleTime(ec.scheduleTime);
+        if (ec.isRecurring !== undefined) setIsRecurring(ec.isRecurring);
+        if (ec.recurrenceIntervalDays !== undefined) setRecurrenceIntervalDays(ec.recurrenceIntervalDays);
+        if (ec.hasEndDate !== undefined) setHasEndDate(ec.hasEndDate);
+        if (ec.recurrenceEndDate !== undefined) setRecurrenceEndDate(ec.recurrenceEndDate);
+        setStatus({ type: 'success', msg: 'Orlo action undone. Previous email state restored.' });
+      }
+    };
     
     window.addEventListener('copilot-action', handleCopilotAction);
-    return () => window.removeEventListener('copilot-action', handleCopilotAction);
+    window.addEventListener('copilot-undo', handleCopilotUndo);
+    return () => {
+      window.removeEventListener('copilot-action', handleCopilotAction);
+      window.removeEventListener('copilot-undo', handleCopilotUndo);
+    };
   }, []);
 
   // Expose current context to Copilot

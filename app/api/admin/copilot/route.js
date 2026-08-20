@@ -173,6 +173,15 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
   - packageType: "project" (for one-time web development, branding, or project builds) or "monthly" (for monthly retainers/management).
   - totalBudget: The total budget as an integer (e.g. "15 K" -> 15000, "50k" -> 50000, "1.5L" -> 150000).
   
+  - **INCREMENTAL EDITS & NOTES (CRITICAL)**:
+    If the user asks to add a note, disclaimer, condition, or modification to the existing proposal (e.g. "add a line to it that domain purchasing is not included in it", "mention that images are provided by client", "add a note about 50% advance"):
+    - DO NOT wipe, reset, or rewrite the other existing items!
+    - Read the existing "Current Active Form State" (packageTiers, clientDetails, quoteDetails, pmpStrategy).
+    - Keep ALL existing line items, tiers, and rates completely intact.
+    - Update the target deliverable's "details" (e.g. append "(Note: Domain purchasing/registration fee is not included; client to provide domain)" to the Domain deliverable).
+    - If relevant, also update the Strategy & Concept pitch notes.
+    - In "replyMessage", confirm specifically what note or condition you added to the proposal.
+
   - **FLEXIBLE PACKAGING MODES**:
     1. **SINGLE-SERVICE MODE**: If user explicitly asks for a "single service", "all in one package", "one line item", "bundle it into one", or asks to "define details in PMP / strategy and keep a single service":
        - packageTiers: Output EXACTLY 1 comprehensive tier with 1 bundled service item (e.g. "Turnkey Web Development & Digital Growth Package", qty: 1, rate: totalBudget).
@@ -200,7 +209,7 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
 - In "replyMessage": DO NOT give a lazy one-line response like "Done". Respond like an elite agency strategist and co-founder!
   - If single-service mode: explain that the package was bundled into 1 single service with all granular deliverables mapped in the Strategy & Concept Pitch (PMP).
   - If itemized mode: break down the proposed scope with bullet points and realistic pricing for each item.
-  - Highlight the strategic concept pitch and why this setup will succeed for their specific brand.
+  - If note/edit: confirm the exact line/note that was updated.
   - Keep the tone confident, sharp, warm, and collaborative.
 
 **For "invoice" intent:**
@@ -679,7 +688,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       const currencySymbol = '₹';
       const formattedBudget = `${currencySymbol}${Number(totalBudget || 15000).toLocaleString()}`;
       
-      if (isSingleMode || (items && items.length === 1)) {
+      if (isSingleMode) {
         const singleItem = items?.[0] || { name: 'Turnkey Digital Growth Package', rate: totalBudget };
         return `I've packaged the entire project into a **single turnkey service item (${currencySymbol}${Number(singleItem.rate || totalBudget).toLocaleString()})** for ${brand} as requested!\n\n• **${singleItem.name}** — ${singleItem.details || 'Complete end-to-end execution.'}\n\nAll granular components (UI/UX Design, Development, Domain, Cloud Hosting, SEO Indexing, and 30-Day Maintenance) are thoroughly mapped out in the **Strategy & Concept Pitch (PMP)** section on the left. Everything is ready for client review!`;
       }
@@ -708,7 +717,6 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         pLower.includes('single item') ||
         pLower.includes('one service') ||
         pLower.includes('one line item') ||
-        pLower.includes('single line') ||
         pLower.includes('bundle it') ||
         pLower.includes('bundle everything') ||
         pLower.includes('single package') ||
@@ -755,8 +763,68 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         parsed.replyMessage = `I've saved this package as the template **"${parsed.payload.templateName}"**! It is now stored in your Templates library on the right, ready to load whenever you need it.`;
       }
 
+      // Check if user is requesting an incremental note / edit to existing deliverables
+      const isEditOrNoteReq = (
+        pLower.includes('add a line') ||
+        pLower.includes('add note') ||
+        pLower.includes('add a note') ||
+        pLower.includes('mention that') ||
+        pLower.includes('not included') ||
+        pLower.includes('separate fee') ||
+        pLower.includes('disclaimer') ||
+        pLower.includes('purchasing is not included') ||
+        pLower.includes('purchase is not included') ||
+        pLower.includes('update the') ||
+        pLower.includes('change the') ||
+        pLower.includes('edit the')
+      );
+
+      if (isEditOrNoteReq && formContext?.packageTiers && formContext.packageTiers.length > 0 && !isSingleReq && !isSaveTemplateReq) {
+        let baseTiers = JSON.parse(JSON.stringify(formContext.packageTiers));
+        let noteAdded = false;
+
+        if (pLower.includes('domain') && (pLower.includes('not included') || pLower.includes('purchas') || pLower.includes('buy'))) {
+          baseTiers.forEach(t => {
+            (t.items || []).forEach(it => {
+              const nameLower = (it.name || it.desc || '').toLowerCase();
+              if (nameLower.includes('domain')) {
+                if (!it.details.toLowerCase().includes('not included')) {
+                  it.details = `${it.details.replace(/\.\s*$/, '')}. (Note: Domain name purchasing/registration fee is not included; client to provide domain).`;
+                }
+                noteAdded = true;
+              }
+            });
+          });
+          if (noteAdded) {
+            parsed.replyMessage = `I've updated your proposal! The **Domain Implementation & DNS Configuration** deliverable now clearly notes that domain purchasing/registration is not included and is to be provided by the client.`;
+          }
+        } else if (pLower.includes('host') && (pLower.includes('not included') || pLower.includes('client'))) {
+          baseTiers.forEach(t => {
+            (t.items || []).forEach(it => {
+              const nameLower = (it.name || it.desc || '').toLowerCase();
+              if (nameLower.includes('host')) {
+                if (!it.details.toLowerCase().includes('not included')) {
+                  it.details = `${it.details.replace(/\.\s*$/, '')}. (Note: Server hosting subscription fee is to be paid directly by client).`;
+                }
+                noteAdded = true;
+              }
+            });
+          });
+          if (noteAdded) {
+            parsed.replyMessage = `I've updated your proposal! The **Hosting** deliverable now notes that server hosting subscription is to be maintained by the client.`;
+          }
+        }
+
+        if (noteAdded) {
+          parsed.payload.packageTiers = baseTiers;
+          const allItems = [];
+          baseTiers.forEach(t => { if (t.items) allItems.push(...t.items); });
+          parsed.payload.services = allItems;
+        }
+      }
+
       // If user requested a single service, override multiple tiers/services into a single bundled line item
-      if (isSingleReq && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0 && !isSaveTemplateReq) {
+      if (isSingleReq && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0 && !isSaveTemplateReq && !isEditOrNoteReq) {
         const budgetVal = parsed.payload.totalBudget || existingFormBudget || parseAmountNumber(userPrompt) || 15000;
         const brandName = parsed.payload.brandName || existingFormBrand || 'Real Estate Brand';
         const singleDeliverable = {

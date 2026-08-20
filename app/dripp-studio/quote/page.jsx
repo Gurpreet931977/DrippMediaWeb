@@ -824,9 +824,25 @@ export default function QuoteMaker() {
         parseQuotePayload(data.payload);
       }
     };
+
+    const handleCopilotUndo = (e) => {
+      const data = e.detail;
+      if (data?.formContext) {
+        const { clientDetails: c, packageTiers: pt, quoteDetails: q, packageType: pType, pmpStrategy: pmp } = data.formContext;
+        if (c) setClientDetails(c);
+        if (pt) setPackageTiers(pt);
+        if (q) setQuoteDetails(q);
+        if (pType) setPackageType(pType);
+        if (pmp !== undefined) setPmpStrategy(pmp);
+      }
+    };
     
     window.addEventListener('copilot-action', handleCopilotAction);
-    return () => window.removeEventListener('copilot-action', handleCopilotAction);
+    window.addEventListener('copilot-undo', handleCopilotUndo);
+    return () => {
+      window.removeEventListener('copilot-action', handleCopilotAction);
+      window.removeEventListener('copilot-undo', handleCopilotUndo);
+    };
   }, []);
 
   useEffect(() => {

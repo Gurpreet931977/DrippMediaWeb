@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon, Mic, MicOff, ArrowDown } from 'lucide-react';
+import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon, Mic, MicOff, ArrowDown, Square, RotateCcw } from 'lucide-react';
 import OrloIcon from './OrloIcon';
 import gsap from 'gsap';
 import { useGenz } from '../../contexts/GenzContext';
@@ -174,6 +174,29 @@ export default function OrloChat() {
   const [voiceCallTranscript, setVoiceCallTranscript] = useState({ user: '', ai: '' });
   const voiceHistoryRef = useRef([]);
   const autoRelistenRef = useRef(false);
+  const abortControllerRef = useRef(null);
+
+  const handleCancelGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    if (typeof window !== 'undefined') {
+      window.speechSynthesis?.cancel();
+    }
+    setIsTyping(false);
+    setIsProcessingVoice(false);
+    setEmotion('idle');
+    setMessages(prev => [...prev, { role: 'ai', text: 'Action cancelled.' }]);
+    if (inputRef.current) inputRef.current.focus();
+  };
+
+  const handleUndoAction = (msgObj, index) => {
+    if (!msgObj.undoSnapshot || msgObj.isUndone) return;
+    window.dispatchEvent(new CustomEvent('copilot-undo', { detail: msgObj.undoSnapshot }));
+    setMessages(prev => prev.map((m, idx) => idx === index ? { ...m, isUndone: true } : m));
+    showToast('Previous action undone successfully!');
+  };
 
   // Load chat history and fetch working models from API on mount
   useEffect(() => {
@@ -981,6 +1004,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
     setIsTyping(true);
     setEmotion('thinking');
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     try {
       const currentContext = window._drippEmailContext || {};
       const systemContext = window._drippSystemContext || {};
@@ -990,6 +1018,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
 
       const res = await fetch('/api/admin/copilot', {
         method: 'POST',
+        signal: abortControllerRef.current.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           userPrompt: userText,
@@ -1034,14 +1063,32 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         if (!msg) {
           if (data.intent === 'chat' || data.intent === 'notion_edit') {
             msg = "Here is what I came up with for you!";
-          } else if (['quote', 'package', 'invoice', 'email', 'portfolio'].includes(data.intent)) {
+          } else if (['quote', 'package', 'invoice', 'email', 'portfolio', 'save_template'].includes(data.intent)) {
             msg = "Done! I've updated the form with the requested details.";
           } else {
             msg = "Done! I've processed your request.";
           }
         }
         
-        nextMessages.push({ role: 'ai', text: msg });
+        // Capture snapshot before applying action to enable Undo
+        let undoSnapshot = null;
+        if (data.intent && data.payload && ['quote', 'package', 'invoice', 'email'].includes(data.intent)) {
+          undoSnapshot = {
+            intent: data.intent,
+            path: window.location.pathname,
+            formContext: window._drippFormContext ? JSON.parse(JSON.stringify(window._drippFormContext)) : null,
+            emailContext: window._drippEmailContext ? JSON.parse(JSON.stringify(window._drippEmailContext)) : null,
+            systemContext: window._drippSystemContext ? JSON.parse(JSON.stringify(window._drippSystemContext)) : null
+          };
+        }
+
+        nextMessages.push({ 
+          role: 'ai', 
+          text: msg,
+          undoSnapshot: undoSnapshot,
+          isUndone: false,
+          id: Date.now()
+        });
         setMessages(prev => [...prev, ...nextMessages]);
       }
       
@@ -1070,12 +1117,17 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       }
 
     } catch (error) {
+      if (error.name === 'AbortError') {
+        // User aborted intentionally
+        return;
+      }
       setEmotion('disappointed');
       setTimeout(() => setEmotion('idle'), 4000);
       setMessages(prev => [...prev, { role: 'ai', text: `Error: ${error.message}` }]);
       setIsProcessingVoice(false);
     } finally {
       setIsTyping(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -1923,7 +1975,35 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
               }
               return (
                 <div key={i} className={`msg-bubble ${m.role === 'ai' ? 'msg-ai' : 'msg-user'}`}>
-                  {m.text}
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{m.text}</div>
+                  {m.undoSnapshot && (
+                    <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleUndoAction(m, i)}
+                        disabled={m.isUndone}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: m.isUndone ? 'rgba(255, 255, 255, 0.04)' : 'rgba(235, 215, 63, 0.12)',
+                          border: m.isUndone ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(235, 215, 63, 0.35)',
+                          color: m.isUndone ? '#666' : '#ebd73f',
+                          borderRadius: '6px',
+                          padding: '4px 10px',
+                          fontSize: '0.72rem',
+                          fontFamily: "'Clash Display', sans-serif",
+                          fontWeight: '600',
+                          cursor: m.isUndone ? 'default' : 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        title="Revert form changes made by this action"
+                      >
+                        <RotateCcw size={12} />
+                        {m.isUndone ? 'Action Undone' : 'Undo Action'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1980,7 +2060,10 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   e.target.style.height = `${e.target.scrollHeight}px`;
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === 'Escape' && isTyping) {
+                    e.preventDefault();
+                    handleCancelGeneration();
+                  } else if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     if (input.trim() && !isTyping) {
                       handleSubmit();
@@ -2005,13 +2088,38 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                 disabled={isTyping}
                 rows={1}
               />
-              <button 
-                type="submit" 
-                className={`send-btn ${input.trim() ? 'active' : ''}`}
-                disabled={!input.trim() || isTyping}
-              >
-                <Send size={18} />
-              </button>
+              {isTyping ? (
+                <button 
+                  type="button" 
+                  className="send-btn"
+                  onClick={handleCancelGeneration}
+                  title="Cancel processing (Esc)"
+                  style={{
+                    background: 'rgba(235, 87, 87, 0.15)',
+                    border: '1px solid rgba(235, 87, 87, 0.4)',
+                    color: '#eb5757',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    borderRadius: '50%',
+                    width: '38px',
+                    height: '38px',
+                    marginRight: '4px',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Square size={13} fill="#eb5757" />
+                </button>
+              ) : (
+                <button 
+                  type="submit" 
+                  className={`send-btn ${input.trim() ? 'active' : ''}`}
+                  disabled={!input.trim() || isTyping}
+                >
+                  <Send size={18} />
+                </button>
+              )}
             </div>
           </form>
           </div>
