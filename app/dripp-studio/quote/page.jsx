@@ -843,21 +843,39 @@ export default function QuoteMaker() {
     const handleCopilotAction = (e) => {
       const data = e.detail;
       if (data?.intent === 'save_template' || data?.payload?.action === 'save_template' || data?.payload?.saveAsTemplate) {
-        const tName = data.payload?.templateName || (clientDetails.brandName ? `${clientDetails.brandName} Package` : 'Custom Package Template');
-        const tiersToSave = (data.payload?.packageTiers && data.payload.packageTiers.length > 0) ? data.payload.packageTiers : packageTiers;
+        const live = window._drippFormContext || {};
+        const liveClient = live.clientDetails || clientDetails || {};
+        const liveTiers = live.packageTiers || packageTiers || [];
+        const liveType = live.packageType || packageType || 'project';
+        const livePmp = live.pmpStrategy !== undefined ? live.pmpStrategy : pmpStrategy;
+        const liveQuote = live.quoteDetails || quoteDetails || {};
+
+        const brand = liveClient.brandName || liveClient.name || '';
+        const tName = data.payload?.templateName || (brand ? `${brand} Package` : 'Custom Package Template');
+        const tiersToSave = (data.payload?.packageTiers && data.payload.packageTiers.length > 0) ? data.payload.packageTiers : liveTiers;
+        
         const newPackage = {
           id: Date.now(),
           name: tName,
-          type: packageType,
+          type: liveType,
           packageTiers: JSON.parse(JSON.stringify(tiersToSave)),
-          pmpStrategy: data.payload?.pmpStrategy || pmpStrategy || '',
-          message: quoteDetails.message
+          pmpStrategy: data.payload?.pmpStrategy || livePmp || '',
+          message: liveQuote.message || ''
         };
-        setSavedPackages(prev => {
-          const updated = [...prev, newPackage];
+
+        let existing = [];
+        try {
+          const stored = localStorage.getItem('dripp_advanced_packages');
+          if (stored) existing = JSON.parse(stored);
+        } catch (err) {
+          existing = [];
+        }
+
+        const updated = [...existing, newPackage];
+        try {
           localStorage.setItem('dripp_advanced_packages', JSON.stringify(updated));
-          return updated;
-        });
+        } catch (err) {}
+        setSavedPackages(updated);
         showAlert(`Template "${tName}" saved successfully!`);
       } else if (['quote', 'package', 'pmp'].includes(data?.intent) && data?.payload) {
         parseQuotePayload(data.payload);

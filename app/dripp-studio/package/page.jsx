@@ -160,7 +160,42 @@ export default function PackageMaker() {
 
     const handleCopilotAction = (e) => {
       const data = e.detail;
-      if (data && ['package', 'quote', 'pmp'].includes(data?.intent) && data.payload) {
+      if (data?.intent === 'save_template' || data?.payload?.action === 'save_template' || data?.payload?.saveAsTemplate) {
+        const live = window._drippFormContext || {};
+        const liveBrand = live.brandName || brandName || '';
+        const liveServices = live.services || services || [];
+        const liveType = live.packageType || packageType || 'project';
+        const livePmp = live.pmpStrategy !== undefined ? live.pmpStrategy : pmpStrategy;
+
+        const tName = data.payload?.templateName || (liveBrand ? `${liveBrand} Package` : 'Custom Package Template');
+        const tiersToSave = (data.payload?.packageTiers && data.payload.packageTiers.length > 0) 
+          ? data.payload.packageTiers 
+          : [{ id: Date.now(), name: tName, items: liveServices }];
+        
+        const newPackage = {
+          id: Date.now(),
+          name: tName,
+          type: liveType,
+          packageTiers: JSON.parse(JSON.stringify(tiersToSave)),
+          pmpStrategy: data.payload?.pmpStrategy || livePmp || '',
+          message: ''
+        };
+
+        let existing = [];
+        try {
+          const stored = localStorage.getItem('dripp_advanced_packages');
+          if (stored) existing = JSON.parse(stored);
+        } catch (err) {
+          existing = [];
+        }
+
+        const updated = [...existing, newPackage];
+        try {
+          localStorage.setItem('dripp_advanced_packages', JSON.stringify(updated));
+        } catch (err) {}
+        setSavedPackages(updated);
+        showAlert(`Template "${tName}" saved successfully!`);
+      } else if (data && ['package', 'quote', 'pmp'].includes(data?.intent) && data.payload) {
         parsePackagePayload(data.payload);
       } else if (data?.payload && (data.payload.services || data.payload.packageTiers || data.payload.items || data.payload.totalBudget || data.payload.pmpStrategy)) {
         parsePackagePayload(data.payload);

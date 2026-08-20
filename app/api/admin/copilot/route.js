@@ -745,19 +745,34 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
 
       // Check if user requested saving as a template
       const isSaveTemplateReq = (
+        /save.*template/i.test(pLower) ||
         pLower.includes('save this as a template') ||
+        pLower.includes('save this as template') ||
         pLower.includes('save as template') ||
-        pLower.includes('save template') ||
         pLower.includes('save as a template') ||
+        pLower.includes('save template') ||
         pLower.includes('save package template') ||
         pLower.includes('save this package') ||
+        pLower.includes('save package') ||
+        pLower.includes('save current') ||
+        (pLower.includes('save') && (pLower.includes('template') || pLower.includes('package'))) ||
         parsed.intent === 'save_template'
       );
 
       if (isSaveTemplateReq) {
         parsed.intent = 'save_template';
-        const templateMatch = userPrompt.match(/(?:named|called|as)\s+["']?([^"'\.\,\n]+)["']?/i);
-        const inferredName = templateMatch ? templateMatch[1].trim() : (parsed.payload.brandName ? `${parsed.payload.brandName} Package` : (existingFormBrand ? `${existingFormBrand} Package` : 'Custom Package Template'));
+        const templateMatch = userPrompt.match(/(?:named|called)\s+["']?([^"'\.\,\n]+)["']?/i) || userPrompt.match(/(?:template)\s+(?:named|called|as)\s+["']?([^"'\.\,\n]+)["']?/i) || userPrompt.match(/(?:save\s+(?:this\s+)?(?:as\s+)?)(?:template\s+)?["']?([^"'\.\,\n]+)["']?/i);
+        let inferredName = '';
+        if (templateMatch && templateMatch[1] && !['template', 'a template', 'this', 'this as template', 'this as a template'].includes(templateMatch[1].trim().toLowerCase())) {
+          inferredName = templateMatch[1].trim();
+        } else if (parsed.payload?.brandName) {
+          inferredName = `${parsed.payload.brandName} Package`;
+        } else if (existingFormBrand) {
+          inferredName = `${existingFormBrand} Package`;
+        } else {
+          inferredName = 'Custom Package Template';
+        }
+        parsed.payload = parsed.payload || {};
         parsed.payload.templateName = parsed.payload.templateName || inferredName;
         parsed.payload.action = 'save_template';
         parsed.payload.packageTiers = (parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0) ? parsed.payload.packageTiers : (formContext?.packageTiers || []);
