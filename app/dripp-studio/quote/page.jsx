@@ -963,6 +963,7 @@ export default function QuoteMaker() {
     const msg = `Hey ${clientName}!\n\nHere is your secure proposal from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 PIN: ${sharePassword}\n\nLet me know if you have any questions!`;
     copyToClipboard(msg, 'message');
   };
+  const copyShareMessage = handleCopyMessage;
 
   const generateSecureLink = async () => {
     const pass = Math.floor(1000 + Math.random() * 9000).toString();
@@ -1222,7 +1223,7 @@ export default function QuoteMaker() {
 
             <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
               <button 
-                onClick={copyShareMessage}
+                onClick={handleCopyMessage}
                 style={{ background: '#ebd73f', border: 'none', color: '#000', padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
               >
                 <Share2 size={16} /> Copy Full Message
