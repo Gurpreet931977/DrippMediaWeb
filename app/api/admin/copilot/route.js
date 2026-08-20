@@ -162,13 +162,20 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
   - brandName: The brand/client name (e.g. "Real Estate Brand", "Aura Fitness"). If not explicitly named, infer a clean descriptive name.
   - packageType: "project" (for one-time web development, branding, or project builds) or "monthly" (for monthly retainers/management).
   - totalBudget: The total budget as an integer (e.g. "15 K" -> 15000, "50k" -> 50000, "1.5L" -> 150000).
-  - packageTiers: Array of tiers containing itemized services.
-    CRITICAL PRICING & WEIGHTING: Break down ALL requested deliverables into distinct service items with appropriate, realistic weighted rates (DO NOT divide budget evenly).
-    - Core deliverable (e.g. Custom Website Design & Development) should represent ~50-60% of total budget.
-    - SEO / Marketing setups should represent ~15-20%.
-    - Infrastructure (Domain, Hosting, SSL) should represent ~10-15%.
-    - Maintenance / Warranty support should represent ~10%.
-    The sum of (qty * rate) across all items in a tier MUST equal the totalBudget to the exact rupee!
+  
+  - **FLEXIBLE PACKAGING MODES**:
+    1. **SINGLE-SERVICE MODE**: If user explicitly asks for a "single service", "all in one package", "one line item", "bundle it into one", or asks to "define details in PMP / strategy and keep a single service":
+       - packageTiers: Output EXACTLY 1 comprehensive tier with 1 bundled service item (e.g. "Turnkey Web Development & Digital Growth Package", qty: 1, rate: totalBudget).
+       - services: Exactly 1 service item at rate = totalBudget.
+       - pmpStrategy: Provide a deep, extensive, itemized breakdown across all deliverables (UI/UX design, custom frontend development, domain setup, cloud hosting, SEO indexing, and 30-day maintenance warranty) directly in the overview and phases.
+    2. **ITEMIZED MODE (DEFAULT)**: If user does NOT specify a single service:
+       - Break down ALL requested deliverables into distinct service items with appropriate, realistic weighted rates (DO NOT divide budget evenly).
+       - Core deliverable (e.g. Custom Website Design & Development) should represent ~50-60% of total budget.
+       - SEO / Marketing setups should represent ~15-20%.
+       - Infrastructure (Domain, Hosting, SSL) should represent ~10-15%.
+       - Maintenance / Warranty support should represent ~10%.
+       - The sum of (qty * rate) across all items in a tier MUST equal the totalBudget to the exact rupee!
+    
     For each item in items:
       - name: Clear, professional title of the deliverable (e.g. "Custom Designed Website (Basic-Intermediate)", "Basic Search Engine Optimization (SEO)", "Domain Implementation & DNS Configuration", "High-Performance Cloud Web Hosting", "1 Month Maintenance & Bug Fixing Warranty")
       - desc: Same clear title
@@ -181,7 +188,8 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
     - targetAudience: Specific description of the target demographic/customers (e.g. for real estate: high-net-worth property buyers and investors).
     - phases: Array of 3-4 structured phases ({ "title": "Phase 1: Architecture & UI/UX Design", "description": "..." }, { "title": "Phase 2: Development, SEO & Cloud Deployment", "description": "..." }, { "title": "Phase 3: Launch & 30-Day Stability Warranty", "description": "..." }).
 - In "replyMessage": DO NOT give a lazy one-line response like "Done". Respond like an elite agency strategist and co-founder!
-  - Break down the proposed scope with bullet points and realistic pricing for each item.
+  - If single-service mode: explain that the package was bundled into 1 single service with all granular deliverables mapped in the Strategy & Concept Pitch (PMP).
+  - If itemized mode: break down the proposed scope with bullet points and realistic pricing for each item.
   - Highlight the strategic concept pitch and why this setup will succeed for their specific brand.
   - Keep the tone confident, sharp, warm, and collaborative.
 
@@ -525,7 +533,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       return 0;
     };
 
-    // Smart deliverable extractor with realistic weighted pricing & industry strategy
+    // Smart deliverable extractor with realistic weighted pricing & single-service support
     const generateFallbackDeliverables = (prompt, targetBudget = 15000) => {
       const p = (prompt || '').toLowerCase();
       const items = [];
@@ -538,6 +546,26 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       const isMaintenance = p.includes('maintenance') || p.includes('bug') || p.includes('error') || p.includes('fixing') || p.includes('support');
       const isReels = p.includes('reel') || p.includes('tiktok') || p.includes('short') || p.includes('video');
       const isGraphic = p.includes('graphic') || p.includes('design') || p.includes('post') || p.includes('carousel') || p.includes('branding');
+
+      // Check if user specifically requested a single bundled service
+      const isSingleService = p.includes('single service') || p.includes('single item') || p.includes('one service') || p.includes('one line item') || p.includes('bundle it') || p.includes('single package') || p.includes('one package item') || (p.includes('in pmp') && (p.includes('single') || p.includes('one'))) || p.includes('as a single') || p.includes('bundled into one');
+
+      const budget = targetBudget || 15000;
+
+      if (isSingleService) {
+        let singleTitle = 'Turnkey Web Development & Digital Growth Package';
+        if (isRealEstate) singleTitle = 'Turnkey Real Estate Web & Digital Growth Package';
+        else if (isReels) singleTitle = 'Complete High-Retention Video & Social Growth Package';
+        else if (isGraphic) singleTitle = 'Full-Suite Brand Identity & Creative Package';
+
+        return [{
+          name: singleTitle,
+          desc: singleTitle,
+          qty: 1,
+          rate: budget,
+          details: 'Comprehensive end-to-end delivery including bespoke UI/UX design, custom web development, domain DNS setup, cloud hosting, on-page SEO ranking, and 30-day maintenance warranty (detailed in Strategy & Concept Pitch).'
+        }];
+      }
 
       if (isWeb) {
         items.push({
@@ -619,7 +647,6 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         );
       }
 
-      const budget = targetBudget || 15000;
       const totalWeight = items.reduce((acc, it) => acc + (it.weight || 20), 0);
       let running = 0;
       items.forEach((it, idx) => {
@@ -637,10 +664,16 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
     };
 
     // Consultative reply message builder
-    const buildSmartReplyMessage = (brandName, totalBudget, items) => {
+    const buildSmartReplyMessage = (brandName, totalBudget, items, isSingleMode) => {
       const brand = brandName || 'the client';
       const currencySymbol = '₹';
       const formattedBudget = `${currencySymbol}${Number(totalBudget || 15000).toLocaleString()}`;
+      
+      if (isSingleMode || (items && items.length === 1)) {
+        const singleItem = items?.[0] || { name: 'Turnkey Digital Growth Package', rate: totalBudget };
+        return `I've packaged the entire project into a **single turnkey service item (${currencySymbol}${Number(singleItem.rate || totalBudget).toLocaleString()})** for ${brand} as requested!\n\n• **${singleItem.name}** — ${singleItem.details || 'Complete end-to-end execution.'}\n\nAll granular components (UI/UX Design, Development, Domain, Cloud Hosting, SEO Indexing, and 30-Day Maintenance) are thoroughly mapped out in the **Strategy & Concept Pitch (PMP)** section on the left. Everything is ready for client review!`;
+      }
+
       const breakdown = (items || []).map(it => `• **${it.name || it.desc}** (${currencySymbol}${Number(it.rate || 0).toLocaleString()}) — ${it.details || 'Full implementation and delivery.'}`).join('\n');
       return `I've structured a complete ${formattedBudget} proposal tailored for ${brand}!\n\nHere is the strategic scope and pricing breakdown:\n${breakdown}\n\nI also populated the **Strategy & Concept Pitch** section with a customized 3-phase digital blueprint (UI/UX Architecture, SEO & Cloud Infrastructure, and 30-Day Stability Warranty). Everything is loaded directly into your proposal form ready for review!`;
     };
@@ -651,14 +684,62 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         parsed.payload.totalBudget = parseAmountNumber(parsed.payload.totalBudget);
       }
 
+      // Recover previous form state if in follow-up chat turn
+      const existingFormBudget = formContext?.quoteDetails?.total || formContext?.total || (formContext?.packageTiers && Array.isArray(formContext.packageTiers) ? formContext.packageTiers.reduce((acc, t) => acc + (t.items || []).reduce((s, it) => s + ((it.qty || 1) * (it.rate || 0)), 0), 0) : 0);
+      const existingFormBrand = formContext?.clientDetails?.brandName || formContext?.clientDetails?.name || '';
+
+      if (!parsed.payload.totalBudget && existingFormBudget > 0) {
+        parsed.payload.totalBudget = existingFormBudget;
+      }
+
+      const pLower = userPrompt.toLowerCase();
+      const isSingleReq = (
+        pLower.includes('single service') ||
+        pLower.includes('single item') ||
+        pLower.includes('one service') ||
+        pLower.includes('one line item') ||
+        pLower.includes('single line') ||
+        pLower.includes('bundle it') ||
+        pLower.includes('bundle everything') ||
+        pLower.includes('single package') ||
+        pLower.includes('one package item') ||
+        pLower.includes('1 service') ||
+        pLower.includes('as a single') ||
+        (pLower.includes('pmp') && (pLower.includes('single') || pLower.includes('one') || pLower.includes('everything else') || pLower.includes('all details'))) ||
+        (pLower.includes('strategy') && (pLower.includes('single') || pLower.includes('one') || pLower.includes('bundle')))
+      );
+
       // Infer brand name if generic
       if (!parsed.payload.brandName || parsed.payload.brandName.toLowerCase() === 'client project' || parsed.payload.brandName.toLowerCase() === 'brand') {
-        const brandMatch = userPrompt.match(/(?:for\s+(?:a\s+)?)([a-zA-Z0-9\s]+?)(?:\s+brand|\s+company|\s+business|\.|\,|$)/i);
-        if (brandMatch && brandMatch[1]) {
-          parsed.payload.brandName = brandMatch[1].trim().replace(/\b\w/g, l => l.toUpperCase()) + (brandMatch[1].toLowerCase().includes('brand') ? '' : ' Brand');
-        } else if (userPrompt.toLowerCase().includes('real estate')) {
-          parsed.payload.brandName = 'Real Estate Brand';
+        if (existingFormBrand) {
+          parsed.payload.brandName = existingFormBrand;
+        } else {
+          const brandMatch = userPrompt.match(/(?:for\s+(?:a\s+)?)([a-zA-Z0-9\s]+?)(?:\s+brand|\s+company|\s+business|\.|\,|$)/i);
+          if (brandMatch && brandMatch[1]) {
+            parsed.payload.brandName = brandMatch[1].trim().replace(/\b\w/g, l => l.toUpperCase()) + (brandMatch[1].toLowerCase().includes('brand') ? '' : ' Brand');
+          } else if (pLower.includes('real estate')) {
+            parsed.payload.brandName = 'Real Estate Brand';
+          }
         }
+      }
+
+      // If user requested a single service, override multiple tiers/services into a single bundled line item
+      if (isSingleReq && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0) {
+        const budgetVal = parsed.payload.totalBudget || existingFormBudget || parseAmountNumber(userPrompt) || 15000;
+        const brandName = parsed.payload.brandName || existingFormBrand || 'Real Estate Brand';
+        const singleDeliverable = {
+          name: pLower.includes('real estate') || (existingFormBrand && existingFormBrand.toLowerCase().includes('real estate')) ? 'Turnkey Real Estate Web & Digital Growth Package' : 'Turnkey Web Development & Digital Growth Package',
+          desc: pLower.includes('real estate') || (existingFormBrand && existingFormBrand.toLowerCase().includes('real estate')) ? 'Turnkey Real Estate Web & Digital Growth Package' : 'Turnkey Web Development & Digital Growth Package',
+          qty: 1,
+          rate: budgetVal,
+          details: 'Comprehensive end-to-end delivery including bespoke UI/UX design, custom web development, domain DNS setup, cloud hosting, on-page SEO ranking, and 30-day maintenance warranty (detailed in Strategy & Concept Pitch).'
+        };
+        parsed.payload.totalBudget = budgetVal;
+        parsed.payload.services = [singleDeliverable];
+        parsed.payload.packageTiers = [{
+          name: `${brandName} Package`,
+          items: [singleDeliverable]
+        }];
       }
 
       // Check if prompt describes a quote/package or if items exist
@@ -671,7 +752,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       }
 
       // Sync and normalize packageTiers <-> services <-> items
-      if (hasTiers) {
+      if (hasTiers && !isSingleReq) {
         parsed.payload.packageTiers = parsed.payload.packageTiers.map(tier => ({
           name: tier.name || `${parsed.payload.brandName || 'Standard'} Package`,
           items: ((tier.items && tier.items.length > 0) ? tier.items : (tier.services && tier.services.length > 0) ? tier.services : (parsed.payload.services || [])).map(item => {
@@ -690,7 +771,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         const allTierItems = [];
         parsed.payload.packageTiers.forEach(t => { if (t.items) allTierItems.push(...t.items); });
         parsed.payload.services = allTierItems.length > 0 ? allTierItems : (parsed.payload.services || []);
-      } else if (hasServices) {
+      } else if (hasServices && !isSingleReq) {
         const normalized = parsed.payload.services.map(s => {
           const title = typeof s === 'string' ? s : (s.name || s.desc || 'Service Item');
           return {
@@ -706,7 +787,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
           name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
           items: normalized
         }];
-      } else if (hasItems) {
+      } else if (hasItems && !isSingleReq) {
         const normalized = parsed.payload.items.map(s => {
           const title = typeof s === 'string' ? s : (s.name || s.desc || 'Service Item');
           return {
@@ -745,15 +826,15 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       }
 
       // Ensure rich Strategy & Concept Pitch (PMP strategy)
-      if (!parsed.payload.pmpStrategy || typeof parsed.payload.pmpStrategy !== 'object' || !parsed.payload.pmpStrategy.phases || parsed.payload.pmpStrategy.phases.length === 0) {
+      if (!parsed.payload.pmpStrategy || typeof parsed.payload.pmpStrategy !== 'object' || !parsed.payload.pmpStrategy.phases || parsed.payload.pmpStrategy.phases.length === 0 || isSingleReq) {
         const brand = parsed.payload.brandName || 'Real Estate Brand';
         parsed.payload.pmpStrategy = {
-          overview: `Strategic high-performance digital web presence engineered for ${brand} to showcase premier properties, establish market authority, and capture high-intent buyer and investor inquiries.`,
-          targetAudience: `High-net-worth individuals, property buyers, prospective tenants, and local investors seeking trusted real estate opportunities from ${brand}.`,
+          overview: `Strategic turnkey digital execution engineered for ${brand} to establish market authority and capture high-intent inquiries. This package covers end-to-end deliverables: bespoke UI/UX design, responsive frontend web development, domain DNS setup, high-speed cloud hosting, on-page SEO ranking, and a 30-day post-launch maintenance warranty.`,
+          targetAudience: `Target demographic and high-intent clients seeking premier services and trusted solutions from ${brand}.`,
           phases: [
-            { title: "Phase 1: Architecture & UI/UX Design", description: "Brand integration, modern property showcase layout, lead funnel wireframes, and interactive prototype sign-off." },
-            { title: "Phase 2: Full-Stack Engineering, SEO & Cloud Infrastructure", description: "Responsive web development, domain connection, on-page SEO meta tags, Google Search indexing, and high-speed cloud hosting deployment." },
-            { title: "Phase 3: Live Launch & 30-Day Stability Warranty", description: "Production release, search engine verification, and 1 full month of dedicated bug fixing, error resolution, and stability support." }
+            { title: "Phase 1: Architecture & UI/UX Design", description: "Bespoke wireframing, property/brand showcase layouts, high-converting lead funnels, and responsive UI prototype sign-off." },
+            { title: "Phase 2: Full-Stack Engineering, SEO & Cloud Infrastructure", description: "Clean web development, custom domain DNS integration, meta tag structuring, Google Search Console indexing, and cloud hosting deployment." },
+            { title: "Phase 3: Live Launch & 30-Day Stability Warranty", description: "Live production deployment, search ranking verification, and 1 full month of dedicated bug fixing, error resolution, and technical maintenance." }
           ]
         };
       }
@@ -761,12 +842,12 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       // Ensure consultative replyMessage
       const activeItems = parsed.payload.packageTiers?.[0]?.items || parsed.payload.services || [];
       if (!parsed.replyMessage || parsed.replyMessage.startsWith("Done! I've updated the proposal") || parsed.replyMessage.startsWith("Done! I've processed") || parsed.replyMessage.length < 60) {
-        parsed.replyMessage = buildSmartReplyMessage(parsed.payload.brandName, parsed.payload.totalBudget, activeItems);
+        parsed.replyMessage = buildSmartReplyMessage(parsed.payload.brandName, parsed.payload.totalBudget, activeItems, isSingleReq);
       }
 
       // Exact budget allocation / scaling if totalBudget is specified
       const targetBudget = parsed.payload.totalBudget || 0;
-      if (targetBudget > 0 && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0) {
+      if (targetBudget > 0 && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0 && !isSingleReq) {
         parsed.payload.packageTiers.forEach(tier => {
           const items = tier.items || [];
           if (items.length > 0) {
