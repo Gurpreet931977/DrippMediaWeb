@@ -1569,6 +1569,62 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           transform: translate(2px, -2px) scale(1.1);
         }
 
+        @keyframes stopPulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.55), 0 0 12px rgba(255, 77, 77, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+          }
+          70% {
+            box-shadow: 0 0 0 7px rgba(255, 77, 77, 0), 0 0 20px rgba(255, 77, 77, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(255, 77, 77, 0), 0 0 12px rgba(255, 77, 77, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+          }
+        }
+
+        .orlo-stop-btn {
+          background: linear-gradient(135deg, rgba(255, 77, 77, 0.25) 0%, rgba(220, 38, 38, 0.15) 100%);
+          border: 1.5px solid rgba(255, 77, 77, 0.6);
+          color: #ff4d4d;
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          min-width: 36px;
+          min-height: 36px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 4px;
+          margin-bottom: 4px;
+          position: relative;
+          outline: none;
+          animation: stopPulse 1.8s infinite cubic-bezier(0.4, 0, 0.6, 1);
+          transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          backdrop-filter: blur(8px);
+        }
+        .orlo-stop-btn:hover {
+          transform: scale(1.08);
+          background: linear-gradient(135deg, rgba(255, 77, 77, 0.45) 0%, rgba(220, 38, 38, 0.35) 100%);
+          border-color: #ff4d4d;
+          box-shadow: 0 0 24px rgba(255, 77, 77, 0.7), inset 0 1px 3px rgba(255, 255, 255, 0.4);
+        }
+        .orlo-stop-btn:active {
+          transform: scale(0.95);
+        }
+        .orlo-stop-icon {
+          width: 12px;
+          height: 12px;
+          background: #ff4d4d;
+          border-radius: 3px;
+          box-shadow: 0 0 8px rgba(255, 77, 77, 0.9);
+          transition: all 0.2s ease;
+        }
+        .orlo-stop-btn:hover .orlo-stop-icon {
+          transform: scale(1.1);
+          background: #fff;
+          box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+        }
+
         .typing-indicator {
           display: flex;
           gap: 6px;
@@ -2091,25 +2147,12 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
               {isTyping ? (
                 <button 
                   type="button" 
-                  className="send-btn"
+                  className="orlo-stop-btn"
                   onClick={handleCancelGeneration}
-                  title="Cancel processing (Esc)"
-                  style={{
-                    background: 'rgba(235, 87, 87, 0.15)',
-                    border: '1px solid rgba(235, 87, 87, 0.4)',
-                    color: '#eb5757',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    borderRadius: '50%',
-                    width: '38px',
-                    height: '38px',
-                    marginRight: '4px',
-                    transition: 'all 0.2s ease'
-                  }}
+                  title="Stop generating (Esc)"
+                  aria-label="Stop generating"
                 >
-                  <Square size={13} fill="#eb5757" />
+                  <div className="orlo-stop-icon" />
                 </button>
               ) : (
                 <button 

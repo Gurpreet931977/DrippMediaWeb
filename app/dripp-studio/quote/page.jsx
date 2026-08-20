@@ -1233,6 +1233,8 @@ export default function QuoteMaker() {
                   type="text" 
                   readOnly 
                   value={shareLink} 
+                  onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')}
+                  title="Click to open proposal directly with PIN in a new tab"
                   style={{ 
                     width: '100%', 
                     background: '#0a0a0a', 
@@ -1241,7 +1243,8 @@ export default function QuoteMaker() {
                     padding: '10px 14px', 
                     borderRadius: '8px', 
                     fontFamily: "'Clash Display', sans-serif",
-                    fontSize: '0.9rem' 
+                    fontSize: '0.9rem',
+                    cursor: 'pointer'
                   }}
                 />
                 <button 

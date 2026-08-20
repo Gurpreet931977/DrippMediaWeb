@@ -47,9 +47,12 @@ export default function SharedQuote() {
     setMounted(true);
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
-      const pwdParam = urlParams.get('pwd');
+      const pwdParam = urlParams.get('pwd') || urlParams.get('pin');
       if (pwdParam) {
         setPassword(pwdParam);
+        const digits = pwdParam.slice(0, 4).split('');
+        while (digits.length < 4) digits.push('');
+        setPin(digits);
         setLoading(true);
         fetch(`/api/quote/${params?.id}`, {
           method: 'POST',
