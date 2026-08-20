@@ -1143,7 +1143,6 @@ export default function QuoteMaker() {
       )}
       <div className={styles.headerTop}>
         <div>
-          <div className={styles.genzPill}>GEN-Z</div>
           <h1 className={styles.titleModern}>QUOTES & <span className={styles.titleHighlight}>PACKAGES</span></h1>
           <p className={styles.subtitleModern}>Design customized proposals, tier packages, and client quotations</p>
         </div>
