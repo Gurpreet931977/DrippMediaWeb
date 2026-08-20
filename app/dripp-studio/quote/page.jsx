@@ -78,7 +78,7 @@ export default function QuoteMaker() {
   // PDF Pages State (Dynamic Builder)
   const [pdfPages, setPdfPages] = useState([
     { id: 'cover_1', type: 'cover', title: 'Immersive Visual Narratives & Strategic Growth', subtitle: 'Prepared Exclusively For', hideHeading: false },
-    { id: 'pmp_1', type: 'pmp', title: 'PMP Strategy', hideHeading: false },
+    { id: 'pmp_1', type: 'pmp', title: 'Strategy & Concept Pitch', hideHeading: false },
     { id: 'services_1', type: 'services', title: 'Scope of Work', hideHeading: false },
     { id: 'investment_1', type: 'investment', title: 'Investment Overview', hideHeading: false },
     { id: 'next_steps_1', type: 'next_steps', title: 'Next Steps', hideHeading: false }
@@ -669,11 +669,52 @@ export default function QuoteMaker() {
       setPdfPages(prev => {
         if (!prev.find(p => p.type === 'pmp')) {
           const newPages = [...prev];
-          newPages.splice(1, 0, { id: 'pmp_1', type: 'pmp', title: 'Marketing Strategy & Concept', hideHeading: false });
+          newPages.splice(1, 0, { id: 'pmp_1', type: 'pmp', title: 'Strategy & Concept Pitch', hideHeading: false });
           return newPages;
         }
         return prev;
       });
+    }
+
+    // Dynamic cover page title & subtitle generation
+    if (payload.coverHeading || payload.coverTitle || payload.coverSubtitle || payload.coverDetails) {
+      const title = payload.coverHeading || payload.coverTitle || payload.coverDetails?.title || payload.coverDetails?.heading;
+      const subtitle = payload.coverSubtitle || payload.coverDetails?.subtitle;
+      setPdfPages(prev => prev.map(p => {
+        if (p.type === 'cover') {
+          return {
+            ...p,
+            title: title || p.title,
+            subtitle: subtitle !== undefined ? subtitle : p.subtitle
+          };
+        }
+        return p;
+      }));
+    } else if (payload.brandName) {
+      const bName = payload.brandName;
+      const combined = (bName + ' ' + (typeof payload.pmpStrategy === 'string' ? payload.pmpStrategy : JSON.stringify(payload.pmpStrategy || ''))).toLowerCase();
+      let autoTitle = 'Strategic Growth & Digital Architecture Proposal';
+      if (combined.includes('real estate') || combined.includes('property')) {
+        autoTitle = 'Strategic Real Estate Web Platform & Digital Growth';
+      } else if (combined.includes('e-commerce') || combined.includes('ecommerce') || combined.includes('store') || combined.includes('shop')) {
+        autoTitle = 'Omnichannel Commerce Architecture & Conversion Engine';
+      } else if (combined.includes('brand') || combined.includes('identity')) {
+        autoTitle = 'Bespoke Brand Identity & Market Authority Blueprint';
+      } else if (combined.includes('video') || combined.includes('media') || combined.includes('production')) {
+        autoTitle = 'High-Impact Cinematic Media & Creative Production';
+      } else if (bName && bName.toLowerCase() !== 'client') {
+        autoTitle = `Strategic ${bName} Growth & Digital Architecture`;
+      }
+      setPdfPages(prev => prev.map(p => {
+        if (p.type === 'cover') {
+          return {
+            ...p,
+            title: (p.title === 'Immersive Visual Narratives & Strategic Growth' ? autoTitle : p.title),
+            subtitle: `Prepared Exclusively For ${bName}`
+          };
+        }
+        return p;
+      }));
     }
     
     // Number parser helper for amounts (e.g. "15k", "15 K", "15,000", "₹15000", etc.)
@@ -828,12 +869,13 @@ export default function QuoteMaker() {
     const handleCopilotUndo = (e) => {
       const data = e.detail;
       if (data?.formContext) {
-        const { clientDetails: c, packageTiers: pt, quoteDetails: q, packageType: pType, pmpStrategy: pmp } = data.formContext;
+        const { clientDetails: c, packageTiers: pt, quoteDetails: q, packageType: pType, pmpStrategy: pmp, pdfPages: pages } = data.formContext;
         if (c) setClientDetails(c);
         if (pt) setPackageTiers(pt);
         if (q) setQuoteDetails(q);
         if (pType) setPackageType(pType);
         if (pmp !== undefined) setPmpStrategy(pmp);
+        if (pages) setPdfPages(pages);
       }
     };
     
@@ -846,8 +888,8 @@ export default function QuoteMaker() {
   }, []);
 
   useEffect(() => {
-    window._drippFormContext = { clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy };
-  }, [clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy]);
+    window._drippFormContext = { clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy, pdfPages };
+  }, [clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy, pdfPages]);
 
   const handleClientChange = (field, value) => setClientDetails(prev => ({ ...prev, [field]: value }));
   const handleQuoteChange = (field, value) => setQuoteDetails(prev => ({ ...prev, [field]: value }));
@@ -1204,9 +1246,24 @@ export default function QuoteMaker() {
                 />
                 <button 
                   onClick={() => copyToClipboard(shareLink, 'link')}
-                  style={{ background: 'rgba(235, 215, 63, 0.2)', border: '1px solid #ebd73f', color: '#ebd73f', padding: '0 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
+                  style={{ 
+                    background: copiedItem === 'link' ? '#22c55e' : 'rgba(235, 215, 63, 0.2)', 
+                    border: copiedItem === 'link' ? '1px solid #22c55e' : '1px solid #ebd73f', 
+                    color: copiedItem === 'link' ? '#fff' : '#ebd73f', 
+                    padding: '0 16px', 
+                    borderRadius: '8px', 
+                    cursor: 'pointer', 
+                    fontWeight: 'bold', 
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transform: copiedItem === 'link' ? 'scale(1.05)' : 'scale(1)',
+                    boxShadow: copiedItem === 'link' ? '0 0 15px rgba(34, 197, 94, 0.4)' : 'none',
+                    transition: 'all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                  }}
                 >
-                  Copy Link
+                  {copiedItem === 'link' ? <><CheckCircle2 size={15} color="#fff" /> Copied!</> : 'Copy Link'}
                 </button>
               </div>
             </div>
@@ -1223,9 +1280,32 @@ export default function QuoteMaker() {
             <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
               <button 
                 onClick={handleCopyMessage}
-                style={{ background: '#ebd73f', border: 'none', color: '#000', padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+                style={{ 
+                  background: copiedItem === 'message' ? '#22c55e' : '#ebd73f', 
+                  border: 'none', 
+                  color: copiedItem === 'message' ? '#fff' : '#000', 
+                  padding: '12px 20px', 
+                  borderRadius: '8px', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  whiteSpace: 'nowrap',
+                  transform: copiedItem === 'message' ? 'scale(1.05)' : 'scale(1)',
+                  boxShadow: copiedItem === 'message' ? '0 0 15px rgba(34, 197, 94, 0.4)' : 'none',
+                  transition: 'all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                }}
               >
-                <Share2 size={16} /> Copy Full Message
+                {copiedItem === 'message' ? (
+                  <>
+                    <CheckCircle2 size={16} color="#fff" /> Copied Message!
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={16} /> Copy Full Message
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -1676,7 +1756,7 @@ export default function QuoteMaker() {
                              {page.type === 'custom_text' && <Type size={16} color="#888" />}
                              {page.type === 'infographic' && <Layers size={16} color="#888" />}
                              <span style={{ fontSize: '0.9rem', color: selectedPageIndex === index ? '#fff' : '#aaa' }}>
-                                {page.type === 'pmp' ? 'PMP Strategy' : page.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                {page.type === 'pmp' ? 'Strategy & Concept Pitch' : page.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                              </span>
                           </div>
                           
@@ -1702,7 +1782,7 @@ export default function QuoteMaker() {
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                              <h4 style={{ color: '#ebd73f', margin: 0, textTransform: 'capitalize' }}>
-                                 {pdfPages[selectedPageIndex].type.replace('_', ' ')} Settings
+                                 {pdfPages[selectedPageIndex].type === 'pmp' ? 'Strategy & Concept Pitch Settings' : (pdfPages[selectedPageIndex].type.replace('_', ' ') + ' Settings')}
                              </h4>
                              <button 
                                 onClick={() => updatePage(selectedPageIndex, 'hideHeading', !pdfPages[selectedPageIndex].hideHeading)}

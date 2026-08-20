@@ -202,12 +202,14 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
       - rate: Realistic integer price for this item (rates MUST sum to totalBudget)
       - details: Professional 1-2 sentence description of what is included in this deliverable.
   - services: Flat array of all the service items above (for cross-compatibility).
+  - coverHeading: High-impact, elevated proposal cover page heading tailored specifically to the project type and client's brand (e.g. for real estate: "Strategic Real Estate Web Platform & Digital Growth", for luxury fitness: "Elevated Brand Experience & Digital Acquisition Strategy", for e-commerce: "Omnichannel Commerce Platform & Conversion Architecture").
+  - coverSubtitle: Elegant subtitle (e.g. "Prepared Exclusively For [Brand Name]").
   - pmpStrategy: A rich, bespoke marketing/project strategy object tailored directly to the client's industry:
     - overview: 2-3 sentences explaining the strategic vision, lead generation approach, and brand authority positioning.
     - targetAudience: Specific description of the target demographic/customers (e.g. for real estate: high-net-worth property buyers and investors).
     - phases: Array of 3-4 structured phases ({ "title": "Phase 1: Architecture & UI/UX Design", "description": "..." }, { "title": "Phase 2: Development, SEO & Cloud Deployment", "description": "..." }, { "title": "Phase 3: Launch & 30-Day Stability Warranty", "description": "..." }).
 - In "replyMessage": DO NOT give a lazy one-line response like "Done". Respond like an elite agency strategist and co-founder!
-  - If single-service mode: explain that the package was bundled into 1 single service with all granular deliverables mapped in the Strategy & Concept Pitch (PMP).
+  - If single-service mode: explain that the package was bundled into 1 single service with all granular deliverables mapped in the Strategy & Concept Pitch.
   - If itemized mode: break down the proposed scope with bullet points and realistic pricing for each item.
   - If note/edit: confirm the exact line/note that was updated.
   - Keep the tone confident, sharp, warm, and collaborative.
@@ -937,6 +939,40 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
             { title: "Phase 3: Live Launch & 30-Day Stability Warranty", description: "Live production deployment, search ranking verification, and 1 full month of dedicated bug fixing, error resolution, and technical maintenance." }
           ]
         };
+      }
+
+      // Auto-generate high-impact tailored cover heading and subtitle
+      if (!parsed.payload.coverHeading) {
+        const b = parsed.payload.brandName || existingFormBrand || '';
+        const combined = (userPrompt + ' ' + b + ' ' + JSON.stringify(parsed.payload.pmpStrategy || '')).toLowerCase();
+        if (combined.includes('real estate') || combined.includes('property')) {
+          parsed.payload.coverHeading = 'Strategic Real Estate Web Platform & Digital Growth';
+        } else if (combined.includes('e-commerce') || combined.includes('ecommerce') || combined.includes('store') || combined.includes('shop')) {
+          parsed.payload.coverHeading = 'Omnichannel Commerce Architecture & Conversion Engine';
+        } else if (combined.includes('brand') || combined.includes('identity')) {
+          parsed.payload.coverHeading = 'Bespoke Brand Identity & Market Authority Blueprint';
+        } else if (combined.includes('video') || combined.includes('media') || combined.includes('production')) {
+          parsed.payload.coverHeading = 'High-Impact Cinematic Media & Creative Production';
+        } else if (b && b.toLowerCase() !== 'client') {
+          parsed.payload.coverHeading = `Strategic ${b} Growth & Digital Architecture`;
+        } else {
+          parsed.payload.coverHeading = 'Strategic Growth & Digital Architecture Proposal';
+        }
+      }
+      if (!parsed.payload.coverSubtitle) {
+        const b = parsed.payload.brandName || existingFormBrand || 'Client';
+        parsed.payload.coverSubtitle = `Prepared Exclusively For ${b}`;
+      }
+
+      // Check if user specifically requested to edit the cover heading or subtitle
+      if (pLower.includes('cover') && (pLower.includes('heading') || pLower.includes('title') || pLower.includes('subtitle') || pLower.includes('text'))) {
+        const titleMatch = userPrompt.match(/(?:heading|title)\s+(?:to|as)\s+["']?([^"'\.\,\n]+)["']?/i);
+        const subMatch = userPrompt.match(/(?:subtitle|sub-title)\s+(?:to|as)\s+["']?([^"'\.\,\n]+)["']?/i);
+        if (titleMatch && titleMatch[1]) parsed.payload.coverHeading = titleMatch[1].trim();
+        if (subMatch && subMatch[1]) parsed.payload.coverSubtitle = subMatch[1].trim();
+        if (formContext?.packageTiers) parsed.payload.packageTiers = formContext.packageTiers;
+        if (formContext?.pmpStrategy) parsed.payload.pmpStrategy = formContext.pmpStrategy;
+        parsed.replyMessage = `I've updated the proposal cover settings! Cover Heading: **"${parsed.payload.coverHeading}"**, Subtitle: **"${parsed.payload.coverSubtitle}"**.`;
       }
 
       // Ensure consultative replyMessage
