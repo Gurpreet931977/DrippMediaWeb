@@ -239,15 +239,11 @@ export default function InvoiceMaker() {
     };
 
     let extracted = [];
-    if (payload.services && Array.isArray(payload.services) && payload.services.length > 0) {
-      extracted = payload.services.map(s => ({
-        desc: typeof s === 'string' ? s : (s.desc || s.name || 'Service Item'),
-        qty: parseNum(s.qty) || 1,
-        rate: parseNum(s.rate) || 0
-      }));
-    } else if (payload.packageTiers && Array.isArray(payload.packageTiers) && payload.packageTiers.length > 0) {
+    if (payload.packageTiers && Array.isArray(payload.packageTiers) && payload.packageTiers.length > 0) {
       payload.packageTiers.forEach(tier => {
-        (tier.items || tier.services || []).forEach(item => {
+        const tierList = (tier.items && Array.isArray(tier.items) && tier.items.length > 0) ? tier.items : 
+                         (tier.services && Array.isArray(tier.services) && tier.services.length > 0) ? tier.services : [];
+        tierList.forEach(item => {
           extracted.push({
             desc: typeof item === 'string' ? item : (item.desc || item.name || 'Service Item'),
             qty: parseNum(item.qty) || 1,
@@ -255,7 +251,15 @@ export default function InvoiceMaker() {
           });
         });
       });
-    } else if (payload.items && Array.isArray(payload.items) && payload.items.length > 0) {
+    }
+
+    if (extracted.length === 0 && payload.services && Array.isArray(payload.services) && payload.services.length > 0) {
+      extracted = payload.services.map(s => ({
+        desc: typeof s === 'string' ? s : (s.desc || s.name || 'Service Item'),
+        qty: parseNum(s.qty) || 1,
+        rate: parseNum(s.rate) || 0
+      }));
+    } else if (extracted.length === 0 && payload.items && Array.isArray(payload.items) && payload.items.length > 0) {
       extracted = payload.items.map(item => ({
         desc: typeof item === 'string' ? item : (item.desc || item.name || 'Service Item'),
         qty: parseNum(item.qty) || 1,

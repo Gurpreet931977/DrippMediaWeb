@@ -742,24 +742,43 @@ export default function QuoteMaker() {
       return mapped;
     };
 
+    let allItems = [];
     if (payload.packageTiers && Array.isArray(payload.packageTiers) && payload.packageTiers.length > 0) {
-      setPackageTiers(payload.packageTiers.map((t, idx) => ({
-        id: Date.now() + idx,
-        name: t.name || `Package ${idx + 1}`,
-        items: normalizeItems(t.items || t.services || [])
-      })));
-    } else if (payload.services && Array.isArray(payload.services) && payload.services.length > 0) {
-      setPackageTiers([{
-        id: Date.now(),
-        name: payload.brandName ? `${payload.brandName} Package` : 'Standard Package',
-        items: normalizeItems(payload.services)
-      }]);
-    } else if (payload.items && Array.isArray(payload.items) && payload.items.length > 0) {
-      setPackageTiers([{
-        id: Date.now(),
-        name: payload.brandName ? `${payload.brandName} Package` : 'Standard Package',
-        items: normalizeItems(payload.items)
-      }]);
+      payload.packageTiers.forEach(t => {
+        const tierItems = (t.items && Array.isArray(t.items) && t.items.length > 0) ? t.items : 
+                          (t.services && Array.isArray(t.services) && t.services.length > 0) ? t.services : [];
+        if (tierItems.length > 0) {
+          allItems.push(...tierItems);
+        }
+      });
+    }
+
+    if (allItems.length === 0) {
+      if (payload.services && Array.isArray(payload.services) && payload.services.length > 0) {
+        allItems = payload.services;
+      } else if (payload.items && Array.isArray(payload.items) && payload.items.length > 0) {
+        allItems = payload.items;
+      }
+    }
+
+    if (allItems.length > 0) {
+      if (payload.packageTiers && Array.isArray(payload.packageTiers) && payload.packageTiers.some(t => ((t.items && t.items.length > 0) || (t.services && t.services.length > 0)))) {
+        setPackageTiers(payload.packageTiers.map((t, idx) => {
+          const tierItems = (t.items && Array.isArray(t.items) && t.items.length > 0) ? t.items : 
+                            (t.services && Array.isArray(t.services) && t.services.length > 0) ? t.services : allItems;
+          return {
+            id: Date.now() + idx,
+            name: t.name || `Package ${idx + 1}`,
+            items: normalizeItems(tierItems)
+          };
+        }));
+      } else {
+        setPackageTiers([{
+          id: Date.now(),
+          name: payload.brandName ? `${payload.brandName} Package` : 'Standard Package',
+          items: normalizeItems(allItems)
+        }]);
+      }
     }
   };
 

@@ -517,6 +517,106 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       return 0;
     };
 
+    // Smart deliverable extractor for project briefs and quotations
+    const generateFallbackDeliverables = (prompt, targetBudget = 0) => {
+      const p = (prompt || '').toLowerCase();
+      const items = [];
+
+      if (p.includes('web') || p.includes('site') || p.includes('development') || p.includes('landing')) {
+        items.push({
+          name: 'Custom Designed Website (Basic-Intermediate)',
+          desc: 'Custom Designed Website (Basic-Intermediate)',
+          qty: 1,
+          rate: 0,
+          details: 'Custom responsive UI/UX design and frontend web development tailored for brand identity.'
+        });
+      }
+
+      if (p.includes('domain') || p.includes('dns') || p.includes('ssl')) {
+        items.push({
+          name: 'Domain Implementation & DNS Setup',
+          desc: 'Domain Implementation & DNS Setup',
+          qty: 1,
+          rate: 0,
+          details: 'Custom domain connection, DNS record configuration, and SSL security setup.'
+        });
+      }
+
+      if (p.includes('seo') || p.includes('search') || p.includes('google')) {
+        items.push({
+          name: 'Basic Search Engine Optimization (SEO)',
+          desc: 'Basic Search Engine Optimization (SEO)',
+          qty: 1,
+          rate: 0,
+          details: 'On-page SEO structuring, meta tags, and Google Search Console indexing for visibility.'
+        });
+      }
+
+      if (p.includes('host') || p.includes('server') || p.includes('cloud')) {
+        items.push({
+          name: 'Cloud Web Hosting Deployment',
+          desc: 'Cloud Web Hosting Deployment',
+          qty: 1,
+          rate: 0,
+          details: 'High-speed cloud server deployment, uptime monitoring, and CDN configuration.'
+        });
+      }
+
+      if (p.includes('maintenance') || p.includes('bug') || p.includes('error') || p.includes('support')) {
+        items.push({
+          name: '1 Month Maintenance & Bug Fixing Support',
+          desc: '1 Month Maintenance & Bug Fixing Support',
+          qty: 1,
+          rate: 0,
+          details: '30-day post-launch warranty for error resolution, bug fixes, and minor adjustments.'
+        });
+      }
+
+      if (p.includes('reel') || p.includes('tiktok') || p.includes('short')) {
+        const countMatch = p.match(/(\d+)\s*(?:reels?|shorts?|videos?)/i);
+        const count = countMatch ? parseInt(countMatch[1]) : 5;
+        items.push({
+          name: `High-Retention Short-Form Content (${count} Reels)`,
+          desc: `High-Retention Short-Form Content (${count} Reels)`,
+          qty: count,
+          rate: 0,
+          details: 'Concept ideation, dynamic typography, pacing edits, sound design, and color grading.'
+        });
+      }
+
+      if (p.includes('graphic') || p.includes('design') || p.includes('post') || p.includes('carousel')) {
+        items.push({
+          name: 'Creative Graphic Design & Brand Assets',
+          desc: 'Creative Graphic Design & Brand Assets',
+          qty: 1,
+          rate: 0,
+          details: 'Bespoke promotional visuals, brand assets, and engaging social layouts.'
+        });
+      }
+
+      if (items.length === 0) {
+        items.push(
+          { name: 'Custom Brand & Development Strategy', desc: 'Custom Brand & Development Strategy', qty: 1, rate: 0, details: 'Full project execution and deliverables as per client brief.' },
+          { name: 'Production & Implementation', desc: 'Production & Implementation', qty: 1, rate: 0, details: 'High-fidelity execution, deployment, and testing.' },
+          { name: 'Post-Launch Support & Optimization', desc: 'Post-Launch Support & Optimization', qty: 1, rate: 0, details: 'Review, error monitoring, and performance checks.' }
+        );
+      }
+
+      const budget = targetBudget || 15000;
+      const perItem = Math.round(budget / items.length);
+      let running = 0;
+      items.forEach((it, idx) => {
+        if (idx === items.length - 1) {
+          it.rate = Math.max(0, budget - running);
+        } else {
+          it.rate = perItem;
+          running += perItem;
+        }
+      });
+
+      return items;
+    };
+
     // Auto-normalize and validate payload for quote, package, and invoice
     if (parsed.payload) {
       if (parsed.payload.totalBudget !== undefined) {
@@ -536,7 +636,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       if (hasTiers) {
         parsed.payload.packageTiers = parsed.payload.packageTiers.map(tier => ({
           name: tier.name || 'Standard Package',
-          items: (tier.items || tier.services || []).map(item => {
+          items: ((tier.items && tier.items.length > 0) ? tier.items : (tier.services && tier.services.length > 0) ? tier.services : (parsed.payload.services || [])).map(item => {
             const title = typeof item === 'string' ? item : (item.name || item.desc || 'Service Item');
             return {
               name: title,
@@ -549,9 +649,9 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         }));
 
         // Flatten for services array
-        if (!hasServices) {
-          parsed.payload.services = parsed.payload.packageTiers[0]?.items || [];
-        }
+        const allTierItems = [];
+        parsed.payload.packageTiers.forEach(t => { if (t.items) allTierItems.push(...t.items); });
+        parsed.payload.services = allTierItems.length > 0 ? allTierItems : (parsed.payload.services || []);
       } else if (hasServices) {
         const normalized = parsed.payload.services.map(s => {
           const title = typeof s === 'string' ? s : (s.name || s.desc || 'Service Item');
@@ -584,6 +684,40 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
           name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
           items: normalized
         }];
+      }
+
+      // Check if items are still empty: guarantee non-empty deliverables
+      let itemCount = 0;
+      if (parsed.payload.packageTiers) {
+        parsed.payload.packageTiers.forEach(t => { itemCount += (t.items || []).length; });
+      }
+      if (itemCount === 0 && parsed.payload.services) {
+        itemCount = parsed.payload.services.length;
+      }
+
+      if (itemCount === 0 && (parsed.intent === 'quote' || parsed.intent === 'package' || parsed.payload.totalBudget > 0 || currentPath.includes('quote') || currentPath.includes('package') || userPrompt.toLowerCase().includes('quotation') || userPrompt.toLowerCase().includes('package') || userPrompt.toLowerCase().includes('website') || userPrompt.toLowerCase().includes('development'))) {
+        const fallbackBudget = parsed.payload.totalBudget || parseAmountNumber(userPrompt) || 15000;
+        const fallbackItems = generateFallbackDeliverables(userPrompt, fallbackBudget);
+        parsed.payload.totalBudget = fallbackBudget;
+        parsed.payload.services = fallbackItems;
+        parsed.payload.packageTiers = [{
+          name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
+          items: fallbackItems
+        }];
+      }
+
+      // Ensure rich PMP Strategy
+      if (!parsed.payload.pmpStrategy || typeof parsed.payload.pmpStrategy !== 'object' || !parsed.payload.pmpStrategy.phases || parsed.payload.pmpStrategy.phases.length === 0) {
+        const brand = parsed.payload.brandName || 'Real Estate Brand';
+        parsed.payload.pmpStrategy = {
+          overview: `Strategic high-performance digital web presence engineered for ${brand} to capture high-intent inquiries and establish market authority.`,
+          targetAudience: `High-value clients, buyers, and investors seeking trusted property solutions from ${brand}.`,
+          phases: [
+            { title: "Phase 1: Architecture & UI/UX Design", description: "Brand integration, custom wireframing, and interactive UI/UX prototypes." },
+            { title: "Phase 2: Full-Stack Development & SEO", description: "Responsive web engineering, domain connection, search engine optimization (SEO), and cloud hosting." },
+            { title: "Phase 3: Launch & 30-Day Support", description: "Live deployment, Google search indexing verification, and 1 month of bug fixing & maintenance." }
+          ]
+        };
       }
 
       // Exact budget allocation / scaling if totalBudget is specified
