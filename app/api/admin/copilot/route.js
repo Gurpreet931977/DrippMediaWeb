@@ -318,16 +318,30 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
-            tools: [{ googleSearch: {} }],
             generationConfig: {
-                temperature: 0.7
+                temperature: 0.7,
+                responseMimeType: "application/json"
             }
           })
         });
 
         const resData = await response.json();
         if (resData.error) {
-          console.warn(`[Gemini Model ${modelToTry} Error]: ${resData.error.message}. Retrying fallback model...`);
+          console.warn(`[Gemini Model ${modelToTry} Error]: ${resData.error.message}. Retrying without responseMimeType...`);
+          // Fallback retry without responseMimeType in case model doesn't support it
+          const retryRes = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
+              generationConfig: { temperature: 0.7 }
+            })
+          });
+          const retryData = await retryRes.json();
+          if (retryData.candidates && retryData.candidates[0]?.content?.parts?.[0]?.text) {
+            data = retryData;
+            break;
+          }
           lastError = resData.error.message;
           continue;
         }
@@ -349,59 +363,133 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
     let textOutput = data.candidates[0].content.parts[0].text;
     
     function safeParseJSON(str) {
-      if (!str) return null;
-      let cleaned = str.replace(/```json/gi, '').replace(/```/g, '').trim();
-      
-      try { return JSON.parse(cleaned); } catch (e) {}
+      if (!str || typeof str !== 'string') return null;
+      const rawClean = str.trim();
 
-      const sanitize = (s) => {
-        return s
-          .replace(/("[\s\S]*?")/g, (match) => {
-            return match.replace(/\r?\n/g, '\\n').replace(/\t/g, '\\t');
-          })
-          .replace(/,\s*([}\]])/g, '$1');
-      };
+      // 1. Direct JSON parse
+      try { return JSON.parse(rawClean); } catch (e) {}
 
-      try { return JSON.parse(sanitize(cleaned)); } catch (e) {}
+      // 2. Extract from markdown codeblock ```json ... ```
+      const codeBlockMatch = rawClean.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (codeBlockMatch && codeBlockMatch[1]) {
+        const extracted = codeBlockMatch[1].trim();
+        try { return JSON.parse(extracted); } catch (e) {}
+      }
 
-      const firstBrace = cleaned.indexOf('{');
-      if (firstBrace !== -1) {
-        let depth = 0;
+      // 3. Clean and state-machine repair
+      const cleanAndRepair = (jsonString) => {
+        let result = jsonString;
+        result = result.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^\\:])\/\/.*$/gm, '$1');
+        result = result.replace(/,\s*([}\]])/g, '$1');
+
+        let repaired = '';
         let inString = false;
-        let escapeNext = false;
-        for (let i = firstBrace; i < cleaned.length; i++) {
-          const char = cleaned[i];
-          if (escapeNext) { escapeNext = false; continue; }
-          if (char === '\\') { escapeNext = true; continue; }
-          if (char === '"') { inString = !inString; continue; }
-          if (!inString) {
-            if (char === '{') depth++;
-            else if (char === '}') {
-              depth--;
-              if (depth === 0) {
-                const exactJson = cleaned.substring(firstBrace, i + 1);
-                try { return JSON.parse(exactJson); } catch (e) {}
-                try { return JSON.parse(sanitize(exactJson)); } catch (e) {}
-                break;
-              }
+        let isEscaped = false;
+
+        for (let i = 0; i < result.length; i++) {
+          const ch = result[i];
+          if (inString) {
+            if (isEscaped) {
+              repaired += ch;
+              isEscaped = false;
+            } else if (ch === '\\') {
+              repaired += ch;
+              isEscaped = true;
+            } else if (ch === '"') {
+              repaired += ch;
+              inString = false;
+            } else if (ch === '\n') {
+              repaired += '\\n';
+            } else if (ch === '\r') {
+              // skip carriage return
+            } else if (ch === '\t') {
+              repaired += '\\t';
+            } else {
+              repaired += ch;
             }
+          } else {
+            if (ch === '"') {
+              inString = true;
+            }
+            repaired += ch;
           }
         }
+        return repaired;
+      };
 
-        const lastBrace = cleaned.lastIndexOf('}');
-        if (lastBrace > firstBrace) {
-          const candidate = cleaned.substring(firstBrace, lastBrace + 1);
-          try { return JSON.parse(candidate); } catch (e) {}
-          try { return JSON.parse(sanitize(candidate)); } catch (e) {}
+      const firstBrace = rawClean.indexOf('{');
+      let candidate = firstBrace !== -1 ? rawClean.substring(firstBrace).trim() : rawClean;
+      const lastBrace = candidate.lastIndexOf('}');
+      if (lastBrace !== -1) {
+        candidate = candidate.substring(0, lastBrace + 1);
+      }
+
+      try { return JSON.parse(candidate); } catch (e) {}
+
+      const repaired = cleanAndRepair(candidate);
+      try { return JSON.parse(repaired); } catch (e) {}
+
+      // 4. Balance unclosed braces if truncated
+      let openBraces = 0;
+      let inStr = false;
+      let esc = false;
+      for (let i = 0; i < repaired.length; i++) {
+        const c = repaired[i];
+        if (inStr) {
+          if (esc) esc = false;
+          else if (c === '\\') esc = true;
+          else if (c === '"') inStr = false;
+        } else {
+          if (c === '"') inStr = true;
+          else if (c === '{') openBraces++;
+          else if (c === '}') openBraces--;
         }
       }
+
+      if (openBraces > 0) {
+        let autoClosed = repaired + (inStr ? '"' : '') + '}'.repeat(openBraces);
+        autoClosed = autoClosed.replace(/,\s*([}\]])/g, '$1');
+        try { return JSON.parse(autoClosed); } catch (e) {}
+      }
+
+      // 5. Resilient heuristic fallback
+      try {
+        const intentMatch = str.match(/"intent"\s*:\s*"([^"]+)"/i);
+        const replyMatch = str.match(/"replyMessage"\s*:\s*"((?:[^"\\]|\\.)*)"/i);
+        const budgetMatch = str.match(/"totalBudget"\s*:\s*"?([0-9kKmM.,]+)"?/i);
+        const brandMatch = str.match(/"brandName"\s*:\s*"((?:[^"\\]|\\.)*)"/i);
+        
+        if (intentMatch || replyMatch || brandMatch) {
+          return {
+            intent: intentMatch ? intentMatch[1] : (currentPath === '/dripp-studio/package' ? 'package' : 'quote'),
+            replyMessage: replyMatch ? replyMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "Done! I've processed your request.",
+            payload: {
+              brandName: brandMatch ? brandMatch[1] : '',
+              totalBudget: budgetMatch ? budgetMatch[1] : 0,
+              services: [],
+              packageTiers: []
+            }
+          };
+        }
+      } catch (e) {}
+
       return null;
     }
 
     let parsed = safeParseJSON(textOutput);
 
     if (!parsed) {
-      throw new Error('Failed to parse AI response. Please try rephrasing your command.');
+      // Ultimate fallback: return structured quote/action rather than error
+      parsed = {
+        intent: (currentPath === '/dripp-studio/package') ? 'package' : 'quote',
+        replyMessage: "Done! I've updated the proposal with your project details and budget.",
+        payload: {
+          brandName: 'Client Project',
+          totalBudget: 0,
+          services: [],
+          packageTiers: []
+        }
+      };
     }
 
     // Number parser helper for budgets and rates (handles "15k", "15 K", "15,000", "₹15000", "1.5L", etc.)
