@@ -213,25 +213,88 @@ export default function InvoiceMaker() {
     if (payload.clientAddress) setClientDetails(prev => ({ ...prev, address: payload.clientAddress }));
     if (payload.gstNumber) setClientDetails(prev => ({ ...prev, gst: payload.gstNumber }));
     
+    // Number parser helper
+    const parseNum = (val) => {
+      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      if (!val || typeof val !== 'string') return 0;
+      const cleaned = val.toLowerCase().replace(/,/g, '').trim();
+      if (cleaned.endsWith('k')) {
+        const num = parseFloat(cleaned.slice(0, -1));
+        return isNaN(num) ? 0 : Math.round(num * 1000);
+      }
+      if (cleaned.endsWith('m') || cleaned.endsWith('cr')) {
+        const num = parseFloat(cleaned.slice(0, -2));
+        return isNaN(num) ? 0 : Math.round(num * 1000000);
+      }
+      if (cleaned.endsWith('l') || cleaned.endsWith('lac') || cleaned.endsWith('lakh')) {
+        const num = parseFloat(cleaned.replace(/lakh|lac|l/, ''));
+        return isNaN(num) ? 0 : Math.round(num * 100000);
+      }
+      const match = cleaned.match(/[\d.]+/);
+      if (match) {
+        const num = parseFloat(match[0]);
+        return isNaN(num) ? 0 : Math.round(num);
+      }
+      return 0;
+    };
+
     let extracted = [];
-    if (payload.services && payload.services.length > 0) {
+    if (payload.services && Array.isArray(payload.services) && payload.services.length > 0) {
       extracted = payload.services.map(s => ({
-        desc: s.desc || s.name || 'Service Item',
-        qty: Number(s.qty) || 1,
-        rate: Number(s.rate) || 0
+        desc: typeof s === 'string' ? s : (s.desc || s.name || 'Service Item'),
+        qty: parseNum(s.qty) || 1,
+        rate: parseNum(s.rate) || 0
       }));
-    } else if (payload.packageTiers && payload.packageTiers.length > 0) {
+    } else if (payload.packageTiers && Array.isArray(payload.packageTiers) && payload.packageTiers.length > 0) {
       payload.packageTiers.forEach(tier => {
-        (tier.items || []).forEach(item => {
+        (tier.items || tier.services || []).forEach(item => {
           extracted.push({
-            desc: item.desc || item.name || 'Service Item',
-            qty: Number(item.qty) || 1,
-            rate: Number(item.rate) || 0
+            desc: typeof item === 'string' ? item : (item.desc || item.name || 'Service Item'),
+            qty: parseNum(item.qty) || 1,
+            rate: parseNum(item.rate) || 0
           });
         });
       });
+    } else if (payload.items && Array.isArray(payload.items) && payload.items.length > 0) {
+      extracted = payload.items.map(item => ({
+        desc: typeof item === 'string' ? item : (item.desc || item.name || 'Service Item'),
+        qty: parseNum(item.qty) || 1,
+        rate: parseNum(item.rate) || 0
+      }));
     }
+
+    const targetBudget = parseNum(payload.totalBudget);
     if (extracted.length > 0) {
+      if (targetBudget > 0) {
+        const sum = extracted.reduce((acc, it) => acc + (it.qty * it.rate), 0);
+        if (sum === 0) {
+          const perItemRate = Math.round(targetBudget / extracted.length);
+          let runningSum = 0;
+          extracted = extracted.map((it, idx) => {
+            if (idx === extracted.length - 1) {
+              const rem = targetBudget - runningSum;
+              const r = Math.max(0, Math.round(rem / (it.qty || 1)));
+              return { ...it, rate: r };
+            }
+            const r = Math.round(perItemRate / (it.qty || 1));
+            runningSum += (it.qty * r);
+            return { ...it, rate: r };
+          });
+        } else if (Math.abs(sum - targetBudget) > 1) {
+          const factor = targetBudget / sum;
+          let runningSum = 0;
+          extracted = extracted.map((it, idx) => {
+            if (idx === extracted.length - 1) {
+              const rem = targetBudget - runningSum;
+              const r = Math.max(0, Math.round(rem / (it.qty || 1)));
+              return { ...it, rate: r };
+            }
+            const r = Math.round(it.rate * factor);
+            runningSum += (it.qty * r);
+            return { ...it, rate: r };
+          });
+        }
+      }
       setItems(extracted);
     }
   };
@@ -252,7 +315,9 @@ export default function InvoiceMaker() {
   useEffect(() => {
     const handleCopilotAction = (e) => {
       const data = e.detail;
-      if (data && data.intent === 'invoice' && data.payload) {
+      if (data && ['invoice', 'quote', 'package'].includes(data?.intent) && data.payload) {
+        parseInvoicePayload(data.payload);
+      } else if (data?.payload && (data.payload.services || data.payload.items || data.payload.packageTiers || data.payload.totalBudget)) {
         parseInvoicePayload(data.payload);
       }
     };
@@ -1396,9 +1461,9 @@ export default function InvoiceMaker() {
                                      <>
                                          <div>Bank: {b.bankName}</div>
                                          <div>Name: {b.accountName}</div>
-                                         <div style={{ fontFamily: 'monospace' }}>A/C: {b.accountNumber}</div>
-                                         {b.ifsc && <div style={{ fontFamily: 'monospace' }}>IFSC: {b.ifsc}</div>}
-                                         {b.swift && <div style={{ fontFamily: 'monospace' }}>SWIFT: {b.swift}</div>}
+                                         <div style={{ fontFamily: "'Clash Display', sans-serif" }}>A/C: {b.accountNumber}</div>
+                                         {b.ifsc && <div style={{ fontFamily: "'Clash Display', sans-serif" }}>IFSC: {b.ifsc}</div>}
+                                         {b.swift && <div style={{ fontFamily: "'Clash Display', sans-serif" }}>SWIFT: {b.swift}</div>}
                                      </>
                                  );
                              })()}
@@ -1649,24 +1714,24 @@ export default function InvoiceMaker() {
                                   </div>
                                   <div style={{ marginBottom: '30px' }}>
                                       <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Account Number</p>
-                                      <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.accountNumber}</p>
+                                      <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>{bank.accountNumber}</p>
                                   </div>
                                   {bank.ifsc && (
                                       <div style={{ marginBottom: '30px' }}>
                                           <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>Routing / IFSC</p>
-                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.ifsc}</p>
+                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>{bank.ifsc}</p>
                                       </div>
                                   )}
                                   {bank.swift && (
                                       <div style={{ marginBottom: '30px' }}>
                                           <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>SWIFT Code</p>
-                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.swift}</p>
+                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>{bank.swift}</p>
                                       </div>
                                   )}
                                   {bank.upi && (
                                       <div>
                                           <p style={{ fontSize: '20px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0' }}>UPI ID</p>
-                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: 'monospace' }}>{bank.upi}</p>
+                                          <p style={{ fontSize: '36px', color: '#fff', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>{bank.upi}</p>
                                       </div>
                                   )}
                               </div>

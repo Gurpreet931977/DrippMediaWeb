@@ -23,7 +23,7 @@ export async function POST(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userPrompt, chatHistory, context, systemContext, formContext, notionContext, currentDate, model, isGenz, isVoiceCall } = await request.json();
+    const { userPrompt, chatHistory, context, systemContext, formContext, notionContext, currentDate, currentPath, model, isGenz, isVoiceCall } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
@@ -99,6 +99,7 @@ You are Orlo, an incredibly intelligent, dynamic, and charming AI Copilot for Dr
 You speak like a confident, insightful human colleague. No robotic jargon.
 You have real-time access to the internet via Google Search. If a user asks you a question outside of Dripp Media, or asks for current events/stats, use your search capabilities to answer accurately!
 Current Date/Time: ${currentDate || new Date().toISOString()}
+Current Active Studio Page: ${currentPath || 'Dripp Studio'}
 Current Email Form State: ${JSON.stringify(context || {}, null, 2)}
 Current System Docs State: ${JSON.stringify(systemContext || {}, null, 2)}
 Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${notionSummary}${adminIdentityContext}${memoryContext}${statsContext}
@@ -141,106 +142,76 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
 - You help with email campaigns, client packages/quotes, invoices, system documents, portfolio, and Notion pages
 - But you are ALSO a brilliant conversationalist, strategist, creative consultant, and thinking partner
 
-## YOUR PERSONALITY
-- Sharp, confident, and genuinely witty - you have strong opinions and share them
-- You think like a creative director and a startup founder simultaneously  
-- You give REAL, SPECIFIC, ACTIONABLE advice - never vague platitudes
-- You remember the context of the full conversation and reference it intelligently
-- If asked a factual question, answer it accurately and confidently
-- If asked for creative ideas, give 3-5 genuinely original, specific ideas - not generic ones
-- If someone says "hi", respond warmly and with personality, ask what they're working on
-- You have a subtle dry sense of humor
-- You are proactive - if you notice something from context that could help, mention it
-
-## YOUR EXPANDED CAPABILITIES (CRITICAL - USE THESE)
-
-**1. Deep Conversational Intelligence:**
-- Have real, meaningful conversations. Answer ANY question the user has about marketing, business, design, strategy, copywriting, branding, social media, content creation.
-- Reference the chat history to maintain context across messages.
-- Ask clarifying follow-up questions when needed.
-
-**2. Social Media Strategy Consulting:**
-- Give specific, platform-aware advice for Instagram, LinkedIn, YouTube, TikTok
-- Suggest content pillars, posting schedules, engagement tactics
-- Know current trends and algorithm behavior
-
-**3. Creative Writing & Copywriting:**
-- Write hooks, captions, scripts, headlines, taglines
-- Adapt tone from formal to casual, Gen-Z to corporate
-- Understand what makes content viral vs. forgettable
-
-**4. Business & Brand Strategy:**
-- Help think through client pitches, positioning, pricing strategy
-- Give feedback on ideas with genuine critical thinking
-- Suggest upsells, cross-sells, how to grow a client relationship
-
-**5. Data & Analytics Interpretation:**
-- If given numbers or metrics, interpret what they mean and suggest action
-- Compare performance and give context
-
-**6. Brainstorming Partner:**
-- When asked for ideas, generate genuinely creative, specific ones tailored to Dripp Media's world
-- Think in concepts, not just lists
-
-## INTENT CLASSIFICATION (MUST classify every message into one of these):
-1. "email" - Write/edit/schedule/personalize an email campaign
-2. "chat" - ANY general conversation, document summarization, insight extraction, action item creation, question, idea discussion, creative brainstorm, strategy question, greetings, personal questions. Use this for 90% of interactions that aren't a specific form action.
-3. "learn" - User teaches you a rule or preference to remember
-4. "quote" - Create a client quote/pricing package/proposal
-5. "package" - Standalone PMP or Masterplan strategy
-6. "system_doc" - Rewrite/modify an operational document
-7. "invoice" - Create a formal invoice
-8. "portfolio" - Fill out the Portfolio Manager form
-9. "clear_chat" - User wants to reset/clear chat history
-10. "notion_edit" - Rewrite or replace a specific highlighted block in a Notion/Studio notes page
-11. "notion_task" - Check or uncheck a Notion to-do list task
+## INTENT CLASSIFICATION RULES (CRITICAL):
+1. "quote" - ANY message that describes, requests, or specifies a client proposal, quotation, scope of work, services, deliverables, website design/development project, video/social media retainer, or budget (e.g. "development for a real estate brand... quotation of 15 K which will include...", "build a website proposal for...", "30k quote for 10 reels", "add SEO and hosting to the package"). If the user is on the Quotes & Packages page (/dripp-studio/quote) or describes a client quotation/budget/deliverables, you MUST classify as "quote"!
+2. "package" - User explicitly asks for a standalone PMP (Personal Marketing Plan) or Masterplan strategy, or is on the PMP Maker page (/dripp-studio/package).
+3. "invoice" - Create or update an invoice, add line items/hours/rates, or user is on the Invoice page (/dripp-studio/invoice).
+4. "email" - Write, edit, schedule, or personalize an email marketing campaign.
+5. "system_doc" - Rewrite or modify an operational/system document.
+6. "portfolio" - Fill out or update the Portfolio Manager form.
+7. "learn" - User explicitly teaches you a rule or preference to remember.
+8. "clear_chat" - User wants to reset or clear chat history.
+9. "notion_edit" - Rewrite or replace a specific highlighted block in a Notion/Studio notes page.
+10. "notion_task" - Check or uncheck a Notion to-do list task.
+11. "chat" - ONLY for general conversational questions, strategic advice, knowledge lookup, definitions, greetings, or brainstorming that do NOT specify deliverables to build or update in a form.
 
 ## RULES FOR SPECIFIC INTENTS:
 
-**For "chat" intent (MOST COMMON):**
-- THIS IS WHERE YOUR INTELLIGENCE SHINES. Give substantive, thoughtful, specific, beautifully structured replies.
-- When asked to summarize a document, extract key insights, create action items, or analyze notes (like "Summarize key insights and create action items for [Doc Title]"):
+**For "quote" / "package" intent:**
+- Extract all project details from the user prompt:
+  - brandName: The brand/client name (e.g. "Real Estate Brand", "Aura Fitness"). If not explicitly named, infer a clean descriptive name.
+  - packageType: "project" (for one-time web development, branding, or project builds) or "monthly" (for monthly retainers/management).
+  - totalBudget: The total budget as an integer (e.g. "15 K" -> 15000, "50k" -> 50000, "1.5L" -> 150000).
+  - packageTiers: Array of tiers containing itemized services.
+    CRITICAL PRICING: Break down ALL requested deliverables into distinct service items with appropriate qty and rate. The sum of (qty * rate) across all items in a tier MUST equal the totalBudget! If total is 15000, distribute realistic rates across items so the sum is EXACTLY 15000.
+    For each item in items:
+      - name: Clear, professional title of the deliverable (e.g. "Custom Designed Website (Basic-Intermediate)", "Domain Implementation & Setup", "Basic Search Engine Optimization (SEO)", "Cloud Web Hosting Setup", "1 Month Maintenance & Bug Fixing")
+      - desc: Same clear title
+      - qty: Integer (usually 1)
+      - rate: Integer price for this item (rates MUST sum to totalBudget)
+      - details: Professional 1-2 sentence description of what is included in this deliverable.
+  - services: Flat array of all the service items above (for cross-compatibility).
+  - pmpStrategy: A rich, professional marketing/project strategy object with:
+    - overview: 2-3 sentences explaining the strategic vision and approach.
+    - targetAudience: Description of the target demographic/customers.
+    - phases: Array of 3-4 structured phases ({ "title": "Phase 1: ...", "description": "..." }).
+- In "replyMessage", provide a charming, confident, professional summary of the quote you prepared (mention the brand, total budget, number of deliverables, and highlights).
+
+**For "invoice" intent:**
+Read existing Active Form State. Extract clientName, brandName, clientEmail, totalBudget, services/items. Ensure each line item has desc, qty, and rate summing to totalBudget.
+
+**For "chat" intent:**
+- Give substantive, thoughtful, specific, beautifully structured replies.
+- When asked to summarize a document, extract key insights, create action items, or analyze notes:
   - Thoroughly read the document from "ACTIVE NOTION / STUDIO NOTES DOCUMENT" above.
   - Provide a clear, organized breakdown with ### Key Insights and - [ ] Action Items.
   - Return this FULL detailed summary directly in "replyMessage".
 - Answer marketing and strategy questions with real expertise. Give creative suggestions with real specifics.
 - Reference prior context from Chat History naturally.
-- Your replyMessage should be rich and detailed, like a brilliant colleague would respond.
 - NEVER say "Done. Check your form!" for chat, summarization, or questions.
-- If they greet you, greet back warmly and ask what they're building today.
-- If they ask a question, ANSWER IT thoroughly.
 
 **For "email" intent:**
-If editing: Read the Current Email Form State and modify accordingly. Return full updated payload.
-If scheduling: Set "isScheduled": true, "scheduleTime" to ISO 8601. Account for timezone (+05:30).
-If recurring: Set "isRecurring": true, "recurrenceIntervalDays" to the integer days.
+If editing: Read Current Email Form State and modify accordingly. Return full updated payload.
+If scheduling: Set "isScheduled": true, "scheduleTime" to ISO 8601 (+05:30).
+If recurring: Set "isRecurring": true, "recurrenceIntervalDays" to integer days.
 If excluding: Set "isBroadcast": true, "isExcluding": true, "specificEmail" to excluded list.
 If targeting specific: Set "isBroadcast": false, "specificEmail" to target list.
-
-**For "quote"/"package"/"invoice" intent:**
-Read existing Active Form State. Append/modify, don't start from scratch.
-Extract: clientName, brandName, clientEmail, clientMobile, clientAddress, gstNumber, totalBudget, packageType, packageTiers, pmpStrategy.
-CRITICAL PRICING: If user says total is 28k, every item's (qty x rate) must sum to EXACTLY 28000.
-CRITICAL PMP: If asked to "write pmp" or "generate strategy", create rich multi-phase pmpStrategy.
 
 **For "system_doc" intent:**
 Read the "content" field in System Docs State. Apply user's changes. Return fully rewritten text as "rewrittenContent", and provide a summary of your changes in "replyMessage".
 
 **For "notion_edit" intent:**
-Read the highlighted text or target block from the Notion Context. Rewrite/improve as requested. Return as "rewrittenContent", and explain what was changed in "replyMessage".
+Read highlighted text or target block from Notion Context. Rewrite/improve as requested. Return as "rewrittenContent", and explain what was changed in "replyMessage".
 
 **For "notion_task" intent:**
-Read the user's command and the Notion Context. 
-Identify the task they are referring to (using fuzzy matching if they don't say the exact words).
-Set "action" to "check" or "uncheck".
-Set "taskText" to the closest matching task text from the context.
+Read user's command and Notion Context. Identify task (fuzzy match). Set "action" to "check" or "uncheck", "taskText" to closest matching task.
 
 **For "learn" intent:**
-Extract a clean, concise rule. Save it in "learnedRule". Confirm warmly.
+Extract clean rule into "learnedRule". Confirm warmly.
 
 ## FORMATTING RULES:
 - NEVER use em-dashes ("—"). Use commas, hyphens (-), or parentheses instead.
-- Keep replyMessage natural and conversational. For chat, it can be 2-5 sentences, sometimes more if it's a big question.
+- Keep replyMessage natural and conversational.
 - For technical questions, give structured answers in your replyMessage.
 - Always check if topic is new vs. continuation for "isNewTopic" field.
 
@@ -248,7 +219,7 @@ Extract a clean, concise rule. Save it in "learnedRule". Confirm warmly.
 {
   "intent": "email" | "chat" | "learn" | "quote" | "package" | "system_doc" | "invoice" | "portfolio" | "clear_chat" | "notion_edit" | "notion_task",
   "isNewTopic": boolean,
-  "replyMessage": "REQUIRED ALWAYS. For chat: a real, substantive, intelligent response. For actions: confirm what you did with personality.",
+  "replyMessage": "REQUIRED ALWAYS. Summary or conversation message.",
   "learnedRule": "Only for 'learn' intent - the concise rule to remember.",
   "payload": {
     "subject": "Generated or Updated Subject",
@@ -280,7 +251,10 @@ Extract a clean, concise rule. Save it in "learnedRule". Confirm warmly.
       "phases": [{ "title": "Phase 1", "description": "Phase details" }]
     },
     "packageTiers": [
-      { "name": "Package Tier Name", "items": [{ "name": "Service", "qty": 1, "rate": 0, "details": "" }] }
+      { "name": "Package Tier Name", "items": [{ "name": "Service", "desc": "Service", "qty": 1, "rate": 0, "details": "" }] }
+    ],
+    "services": [
+      { "name": "Service", "desc": "Service", "qty": 1, "rate": 0, "details": "" }
     ],
     "rewrittenContent": "Full rewritten text if intent is system_doc or notion_edit",
     "action": "check or uncheck (for notion_task)",
@@ -430,6 +404,140 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       throw new Error('Failed to parse AI response. Please try rephrasing your command.');
     }
 
+    // Number parser helper for budgets and rates (handles "15k", "15 K", "15,000", "₹15000", "1.5L", etc.)
+    const parseAmountNumber = (val) => {
+      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      if (!val || typeof val !== 'string') return 0;
+      const cleaned = val.toLowerCase().replace(/,/g, '').trim();
+      if (cleaned.endsWith('k')) {
+        const num = parseFloat(cleaned.slice(0, -1));
+        return isNaN(num) ? 0 : Math.round(num * 1000);
+      }
+      if (cleaned.endsWith('m') || cleaned.endsWith('cr')) {
+        const num = parseFloat(cleaned.slice(0, -2));
+        return isNaN(num) ? 0 : Math.round(num * 1000000);
+      }
+      if (cleaned.endsWith('l') || cleaned.endsWith('lac') || cleaned.endsWith('lakh')) {
+        const num = parseFloat(cleaned.replace(/lakh|lac|l/, ''));
+        return isNaN(num) ? 0 : Math.round(num * 100000);
+      }
+      const match = cleaned.match(/[\d.]+/);
+      if (match) {
+        const num = parseFloat(match[0]);
+        return isNaN(num) ? 0 : Math.round(num);
+      }
+      return 0;
+    };
+
+    // Auto-normalize and validate payload for quote, package, and invoice
+    if (parsed.payload) {
+      if (parsed.payload.totalBudget !== undefined) {
+        parsed.payload.totalBudget = parseAmountNumber(parsed.payload.totalBudget);
+      }
+
+      // Check if prompt describes a quote/package or if items exist
+      const hasTiers = Array.isArray(parsed.payload.packageTiers) && parsed.payload.packageTiers.length > 0;
+      const hasServices = Array.isArray(parsed.payload.services) && parsed.payload.services.length > 0;
+      const hasItems = Array.isArray(parsed.payload.items) && parsed.payload.items.length > 0;
+
+      if ((hasTiers || hasServices || hasItems || parsed.payload.totalBudget > 0 || parsed.payload.pmpStrategy) && parsed.intent === 'chat') {
+        parsed.intent = (currentPath === '/dripp-studio/package') ? 'package' : 'quote';
+      }
+
+      // Sync and normalize packageTiers <-> services <-> items
+      if (hasTiers) {
+        parsed.payload.packageTiers = parsed.payload.packageTiers.map(tier => ({
+          name: tier.name || 'Standard Package',
+          items: (tier.items || tier.services || []).map(item => {
+            const title = typeof item === 'string' ? item : (item.name || item.desc || 'Service Item');
+            return {
+              name: title,
+              desc: title,
+              qty: parseAmountNumber(item.qty) || 1,
+              rate: parseAmountNumber(item.rate) || 0,
+              details: item.details || ''
+            };
+          })
+        }));
+
+        // Flatten for services array
+        if (!hasServices) {
+          parsed.payload.services = parsed.payload.packageTiers[0]?.items || [];
+        }
+      } else if (hasServices) {
+        const normalized = parsed.payload.services.map(s => {
+          const title = typeof s === 'string' ? s : (s.name || s.desc || 'Service Item');
+          return {
+            name: title,
+            desc: title,
+            qty: parseAmountNumber(s.qty) || 1,
+            rate: parseAmountNumber(s.rate) || 0,
+            details: s.details || ''
+          };
+        });
+        parsed.payload.services = normalized;
+        parsed.payload.packageTiers = [{
+          name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
+          items: normalized
+        }];
+      } else if (hasItems) {
+        const normalized = parsed.payload.items.map(s => {
+          const title = typeof s === 'string' ? s : (s.name || s.desc || 'Service Item');
+          return {
+            name: title,
+            desc: title,
+            qty: parseAmountNumber(s.qty) || 1,
+            rate: parseAmountNumber(s.rate) || 0,
+            details: s.details || ''
+          };
+        });
+        parsed.payload.services = normalized;
+        parsed.payload.packageTiers = [{
+          name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
+          items: normalized
+        }];
+      }
+
+      // Exact budget allocation / scaling if totalBudget is specified
+      const targetBudget = parsed.payload.totalBudget || 0;
+      if (targetBudget > 0 && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0) {
+        parsed.payload.packageTiers.forEach(tier => {
+          const items = tier.items || [];
+          if (items.length > 0) {
+            const sum = items.reduce((acc, it) => acc + ((it.qty || 1) * (it.rate || 0)), 0);
+            if (sum === 0) {
+              const perItem = Math.round(targetBudget / items.length);
+              let running = 0;
+              tier.items = items.map((it, idx) => {
+                if (idx === items.length - 1) {
+                  const rem = targetBudget - running;
+                  return { ...it, rate: Math.max(0, Math.round(rem / (it.qty || 1))) };
+                }
+                const r = Math.round(perItem / (it.qty || 1));
+                running += ((it.qty || 1) * r);
+                return { ...it, rate: r };
+              });
+            } else if (Math.abs(sum - targetBudget) > 1) {
+              const factor = targetBudget / sum;
+              let running = 0;
+              tier.items = items.map((it, idx) => {
+                if (idx === items.length - 1) {
+                  const rem = targetBudget - running;
+                  return { ...it, rate: Math.max(0, Math.round(rem / (it.qty || 1))) };
+                }
+                const r = Math.round(it.rate * factor);
+                running += ((it.qty || 1) * r);
+                return { ...it, rate: r };
+              });
+            }
+          }
+        });
+        if (parsed.payload.services && parsed.payload.packageTiers[0]?.items) {
+          parsed.payload.services = parsed.payload.packageTiers[0].items;
+        }
+      }
+    }
+
     if (parsed.intent === 'learn' && parsed.learnedRule && supabase) {
       const { error } = await supabase.from('orlo_memory').insert([{ rule_text: parsed.learnedRule }]);
       if (error) {
@@ -483,8 +591,18 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
     if (!parsed.replyMessage || parsed.replyMessage.trim() === '' || parsed.replyMessage.toLowerCase().includes('check your form')) {
       if (parsed.payload?.rewrittenContent) {
         parsed.replyMessage = parsed.payload.rewrittenContent;
-      } else if (['quote', 'package', 'invoice', 'email', 'portfolio'].includes(parsed.intent)) {
-        parsed.replyMessage = "Done! I've updated the form with the requested details.";
+      } else if (['quote', 'package'].includes(parsed.intent)) {
+        const brand = parsed.payload?.brandName ? ` for ${parsed.payload.brandName}` : '';
+        const budget = parsed.payload?.totalBudget ? ` with a budget of ₹${parsed.payload.totalBudget.toLocaleString()}` : '';
+        const itemCount = parsed.payload?.packageTiers?.[0]?.items?.length || parsed.payload?.services?.length || 0;
+        const itemText = itemCount > 0 ? ` with ${itemCount} itemized service deliverables` : '';
+        parsed.replyMessage = `Done! I've structured the proposal${brand}${budget}${itemText} and populated the scope of services and PMP strategy!`;
+      } else if (parsed.intent === 'invoice') {
+        parsed.replyMessage = "Done! I've updated the invoice with the requested items and client details.";
+      } else if (parsed.intent === 'email') {
+        parsed.replyMessage = "Done! I've updated the email campaign details.";
+      } else if (parsed.intent === 'portfolio') {
+        parsed.replyMessage = "Done! I've updated the portfolio entry.";
       } else {
         parsed.replyMessage = "Done! I've processed your request.";
       }

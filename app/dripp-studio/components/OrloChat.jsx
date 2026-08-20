@@ -880,6 +880,8 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       // Send last 6 voice exchanges for conversational continuity
       const recentVoiceHistory = voiceHistoryRef.current.slice(-12);
 
+      const currentPathName = typeof window !== 'undefined' ? window.location.pathname : '';
+
       const res = await fetch('/api/admin/copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -891,6 +893,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           formContext: formContext,
           notionContext: window._notionContext || {},
           currentDate: new Date().toString(),
+          currentPath: currentPathName,
           model: selectedModel,
           isGenz: isGenz,
           isVoiceCall: true
@@ -922,7 +925,8 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
         
         const currentPath = window.location.pathname;
-        const targetPath = (data.intent === 'quote' || data.intent === 'package') ? '/dripp-studio/quote' :
+        const targetPath = data.intent === 'quote' ? '/dripp-studio/quote' :
+                           data.intent === 'package' ? (currentPath === '/dripp-studio/package' ? '/dripp-studio/package' : '/dripp-studio/quote') :
                            data.intent === 'pmp' ? '/dripp-studio/package' :
                            data.intent === 'invoice' ? '/dripp-studio/invoice' : null;
                            
@@ -982,6 +986,8 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       const systemContext = window._drippSystemContext || {};
       const formContext = window._drippFormContext || {};
       
+      const currentPathName = typeof window !== 'undefined' ? window.location.pathname : '';
+
       const res = await fetch('/api/admin/copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -993,6 +999,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           formContext: formContext,
           notionContext: window._notionContext || {},
           currentDate: new Date().toString(),
+          currentPath: currentPathName,
           model: selectedModel,
           isGenz: isGenz
         })
@@ -1046,7 +1053,8 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
         
         const currentPath = window.location.pathname;
-        const targetPath = (data.intent === 'quote' || data.intent === 'package') ? '/dripp-studio/quote' :
+        const targetPath = data.intent === 'quote' ? '/dripp-studio/quote' :
+                           data.intent === 'package' ? (currentPath === '/dripp-studio/package' ? '/dripp-studio/package' : '/dripp-studio/quote') :
                            data.intent === 'pmp' ? '/dripp-studio/package' :
                            data.intent === 'invoice' ? '/dripp-studio/invoice' : null;
                            

@@ -650,7 +650,10 @@ export default function QuoteMaker() {
     if (payload.clientAddress) setClientDetails(prev => ({ ...prev, address: payload.clientAddress }));
     if (payload.gstNumber) setClientDetails(prev => ({ ...prev, gst: payload.gstNumber }));
     
-    if (payload.packageType) setPackageType(payload.packageType.toLowerCase());
+    if (payload.packageType) {
+      const pType = payload.packageType.toLowerCase();
+      setPackageType(pType.includes('month') || pType.includes('retain') ? 'monthly' : 'project');
+    }
     
     if (payload.pmpStrategy) {
       setIncludePMP(true);
@@ -668,22 +671,60 @@ export default function QuoteMaker() {
       });
     }
     
-    const targetBudget = Number(payload.totalBudget) || 0;
+    // Number parser helper for amounts (e.g. "15k", "15 K", "15,000", "₹15000", etc.)
+    const parseNum = (val) => {
+      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      if (!val || typeof val !== 'string') return 0;
+      const cleaned = val.toLowerCase().replace(/,/g, '').trim();
+      if (cleaned.endsWith('k')) {
+        const num = parseFloat(cleaned.slice(0, -1));
+        return isNaN(num) ? 0 : Math.round(num * 1000);
+      }
+      if (cleaned.endsWith('m') || cleaned.endsWith('cr')) {
+        const num = parseFloat(cleaned.slice(0, -2));
+        return isNaN(num) ? 0 : Math.round(num * 1000000);
+      }
+      if (cleaned.endsWith('l') || cleaned.endsWith('lac') || cleaned.endsWith('lakh')) {
+        const num = parseFloat(cleaned.replace(/lakh|lac|l/, ''));
+        return isNaN(num) ? 0 : Math.round(num * 100000);
+      }
+      const match = cleaned.match(/[\d.]+/);
+      if (match) {
+        const num = parseFloat(match[0]);
+        return isNaN(num) ? 0 : Math.round(num);
+      }
+      return 0;
+    };
+
+    const targetBudget = parseNum(payload.totalBudget);
     const normalizeItems = (rawItems) => {
       let mapped = (rawItems || []).map(s => {
-        const title = s.desc || s.name || 'Service Item';
+        const title = typeof s === 'string' ? s : (s.desc || s.name || 'Service Item');
         return {
           name: title,
           desc: title,
-          qty: Number(s.qty) || 1,
-          rate: Number(s.rate) || 0,
+          qty: parseNum(s.qty) || 1,
+          rate: parseNum(s.rate) || 0,
           details: s.details || ''
         };
       });
 
       if (targetBudget > 0 && mapped.length > 0) {
         const sum = mapped.reduce((acc, it) => acc + (it.qty * it.rate), 0);
-        if (sum > 0 && Math.abs(sum - targetBudget) > 1) {
+        if (sum === 0) {
+          const perItemRate = Math.round(targetBudget / mapped.length);
+          let runningSum = 0;
+          mapped = mapped.map((it, idx) => {
+            if (idx === mapped.length - 1) {
+              const rem = targetBudget - runningSum;
+              const r = Math.max(0, Math.round(rem / (it.qty || 1)));
+              return { ...it, rate: r };
+            }
+            const r = Math.round(perItemRate / (it.qty || 1));
+            runningSum += (it.qty * r);
+            return { ...it, rate: r };
+          });
+        } else if (Math.abs(sum - targetBudget) > 1) {
           const factor = targetBudget / sum;
           let runningSum = 0;
           mapped = mapped.map((it, idx) => {
@@ -701,17 +742,23 @@ export default function QuoteMaker() {
       return mapped;
     };
 
-    if (payload.packageTiers && payload.packageTiers.length > 0) {
+    if (payload.packageTiers && Array.isArray(payload.packageTiers) && payload.packageTiers.length > 0) {
       setPackageTiers(payload.packageTiers.map((t, idx) => ({
         id: Date.now() + idx,
         name: t.name || `Package ${idx + 1}`,
-        items: normalizeItems(t.items)
+        items: normalizeItems(t.items || t.services || [])
       })));
-    } else if (payload.services && payload.services.length > 0) {
+    } else if (payload.services && Array.isArray(payload.services) && payload.services.length > 0) {
       setPackageTiers([{
         id: Date.now(),
-        name: 'Standard Package',
+        name: payload.brandName ? `${payload.brandName} Package` : 'Standard Package',
         items: normalizeItems(payload.services)
+      }]);
+    } else if (payload.items && Array.isArray(payload.items) && payload.items.length > 0) {
+      setPackageTiers([{
+        id: Date.now(),
+        name: payload.brandName ? `${payload.brandName} Package` : 'Standard Package',
+        items: normalizeItems(payload.items)
       }]);
     }
   };
@@ -730,7 +777,9 @@ export default function QuoteMaker() {
 
     const handleCopilotAction = (e) => {
       const data = e.detail;
-      if (['quote', 'package'].includes(data?.intent) && data?.payload) {
+      if (['quote', 'package', 'pmp'].includes(data?.intent) && data?.payload) {
+        parseQuotePayload(data.payload);
+      } else if (data?.payload && (data.payload.packageTiers || data.payload.services || data.payload.items || data.payload.totalBudget || data.payload.pmpStrategy)) {
         parseQuotePayload(data.payload);
       }
     };
@@ -1080,7 +1129,7 @@ export default function QuoteMaker() {
                     color: '#ebd73f', 
                     padding: '10px 14px', 
                     borderRadius: '8px', 
-                    fontFamily: 'monospace',
+                    fontFamily: "'Clash Display', sans-serif",
                     fontSize: '0.9rem' 
                   }}
                 />
