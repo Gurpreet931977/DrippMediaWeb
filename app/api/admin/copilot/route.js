@@ -153,9 +153,19 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
 8. "clear_chat" - User wants to reset or clear chat history.
 9. "notion_edit" - Rewrite or replace a specific highlighted block in a Notion/Studio notes page.
 10. "notion_task" - Check or uncheck a Notion to-do list task.
-11. "chat" - ONLY for general conversational questions, strategic advice, knowledge lookup, definitions, greetings, or brainstorming that do NOT specify deliverables to build or update in a form.
+11. "save_template" - User wants to save the current quote, package, or deliverables as a reusable package template (e.g. "save this as a template", "save as template", "save package template called Real Estate Web Package").
+12. "chat" - ONLY for general conversational questions, strategic advice, knowledge lookup, definitions, greetings, or brainstorming that do NOT specify deliverables to build or update in a form.
 
 ## RULES FOR SPECIFIC INTENTS:
+
+**For "save_template" intent:**
+- Read the current package tiers, strategy pitch, and brand name from Form Context or user prompt.
+- In payload, return:
+  - "action": "save_template"
+  - "templateName": Clean, descriptive template name specified by user or inferred (e.g. "Real Estate Web Package", "Turnkey Growth Package").
+  - "packageTiers": The active package tiers with itemized services.
+  - "pmpStrategy": The current Strategy & Concept pitch.
+- In "replyMessage", confirm enthusiastically that the template has been saved to their Templates Library on the right!
 
 **For "quote" / "package" intent:**
 - Extract all project details from the user prompt:
@@ -233,7 +243,7 @@ Extract clean rule into "learnedRule". Confirm warmly.
 
 ## JSON SCHEMA (ALWAYS return this exact structure):
 {
-  "intent": "email" | "chat" | "learn" | "quote" | "package" | "system_doc" | "invoice" | "portfolio" | "clear_chat" | "notion_edit" | "notion_task",
+  "intent": "email" | "chat" | "learn" | "quote" | "package" | "save_template" | "system_doc" | "invoice" | "portfolio" | "clear_chat" | "notion_edit" | "notion_task",
   "isNewTopic": boolean,
   "replyMessage": "REQUIRED ALWAYS. Summary or conversation message.",
   "learnedRule": "Only for 'learn' intent - the concise rule to remember.",
@@ -723,8 +733,30 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         }
       }
 
+      // Check if user requested saving as a template
+      const isSaveTemplateReq = (
+        pLower.includes('save this as a template') ||
+        pLower.includes('save as template') ||
+        pLower.includes('save template') ||
+        pLower.includes('save as a template') ||
+        pLower.includes('save package template') ||
+        pLower.includes('save this package') ||
+        parsed.intent === 'save_template'
+      );
+
+      if (isSaveTemplateReq) {
+        parsed.intent = 'save_template';
+        const templateMatch = userPrompt.match(/(?:named|called|as)\s+["']?([^"'\.\,\n]+)["']?/i);
+        const inferredName = templateMatch ? templateMatch[1].trim() : (parsed.payload.brandName ? `${parsed.payload.brandName} Package` : (existingFormBrand ? `${existingFormBrand} Package` : 'Custom Package Template'));
+        parsed.payload.templateName = parsed.payload.templateName || inferredName;
+        parsed.payload.action = 'save_template';
+        parsed.payload.packageTiers = (parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0) ? parsed.payload.packageTiers : (formContext?.packageTiers || []);
+        parsed.payload.pmpStrategy = parsed.payload.pmpStrategy || formContext?.pmpStrategy || '';
+        parsed.replyMessage = `I've saved this package as the template **"${parsed.payload.templateName}"**! It is now stored in your Templates library on the right, ready to load whenever you need it.`;
+      }
+
       // If user requested a single service, override multiple tiers/services into a single bundled line item
-      if (isSingleReq && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0) {
+      if (isSingleReq && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0 && !isSaveTemplateReq) {
         const budgetVal = parsed.payload.totalBudget || existingFormBudget || parseAmountNumber(userPrompt) || 15000;
         const brandName = parsed.payload.brandName || existingFormBrand || 'Real Estate Brand';
         const singleDeliverable = {

@@ -547,7 +547,8 @@ export default function QuoteMaker() {
       brandName: '',
       email: '',
       mobile: '',
-      date: localDate
+      date: localDate,
+      gst: ''
     });
     setQuoteDetails({
       number: 'QT-' + Math.floor(1000 + Math.random() * 9000),
@@ -559,7 +560,11 @@ export default function QuoteMaker() {
     });
     setPackageTiers([{ id: Date.now(), name: 'Standard Package', items: [] }]);
     setPackageType('project');
+    setPmpStrategy('');
+    setIncludePMP(true);
     setSmartText('');
+    setShareLink('');
+    setSharePin('');
     setShowClearModal(false);
   };
 
@@ -796,7 +801,24 @@ export default function QuoteMaker() {
 
     const handleCopilotAction = (e) => {
       const data = e.detail;
-      if (['quote', 'package', 'pmp'].includes(data?.intent) && data?.payload) {
+      if (data?.intent === 'save_template' || data?.payload?.action === 'save_template' || data?.payload?.saveAsTemplate) {
+        const tName = data.payload?.templateName || (clientDetails.brandName ? `${clientDetails.brandName} Package` : 'Custom Package Template');
+        const tiersToSave = (data.payload?.packageTiers && data.payload.packageTiers.length > 0) ? data.payload.packageTiers : packageTiers;
+        const newPackage = {
+          id: Date.now(),
+          name: tName,
+          type: packageType,
+          packageTiers: JSON.parse(JSON.stringify(tiersToSave)),
+          pmpStrategy: data.payload?.pmpStrategy || pmpStrategy || '',
+          message: quoteDetails.message
+        };
+        setSavedPackages(prev => {
+          const updated = [...prev, newPackage];
+          localStorage.setItem('dripp_advanced_packages', JSON.stringify(updated));
+          return updated;
+        });
+        showAlert(`Template "${tName}" saved successfully!`);
+      } else if (['quote', 'package', 'pmp'].includes(data?.intent) && data?.payload) {
         parseQuotePayload(data.payload);
       } else if (data?.payload && (data.payload.packageTiers || data.payload.services || data.payload.items || data.payload.totalBudget || data.payload.pmpStrategy)) {
         parseQuotePayload(data.payload);
@@ -846,14 +868,15 @@ export default function QuoteMaker() {
     setPackageTiers(newTiers);
   };
 
-  const saveCurrentAsPackage = () => {
-    const name = prompt("Enter a name for this package template:");
+  const saveCurrentAsPackage = (customName) => {
+    const name = (typeof customName === 'string' && customName.trim()) ? customName : prompt("Enter a name for this package template:");
     if (name && name.trim()) {
       const newPackage = { 
         id: Date.now(),
         name: name.trim(), 
         type: packageType,
         packageTiers: JSON.parse(JSON.stringify(packageTiers)),
+        pmpStrategy: pmpStrategy || '',
         message: quoteDetails.message
       };
       const updatedPackages = [...savedPackages, newPackage];
@@ -865,8 +888,19 @@ export default function QuoteMaker() {
 
   const loadPackage = (pkg) => {
     showConfirm(`Load template "${pkg.name}"? This will replace your current items.`, () => {
-       if (pkg.packageTiers) { setPackageTiers(JSON.parse(JSON.stringify(pkg.packageTiers))); } else if (pkg.items) { setPackageTiers([{ id: Date.now(), name: 'Standard Package', items: [...pkg.items] }]); }
+       if (pkg.packageTiers) { 
+         setPackageTiers(JSON.parse(JSON.stringify(pkg.packageTiers))); 
+       } else if (pkg.items) { 
+         setPackageTiers([{ id: Date.now(), name: 'Standard Package', items: [...pkg.items] }]); 
+       }
        setPackageType(pkg.type || 'project');
+       if (pkg.pmpStrategy) {
+         setPmpStrategy(pkg.pmpStrategy);
+         setIncludePMP(true);
+       }
+       if (pkg.message) {
+         setQuoteDetails(prev => ({ ...prev, message: pkg.message }));
+       }
     });
   };
 
