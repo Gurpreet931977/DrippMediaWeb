@@ -1093,15 +1093,15 @@ export default function QuoteMaker() {
       <div className={styles.headerTop}>
         <div>
           <div className={styles.genzPill}>GEN-Z</div>
-          <h1 className={styles.titleModern}>PERSONAL <span className={styles.titleHighlight}>MARKETING</span> PLAN</h1>
-          <p className={styles.subtitleModern}>Design a personalized PMP for your clients</p>
+          <h1 className={styles.titleModern}>QUOTES & <span className={styles.titleHighlight}>PACKAGES</span></h1>
+          <p className={styles.subtitleModern}>Design customized proposals, tier packages, and client quotations</p>
         </div>
         <div className={styles.headerActions}>
            <button onClick={generatePDF} className={styles.btnModernSecondary}>
              <Download size={18} /> Export PDF
            </button>
            <button onClick={generateSecureLink} className={styles.btnModernPrimary}>
-             <Share2 size={18} /> SHARE PACKAGE
+             <Share2 size={18} /> SHARE PROPOSAL
            </button>
         </div>
       </div>
@@ -1247,7 +1247,7 @@ export default function QuoteMaker() {
                 ) : isAutoFillDone ? (
                    <><CheckCircle2 size={18} color="#000" /> Success!</>
                 ) : (
-                   'Auto-Fill Package'
+                   'Auto-Fill Quote'
                 )}
               </button>
               <button 
@@ -1292,15 +1292,15 @@ export default function QuoteMaker() {
             </div>
           </div>
 
-          {/* Strategy / Concept Pitch (PMP) */}
+          {/* Strategy / Concept Pitch */}
           <div className={styles.cardModern}>
             <div className={styles.cardHeaderModern} style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Edit3 size={20} color="#ebd73f" />
-                <h3 className={styles.cardTitleModern}>PMP Strategy & Concept Pitch</h3>
+                <h3 className={styles.cardTitleModern}>Strategy & Concept Pitch</h3>
               </div>
               
-              {/* Interactive PMP Toggle Switch */}
+              {/* Interactive Strategy Toggle Switch */}
               <label 
                 onClick={() => {
                   const nextVal = !includePMP;
@@ -1308,7 +1308,7 @@ export default function QuoteMaker() {
                   if (nextVal) {
                     if (!pdfPages.find(p => p.type === 'pmp')) {
                       const newPages = [...pdfPages];
-                      newPages.splice(1, 0, { id: 'pmp_' + Date.now(), type: 'pmp', title: 'PMP Strategy', hideHeading: false });
+                      newPages.splice(1, 0, { id: 'pmp_' + Date.now(), type: 'pmp', title: 'Strategy & Concept', hideHeading: false });
                       setPdfPages(newPages);
                     }
                   } else {
@@ -1318,7 +1318,7 @@ export default function QuoteMaker() {
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}
               >
                 <span style={{ fontSize: '0.75rem', color: includePMP ? '#ebd73f' : '#888', fontWeight: '600', letterSpacing: '0.5px' }}>
-                  {includePMP ? 'PMP SLIDE INCLUDED' : 'PMP SLIDE EXCLUDED'}
+                  {includePMP ? 'STRATEGY SLIDE INCLUDED' : 'STRATEGY SLIDE EXCLUDED'}
                 </span>
                 <div 
                   style={{
@@ -1347,7 +1347,7 @@ export default function QuoteMaker() {
               </label>
             </div>
             <p style={{ fontSize: '0.8rem', color: '#aaa', margin: '-5px 0 12px 0' }}>
-              This section populates the PMP (Personal Marketing Plan) slide in your proposal presentation.
+              This section populates the strategic concept & scope slide in your proposal presentation.
             </p>
             {includePMP ? (
               <textarea 
@@ -1362,7 +1362,7 @@ export default function QuoteMaker() {
               />
             ) : (
               <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)', color: '#888', fontSize: '0.85rem', textAlign: 'center' }}>
-                PMP Strategy slide is currently excluded from this proposal. Toggle ON above to include a PMP Strategy slide.
+                Strategy slide is currently excluded from this proposal. Toggle ON above to include a Strategy slide.
               </div>
             )}
           </div>
@@ -1500,7 +1500,7 @@ export default function QuoteMaker() {
               <h4 className={styles.summarySectionTitle}>Included Services</h4>
               {includePMP && (
                 <div className={styles.summaryItem}>
-                  <span className={styles.summaryItemIncluded}>✓ Personal Marketing Plan</span>
+                  <span className={styles.summaryItemIncluded}>✓ Strategy & Scope Pitch</span>
                   <span className={styles.summaryItemBadge}>INCLUDED</span>
                 </div>
               )}
