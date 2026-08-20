@@ -163,19 +163,27 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
   - packageType: "project" (for one-time web development, branding, or project builds) or "monthly" (for monthly retainers/management).
   - totalBudget: The total budget as an integer (e.g. "15 K" -> 15000, "50k" -> 50000, "1.5L" -> 150000).
   - packageTiers: Array of tiers containing itemized services.
-    CRITICAL PRICING: Break down ALL requested deliverables into distinct service items with appropriate qty and rate. The sum of (qty * rate) across all items in a tier MUST equal the totalBudget! If total is 15000, distribute realistic rates across items so the sum is EXACTLY 15000.
+    CRITICAL PRICING & WEIGHTING: Break down ALL requested deliverables into distinct service items with appropriate, realistic weighted rates (DO NOT divide budget evenly).
+    - Core deliverable (e.g. Custom Website Design & Development) should represent ~50-60% of total budget.
+    - SEO / Marketing setups should represent ~15-20%.
+    - Infrastructure (Domain, Hosting, SSL) should represent ~10-15%.
+    - Maintenance / Warranty support should represent ~10%.
+    The sum of (qty * rate) across all items in a tier MUST equal the totalBudget to the exact rupee!
     For each item in items:
-      - name: Clear, professional title of the deliverable (e.g. "Custom Designed Website (Basic-Intermediate)", "Domain Implementation & Setup", "Basic Search Engine Optimization (SEO)", "Cloud Web Hosting Setup", "1 Month Maintenance & Bug Fixing")
+      - name: Clear, professional title of the deliverable (e.g. "Custom Designed Website (Basic-Intermediate)", "Basic Search Engine Optimization (SEO)", "Domain Implementation & DNS Configuration", "High-Performance Cloud Web Hosting", "1 Month Maintenance & Bug Fixing Warranty")
       - desc: Same clear title
       - qty: Integer (usually 1)
-      - rate: Integer price for this item (rates MUST sum to totalBudget)
+      - rate: Realistic integer price for this item (rates MUST sum to totalBudget)
       - details: Professional 1-2 sentence description of what is included in this deliverable.
   - services: Flat array of all the service items above (for cross-compatibility).
-  - pmpStrategy: A rich, professional marketing/project strategy object with:
-    - overview: 2-3 sentences explaining the strategic vision and approach.
-    - targetAudience: Description of the target demographic/customers.
-    - phases: Array of 3-4 structured phases ({ "title": "Phase 1: ...", "description": "..." }).
-- In "replyMessage", provide a charming, confident, professional summary of the quote you prepared (mention the brand, total budget, number of deliverables, and highlights).
+  - pmpStrategy: A rich, bespoke marketing/project strategy object tailored directly to the client's industry:
+    - overview: 2-3 sentences explaining the strategic vision, lead generation approach, and brand authority positioning.
+    - targetAudience: Specific description of the target demographic/customers (e.g. for real estate: high-net-worth property buyers and investors).
+    - phases: Array of 3-4 structured phases ({ "title": "Phase 1: Architecture & UI/UX Design", "description": "..." }, { "title": "Phase 2: Development, SEO & Cloud Deployment", "description": "..." }, { "title": "Phase 3: Launch & 30-Day Stability Warranty", "description": "..." }).
+- In "replyMessage": DO NOT give a lazy one-line response like "Done". Respond like an elite agency strategist and co-founder!
+  - Break down the proposed scope with bullet points and realistic pricing for each item.
+  - Highlight the strategic concept pitch and why this setup will succeed for their specific brand.
+  - Keep the tone confident, sharp, warm, and collaborative.
 
 **For "invoice" intent:**
 Read existing Active Form State. Extract clientName, brandName, clientEmail, totalBudget, services/items. Ensure each line item has desc, qty, and rate summing to totalBudget.
@@ -517,110 +525,140 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       return 0;
     };
 
-    // Smart deliverable extractor for project briefs and quotations
-    const generateFallbackDeliverables = (prompt, targetBudget = 0) => {
+    // Smart deliverable extractor with realistic weighted pricing & industry strategy
+    const generateFallbackDeliverables = (prompt, targetBudget = 15000) => {
       const p = (prompt || '').toLowerCase();
       const items = [];
 
-      if (p.includes('web') || p.includes('site') || p.includes('development') || p.includes('landing')) {
+      const isRealEstate = p.includes('real estate') || p.includes('property') || p.includes('housing') || p.includes('realtor') || p.includes('builder');
+      const isWeb = p.includes('web') || p.includes('site') || p.includes('development') || p.includes('landing') || p.includes('redesign');
+      const isSEO = p.includes('seo') || p.includes('search') || p.includes('google') || p.includes('rank');
+      const isDomain = p.includes('domain') || p.includes('dns') || p.includes('ssl');
+      const isHosting = p.includes('host') || p.includes('server') || p.includes('cloud');
+      const isMaintenance = p.includes('maintenance') || p.includes('bug') || p.includes('error') || p.includes('fixing') || p.includes('support');
+      const isReels = p.includes('reel') || p.includes('tiktok') || p.includes('short') || p.includes('video');
+      const isGraphic = p.includes('graphic') || p.includes('design') || p.includes('post') || p.includes('carousel') || p.includes('branding');
+
+      if (isWeb) {
         items.push({
-          name: 'Custom Designed Website (Basic-Intermediate)',
-          desc: 'Custom Designed Website (Basic-Intermediate)',
+          name: isRealEstate ? 'Custom Designed Real Estate Website (Basic-Intermediate)' : 'Custom Designed Website (Basic-Intermediate)',
+          desc: isRealEstate ? 'Custom Designed Real Estate Website (Basic-Intermediate)' : 'Custom Designed Website (Basic-Intermediate)',
           qty: 1,
-          rate: 0,
-          details: 'Custom responsive UI/UX design and frontend web development tailored for brand identity.'
+          weight: 55,
+          details: isRealEstate ? 'Custom responsive UI/UX design, property showcase layout, fast mobile loading, and high-intent lead capture forms.' : 'Custom responsive UI/UX design, modern layout, fast performance, and brand identity alignment.'
         });
       }
 
-      if (p.includes('domain') || p.includes('dns') || p.includes('ssl')) {
-        items.push({
-          name: 'Domain Implementation & DNS Setup',
-          desc: 'Domain Implementation & DNS Setup',
-          qty: 1,
-          rate: 0,
-          details: 'Custom domain connection, DNS record configuration, and SSL security setup.'
-        });
-      }
-
-      if (p.includes('seo') || p.includes('search') || p.includes('google')) {
+      if (isSEO) {
         items.push({
           name: 'Basic Search Engine Optimization (SEO)',
           desc: 'Basic Search Engine Optimization (SEO)',
           qty: 1,
-          rate: 0,
-          details: 'On-page SEO structuring, meta tags, and Google Search Console indexing for visibility.'
+          weight: 15,
+          details: 'On-page SEO optimization, meta tags, schema markup, and Google Search Console indexing to rank on search.'
         });
       }
 
-      if (p.includes('host') || p.includes('server') || p.includes('cloud')) {
+      if (isDomain) {
         items.push({
-          name: 'Cloud Web Hosting Deployment',
-          desc: 'Cloud Web Hosting Deployment',
+          name: 'Domain Implementation & DNS Configuration',
+          desc: 'Domain Implementation & DNS Configuration',
           qty: 1,
-          rate: 0,
-          details: 'High-speed cloud server deployment, uptime monitoring, and CDN configuration.'
+          weight: 10,
+          details: 'Custom domain connection, DNS record setup, and SSL security certificate installation.'
         });
       }
 
-      if (p.includes('maintenance') || p.includes('bug') || p.includes('error') || p.includes('support')) {
+      if (isHosting) {
         items.push({
-          name: '1 Month Maintenance & Bug Fixing Support',
-          desc: '1 Month Maintenance & Bug Fixing Support',
+          name: 'High-Performance Cloud Web Hosting',
+          desc: 'High-Performance Cloud Web Hosting',
           qty: 1,
-          rate: 0,
-          details: '30-day post-launch warranty for error resolution, bug fixes, and minor adjustments.'
+          weight: 10,
+          details: 'Cloud server deployment, uptime monitoring, CDN caching, and high-speed internet delivery.'
         });
       }
 
-      if (p.includes('reel') || p.includes('tiktok') || p.includes('short')) {
+      if (isMaintenance) {
+        items.push({
+          name: '1 Month Maintenance & Bug Fixing Warranty',
+          desc: '1 Month Maintenance & Bug Fixing Warranty',
+          qty: 1,
+          weight: 10,
+          details: '30-day post-launch technical warranty covering error fixing, bug resolution, and stability checks.'
+        });
+      }
+
+      if (isReels && items.length === 0) {
         const countMatch = p.match(/(\d+)\s*(?:reels?|shorts?|videos?)/i);
         const count = countMatch ? parseInt(countMatch[1]) : 5;
         items.push({
           name: `High-Retention Short-Form Content (${count} Reels)`,
           desc: `High-Retention Short-Form Content (${count} Reels)`,
           qty: count,
-          rate: 0,
+          weight: 70,
           details: 'Concept ideation, dynamic typography, pacing edits, sound design, and color grading.'
         });
       }
 
-      if (p.includes('graphic') || p.includes('design') || p.includes('post') || p.includes('carousel')) {
+      if (isGraphic && items.length === 0) {
         items.push({
-          name: 'Creative Graphic Design & Brand Assets',
-          desc: 'Creative Graphic Design & Brand Assets',
+          name: 'Creative Graphic Design & Brand Identity Assets',
+          desc: 'Creative Graphic Design & Brand Identity Assets',
           qty: 1,
-          rate: 0,
+          weight: 70,
           details: 'Bespoke promotional visuals, brand assets, and engaging social layouts.'
         });
       }
 
       if (items.length === 0) {
         items.push(
-          { name: 'Custom Brand & Development Strategy', desc: 'Custom Brand & Development Strategy', qty: 1, rate: 0, details: 'Full project execution and deliverables as per client brief.' },
-          { name: 'Production & Implementation', desc: 'Production & Implementation', qty: 1, rate: 0, details: 'High-fidelity execution, deployment, and testing.' },
-          { name: 'Post-Launch Support & Optimization', desc: 'Post-Launch Support & Optimization', qty: 1, rate: 0, details: 'Review, error monitoring, and performance checks.' }
+          { name: 'Core Project Architecture & Design', desc: 'Core Project Architecture & Design', qty: 1, weight: 60, details: 'Full project execution and custom deliverables as per client brief.' },
+          { name: 'Technical Setup & Cloud Deployment', desc: 'Technical Setup & Cloud Deployment', qty: 1, weight: 25, details: 'High-fidelity execution, deployment, and testing.' },
+          { name: 'Post-Launch Support & Optimization', desc: 'Post-Launch Support & Optimization', qty: 1, weight: 15, details: 'Review, error monitoring, and performance checks.' }
         );
       }
 
       const budget = targetBudget || 15000;
-      const perItem = Math.round(budget / items.length);
+      const totalWeight = items.reduce((acc, it) => acc + (it.weight || 20), 0);
       let running = 0;
       items.forEach((it, idx) => {
         if (idx === items.length - 1) {
           it.rate = Math.max(0, budget - running);
         } else {
-          it.rate = perItem;
-          running += perItem;
+          const share = Math.round((budget * (it.weight || 20)) / totalWeight / 100) * 100;
+          it.rate = share;
+          running += share;
         }
+        delete it.weight;
       });
 
       return items;
+    };
+
+    // Consultative reply message builder
+    const buildSmartReplyMessage = (brandName, totalBudget, items) => {
+      const brand = brandName || 'the client';
+      const currencySymbol = '₹';
+      const formattedBudget = `${currencySymbol}${Number(totalBudget || 15000).toLocaleString()}`;
+      const breakdown = (items || []).map(it => `• **${it.name || it.desc}** (${currencySymbol}${Number(it.rate || 0).toLocaleString()}) — ${it.details || 'Full implementation and delivery.'}`).join('\n');
+      return `I've structured a complete ${formattedBudget} proposal tailored for ${brand}!\n\nHere is the strategic scope and pricing breakdown:\n${breakdown}\n\nI also populated the **Strategy & Concept Pitch** section with a customized 3-phase digital blueprint (UI/UX Architecture, SEO & Cloud Infrastructure, and 30-Day Stability Warranty). Everything is loaded directly into your proposal form ready for review!`;
     };
 
     // Auto-normalize and validate payload for quote, package, and invoice
     if (parsed.payload) {
       if (parsed.payload.totalBudget !== undefined) {
         parsed.payload.totalBudget = parseAmountNumber(parsed.payload.totalBudget);
+      }
+
+      // Infer brand name if generic
+      if (!parsed.payload.brandName || parsed.payload.brandName.toLowerCase() === 'client project' || parsed.payload.brandName.toLowerCase() === 'brand') {
+        const brandMatch = userPrompt.match(/(?:for\s+(?:a\s+)?)([a-zA-Z0-9\s]+?)(?:\s+brand|\s+company|\s+business|\.|\,|$)/i);
+        if (brandMatch && brandMatch[1]) {
+          parsed.payload.brandName = brandMatch[1].trim().replace(/\b\w/g, l => l.toUpperCase()) + (brandMatch[1].toLowerCase().includes('brand') ? '' : ' Brand');
+        } else if (userPrompt.toLowerCase().includes('real estate')) {
+          parsed.payload.brandName = 'Real Estate Brand';
+        }
       }
 
       // Check if prompt describes a quote/package or if items exist
@@ -635,7 +673,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       // Sync and normalize packageTiers <-> services <-> items
       if (hasTiers) {
         parsed.payload.packageTiers = parsed.payload.packageTiers.map(tier => ({
-          name: tier.name || 'Standard Package',
+          name: tier.name || `${parsed.payload.brandName || 'Standard'} Package`,
           items: ((tier.items && tier.items.length > 0) ? tier.items : (tier.services && tier.services.length > 0) ? tier.services : (parsed.payload.services || [])).map(item => {
             const title = typeof item === 'string' ? item : (item.name || item.desc || 'Service Item');
             return {
@@ -706,18 +744,24 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         }];
       }
 
-      // Ensure rich PMP Strategy
+      // Ensure rich Strategy & Concept Pitch (PMP strategy)
       if (!parsed.payload.pmpStrategy || typeof parsed.payload.pmpStrategy !== 'object' || !parsed.payload.pmpStrategy.phases || parsed.payload.pmpStrategy.phases.length === 0) {
         const brand = parsed.payload.brandName || 'Real Estate Brand';
         parsed.payload.pmpStrategy = {
-          overview: `Strategic high-performance digital web presence engineered for ${brand} to capture high-intent inquiries and establish market authority.`,
-          targetAudience: `High-value clients, buyers, and investors seeking trusted property solutions from ${brand}.`,
+          overview: `Strategic high-performance digital web presence engineered for ${brand} to showcase premier properties, establish market authority, and capture high-intent buyer and investor inquiries.`,
+          targetAudience: `High-net-worth individuals, property buyers, prospective tenants, and local investors seeking trusted real estate opportunities from ${brand}.`,
           phases: [
-            { title: "Phase 1: Architecture & UI/UX Design", description: "Brand integration, custom wireframing, and interactive UI/UX prototypes." },
-            { title: "Phase 2: Full-Stack Development & SEO", description: "Responsive web engineering, domain connection, search engine optimization (SEO), and cloud hosting." },
-            { title: "Phase 3: Launch & 30-Day Support", description: "Live deployment, Google search indexing verification, and 1 month of bug fixing & maintenance." }
+            { title: "Phase 1: Architecture & UI/UX Design", description: "Brand integration, modern property showcase layout, lead funnel wireframes, and interactive prototype sign-off." },
+            { title: "Phase 2: Full-Stack Engineering, SEO & Cloud Infrastructure", description: "Responsive web development, domain connection, on-page SEO meta tags, Google Search indexing, and high-speed cloud hosting deployment." },
+            { title: "Phase 3: Live Launch & 30-Day Stability Warranty", description: "Production release, search engine verification, and 1 full month of dedicated bug fixing, error resolution, and stability support." }
           ]
         };
+      }
+
+      // Ensure consultative replyMessage
+      const activeItems = parsed.payload.packageTiers?.[0]?.items || parsed.payload.services || [];
+      if (!parsed.replyMessage || parsed.replyMessage.startsWith("Done! I've updated the proposal") || parsed.replyMessage.startsWith("Done! I've processed") || parsed.replyMessage.length < 60) {
+        parsed.replyMessage = buildSmartReplyMessage(parsed.payload.brandName, parsed.payload.totalBudget, activeItems);
       }
 
       // Exact budget allocation / scaling if totalBudget is specified
@@ -728,14 +772,15 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
           if (items.length > 0) {
             const sum = items.reduce((acc, it) => acc + ((it.qty || 1) * (it.rate || 0)), 0);
             if (sum === 0) {
-              const perItem = Math.round(targetBudget / items.length);
+              const totalWeight = items.reduce((acc, it) => acc + (it.name.toLowerCase().includes('web') ? 55 : it.name.toLowerCase().includes('seo') ? 15 : 10), 0);
               let running = 0;
               tier.items = items.map((it, idx) => {
                 if (idx === items.length - 1) {
                   const rem = targetBudget - running;
                   return { ...it, rate: Math.max(0, Math.round(rem / (it.qty || 1))) };
                 }
-                const r = Math.round(perItem / (it.qty || 1));
+                const weight = it.name.toLowerCase().includes('web') ? 55 : it.name.toLowerCase().includes('seo') ? 15 : 10;
+                const r = Math.round((targetBudget * weight) / totalWeight / (it.qty || 1) / 100) * 100;
                 running += ((it.qty || 1) * r);
                 return { ...it, rate: r };
               });
