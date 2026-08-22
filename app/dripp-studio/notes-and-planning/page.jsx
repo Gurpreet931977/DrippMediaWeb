@@ -1777,10 +1777,151 @@ export default function NotionHubPage() {
           border-radius: 4px;
           padding: 0 4px;
         }
-        .preset-redacted:hover {
-          background: rgba(255, 255, 255, 0.15);
-          color: #fff;
-          user-select: auto;
+        .preset-cyber-lime {
+          color: #a3f08c;
+          font-weight: 700;
+          background: rgba(163, 240, 140, 0.12);
+          border: 1px solid rgba(163, 240, 140, 0.35);
+          border-radius: 6px;
+          padding: 2px 8px;
+          box-shadow: 0 0 14px rgba(163, 240, 140, 0.2);
+          text-shadow: 0 0 6px rgba(163, 240, 140, 0.4);
+        }
+
+        .preset-sunset-aura {
+          background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 50%, #ff2a6d 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 800;
+          filter: drop-shadow(0 2px 8px rgba(255, 126, 95, 0.35));
+        }
+
+        .preset-frosted-chrome {
+          color: #f1f5f9;
+          font-weight: 700;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 20px;
+          padding: 2px 10px;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+        }
+
+        .preset-cosmic-star {
+          background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #7f00ff 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 800;
+          animation: cosmicShift 4s ease infinite alternate;
+        }
+        @keyframes cosmicShift {
+          0% { filter: drop-shadow(0 0 6px rgba(79, 172, 254, 0.4)); }
+          100% { filter: drop-shadow(0 0 14px rgba(127, 0, 255, 0.7)); }
+        }
+
+        .preset-fire-burn {
+          background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 800;
+          filter: drop-shadow(0 0 8px rgba(255, 75, 43, 0.5));
+        }
+
+        .preset-aurora-borealis {
+          background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 50%, #7f00ff 100%);
+          background-size: 200% 200%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 800;
+          animation: auroraFlow 4s ease infinite alternate;
+          filter: drop-shadow(0 0 8px rgba(0, 245, 160, 0.4));
+        }
+        @keyframes auroraFlow {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 100% 50%; }
+        }
+
+        .preset-subzero-frost {
+          color: #e0f2fe;
+          font-weight: 700;
+          background: rgba(14, 165, 233, 0.15);
+          border: 1px solid rgba(186, 230, 253, 0.45);
+          border-radius: 6px;
+          padding: 2px 8px;
+          box-shadow: 0 0 14px rgba(56, 189, 248, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+          text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+        }
+
+        .preset-electric-amethyst {
+          color: #f0abfc;
+          font-weight: 700;
+          text-shadow: 0 0 8px rgba(217, 70, 239, 0.7), 0 0 18px rgba(168, 85, 247, 0.4);
+          animation: amethystPulse 2.5s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
+          padding: 0 4px;
+        }
+        @keyframes amethystPulse {
+          0% { text-shadow: 0 0 4px rgba(217, 70, 239, 0.5), 0 0 8px rgba(168, 85, 247, 0.3); opacity: 0.88; }
+          100% { text-shadow: 0 0 10px rgba(217, 70, 239, 0.95), 0 0 22px rgba(168, 85, 247, 0.65), 0 0 32px rgba(217, 70, 239, 0.4); opacity: 1; }
+        }
+
+        .preset-hazard-warning {
+          color: #000000 !important;
+          background: #ffcc00;
+          font-weight: 800;
+          border: 1px dashed rgba(0, 0, 0, 0.6);
+          border-radius: 4px;
+          padding: 2px 8px;
+          box-shadow: 0 0 14px rgba(255, 204, 0, 0.45);
+          text-shadow: none;
+          letter-spacing: 0.3px;
+        }
+
+        .preset-rose-gold {
+          background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 50%, #f6d365 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 800;
+          animation: roseShimmer 3s linear infinite;
+          filter: drop-shadow(0 0 6px rgba(251, 194, 235, 0.4));
+        }
+        @keyframes roseShimmer {
+          0% { background-position: 0% center; }
+          100% { background-position: 200% center; }
+        }
+
+        .preset-matrix-terminal {
+          color: #22c55e;
+          font-weight: 700;
+          background: rgba(34, 197, 94, 0.12);
+          border: 1px solid rgba(34, 197, 94, 0.4);
+          border-radius: 4px;
+          padding: 2px 6px;
+          text-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+          letter-spacing: 0.5px;
+        }
+
+        .preset-laser-crimson {
+          color: #ff3344;
+          font-weight: 800;
+          text-shadow: 0 0 6px #ff3344, 0 0 14px rgba(255, 51, 68, 0.5);
+          padding: 0 4px;
+        }
+
+        .preset-clay-emboss {
+          color: #ffffff !important;
+          background: #181920;
+          font-weight: 700;
+          border-radius: 8px;
+          padding: 3px 10px;
+          box-shadow: 3px 3px 7px rgba(0,0,0,0.8), -2px -2px 5px rgba(255,255,255,0.12), inset 0 1px 1px rgba(255,255,255,0.25);
+          text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
 
         .shimmer {
@@ -2429,21 +2570,34 @@ export default function NotionHubPage() {
               { label: 'Default / Reset', value: '' },
               { label: '✨ Gold Shimmer', value: 'gold_shimmer' },
               { label: '👑 Dripp Signature', value: 'dripp_signature' },
+              { label: '🏆 Gold Foil Emboss', value: 'gold_emboss' },
+              { label: '🌸 Rose Gold Luxe', value: 'rose_gold' },
               { label: '💎 Glass Text', value: 'glass' },
+              { label: '❄️ Frosted Chrome', value: 'frosted_chrome' },
+              { label: '🏺 Clay Emboss', value: 'clay_emboss' },
               { label: '⚡ Neon Pulse', value: 'neon_pulse' },
-              { label: '🌈 Iridescent', value: 'iridescent' },
-              { label: '🔮 Liquid Gradient', value: 'liquid_gradient' },
-              { label: '🪩 Liquid Chrome', value: 'liquid_chrome' },
               { label: '💡 Neon Sign', value: 'neon_sign' },
-              { label: '🛸 Hologram Float', value: 'hologram_float' },
-              { label: '🖊️ Marker Draw', value: 'marker_draw' },
-              { label: '🧱 3D Extruded', value: 'extruded_3d' },
-              { label: '🏆 Gold Emboss', value: 'gold_emboss' },
+              { label: '🔮 Electric Amethyst', value: 'electric_amethyst' },
+              { label: '🧪 Cyber Lime', value: 'cyber_lime' },
+              { label: '🔴 Laser Crimson', value: 'laser_crimson' },
+              { label: '🌈 Iridescent Prism', value: 'iridescent' },
+              { label: '🔮 Liquid Velvet', value: 'liquid_gradient' },
+              { label: '🪩 Liquid Chrome', value: 'liquid_chrome' },
+              { label: '🌅 Sunset Aura', value: 'sunset_aura' },
+              { label: '🌲 Aurora Borealis', value: 'aurora_borealis' },
+              { label: '🔥 Molten Flame', value: 'fire_burn' },
+              { label: '🌌 Cosmic Starlight', value: 'cosmic_star' },
+              { label: '🛸 Holographic Glitch', value: 'hologram_float' },
+              { label: '💻 Matrix Terminal', value: 'matrix_terminal' },
+              { label: '❄️ Sub-Zero Frost', value: 'subzero_frost' },
               { label: '〰️ Kinetic Wave', value: 'kinetic_wave' },
               { label: '📺 Retro VHS', value: 'retro_vhs' },
+              { label: '🖊️ Studio Marker', value: 'marker_draw' },
+              { label: '🧱 3D Extruded', value: 'extruded_3d' },
               { label: '📰 Ransom Note', value: 'ransom_note' },
-              { label: '📐 Brutalism', value: 'brutalism' },
-              { label: '🕶️ Classified', value: 'code' }
+              { label: '📐 Brutalism Block', value: 'brutalism' },
+              { label: '⚠️ Hazard Warning', value: 'hazard_warning' },
+              { label: '🕶️ CIA Redacted', value: 'code' }
             ]}
             onChange={(val) => handleApplyPreset({ target: { value: val } })}
           />
@@ -3126,26 +3280,53 @@ export default function NotionHubPage() {
 
 // Preset mapping dictionary ensuring 100% unique visual rendering and Notion API compatibility
 const PRESET_MAP = {
+  // Gold & Luxury
   gold_shimmer: { class: 'preset-gold-shimmer', notion: 'yellow_background' },
   highlight: { class: 'preset-gold-shimmer', notion: 'yellow_background' },
   dripp_signature: { class: 'preset-dripp-signature', notion: 'yellow_background' },
-  glass: { class: 'preset-glass-morphic', notion: 'brown_background' },
-  glass_pill: { class: 'preset-glass-pill', notion: 'brown_background' },
+  gold_emboss: { class: 'preset-gold-emboss', notion: 'yellow_background' },
+  rose_gold: { class: 'preset-rose-gold', notion: 'pink_background' },
+  
+  // Neon, Light & Glow
   neon_pulse: { class: 'preset-neon-pulse', notion: 'blue_background' },
   neon: { class: 'preset-neon-pulse', notion: 'blue_background' },
+  neon_sign: { class: 'preset-neon-sign', notion: 'pink_background' },
+  electric_amethyst: { class: 'preset-electric-amethyst', notion: 'purple_background' },
+  cyber_lime: { class: 'preset-cyber-lime', notion: 'green_background' },
+  laser_crimson: { class: 'preset-laser-crimson', notion: 'red_background' },
+  
+  // Chromatic & Liquid
   iridescent: { class: 'preset-iridescent', notion: 'pink_background' },
   liquid_gradient: { class: 'preset-liquid-gradient', notion: 'purple_background' },
   liquid: { class: 'preset-liquid-gradient', notion: 'purple_background' },
   liquid_chrome: { class: 'preset-liquid-chrome', notion: 'purple_background' },
-  neon_sign: { class: 'preset-neon-sign', notion: 'pink_background' },
+  sunset_aura: { class: 'preset-sunset-aura', notion: 'orange_background' },
+  aurora_borealis: { class: 'preset-aurora-borealis', notion: 'green_background' },
+  fire_burn: { class: 'preset-fire-burn', notion: 'red_background' },
+  cosmic_star: { class: 'preset-cosmic-star', notion: 'blue_background' },
+  
+  // Futuristic & Tech
   hologram_float: { class: 'preset-hologram-float', notion: 'blue_background' },
-  marker_draw: { class: 'preset-marker-draw', notion: 'yellow_background' },
-  extruded_3d: { class: 'preset-3d-extruded', notion: 'orange_background' },
-  gold_emboss: { class: 'preset-gold-emboss', notion: 'yellow_background' },
+  hologram_glitch: { class: 'preset-hologram-float', notion: 'blue_background' },
+  matrix_terminal: { class: 'preset-matrix-terminal', notion: 'green_background' },
+  subzero_frost: { class: 'preset-subzero-frost', notion: 'blue_background' },
+  frosted_chrome: { class: 'preset-frosted-chrome', notion: 'gray_background' },
   kinetic_wave: { class: 'preset-kinetic-wave', notion: 'green_background' },
   retro_vhs: { class: 'preset-retro-vhs', notion: 'blue_background' },
+  
+  // Glass & Material
+  glass: { class: 'preset-glass-morphic', notion: 'brown_background' },
+  glass_pill: { class: 'preset-glass-pill', notion: 'brown_background' },
+  glass_morphic: { class: 'preset-glass-morphic', notion: 'brown_background' },
+  clay_emboss: { class: 'preset-clay-emboss', notion: 'gray_background' },
+  
+  // Editorial & Bold
+  marker_draw: { class: 'preset-marker-draw', notion: 'yellow_background' },
+  studio_marker: { class: 'preset-marker-draw', notion: 'yellow_background' },
+  extruded_3d: { class: 'preset-3d-extruded', notion: 'orange_background' },
   ransom_note: { class: 'preset-ransom-note', notion: 'yellow_background' },
   brutalism: { class: 'preset-brutalism', notion: 'gray_background' },
+  hazard_warning: { class: 'preset-hazard-warning', notion: 'orange_background' },
   code: { class: 'preset-redacted', notion: 'gray_background' },
   redacted: { class: 'preset-redacted', notion: 'gray_background' }
 };
