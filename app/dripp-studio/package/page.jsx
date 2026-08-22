@@ -319,7 +319,7 @@ export default function PackageMaker() {
 
         alert(`✅ SHARE LINK & PIN CREATED!\n\n🔗 Link: ${link}\n🔑 PIN: ${pass}\n\n(Details copied to clipboard!)`);
     } catch(err) {
-        console.error(err);
+        console.error('Failed to generate package share link:', err);
         alert("An error occurred while generating the share link. Please try again.");
     } finally {
         setIsGeneratingLink(false);

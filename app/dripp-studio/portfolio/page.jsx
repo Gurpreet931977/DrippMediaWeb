@@ -285,7 +285,7 @@ export default function PortfolioManager() {
             showNotification('error', 'Failed to extract YouTube info');
         }
     } catch (err) {
-        console.error(err);
+        console.error('Failed to extract YouTube info:', err);
         showNotification('error', 'Failed to fetch YouTube info');
     }
   };
@@ -586,7 +586,7 @@ export default function PortfolioManager() {
       fetchItems();
 
     } catch (err) {
-      console.error(err);
+      console.error('Failed to upload portfolio item:', err);
       let errorMsg = err.message || 'An error occurred during upload';
       if (errorMsg === 'Network error during upload' || errorMsg === 'Upload to R2 failed') {
         errorMsg += '. This is usually caused by missing CORS configuration on your Cloudflare R2 bucket.';
@@ -1804,7 +1804,7 @@ export default function PortfolioManager() {
                                         throw new Error('Update failed');
                                     }
                                 } catch (err) {
-                                    console.error(err);
+                                    console.error('Failed to extract thumbnail frame:', err);
                                     showNotification('error', err.message || 'Failed to extract frame');
                                     setEditPopup(prev => ({ ...prev, isUploading: false }));
                                 }

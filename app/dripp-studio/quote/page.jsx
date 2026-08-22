@@ -1056,7 +1056,7 @@ export default function QuoteMaker() {
             showAlert("Failed to save quote securely.");
         }
     } catch(err) {
-        console.error(err);
+        console.error('Failed to generate secure quote link:', err);
         showAlert("API error while generating secure link.");
     }
   };

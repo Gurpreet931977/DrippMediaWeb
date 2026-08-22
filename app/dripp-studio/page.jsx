@@ -47,7 +47,7 @@ export default function AdminDashboard() {
         setCompletingIds(prev => prev.filter(id => id !== task.id));
       }, 400);
     } catch(err) {
-      console.error(err);
+      console.error('Failed to complete task in dashboard:', err);
       setCompletingIds(prev => prev.filter(id => id !== task.id));
     }
   };
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
         setPendingTasks([...allPending]);
         setPendingCount(allPending.length);
       } catch(err) {
-        console.error(err);
+        console.error('Failed to load pending tasks in dashboard:', err);
         setPendingCount(prev => prev === null ? 0 : prev);
       }
     }

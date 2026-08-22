@@ -158,7 +158,7 @@ export default function ImageEditorModal({ isOpen, onClose, imageUrl, onSave }) 
             }, 'image/jpeg', 0.95);
 
         } catch (e) {
-            console.error(e);
+            console.error('Failed to process/save canvas image:', e);
             setIsSaving(false);
             alert('Failed to save image');
         }
