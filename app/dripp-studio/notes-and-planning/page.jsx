@@ -1697,6 +1697,45 @@ export default function NotionHubPage() {
           font-family: 'Panchang', sans-serif;
         }
 
+        /* Money & Metrics Presets */
+        .preset-vault-emerald {
+          color: #34d399;
+          font-weight: 800;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(6, 78, 59, 0.5) 100%);
+          border: 1px solid rgba(52, 211, 153, 0.5);
+          border-radius: 6px;
+          padding: 2px 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), 0 0 14px rgba(16, 185, 129, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+          text-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+          letter-spacing: 0.5px;
+          font-family: 'Panchang', sans-serif;
+        }
+
+        .preset-solid-bullion {
+          color: #1a1400 !important;
+          font-weight: 900;
+          background: linear-gradient(180deg, #fff4b8 0%, #ffd700 45%, #e6b800 55%, #c69500 100%);
+          border-radius: 4px;
+          padding: 2px 8px;
+          box-shadow: 0 3px 12px rgba(255, 215, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+          letter-spacing: 0.6px;
+          border: 1px solid #e6b800;
+          font-family: 'Panchang', sans-serif;
+        }
+
+        .preset-bloomberg-ticker {
+          color: #ffb703;
+          font-weight: 800;
+          background: #0d0f12;
+          border: 1px solid rgba(255, 183, 3, 0.5);
+          border-radius: 5px;
+          padding: 2px 8px;
+          box-shadow: 0 0 12px rgba(255, 183, 3, 0.25), inset 0 1px 1px rgba(255, 183, 3, 0.2);
+          text-shadow: 0 0 8px rgba(255, 183, 3, 0.7);
+          letter-spacing: 0.8px;
+          font-family: 'Panchang', sans-serif;
+        }
+
         .preset-liquid-chrome {
           background: linear-gradient(180deg, #ffffff 0%, #d4d4d8 35%, #71717a 50%, #e4e4e7 65%, #ffffff 100%);
           -webkit-background-clip: text;
@@ -2616,6 +2655,9 @@ export default function NotionHubPage() {
             align="right"
             options={[
               { label: 'Default / Reset', value: '' },
+              { label: 'Vault Emerald', value: 'vault_emerald' },
+              { label: 'Solid Bullion', value: 'solid_bullion' },
+              { label: 'Bloomberg Ticker', value: 'bloomberg_ticker' },
               { label: 'Gold Shimmer', value: 'gold_shimmer' },
               { label: 'Dripp Signature', value: 'dripp_signature' },
               { label: 'Gold Foil Emboss', value: 'gold_emboss' },
@@ -3328,6 +3370,11 @@ export default function NotionHubPage() {
 
 // Preset mapping dictionary ensuring 100% unique visual rendering and Notion API compatibility
 const PRESET_MAP = {
+  // Money & Metrics
+  vault_emerald: { class: 'preset-vault-emerald', notion: 'green_background' },
+  solid_bullion: { class: 'preset-solid-bullion', notion: 'yellow_background' },
+  bloomberg_ticker: { class: 'preset-bloomberg-ticker', notion: 'orange_background' },
+
   // Gold & Luxury
   gold_shimmer: { class: 'preset-gold-shimmer', notion: 'yellow_background' },
   highlight: { class: 'preset-gold-shimmer', notion: 'yellow_background' },
