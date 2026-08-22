@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [currentDate, setCurrentDate] = useState('');
   const [pendingTasks, setPendingTasks] = useState([]);
   const [pendingCount, setPendingCount] = useState(null);
+  const [pendingTasksDocId, setPendingTasksDocId] = useState(null);
   const [completingIds, setCompletingIds] = useState([]);
 
   const handleToggleTask = async (e, task) => {
@@ -55,6 +56,22 @@ export default function AdminDashboard() {
     const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     setCurrentDate(date);
 
+    const getPendingTasksTargetItems = (itemList = []) => {
+      // 1. Strictly look for the "Pending Tasks" document / folder first
+      const exactMatch = itemList.filter(item => {
+        const t = (item.title || '').toLowerCase().trim();
+        return t === 'pending tasks' || t.startsWith('pending task');
+      });
+      if (exactMatch.length > 0) return exactMatch;
+
+      // 2. Fallback to any dedicated task documents (strictly excluding client or other folders)
+      return itemList.filter(item => {
+        const t = (item.title || '').toLowerCase().trim();
+        if (t.includes('client') || t.includes('plan') || t.includes('talk') || t.includes('idea') || t.includes('tool')) return false;
+        return t.includes('task') || t === 'to-do list' || t === 'todo list' || t === 'to-dos';
+      });
+    };
+
     async function loadPendingTasks() {
       try {
         // 1. Fast sync from cache
@@ -62,8 +79,12 @@ export default function AdminDashboard() {
         if (cachedListStr) {
           try {
             const cachedList = JSON.parse(cachedListStr).items || [];
+            const targetItems = getPendingTasksTargetItems(cachedList);
+            if (targetItems[0]?.id) {
+              setPendingTasksDocId(targetItems[0].id);
+            }
             let fastPending = [];
-            for (const item of cachedList) {
+            for (const item of targetItems) {
               const cachedPageStr = localStorage.getItem(`notion_page_${item.id}`);
               if (cachedPageStr) {
                 const pageBlocks = JSON.parse(cachedPageStr).blocks || [];
@@ -91,8 +112,19 @@ export default function AdminDashboard() {
         const items = data.items || [];
         localStorage.setItem('notion_list', JSON.stringify({ ...data, items }));
         
+        const targetItems = getPendingTasksTargetItems(items);
+        if (targetItems[0]?.id) {
+          setPendingTasksDocId(targetItems[0].id);
+        }
+        
+        if (targetItems.length === 0) {
+          setPendingTasks([]);
+          setPendingCount(0);
+          return;
+        }
+
         let allPending = [];
-        for (const item of items) {
+        for (const item of targetItems) {
           const cacheKey = `notion_page_${item.id}`;
           const cached = localStorage.getItem(cacheKey);
           let pageBlocks = [];
@@ -128,6 +160,8 @@ export default function AdminDashboard() {
           setPendingTasks([...allPending]);
           setPendingCount(allPending.length);
         }
+        setPendingTasks([...allPending]);
+        setPendingCount(allPending.length);
       } catch(err) {
         console.error(err);
         setPendingCount(prev => prev === null ? 0 : prev);
@@ -311,7 +345,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <Link href="/dripp-studio/notes-and-planning" style={{ textDecoration: 'none' }}>
+        <Link href={pendingTasksDocId ? `/dripp-studio/notes-and-planning?docId=${pendingTasksDocId}` : '/dripp-studio/notes-and-planning'} style={{ textDecoration: 'none' }}>
           <div className={styles.card} style={{ 
             margin: 0, 
             padding: '1.75rem', 
@@ -371,7 +405,7 @@ export default function AdminDashboard() {
             </h2>
           </div>
           <Link 
-            href="/dripp-studio/notes-and-planning" 
+            href={pendingTasksDocId ? `/dripp-studio/notes-and-planning?docId=${pendingTasksDocId}` : '/dripp-studio/notes-and-planning'} 
             style={{ 
               display: 'inline-flex', 
               alignItems: 'center', 
