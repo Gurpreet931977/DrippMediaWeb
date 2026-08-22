@@ -581,7 +581,7 @@ export default function NotionHubPage() {
         }
       }
     } catch(err) {
-      console.error(err);
+      console.error('Failed to update/delete block:', err);
     }
   };
 
@@ -624,7 +624,7 @@ export default function NotionHubPage() {
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to append block:', err);
     } finally {
       setIsAppendingBlock(false);
     }
@@ -804,7 +804,7 @@ export default function NotionHubPage() {
         body: JSON.stringify({ blockId })
       });
     } catch (err) {
-      console.error(err);
+      console.error('Failed to delete block:', err);
     }
   };
 
@@ -874,7 +874,7 @@ export default function NotionHubPage() {
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to insert block after:', err);
     }
   };
 
@@ -925,7 +925,7 @@ export default function NotionHubPage() {
         }
       }
     } catch(err) {
-      console.error(err);
+      console.error('Failed to convert block:', err);
     }
   };
 
@@ -2927,7 +2927,7 @@ export default function NotionHubPage() {
                                 fetchNotionItems();
                               }
                             } catch (err) {
-                              console.error(err);
+                              console.error('Failed to create subpage:', err);
                             } finally {
                               setIsCreatingSubpage(false);
                             }
@@ -2957,7 +2957,7 @@ export default function NotionHubPage() {
                                 fetchNotionItems();
                               }
                             } catch (err) {
-                              console.error(err);
+                              console.error('Failed to create subpage:', err);
                             } finally {
                               setIsCreatingSubpage(false);
                             }
@@ -3536,7 +3536,7 @@ function EditableTextBlock({ blockId, type, initialRichTextArr, tagName, classNa
         body: JSON.stringify({ blockId, type, content: plainText, richTextArray })
       });
     } catch(err) {
-      console.error(err);
+      console.error('Failed to update rich text block:', err);
     } finally {
       setIsSaving(false);
     }
@@ -3717,7 +3717,7 @@ function EditableTodoBlock({ block, onDeleteBlock, onInsertBlockAfter, onUpdateB
         body: JSON.stringify({ blockId: block.id, type: 'to_do', checked: newChecked })
       });
     } catch(err) {
-      console.error(err);
+      console.error('Failed to toggle todo item:', err);
     } finally {
       setIsSaving(false);
     }
@@ -3759,7 +3759,7 @@ function EditableTodoBlock({ block, onDeleteBlock, onInsertBlockAfter, onUpdateB
         body: JSON.stringify({ blockId: block.id, type: 'to_do', content: plainText, richTextArray, checked: isChecked })
       });
     } catch(err) {
-      console.error(err);
+      console.error('Failed to save todo item text:', err);
     } finally {
       setIsSaving(false);
     }

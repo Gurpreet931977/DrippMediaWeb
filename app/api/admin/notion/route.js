@@ -116,8 +116,18 @@ export async function GET(request) {
       // Fetch rich content blocks for a specific page
       const blocks = await fetchAllBlocks(notion, pageId);
       
-      // Also fetch page header info
-      const pageInfo = await notion.pages.retrieve({ page_id: pageId });
+      // Also fetch page header info (fallback to database if pageId is a database)
+      let pageInfo;
+      try {
+        pageInfo = await notion.pages.retrieve({ page_id: pageId });
+      } catch {
+        try {
+          pageInfo = await notion.databases.retrieve({ database_id: pageId });
+        } catch (dbErr) {
+          throw dbErr;
+        }
+      }
+      
       const title = getPageTitle(pageInfo);
       const icon = pageInfo.icon?.emoji || pageInfo.icon?.external?.url || pageInfo.icon?.file?.url || null;
       const cover = pageInfo.cover?.external?.url || pageInfo.cover?.file?.url || null;

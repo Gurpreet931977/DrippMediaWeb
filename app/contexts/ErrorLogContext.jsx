@@ -97,14 +97,44 @@ export function ErrorLogProvider({ children }) {
     };
     window.addEventListener('unhandledrejection', handlePromiseRejection);
 
+    // Helper to extract clean error message string
+    const formatLogArg = (a) => {
+      if (a instanceof Error) {
+        return a.message || a.toString();
+      }
+      if (typeof a === 'object' && a !== null) {
+        try {
+          const json = JSON.stringify(a);
+          if (json === '{}' && (a.message || a.name || a.stack)) {
+            return `${a.name || 'Error'}: ${a.message || ''}`.trim();
+          }
+          return json;
+        } catch {
+          return String(a);
+        }
+      }
+      return String(a);
+    };
+
+    // Helper to extract stack trace details
+    const extractDetails = (args, defaultLabel) => {
+      const errWithStack = args.find(a => a instanceof Error || (a && typeof a === 'object' && a.stack));
+      if (errWithStack?.stack) {
+        return `${defaultLabel}\n\nStack:\n${errWithStack.stack}`;
+      }
+      return defaultLabel;
+    };
+
     // 4. Override console.error
     const originalConsoleError = console.error;
     console.error = (...args) => {
+      const formattedMessage = args.map(formatLogArg).join(' ') || 'Unknown Error';
+      const details = extractDetails(args, 'Logged via console.error');
       addLog(
         'error',
-        args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '),
+        formattedMessage,
         window.location.href,
-        'Logged via console.error'
+        details
       );
       originalConsoleError.apply(console, args);
     };
@@ -112,11 +142,13 @@ export function ErrorLogProvider({ children }) {
     // 5. Override console.warn
     const originalConsoleWarn = console.warn;
     console.warn = (...args) => {
+      const formattedMessage = args.map(formatLogArg).join(' ') || 'Unknown Warning';
+      const details = extractDetails(args, 'Logged via console.warn');
       addLog(
         'warn',
-        args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '),
+        formattedMessage,
         window.location.href,
-        'Logged via console.warn'
+        details
       );
       originalConsoleWarn.apply(console, args);
     };
