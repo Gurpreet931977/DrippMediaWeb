@@ -18,8 +18,25 @@ import {
 
 function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [openUpwards, setOpenUpwards] = useState(false);
+  const [placement, setPlacement] = useState({ openUpwards: false, maxHeight: 280 });
   const dropdownRef = useRef(null);
+
+  const calculatePlacement = () => {
+    if (!dropdownRef.current) return;
+    const rect = dropdownRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom - 16;
+    const spaceAbove = rect.top - 16;
+    
+    // If space below is less than 280px and space above is greater, open upwards
+    const openUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+    const availableHeight = openUp ? spaceAbove : spaceBelow;
+    const maxHeight = Math.min(300, Math.max(140, availableHeight));
+
+    setPlacement({
+      openUpwards: openUp,
+      maxHeight
+    });
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -27,19 +44,29 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
         setIsOpen(false);
       }
     };
+    const handleViewportChange = () => {
+      if (isOpen) calculatePlacement();
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('scroll', handleViewportChange, true);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleViewportChange);
+      window.removeEventListener('scroll', handleViewportChange, true);
+    };
+  }, [isOpen]);
 
   const toggleOpen = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isOpen && dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      setOpenUpwards(spaceBelow < 250);
+    if (!isOpen) {
+      calculatePlacement();
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
     }
-    setIsOpen(prev => !prev);
   };
 
   return (
@@ -70,41 +97,47 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
         onMouseOut={e => !isOpen && (e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%)')}
       >
         {label}
-        <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#888', fontSize: '0.55rem', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)', transform: isOpen ? (openUpwards ? 'rotate(0deg)' : 'rotate(180deg)') : (openUpwards ? 'rotate(180deg)' : 'rotate(0deg)') }}>
-          {openUpwards ? '▲' : '▼'}
+        <div style={{ position: 'absolute', right: '10px', pointerEvents: 'none', color: '#888', fontSize: '0.55rem', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)', transform: isOpen ? (placement.openUpwards ? 'rotate(0deg)' : 'rotate(180deg)') : (placement.openUpwards ? 'rotate(180deg)' : 'rotate(0deg)') }}>
+          {placement.openUpwards ? '▲' : '▼'}
         </div>
       </button>
       
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          top: openUpwards ? 'auto' : '100%',
-          bottom: openUpwards ? '100%' : 'auto',
-          left: align === 'left' ? 0 : 'auto',
-          right: align === 'right' ? 0 : 'auto',
-          marginTop: openUpwards ? '0px' : '8px',
-          marginBottom: openUpwards ? '8px' : '0px',
-          background: 'linear-gradient(135deg, rgba(24, 24, 28, 0.98) 0%, rgba(12, 12, 16, 0.98) 100%)',
-          backdropFilter: 'blur(30px) saturate(140%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(140%)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          borderTop: openUpwards ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.4)',
-          borderBottom: openUpwards ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(255,255,255,0.15)',
-          borderRadius: '14px',
-          padding: '6px',
-          minWidth: '175px',
-          maxHeight: '320px',
-          overflowY: 'auto',
-          boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 20px 50px rgba(0,0,0,0.8)',
-          zIndex: 100050,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2px',
-          animation: openUpwards ? 'slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both' : 'slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
-          fontFamily: "'Clash Display', sans-serif"
-        }}>
+        <div 
+          className="notion-dropdown-menu"
+          style={{
+            position: 'absolute',
+            top: placement.openUpwards ? 'auto' : 'calc(100% + 6px)',
+            bottom: placement.openUpwards ? 'calc(100% + 6px)' : 'auto',
+            left: align === 'left' ? 0 : 'auto',
+            right: align === 'right' ? 0 : 'auto',
+            background: 'linear-gradient(135deg, rgba(22, 22, 28, 0.98) 0%, rgba(12, 12, 16, 0.99) 100%)',
+            backdropFilter: 'blur(30px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(30px) saturate(160%)',
+            border: '1px solid rgba(255,255,255,0.14)',
+            borderTop: placement.openUpwards ? '1px solid rgba(255,255,255,0.18)' : '1px solid rgba(255,255,255,0.4)',
+            borderBottom: placement.openUpwards ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(255,255,255,0.18)',
+            borderRadius: '12px',
+            padding: '6px',
+            minWidth: '180px',
+            maxWidth: 'calc(100vw - 32px)',
+            width: 'max-content',
+            maxHeight: `${placement.maxHeight}px`,
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(235, 215, 63, 0.4) transparent',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.85), inset 0 1px 1px rgba(255, 255, 255, 0.25)',
+            zIndex: 100050,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px',
+            animation: placement.openUpwards ? 'slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both' : 'slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            fontFamily: "'Clash Display', sans-serif"
+          }}
+        >
           {options.map((opt, i) => (
             <div
               key={i}
@@ -125,7 +158,8 @@ function FocusSafeDropdown({ label, options, onChange, align = 'left' }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                fontFamily: "'Clash Display', sans-serif"
+                fontFamily: "'Clash Display', sans-serif",
+                whiteSpace: 'nowrap'
               }}
               onMouseOver={e => {
                 e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)';
@@ -1922,6 +1956,20 @@ export default function NotionHubPage() {
           padding: 3px 10px;
           box-shadow: 3px 3px 7px rgba(0,0,0,0.8), -2px -2px 5px rgba(255,255,255,0.12), inset 0 1px 1px rgba(255,255,255,0.25);
           text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .notion-dropdown-menu::-webkit-scrollbar {
+          width: 5px;
+        }
+        .notion-dropdown-menu::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .notion-dropdown-menu::-webkit-scrollbar-thumb {
+          background: rgba(235, 215, 63, 0.35);
+          border-radius: 4px;
+        }
+        .notion-dropdown-menu::-webkit-scrollbar-thumb:hover {
+          background: rgba(235, 215, 63, 0.6);
         }
 
         .shimmer {
