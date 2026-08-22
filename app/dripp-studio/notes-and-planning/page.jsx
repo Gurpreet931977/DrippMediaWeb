@@ -360,11 +360,6 @@ export default function NotionHubPage() {
       // Only update if this is still the active page
       if (latestPageIdRef.current === pageId) {
         if (res.ok && data.success) {
-          // Merge preset annotations from existing cached/loaded blocks so custom presets are preserved across network refreshes
-          const cachedBlocks = cachedData?.blocks || [];
-          if (cachedBlocks.length > 0 && Array.isArray(data.blocks)) {
-            data.blocks = mergePresetAnnotations(data.blocks, cachedBlocks);
-          }
           setDocContent(data);
           window._notionContext = data;
           localStorage.setItem(cacheKey, JSON.stringify(data));
@@ -1584,262 +1579,85 @@ export default function NotionHubPage() {
           }
         }
 
-        /* Elite Creative Designer Presets */
-        .preset-dripp-signature,
-        .preset-glass-pill,
-        .preset-brutalism,
-        .preset-retro-vhs,
-        .preset-redacted,
-        .preset-liquid-chrome,
-        .preset-neon-sign,
-        .preset-ransom-note,
-        .preset-hologram-float,
-        .preset-marker-draw,
-        .preset-3d-extruded,
-        .preset-gold-emboss,
-        .preset-kinetic-wave {
-          display: inline-block !important;
-          vertical-align: baseline;
-          transform: translate3d(0, 0, 0);
-          -webkit-transform: translate3d(0, 0, 0);
-          will-change: background-position, transform, filter;
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-          isolation: isolate;
-          animation-play-state: running !important;
-        }
-
-        /* 1. Dripp Signature */
-        .preset-dripp-signature {
-          background: #050505;
-          color: #ebd73f;
-          padding: 3px 12px;
-          border-radius: 20px;
-          font-weight: 800;
-          box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.8);
-          border: 1px solid rgba(235, 215, 63, 0.4);
-          position: relative;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-        }
-
-        /* 2. Glassmorphic Pill */
-        .preset-glass-pill {
-          background: rgba(255,255,255,0.1);
+        /* Luxury Creative Designer Presets */
+        .preset-glass-morphic {
           color: #fff;
-          padding: 2px 10px;
-          border-radius: 50px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 6px;
+          padding: 2px 8px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
           font-weight: 600;
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255,255,255,0.25);
-          box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        }
-
-        /* 3. Brutalism Block */
-        .preset-brutalism {
-          background: #ffffff;
-          color: #000000 !important;
-          padding: 2px 6px;
-          font-weight: 900;
-          border: 3px solid #000000;
-          box-shadow: 4px 4px 0px #000000;
-          text-transform: uppercase;
-        }
-
-        /* 4. Retro VHS */
-        .preset-retro-vhs {
-          background: repeating-linear-gradient(0deg, #111, #111 2px, #222 2px, #222 4px);
-          color: #fff;
-          padding: 2px 8px;
-          font-weight: 800;
-          transform: skewX(-10deg);
-          text-shadow: 2px 0px #ff00ea, -2px 0px #00f0ff;
-          letter-spacing: 1px;
-        }
-
-        /* 5. CIA Redacted */
-        .preset-redacted {
-          background: #000;
-          color: #000 !important;
-          padding: 0px 4px;
-          font-weight: 700;
           transition: all 0.3s ease;
-          border-radius: 2px;
-          cursor: pointer;
-        }
-        .preset-redacted:hover {
-          color: #fff !important;
-          background: #333;
         }
 
-        /* 6. Liquid Chrome */
-        .preset-liquid-chrome {
-          background: linear-gradient(180deg, #fff 0%, #aaa 45%, #555 50%, #ddd 55%, #fff 100%);
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          font-weight: 900;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-        }
-
-        /* 7. Neon Sign */
-        .preset-neon-sign {
-          color: #fff;
-          font-weight: 800;
-          -webkit-text-stroke: 1px #ff00ea;
-          text-shadow: 0 0 5px #ff00ea, 0 0 15px #ff00ea, 0 0 30px #ff00ea;
-          padding: 2px 6px;
-          border: 2px solid #ff00ea;
-          border-radius: 8px;
-          box-shadow: 0 0 10px rgba(255,0,234,0.4), inset 0 0 10px rgba(255,0,234,0.4);
-          animation: neonFlicker 3s infinite alternate;
-        }
-        @keyframes neonFlicker {
-          0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-          20%, 24%, 55% { opacity: 0.4; }
-        }
-
-        /* 8. Ransom Note */
-        .preset-ransom-note {
-          background: #f4f1ea;
-          color: #000 !important;
-          padding: 2px 8px;
-          font-weight: 800;
-          transform: rotate(-3deg);
-          box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-          clip-path: polygon(2% 4%, 98% 0%, 96% 95%, 0% 100%);
-          font-family: 'Panchang', sans-serif;
-        }
-
-        /* 9. Hologram Projection */
-        .preset-hologram-float {
-          color: #00ffff;
+        .preset-neon-pulse {
+          color: #00e5ff;
           font-weight: 700;
-          opacity: 0.8;
-          text-shadow: 0 0 8px #00ffff;
-          animation: hologramBob 4s ease-in-out infinite;
-          background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,255,255,0.1) 1px, rgba(0,255,255,0.1) 2px);
+          text-shadow: 0 0 5px rgba(0, 229, 255, 0.3), 0 0 10px rgba(0, 229, 255, 0.2);
+          animation: neonPulse 3s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
           padding: 0 4px;
         }
-        @keyframes hologramBob {
-          0%, 100% { transform: translateY(0px) translate3d(0,0,0); }
-          50% { transform: translateY(-4px) translate3d(0,0,0); }
+        @keyframes neonPulse {
+          0% { text-shadow: 0 0 4px rgba(0, 229, 255, 0.4), 0 0 8px rgba(0, 229, 255, 0.2); opacity: 0.8; }
+          100% { text-shadow: 0 0 8px rgba(0, 229, 255, 0.8), 0 0 16px rgba(0, 229, 255, 0.5), 0 0 24px rgba(0, 229, 255, 0.3); opacity: 1; }
         }
 
-        /* 10. Marker Draw */
-        .preset-marker-draw,
-        .preset-studio-marker,
-        .preset-highlight {
-          color: #000 !important;
-          font-weight: 800;
-          background: #ffe600 !important;
-          padding: 2px 6px;
-          border-radius: 3px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
-
-        /* 11. 3D Extruded */
-        .preset-3d-extruded,
-        .preset-sunset-aura,
-        .preset-clay-emboss {
-          color: #fff;
-          font-weight: 900;
-          text-shadow: 1px 1px 0 #ff4500, 2px 2px 0 #ff4500, 3px 3px 0 #ff4500, 4px 4px 0 #ff4500, 5px 5px 0 #ff4500;
-          letter-spacing: 2px;
-          margin-right: 5px; /* space for shadow */
-        }
-
-        /* 12. Gold Foil Emboss */
-        .preset-gold-emboss,
-        .preset-gold-shimmer,
-        .preset-rose-gold {
-          background: #1e2124;
-          color: #ebd73f;
-          padding: 3px 10px;
-          border-radius: 4px;
-          font-weight: 700;
-          box-shadow: inset 0 3px 6px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.1);
-          text-shadow: 0 1px 1px rgba(255,255,255,0.2);
-        }
-
-        /* 13. Kinetic Wave */
-        .preset-kinetic-wave,
-        .preset-cyber-lime {
-          color: #ffffff;
-          font-weight: 700;
-          text-decoration: underline wavy #ebd73f;
-          text-underline-offset: 5px;
-          text-decoration-thickness: 2px;
-          filter: drop-shadow(0 2px 6px rgba(235, 215, 63, 0.6));
-          padding: 0 3px;
-        }
-
-        /* Compatibility Aliases */
-        .preset-neon-pulse,
-        .preset-hologram-glitch,
-        .preset-matrix-terminal {
-          background: repeating-linear-gradient(0deg, #111, #111 2px, #222 2px, #222 4px);
-          color: #fff;
-          padding: 2px 8px;
-          font-weight: 800;
-          transform: skewX(-10deg);
-          text-shadow: 2px 0px #ff00ea, -2px 0px #00f0ff;
-          letter-spacing: 1px;
-        }
-
-        .preset-iridescent,
-        .preset-electric-amethyst {
-          color: #fff;
-          font-weight: 800;
-          -webkit-text-stroke: 1px #ff00ea;
-          text-shadow: 0 0 5px #ff00ea, 0 0 15px #ff00ea, 0 0 30px #ff00ea;
-          padding: 2px 6px;
-          border: 2px solid #ff00ea;
-          border-radius: 8px;
-          box-shadow: 0 0 10px rgba(255,0,234,0.4), inset 0 0 10px rgba(255,0,234,0.4);
-        }
-
-        .preset-liquid-gradient,
-        .preset-liquid {
-          background: linear-gradient(180deg, #fff 0%, #aaa 45%, #555 50%, #ddd 55%, #fff 100%);
+        .preset-iridescent {
+          background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
+          background-size: 1800% 1800%;
           -webkit-background-clip: text;
           background-clip: text;
           -webkit-text-fill-color: transparent;
-          font-weight: 900;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+          font-weight: 800;
+          animation: iridescentFade 8s ease infinite;
+        }
+        @keyframes iridescentFade { 
+          0%{background-position:0% 82%}
+          50%{background-position:100% 19%}
+          100%{background-position:0% 82%}
         }
 
-        .preset-frosted-chrome,
-        .preset-subzero-frost {
-          background: rgba(255,255,255,0.1);
+        .preset-liquid-gradient {
+          font-weight: bold;
           color: #fff;
-          padding: 2px 10px;
-          border-radius: 50px;
-          font-weight: 600;
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255,255,255,0.25);
-          box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+          background: linear-gradient(270deg, #8a2be2, #4b0082, #9400d3, #8a2be2);
+          background-size: 400% 400%;
+          animation: liquid 4s ease infinite;
+          padding: 2px 6px;
+          border-radius: 6px;
+          box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+        }
+        @keyframes liquid {
+          0% { background-position: 0% 50% }
+          50% { background-position: 100% 50% }
+          100% { background-position: 0% 50% }
         }
 
-        .preset-laser-crimson {
-          background: #000;
-          color: #ff3344 !important;
-          border: 1px solid #ff3344;
+        .preset-gold-shimmer {
+          color: #ebd73f;
+          font-weight: bold;
+          background: linear-gradient(90deg, rgba(235,215,63,0) 0%, rgba(235,215,63,0.3) 50%, rgba(235,215,63,0) 100%);
+          background-size: 200% auto;
+          animation: goldShimmer 2s linear infinite;
           padding: 2px 6px;
+          border-radius: 6px;
+        }
+        @keyframes goldShimmer {
+          to { background-position: 200% center; }
+        }
+
+        .preset-redacted {
+          background: #222;
+          color: transparent;
+          user-select: none;
+          transition: all 0.3s ease;
           border-radius: 4px;
-          font-weight: 700;
         }
-
-        .preset-hazard-warning {
-          background: #ffffff;
-          color: #000000 !important;
-          padding: 2px 6px;
-          font-weight: 900;
-          border: 3px solid #000000;
-          box-shadow: 4px 4px 0px #000000;
-          text-transform: uppercase;
+        .preset-redacted:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #fff;
+          user-select: auto;
         }
 
         .shimmer {
@@ -2486,19 +2304,12 @@ export default function NotionHubPage() {
             align="right"
             options={[
               { label: 'Default', value: '' },
-              { label: 'Dripp Signature', value: 'dripp_signature' },
-              { label: 'Glassmorphic Pill', value: 'glass_pill' },
-              { label: 'Brutalism Block', value: 'brutalism' },
-              { label: 'Retro VHS', value: 'retro_vhs' },
-              { label: 'CIA Redacted', value: 'redacted' },
-              { label: 'Liquid Chrome', value: 'liquid_chrome' },
-              { label: 'Neon Sign', value: 'neon_sign' },
-              { label: 'Ransom Note', value: 'ransom_note' },
-              { label: 'Hologram Projection', value: 'hologram_float' },
-              { label: 'Marker Draw', value: 'marker_draw' },
-              { label: '3D Extruded', value: 'extruded_3d' },
-              { label: 'Gold Foil Emboss', value: 'gold_emboss' },
-              { label: 'Kinetic Wave', value: 'kinetic_wave' }
+              { label: 'Glass Text', value: 'glass' },
+              { label: 'Neon Pulse', value: 'neon' },
+              { label: 'Iridescent', value: 'iridescent' },
+              { label: 'Liquid Gradient', value: 'liquid' },
+              { label: 'Gold Shimmer', value: 'highlight' },
+              { label: 'Classified', value: 'code' }
             ]}
             onChange={(val) => handleApplyPreset({ target: { value: val } })}
           />
@@ -3209,25 +3020,16 @@ function parseHTMLToNotion(htmlNode) {
         if (tag === 's' || tag === 'strike' || tag === 'del') annotations.strikethrough = true;
         if (tag === 'code') annotations.code = true;
 
-        if (node.hasAttribute && node.hasAttribute('data-preset')) {
-          const pName = node.getAttribute('data-preset');
-          if (pName && PRESET_MAP[pName]) {
-            annotations.preset = pName;
-            annotations.color = PRESET_MAP[pName].notion;
-          }
-        } else if (node.className && typeof node.className === 'string') {
-          for (const [pKey, pVal] of Object.entries(PRESET_MAP)) {
-            if (node.className.includes(pVal.class)) {
-              annotations.preset = pKey;
-              annotations.color = pVal.notion;
-              break;
-            }
-          }
-        }
-
-        if (!annotations.preset && node.hasAttribute && node.hasAttribute('data-notion-color')) {
+        if (node.hasAttribute && node.hasAttribute('data-notion-color')) {
           const colorAttr = node.getAttribute('data-notion-color');
           if (colorAttr && colorAttr !== 'default') annotations.color = colorAttr;
+        } else if (node.className && typeof node.className === 'string') {
+          if (node.className.includes('preset-gold-shimmer')) annotations.color = 'yellow_background';
+          else if (node.className.includes('preset-liquid-gradient')) annotations.color = 'purple_background';
+          else if (node.className.includes('preset-redacted')) annotations.color = 'gray_background';
+          else if (node.className.includes('preset-neon-pulse')) annotations.color = 'blue_background';
+          else if (node.className.includes('preset-iridescent')) annotations.color = 'pink_background';
+          else if (node.className.includes('preset-glass-morphic')) annotations.color = 'brown_background';
         }
       }
 
@@ -3259,161 +3061,44 @@ function parseHTMLToNotion(htmlNode) {
   return richTextArray.length > 0 ? richTextArray : [{ text: { content: '' }, plain_text: '' }];
 }
 
-// --- Utility: Merge Cached Preset Annotations with Fresh Notion Blocks ---
-function mergePresetAnnotations(freshBlocks, cachedBlocks) {
-  if (!cachedBlocks || !Array.isArray(cachedBlocks) || cachedBlocks.length === 0) return freshBlocks;
-  
-  const cachedBlockMap = new Map();
-  for (const b of cachedBlocks) {
-    if (b?.id) {
-      cachedBlockMap.set(b.id.replace(/-/g, ''), b);
-    }
-  }
-
-  return freshBlocks.map(block => {
-    if (!block?.id) return block;
-    const cached = cachedBlockMap.get(block.id.replace(/-/g, ''));
-    if (!cached) return block;
-
-    const blockType = block.type;
-    const cachedRichText = cached[blockType]?.rich_text;
-    const freshRichText = block[blockType]?.rich_text;
-
-    if (!Array.isArray(freshRichText) || !Array.isArray(cachedRichText)) return block;
-
-    const mergedRichText = freshRichText.map((fItem, idx) => {
-      const fText = fItem.plain_text || fItem.text?.content || '';
-      const cachedMatch = cachedRichText.find(c => {
-        const cText = c.plain_text || c.text?.content || '';
-        return cText === fText && (c.annotations?.preset || c.preset);
-      }) || (cachedRichText[idx] && (cachedRichText[idx].plain_text || cachedRichText[idx].text?.content) === fText ? cachedRichText[idx] : null);
-
-      if (cachedMatch && (cachedMatch.annotations?.preset || cachedMatch.preset)) {
-        const preset = cachedMatch.annotations?.preset || cachedMatch.preset;
-        return {
-          ...fItem,
-          annotations: {
-            ...fItem.annotations,
-            preset: preset
-          }
-        };
-      }
-      return fItem;
-    });
-
-    return {
-      ...block,
-      [blockType]: {
-        ...block[blockType],
-        rich_text: mergedRichText
-      }
-    };
-  });
-}
-
-// Preset mapping dictionary ensuring 100% unique visual rendering and Notion API compatibility
-const PRESET_MAP = {
-  dripp_signature: { class: 'preset-dripp-signature', notion: 'yellow_background' },
-  glass_pill: { class: 'preset-glass-pill', notion: 'gray_background' },
-  brutalism: { class: 'preset-brutalism', notion: 'gray_background' },
-  retro_vhs: { class: 'preset-retro-vhs', notion: 'blue_background' },
-  redacted: { class: 'preset-redacted', notion: 'gray_background' },
-  liquid_chrome: { class: 'preset-liquid-chrome', notion: 'purple_background' },
-  neon_sign: { class: 'preset-neon-sign', notion: 'pink_background' },
-  ransom_note: { class: 'preset-ransom-note', notion: 'yellow_background' },
-  hologram_float: { class: 'preset-hologram-float', notion: 'blue_background' },
-  marker_draw: { class: 'preset-marker-draw', notion: 'yellow_background' },
-  extruded_3d: { class: 'preset-3d-extruded', notion: 'orange_background' },
-  gold_emboss: { class: 'preset-gold-emboss', notion: 'yellow_background' },
-  kinetic_wave: { class: 'preset-kinetic-wave', notion: 'green_background' },
-  // Backward compatibility aliases
-  gold_shimmer: { class: 'preset-gold-shimmer', notion: 'yellow_background' },
-  hologram_glitch: { class: 'preset-hologram-glitch', notion: 'blue_background' },
-  neon_pulse: { class: 'preset-neon-pulse', notion: 'blue_background' },
-  studio_marker: { class: 'preset-studio-marker', notion: 'yellow_background' },
-  matrix_terminal: { class: 'preset-matrix-terminal', notion: 'green_background' },
-  laser_crimson: { class: 'preset-laser-crimson', notion: 'red_background' },
-  subzero_frost: { class: 'preset-subzero-frost', notion: 'blue_background' },
-  electric_amethyst: { class: 'preset-electric-amethyst', notion: 'purple_background' },
-  hazard_warning: { class: 'preset-hazard-warning', notion: 'orange_background' },
-  liquid_gradient: { class: 'preset-liquid-gradient', notion: 'purple_background' },
-  rose_gold: { class: 'preset-rose-gold', notion: 'pink_background' },
-  iridescent: { class: 'preset-iridescent', notion: 'pink_background' },
-  clay_emboss: { class: 'preset-clay-emboss', notion: 'gray_background' },
-  cyber_lime: { class: 'preset-cyber-lime', notion: 'green_background' },
-  sunset_aura: { class: 'preset-sunset-aura', notion: 'orange_background' },
-  frosted_chrome: { class: 'preset-frosted-chrome', notion: 'gray_background' },
-  highlight: { class: 'preset-highlight', notion: 'yellow_background' },
-  neon: { class: 'preset-neon-sign', notion: 'pink_background' },
-  liquid: { class: 'preset-liquid', notion: 'purple_background' }
-};
-
 // --- Utility: Apply Designer Preset ---
 function applyDesignerPreset(presetName, range) {
   if (!range) return;
   if (range.collapsed) return;
 
-  // 1. Identify any existing parent preset span containing the range
-  const startEl = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
-  const endEl = range.endContainer.nodeType === 1 ? range.endContainer : range.endContainer.parentElement;
-  let parentPreset = startEl?.closest('span[data-notion-color], span[data-preset], span[class*="preset-"]') || endEl?.closest('span[data-notion-color], span[data-preset], span[class*="preset-"]');
+  const content = range.extractContents();
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(content);
 
-  if (parentPreset) {
-    const selectedText = range.toString().trim();
-    const parentText = parentPreset.textContent.trim();
-    if (selectedText === parentText || range.toString().length >= parentText.length) {
-      range.selectNode(parentPreset);
-    }
-  }
-
-  // 2. Extract contents from range
-  let fragment = range.extractContents();
-
-  // 3. Strip all existing nested preset spans and color attributes
-  const tempDiv = document.createElement('div');
-  tempDiv.appendChild(fragment);
-  const elementsToClean = tempDiv.querySelectorAll('span[data-notion-color], span[data-preset], span[class*="preset-"], code');
-  elementsToClean.forEach(el => {
-    while (el.firstChild) {
-      el.parentNode.insertBefore(el.firstChild, el);
-    }
-    el.parentNode.removeChild(el);
-  });
-
-  fragment = document.createDocumentFragment();
-  while (tempDiv.firstChild) {
-    fragment.appendChild(tempDiv.firstChild);
-  }
-
-  // 4. If Default / Reset (no preset), insert clean unstyled text and unwrap any leftover parent preset
-  if (!presetName) {
-    if (parentPreset && parentPreset.parentNode) {
-      while (parentPreset.firstChild) {
-        parentPreset.parentNode.insertBefore(parentPreset.firstChild, parentPreset);
-      }
-      parentPreset.parentNode.removeChild(parentPreset);
-    }
-    range.insertNode(fragment);
-    return;
-  }
-
-  // 5. Create new single preset span with exact unique styling class and attributes
   const span = document.createElement('span');
-  const meta = PRESET_MAP[presetName] || { class: `preset-${presetName.replace(/_/g, '-')}`, notion: 'yellow_background' };
-  span.className = meta.class;
-  span.setAttribute('data-preset', presetName);
-  span.setAttribute('data-notion-color', meta.notion);
+
+  if (presetName === 'glass') {
+    span.setAttribute('data-notion-color', 'brown_background');
+    span.className = 'preset-glass-morphic';
+  } else if (presetName === 'neon') {
+    span.setAttribute('data-notion-color', 'blue_background');
+    span.className = 'preset-neon-pulse';
+  } else if (presetName === 'iridescent') {
+    span.setAttribute('data-notion-color', 'pink_background');
+    span.className = 'preset-iridescent';
+  } else if (presetName === 'highlight') {
+    span.setAttribute('data-notion-color', 'yellow_background');
+    span.className = 'preset-gold-shimmer';
+  } else if (presetName === 'code') {
+    span.setAttribute('data-notion-color', 'gray_background');
+    span.className = 'preset-redacted';
+    const code = document.createElement('code');
+    code.appendChild(fragment);
+    span.appendChild(code);
+    range.insertNode(span);
+    return;
+  } else if (presetName === 'liquid') {
+    span.setAttribute('data-notion-color', 'purple_background');
+    span.className = 'preset-liquid-gradient';
+  }
 
   span.appendChild(fragment);
   range.insertNode(span);
-
-  // If new span ended up nested inside an ancestor preset, unwrap the outer preset around it
-  if (parentPreset && parentPreset.parentNode && parentPreset !== span) {
-    while (parentPreset.firstChild) {
-      parentPreset.parentNode.insertBefore(parentPreset.firstChild, parentPreset);
-    }
-    parentPreset.parentNode.removeChild(parentPreset);
-  }
 }
 
 // --- Utility: Render Notion Rich Text to HTML String ---
@@ -3428,41 +3113,25 @@ function renderRichTextToHTML(richTextArr) {
     if (t.annotations?.strikethrough) styleStr += "text-decoration:line-through;";
     if (t.annotations?.underline) styleStr += "text-decoration:underline;";
     
-    let customAttrs = "";
-    const presetKey = t.annotations?.preset || t.preset;
-    if (presetKey && PRESET_MAP[presetKey]) {
-      className += ` ${PRESET_MAP[presetKey].class}`;
-      customAttrs += ` data-preset="${presetKey}" data-notion-color="${PRESET_MAP[presetKey].notion}"`;
-    } else if (t.annotations?.color && t.annotations.color !== 'default') {
-      const color = t.annotations.color;
-      let matchedClass = "";
-      if (color === 'yellow_background') matchedClass = 'preset-dripp-signature';
-      else if (color === 'blue_background') matchedClass = 'preset-retro-vhs';
-      else if (color === 'pink_background') matchedClass = 'preset-neon-sign';
-      else if (color === 'purple_background') matchedClass = 'preset-liquid-chrome';
-      else if (color === 'green_background') matchedClass = 'preset-kinetic-wave';
-      else if (color === 'orange_background') matchedClass = 'preset-3d-extruded';
-      else if (color === 'gray_background') matchedClass = 'preset-glass-pill';
-      else if (color === 'red_background') matchedClass = 'preset-laser-crimson';
-      else if (color === 'brown_background') matchedClass = 'preset-brutalism';
-      else if (color === 'yellow') matchedClass = 'preset-gold-emboss';
-      else if (color === 'blue') matchedClass = 'preset-hologram-float';
-      else if (color === 'pink') matchedClass = 'preset-neon-sign';
-      else if (color === 'green') matchedClass = 'preset-kinetic-wave';
-      else if (color === 'orange') matchedClass = 'preset-3d-extruded';
-      else if (color === 'purple') matchedClass = 'preset-liquid-chrome';
-      else if (color === 'gray') matchedClass = 'preset-glass-pill';
-      else if (color === 'red') matchedClass = 'preset-laser-crimson';
-      else if (typeof color === 'string') {
-        styleStr += `color:${color.replace('_background', '')};`;
-      }
-
-      if (matchedClass) {
-        className += ` ${matchedClass}`;
-        const pKey = matchedClass.replace('preset-', '').replace(/-/g, '_');
-        customAttrs += ` data-preset="${pKey}" data-notion-color="${color}"`;
-      } else {
-        customAttrs += ` data-notion-color="${color}"`;
+    if (t.annotations?.color && t.annotations.color !== 'default') {
+      if (t.annotations.color === 'yellow_background') {
+        className += " preset-gold-shimmer";
+      } else if (t.annotations.color === 'purple_background') {
+        className += " preset-liquid-gradient";
+      } else if (t.annotations.color === 'gray_background') {
+        className += " preset-redacted";
+      } else if (t.annotations.color === 'blue_background') {
+        className += " preset-neon-pulse";
+      } else if (t.annotations.color === 'pink_background') {
+        className += " preset-iridescent";
+      } else if (t.annotations.color === 'brown_background') {
+        className += " preset-glass-morphic";
+      } else if (t.annotations.color === 'red_background') {
+        styleStr += "color:#ff4d4d;background:rgba(255,77,77,0.15);padding:2px 4px;border-radius:4px;";
+      } else if (t.annotations.color === 'green_background') {
+        styleStr += "color:#52c41a;background-color:rgba(82, 196, 26, 0.2);padding:2px 4px;border-radius:4px;";
+      } else if (typeof t.annotations.color === 'string') {
+        styleStr += `color:${t.annotations.color.replace('_background', '')};`;
       }
     }
 
@@ -3472,10 +3141,12 @@ function renderRichTextToHTML(richTextArr) {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
+    const colorAttr = t.annotations?.color ? ` data-notion-color="${t.annotations.color}"` : '';
+
     if (t.href) {
-      return `<a href="${t.href}" target="_blank" rel="noopener noreferrer" class="${className}" style="${styleStr}color:#ebd73f;text-decoration:underline;text-underline-offset:4px;"${customAttrs}>${escapedText}</a>`;
+      return `<a href="${t.href}" target="_blank" rel="noopener noreferrer" class="${className}" style="${styleStr}color:#ebd73f;text-decoration:underline;text-underline-offset:4px;"${colorAttr}>${escapedText}</a>`;
     }
-    return `<span class="${className}" style="${styleStr}"${customAttrs}>${escapedText}</span>`;
+    return `<span class="${className}" style="${styleStr}"${colorAttr}>${escapedText}</span>`;
   }).join('');
 }
 
