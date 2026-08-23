@@ -3426,6 +3426,64 @@ const PRESET_MAP = {
   redacted: { class: 'preset-redacted', notion: 'gray_background' }
 };
 
+// Global persistent preset registry helpers
+function savePresetToGlobalRegistry(text, presetKey) {
+  if (typeof window === 'undefined' || !text) return;
+  try {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const raw = localStorage.getItem('dripp_presets_global_registry') || '{}';
+    const registry = JSON.parse(raw);
+    if (presetKey) {
+      registry[trimmed] = presetKey;
+    } else {
+      delete registry[trimmed];
+    }
+    localStorage.setItem('dripp_presets_global_registry', JSON.stringify(registry));
+  } catch(e) {}
+}
+
+function resolvePresetFromRichText(t) {
+  if (!t || typeof t !== 'object') return null;
+
+  // 1. Direct preset attribute or property
+  const directPreset = t.annotations?.preset || t.preset;
+  if (directPreset && PRESET_MAP[directPreset]) return directPreset;
+
+  // 2. Encoded in Notion text.link or href (e.g. https://dripp.internal/preset?p=vault_emerald)
+  const linkUrl = t.href || t.text?.link?.url || '';
+  if (linkUrl) {
+    if (linkUrl.includes('dripp.internal/preset') || linkUrl.includes('dripp.app/preset')) {
+      try {
+        const urlObj = new URL(linkUrl);
+        const p = urlObj.searchParams.get('p') || urlObj.pathname.split('/').pop();
+        if (p && PRESET_MAP[p]) return p;
+      } catch(e) {
+        const match = linkUrl.match(/[?&]p=([^&]+)/);
+        if (match && PRESET_MAP[match[1]]) return match[1];
+      }
+    }
+  }
+
+  // 3. Match from persistent registry
+  if (typeof window !== 'undefined') {
+    try {
+      const text = (t.plain_text || t.text?.content || '').trim();
+      if (text) {
+        const raw = localStorage.getItem('dripp_presets_global_registry');
+        if (raw) {
+          const registry = JSON.parse(raw);
+          if (registry && registry[text] && PRESET_MAP[registry[text]]) {
+            return registry[text];
+          }
+        }
+      }
+    } catch(e) {}
+  }
+
+  return null;
+}
+
 // --- Utility: Parse HTML to Notion Rich Text ---
 function parseHTMLToNotion(htmlNode) {
   if (!htmlNode) return [];
@@ -3435,12 +3493,38 @@ function parseHTMLToNotion(htmlNode) {
     if (node.nodeType === 3) {
       const text = node.textContent;
       if (text !== '') {
-        richTextArray.push({
+        const activePreset = currentAnnotations.preset;
+        if (activePreset) {
+          savePresetToGlobalRegistry(text, activePreset);
+        }
+        
+        const linkObj = activePreset 
+          ? { url: `https://dripp.internal/preset?p=${encodeURIComponent(activePreset)}` }
+          : (currentAnnotations.linkUrl ? { url: currentAnnotations.linkUrl } : null);
+
+        const item = {
           type: 'text',
-          text: { content: text },
+          text: { 
+            content: text,
+            link: linkObj
+          },
           plain_text: text,
-          annotations: { ...currentAnnotations }
-        });
+          annotations: {
+            bold: !!currentAnnotations.bold,
+            italic: !!currentAnnotations.italic,
+            strikethrough: !!currentAnnotations.strikethrough,
+            underline: !!currentAnnotations.underline,
+            code: !!currentAnnotations.code,
+            color: currentAnnotations.color || 'default',
+            preset: activePreset || undefined
+          }
+        };
+        if (activePreset) {
+          item.href = `https://dripp.internal/preset?p=${encodeURIComponent(activePreset)}`;
+        } else if (currentAnnotations.linkUrl) {
+          item.href = currentAnnotations.linkUrl;
+        }
+        richTextArray.push(item);
       }
       return;
     }
@@ -3455,6 +3539,13 @@ function parseHTMLToNotion(htmlNode) {
         if (tag === 'u') annotations.underline = true;
         if (tag === 's' || tag === 'strike' || tag === 'del') annotations.strikethrough = true;
         if (tag === 'code') annotations.code = true;
+
+        if (tag === 'a') {
+          const href = node.getAttribute('href');
+          if (href && !href.includes('dripp.internal/preset')) {
+            annotations.linkUrl = href;
+          }
+        }
 
         if (node.hasAttribute && node.hasAttribute('data-preset')) {
           const pName = node.getAttribute('data-preset');
@@ -3523,11 +3614,16 @@ function applyDesignerPreset(presetName, range) {
     }
   }
 
+  const selectedText = range.toString().trim();
+  if (selectedText) {
+    savePresetToGlobalRegistry(selectedText, presetName || null);
+  }
+
   let fragment = range.extractContents();
 
   const tempDiv = document.createElement('div');
   tempDiv.appendChild(fragment);
-  const elementsToClean = tempDiv.querySelectorAll('span[data-notion-color], span[data-preset], span[class*="preset-"], code');
+  const elementsToClean = tempDiv.querySelectorAll('span[data-notion-color], span[data-preset], span[class*="preset-"], code, a[href*="dripp.internal/preset"]');
   elementsToClean.forEach(el => {
     while (el.firstChild) {
       el.parentNode.insertBefore(el.firstChild, el);
@@ -3588,7 +3684,8 @@ function renderRichTextToHTML(richTextArr) {
     if (t.annotations?.underline) styleStr += "text-decoration:underline;";
     
     let customAttrs = "";
-    const presetKey = t.annotations?.preset || t.preset;
+    const presetKey = resolvePresetFromRichText(t);
+
     if (presetKey && PRESET_MAP[presetKey]) {
       className += ` ${PRESET_MAP[presetKey].class}`;
       customAttrs += ` data-preset="${presetKey}" data-notion-color="${PRESET_MAP[presetKey].notion}"`;
@@ -3598,17 +3695,19 @@ function renderRichTextToHTML(richTextArr) {
       } else if (t.annotations.color === 'purple_background') {
         className += " preset-liquid-gradient";
       } else if (t.annotations.color === 'gray_background') {
-        className += " preset-redacted";
+        className += " preset-frosted-chrome";
       } else if (t.annotations.color === 'blue_background') {
         className += " preset-neon-pulse";
       } else if (t.annotations.color === 'pink_background') {
         className += " preset-iridescent";
       } else if (t.annotations.color === 'brown_background') {
         className += " preset-glass-morphic";
-      } else if (t.annotations.color === 'red_background') {
-        styleStr += "color:#ff4d4d;background:rgba(255,77,77,0.15);padding:2px 4px;border-radius:4px;";
+      } else if (t.annotations.color === 'orange_background') {
+        className += " preset-bloomberg-ticker";
       } else if (t.annotations.color === 'green_background') {
-        styleStr += "color:#52c41a;background-color:rgba(82, 196, 26, 0.2);padding:2px 4px;border-radius:4px;";
+        className += " preset-vault-emerald";
+      } else if (t.annotations.color === 'red_background') {
+        className += " preset-laser-crimson";
       } else if (typeof t.annotations.color === 'string') {
         styleStr += `color:${t.annotations.color.replace('_background', '')};`;
       }
@@ -3621,8 +3720,9 @@ function renderRichTextToHTML(richTextArr) {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    if (t.href) {
-      return `<a href="${t.href}" target="_blank" rel="noopener noreferrer" class="${className}" style="${styleStr}color:#ebd73f;text-decoration:underline;text-underline-offset:4px;"${customAttrs}>${escapedText}</a>`;
+    const linkUrl = t.href || t.text?.link?.url || '';
+    if (linkUrl && !linkUrl.includes('dripp.internal/preset') && !linkUrl.includes('dripp.app/preset')) {
+      return `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="${className}" style="${styleStr}color:#ebd73f;text-decoration:underline;text-underline-offset:4px;"${customAttrs}>${escapedText}</a>`;
     }
     return `<span class="${className}" style="${styleStr}"${customAttrs}>${escapedText}</span>`;
   }).join('');
@@ -4006,41 +4106,41 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
       if (t.annotations?.strikethrough) customStyle.textDecoration = 'line-through';
       if (t.annotations?.underline) customStyle.textDecoration = 'underline';
       
-      if (t.annotations?.color && t.annotations.color !== 'default') {
-        if (t.annotations.color === 'red_background') {
-          customStyle.color = '#ff4d4d';
-          customStyle.backgroundColor = 'rgba(255, 77, 77, 0.15)';
-          customStyle.padding = '2px 6px';
-          customStyle.borderRadius = '4px';
-        } else if (t.annotations.color === 'green_background') {
-          customStyle.color = '#52c41a';
-          customStyle.backgroundColor = 'rgba(82, 196, 26, 0.2)';
-          customStyle.padding = '2px 6px';
-          customStyle.borderRadius = '4px';
-        } else if (t.annotations.color === 'yellow_background') {
+      const presetKey = resolvePresetFromRichText(t);
+      if (presetKey && PRESET_MAP[presetKey]) {
+        className += ` ${PRESET_MAP[presetKey].class}`;
+      } else if (t.annotations?.color && t.annotations.color !== 'default') {
+        if (t.annotations.color === 'yellow_background') {
           className += " preset-gold-shimmer";
         } else if (t.annotations.color === 'purple_background') {
           className += " preset-liquid-gradient";
         } else if (t.annotations.color === 'gray_background') {
-          className += " preset-redacted";
+          className += " preset-frosted-chrome";
         } else if (t.annotations.color === 'blue_background') {
           className += " preset-neon-pulse";
         } else if (t.annotations.color === 'pink_background') {
           className += " preset-iridescent";
         } else if (t.annotations.color === 'brown_background') {
           className += " preset-glass-morphic";
+        } else if (t.annotations.color === 'orange_background') {
+          className += " preset-bloomberg-ticker";
+        } else if (t.annotations.color === 'green_background') {
+          className += " preset-vault-emerald";
+        } else if (t.annotations.color === 'red_background') {
+          className += " preset-laser-crimson";
         } else {
           customStyle.color = t.annotations.color.replace('_background', ''); 
         }
       }
 
       const textContent = t.plain_text || t.text?.content || '';
+      const linkUrl = t.href || t.text?.link?.url || '';
 
-      if (t.href) {
+      if (linkUrl && !linkUrl.includes('dripp.internal/preset') && !linkUrl.includes('dripp.app/preset')) {
         return (
           <a
             key={idx}
-            href={t.href}
+            href={linkUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={className}
@@ -4051,7 +4151,7 @@ function NotionBlockRenderer({ block, setSelectedItem, onDeleteBlock, onInsertBl
         );
       }
       return (
-        <span key={idx} className={className} style={{ ...customStyle, fontFamily: "'Clash Display', sans-serif" }} data-notion-color={t.annotations?.color}>
+        <span key={idx} className={className} style={{ ...customStyle, fontFamily: "'Clash Display', sans-serif" }} data-notion-color={t.annotations?.color} data-preset={presetKey || undefined}>
           {textContent}
         </span>
       );

@@ -9,6 +9,36 @@ function getNotionClient() {
   return new Client({ auth: apiKey });
 }
 
+function sanitizeRichTextForNotion(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.map(item => {
+    if (!item) return { type: 'text', text: { content: '' } };
+    const content = item.text?.content || item.plain_text || '';
+    const linkUrl = item.text?.link?.url || item.href || null;
+    
+    const sanitizedItem = {
+      type: 'text',
+      text: {
+        content,
+        link: linkUrl ? { url: linkUrl } : null
+      }
+    };
+
+    if (item.annotations) {
+      sanitizedItem.annotations = {
+        bold: !!item.annotations.bold,
+        italic: !!item.annotations.italic,
+        strikethrough: !!item.annotations.strikethrough,
+        underline: !!item.annotations.underline,
+        code: !!item.annotations.code,
+        color: item.annotations.color || 'default'
+      };
+    }
+
+    return sanitizedItem;
+  });
+}
+
 export async function PATCH(request) {
   try {
     const { blockId, type, content, richTextArray, checked } = await request.json();
@@ -19,6 +49,7 @@ export async function PATCH(request) {
 
     const notion = getNotionClient();
     let payload = {};
+    const sanitizedRichText = richTextArray ? sanitizeRichTextForNotion(richTextArray) : (content !== undefined ? [{ text: { content } }] : undefined);
 
     if (type === 'to_do') {
       payload = {
@@ -27,15 +58,13 @@ export async function PATCH(request) {
       if (checked !== undefined) {
         payload.to_do.checked = checked;
       }
-      if (richTextArray) {
-         payload.to_do.rich_text = richTextArray;
-      } else if (content !== undefined) {
-         payload.to_do.rich_text = [{ text: { content } }];
+      if (sanitizedRichText) {
+        payload.to_do.rich_text = sanitizedRichText;
       }
     } else if (['paragraph', 'heading_1', 'heading_2', 'heading_3'].includes(type)) {
       payload = {
         [type]: {
-          rich_text: richTextArray || [{ text: { content } }]
+          rich_text: sanitizedRichText || [{ text: { content: '' } }]
         }
       };
     } else if (type === 'page' || type === 'database') {
@@ -45,7 +74,7 @@ export async function PATCH(request) {
           page_id: blockId,
           properties: {
             title: {
-              title: richTextArray || [{ text: { content } }]
+              title: sanitizedRichText || [{ text: { content: '' } }]
             }
           }
         });
@@ -56,7 +85,7 @@ export async function PATCH(request) {
           page_id: blockId,
           properties: {
             Name: {
-              title: richTextArray || [{ text: { content } }]
+              title: sanitizedRichText || [{ text: { content: '' } }]
             }
           }
         });
