@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon, Mic, MicOff, ArrowDown, Square, RotateCcw } from 'lucide-react';
+import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon, Mic, MicOff, ArrowDown, Square, RotateCcw, Plus } from 'lucide-react';
 import OrloIcon from './OrloIcon';
 import gsap from 'gsap';
 import { useGenz } from '../../contexts/GenzContext';
@@ -986,10 +986,26 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
     setInput('');
     originalInputRef.current = '';
     
-    // Intercept clear chat locally so AI doesn't misinterpret it as a form command
-    if (lowerInput === 'clear chat' || lowerInput === 'clearchat' || lowerInput === 'reset chat') {
-      const msg = 'Chat history cleared. My mind is a blank slate!';
+    // Intercept clear chat / new chat locally so AI doesn't misinterpret it as a form command
+    const isClearChatPrompt = (
+      lowerInput === 'clear chat' ||
+      lowerInput === 'clearchat' ||
+      lowerInput === 'reset chat' ||
+      lowerInput === 'new chat' ||
+      lowerInput === 'newchat' ||
+      lowerInput === 'start new chat' ||
+      lowerInput === 'start a new chat' ||
+      lowerInput === 'clear' ||
+      lowerInput === 'reset' ||
+      lowerInput === 'fresh chat' ||
+      lowerInput === 'start fresh' ||
+      lowerInput === 'clear history'
+    );
+
+    if (isClearChatPrompt) {
+      const msg = 'New chat started! What are we working on today?';
       setMessages([{ role: 'ai', text: msg }]);
+      localStorage.removeItem('orlo_chat_history');
       setIsTyping(false);
       setEmotion('success');
       setTimeout(() => setEmotion('idle'), 2000);
@@ -1051,8 +1067,9 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       }
 
       if (data.intent === 'clear_chat') {
-        const msg = data.replyMessage || data.message || "Chat history cleared. My mind is a blank slate!";
+        const msg = data.replyMessage || data.message || "New chat started! What are we working on today?";
         setMessages([{ role: 'ai', text: msg }]);
+        localStorage.removeItem('orlo_chat_history');
       } else {
         let msg = data.replyMessage || data.message || (data.payload && data.payload.replyMessage);
         
@@ -1062,11 +1079,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
 
         if (!msg) {
           if (data.intent === 'chat' || data.intent === 'notion_edit') {
-            msg = "Here is what I came up with for you!";
+            msg = "Here is what I've put together for you!";
           } else if (['quote', 'package', 'invoice', 'email', 'portfolio', 'save_template'].includes(data.intent)) {
-            msg = "Done! I've updated the form with the requested details.";
+            msg = "I've updated the form with the requested details.";
           } else {
-            msg = "Done! I've processed your request.";
+            msg = "I'm right here! How can I help you today?";
           }
         }
         
@@ -1980,7 +1997,37 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                 <p style={{ margin: 0, fontSize: '0.75rem', color: '#ebd73f' }}>{isSpeaking ? 'Speaking...' : isListening ? 'Listening...' : 'Online & Ready'}</p>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button 
+                type="button"
+                onClick={() => {
+                  const msg = "New chat started! What are we working on today?";
+                  setMessages([{ role: 'ai', text: msg }]);
+                  localStorage.removeItem('orlo_chat_history');
+                  showToast('Started a new chat!');
+                }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  color: '#ebd73f',
+                  padding: '4px 8px',
+                  borderRadius: '16px',
+                  fontSize: '0.72rem',
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)'}
+                onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
+                title="Start a new chat"
+              >
+                <Plus size={13} />
+                <span>New</span>
+              </button>
               <select 
                 value={selectedModel} 
                 onChange={(e) => {
@@ -1998,7 +2045,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   fontWeight: '600',
                   outline: 'none',
                   cursor: 'pointer',
-                  maxWidth: '145px',
+                  maxWidth: '125px',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden'

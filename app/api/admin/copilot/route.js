@@ -29,6 +29,31 @@ export async function POST(request) {
     if (!apiKey) return Response.json({ error: 'Missing API key' }, { status: 500 });
     if (!userPrompt) return Response.json({ error: 'Missing prompt' }, { status: 400 });
 
+    const pTrim = (userPrompt || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+    const isClearChatPrompt = (
+      pTrim === 'new chat' ||
+      pTrim === 'newchat' ||
+      pTrim === 'start new chat' ||
+      pTrim === 'start a new chat' ||
+      pTrim === 'clear chat' ||
+      pTrim === 'clearchat' ||
+      pTrim === 'reset chat' ||
+      pTrim === 'clear' ||
+      pTrim === 'reset' ||
+      pTrim === 'fresh chat' ||
+      pTrim === 'start fresh' ||
+      pTrim === 'clear history'
+    );
+
+    if (isClearChatPrompt) {
+      return Response.json({
+        intent: 'clear_chat',
+        isNewTopic: false,
+        replyMessage: "New chat started! What are we working on today?",
+        payload: {}
+      });
+    }
+
     const supabase = getSupabase();
     let memoryContext = '';
     let statsContext = '';
@@ -143,18 +168,18 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
 - But you are ALSO a brilliant conversationalist, strategist, creative consultant, and thinking partner
 
 ## INTENT CLASSIFICATION RULES (CRITICAL):
-1. "quote" - ANY message that describes, requests, or specifies a client proposal, quotation, scope of work, services, deliverables, website design/development project, video/social media retainer, or budget (e.g. "development for a real estate brand... quotation of 15 K which will include...", "build a website proposal for...", "30k quote for 10 reels", "add SEO and hosting to the package"). If the user is on the Quotes & Packages page (/dripp-studio/quote) or describes a client quotation/budget/deliverables, you MUST classify as "quote"!
-2. "package" - User explicitly asks for a standalone PMP (Personal Marketing Plan) or Masterplan strategy, or is on the PMP Maker page (/dripp-studio/package).
-3. "invoice" - Create or update an invoice, add line items/hours/rates, or user is on the Invoice page (/dripp-studio/invoice).
+1. "quote" - ONLY when the user's message actually requests, specifies, creates, or updates a client proposal, quotation, scope of work, services, deliverables, website project, retainer, or pricing/budget to fill into the quote form. If the user is just asking a question, chatting, greeting ("hello", "whats your name", "who are you", "what can you do", "help me with..."), or discussing general topics, you MUST classify as "chat", even if the user is on the quote page!
+2. "package" - ONLY when the user explicitly asks to generate a standalone PMP package or client strategy with deliverables.
+3. "invoice" - Create or update an invoice, or user specifies line items/rates/invoice details.
 4. "email" - Write, edit, schedule, or personalize an email marketing campaign.
 5. "system_doc" - Rewrite or modify an operational/system document.
 6. "portfolio" - Fill out or update the Portfolio Manager form.
 7. "learn" - User explicitly teaches you a rule or preference to remember.
-8. "clear_chat" - User wants to reset or clear chat history.
+8. "clear_chat" - User wants to reset, clear, wipe, or start a new chat (e.g. "new chat", "start a new chat", "clear chat", "reset", "fresh chat", "start over"). Return intent "clear_chat" and a warm greeting in replyMessage.
 9. "notion_edit" - Rewrite or replace a specific highlighted block in a Notion/Studio notes page.
 10. "notion_task" - Check or uncheck a Notion to-do list task.
-11. "save_template" - User wants to save the current quote, package, or deliverables as a reusable package template (e.g. "save this as a template", "save as template", "save package template called Real Estate Web Package").
-12. "chat" - ONLY for general conversational questions, strategic advice, knowledge lookup, definitions, greetings, or brainstorming that do NOT specify deliverables to build or update in a form.
+11. "save_template" - User wants to save the current quote, package, or deliverables as a reusable package template.
+12. "chat" - For ALL general conversation, questions, answers, explanations, strategy advice, greetings, identity questions ("whats your name", "who are you"), opinions, or knowledge lookups. NEVER output quote/package deliverables or modify forms when intent is "chat"! Give an intelligent, authentic, helpful human-like response in replyMessage!
 
 ## RULES FOR SPECIFIC INTENTS:
 
@@ -948,144 +973,164 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       const hasServices = Array.isArray(parsed.payload.services) && parsed.payload.services.length > 0;
       const hasItems = Array.isArray(parsed.payload.items) && parsed.payload.items.length > 0;
 
-      if ((hasTiers || hasServices || hasItems || parsed.payload.totalBudget > 0 || parsed.payload.pmpStrategy) && parsed.intent === 'chat') {
-        parsed.intent = (currentPath === '/dripp-studio/package') ? 'package' : 'quote';
+      // If intent is conversational (chat, learn, clear_chat), preserve it and prevent accidental form actions
+      if (['chat', 'learn', 'clear_chat'].includes(parsed.intent)) {
+        parsed.payload.packageTiers = [];
+        parsed.payload.services = [];
+        parsed.payload.items = [];
+        delete parsed.payload.totalBudget;
+        delete parsed.payload.pmpStrategy;
+      } else {
+        // Only convert to quote/package if explicit quote/deliverable keywords exist in the prompt
+        const isExplicitQuotePrompt = /quote|quotation|proposal|budget|package|pricing|rate|retainer|scope|deliverables|reels|services|website|marketing/i.test(userPrompt);
+        if (isExplicitQuotePrompt && !['invoice', 'email', 'system_doc', 'portfolio', 'notion_edit', 'notion_task', 'save_template'].includes(parsed.intent)) {
+          parsed.intent = (currentPath === '/dripp-studio/package') ? 'package' : 'quote';
+        }
       }
 
-      // Sync and normalize packageTiers <-> services <-> items
-      if (hasTiers && !isSingleReq) {
-        parsed.payload.packageTiers = parsed.payload.packageTiers.map(tier => ({
-          name: tier.name || `${parsed.payload.brandName || 'Standard'} Package`,
-          items: ((tier.items && tier.items.length > 0) ? tier.items : (tier.services && tier.services.length > 0) ? tier.services : (parsed.payload.services || [])).map(item => {
-            const title = typeof item === 'string' ? item : (item.name || item.desc || 'Service Item');
+      // Sync and normalize packageTiers <-> services <-> items for quote/package intents
+      if (['quote', 'package'].includes(parsed.intent)) {
+        if (hasTiers && !isSingleReq) {
+          parsed.payload.packageTiers = parsed.payload.packageTiers.map(tier => ({
+            name: tier.name || `${parsed.payload.brandName || 'Standard'} Package`,
+            items: ((tier.items && tier.items.length > 0) ? tier.items : (tier.services && tier.services.length > 0) ? tier.services : (parsed.payload.services || [])).map(item => {
+              const title = typeof item === 'string' ? item : (item.name || item.desc || 'Service Item');
+              return {
+                name: title,
+                desc: title,
+                qty: parseAmountNumber(item.qty) || 1,
+                rate: parseAmountNumber(item.rate) || 0,
+                details: item.details || ''
+              };
+            })
+          }));
+
+          // Flatten for services array
+          const allTierItems = [];
+          parsed.payload.packageTiers.forEach(t => { if (t.items) allTierItems.push(...t.items); });
+          parsed.payload.services = allTierItems.length > 0 ? allTierItems : (parsed.payload.services || []);
+        } else if (hasServices && !isSingleReq) {
+          const normalized = parsed.payload.services.map(s => {
+            const title = typeof s === 'string' ? s : (s.name || s.desc || 'Service Item');
             return {
               name: title,
               desc: title,
-              qty: parseAmountNumber(item.qty) || 1,
-              rate: parseAmountNumber(item.rate) || 0,
-              details: item.details || ''
+              qty: parseAmountNumber(s.qty) || 1,
+              rate: parseAmountNumber(s.rate) || 0,
+              details: s.details || ''
             };
-          })
-        }));
-
-        // Flatten for services array
-        const allTierItems = [];
-        parsed.payload.packageTiers.forEach(t => { if (t.items) allTierItems.push(...t.items); });
-        parsed.payload.services = allTierItems.length > 0 ? allTierItems : (parsed.payload.services || []);
-      } else if (hasServices && !isSingleReq) {
-        const normalized = parsed.payload.services.map(s => {
-          const title = typeof s === 'string' ? s : (s.name || s.desc || 'Service Item');
-          return {
-            name: title,
-            desc: title,
-            qty: parseAmountNumber(s.qty) || 1,
-            rate: parseAmountNumber(s.rate) || 0,
-            details: s.details || ''
-          };
-        });
-        parsed.payload.services = normalized;
-        parsed.payload.packageTiers = [{
-          name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
-          items: normalized
-        }];
-      } else if (hasItems && !isSingleReq) {
-        const normalized = parsed.payload.items.map(s => {
-          const title = typeof s === 'string' ? s : (s.name || s.desc || 'Service Item');
-          return {
-            name: title,
-            desc: title,
-            qty: parseAmountNumber(s.qty) || 1,
-            rate: parseAmountNumber(s.rate) || 0,
-            details: s.details || ''
-          };
-        });
-        parsed.payload.services = normalized;
-        parsed.payload.packageTiers = [{
-          name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
-          items: normalized
-        }];
-      }
-
-      // Check if items are still empty: guarantee non-empty deliverables
-      let itemCount = 0;
-      if (parsed.payload.packageTiers) {
-        parsed.payload.packageTiers.forEach(t => { itemCount += (t.items || []).length; });
-      }
-      if (itemCount === 0 && parsed.payload.services) {
-        itemCount = parsed.payload.services.length;
-      }
-
-      if (itemCount === 0 && (parsed.intent === 'quote' || parsed.intent === 'package' || parsed.payload.totalBudget > 0 || currentPath.includes('quote') || currentPath.includes('package') || userPrompt.toLowerCase().includes('quotation') || userPrompt.toLowerCase().includes('package') || userPrompt.toLowerCase().includes('website') || userPrompt.toLowerCase().includes('development') || userPrompt.toLowerCase().includes('social'))) {
-        const fallbackBudget = parsed.payload.totalBudget || parseAmountNumber(userPrompt) || 20000;
-        const fallbackItems = generateFallbackDeliverables(userPrompt, fallbackBudget);
-        parsed.payload.totalBudget = fallbackBudget;
-        parsed.payload.services = fallbackItems;
-        parsed.payload.packageTiers = [{
-          name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
-          items: fallbackItems
-        }];
-      }
-
-      // Ensure rich Strategy & Concept Pitch (PMP strategy)
-      if (!parsed.payload.pmpStrategy || typeof parsed.payload.pmpStrategy !== 'object' || !parsed.payload.pmpStrategy.phases || parsed.payload.pmpStrategy.phases.length === 0) {
-        const brand = parsed.payload.brandName || existingFormBrand || 'Client';
-        const isSocialPmp = pLower.includes('social') || pLower.includes('media') || pLower.includes('instagram') || pLower.includes('facebook') || pLower.includes('ads') || pLower.includes('meta') || pLower.includes('smm');
-        const isReelPmp = pLower.includes('reel') || pLower.includes('video') || pLower.includes('short');
-
-        if (isSocialPmp) {
-          parsed.payload.pmpStrategy = {
-            overview: `Comprehensive social media growth and performance marketing strategy for ${brand}. Designed to scale organic reach, create high-retention promotional videos, and generate high-intent inquiries via Meta Ads campaign management.`,
-            targetAudience: `Target demographics, potential customers, and social media audiences across Instagram, Facebook, and LinkedIn.`,
-            phases: [
-              { title: "Phase 1: Content Architecture & Brand Aesthetics", description: "Strategic content calendar formulation, feed aesthetic curation, story scheduling, and custom promotional posters." },
-              { title: "Phase 2: Video Production & Dynamic Storytelling", description: "Production and high-retention editing of monthly promotional videos featuring hook ideation, dynamic typography, and sound design." },
-              { title: "Phase 3: Meta Ads Execution & Analytics Optimization", description: "Targeted Meta Ads campaign deployment, creative A/B testing, lead conversion tracking, and monthly performance reporting." }
-            ]
-          };
-        } else if (isReelPmp) {
-          parsed.payload.pmpStrategy = {
-            overview: `High-retention visual storytelling and short-form video strategy engineered for ${brand} to dominate social algorithms and build brand authority.`,
-            targetAudience: `Audience demographics and social media users across Instagram and YouTube Shorts.`,
-            phases: [
-              { title: "Phase 1: Concept Ideation & Hook Structuring", description: `Researching viral hooks, trending audio, and high-impact scripting tailored to ${brand}.` },
-              { title: "Phase 2: High-Retention Video Editing", description: "Pacing cuts, motion graphics, sound design, color grading, and dynamic captions for maximum watch time." },
-              { title: "Phase 3: Publishing Optimization & Performance Review", description: "Thumbnail curation, hashtag strategy, and engagement retention analysis." }
-            ]
-          };
-        } else {
-          parsed.payload.pmpStrategy = {
-            overview: `Strategic turnkey digital execution engineered for ${brand} to establish market authority and capture high-intent inquiries. This package covers end-to-end deliverables tailored to the client brief.`,
-            targetAudience: `Target demographic and high-intent clients seeking premier services and trusted solutions from ${brand}.`,
-            phases: [
-              { title: "Phase 1: Architecture & UI/UX Design", description: "Bespoke wireframing, property/brand showcase layouts, high-converting lead funnels, and responsive UI prototype sign-off." },
-              { title: "Phase 2: Full-Stack Engineering, SEO & Cloud Infrastructure", description: "Clean web development, custom domain DNS integration, meta tag structuring, Google Search Console indexing, and cloud hosting deployment." },
-              { title: "Phase 3: Live Launch & 30-Day Stability Warranty", description: "Live production deployment, search ranking verification, and 1 full month of dedicated bug fixing, error resolution, and technical maintenance." }
-            ]
-          };
+          });
+          parsed.payload.services = normalized;
+          parsed.payload.packageTiers = [{
+            name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
+            items: normalized
+          }];
+        } else if (hasItems && !isSingleReq) {
+          const normalized = parsed.payload.items.map(s => {
+            const title = typeof s === 'string' ? s : (s.name || s.desc || 'Service Item');
+            return {
+              name: title,
+              desc: title,
+              qty: parseAmountNumber(s.qty) || 1,
+              rate: parseAmountNumber(s.rate) || 0,
+              details: s.details || ''
+            };
+          });
+          parsed.payload.services = normalized;
+          parsed.payload.packageTiers = [{
+            name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
+            items: normalized
+          }];
         }
-      }
 
-      // Auto-generate high-impact tailored cover heading and subtitle
-      if (!parsed.payload.coverHeading) {
-        const b = parsed.payload.brandName || existingFormBrand || '';
-        const combined = (userPrompt + ' ' + b + ' ' + JSON.stringify(parsed.payload.pmpStrategy || '')).toLowerCase();
-        if (combined.includes('real estate') || combined.includes('property')) {
-          parsed.payload.coverHeading = 'Strategic Real Estate Web Platform & Digital Growth';
-        } else if (combined.includes('e-commerce') || combined.includes('ecommerce') || combined.includes('store') || combined.includes('shop')) {
-          parsed.payload.coverHeading = 'Omnichannel Commerce Architecture & Conversion Engine';
-        } else if (combined.includes('brand') || combined.includes('identity')) {
-          parsed.payload.coverHeading = 'Bespoke Brand Identity & Market Authority Blueprint';
-        } else if (combined.includes('video') || combined.includes('media') || combined.includes('production')) {
-          parsed.payload.coverHeading = 'High-Impact Cinematic Media & Creative Production';
-        } else if (b && b.toLowerCase() !== 'client') {
-          parsed.payload.coverHeading = `Strategic ${b} Growth & Digital Architecture`;
-        } else {
-          parsed.payload.coverHeading = 'Strategic Growth & Digital Architecture Proposal';
+        // Check if items are still empty: guarantee non-empty deliverables only when explicitly requested
+        let itemCount = 0;
+        if (parsed.payload.packageTiers) {
+          parsed.payload.packageTiers.forEach(t => { itemCount += (t.items || []).length; });
         }
-      }
-      if (!parsed.payload.coverSubtitle) {
-        const b = parsed.payload.brandName || existingFormBrand || 'Client';
-        parsed.payload.coverSubtitle = `Prepared Exclusively For ${b}`;
+        if (itemCount === 0 && parsed.payload.services) {
+          itemCount = parsed.payload.services.length;
+        }
+
+        const isExplicitQuotePrompt = /quote|quotation|proposal|budget|package|pricing|retainer|scope|website|development|social|reels|services/i.test(userPrompt);
+        if (itemCount === 0 && isExplicitQuotePrompt) {
+          const fallbackBudget = parsed.payload.totalBudget || parseAmountNumber(userPrompt) || 20000;
+          const fallbackItems = generateFallbackDeliverables(userPrompt, fallbackBudget);
+          parsed.payload.totalBudget = fallbackBudget;
+          parsed.payload.services = fallbackItems;
+          parsed.payload.packageTiers = [{
+            name: parsed.payload.brandName ? `${parsed.payload.brandName} Package` : 'Standard Package',
+            items: fallbackItems
+          }];
+        }
+
+        // Ensure rich Strategy & Concept Pitch (PMP strategy)
+        if (!parsed.payload.pmpStrategy || typeof parsed.payload.pmpStrategy !== 'object' || !parsed.payload.pmpStrategy.phases || parsed.payload.pmpStrategy.phases.length === 0) {
+          const brand = parsed.payload.brandName || existingFormBrand || 'Client';
+          const isSocialPmp = pLower.includes('social') || pLower.includes('media') || pLower.includes('instagram') || pLower.includes('facebook') || pLower.includes('ads') || pLower.includes('meta') || pLower.includes('smm');
+          const isReelPmp = pLower.includes('reel') || pLower.includes('video') || pLower.includes('short');
+
+          if (isSocialPmp) {
+            parsed.payload.pmpStrategy = {
+              overview: `Comprehensive social media growth and performance marketing strategy for ${brand}. Designed to scale organic reach, create high-retention promotional videos, and generate high-intent inquiries via Meta Ads campaign management.`,
+              targetAudience: `Target demographics, potential customers, and social media audiences across Instagram, Facebook, and LinkedIn.`,
+              phases: [
+                { title: "Phase 1: Content Architecture & Brand Aesthetics", description: "Strategic content calendar formulation, feed aesthetic curation, story scheduling, and custom promotional posters." },
+                { title: "Phase 2: Video Production & Dynamic Storytelling", description: "Production and high-retention editing of monthly promotional videos featuring hook ideation, dynamic typography, and sound design." },
+                { title: "Phase 3: Meta Ads Execution & Analytics Optimization", description: "Targeted Meta Ads campaign deployment, creative A/B testing, lead conversion tracking, and monthly performance reporting." }
+              ]
+            };
+          } else if (isReelPmp) {
+            parsed.payload.pmpStrategy = {
+              overview: `High-retention visual storytelling and short-form video strategy engineered for ${brand} to dominate social algorithms and build brand authority.`,
+              targetAudience: `Audience demographics and social media users across Instagram and YouTube Shorts.`,
+              phases: [
+                { title: "Phase 1: Concept Ideation & Hook Structuring", description: `Researching viral hooks, trending audio, and high-impact scripting tailored to ${brand}.` },
+                { title: "Phase 2: High-Retention Video Editing", description: "Pacing cuts, motion graphics, sound design, color grading, and dynamic captions for maximum watch time." },
+                { title: "Phase 3: Publishing Optimization & Performance Review", description: "Thumbnail curation, hashtag strategy, and engagement retention analysis." }
+              ]
+            };
+          } else {
+            parsed.payload.pmpStrategy = {
+              overview: `Strategic turnkey digital execution engineered for ${brand} to establish market authority and capture high-intent inquiries. This package covers end-to-end deliverables tailored to the client brief.`,
+              targetAudience: `Target demographic and high-intent clients seeking premier services and trusted solutions from ${brand}.`,
+              phases: [
+                { title: "Phase 1: Architecture & UI/UX Design", description: "Bespoke wireframing, property/brand showcase layouts, high-converting lead funnels, and responsive UI prototype sign-off." },
+                { title: "Phase 2: Full-Stack Engineering, SEO & Cloud Infrastructure", description: "Clean web development, custom domain DNS integration, meta tag structuring, Google Search Console indexing, and cloud hosting deployment." },
+                { title: "Phase 3: Live Launch & 30-Day Stability Warranty", description: "Live production deployment, search ranking verification, and 1 full month of dedicated bug fixing, error resolution, and technical maintenance." }
+              ]
+            };
+          }
+        }
+
+        // Auto-generate high-impact tailored cover heading and subtitle
+        if (!parsed.payload.coverHeading) {
+          const b = parsed.payload.brandName || existingFormBrand || '';
+          const combined = (userPrompt + ' ' + b + ' ' + JSON.stringify(parsed.payload.pmpStrategy || '')).toLowerCase();
+          if (combined.includes('real estate') || combined.includes('property')) {
+            parsed.payload.coverHeading = 'Strategic Real Estate Web Platform & Digital Growth';
+          } else if (combined.includes('e-commerce') || combined.includes('ecommerce') || combined.includes('store') || combined.includes('shop')) {
+            parsed.payload.coverHeading = 'Omnichannel Commerce Architecture & Conversion Engine';
+          } else if (combined.includes('brand') || combined.includes('identity')) {
+            parsed.payload.coverHeading = 'Bespoke Brand Identity & Market Authority Blueprint';
+          } else if (combined.includes('video') || combined.includes('media') || combined.includes('production')) {
+            parsed.payload.coverHeading = 'High-Impact Cinematic Media & Creative Production';
+          } else if (b && b.toLowerCase() !== 'client') {
+            parsed.payload.coverHeading = `Strategic ${b} Growth & Digital Architecture`;
+          } else {
+            parsed.payload.coverHeading = 'Strategic Growth & Digital Architecture Proposal';
+          }
+        }
+        if (!parsed.payload.coverSubtitle) {
+          const b = parsed.payload.brandName || existingFormBrand || 'Client';
+          parsed.payload.coverSubtitle = `Prepared Exclusively For ${b}`;
+        }
+
+        // Ensure consultative replyMessage only for quote / package when reply is missing or defaulted
+        const activeItems = parsed.payload.packageTiers?.[0]?.items || parsed.payload.services || [];
+        if (!parsed.replyMessage || parsed.replyMessage.startsWith("Done! I've updated the proposal") || parsed.replyMessage.startsWith("Done! I've processed")) {
+          parsed.replyMessage = buildSmartReplyMessage(parsed.payload.brandName, parsed.payload.totalBudget, activeItems, isSingleReq);
+        }
       }
 
       // Check if user specifically requested to edit the cover heading or subtitle
@@ -1097,12 +1142,6 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         if (formContext?.packageTiers) parsed.payload.packageTiers = formContext.packageTiers;
         if (formContext?.pmpStrategy) parsed.payload.pmpStrategy = formContext.pmpStrategy;
         parsed.replyMessage = `I've updated the proposal cover settings! Cover Heading: **"${parsed.payload.coverHeading}"**, Subtitle: **"${parsed.payload.coverSubtitle}"**.`;
-      }
-
-      // Ensure consultative replyMessage
-      const activeItems = parsed.payload.packageTiers?.[0]?.items || parsed.payload.services || [];
-      if (!parsed.replyMessage || parsed.replyMessage.startsWith("Done! I've updated the proposal") || parsed.replyMessage.startsWith("Done! I've processed") || parsed.replyMessage.length < 60) {
-        parsed.replyMessage = buildSmartReplyMessage(parsed.payload.brandName, parsed.payload.totalBudget, activeItems, isSingleReq);
       }
 
       // Exact budget allocation / scaling if totalBudget is specified
@@ -1204,15 +1243,17 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         const budget = parsed.payload?.totalBudget ? ` with a budget of ₹${parsed.payload.totalBudget.toLocaleString()}` : '';
         const itemCount = parsed.payload?.packageTiers?.[0]?.items?.length || parsed.payload?.services?.length || 0;
         const itemText = itemCount > 0 ? ` with ${itemCount} itemized service deliverables` : '';
-        parsed.replyMessage = `Done! I've structured the proposal${brand}${budget}${itemText} and populated the scope of services and PMP strategy!`;
+        parsed.replyMessage = `I've structured the proposal${brand}${budget}${itemText} and populated the scope of services and PMP strategy!`;
       } else if (parsed.intent === 'invoice') {
-        parsed.replyMessage = "Done! I've updated the invoice with the requested items and client details.";
+        parsed.replyMessage = "I've updated the invoice with the requested items and client details.";
       } else if (parsed.intent === 'email') {
-        parsed.replyMessage = "Done! I've updated the email campaign details.";
+        parsed.replyMessage = "I've updated the email campaign details.";
       } else if (parsed.intent === 'portfolio') {
-        parsed.replyMessage = "Done! I've updated the portfolio entry.";
+        parsed.replyMessage = "I've updated the portfolio entry.";
+      } else if (parsed.intent === 'clear_chat') {
+        parsed.replyMessage = "New chat started! What are we working on today?";
       } else {
-        parsed.replyMessage = "Done! I've processed your request.";
+        parsed.replyMessage = "I'm right here! How can I help you today?";
       }
     }
 
