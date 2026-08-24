@@ -592,6 +592,40 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       return 0;
     };
 
+    // Smart brand / client name extractor from prompt
+    const extractBrandNameFromPrompt = (prompt) => {
+      if (!prompt || typeof prompt !== 'string') return null;
+
+      // Pattern 1: "brand name is XYZ", "brand is XYZ", "client name is XYZ", "brand: XYZ", "client: XYZ", "company is XYZ"
+      const explicitMatch = prompt.match(/(?:brand(?:\s+name)?|client(?:\s+name)?|company(?:\s+name)?)\s*(?:is|:|=|\bas\b)\s*["']?([A-Za-z0-9\s&'.-]+?)(?=["']?(?:[\n\r,.]|\band\b|\bwith\b|\bpricing\b|\bquotation\b|\bquote\b|\bbudget\b|\bfor\b|$))/i);
+      if (explicitMatch && explicitMatch[1]?.trim()) {
+        const val = explicitMatch[1].trim();
+        if (!['a', 'an', 'the', 'my', 'our', 'this', 'client', 'brand'].includes(val.toLowerCase())) {
+          return val.replace(/\b\w/g, l => l.toUpperCase());
+        }
+      }
+
+      // Pattern 2: "called XYZ", "named XYZ"
+      const namedMatch = prompt.match(/(?:named|called)\s+["']?([A-Za-z0-9\s&'.-]+?)(?=["']?(?:[\n\r,.]|\band\b|\bwith\b|\bpricing\b|\bquotation\b|\bquote\b|\bbudget\b|\bfor\b|$))/i);
+      if (namedMatch && namedMatch[1]?.trim()) {
+        const val = namedMatch[1].trim();
+        if (!['a', 'an', 'the', 'template', 'package', 'client'].includes(val.toLowerCase())) {
+          return val.replace(/\b\w/g, l => l.toUpperCase());
+        }
+      }
+
+      // Pattern 3: "for [a] [Brand] Brand/Company" or "for Akaaya Events"
+      const forMatch = prompt.match(/(?:for\s+(?:a\s+|an\s+)?)([A-Za-z0-9\s&'.-]+?)(?:\s+brand|\s+company|\s+business|[\n\r,.]|\band\b|\bwith\b|\bpricing\b|\bquote\b|\bbudget\b|$)/i);
+      if (forMatch && forMatch[1]?.trim()) {
+        const val = forMatch[1].trim();
+        if (!['a', 'an', 'the', 'my', 'our', 'client', 'project', 'him', 'her', 'them', 'me', 'us', 'single', 'monthly'].includes(val.toLowerCase())) {
+          return val.replace(/\b\w/g, l => l.toUpperCase());
+        }
+      }
+
+      return null;
+    };
+
     // Smart deliverable extractor with realistic weighted pricing & domain-aware single-service support
     const generateFallbackDeliverables = (prompt, targetBudget = 0) => {
       const p = (prompt || '').toLowerCase();
@@ -806,18 +840,56 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         (pLower.includes('strategy') && (pLower.includes('single') || pLower.includes('one') || pLower.includes('bundle')))
       );
 
-      // Infer brand name if generic
-      if (!parsed.payload.brandName || parsed.payload.brandName.toLowerCase() === 'client project' || parsed.payload.brandName.toLowerCase() === 'brand') {
+      // 1. Prioritize explicit brand name from prompt, then AI output, then existing form context
+      const extractedBrand = extractBrandNameFromPrompt(userPrompt);
+      if (extractedBrand) {
+        parsed.payload.brandName = extractedBrand;
+      } else if (!parsed.payload.brandName || ['client project', 'client', 'brand', 'standard'].includes(parsed.payload.brandName.toLowerCase())) {
         if (existingFormBrand) {
           parsed.payload.brandName = existingFormBrand;
-        } else {
-          const brandMatch = userPrompt.match(/(?:for\s+(?:a\s+)?)([a-zA-Z0-9\s]+?)(?:\s+brand|\s+company|\s+business|\.|\,|$)/i);
-          if (brandMatch && brandMatch[1]) {
-            parsed.payload.brandName = brandMatch[1].trim().replace(/\b\w/g, l => l.toUpperCase()) + (brandMatch[1].toLowerCase().includes('brand') ? '' : ' Brand');
-          } else if (pLower.includes('real estate')) {
-            parsed.payload.brandName = 'Real Estate Brand';
-          }
+        } else if (pLower.includes('real estate')) {
+          parsed.payload.brandName = 'Real Estate Brand';
         }
+      }
+
+      // 2. Prioritize packageType from prompt
+      if (pLower.includes('monthly') || pLower.includes('per month') || pLower.includes('/month') || pLower.includes('retainer') || pLower.includes('month-on-month')) {
+        parsed.payload.packageType = 'monthly';
+      } else if ((pLower.includes('project') && !pLower.includes('monthly project')) || pLower.includes('one-time') || pLower.includes('one time') || pLower.includes('fixed')) {
+        parsed.payload.packageType = 'project';
+      } else if (formContext?.packageType) {
+        parsed.payload.packageType = formContext.packageType;
+      }
+
+      // 3. Multi-turn refinement preservation: if user didn't specify new items but is refining brand/packageType/notes, preserve existing items from formContext
+      const hasExistingItems = (formContext?.packageTiers && formContext.packageTiers.length > 0 && (formContext.packageTiers[0]?.items || []).length > 0) || (formContext?.services && formContext.services.length > 0);
+      const isRefinementOnly = (
+        extractedBrand ||
+        pLower.includes('monthly') ||
+        pLower.includes('package type') ||
+        pLower.includes('brand name') ||
+        pLower.includes('client name') ||
+        pLower.includes('make it monthly') ||
+        pLower.includes('change to') ||
+        pLower.includes('update to')
+      );
+
+      const itemsInPayload = (parsed.payload.packageTiers?.[0]?.items?.length || 0) + (parsed.payload.services?.length || 0);
+      if (itemsInPayload === 0 && hasExistingItems && isRefinementOnly) {
+        parsed.payload.packageTiers = JSON.parse(JSON.stringify(formContext.packageTiers || []));
+        parsed.payload.services = JSON.parse(JSON.stringify(formContext.services || formContext.packageTiers?.[0]?.items || []));
+        parsed.payload.totalBudget = parsed.payload.totalBudget || existingFormBudget;
+        parsed.payload.pmpStrategy = parsed.payload.pmpStrategy || formContext?.pmpStrategy;
+        
+        // Update the tier name if brandName changed
+        if (parsed.payload.brandName && parsed.payload.packageTiers.length > 0) {
+          parsed.payload.packageTiers[0].name = `${parsed.payload.brandName} Package`;
+        }
+
+        const bName = parsed.payload.brandName || 'your project';
+        const typeText = parsed.payload.packageType === 'monthly' ? 'Monthly Retainer' : 'Project Proposal';
+        const budgetText = parsed.payload.totalBudget ? ` (₹${parsed.payload.totalBudget.toLocaleString()}${parsed.payload.packageType === 'monthly' ? '/mo' : ''})` : '';
+        parsed.replyMessage = `I've updated the proposal for **${bName}**! Configured as a **${typeText}**${budgetText} with all your scope of services and strategy pitch preserved.`;
       }
 
       // Check if user requested saving as a template
