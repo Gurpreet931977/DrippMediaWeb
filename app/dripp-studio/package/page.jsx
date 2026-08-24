@@ -41,24 +41,29 @@ export default function PackageMaker() {
       setIncludePMP(true);
     }
     
-    // Number parser helper for amounts
+    // Number parser helper for amounts (e.g. "24k", "24 K", "24,000", "₹24000", "1.5L", "2 Lakhs", etc.)
     const parseNum = (val) => {
-      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      if (typeof val === 'number') return isNaN(val) ? 0 : Math.round(val);
       if (!val || typeof val !== 'string') return 0;
-      const cleaned = val.toLowerCase().replace(/,/g, '').trim();
-      if (cleaned.endsWith('k')) {
-        const num = parseFloat(cleaned.slice(0, -1));
-        return isNaN(num) ? 0 : Math.round(num * 1000);
-      }
-      if (cleaned.endsWith('m') || cleaned.endsWith('cr')) {
-        const num = parseFloat(cleaned.slice(0, -2));
-        return isNaN(num) ? 0 : Math.round(num * 1000000);
-      }
-      if (cleaned.endsWith('l') || cleaned.endsWith('lac') || cleaned.endsWith('lakh')) {
-        const num = parseFloat(cleaned.replace(/lakh|lac|l/, ''));
-        return isNaN(num) ? 0 : Math.round(num * 100000);
-      }
-      const match = cleaned.match(/[\d.]+/);
+      const str = val.trim();
+      if (!str) return 0;
+
+      const crMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:cr\b|crores?)/i);
+      if (crMatch) return Math.round(parseFloat(crMatch[1]) * 10000000);
+
+      const mMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:m\b|millions?)/i);
+      if (mMatch) return Math.round(parseFloat(mMatch[1]) * 1000000);
+
+      const lakhMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:lakhs?|lacs?|lac\b|l\b)/i);
+      if (lakhMatch) return Math.round(parseFloat(lakhMatch[1]) * 100000);
+
+      const kMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:k\b|thousands?)/i);
+      if (kMatch) return Math.round(parseFloat(kMatch[1]) * 1000);
+
+      const currMatch = str.match(/(?:₹|rs\.?|inr)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?)/i);
+      if (currMatch) return Math.round(parseFloat(currMatch[1].replace(/,/g, '')));
+
+      const match = str.replace(/,/g, '').match(/\b\d+(?:\.\d+)?\b/);
       if (match) {
         const num = parseFloat(match[0]);
         return isNaN(num) ? 0 : Math.round(num);

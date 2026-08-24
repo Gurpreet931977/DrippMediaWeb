@@ -184,30 +184,31 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
 
   - **FLEXIBLE PACKAGING MODES**:
     1. **SINGLE-SERVICE MODE**: If user explicitly asks for a "single service", "all in one package", "one line item", "bundle it into one", or asks to "define details in PMP / strategy and keep a single service":
-       - packageTiers: Output EXACTLY 1 comprehensive tier with 1 bundled service item (e.g. "Turnkey Web Development & Digital Growth Package", qty: 1, rate: totalBudget).
+       - packageTiers: Output EXACTLY 1 comprehensive tier with 1 bundled service item matching the user's specific requested domain and deliverables (e.g. for Social Media: "Comprehensive Social Media Management & Creative Growth Retainer", for Video: "Complete High-Retention Video Production Retainer", for Web: "Full-Stack Web Development & Launch Package").
+       - The single item's name and desc: Professional all-inclusive title for the user's requested services.
+       - The single item's qty: 1.
+       - The single item's rate: totalBudget (the exact total amount specified by user, e.g. 24000 if 24k requested).
+       - The single item's details: MUST summarize the ACTUAL requested deliverables from the prompt (e.g. "Comprehensive management across Facebook, Instagram & LinkedIn, 4 creatives + stories on alternate days, 8 promotional videos/month, Meta Ads campaign execution & analytics, and 4 promotional posters").
        - services: Exactly 1 service item at rate = totalBudget.
-       - pmpStrategy: Provide a deep, extensive, itemized breakdown across all deliverables (UI/UX design, custom frontend development, domain setup, cloud hosting, SEO indexing, and 30-day maintenance warranty) directly in the overview and phases.
+       - pmpStrategy: Provide a deep, extensive, itemized breakdown tailored specifically to the requested domain (overview, targetAudience, and 3 structured phases) directly in the overview and phases.
     2. **ITEMIZED MODE (DEFAULT)**: If user does NOT specify a single service:
        - Break down ALL requested deliverables into distinct service items with appropriate, realistic weighted rates (DO NOT divide budget evenly).
-       - Core deliverable (e.g. Custom Website Design & Development) should represent ~50-60% of total budget.
-       - SEO / Marketing setups should represent ~15-20%.
-       - Infrastructure (Domain, Hosting, SSL) should represent ~10-15%.
-       - Maintenance / Warranty support should represent ~10%.
+       - Core deliverable should represent ~50-60% of total budget.
        - The sum of (qty * rate) across all items in a tier MUST equal the totalBudget to the exact rupee!
     
     For each item in items:
-      - name: Clear, professional title of the deliverable (e.g. "Custom Designed Website (Basic-Intermediate)", "Basic Search Engine Optimization (SEO)", "Domain Implementation & DNS Configuration", "High-Performance Cloud Web Hosting", "1 Month Maintenance & Bug Fixing Warranty")
+      - name: Clear, professional title of the deliverable
       - desc: Same clear title
       - qty: Integer (usually 1)
       - rate: Realistic integer price for this item (rates MUST sum to totalBudget)
       - details: Professional 1-2 sentence description of what is included in this deliverable.
   - services: Flat array of all the service items above (for cross-compatibility).
-  - coverHeading: High-impact, elevated proposal cover page heading tailored specifically to the project type and client's brand (e.g. for real estate: "Strategic Real Estate Web Platform & Digital Growth", for luxury fitness: "Elevated Brand Experience & Digital Acquisition Strategy", for e-commerce: "Omnichannel Commerce Platform & Conversion Architecture").
+  - coverHeading: High-impact, elevated proposal cover page heading tailored specifically to the project type and client's brand (e.g. for social media: "Strategic Social Media Growth & Brand Authority Blueprint", for real estate: "Strategic Real Estate Web Platform & Digital Growth", for luxury fitness: "Elevated Brand Experience & Digital Acquisition Strategy", for video: "High-Impact Cinematic Media & Creative Production").
   - coverSubtitle: Elegant subtitle (e.g. "Prepared Exclusively For [Brand Name]").
   - pmpStrategy: A rich, bespoke marketing/project strategy object tailored directly to the client's industry:
     - overview: 2-3 sentences explaining the strategic vision, lead generation approach, and brand authority positioning.
-    - targetAudience: Specific description of the target demographic/customers (e.g. for real estate: high-net-worth property buyers and investors).
-    - phases: Array of 3-4 structured phases ({ "title": "Phase 1: Architecture & UI/UX Design", "description": "..." }, { "title": "Phase 2: Development, SEO & Cloud Deployment", "description": "..." }, { "title": "Phase 3: Launch & 30-Day Stability Warranty", "description": "..." }).
+    - targetAudience: Specific description of the target demographic/customers.
+    - phases: Array of 3-4 structured phases ({ "title": "Phase 1: ...", "description": "..." }, { "title": "Phase 2: ...", "description": "..." }, { "title": "Phase 3: ...", "description": "..." }).
 - In "replyMessage": DO NOT give a lazy one-line response like "Done". Respond like an elite agency strategist and co-founder!
   - If single-service mode: explain that the package was bundled into 1 single service with all granular deliverables mapped in the Strategy & Concept Pitch.
   - If itemized mode: break down the proposed scope with bullet points and realistic pricing for each item.
@@ -529,66 +530,139 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       };
     }
 
-    // Number parser helper for budgets and rates (handles "15k", "15 K", "15,000", "₹15000", "1.5L", etc.)
+    // Robust number parser helper for budgets and rates (handles "24k", "24 K", "24,000", "₹24000", "1.5L", "2 Lakhs", "1.2 Cr", full sentences, etc.)
     const parseAmountNumber = (val) => {
-      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      if (typeof val === 'number') return isNaN(val) ? 0 : Math.round(val);
       if (!val || typeof val !== 'string') return 0;
-      const cleaned = val.toLowerCase().replace(/,/g, '').trim();
-      if (cleaned.endsWith('k')) {
-        const num = parseFloat(cleaned.slice(0, -1));
-        return isNaN(num) ? 0 : Math.round(num * 1000);
-      }
-      if (cleaned.endsWith('m') || cleaned.endsWith('cr')) {
-        const num = parseFloat(cleaned.slice(0, -2));
-        return isNaN(num) ? 0 : Math.round(num * 1000000);
-      }
-      if (cleaned.endsWith('l') || cleaned.endsWith('lac') || cleaned.endsWith('lakh')) {
-        const num = parseFloat(cleaned.replace(/lakh|lac|l/, ''));
-        return isNaN(num) ? 0 : Math.round(num * 100000);
-      }
-      const match = cleaned.match(/[\d.]+/);
+      const str = val.trim();
+      if (!str) return 0;
+
+      // Check for Crore (e.g. "1.5 cr", "2 crores")
+      const crMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:cr\b|crores?)/i);
+      if (crMatch) return Math.round(parseFloat(crMatch[1]) * 10000000);
+
+      // Check for Million (e.g. "1.5m", "2 millions")
+      const mMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:m\b|millions?)/i);
+      if (mMatch) return Math.round(parseFloat(mMatch[1]) * 1000000);
+
+      // Check for Lakh / Lac (e.g. "1.5L", "2.5 lakh", "3 lacs")
+      const lakhMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:lakhs?|lacs?|lac\b|l\b)/i);
+      if (lakhMatch) return Math.round(parseFloat(lakhMatch[1]) * 100000);
+
+      // Check for K / Thousand (e.g. "24k", "24 K", "24 thousand")
+      const kMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:k\b|thousands?)/i);
+      if (kMatch) return Math.round(parseFloat(kMatch[1]) * 1000);
+
+      // Check for currency formatted numbers (e.g. "₹24,000", "24,000", "₹ 24000", "Rs 24000")
+      const currMatch = str.match(/(?:₹|rs\.?|inr)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?)/i);
+      if (currMatch) return Math.round(parseFloat(currMatch[1].replace(/,/g, '')));
+
+      // Check for standalone numbers (e.g. "24000")
+      const match = str.replace(/,/g, '').match(/\b\d+(?:\.\d+)?\b/);
       if (match) {
         const num = parseFloat(match[0]);
         return isNaN(num) ? 0 : Math.round(num);
       }
+
       return 0;
     };
 
-    // Smart deliverable extractor with realistic weighted pricing & single-service support
-    const generateFallbackDeliverables = (prompt, targetBudget = 15000) => {
+    // Smart deliverable extractor with realistic weighted pricing & domain-aware single-service support
+    const generateFallbackDeliverables = (prompt, targetBudget = 0) => {
       const p = (prompt || '').toLowerCase();
       const items = [];
 
+      const isSocial = p.includes('social') || p.includes('instagram') || p.includes('facebook') || p.includes('linkedin') || p.includes('meta') || p.includes('smm') || p.includes('management');
       const isRealEstate = p.includes('real estate') || p.includes('property') || p.includes('housing') || p.includes('realtor') || p.includes('builder');
       const isWeb = p.includes('web') || p.includes('site') || p.includes('development') || p.includes('landing') || p.includes('redesign');
       const isSEO = p.includes('seo') || p.includes('search') || p.includes('google') || p.includes('rank');
       const isDomain = p.includes('domain') || p.includes('dns') || p.includes('ssl');
       const isHosting = p.includes('host') || p.includes('server') || p.includes('cloud');
       const isMaintenance = p.includes('maintenance') || p.includes('bug') || p.includes('error') || p.includes('fixing') || p.includes('support');
-      const isReels = p.includes('reel') || p.includes('tiktok') || p.includes('short') || p.includes('video');
-      const isGraphic = p.includes('graphic') || p.includes('design') || p.includes('post') || p.includes('carousel') || p.includes('branding');
+      const isReels = p.includes('reel') || p.includes('tiktok') || p.includes('short') || p.includes('video') || p.includes('promotional video');
+      const isGraphic = p.includes('graphic') || p.includes('design') || p.includes('post') || p.includes('poster') || p.includes('creative') || p.includes('carousel') || p.includes('branding');
 
       // Check if user specifically requested a single bundled service
       const isSingleService = p.includes('single service') || p.includes('single item') || p.includes('one service') || p.includes('one line item') || p.includes('bundle it') || p.includes('single package') || p.includes('one package item') || (p.includes('in pmp') && (p.includes('single') || p.includes('one'))) || p.includes('as a single') || p.includes('bundled into one');
 
-      const budget = targetBudget || 15000;
+      const budget = targetBudget || parseAmountNumber(prompt) || 20000;
 
       if (isSingleService) {
-        let singleTitle = 'Turnkey Web Development & Digital Growth Package';
-        if (isRealEstate) singleTitle = 'Turnkey Real Estate Web & Digital Growth Package';
-        else if (isReels) singleTitle = 'Complete High-Retention Video & Social Growth Package';
-        else if (isGraphic) singleTitle = 'Full-Suite Brand Identity & Creative Package';
+        let singleTitle = 'Turnkey Digital Growth & Marketing Package';
+        let singleDetails = 'Comprehensive turnkey execution tailored to client deliverables and strategic goals.';
+
+        if (isSocial && (isReels || isGraphic)) {
+          singleTitle = 'Complete Social Media Management & Creative Growth Retainer';
+          singleDetails = 'End-to-end multi-platform social media management (Facebook, Instagram & LinkedIn), content creation, promotional videos, posters & creatives, Meta Ads execution and performance analysis.';
+        } else if (isSocial) {
+          singleTitle = 'Comprehensive Social Media Management Retainer';
+          singleDetails = 'Dedicated multi-platform management, regular content publishing, audience engagement, Meta Ads management, and monthly performance reporting.';
+        } else if (isRealEstate) {
+          singleTitle = 'Turnkey Real Estate Web & Digital Growth Package';
+          singleDetails = 'High-converting real estate web platform, lead capture architecture, local SEO, and technical infrastructure.';
+        } else if (isReels) {
+          singleTitle = 'Complete High-Retention Video Production Retainer';
+          singleDetails = 'End-to-end video ideation, high-retention editing, motion graphics, sound design, and color grading.';
+        } else if (isGraphic) {
+          singleTitle = 'Full-Suite Brand Identity & Creative Design Package';
+          singleDetails = 'Bespoke brand identity design, social marketing creatives, promotional collateral, and style guide.';
+        } else if (isWeb) {
+          singleTitle = 'Turnkey Web Development & Digital Growth Package';
+          singleDetails = 'Bespoke UI/UX design, custom web development, domain setup, cloud hosting, and on-page SEO ranking.';
+        }
 
         return [{
           name: singleTitle,
           desc: singleTitle,
           qty: 1,
           rate: budget,
-          details: 'Comprehensive end-to-end delivery including bespoke UI/UX design, custom web development, domain DNS setup, cloud hosting, on-page SEO ranking, and 30-day maintenance warranty (detailed in Strategy & Concept Pitch).'
+          details: singleDetails
         }];
       }
 
-      if (isWeb) {
+      if (isSocial) {
+        items.push({
+          name: 'Social Media Management & Strategy (FB, IG & LinkedIn)',
+          desc: 'Social Media Management & Strategy (FB, IG & LinkedIn)',
+          qty: 1,
+          weight: 35,
+          details: 'Multi-channel account management, content scheduling, and community engagement across Facebook, Instagram, and LinkedIn.'
+        });
+      }
+
+      if (isReels) {
+        const countMatch = p.match(/(\d+)\s*(?:reels?|shorts?|videos?|promotional\s*videos?)/i);
+        const count = countMatch ? parseInt(countMatch[1]) : 8;
+        items.push({
+          name: `High-Retention Video Editing (${count} Videos/Month)`,
+          desc: `High-Retention Video Editing (${count} Videos/Month)`,
+          qty: count,
+          weight: 35,
+          details: 'Scripting hooks, pacing cuts, kinetic subtitles, sound design, and color grading.'
+        });
+      }
+
+      if (isGraphic) {
+        items.push({
+          name: 'Creative Graphic Design & Promotional Posters',
+          desc: 'Creative Graphic Design & Promotional Posters',
+          qty: 1,
+          weight: 20,
+          details: 'Bespoke promotional posters, social feed creatives, and story layouts.'
+        });
+      }
+
+      if (p.includes('meta') || p.includes('ads') || p.includes('campaign')) {
+        items.push({
+          name: 'Meta Ads Campaign Execution & Analytics',
+          desc: 'Meta Ads Campaign Execution & Analytics',
+          qty: 1,
+          weight: 20,
+          details: 'Targeting setup, ad campaign management, A/B testing, and monthly performance tracking (ad spend separate).'
+        });
+      }
+
+      if (isWeb && items.length === 0) {
         items.push({
           name: isRealEstate ? 'Custom Designed Real Estate Website (Basic-Intermediate)' : 'Custom Designed Website (Basic-Intermediate)',
           desc: isRealEstate ? 'Custom Designed Real Estate Website (Basic-Intermediate)' : 'Custom Designed Website (Basic-Intermediate)',
@@ -598,7 +672,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         });
       }
 
-      if (isSEO) {
+      if (isSEO && items.length <= 2) {
         items.push({
           name: 'Basic Search Engine Optimization (SEO)',
           desc: 'Basic Search Engine Optimization (SEO)',
@@ -608,7 +682,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         });
       }
 
-      if (isDomain) {
+      if (isDomain && items.length <= 2) {
         items.push({
           name: 'Domain Implementation & DNS Configuration',
           desc: 'Domain Implementation & DNS Configuration',
@@ -618,7 +692,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         });
       }
 
-      if (isHosting) {
+      if (isHosting && items.length <= 2) {
         items.push({
           name: 'High-Performance Cloud Web Hosting',
           desc: 'High-Performance Cloud Web Hosting',
@@ -628,7 +702,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         });
       }
 
-      if (isMaintenance) {
+      if (isMaintenance && items.length <= 2) {
         items.push({
           name: '1 Month Maintenance & Bug Fixing Warranty',
           desc: '1 Month Maintenance & Bug Fixing Warranty',
@@ -638,32 +712,10 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         });
       }
 
-      if (isReels && items.length === 0) {
-        const countMatch = p.match(/(\d+)\s*(?:reels?|shorts?|videos?)/i);
-        const count = countMatch ? parseInt(countMatch[1]) : 5;
-        items.push({
-          name: `High-Retention Short-Form Content (${count} Reels)`,
-          desc: `High-Retention Short-Form Content (${count} Reels)`,
-          qty: count,
-          weight: 70,
-          details: 'Concept ideation, dynamic typography, pacing edits, sound design, and color grading.'
-        });
-      }
-
-      if (isGraphic && items.length === 0) {
-        items.push({
-          name: 'Creative Graphic Design & Brand Identity Assets',
-          desc: 'Creative Graphic Design & Brand Identity Assets',
-          qty: 1,
-          weight: 70,
-          details: 'Bespoke promotional visuals, brand assets, and engaging social layouts.'
-        });
-      }
-
       if (items.length === 0) {
         items.push(
-          { name: 'Core Project Architecture & Design', desc: 'Core Project Architecture & Design', qty: 1, weight: 60, details: 'Full project execution and custom deliverables as per client brief.' },
-          { name: 'Technical Setup & Cloud Deployment', desc: 'Technical Setup & Cloud Deployment', qty: 1, weight: 25, details: 'High-fidelity execution, deployment, and testing.' },
+          { name: 'Core Project Architecture & Execution', desc: 'Core Project Architecture & Execution', qty: 1, weight: 60, details: 'Full project execution and custom deliverables as per client brief.' },
+          { name: 'Creative Development & Technical Setup', desc: 'Creative Development & Technical Setup', qty: 1, weight: 25, details: 'High-fidelity execution, creative assets, and testing.' },
           { name: 'Post-Launch Support & Optimization', desc: 'Post-Launch Support & Optimization', qty: 1, weight: 15, details: 'Review, error monitoring, and performance checks.' }
         );
       }
@@ -688,15 +740,15 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
     const buildSmartReplyMessage = (brandName, totalBudget, items, isSingleMode) => {
       const brand = brandName || 'the client';
       const currencySymbol = '₹';
-      const formattedBudget = `${currencySymbol}${Number(totalBudget || 15000).toLocaleString()}`;
+      const formattedBudget = `${currencySymbol}${Number(totalBudget || 0).toLocaleString()}`;
       
       if (isSingleMode) {
-        const singleItem = items?.[0] || { name: 'Turnkey Digital Growth Package', rate: totalBudget };
-        return `I've packaged the entire project into a **single turnkey service item (${currencySymbol}${Number(singleItem.rate || totalBudget).toLocaleString()})** for ${brand} as requested!\n\n• **${singleItem.name}** — ${singleItem.details || 'Complete end-to-end execution.'}\n\nAll granular components (UI/UX Design, Development, Domain, Cloud Hosting, SEO Indexing, and 30-Day Maintenance) are thoroughly mapped out in the **Strategy & Concept Pitch (PMP)** section on the left. Everything is ready for client review!`;
+        const singleItem = items?.[0] || { name: 'Turnkey Growth Package', rate: totalBudget, details: 'Comprehensive end-to-end execution.' };
+        return `I've packaged the entire project into a **single turnkey service item (${currencySymbol}${Number(singleItem.rate || totalBudget).toLocaleString()})** for ${brand} as requested!\n\n• **${singleItem.name}** — ${singleItem.details || 'Comprehensive end-to-end delivery.'}\n\nAll granular components and strategic phases are thoroughly mapped out in the **Strategy & Concept Pitch (PMP)** section on the left. Everything is ready for client review!`;
       }
 
       const breakdown = (items || []).map(it => `• **${it.name || it.desc}** (${currencySymbol}${Number(it.rate || 0).toLocaleString()}) — ${it.details || 'Full implementation and delivery.'}`).join('\n');
-      return `I've structured a complete ${formattedBudget} proposal tailored for ${brand}!\n\nHere is the strategic scope and pricing breakdown:\n${breakdown}\n\nI also populated the **Strategy & Concept Pitch** section with a customized 3-phase digital blueprint (UI/UX Architecture, SEO & Cloud Infrastructure, and 30-Day Stability Warranty). Everything is loaded directly into your proposal form ready for review!`;
+      return `I've structured a complete ${formattedBudget} proposal tailored for ${brand}!\n\nHere is the strategic scope and pricing breakdown:\n${breakdown}\n\nI also populated the **Strategy & Concept Pitch** section with a customized strategic blueprint. Everything is loaded directly into your proposal form ready for review!`;
     };
 
     // Auto-normalize and validate payload for quote, package, and invoice
@@ -840,17 +892,49 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         }
       }
 
-      // If user requested a single service, override multiple tiers/services into a single bundled line item
-      if (isSingleReq && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0 && !isSaveTemplateReq && !isEditOrNoteReq) {
-        const budgetVal = parsed.payload.totalBudget || existingFormBudget || parseAmountNumber(userPrompt) || 15000;
-        const brandName = parsed.payload.brandName || existingFormBrand || 'Real Estate Brand';
-        const singleDeliverable = {
-          name: pLower.includes('real estate') || (existingFormBrand && existingFormBrand.toLowerCase().includes('real estate')) ? 'Turnkey Real Estate Web & Digital Growth Package' : 'Turnkey Web Development & Digital Growth Package',
-          desc: pLower.includes('real estate') || (existingFormBrand && existingFormBrand.toLowerCase().includes('real estate')) ? 'Turnkey Real Estate Web & Digital Growth Package' : 'Turnkey Web Development & Digital Growth Package',
-          qty: 1,
-          rate: budgetVal,
-          details: 'Comprehensive end-to-end delivery including bespoke UI/UX design, custom web development, domain DNS setup, cloud hosting, on-page SEO ranking, and 30-day maintenance warranty (detailed in Strategy & Concept Pitch).'
-        };
+      // If user requested a single service, normalize tiers/services into a single bundled line item
+      if (isSingleReq && !isSaveTemplateReq && !isEditOrNoteReq) {
+        const promptBudget = parseAmountNumber(userPrompt);
+        const budgetVal = parsed.payload.totalBudget || promptBudget || existingFormBudget || 20000;
+        const brandName = parsed.payload.brandName || existingFormBrand || 'Client';
+        
+        let singleDeliverable = null;
+        // Check if AI already produced exactly 1 service/tier item matching the prompt
+        if (parsed.payload.services && parsed.payload.services.length === 1) {
+          const s = parsed.payload.services[0];
+          singleDeliverable = {
+            name: s.name || s.desc || 'Turnkey Marketing & Growth Package',
+            desc: s.desc || s.name || 'Turnkey Marketing & Growth Package',
+            qty: 1,
+            rate: budgetVal,
+            details: s.details || 'Comprehensive turnkey execution as per client brief.'
+          };
+        } else if (parsed.payload.packageTiers && parsed.payload.packageTiers.length === 1 && parsed.payload.packageTiers[0].items?.length === 1) {
+          const s = parsed.payload.packageTiers[0].items[0];
+          singleDeliverable = {
+            name: s.name || s.desc || 'Turnkey Marketing & Growth Package',
+            desc: s.desc || s.name || 'Turnkey Marketing & Growth Package',
+            qty: 1,
+            rate: budgetVal,
+            details: s.details || 'Comprehensive turnkey execution as per client brief.'
+          };
+        } else if (parsed.payload.services && parsed.payload.services.length > 1) {
+          // AI produced multiple items; bundle them together cleanly
+          const combinedNames = parsed.payload.services.map(s => s.name || s.desc).filter(Boolean);
+          const combinedDetails = parsed.payload.services.map(s => s.details).filter(Boolean).join('; ');
+          const title = combinedNames[0]?.includes('Social') ? 'Comprehensive Social Media Management & Creative Growth Retainer' : (combinedNames[0] || 'Complete Turnkey Growth Package');
+          singleDeliverable = {
+            name: title,
+            desc: title,
+            qty: 1,
+            rate: budgetVal,
+            details: combinedDetails || `Comprehensive turnkey execution including ${combinedNames.join(', ')}.`
+          };
+        } else {
+          const fallback = generateFallbackDeliverables(userPrompt, budgetVal);
+          singleDeliverable = fallback[0];
+        }
+
         parsed.payload.totalBudget = budgetVal;
         parsed.payload.services = [singleDeliverable];
         parsed.payload.packageTiers = [{
@@ -931,8 +1015,8 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         itemCount = parsed.payload.services.length;
       }
 
-      if (itemCount === 0 && (parsed.intent === 'quote' || parsed.intent === 'package' || parsed.payload.totalBudget > 0 || currentPath.includes('quote') || currentPath.includes('package') || userPrompt.toLowerCase().includes('quotation') || userPrompt.toLowerCase().includes('package') || userPrompt.toLowerCase().includes('website') || userPrompt.toLowerCase().includes('development'))) {
-        const fallbackBudget = parsed.payload.totalBudget || parseAmountNumber(userPrompt) || 15000;
+      if (itemCount === 0 && (parsed.intent === 'quote' || parsed.intent === 'package' || parsed.payload.totalBudget > 0 || currentPath.includes('quote') || currentPath.includes('package') || userPrompt.toLowerCase().includes('quotation') || userPrompt.toLowerCase().includes('package') || userPrompt.toLowerCase().includes('website') || userPrompt.toLowerCase().includes('development') || userPrompt.toLowerCase().includes('social'))) {
+        const fallbackBudget = parsed.payload.totalBudget || parseAmountNumber(userPrompt) || 20000;
         const fallbackItems = generateFallbackDeliverables(userPrompt, fallbackBudget);
         parsed.payload.totalBudget = fallbackBudget;
         parsed.payload.services = fallbackItems;
@@ -943,17 +1027,42 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       }
 
       // Ensure rich Strategy & Concept Pitch (PMP strategy)
-      if (!parsed.payload.pmpStrategy || typeof parsed.payload.pmpStrategy !== 'object' || !parsed.payload.pmpStrategy.phases || parsed.payload.pmpStrategy.phases.length === 0 || isSingleReq) {
-        const brand = parsed.payload.brandName || 'Real Estate Brand';
-        parsed.payload.pmpStrategy = {
-          overview: `Strategic turnkey digital execution engineered for ${brand} to establish market authority and capture high-intent inquiries. This package covers end-to-end deliverables: bespoke UI/UX design, responsive frontend web development, domain DNS setup, high-speed cloud hosting, on-page SEO ranking, and a 30-day post-launch maintenance warranty.`,
-          targetAudience: `Target demographic and high-intent clients seeking premier services and trusted solutions from ${brand}.`,
-          phases: [
-            { title: "Phase 1: Architecture & UI/UX Design", description: "Bespoke wireframing, property/brand showcase layouts, high-converting lead funnels, and responsive UI prototype sign-off." },
-            { title: "Phase 2: Full-Stack Engineering, SEO & Cloud Infrastructure", description: "Clean web development, custom domain DNS integration, meta tag structuring, Google Search Console indexing, and cloud hosting deployment." },
-            { title: "Phase 3: Live Launch & 30-Day Stability Warranty", description: "Live production deployment, search ranking verification, and 1 full month of dedicated bug fixing, error resolution, and technical maintenance." }
-          ]
-        };
+      if (!parsed.payload.pmpStrategy || typeof parsed.payload.pmpStrategy !== 'object' || !parsed.payload.pmpStrategy.phases || parsed.payload.pmpStrategy.phases.length === 0) {
+        const brand = parsed.payload.brandName || existingFormBrand || 'Client';
+        const isSocialPmp = pLower.includes('social') || pLower.includes('media') || pLower.includes('instagram') || pLower.includes('facebook') || pLower.includes('ads') || pLower.includes('meta') || pLower.includes('smm');
+        const isReelPmp = pLower.includes('reel') || pLower.includes('video') || pLower.includes('short');
+
+        if (isSocialPmp) {
+          parsed.payload.pmpStrategy = {
+            overview: `Comprehensive social media growth and performance marketing strategy for ${brand}. Designed to scale organic reach, create high-retention promotional videos, and generate high-intent inquiries via Meta Ads campaign management.`,
+            targetAudience: `Target demographics, potential customers, and social media audiences across Instagram, Facebook, and LinkedIn.`,
+            phases: [
+              { title: "Phase 1: Content Architecture & Brand Aesthetics", description: "Strategic content calendar formulation, feed aesthetic curation, story scheduling, and custom promotional posters." },
+              { title: "Phase 2: Video Production & Dynamic Storytelling", description: "Production and high-retention editing of monthly promotional videos featuring hook ideation, dynamic typography, and sound design." },
+              { title: "Phase 3: Meta Ads Execution & Analytics Optimization", description: "Targeted Meta Ads campaign deployment, creative A/B testing, lead conversion tracking, and monthly performance reporting." }
+            ]
+          };
+        } else if (isReelPmp) {
+          parsed.payload.pmpStrategy = {
+            overview: `High-retention visual storytelling and short-form video strategy engineered for ${brand} to dominate social algorithms and build brand authority.`,
+            targetAudience: `Audience demographics and social media users across Instagram and YouTube Shorts.`,
+            phases: [
+              { title: "Phase 1: Concept Ideation & Hook Structuring", description: `Researching viral hooks, trending audio, and high-impact scripting tailored to ${brand}.` },
+              { title: "Phase 2: High-Retention Video Editing", description: "Pacing cuts, motion graphics, sound design, color grading, and dynamic captions for maximum watch time." },
+              { title: "Phase 3: Publishing Optimization & Performance Review", description: "Thumbnail curation, hashtag strategy, and engagement retention analysis." }
+            ]
+          };
+        } else {
+          parsed.payload.pmpStrategy = {
+            overview: `Strategic turnkey digital execution engineered for ${brand} to establish market authority and capture high-intent inquiries. This package covers end-to-end deliverables tailored to the client brief.`,
+            targetAudience: `Target demographic and high-intent clients seeking premier services and trusted solutions from ${brand}.`,
+            phases: [
+              { title: "Phase 1: Architecture & UI/UX Design", description: "Bespoke wireframing, property/brand showcase layouts, high-converting lead funnels, and responsive UI prototype sign-off." },
+              { title: "Phase 2: Full-Stack Engineering, SEO & Cloud Infrastructure", description: "Clean web development, custom domain DNS integration, meta tag structuring, Google Search Console indexing, and cloud hosting deployment." },
+              { title: "Phase 3: Live Launch & 30-Day Stability Warranty", description: "Live production deployment, search ranking verification, and 1 full month of dedicated bug fixing, error resolution, and technical maintenance." }
+            ]
+          };
+        }
       }
 
       // Auto-generate high-impact tailored cover heading and subtitle
