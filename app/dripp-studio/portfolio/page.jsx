@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2, BookOpen, Info, Crop } from 'lucide-react';
+import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2, BookOpen, Info, Crop, Activity, RefreshCw, ShieldAlert, Check, X, Play, AlertTriangle } from 'lucide-react';
 import styles from '../admin.module.css';
 import ImageEditorModal from './ImageEditorModal';
 
@@ -21,6 +21,20 @@ const DEFAULT_CATEGORIES = [
 
 export default function PortfolioManager() {
   const [activeTab, setActiveTab] = useState(TABS.REELS);
+  const [manageTab, setManageTab] = useState('live'); // 'live' | 'held'
+  const [isScanningHealth, setIsScanningHealth] = useState(false);
+  const [testingUrlId, setTestingUrlId] = useState(null);
+  const [testResults, setTestResults] = useState({});
+  const [replaceMediaConfig, setReplaceMediaConfig] = useState({
+    show: false,
+    item: null,
+    file: null,
+    newUrl: '',
+    isUploading: false,
+    progress: 0
+  });
+  const replaceFileInputRef = useRef(null);
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -668,6 +682,238 @@ export default function PortfolioManager() {
     }
   };
 
+  const liveItems = items.filter(item => item.is_visible !== false && item.held_for_review !== true);
+  const heldItems = items.filter(item => item.is_visible === false || item.held_for_review === true);
+  const displayedItems = manageTab === 'held' ? heldItems : liveItems;
+
+  const handleRunHealthCheck = async () => {
+    setIsScanningHealth(true);
+    showNotification('success', 'Scanning media links for broken files...');
+    try {
+      const res = await fetch('/api/admin/portfolio/health-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: activeTab, autoHold: true })
+      });
+      if (res.ok) {
+        const report = await res.json();
+        const resultsMap = {};
+        (report.results || []).forEach(r => {
+          resultsMap[r.id] = { ok: r.isHealthy, status: r.status, msg: r.reason || (r.isHealthy ? '200 OK' : 'Failed') };
+        });
+        setTestResults(prev => ({ ...prev, ...resultsMap }));
+
+        if (report.brokenCount > 0) {
+          showNotification('error', `Health Check: ${report.brokenCount} item(s) broken & held for review (${report.healthyCount} healthy)`);
+          setManageTab('held');
+        } else {
+          showNotification('success', `Health Check: All ${report.healthyCount} item(s) are online & healthy!`);
+        }
+        await fetchItems();
+      } else {
+        showNotification('error', 'Health check scan failed');
+      }
+    } catch (err) {
+      console.error('Health check error:', err);
+      showNotification('error', 'Failed to run health check scan');
+    } finally {
+      setIsScanningHealth(false);
+    }
+  };
+
+  const handleHoldForReview = async (item) => {
+    try {
+      const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: item.id,
+          is_visible: false,
+          held_for_review: true,
+          review_reason: 'Manually held by admin',
+          review_date: new Date().toISOString()
+        })
+      });
+      if (res.ok) {
+        showNotification('success', 'Item held for review and hidden from live site');
+        await fetchItems();
+      }
+    } catch (e) {
+      showNotification('error', 'Failed to hold item for review');
+    }
+  };
+
+  const handleTestMedia = async (item) => {
+    setTestingUrlId(item.id);
+    try {
+      const res = await fetch('/api/admin/portfolio/health-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id, type: activeTab, autoHold: false })
+      });
+      if (res.ok) {
+        const report = await res.json();
+        const result = report.results?.[0];
+        if (result) {
+          setTestResults(prev => ({
+            ...prev,
+            [item.id]: { ok: result.isHealthy, status: result.status, msg: result.reason || '200 OK' }
+          }));
+          if (result.isHealthy) {
+            showNotification('success', '✅ Media source is reachable (HTTP 200 OK)');
+          } else {
+            showNotification('error', `❌ Media unreachable (${result.reason || 'Error'})`);
+          }
+        }
+      }
+    } catch (e) {
+      showNotification('error', 'Failed to test media URL');
+    } finally {
+      setTestingUrlId(null);
+    }
+  };
+
+  const handleApproveAndRestore = async (item) => {
+    try {
+      const res = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: item.id,
+          is_visible: true,
+          held_for_review: false,
+          review_reason: null,
+          review_date: null
+        })
+      });
+      if (res.ok) {
+        showNotification('success', 'Item approved and restored to live site!');
+        await fetchItems();
+      }
+    } catch (e) {
+      showNotification('error', 'Failed to restore item');
+    }
+  };
+
+  const handleOpenReplaceMedia = (item) => {
+    setReplaceMediaConfig({
+      show: true,
+      item,
+      file: null,
+      newUrl: '',
+      isUploading: false,
+      progress: 0
+    });
+  };
+
+  const handleSaveReplacementMedia = async (e) => {
+    if (e) e.preventDefault();
+    const { item, file, newUrl } = replaceMediaConfig;
+    if (!item) return;
+
+    if (!file && !newUrl.trim()) {
+      showNotification('error', 'Please select a file or provide a URL');
+      return;
+    }
+
+    setReplaceMediaConfig(prev => ({ ...prev, isUploading: true, progress: 10 }));
+
+    try {
+      let finalPublicUrl = newUrl.trim();
+
+      if (file) {
+        let fileToUpload = file;
+        setReplaceMediaConfig(prev => ({ ...prev, progress: 20 }));
+
+        if (activeTab === TABS.REELS) {
+          try {
+            fileToUpload = await optimizeVideo(file);
+          } catch (err) {
+            console.warn('Optimization failed, using original file', err);
+          }
+        }
+
+        setReplaceMediaConfig(prev => ({ ...prev, progress: 40 }));
+
+        const folder = activeTab === TABS.GRAPHICS ? 'Graphics' : 'Reels';
+        const presignRes = await fetch('/api/admin/portfolio/upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: fileToUpload.name,
+            contentType: fileToUpload.type,
+            folder: folder
+          })
+        });
+
+        if (!presignRes.ok) throw new Error('Failed to get upload URL');
+        const { presignedUrl, publicUrl } = await presignRes.json();
+        finalPublicUrl = publicUrl;
+
+        setReplaceMediaConfig(prev => ({ ...prev, progress: 60 }));
+
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', presignedUrl, true);
+          xhr.setRequestHeader('Content-Type', fileToUpload.type);
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              const p = 60 + Math.round((evt.loaded / evt.total) * 30);
+              setReplaceMediaConfig(prev => ({ ...prev, progress: p }));
+            }
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error('Upload to R2 failed'));
+          };
+          xhr.onerror = () => reject(new Error('Network upload failed'));
+          xhr.send(fileToUpload);
+        });
+      }
+
+      setReplaceMediaConfig(prev => ({ ...prev, progress: 95 }));
+
+      const payload = {
+        id: item.id,
+        is_visible: true,
+        held_for_review: false,
+        review_reason: null,
+        review_date: null
+      };
+
+      if (activeTab === TABS.REELS) {
+        payload.videoSrc = finalPublicUrl;
+      } else if (activeTab === TABS.GRAPHICS) {
+        payload.image_url = finalPublicUrl;
+      } else if (activeTab === TABS.LONG_FORM) {
+        if (newUrl.includes('youtube.com') || newUrl.includes('youtu.be') || newUrl.length === 11) {
+          let vidId = newUrl;
+          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+          const match = vidId.match(regExp);
+          if (match && match[2].length === 11) vidId = match[2];
+          payload.video_id = vidId;
+        }
+        if (file) payload.thumbnail_url = finalPublicUrl;
+      }
+
+      const dbRes = await fetch(`/api/admin/portfolio/manage/${activeTab}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!dbRes.ok) throw new Error('Database update failed');
+
+      setReplaceMediaConfig(prev => ({ ...prev, progress: 100, isUploading: false, show: false, item: null, file: null, newUrl: '' }));
+      showNotification('success', 'Media successfully replaced & restored to Live Showcase!');
+      await fetchItems();
+    } catch (err) {
+      console.error('Replace media error:', err);
+      showNotification('error', err.message || 'Failed to replace media');
+      setReplaceMediaConfig(prev => ({ ...prev, isUploading: false }));
+    }
+  };
+
   return (
     <div className={styles.mainContent}>
       <style>{`
@@ -1271,6 +1517,211 @@ export default function PortfolioManager() {
             opacity: 1;
             visibility: visible;
             transform: translateX(-50%) translateY(0);
+        }
+        .manage-controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .manage-subtabs {
+            display: flex;
+            gap: 8px;
+            background: rgba(15, 15, 15, 0.7);
+            backdrop-filter: blur(20px);
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .manage-subtab-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: #888;
+            border-radius: 12px;
+            font-family: 'Clash Display', sans-serif;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .manage-subtab-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .manage-subtab-btn.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .manage-subtab-btn.active.held-active {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+        }
+        .held-counter-badge {
+            background: #f59e0b;
+            color: #000;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+            animation: pulseHeld 2s infinite;
+        }
+        @keyframes pulseHeld {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(245, 158, 11, 0.9); }
+            100% { transform: scale(1); }
+        }
+        .health-scan-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(235, 215, 63, 0.08);
+            border: 1px solid rgba(235, 215, 63, 0.3);
+            color: #ebd73f;
+            border-radius: 14px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .health-scan-btn:hover:not(:disabled) {
+            background: rgba(235, 215, 63, 0.18);
+            border-color: rgba(235, 215, 63, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(235, 215, 63, 0.25);
+        }
+        .health-scan-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .held-alert-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(220, 38, 38, 0.08) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            border-radius: 18px;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            gap: 16px;
+            animation: fadeIn 0.4s ease;
+        }
+        .held-pill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #fbbf24;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .reason-pill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 8px;
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .test-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-family: 'Clash Display', sans-serif;
+        }
+        .test-status-pill.success {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+        }
+        .test-status-pill.error {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+        .action-btn.restore:hover {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: rgba(34, 197, 94, 0.5);
+            color: #4ade80;
+            transform: translateY(-4px) scale(1.15);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+        }
+        .action-btn.hold-btn:hover {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.5);
+            color: #fbbf24;
+            transform: translateY(-4px) scale(1.15);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        }
+        .action-btn.replace-btn:hover {
+            background: rgba(235, 215, 63, 0.15);
+            border-color: rgba(235, 215, 63, 0.6);
+            color: #ebd73f;
+            transform: translateY(-4px) scale(1.15);
+            box-shadow: 0 8px 25px rgba(235, 215, 63, 0.3);
+        }
+        .action-btn.test-btn:hover {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.5);
+            color: #60a5fa;
+            transform: translateY(-4px) scale(1.15);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+        .replace-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+        .replace-modal {
+            background: linear-gradient(145deg, rgba(25, 25, 25, 0.9) 0%, rgba(8, 8, 8, 0.98) 100%);
+            backdrop-filter: blur(50px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(235, 215, 63, 0.4);
+            padding: 40px;
+            border-radius: 30px;
+            max-width: 540px;
+            width: 90%;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.9), 0 0 60px rgba(235, 215, 63, 0.1);
+            font-family: 'Clash Display', sans-serif;
+            position: relative;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @media (max-width: 1024px) {
@@ -2323,21 +2774,109 @@ export default function PortfolioManager() {
       </div>
 
       <div>
-        <h2 style={{ marginBottom: '20px', fontSize: '1.2rem' }}>Manage Portfolio</h2>
+        <div className="manage-controls-header">
+          <div>
+            <h2 style={{ fontSize: '1.4rem', fontFamily: 'Panchang, sans-serif', color: '#fff', marginBottom: '6px' }}>Manage Portfolio</h2>
+            <p style={{ color: '#888', fontSize: '0.9rem' }}>Control live showcase status, diagnose media playback, and manage held reviews.</p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="manage-subtabs">
+              <button
+                type="button"
+                className={`manage-subtab-btn ${manageTab === 'live' ? 'active' : ''}`}
+                onClick={() => setManageTab('live')}
+              >
+                <Eye size={16} color={manageTab === 'live' ? '#ebd73f' : '#888'} />
+                Live Showcase ({liveItems.length})
+              </button>
+
+              <button
+                type="button"
+                className={`manage-subtab-btn ${manageTab === 'held' ? 'active held-active' : ''}`}
+                onClick={() => setManageTab('held')}
+              >
+                <AlertTriangle size={16} color={manageTab === 'held' ? '#fbbf24' : '#888'} />
+                Held for Review
+                {heldItems.length > 0 && (
+                  <span className="held-counter-badge">{heldItems.length}</span>
+                )}
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="health-scan-btn"
+              onClick={handleRunHealthCheck}
+              disabled={isScanningHealth}
+              title="Ping all media URLs to detect 404s and playback errors"
+            >
+              <RefreshCw size={16} style={{ animation: isScanningHealth ? 'spin 1s linear infinite' : 'none' }} />
+              {isScanningHealth ? 'Scanning Links...' : '⚡ Scan Media Health'}
+            </button>
+          </div>
+        </div>
+
+        {/* Amber Banner if heldItems > 0 and viewing live items */}
+        {heldItems.length > 0 && manageTab === 'live' && (
+          <div className="held-alert-banner">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ padding: '8px', background: 'rgba(245, 158, 11, 0.2)', borderRadius: '10px' }}>
+                <ShieldAlert size={22} color="#fbbf24" />
+              </div>
+              <div>
+                <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.95rem' }}>
+                  {heldItems.length} item{heldItems.length > 1 ? 's' : ''} currently held for review
+                </div>
+                <div style={{ color: '#fbbf24', fontSize: '0.85rem' }}>
+                  Temporarily hidden from the live website to protect user experience.
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setManageTab('held')}
+              style={{
+                background: 'rgba(245, 158, 11, 0.2)',
+                border: '1px solid rgba(245, 158, 11, 0.5)',
+                color: '#fbbf24',
+                padding: '8px 16px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontFamily: 'Clash Display, sans-serif',
+                fontWeight: 600,
+                fontSize: '0.85rem'
+              }}
+            >
+              Review Held Items ({heldItems.length})
+            </button>
+          </div>
+        )}
         
         {loading ? (
             <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>Loading database...</div>
-        ) : items.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#888', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
-                No items found in {activeTab}. Add one above!
+        ) : displayedItems.length === 0 ? (
+            <div style={{ padding: '50px 20px', textAlign: 'center', color: '#888', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                <CheckCircle2 size={36} color={manageTab === 'held' ? '#4ade80' : '#888'} style={{ margin: '0 auto 12px', display: 'block' }} />
+                <div style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '6px' }}>
+                  {manageTab === 'held' ? 'No items held for review!' : `No live items in ${activeTab}`}
+                </div>
+                <p style={{ fontSize: '0.9rem' }}>
+                  {manageTab === 'held' ? 'All active media files are online and healthy.' : 'Upload an item above to add it to your showcase.'}
+                </p>
             </div>
         ) : (
             <div className="item-list">
-                {items.map((item, index) => (
-                    <div key={item.id} className="item-row">
+                {displayedItems.map((item, index) => {
+                  const isHeld = !item.is_visible || item.held_for_review;
+                  const testRes = testResults[item.id];
+                  const isTestingThis = testingUrlId === item.id;
+
+                  return (
+                    <div key={item.id} className="item-row" style={{ borderColor: isHeld ? 'rgba(245, 158, 11, 0.3)' : 'rgba(255, 255, 255, 0.05)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <button className="action-btn move" onClick={() => moveItem(index, 'up')} disabled={index === 0}><ArrowUp size={18} /></button>
-                            <button className="action-btn move" onClick={() => moveItem(index, 'down')} disabled={index === items.length - 1}><ArrowDown size={18} /></button>
+                            <button className="action-btn move" onClick={() => moveItem(index, 'down')} disabled={index === displayedItems.length - 1}><ArrowDown size={18} /></button>
                         </div>
                         
                         {activeTab === TABS.REELS && (
@@ -2353,9 +2892,9 @@ export default function PortfolioManager() {
                         )}
 
                         <div className="item-info">
-                            <div className="item-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'visible' }}>
+                            <div className="item-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'visible', flexWrap: 'wrap' }}>
                                 <span 
-                                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '250px' }}
+                                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '280px' }}
                                 >
                                     {activeTab === TABS.REELS && (item.description || 'Reel Video')}
                                     {activeTab === TABS.LONG_FORM && item.title}
@@ -2365,6 +2904,25 @@ export default function PortfolioManager() {
                                             : (item.category ? `Graphic: ${item.category}` : 'Graphic Design')
                                     )}
                                 </span>
+
+                                {isHeld && (
+                                  <span className="held-pill-tag">
+                                    <AlertTriangle size={12} /> Held for Review
+                                  </span>
+                                )}
+
+                                {isHeld && item.review_reason && (
+                                  <span className="reason-pill-tag" title={item.review_reason}>
+                                    {item.review_reason}
+                                  </span>
+                                )}
+
+                                {testRes && (
+                                  <span className={`test-status-pill ${testRes.ok ? 'success' : 'error'}`}>
+                                    {testRes.ok ? <Check size={12} /> : <X size={12} />}
+                                    {testRes.msg}
+                                  </span>
+                                )}
                                 
                                 {(activeTab === TABS.LONG_FORM || activeTab === TABS.REELS || activeTab === TABS.GRAPHICS) && (
                                     <>
@@ -2455,6 +3013,11 @@ export default function PortfolioManager() {
                                                         Size: {(sizeBytes / (1024*1024)).toFixed(2)} MB
                                                     </span>
                                                 ) : null}
+                                                {item.review_reason && (
+                                                    <span style={{ color: '#fbbf24', display: 'block', marginTop: '4px', fontSize: '0.8rem' }}>
+                                                        Issue: {item.review_reason}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     );
@@ -2463,24 +3026,149 @@ export default function PortfolioManager() {
                         </div>
 
                         <div className="item-actions">
-                            <button className="action-btn" title="Toggle Visibility" onClick={() => toggleVisibility(item.id, item.is_visible)}>
-                                {item.is_visible ? <Eye size={18} /> : <EyeOff size={18} color="#ef4444" />}
-                            </button>
+                            {/* In Held tab: Test URL, Replace Media, Approve Live */}
+                            {isHeld ? (
+                              <>
+                                <button
+                                  className="action-btn test-btn"
+                                  title="Test media link accessibility"
+                                  onClick={() => handleTestMedia(item)}
+                                  disabled={isTestingThis}
+                                >
+                                  <RefreshCw size={18} style={{ animation: isTestingThis ? 'spin 1s linear infinite' : 'none' }} />
+                                </button>
+                                <button
+                                  className="action-btn replace-btn"
+                                  title="Replace Video/Media File"
+                                  onClick={() => handleOpenReplaceMedia(item)}
+                                >
+                                  <UploadCloud size={18} />
+                                </button>
+                                <button
+                                  className="action-btn restore"
+                                  title="Approve & Restore to Live Showcase"
+                                  onClick={() => handleApproveAndRestore(item)}
+                                >
+                                  <CheckCircle2 size={18} />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  className="action-btn hold-btn"
+                                  title="Hold for Review (Temporarily Hide from Website)"
+                                  onClick={() => handleHoldForReview(item)}
+                                >
+                                  <AlertTriangle size={18} />
+                                </button>
+                                <button className="action-btn" title="Toggle Visibility" onClick={() => toggleVisibility(item.id, item.is_visible)}>
+                                    {item.is_visible ? <Eye size={18} /> : <EyeOff size={18} color="#ef4444" />}
+                                </button>
+                              </>
+                            )}
                             <button className="action-btn delete" title="Delete" onClick={() => deleteItem(item.id)}>
                                 <Trash2 size={18} />
                             </button>
                         </div>
                     </div>
-                ))}
+                  );
+                })}
             </div>
         )}
-            {/* Image Editor Modal */}
-            <ImageEditorModal 
-                isOpen={editorConfig.show} 
-                onClose={() => setEditorConfig({ show: false, item: null })} 
-                imageUrl={editorConfig.item?.image_url} 
-                onSave={handleSaveEditedImage} 
-            />
+
+        {/* Replace Media Modal */}
+        {replaceMediaConfig.show && (
+          <div className="replace-modal-overlay" onClick={() => !replaceMediaConfig.isUploading && setReplaceMediaConfig({ show: false, item: null, file: null, newUrl: '', isUploading: false, progress: 0 })}>
+            <div className="replace-modal" onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ fontFamily: 'Panchang, sans-serif', color: '#fff', fontSize: '1.2rem', margin: 0 }}>
+                  Replace {activeTab === TABS.REELS ? 'Video File' : activeTab === TABS.GRAPHICS ? 'Graphic Image' : 'Media Asset'}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setReplaceMediaConfig({ show: false, item: null, file: null, newUrl: '', isUploading: false, progress: 0 })}
+                  disabled={replaceMediaConfig.isUploading}
+                  style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer' }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <p style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '24px' }}>
+                Item: <strong style={{ color: '#ebd73f' }}>{replaceMediaConfig.item?.title || replaceMediaConfig.item?.description || 'Selected Item'}</strong>. Uploading a new file will retain the title, vision, lore, and sort order while making it live again.
+              </p>
+
+              <form onSubmit={handleSaveReplacementMedia}>
+                <div
+                  className="file-drop-area"
+                  style={{ padding: '30px 20px', marginBottom: '20px' }}
+                  onClick={() => replaceFileInputRef.current?.click()}
+                >
+                  <input
+                    type="file"
+                    ref={replaceFileInputRef}
+                    onChange={(e) => e.target.files?.[0] && setReplaceMediaConfig(prev => ({ ...prev, file: e.target.files[0] }))}
+                    accept={activeTab === TABS.REELS ? 'video/mp4,video/quicktime,video/webm' : activeTab === TABS.GRAPHICS ? 'image/*' : 'video/*,image/*'}
+                    style={{ display: 'none' }}
+                  />
+                  <UploadCloud size={40} color="#ebd73f" style={{ marginBottom: '10px' }} />
+                  <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.95rem' }}>
+                    {replaceMediaConfig.file ? replaceMediaConfig.file.name : 'Click or Drag New File Here'}
+                  </div>
+                  <div style={{ color: '#888', fontSize: '0.8rem', marginTop: '4px' }}>
+                    {activeTab === TABS.REELS ? 'MP4 / MOV (Auto-optimized for 60fps web)' : 'JPG, PNG, WebP'}
+                  </div>
+                </div>
+
+                {activeTab === TABS.LONG_FORM && (
+                  <div className="input-group" style={{ marginBottom: '20px' }}>
+                    <label>Or YouTube URL / Video ID</label>
+                    <input
+                      type="text"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      value={replaceMediaConfig.newUrl}
+                      onChange={(e) => setReplaceMediaConfig(prev => ({ ...prev, newUrl: e.target.value }))}
+                    />
+                  </div>
+                )}
+
+                {replaceMediaConfig.isUploading && (
+                  <div className="progress-bar-container" style={{ marginBottom: '20px' }}>
+                    <div className="progress-bar" style={{ width: `${replaceMediaConfig.progress}%` }}></div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    type="button"
+                    className={styles.btn}
+                    onClick={() => setReplaceMediaConfig({ show: false, item: null, file: null, newUrl: '', isUploading: false, progress: 0 })}
+                    disabled={replaceMediaConfig.isUploading}
+                    style={{ flex: 1 }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="submit-btn"
+                    disabled={replaceMediaConfig.isUploading || (!replaceMediaConfig.file && !replaceMediaConfig.newUrl.trim())}
+                    style={{ flex: 2, padding: '14px', fontSize: '1rem' }}
+                  >
+                    {replaceMediaConfig.isUploading ? `Uploading (${replaceMediaConfig.progress}%)...` : 'Upload & Restore Live'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Image Editor Modal */}
+        <ImageEditorModal 
+            isOpen={editorConfig.show} 
+            onClose={() => setEditorConfig({ show: false, item: null })} 
+            imageUrl={editorConfig.item?.image_url} 
+            onSave={handleSaveEditedImage} 
+        />
             
       </div>
 

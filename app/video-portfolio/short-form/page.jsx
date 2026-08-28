@@ -340,6 +340,51 @@ export default function Page() {
             }
         };
 
+        // Self-Healing Interceptor: Auto-Report Broken Video & Advance Feed
+        window.handleVideoLoadError = function (videoEl, reelId, src) {
+            console.warn('Video failed to load for reel:', reelId, src);
+            
+            // Auto-report to backend to hold for review
+            if (reelId) {
+                try {
+                    fetch('/api/admin/portfolio/report-broken', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: reelId,
+                            type: 'reels',
+                            reason: 'Client playback error: Media source unreachable (404/Media Error)',
+                            url: src
+                        })
+                    }).catch(() => {});
+                } catch(e) {}
+            }
+
+            // Remove from active list
+            if (portfolioVideosList && portfolioVideosList.length > 0) {
+                portfolioVideosList = portfolioVideosList.filter(item => (item.id !== reelId && item.videoSrc !== src));
+            }
+
+            // Smoothly remove broken reel and advance to next valid reel
+            const reelItem = videoEl.closest('.reel-item');
+            if (reelItem) {
+                const nextItem = reelItem.nextElementSibling;
+                if (nextItem) {
+                    nextItem.scrollIntoView({ behavior: 'smooth' });
+                } else if (portfolioVideosList.length > 0) {
+                    createReelHTML(portfolioVideosList[currentVideoIndex]);
+                    currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length;
+                    const newNext = reelItem.nextElementSibling;
+                    if (newNext) newNext.scrollIntoView({ behavior: 'smooth' });
+                }
+                setTimeout(() => {
+                    if (reelItem && reelItem.parentNode) {
+                        reelItem.remove();
+                    }
+                }, 400);
+            }
+        };
+
         // --- Truly Infinite Scroll Logic - Sequential Array Loop ---
         let isAppending = false;
 
@@ -440,7 +485,7 @@ export default function Page() {
                 <video class="reel-ambient-bg" src="${src}" muted loop playsinline preload="metadata" oncontextmenu="return false;"></video>
                 <div class="reel-ambient-blur"></div>
                 <div class="reel-content" data-id="${videoData.id || ''}">
-                    <video class="reel-video" src="${src}" ${posterUrl ? `poster="${posterUrl}"` : ''} muted loop playsinline preload="auto" autoplay oncontextmenu="return false;" onerror="console.error('Video Error: ', this.error)"></video>
+                    <video class="reel-video" src="${src}" ${posterUrl ? `poster="${posterUrl}"` : ''} muted loop playsinline preload="auto" autoplay oncontextmenu="return false;" onerror="window.handleVideoLoadError(this, '${videoData.id || ''}', '${src}')"></video>
                     <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
                     <div class="reel-overlay-top"></div>
                     <div class="reel-overlay"></div>

@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { applyLedgerToItems, setItemReviewStatus, clearItemReviewStatus } from '../../../../../lib/portfolioReviewLedger.js';
 
 function getSupabase() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://irgplkartyhasfucpffn.supabase.co';
   // Use service role key to bypass RLS for admin operations!
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; 
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_55G3R_sssdLflJJGRPTeIQ_3UH2W94U'; 
   if (!supabaseUrl || !supabaseKey) return null;
   return createClient(supabaseUrl, supabaseKey);
 }
@@ -24,14 +25,28 @@ export async function GET(request, { params }) {
   if (!tableName) return Response.json({ error: 'Invalid portfolio type' }, { status: 400 });
 
   try {
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status'); // 'live', 'held', or null/all
+
     const supabase = getSupabase();
-    const { data, error } = await supabase
+    let query = supabase
       .from(tableName)
       .select('*')
       .order('sort_order', { ascending: false });
 
+    const { data, error } = await query;
+
     if (error) throw error;
-    return Response.json(data);
+
+    let itemsWithLedger = applyLedgerToItems(data || []);
+
+    if (status === 'live') {
+      itemsWithLedger = itemsWithLedger.filter(i => i.is_visible !== false && i.held_for_review !== true);
+    } else if (status === 'held') {
+      itemsWithLedger = itemsWithLedger.filter(i => i.is_visible === false || i.held_for_review === true);
+    }
+
+    return Response.json(itemsWithLedger);
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }
@@ -47,15 +62,28 @@ export async function POST(request, { params }) {
     const body = await request.json();
     const supabase = getSupabase();
     
-    // Add default visibility
-    body.is_visible = true;
+    // Add default visibility if not specified
+    if (body.is_visible === undefined) {
+      body.is_visible = true;
+    }
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from(tableName)
       .insert([body])
       .select();
 
-    if (error) throw error;
+    if (error) {
+      // If error is due to unknown column, try stripping review columns
+      const safeBody = { ...body };
+      delete safeBody.held_for_review;
+      delete safeBody.review_reason;
+      delete safeBody.review_date;
+
+      const fallback = await supabase.from(tableName).insert([safeBody]).select();
+      if (fallback.error) throw fallback.error;
+      data = fallback.data;
+    }
+
     return Response.json(data[0]);
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
@@ -72,15 +100,49 @@ export async function PUT(request, { params }) {
     const { id, ...updates } = await request.json();
     if (!id) return Response.json({ error: 'ID is required' }, { status: 400 });
 
+    // Sync with review ledger
+    if (updates.held_for_review === false && updates.is_visible === true) {
+      clearItemReviewStatus(id);
+    } else if (updates.held_for_review === true || updates.is_visible === false) {
+      setItemReviewStatus(id, {
+        is_visible: updates.is_visible,
+        held_for_review: updates.held_for_review !== undefined ? updates.held_for_review : true,
+        review_reason: updates.review_reason || 'Held for review',
+        review_date: updates.review_date || new Date().toISOString()
+      });
+    }
+
     const supabase = getSupabase();
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from(tableName)
       .update(updates)
       .eq('id', id)
       .select();
 
-    if (error) throw error;
-    return Response.json(data[0]);
+    if (error) {
+      // If error is caused by columns not present in the table schema, sanitize and retry
+      console.warn(`Update on ${tableName} failed (${error.message}). Attempting sanitized retry.`);
+      const safeUpdates = { ...updates };
+      delete safeUpdates.held_for_review;
+      delete safeUpdates.review_reason;
+      delete safeUpdates.review_date;
+
+      const fallback = await supabase
+        .from(tableName)
+        .update(safeUpdates)
+        .eq('id', id)
+        .select();
+
+      if (fallback.error) {
+        console.warn(`Fallback update also encountered error: ${fallback.error.message}. Ledger remains updated.`);
+      } else {
+        data = fallback.data;
+      }
+    }
+
+    const finalItem = (data && data[0]) ? data[0] : { id, ...updates };
+    const merged = applyLedgerToItems([finalItem])[0];
+    return Response.json(merged);
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }
