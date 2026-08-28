@@ -109,10 +109,8 @@ export default function Page() {
             const container = element.closest('.reel-content');
             if (container) {
                 const vid = container.querySelector('.reel-video');
-                const ambVid = container.parentElement.querySelector('.reel-ambient-bg');
                 if (vid && vid.paused) {
                     vid.play().catch(()=>{});
-                    if (ambVid) ambVid.play().catch(()=>{});
                     
                     // Also hide the play indicator since it's playing now
                     const indicator = container.querySelector('.center-indicator');
@@ -140,7 +138,7 @@ export default function Page() {
             sheet.classList.remove('open');
         };
 
-        // Intersection Observer to Auto-play videos when in view
+        // Intersection Observer to Auto-play active video and manage stream bandwidth
         const reelsContainer = document.getElementById('reelsContainer');
         const observerOptions = {
             root: reelsContainer,
@@ -151,38 +149,64 @@ export default function Page() {
         const videoObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const mainVid = entry.target.querySelector('.reel-video');
-                const ambVid = entry.target.querySelector('.reel-ambient-bg');
 
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active'); // Triggers side-panel 3D animations
 
-                    if (mainVid) mainVid.currentTime = 0;
-                    if (ambVid) ambVid.currentTime = 0;
-
                     if (mainVid) {
+                        mainVid.preload = 'auto';
                         const playPromise = mainVid.play();
                         if (playPromise !== undefined) {
                             playPromise.catch(error => { 
                                 console.log('Autoplay prevented', error); 
-                                // If autoplay is blocked, the video is paused at 0s. 
-                                // Cinematic videos often start with a black frame. 
-                                // Let's check if there's a poster (thumbnail), if not, seek to 0.5s
                                 setTimeout(() => {
                                     if (mainVid.paused && !mainVid.hasAttribute('poster')) {
                                         mainVid.currentTime = 0.5;
-                                        if (ambVid) ambVid.currentTime = 0.5;
                                     }
                                 }, 100);
                             });
                         }
                     }
-                    if (ambVid) ambVid.play().catch(e => { });
+
+                    // Preload adjacent next reel for instant zero-buffer transition
+                    const nextReel = entry.target.nextElementSibling;
+                    if (nextReel) {
+                        const nextVid = nextReel.querySelector('.reel-video');
+                        if (nextVid) nextVid.preload = 'auto';
+                    }
+
+                    // Release bandwidth on reels far away from active view
+                    if (reelsContainer) {
+                        const allReels = Array.from(reelsContainer.querySelectorAll('.reel-item'));
+                        const currentIdx = allReels.indexOf(entry.target);
+                        allReels.forEach((reel, idx) => {
+                            if (Math.abs(idx - currentIdx) > 2) {
+                                const farVid = reel.querySelector('.reel-video');
+                                if (farVid) {
+                                    farVid.pause();
+                                    farVid.preload = 'none';
+                                }
+                            }
+                        });
+
+                        // Proactively append upcoming reel when nearing the end
+                        if (portfolioVideosList && portfolioVideosList.length > 0) {
+                            if (currentIdx >= allReels.length - 2 && !isAppending) {
+                                isAppending = true;
+                                const nextVideoData = portfolioVideosList[currentVideoIndex];
+                                currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length;
+                                createReelHTML(nextVideoData);
+                                setTimeout(() => { isAppending = false; }, 100);
+                            }
+                        }
+                    }
 
                 } else {
                     entry.target.classList.remove('active'); // Resets side-panel animations
 
-                    if (mainVid) mainVid.pause();
-                    if (ambVid) ambVid.pause();
+                    if (mainVid) {
+                        mainVid.pause();
+                    }
 
                     const sheet = entry.target.querySelector('.comments-sheet');
                     if (sheet && sheet.classList.contains('open')) {
@@ -213,18 +237,17 @@ export default function Page() {
                 if (layer.dataset.lastTap) { // Only play/pause if not double tapped
                     layer.dataset.lastTap = "";
                     const vid = container.querySelector('.reel-video');
-                    const ambVid = container.parentElement.querySelector('.reel-ambient-bg');
                     const indicator = container.querySelector('.center-indicator');
                     const icon = indicator.querySelector('.indicator-icon');
 
-                    if (vid.paused) {
-                        vid.play();
-                        if (ambVid) ambVid.play();
-                        icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-                    } else {
-                        vid.pause();
-                        if (ambVid) ambVid.pause();
-                        icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                    if (vid) {
+                        if (vid.paused) {
+                            vid.play().catch(()=>{});
+                            icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+                        } else {
+                            vid.pause();
+                            icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                        }
                     }
 
                     indicator.classList.remove('show');
@@ -482,10 +505,14 @@ export default function Page() {
                     <button class="cta-panel-btn" onclick="window.open('https://drippmedia.com/contact', '_blank')">${randomCTA.button} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
                 </div>
 
-                <video class="reel-ambient-bg" src="${src}" muted loop playsinline preload="metadata" oncontextmenu="return false;"></video>
+                ${posterUrl ? 
+                    `<img class="reel-ambient-bg" src="${posterUrl}" alt="ambient backdrop" loading="eager" decoding="async" />` : 
+                    `<div class="reel-ambient-bg reel-ambient-gradient"></div>`
+                }
                 <div class="reel-ambient-blur"></div>
                 <div class="reel-content" data-id="${videoData.id || ''}">
-                    <video class="reel-video" src="${src}" ${posterUrl ? `poster="${posterUrl}"` : ''} muted loop playsinline preload="auto" autoplay oncontextmenu="return false;" onerror="window.handleVideoLoadError(this, '${videoData.id || ''}', '${src}')"></video>
+                    <video class="reel-video" src="${src}" data-src="${src}" ${posterUrl ? `poster="${posterUrl}"` : ''} muted loop playsinline preload="auto" autoplay oncontextmenu="return false;" onerror="window.handleVideoLoadError(this, '${videoData.id || ''}', '${src}')"></video>
+                    <div class="video-buffer-spinner"><div class="mini-buffer-spin"></div></div>
                     <div class="video-interact-layer" onclick="togglePlay(event, this)"></div>
                     <div class="reel-overlay-top"></div>
                     <div class="reel-overlay"></div>
@@ -608,6 +635,16 @@ export default function Page() {
             const vid = newReel.querySelector('.reel-video');
             if (vid) {
                 vid.muted = isGlobalMuted;
+                
+                // Seamless Buffering State Listener
+                const bufferSpinner = newReel.querySelector('.video-buffer-spinner');
+                if (bufferSpinner) {
+                    vid.addEventListener('waiting', () => bufferSpinner.classList.add('show-buffering'));
+                    vid.addEventListener('stalled', () => bufferSpinner.classList.add('show-buffering'));
+                    vid.addEventListener('playing', () => bufferSpinner.classList.remove('show-buffering'));
+                    vid.addEventListener('canplay', () => bufferSpinner.classList.remove('show-buffering'));
+                    vid.addEventListener('canplaythrough', () => bufferSpinner.classList.remove('show-buffering'));
+                }
                 
                 // Scrub Bar Logic
                 const barContainer = newReel.querySelector('.premium-scrub-bar-container');
@@ -774,7 +811,7 @@ export default function Page() {
                 }
             }
 
-            const initialCount = portfolioVideosList.length === 0 ? 0 : 2; // Always render at least 2 to allow infinite scroll
+            const initialCount = Math.min(4, portfolioVideosList.length || 0); // Pre-buffer up to 4 reels for seamless initial swiping
             for (let i = 0; i < initialCount; i++) {
                 if (portfolioVideosList.length > 0) {
                     createReelHTML(portfolioVideosList[currentVideoIndex]);
@@ -851,23 +888,173 @@ export default function Page() {
             window.location.href = '?category=' + encodeURIComponent(cat);
         };
 
+        // --- Smooth & Sensitive Navigation Logic for Phone & PC ---
+        function getActiveReelIndex() {
+            if (!reelsContainer) return 0;
+            const items = Array.from(reelsContainer.querySelectorAll('.reel-item'));
+            if (items.length === 0) return 0;
+            
+            const activeItem = reelsContainer.querySelector('.reel-item.active');
+            if (activeItem) {
+                const idx = items.indexOf(activeItem);
+                if (idx !== -1) return idx;
+            }
+            
+            const currentScroll = reelsContainer.scrollTop;
+            const itemHeight = reelsContainer.clientHeight || window.innerHeight;
+            return Math.max(0, Math.round(currentScroll / itemHeight));
+        }
+
+        let isNavigating = false;
+        function scrollToReelIndex(targetIndex) {
+            if (!reelsContainer) return;
+            
+            // Proactively ensure target reel is in DOM
+            const items = reelsContainer.querySelectorAll('.reel-item');
+            if (targetIndex >= items.length - 1 && portfolioVideosList && portfolioVideosList.length > 0) {
+                const nextVideoData = portfolioVideosList[currentVideoIndex];
+                currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length;
+                createReelHTML(nextVideoData);
+            }
+            
+            const updatedItems = reelsContainer.querySelectorAll('.reel-item');
+            if (targetIndex >= 0 && targetIndex < updatedItems.length) {
+                isNavigating = true;
+                const targetElement = updatedItems[targetIndex];
+                
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                setTimeout(() => {
+                    isNavigating = false;
+                }, 400);
+            }
+        }
+
+        window.scrollToNextReel = function () {
+            if (isNavigating) return;
+            const current = getActiveReelIndex();
+            scrollToReelIndex(current + 1);
+        };
+
+        window.scrollToPrevReel = function () {
+            if (isNavigating) return;
+            const current = getActiveReelIndex();
+            if (current > 0) {
+                scrollToReelIndex(current - 1);
+            }
+        };
+
+        // --- PC Keyboard Navigation (Arrow Keys / Page Keys / Space / Shortcuts) ---
+        const handleKeyDown = (e) => {
+            const activeEl = document.activeElement;
+            if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
+                return;
+            }
+
+            if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'j' || e.key === 'J' || e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                window.scrollToNextReel();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'k' || e.key === 'K' || e.key === 'w' || e.key === 'W') {
+                e.preventDefault();
+                window.scrollToPrevReel();
+            } else if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                const activeItem = reelsContainer ? (reelsContainer.querySelector('.reel-item.active .video-interact-layer') || reelsContainer.querySelector('.reel-item .video-interact-layer')) : null;
+                if (activeItem) {
+                    window.togglePlay({ stopPropagation: () => {} }, activeItem);
+                }
+            } else if (e.key === 'm' || e.key === 'M') {
+                e.preventDefault();
+                const activeToggle = reelsContainer ? (reelsContainer.querySelector('.reel-item.active .sound-toggle') || document.querySelector('.sound-toggle')) : null;
+                if (activeToggle) window.toggleMuteGlobal(activeToggle);
+            } else if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                const activeFsBtn = reelsContainer ? (reelsContainer.querySelector('.reel-item.active .btn-enter-fullscreen') || document.querySelector('.btn-enter-fullscreen')) : null;
+                if (activeFsBtn) window.toggleFullscreen(activeFsBtn);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        // --- Sensitive & Fluid Mobile Touch Handling ---
+        let touchStartY = 0;
+        let touchStartX = 0;
+        let touchStartTime = 0;
+        let isTouching = false;
+
+        const onTouchStart = (e) => {
+            if (e.touches.length === 1) {
+                touchStartY = e.touches[0].clientY;
+                touchStartX = e.touches[0].clientX;
+                touchStartTime = Date.now();
+                isTouching = true;
+            }
+        };
+
+        const onTouchEnd = (e) => {
+            if (!isTouching || e.changedTouches.length === 0) return;
+            isTouching = false;
+
+            const touchEndY = e.changedTouches[0].clientY;
+            const touchEndX = e.changedTouches[0].clientX;
+            const deltaY = touchEndY - touchStartY;
+            const deltaX = touchEndX - touchStartX;
+            const duration = Math.max(1, Date.now() - touchStartTime);
+            const velocityY = Math.abs(deltaY) / duration;
+
+            // Check if predominantly vertical gesture
+            if (Math.abs(deltaY) > Math.abs(deltaX) * 1.2) {
+                // Highly sensitive gesture recognition: distance > 35px OR flick velocity > 0.3px/ms
+                if (Math.abs(deltaY) > 35 || (velocityY > 0.3 && Math.abs(deltaY) > 20)) {
+                    if (deltaY < 0) {
+                        window.scrollToNextReel();
+                    } else if (deltaY > 0) {
+                        window.scrollToPrevReel();
+                    }
+                }
+            }
+        };
+
+        if (reelsContainer) {
+            reelsContainer.addEventListener('touchstart', onTouchStart, { passive: true });
+            reelsContainer.addEventListener('touchend', onTouchEnd, { passive: true });
+        }
+
+        // --- PC Mouse Wheel Snapping ---
+        let lastWheelTime = 0;
+        const onWheel = (e) => {
+            const now = Date.now();
+            if (now - lastWheelTime < 500) return;
+
+            if (Math.abs(e.deltaY) > 25) {
+                lastWheelTime = now;
+                if (e.deltaY > 0) {
+                    window.scrollToNextReel();
+                } else {
+                    window.scrollToPrevReel();
+                }
+            }
+        };
+
+        if (reelsContainer) {
+            reelsContainer.addEventListener('wheel', onWheel, { passive: true });
+        }
+
         // Initialize early volume state & setup reels
         fetchAndInitializeFeed();
 
         if (reelsContainer) {
             reelsContainer.addEventListener('scroll', () => {
-                // Append exactly 1 entry effortlessly right before bottom hit.
-                if (reelsContainer.scrollTop + reelsContainer.clientHeight >= reelsContainer.scrollHeight - 10) {
+                // Proactively append upcoming reels at 1.5x viewport height before reaching bottom
+                if (reelsContainer.scrollTop + reelsContainer.clientHeight * 1.5 >= reelsContainer.scrollHeight) {
                     if (!isAppending && portfolioVideosList.length > 0) {
                         isAppending = true;
 
-                        // Fetch next sequential video from array
                         const nextVideoData = portfolioVideosList[currentVideoIndex];
-
-                        // Increment and Loop sequentially
                         currentVideoIndex = (currentVideoIndex + 1) % portfolioVideosList.length;
-
-                        // Add it
                         createReelHTML(nextVideoData);
 
                         setTimeout(() => {
@@ -875,7 +1062,7 @@ export default function Page() {
                         }, 100);
                     }
                 }
-            });
+            }, { passive: true });
         }
 
         setTimeout(() => {
@@ -895,10 +1082,14 @@ export default function Page() {
             }
         });
 
-    
-
     return () => {
       ScrollTrigger.getAll().forEach(t => t.kill());
+      window.removeEventListener('keydown', handleKeyDown);
+      if (reelsContainer) {
+        reelsContainer.removeEventListener('touchstart', onTouchStart);
+        reelsContainer.removeEventListener('touchend', onTouchEnd);
+        reelsContainer.removeEventListener('wheel', onWheel);
+      }
     };
   }, []);
 
@@ -1082,11 +1273,14 @@ export default function Page() {
             height: 100dvh;
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
+            scroll-snap-stop: always;
             scrollbar-width: none;
             -ms-overflow-style: none;
             scroll-behavior: smooth;
-            will-change: transform;
+            will-change: scroll-position, transform;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+            touch-action: pan-y;
         }
 
         .reels-container::-webkit-scrollbar {
@@ -1103,6 +1297,87 @@ export default function Page() {
             justify-content: center;
             align-items: center;
             position: relative;
+            touch-action: pan-y;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        /* Desktop On-Screen Navigation Arrows */
+        .desktop-reel-nav {
+            position: fixed;
+            right: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            z-index: 50;
+            pointer-events: auto;
+        }
+
+        .desktop-nav-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(15, 15, 15, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            outline: none;
+            position: relative;
+        }
+
+        .desktop-nav-btn:hover {
+            background: rgba(235, 215, 63, 0.18);
+            border-color: rgba(235, 215, 63, 0.6);
+            color: var(--brand-yellow);
+            transform: scale(1.12);
+            box-shadow: 0 0 25px rgba(235, 215, 63, 0.35);
+        }
+
+        .desktop-nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .desktop-nav-btn .nav-tooltip {
+            position: absolute;
+            right: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid rgba(235, 215, 63, 0.3);
+            color: #ebd73f;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .desktop-nav-btn:hover .nav-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(-4px);
+        }
+
+        @media (max-width: 768px) {
+            .desktop-reel-nav {
+                display: none !important;
+            }
         }
 
         /* The actual 9:16 Video Player Card */
@@ -1271,17 +1546,60 @@ export default function Page() {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            /* REMOVED filter: blur(80px) brightness(0.3) due to Chromium bug */
             z-index: -1;
-            opacity: 0.6;
+            opacity: 0.55;
+            transform: scale(1.15) translateZ(0);
+            filter: blur(35px);
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .reel-ambient-gradient {
+            background: radial-gradient(circle at center, rgba(235, 215, 63, 0.15) 0%, rgba(10, 10, 10, 0.8) 70%);
         }
 
         .reel-ambient-blur {
             position: absolute;
             inset: 0;
-            backdrop-filter: blur(80px);
-            background: linear-gradient(to bottom, var(--deep-black) 0%, rgba(5, 5, 5, 0.6) 15%, rgba(5, 5, 5, 0.6) 85%, var(--deep-black) 100%);
+            backdrop-filter: blur(70px);
+            -webkit-backdrop-filter: blur(70px);
+            background: linear-gradient(to bottom, var(--deep-black) 0%, rgba(5, 5, 5, 0.5) 15%, rgba(5, 5, 5, 0.5) 85%, var(--deep-black) 100%);
             z-index: -1;
+            pointer-events: none;
+        }
+
+        .video-buffer-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 44px;
+            height: 44px;
+            z-index: 6;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+
+        .video-buffer-spinner.show-buffering {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mini-buffer-spin {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--brand-yellow);
+            animation: bufferSpin 0.75s linear infinite;
+            box-shadow: 0 0 20px rgba(235, 215, 63, 0.3);
+        }
+
+        @keyframes bufferSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .reel-video {
@@ -2393,6 +2711,35 @@ export default function Page() {
       ` }} />
       <div className="premium-spinner"></div>
       <span className="premium-pulse-text">{isGenz ? 'cooking' : 'Loading'}</span>
+  </div>
+
+  {/* Desktop Floating Navigation Arrows */}
+  <div className="desktop-reel-nav">
+    <button
+      type="button"
+      className="desktop-nav-btn"
+      onClick={() => window.scrollToPrevReel && window.scrollToPrevReel()}
+      aria-label="Previous Video (Up Arrow)"
+      title="Previous Video (Up Arrow / W / K)"
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+      <span className="nav-tooltip">PREV [↑]</span>
+    </button>
+
+    <button
+      type="button"
+      className="desktop-nav-btn"
+      onClick={() => window.scrollToNextReel && window.scrollToNextReel()}
+      aria-label="Next Video (Down Arrow)"
+      title="Next Video (Down Arrow / S / J)"
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+      <span className="nav-tooltip">NEXT [↓]</span>
+    </button>
   </div>
 
   <div className="reels-container" id="reelsContainer">
