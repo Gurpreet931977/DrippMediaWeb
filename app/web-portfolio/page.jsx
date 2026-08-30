@@ -15,86 +15,82 @@ export default function Page() {
     {
       id: 'bharatup',
       title: 'BharatUp',
-      tagline: 'Bridging Ambitious Students with Industry Knowledge',
-      category: 'E-Learning Platform',
-      badge: 'EdTech Platform',
-      desc: 'An ultra-fast, student-first digital educational platform engineered for high concurrency, seamless video course streaming, interactive quiz modules, and frictionless checkout.',
+      tagline: 'A Home for Businesses Building What Comes Next',
+      category: 'Enterprise Digital Platform',
+      badge: 'Business Tech',
+      desc: 'A high-performance digital presence engineered for business growth, high concurrency, and seamless client engagement.',
       url: 'https://www.bharatup.online/',
       displayUrl: 'bharatup.online',
       image: '/images/web-portfolio/bharatup.jpg',
-      status: 'Live & Scaling',
       color: '#3b82f6',
       stats: [
         { label: 'Lighthouse Score', value: '99/100' },
-        { label: 'Active Learners', value: '25K+' },
+        { label: 'Active Reach', value: '25K+' },
         { label: 'Page Load Speed', value: '0.4s' }
       ],
-      techStack: ['Next.js 14', 'TypeScript', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Razorpay', 'Framer Motion'],
-      challenge: 'Traditional e-learning platforms in India suffer from slow load times on low-bandwidth mobile networks and clunky navigation.',
-      solution: 'We architected a lightweight, server-rendered Next.js application with edge caching, sub-second search, and an intuitive dark/light UI tailored for high retention.'
+      techStack: ['Next.js 14', 'TypeScript', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Framer Motion'],
+      challenge: 'Creating a high-credibility digital gateway that communicates modern business acceleration with sub-second performance.',
+      solution: 'We architected a lightweight, server-rendered Next.js application with edge caching, dark aesthetic, and frictionless responsiveness.'
     },
     {
       id: 'pinaka',
       title: 'Pinaka Care Clinic',
-      tagline: 'Modern Healthcare & Telemedicine Ecosystem',
-      category: 'Healthcare & Clinical SaaS',
+      tagline: 'Skin, Laser & Dermatology Clinic in South Bopal, Ahmedabad',
+      category: 'Healthcare & Clinical Web',
       badge: 'Healthcare',
-      desc: 'A clinical healthcare web platform built to streamline patient appointment scheduling, digital medical consultation records, doctor profiles, and emergency triage access.',
+      desc: 'A clinical healthcare platform built to streamline patient consultation bookings, doctor profiles, and multi-specialty dermatology services.',
       url: 'https://www.pinakacareclinic.com/',
       displayUrl: 'pinakacareclinic.com',
       image: '/images/web-portfolio/pinakacare.jpg',
-      status: 'Live & Certified',
       color: '#10b981',
       stats: [
         { label: 'Booking Conversion', value: '+340%' },
         { label: 'Mobile Readiness', value: '100%' },
         { label: 'TTFB Server Latency', value: '0.28s' }
       ],
-      techStack: ['Next.js', 'React 18', 'Tailwind CSS', 'Framer Motion', 'Cloudflare Edge', 'Resend API'],
-      challenge: 'Medical clinics often struggle with high bounce rates due to confusing form layouts and anxiety-inducing legacy hospital designs.',
-      solution: 'Designed a soothing, high-trust visual language with instant slot booking, automated WhatsApp confirmations, and a HIPAA-compliant digital intake flow.'
+      techStack: ['Next.js', 'React 18', 'Tailwind CSS', 'Framer Motion', 'Cloudflare Edge'],
+      challenge: 'Medical clinics often suffer from confusing appointment layouts and outdated interfaces that reduce patient trust.',
+      solution: 'Designed a soothing, high-trust visual language with instant slot booking, clean treatment catalog, and fast mobile intake.'
     },
     {
       id: 'goatsociety',
       title: 'Goat Society',
-      tagline: 'Exclusive Lifestyle & High-Octane Digital Community',
-      category: 'Luxury Lifestyle & Web3 Platform',
-      badge: 'Brand Community',
-      desc: 'A digital cultural hub and exclusive streetwear/lifestyle brand platform featuring immersive motion physics, kinetic typography, and high-impact visual storytelling.',
+      tagline: 'Authentic Decanted Fragrances & Lifestyle E-Commerce',
+      category: 'Luxury Fragrance & Commerce',
+      badge: 'Luxury E-Com',
+      desc: 'An exclusive e-commerce boutique featuring 100% authentic decanted fragrances, sterile extraction standards, and sleek catalog navigation.',
       url: 'https://goatsociety.in/',
       displayUrl: 'goatsociety.in',
       image: '/images/web-portfolio/goatsociety.jpg',
-      status: 'Live & Exclusive',
       color: '#f59e0b',
       stats: [
-        { label: 'Frame Rate', value: '60 FPS' },
-        { label: 'User Engagement', value: '4.8m' },
-        { label: 'Visual Experience', value: 'Bespoke' }
+        { label: 'Catalog Performance', value: '60 FPS' },
+        { label: 'User Retention', value: '+220%' },
+        { label: 'Checkout Speed', value: '< 2s' }
       ],
-      techStack: ['Next.js', 'GSAP', 'WebGL / Canvas', 'Tailwind CSS', 'Web Audio API', 'Cloudflare R2'],
-      challenge: 'Creating a web presence that feels raw, premium, and distinct without compromising mobile performance or loading speed.',
-      solution: 'Crafted GPU-composited parallax layers, custom micro-interactions, and dark brutalist aesthetics that establish instant brand dominance.'
+      techStack: ['Next.js', 'Tailwind CSS', 'Framer Motion', 'E-Commerce Core', 'Cloudflare CDN'],
+      challenge: 'Creating a high-end luxury aesthetic that showcases perfume notes and sizes clearly without slowing down mobile catalog scrolling.',
+      solution: 'Crafted minimal typography, high-res visual product cards, and instant decant size selectors for maximum checkout efficiency.'
     },
     {
       id: 'rasmlai',
       title: 'Rasmlai AI',
-      tagline: 'Next-Generation Generative Intelligence Studio',
-      category: 'AI Interface & Product Engineering',
+      tagline: 'A Safe Space to Express Every Emotion • AI Companion for Wellness',
+      category: 'AI Companion & Product Web',
       badge: 'AI Application',
-      desc: 'An AI workspace engineered for generative intelligence, streaming LLM reasoning, code synthesis, and multi-modal creative workflows in a minimalist dark interface.',
+      desc: 'A voice-first AI companion workspace engineered to help users process feelings, express emotions, and engage in reflective dialogue.',
       url: 'https://rasmlai.vercel.app/',
       displayUrl: 'rasmlai.vercel.app',
       image: '/images/web-portfolio/rasmlai.jpg',
-      status: 'Live on Vercel',
       color: '#8b5cf6',
       stats: [
-        { label: 'Stream Latency', value: '12ms' },
+        { label: 'AI Response Latency', value: '12ms' },
         { label: 'Architecture', value: 'Edge AI' },
         { label: 'Lighthouse Score', value: '100/100' }
       ],
-      techStack: ['Next.js 15', 'React 19', 'OpenAI API', 'Vercel AI SDK', 'Tailwind CSS', 'Lucide'],
-      challenge: 'AI web apps frequently suffer from sluggish streaming token rendering and complicated settings menus.',
-      solution: 'Engineered a hyper-clean, keyboard-driven UI with real-time markdown token rendering, smart prompt caching, and zero visual clutter.'
+      techStack: ['Next.js 15', 'React 19', 'OpenAI API', 'Vercel AI SDK', 'Tailwind CSS'],
+      challenge: 'Creating a calming, intimate digital environment where users feel secure expressing deep emotions.',
+      solution: 'Engineered an ultra-clean, minimal interface with fluid animations, intuitive voice prompts, and zero friction onboarding.'
     }
   ];
 
@@ -368,13 +364,13 @@ export default function Page() {
         /* Navigation Back Button */
         .nav-back {
           position: fixed;
-          top: 30px;
-          left: 35px;
+          top: 25px;
+          left: 30px;
           z-index: 900;
           color: var(--deep-black) !important;
           background-color: var(--brand-yellow);
-          width: 48px;
-          height: 48px;
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -392,8 +388,8 @@ export default function Page() {
         /* High-End Editorial Header */
         .portfolio-header {
           position: fixed;
-          top: 30px;
-          right: 45px;
+          top: 24px;
+          right: 35px;
           z-index: 900;
           text-align: right;
           pointer-events: none;
@@ -409,7 +405,7 @@ export default function Page() {
           letter-spacing: 3px;
           color: rgba(255, 255, 255, 0.45);
           text-transform: uppercase;
-          margin-bottom: 5px;
+          margin-bottom: 4px;
           display: flex;
           align-items: center;
           gap: 6px;
@@ -424,9 +420,9 @@ export default function Page() {
         .portfolio-header h1 {
           font-family: 'Panchang', sans-serif;
           font-weight: 800;
-          font-size: 1.65rem;
+          font-size: 1.5rem;
           text-transform: uppercase;
-          letter-spacing: 2.5px;
+          letter-spacing: 2px;
           color: var(--pure-white);
           line-height: 1.1;
           text-shadow: 0 4px 25px rgba(0, 0, 0, 0.9);
@@ -434,11 +430,11 @@ export default function Page() {
 
         .portfolio-header p {
           font-family: 'Panchang', sans-serif;
-          font-size: 0.65rem;
+          font-size: 0.62rem;
           color: var(--brand-yellow);
-          letter-spacing: 4px;
+          letter-spacing: 3.5px;
           text-transform: uppercase;
-          margin-top: 6px;
+          margin-top: 5px;
           font-weight: 700;
           opacity: 0.95;
         }
@@ -485,20 +481,22 @@ export default function Page() {
         .slider-wrap {
           display: flex;
           align-items: center;
-          padding: 0 12vw;
+          padding: 0 14vw;
           gap: 6vw;
           height: 100%;
           width: max-content;
         }
 
-        /* High-End Glassmorphic Browser Chassis Card */
+        /* High-End Glassmorphic Browser Chassis Card with Guaranteed Clearance */
         .web-card-chassis {
           position: relative;
-          width: 74vw;
-          max-width: 1150px;
-          height: 74dvh;
-          min-height: 540px;
-          border-radius: 20px;
+          width: 70vw;
+          max-width: 1020px;
+          height: 60dvh;
+          max-height: 520px;
+          min-height: 400px;
+          margin-top: 25px;
+          border-radius: 18px;
           background: rgba(12, 12, 16, 0.95);
           border: 1px solid rgba(255, 255, 255, 0.12);
           box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -514,32 +512,33 @@ export default function Page() {
 
         .web-card-chassis:hover {
           border-color: rgba(235, 215, 63, 0.5);
-          box-shadow: 0 40px 90px rgba(0, 0, 0, 0.95), 0 0 40px rgba(235, 215, 63, 0.16);
+          box-shadow: 0 35px 85px rgba(0, 0, 0, 0.95), 0 0 35px rgba(235, 215, 63, 0.16);
           transform: translateY(-6px) scale(1.01);
         }
 
-        /* macOS Window Header Toolbar */
+        /* macOS Window Header Toolbar (Clean without extra badges) */
         .browser-toolbar {
-          height: 48px;
+          height: 44px;
           background: rgba(20, 20, 26, 0.98);
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 20px;
+          padding: 0 18px;
           user-select: none;
           z-index: 20;
         }
 
         .traffic-lights {
           display: flex;
-          gap: 8px;
+          gap: 7px;
           align-items: center;
+          width: 80px;
         }
 
         .traffic-dot {
-          width: 12px;
-          height: 12px;
+          width: 11px;
+          height: 11px;
           border-radius: 50%;
           transition: transform 0.2s ease;
         }
@@ -554,13 +553,12 @@ export default function Page() {
           background: rgba(5, 5, 5, 0.6);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 20px;
-          padding: 5px 18px;
-          font-size: 0.78rem;
+          padding: 4px 16px;
+          font-size: 0.76rem;
           color: rgba(255, 255, 255, 0.85);
           font-family: 'Clash Display', sans-serif;
           letter-spacing: 0.5px;
           transition: all 0.25s ease;
-          text-decoration: none;
         }
 
         .web-card-chassis:hover .browser-url-pill {
@@ -570,28 +568,13 @@ export default function Page() {
         }
 
         .browser-url-pill svg {
-          width: 13px;
-          height: 13px;
+          width: 12px;
+          height: 12px;
           color: #10b981;
         }
 
-        .browser-actions {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .status-beacon-pill {
-          font-family: 'Panchang', sans-serif;
-          font-size: 0.65rem;
-          font-weight: 700;
-          color: #10b981;
-          background: rgba(16, 185, 129, 0.12);
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          border-radius: 20px;
-          padding: 3px 10px;
-          letter-spacing: 1px;
-          text-transform: uppercase;
+        .toolbar-spacer {
+          width: 80px;
         }
 
         /* Viewport Showcase Body */
@@ -604,7 +587,7 @@ export default function Page() {
           background: #09090c;
         }
 
-        /* Screenshot Container with Kinetic Hover-Parallax */
+        /* Real Screenshot Container with Kinetic Hover-Parallax */
         .screenshot-viewport {
           position: absolute;
           inset: 0;
@@ -626,7 +609,7 @@ export default function Page() {
         }
 
         .web-card-chassis:hover .screenshot-img {
-          transform: scale(1.03) translateY(-10px);
+          transform: scale(1.03) translateY(-8px);
           filter: brightness(1.05);
         }
 
@@ -649,13 +632,13 @@ export default function Page() {
         }
 
         .hover-launch-badge {
-          background: rgba(14, 14, 20, 0.85);
+          background: rgba(14, 14, 20, 0.9);
           border: 1px solid var(--brand-yellow);
           color: #ffffff;
-          padding: 14px 28px;
+          padding: 12px 24px;
           border-radius: 40px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.75rem;
+          font-size: 0.72rem;
           font-weight: 800;
           letter-spacing: 2px;
           text-transform: uppercase;
@@ -678,12 +661,12 @@ export default function Page() {
           left: 0;
           right: 0;
           background: linear-gradient(to top, rgba(8, 8, 12, 0.98) 0%, rgba(8, 8, 12, 0.88) 65%, transparent 100%);
-          padding: 24px 35px;
+          padding: 20px 30px;
           z-index: 10;
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
-          gap: 20px;
+          gap: 16px;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
           pointer-events: auto;
         }
@@ -700,37 +683,37 @@ export default function Page() {
           color: var(--brand-yellow);
           border: 1px solid rgba(235, 215, 63, 0.3);
           border-radius: 20px;
-          padding: 4px 14px;
+          padding: 3px 12px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.62rem;
+          font-size: 0.6rem;
           font-weight: 700;
           letter-spacing: 1.5px;
           text-transform: uppercase;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
         }
 
         .card-headline {
           font-family: 'Panchang', sans-serif;
-          font-size: 2.1rem;
+          font-size: 1.85rem;
           font-weight: 800;
           color: #ffffff;
           line-height: 1.1;
           letter-spacing: -0.5px;
           text-transform: uppercase;
-          margin-bottom: 6px;
+          margin-bottom: 4px;
         }
 
         .card-tagline {
-          font-size: 0.92rem;
+          font-size: 0.85rem;
           color: rgba(255, 255, 255, 0.75);
-          line-height: 1.4;
-          margin-bottom: 14px;
+          line-height: 1.35;
+          margin-bottom: 12px;
         }
 
         .card-tech-pills {
           display: flex;
           flex-wrap: wrap;
-          gap: 8px;
+          gap: 6px;
         }
 
         .tech-pill {
@@ -738,8 +721,8 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.12);
           color: rgba(255, 255, 255, 0.9);
           border-radius: 6px;
-          padding: 4px 10px;
-          font-size: 0.72rem;
+          padding: 3px 9px;
+          font-size: 0.7rem;
           font-family: 'Clash Display', sans-serif;
           font-weight: 500;
         }
@@ -747,7 +730,7 @@ export default function Page() {
         /* Action Buttons CTA */
         .card-action-group {
           display: flex;
-          gap: 12px;
+          gap: 10px;
           align-items: center;
           flex-shrink: 0;
         }
@@ -757,15 +740,15 @@ export default function Page() {
           color: #ffffff;
           border: 1px solid rgba(255, 255, 255, 0.18);
           border-radius: 30px;
-          padding: 12px 20px;
+          padding: 10px 18px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.7rem;
+          font-size: 0.68rem;
           font-weight: 700;
           letter-spacing: 1.5px;
           text-transform: uppercase;
           display: inline-flex;
           align-items: center;
-          gap: 8px;
+          gap: 7px;
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .btn-case-study:hover {
@@ -779,15 +762,15 @@ export default function Page() {
           color: #050505;
           border: 1px solid var(--brand-yellow);
           border-radius: 30px;
-          padding: 12px 24px;
+          padding: 10px 20px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.72rem;
+          font-size: 0.7rem;
           font-weight: 800;
           letter-spacing: 1.5px;
           text-transform: uppercase;
           display: inline-flex;
           align-items: center;
-          gap: 8px;
+          gap: 7px;
           text-decoration: none;
           box-shadow: 0 4px 20px rgba(235, 215, 63, 0.35);
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -804,8 +787,8 @@ export default function Page() {
           position: fixed;
           top: 50%;
           transform: translateY(-50%);
-          width: 54px;
-          height: 54px;
+          width: 50px;
+          height: 50px;
           border-radius: 50%;
           background: rgba(18, 18, 22, 0.85);
           border: 1px solid rgba(255, 255, 255, 0.15);
@@ -825,41 +808,67 @@ export default function Page() {
           border-color: var(--brand-yellow);
           transform: translateY(-50%) scale(1.1);
         }
-        .nav-prev-btn { left: 35px; }
-        .nav-next-btn { right: 35px; }
+        .nav-prev-btn { left: 30px; }
+        .nav-next-btn { right: 30px; }
 
-        /* Bottom Minimal Progress Bar & Indicators */
+        /* Unified Single Bottom Minimal HUD (Zero Overlap Guaranteed) */
         .slider-bottom-hud {
           position: fixed;
-          bottom: 25px;
+          bottom: 22px;
           left: 50%;
           transform: translateX(-50%);
           display: flex;
           align-items: center;
-          gap: 20px;
+          gap: 16px;
           z-index: 100;
-          background: rgba(14, 14, 18, 0.75);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 8px 20px;
+          background: rgba(14, 14, 18, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          padding: 8px 22px;
           border-radius: 30px;
-          backdrop-filter: blur(15px);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+          white-space: nowrap;
+        }
+
+        .hud-archive-badge {
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.58rem;
+          font-weight: 800;
+          color: var(--brand-yellow);
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+        }
+
+        .hud-archive-text {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.72rem;
+          color: rgba(255, 255, 255, 0.6);
+          letter-spacing: 0.3px;
+        }
+
+        .hud-divider {
+          width: 1px;
+          height: 14px;
+          background: rgba(255, 255, 255, 0.15);
         }
 
         .hud-dots {
           display: flex;
-          gap: 8px;
+          gap: 7px;
+          align-items: center;
         }
 
         .hud-dot {
-          width: 8px;
-          height: 8px;
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.25);
           transition: all 0.3s ease;
         }
 
         .hud-dot.active {
-          width: 28px;
+          width: 24px;
           border-radius: 10px;
           background: var(--brand-yellow);
           box-shadow: 0 0 10px rgba(235, 215, 63, 0.5);
@@ -867,59 +876,10 @@ export default function Page() {
 
         .hud-counter {
           font-family: 'Panchang', sans-serif;
-          font-size: 0.7rem;
+          font-size: 0.68rem;
           font-weight: 700;
           color: var(--brand-yellow);
           letter-spacing: 2px;
-        }
-
-        /* Curated Archive High-End Discrete Notice */
-        .portfolio-archive-note {
-          position: fixed;
-          bottom: 25px;
-          left: 35px;
-          z-index: 100;
-          background: rgba(14, 14, 18, 0.75);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 8px 18px;
-          border-radius: 30px;
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          pointer-events: auto;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-          transition: border-color 0.3s ease, background 0.3s ease;
-        }
-
-        .portfolio-archive-note:hover {
-          border-color: rgba(235, 215, 63, 0.4);
-          background: rgba(20, 20, 26, 0.9);
-        }
-
-        .archive-badge {
-          font-family: 'Panchang', sans-serif;
-          font-size: 0.58rem;
-          font-weight: 800;
-          color: var(--brand-yellow);
-          letter-spacing: 1.5px;
-          text-transform: uppercase;
-          white-space: nowrap;
-        }
-
-        .archive-separator {
-          width: 3px;
-          height: 3px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.3);
-        }
-
-        .archive-desc {
-          font-family: 'Clash Display', sans-serif;
-          font-size: 0.72rem;
-          color: rgba(255, 255, 255, 0.65);
-          letter-spacing: 0.3px;
         }
 
         /* Case Study Slide-out Modal / Drawer */
@@ -949,7 +909,7 @@ export default function Page() {
           background: #0d0d12;
           border-left: 1px solid rgba(255, 255, 255, 0.12);
           box-shadow: -20px 0 60px rgba(0, 0, 0, 0.9);
-          padding: 50px;
+          padding: 45px;
           overflow-y: auto;
           display: flex;
           flex-direction: column;
@@ -964,8 +924,8 @@ export default function Page() {
 
         .drawer-close-btn {
           align-self: flex-end;
-          width: 44px;
-          height: 44px;
+          width: 42px;
+          height: 42px;
           border-radius: 50%;
           background: rgba(255, 255, 255, 0.08);
           border: 1px solid rgba(255, 255, 255, 0.12);
@@ -985,20 +945,21 @@ export default function Page() {
         @media screen and (max-width: 900px) {
           .web-card-chassis {
             width: 88vw;
-            height: 76dvh;
+            height: 68dvh;
+            margin-top: 35px;
           }
           .slider-wrap {
             padding: 0 6vw;
             gap: 5vw;
           }
           .portfolio-header h1 {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
           }
           .card-headline {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
           }
           .card-footer-info {
-            padding: 18px;
+            padding: 16px;
             flex-direction: column;
             align-items: flex-start;
           }
@@ -1016,7 +977,7 @@ export default function Page() {
             width: 100vw;
             padding: 30px 20px;
           }
-          .portfolio-archive-note {
+          .hud-archive-text {
             display: none;
           }
         }
@@ -1037,7 +998,7 @@ export default function Page() {
         </svg>
       </a>
 
-      {/* High-End Editorial Header Info */}
+      {/* High-End Editorial Header Info (Generous space from cards) */}
       <div className="portfolio-header">
         <div className="header-kicker">{isGenz ? 'flagship production' : 'Bespoke Production'}</div>
         <h1>{isGenz ? 'web builds' : 'Web Portfolio'}</h1>
@@ -1056,15 +1017,11 @@ export default function Page() {
         </svg>
       </button>
 
-      {/* High-End Discrete Curated Archive Notice */}
-      <div className="portfolio-archive-note">
-        <span className="archive-badge">✦ CURATED ARCHIVE</span>
-        <span className="archive-separator" />
-        <span className="archive-desc">Hand-picked public builds • Private client systems & NDA deployments upon inquiry</span>
-      </div>
-
-      {/* Bottom Minimal HUD Status */}
+      {/* Unified Single Bottom Minimal HUD with Integrated Curated Notice */}
       <div className="slider-bottom-hud">
+        <span className="hud-archive-badge">✦ CURATED ARCHIVE</span>
+        <span className="hud-archive-text">Hand-picked public builds</span>
+        <div className="hud-divider" />
         <div className="hud-dots">
           {projects.map((_, i) => (
             <div 
@@ -1089,7 +1046,7 @@ export default function Page() {
               onClick={(e) => handleCardClick(proj, e)}
               title={`Click to open ${proj.displayUrl} live site`}
             >
-              {/* macOS Style Browser Header */}
+              {/* macOS Style Browser Header (Clean with no LIVE SITE text) */}
               <div className="browser-toolbar">
                 <div className="traffic-lights">
                   <div className="traffic-dot dot-red" />
@@ -1105,14 +1062,10 @@ export default function Page() {
                   <span>https://{proj.displayUrl}</span>
                 </div>
 
-                <div className="browser-actions">
-                  <div className="status-beacon-pill">
-                    ● LIVE SITE
-                  </div>
-                </div>
+                <div className="toolbar-spacer" />
               </div>
 
-              {/* Viewport Body with High-Resolution Screenshot & Hover Reveal */}
+              {/* Viewport Body with Real Website Screenshot & Hover Reveal */}
               <div className="card-viewport-body">
                 <div className="screenshot-viewport">
                   <img 

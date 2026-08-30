@@ -14,7 +14,8 @@ const tableMap = {
   'reels': 'portfolio_reels',
   'short-form': 'portfolio_reels',
   'long-form': 'portfolio_long_form',
-  'graphics': 'portfolio_graphics'
+  'graphics': 'portfolio_graphics',
+  'web': 'portfolio_web'
 };
 
 export async function GET(request, { params }) {
