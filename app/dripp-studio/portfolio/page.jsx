@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2, BookOpen, Info, Crop, Activity, RefreshCw, ShieldAlert, Check, X, Play, AlertTriangle } from 'lucide-react';
+import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, Globe, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2, BookOpen, Info, Crop, Activity, RefreshCw, ShieldAlert, Check, X, Play, AlertTriangle } from 'lucide-react';
 import styles from '../admin.module.css';
 import ImageEditorModal from './ImageEditorModal';
+import WebPortfolioManager from './WebPortfolioManager';
 
 const TABS = {
   REELS: 'reels',
   LONG_FORM: 'long-form',
-  GRAPHICS: 'graphics'
+  GRAPHICS: 'graphics',
+  WEB: 'web'
 };
 
 const DEFAULT_CATEGORIES = [
@@ -2335,9 +2337,16 @@ export default function PortfolioManager() {
           <button className={`tab-btn ${activeTab === TABS.GRAPHICS ? 'active' : ''}`} onClick={() => setActiveTab(TABS.GRAPHICS)}>
              <ImageIcon size={18} /> Graphics
           </button>
+          <button className={`tab-btn ${activeTab === TABS.WEB ? 'active' : ''}`} onClick={() => setActiveTab(TABS.WEB)}>
+             <Globe size={18} /> Web Portfolio
+          </button>
         </div>
       </div>
 
+      {activeTab === TABS.WEB ? (
+        <WebPortfolioManager />
+      ) : (
+        <>
       <div className="upload-card-wrapper">
         <div className="upload-card">
         <h2 style={{ marginBottom: '35px', fontSize: '1.4rem', display: 'flex', alignItems: 'center', gap: '12px', color: '#fff', letterSpacing: '0.5px' }}>
@@ -3171,6 +3180,8 @@ export default function PortfolioManager() {
         />
             
       </div>
+      </>
+      )}
 
     </div>
   );

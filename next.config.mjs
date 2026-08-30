@@ -54,13 +54,6 @@ const nextConfig = {
         headers: securityHeaders,
       },
       {
-        // Cache static assets aggressively - immutable since Next.js includes content hash in filename
-        source: '/_next/static/(.*)',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-        ],
-      },
-      {
         // Public assets - moderate cache with revalidation
         source: '/(.*)\\.(ico|png|jpg|jpeg|gif|webp|svg|woff|woff2)',
         headers: [

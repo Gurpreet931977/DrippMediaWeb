@@ -4,95 +4,111 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGenz } from '../contexts/GenzContext';
 
+const DEFAULT_PROJECTS = [
+  {
+    id: 'bharatup',
+    title: 'BharatUp',
+    tagline: 'A Home for Businesses Building What Comes Next',
+    category: 'Enterprise Digital Platform',
+    badge: 'Business Tech',
+    desc: 'A high-performance digital presence engineered for business growth, high concurrency, and seamless client engagement.',
+    url: 'https://www.bharatup.online/',
+    displayUrl: 'bharatup.online',
+    image: '/images/web-portfolio/bharatup.jpg',
+    color: '#3b82f6',
+    stats: [
+      { label: 'Lighthouse Score', value: '99/100' },
+      { label: 'Active Reach', value: '25K+' },
+      { label: 'Page Load Speed', value: '0.4s' }
+    ],
+    techStack: ['Next.js 14', 'TypeScript', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Framer Motion'],
+    challenge: 'Creating a high-credibility digital gateway that communicates modern business acceleration with sub-second performance.',
+    solution: 'We architected a lightweight, server-rendered Next.js application with edge caching, dark aesthetic, and frictionless responsiveness.'
+  },
+  {
+    id: 'pinaka',
+    title: 'Pinaka Care Clinic',
+    tagline: 'Skin, Laser & Dermatology Clinic in South Bopal, Ahmedabad',
+    category: 'Healthcare & Clinical Web',
+    badge: 'Healthcare',
+    desc: 'A clinical healthcare platform built to streamline patient consultation bookings, doctor profiles, and multi-specialty dermatology services.',
+    url: 'https://www.pinakacareclinic.com/',
+    displayUrl: 'pinakacareclinic.com',
+    image: '/images/web-portfolio/pinakacare.jpg',
+    color: '#10b981',
+    stats: [
+      { label: 'Booking Conversion', value: '+340%' },
+      { label: 'Mobile Readiness', value: '100%' },
+      { label: 'TTFB Server Latency', value: '0.28s' }
+    ],
+    techStack: ['Next.js', 'React 18', 'Tailwind CSS', 'Framer Motion', 'Cloudflare Edge'],
+    challenge: 'Medical clinics often suffer from confusing appointment layouts and outdated interfaces that reduce patient trust.',
+    solution: 'Designed a soothing, high-trust visual language with instant slot booking, clean treatment catalog, and fast mobile intake.'
+  },
+  {
+    id: 'goatsociety',
+    title: 'Goat Society',
+    tagline: 'Authentic Decanted Fragrances & Lifestyle E-Commerce',
+    category: 'Luxury Fragrance & Commerce',
+    badge: 'Luxury E-Com',
+    desc: 'An exclusive e-commerce boutique featuring 100% authentic decanted fragrances, sterile extraction standards, and sleek catalog navigation.',
+    url: 'https://goatsociety.in/',
+    displayUrl: 'goatsociety.in',
+    image: '/images/web-portfolio/goatsociety.jpg',
+    color: '#f59e0b',
+    stats: [
+      { label: 'Catalog Performance', value: '60 FPS' },
+      { label: 'User Retention', value: '+220%' },
+      { label: 'Checkout Speed', value: '< 2s' }
+    ],
+    techStack: ['Next.js', 'Tailwind CSS', 'Framer Motion', 'E-Commerce Core', 'Cloudflare CDN'],
+    challenge: 'Creating a high-end luxury aesthetic that showcases perfume notes and sizes clearly without slowing down mobile catalog scrolling.',
+    solution: 'Crafted minimal typography, high-res visual product cards, and instant decant size selectors for maximum checkout efficiency.'
+  },
+  {
+    id: 'rasmlai',
+    title: 'Rasmlai AI',
+    tagline: 'A Safe Space to Express Every Emotion • AI Companion for Wellness',
+    category: 'AI Companion & Product Web',
+    badge: 'AI Application',
+    desc: 'A voice-first AI companion workspace engineered to help users process feelings, express emotions, and engage in reflective dialogue.',
+    url: 'https://rasmlai.vercel.app/',
+    displayUrl: 'rasmlai.vercel.app',
+    image: '/images/web-portfolio/rasmlai.jpg',
+    color: '#8b5cf6',
+    stats: [
+      { label: 'AI Response Latency', value: '12ms' },
+      { label: 'Architecture', value: 'Edge AI' },
+      { label: 'Lighthouse Score', value: '100/100' }
+    ],
+    techStack: ['Next.js 15', 'React 19', 'OpenAI API', 'Vercel AI SDK', 'Tailwind CSS'],
+    challenge: 'Creating a calming, intimate digital environment where users feel secure expressing deep emotions.',
+    solution: 'Engineered an ultra-clean, minimal interface with fluid animations, intuitive voice prompts, and zero friction onboarding.'
+  }
+];
+
 export default function Page() {
   const { isGenz } = useGenz() || { isGenz: false };
+  const [projects, setProjects] = useState(DEFAULT_PROJECTS);
   const [activeProjectIdx, setActiveProjectIdx] = useState(0);
   const [selectedCaseStudy, setSelectedCaseStudy] = useState(null);
 
   const audioCtxRef = useRef(null);
+  const hasDraggedRef = useRef(false);
+  const hudRef = useRef(null);
+  const isHudDraggingRef = useRef(false);
 
-  const projects = [
-    {
-      id: 'bharatup',
-      title: 'BharatUp',
-      tagline: 'A Home for Businesses Building What Comes Next',
-      category: 'Enterprise Digital Platform',
-      badge: 'Business Tech',
-      desc: 'A high-performance digital presence engineered for business growth, high concurrency, and seamless client engagement.',
-      url: 'https://www.bharatup.online/',
-      displayUrl: 'bharatup.online',
-      image: '/images/web-portfolio/bharatup.jpg',
-      color: '#3b82f6',
-      stats: [
-        { label: 'Lighthouse Score', value: '99/100' },
-        { label: 'Active Reach', value: '25K+' },
-        { label: 'Page Load Speed', value: '0.4s' }
-      ],
-      techStack: ['Next.js 14', 'TypeScript', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Framer Motion'],
-      challenge: 'Creating a high-credibility digital gateway that communicates modern business acceleration with sub-second performance.',
-      solution: 'We architected a lightweight, server-rendered Next.js application with edge caching, dark aesthetic, and frictionless responsiveness.'
-    },
-    {
-      id: 'pinaka',
-      title: 'Pinaka Care Clinic',
-      tagline: 'Skin, Laser & Dermatology Clinic in South Bopal, Ahmedabad',
-      category: 'Healthcare & Clinical Web',
-      badge: 'Healthcare',
-      desc: 'A clinical healthcare platform built to streamline patient consultation bookings, doctor profiles, and multi-specialty dermatology services.',
-      url: 'https://www.pinakacareclinic.com/',
-      displayUrl: 'pinakacareclinic.com',
-      image: '/images/web-portfolio/pinakacare.jpg',
-      color: '#10b981',
-      stats: [
-        { label: 'Booking Conversion', value: '+340%' },
-        { label: 'Mobile Readiness', value: '100%' },
-        { label: 'TTFB Server Latency', value: '0.28s' }
-      ],
-      techStack: ['Next.js', 'React 18', 'Tailwind CSS', 'Framer Motion', 'Cloudflare Edge'],
-      challenge: 'Medical clinics often suffer from confusing appointment layouts and outdated interfaces that reduce patient trust.',
-      solution: 'Designed a soothing, high-trust visual language with instant slot booking, clean treatment catalog, and fast mobile intake.'
-    },
-    {
-      id: 'goatsociety',
-      title: 'Goat Society',
-      tagline: 'Authentic Decanted Fragrances & Lifestyle E-Commerce',
-      category: 'Luxury Fragrance & Commerce',
-      badge: 'Luxury E-Com',
-      desc: 'An exclusive e-commerce boutique featuring 100% authentic decanted fragrances, sterile extraction standards, and sleek catalog navigation.',
-      url: 'https://goatsociety.in/',
-      displayUrl: 'goatsociety.in',
-      image: '/images/web-portfolio/goatsociety.jpg',
-      color: '#f59e0b',
-      stats: [
-        { label: 'Catalog Performance', value: '60 FPS' },
-        { label: 'User Retention', value: '+220%' },
-        { label: 'Checkout Speed', value: '< 2s' }
-      ],
-      techStack: ['Next.js', 'Tailwind CSS', 'Framer Motion', 'E-Commerce Core', 'Cloudflare CDN'],
-      challenge: 'Creating a high-end luxury aesthetic that showcases perfume notes and sizes clearly without slowing down mobile catalog scrolling.',
-      solution: 'Crafted minimal typography, high-res visual product cards, and instant decant size selectors for maximum checkout efficiency.'
-    },
-    {
-      id: 'rasmlai',
-      title: 'Rasmlai AI',
-      tagline: 'A Safe Space to Express Every Emotion • AI Companion for Wellness',
-      category: 'AI Companion & Product Web',
-      badge: 'AI Application',
-      desc: 'A voice-first AI companion workspace engineered to help users process feelings, express emotions, and engage in reflective dialogue.',
-      url: 'https://rasmlai.vercel.app/',
-      displayUrl: 'rasmlai.vercel.app',
-      image: '/images/web-portfolio/rasmlai.jpg',
-      color: '#8b5cf6',
-      stats: [
-        { label: 'AI Response Latency', value: '12ms' },
-        { label: 'Architecture', value: 'Edge AI' },
-        { label: 'Lighthouse Score', value: '100/100' }
-      ],
-      techStack: ['Next.js 15', 'React 19', 'OpenAI API', 'Vercel AI SDK', 'Tailwind CSS'],
-      challenge: 'Creating a calming, intimate digital environment where users feel secure expressing deep emotions.',
-      solution: 'Engineered an ultra-clean, minimal interface with fluid animations, intuitive voice prompts, and zero friction onboarding.'
-    }
-  ];
+  // Synchronize live web projects with database API
+  useEffect(() => {
+    fetch('/api/web')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProjects(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Synthesize rich Web Audio acoustic feedback
   const playSound = (type = 'click') => {
@@ -149,7 +165,7 @@ export default function Page() {
       const targetScroll = card.offsetLeft - (pinContainer.clientWidth - card.clientWidth) / 2;
       gsap.to(pinContainer, {
         scrollLeft: Math.max(0, targetScroll),
-        duration: 0.75,
+        duration: 0.65,
         ease: "power3.out"
       });
     }
@@ -175,22 +191,24 @@ export default function Page() {
         gsap.to(cursor, {
           x: e.clientX,
           y: e.clientY,
-          duration: 0.15,
+          duration: 0.12,
           ease: "power2.out"
         });
       }
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Custom wheel / trackpad horizontal scrolling
     const pinContainer = document.getElementById('pin-container');
+    const hudElement = hudRef.current;
+
+    // Custom wheel / trackpad horizontal scrolling
     const handleWheel = (e) => {
       const delta = Math.abs(e.deltaY) > 0 ? e.deltaY : e.deltaX;
       if (Math.abs(delta) > 0 && pinContainer) {
         e.preventDefault();
         gsap.to(pinContainer, {
-          scrollLeft: pinContainer.scrollLeft + delta * 2.8,
-          duration: 0.45,
+          scrollLeft: pinContainer.scrollLeft + delta * 2.5,
+          duration: 0.35,
           ease: "power2.out",
           overwrite: "auto"
         });
@@ -200,58 +218,131 @@ export default function Page() {
       pinContainer.addEventListener('wheel', handleWheel, { passive: false });
     }
 
-    // Drag-to-scroll momentum
-    let isDown = false;
-    let startX = 0;
-    let scrollLeftPos = 0;
-    let isDragging = false;
-    let velocity = 0;
-    let lastX = 0;
-
-    const onMouseDown = (e) => {
+    // Magnetic snap helper
+    const snapToNearestCard = () => {
       if (!pinContainer) return;
-      if (e.target.closest('button') || e.target.closest('a')) return;
-      isDown = true;
-      isDragging = false;
-      startX = e.pageX - pinContainer.offsetLeft;
-      scrollLeftPos = pinContainer.scrollLeft;
-      lastX = e.pageX;
-      gsap.killTweensOf(pinContainer);
-      if (cursor) cursor.classList.add('active');
+      const cards = document.querySelectorAll('.web-card-chassis');
+      if (!cards.length) return;
+      const containerCenter = pinContainer.scrollLeft + pinContainer.clientWidth / 2;
+      let closestIdx = 0;
+      let minDiff = Infinity;
+      cards.forEach((card, idx) => {
+        const cardCenter = card.offsetLeft + card.clientWidth / 2;
+        const diff = Math.abs(containerCenter - cardCenter);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIdx = idx;
+        }
+      });
+      scrollToCard(closestIdx);
     };
 
-    const onMouseLeaveUp = () => {
+    // 1. Full-scene hold-and-drag physics
+    let isDown = false;
+    let startX = 0;
+    let scrollStart = 0;
+    let lastMoveX = 0;
+    let velocity = 0;
+    let totalMoved = 0;
+
+    const onPointerDown = (e) => {
+      if (!pinContainer) return;
+      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.slider-bottom-hud')) return;
+      isDown = true;
+      hasDraggedRef.current = false;
+      totalMoved = 0;
+      startX = e.clientX || (e.touches && e.touches[0]?.clientX) || 0;
+      lastMoveX = startX;
+      scrollStart = pinContainer.scrollLeft;
+      velocity = 0;
+      gsap.killTweensOf(pinContainer);
+      if (cursor) cursor.classList.add('grabbing');
+    };
+
+    const onPointerMove = (e) => {
+      if (!isDown || !pinContainer) return;
+      const currentX = e.clientX || (e.touches && e.touches[0]?.clientX) || 0;
+      const deltaX = currentX - lastMoveX;
+      totalMoved += Math.abs(currentX - startX);
+      if (totalMoved > 8) {
+        hasDraggedRef.current = true;
+      }
+      velocity = deltaX;
+      lastMoveX = currentX;
+      pinContainer.scrollLeft = scrollStart - (currentX - startX);
+    };
+
+    const onPointerUp = () => {
       if (isDown && pinContainer) {
         isDown = false;
-        if (cursor) cursor.classList.remove('active');
-        if (Math.abs(velocity) > 1.5) {
-          gsap.to(pinContainer, {
-            scrollLeft: pinContainer.scrollLeft - (velocity * 10),
-            duration: 0.7,
-            ease: "power2.out",
-            overwrite: "auto"
-          });
+        if (cursor) cursor.classList.remove('grabbing');
+        if (Math.abs(velocity) > 6) {
+          if (velocity < 0) {
+            nextCard();
+          } else {
+            prevCard();
+          }
+        } else {
+          snapToNearestCard();
         }
       }
     };
 
-    const onMouseMoveDrag = (e) => {
-      if (!isDown || !pinContainer) return;
-      e.preventDefault();
-      const x = e.pageX - pinContainer.offsetLeft;
-      const walk = (x - startX) * 1.2;
-      if (Math.abs(walk) > 5) isDragging = true;
-      velocity = e.pageX - lastX;
-      lastX = e.pageX;
-      pinContainer.scrollLeft = scrollLeftPos - walk;
+    // 2. HUD Scrubber hold-and-drag physics
+    let isHudDown = false;
+    const updateScrollFromHud = (clientX) => {
+      if (!pinContainer || !hudElement) return;
+      const rect = hudElement.getBoundingClientRect();
+      const relX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+      const progress = relX / rect.width;
+      const maxScroll = pinContainer.scrollWidth - pinContainer.clientWidth;
+      pinContainer.scrollLeft = progress * maxScroll;
     };
 
+    const onHudDown = (e) => {
+      isHudDown = true;
+      isHudDraggingRef.current = true;
+      hudElement?.classList.add('hud-dragging');
+      if (cursor) cursor.classList.add('grabbing');
+      gsap.killTweensOf(pinContainer);
+      const clientX = e.clientX || (e.touches && e.touches[0]?.clientX) || 0;
+      updateScrollFromHud(clientX);
+    };
+
+    const onHudMove = (e) => {
+      if (!isHudDown) return;
+      const clientX = e.clientX || (e.touches && e.touches[0]?.clientX) || 0;
+      updateScrollFromHud(clientX);
+    };
+
+    const onHudUp = () => {
+      if (isHudDown) {
+        isHudDown = false;
+        isHudDraggingRef.current = false;
+        hudElement?.classList.remove('hud-dragging');
+        if (cursor) cursor.classList.remove('grabbing');
+        snapToNearestCard();
+      }
+    };
+
+    // Event listeners
     if (pinContainer) {
-      pinContainer.addEventListener('mousedown', onMouseDown);
-      pinContainer.addEventListener('mouseleave', onMouseLeaveUp);
-      pinContainer.addEventListener('mouseup', onMouseLeaveUp);
-      pinContainer.addEventListener('mousemove', onMouseMoveDrag);
+      pinContainer.addEventListener('mousedown', onPointerDown);
+      pinContainer.addEventListener('touchstart', onPointerDown, { passive: true });
     }
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('touchmove', onPointerMove, { passive: false });
+    window.addEventListener('mouseup', onPointerUp);
+    window.addEventListener('touchend', onPointerUp);
+
+    if (hudElement) {
+      hudElement.addEventListener('mousedown', onHudDown);
+      hudElement.addEventListener('touchstart', onHudDown, { passive: true });
+    }
+    window.addEventListener('mousemove', onHudMove);
+    window.addEventListener('touchmove', onHudMove, { passive: false });
+    window.addEventListener('mouseup', onHudUp);
+    window.addEventListener('touchend', onHudUp);
 
     // Keyboard navigation
     const handleKeyDown = (e) => {
@@ -281,22 +372,38 @@ export default function Page() {
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousemove', onPointerMove);
+      window.removeEventListener('touchmove', onPointerMove);
+      window.removeEventListener('mouseup', onPointerUp);
+      window.removeEventListener('touchend', onPointerUp);
+      window.removeEventListener('mousemove', onHudMove);
+      window.removeEventListener('touchmove', onHudMove);
+      window.removeEventListener('mouseup', onHudUp);
+      window.removeEventListener('touchend', onHudUp);
       window.removeEventListener('keydown', handleKeyDown);
+
       if (pinContainer) {
         pinContainer.removeEventListener('wheel', handleWheel);
-        pinContainer.removeEventListener('mousedown', onMouseDown);
-        pinContainer.removeEventListener('mouseleave', onMouseLeaveUp);
-        pinContainer.removeEventListener('mouseup', onMouseLeaveUp);
-        pinContainer.removeEventListener('mousemove', onMouseMoveDrag);
+        pinContainer.removeEventListener('mousedown', onPointerDown);
+        pinContainer.removeEventListener('touchstart', onPointerDown);
         pinContainer.removeEventListener('scroll', handleScroll);
+      }
+      if (hudElement) {
+        hudElement.removeEventListener('mousedown', onHudDown);
+        hudElement.removeEventListener('touchstart', onHudDown);
       }
       if (audioCtxRef.current) {
         audioCtxRef.current.close().catch(() => {});
       }
     };
-  }, [activeProjectIdx]);
+  }, [projects]);
 
   const handleCardClick = (proj, e) => {
+    // If a drag took place, suppress link redirect
+    if (hasDraggedRef.current) {
+      hasDraggedRef.current = false;
+      return;
+    }
     // If user clicked inside the Case Study button, don't redirect to external site
     if (e.target.closest('.btn-case-study') || e.target.closest('.case-study-prevent')) {
       return;
@@ -354,6 +461,15 @@ export default function Page() {
           background-color: rgba(235, 215, 63, 0.15);
           backdrop-filter: blur(4px);
           border-color: var(--brand-yellow);
+        }
+
+        .cursor.grabbing {
+          width: 52px;
+          height: 52px;
+          background-color: rgba(235, 215, 63, 0.25);
+          backdrop-filter: blur(4px);
+          border-color: var(--brand-yellow);
+          box-shadow: 0 0 25px rgba(235, 215, 63, 0.4);
         }
 
         @media (pointer: coarse) {
@@ -782,36 +898,38 @@ export default function Page() {
           transform: translateY(-2px) scale(1.04);
         }
 
-        /* Floating Nav Arrows */
+        /* Minimalist Side Floating Arrows */
         .slider-nav-btn {
           position: fixed;
           top: 50%;
           transform: translateY(-50%);
-          width: 50px;
-          height: 50px;
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
-          background: rgba(18, 18, 22, 0.85);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          color: #ffffff;
+          background: rgba(14, 14, 18, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: rgba(255, 255, 255, 0.85);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 100;
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          cursor: pointer;
         }
         .slider-nav-btn:hover {
-          background: var(--brand-yellow);
-          color: #050505;
-          border-color: var(--brand-yellow);
-          transform: translateY(-50%) scale(1.1);
+          background: rgba(235, 215, 63, 0.15);
+          color: var(--brand-yellow);
+          border-color: rgba(235, 215, 63, 0.5);
+          transform: translateY(-50%) scale(1.14);
+          box-shadow: 0 0 25px rgba(235, 215, 63, 0.25);
         }
-        .nav-prev-btn { left: 30px; }
-        .nav-next-btn { right: 30px; }
+        .nav-prev-btn { left: 24px; }
+        .nav-next-btn { right: 24px; }
 
-        /* Unified Single Bottom Minimal HUD (Zero Overlap Guaranteed) */
+        /* Unified Single Bottom Minimal HUD (Hold and Draggable Scrubber) */
         .slider-bottom-hud {
           position: fixed;
           bottom: 22px;
@@ -821,7 +939,7 @@ export default function Page() {
           align-items: center;
           gap: 16px;
           z-index: 100;
-          background: rgba(14, 14, 18, 0.8);
+          background: rgba(14, 14, 18, 0.85);
           border: 1px solid rgba(255, 255, 255, 0.12);
           padding: 8px 22px;
           border-radius: 30px;
@@ -829,6 +947,20 @@ export default function Page() {
           -webkit-backdrop-filter: blur(20px);
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
           white-space: nowrap;
+          cursor: grab;
+          user-select: none;
+          touch-action: none;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .slider-bottom-hud:hover {
+          border-color: rgba(235, 215, 63, 0.35);
+          box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 20px rgba(235, 215, 63, 0.12);
+        }
+        .slider-bottom-hud.hud-dragging {
+          cursor: grabbing !important;
+          border-color: rgba(235, 215, 63, 0.6) !important;
+          box-shadow: 0 15px 45px rgba(0, 0, 0, 0.9), 0 0 30px rgba(235, 215, 63, 0.25) !important;
+          transform: translateX(-50%) scale(1.02) !important;
         }
 
         .hud-archive-badge {
@@ -855,8 +987,9 @@ export default function Page() {
 
         .hud-dots {
           display: flex;
-          gap: 7px;
+          gap: 8px;
           align-items: center;
+          padding: 2px 4px;
         }
 
         .hud-dot {
@@ -864,7 +997,19 @@ export default function Page() {
           height: 7px;
           border-radius: 50%;
           background: rgba(255, 255, 255, 0.25);
-          transition: all 0.3s ease;
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          cursor: pointer;
+        }
+        .hud-dot:hover {
+          background: rgba(255, 255, 255, 0.6);
+          transform: scale(1.25);
+        }
+
+        .hud-dot.active {
+          width: 26px;
+          border-radius: 12px;
+          background: var(--brand-yellow);
+          box-shadow: 0 0 12px rgba(235, 215, 63, 0.6);
         }
 
         .hud-dot.active {
@@ -1005,20 +1150,20 @@ export default function Page() {
         <p>{isGenz ? 'interactive digital experiences' : 'Interactive Experiences'}</p>
       </div>
 
-      {/* Floating Prev & Next Arrow Buttons */}
+      {/* Floating Minimal Side Arrows */}
       <button className="slider-nav-btn nav-prev-btn" onClick={prevCard} title="Previous Web Build (←)">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
       </button>
       <button className="slider-nav-btn nav-next-btn" onClick={nextCard} title="Next Web Build (→)">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
       </button>
 
-      {/* Unified Single Bottom Minimal HUD with Integrated Curated Notice */}
-      <div className="slider-bottom-hud">
+      {/* Unified Single Bottom Minimal HUD (Hold and Draggable Scrubber) */}
+      <div className="slider-bottom-hud" ref={hudRef} title="Click, hold & drag to scrub portfolio">
         <span className="hud-archive-badge">✦ CURATED ARCHIVE</span>
         <span className="hud-archive-text">Hand-picked public builds</span>
         <div className="hud-divider" />
@@ -1027,7 +1172,11 @@ export default function Page() {
             <div 
               key={i} 
               className={`hud-dot ${activeProjectIdx === i ? 'active' : ''}`}
-              onClick={() => scrollToCard(i)}
+              onClick={(e) => {
+                e.stopPropagation();
+                scrollToCard(i);
+              }}
+              title={`Jump to build 0${i + 1}`}
             />
           ))}
         </div>
@@ -1156,7 +1305,25 @@ export default function Page() {
                 </button>
 
                 <div style={{ marginTop: '20px' }}>
-                  <div className="card-category-badge">{selectedCaseStudy.category}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                    <div className="card-category-badge" style={{ margin: 0 }}>{selectedCaseStudy.category}</div>
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      background: 'rgba(235, 215, 63, 0.1)',
+                      border: '1px solid rgba(235, 215, 63, 0.25)',
+                      borderRadius: '20px',
+                      padding: '4px 12px',
+                      fontFamily: 'Panchang, sans-serif',
+                      fontSize: '0.58rem',
+                      color: 'var(--brand-yellow)',
+                      fontWeight: 700,
+                      letterSpacing: '1px'
+                    }}>
+                      ✦ ORLO AI ARCHITECTURAL BLUEPRINT
+                    </div>
+                  </div>
                   <h2 style={{
                     fontFamily: 'Panchang, sans-serif',
                     fontSize: '2.5rem',

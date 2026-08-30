@@ -1,6 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { applyLedgerToItems, setItemReviewStatus, clearItemReviewStatus } from '../../../../../lib/portfolioReviewLedger.js';
+import { 
+  getWebPortfolioItems, 
+  addWebPortfolioItem, 
+  updateWebPortfolioItem, 
+  deleteWebPortfolioItem 
+} from '../../../../../lib/webPortfolioStore.js';
 
 function getSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://irgplkartyhasfucpffn.supabase.co';
@@ -21,8 +27,27 @@ const tableMap = {
 export async function GET(request, { params }) {
   const resolvedParams = await params;
   const type = resolvedParams.type.toLowerCase();
+
+  // If web portfolio, use the robust persistent web portfolio store
+  if (type === 'web') {
+    try {
+      const { searchParams } = new URL(request.url);
+      const status = searchParams.get('status');
+      const items = await getWebPortfolioItems();
+      
+      let filtered = items;
+      if (status === 'live') {
+        filtered = items.filter(i => i.is_visible !== false);
+      } else if (status === 'held') {
+        filtered = items.filter(i => i.is_visible === false);
+      }
+      return Response.json(filtered);
+    } catch (err) {
+      return Response.json({ error: err.message }, { status: 500 });
+    }
+  }
+
   const tableName = tableMap[type];
-  
   if (!tableName) return Response.json({ error: 'Invalid portfolio type' }, { status: 400 });
 
   try {
@@ -56,6 +81,17 @@ export async function GET(request, { params }) {
 export async function POST(request, { params }) {
   const resolvedParams = await params;
   const type = resolvedParams.type.toLowerCase();
+
+  if (type === 'web') {
+    try {
+      const body = await request.json();
+      const created = await addWebPortfolioItem(body);
+      return Response.json(created);
+    } catch (err) {
+      return Response.json({ error: err.message }, { status: 500 });
+    }
+  }
+
   const tableName = tableMap[type];
   if (!tableName) return Response.json({ error: 'Invalid portfolio type' }, { status: 400 });
 
@@ -94,6 +130,18 @@ export async function POST(request, { params }) {
 export async function PUT(request, { params }) {
   const resolvedParams = await params;
   const type = resolvedParams.type.toLowerCase();
+
+  if (type === 'web') {
+    try {
+      const { id, ...updates } = await request.json();
+      if (!id) return Response.json({ error: 'ID is required' }, { status: 400 });
+      const updated = await updateWebPortfolioItem(id, updates);
+      return Response.json(updated);
+    } catch (err) {
+      return Response.json({ error: err.message }, { status: 500 });
+    }
+  }
+
   const tableName = tableMap[type];
   if (!tableName) return Response.json({ error: 'Invalid portfolio type' }, { status: 400 });
 
@@ -152,6 +200,19 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   const resolvedParams = await params;
   const type = resolvedParams.type.toLowerCase();
+
+  if (type === 'web') {
+    try {
+      const { searchParams } = new URL(request.url);
+      const id = searchParams.get('id');
+      if (!id) return Response.json({ error: 'ID is required' }, { status: 400 });
+      const result = await deleteWebPortfolioItem(id);
+      return Response.json(result);
+    } catch (err) {
+      return Response.json({ error: err.message }, { status: 500 });
+    }
+  }
+
   const tableName = tableMap[type];
   if (!tableName) return Response.json({ error: 'Invalid portfolio type' }, { status: 400 });
 

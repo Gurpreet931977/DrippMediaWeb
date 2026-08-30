@@ -1,5 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
 export async function POST(request) {
   try {
     const { url, title, category, notes } = await request.json();
@@ -28,9 +26,6 @@ export async function POST(request) {
       });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
     const prompt = `You are Orlo AI, the elite Chief Technology & Design Strategist at Dripp Media (an award-winning web design & development creative agency).
 
 Generate a strategic, agency-grade Web Case Study for the following portfolio website:
@@ -39,10 +34,10 @@ Generate a strategic, agency-grade Web Case Study for the following portfolio we
 - Category / Domain: "${category || 'Web Application'}"
 - Admin Notes / Context: "${notes || 'Modern web engineering and bespoke UI/UX design'}"
 
-Strictly return ONLY a valid JSON object matching this exact schema (no markdown markdown backticks around JSON, just pure JSON):
+Strictly return ONLY a valid JSON object matching this exact schema (no markdown formatting, no backticks, just raw JSON):
 {
   "tagline": "Punchy, elite one-sentence value proposition hook (under 12 words)",
-  "category": "Strategic industry category (e.g. Healthcare & Clinical SaaS, Luxury E-Commerce, EdTech Platform, Generative AI Studio)",
+  "category": "Strategic industry category (e.g. Healthcare & Clinical Web, Luxury Fragrance & Commerce, EdTech Platform, Generative AI Studio)",
   "badge": "Short 2-3 word pill badge",
   "description": "High-impact 2-sentence summary of the engineering and user experience",
   "challenge": "A compelling 2-3 sentence breakdown of the client problem, legacy blockers, or industry pain points",
@@ -50,16 +45,45 @@ Strictly return ONLY a valid JSON object matching this exact schema (no markdown
   "techStack": ["Next.js 15", "TypeScript", "Tailwind CSS", "Framer Motion", "Supabase", "PostgreSQL"],
   "stats": [
     { "label": "Lighthouse Score", "value": "99/100" },
-    { "label": "Specific Metric", "value": "+340%" },
+    { "label": "Impact Metric", "value": "+340%" },
     { "label": "Speed / Latency", "value": "0.3s" }
   ]
 }`;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
-    // Clean JSON markdown fences if any
-    const cleanedJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash'];
+    let textOutput = '';
+
+    for (const model of modelsToTry) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const response = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.4,
+              maxOutputTokens: 1000
+            }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (textOutput) break;
+        }
+      } catch (e) {
+        // try next model
+      }
+    }
+
+    if (!textOutput) {
+      throw new Error('No output received from Orlo AI');
+    }
+
+    // Clean JSON markdown fences
+    const cleanedJson = textOutput.replace(/```json/gi, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleanedJson);
 
     return Response.json(parsed);
@@ -68,7 +92,7 @@ Strictly return ONLY a valid JSON object matching this exact schema (no markdown
     // Fallback on error
     return Response.json({
       tagline: `High-Performance Digital Architecture for Modern Growth`,
-      category: 'Enterprise Web Application',
+      category: 'Enterprise Digital Platform',
       badge: 'Production Web',
       description: `A digital experience built for high performance, sub-second latency, and intuitive conversion flows.`,
       challenge: `Traditional web platforms suffer from slow load times, confusing navigation, and outdated aesthetics that reduce engagement.`,
