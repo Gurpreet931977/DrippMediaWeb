@@ -366,12 +366,8 @@ export default function Page() {
                         this.recalcPositions();
                     };
 
-                    const col = i % this.cols;
-                    const row = Math.floor(i / this.cols);
-
-                    // 2D pseudo-random stride so adjacent rows and columns never repeat identical artwork
                     const itemIndex = this.customItems && this.customItems.length > 0 
-                        ? (col * 3 + row * 5 + i) % this.customItems.length 
+                        ? (i % this.customItems.length) 
                         : 0;
 
                     if (this.customItems && this.customItems.length > 0) {
@@ -385,24 +381,16 @@ export default function Page() {
                             catLabel.innerText = sourceItem.category;
                             el.appendChild(catLabel);
                         }
-                        const dummyTitles = ['Neon Brand Identity', 'Event Poster Vibe', 'Tech Startup Logo', 'Creative Thumbnail', 'Web Redesign'];
-                        const dummyCaseStudies = [
-                          "This project focused on creating a bold, eye-catching aesthetic. We used high-contrast colors and custom typography to make the brand instantly recognizable.",
-                          "The goal was to design something clean and modern. By stripping away unnecessary elements, we created a minimalist design that speaks volumes.",
-                          "This was built for maximum engagement. We used vibrant gradients and dynamic layouts to capture attention in less than a second.",
-                          "Designed specifically to resonate with a younger demographic. It blends modern aesthetics with retro elements to create a nostalgic yet fresh vibe.",
-                          "A complete visual overhaul. We maintained the core identity but modernized the geometry and color palette for a premium feel."
-                        ];
 
-                        el.dataset.title = sourceItem.title || dummyTitles[itemIndex % dummyTitles.length];
-                        el.dataset.case_study = sourceItem.case_study || dummyCaseStudies[itemIndex % dummyCaseStudies.length];
+                        el.dataset.title = sourceItem.title || 'Graphic Project';
+                        el.dataset.case_study = sourceItem.case_study || 'Custom graphic design project crafted by Dripp.';
                     }
 
-                    // Smart Fallback placeholder with immediate loaded status
+                    // Fallback to verified image on error
                     img.onerror = () => {
                         el.classList.remove('is-loading');
                         img.onerror = null;
-                        img.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='1160'%3E%3Crect width='800' height='1160' fill='%23141416'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='32' fill='%23ebd73f'%3EDripp Portfolio Project%3C/text%3E%3C/svg%3E`; 
+                        img.src = 'https://pub-72c28e7d3884434bac75ca152fdf30bb.r2.dev/Graphics/1785782739074_3.png'; 
                         this.recalcPositions();
                     };
 
@@ -411,8 +399,6 @@ export default function Page() {
 
                     // Symmetrical fixed size factor
                     const chosenFactor = 0.9;
-                    const randDriftX = (Math.random() - 0.5) * 1.5;
-                    const randDriftY = (Math.random() - 0.5) * 1.5;
 
                     this.items.push({
                         el: el,
@@ -420,10 +406,6 @@ export default function Page() {
                         basey: 0,
                         index: i,
                         sizeFactor: chosenFactor,
-                        baseDriftX: randDriftX,
-                        baseDriftY: randDriftY,
-                        driftX: randDriftX,
-                        driftY: randDriftY,
                         rotX: 0,
                         rotY: 0
                     });
@@ -786,6 +768,7 @@ export default function Page() {
                 this.state.targetZoom = targetZoom;
 
                 if (this.zoomTween) this.zoomTween.kill();
+                if (this.blurTween) this.blurTween.kill();
 
                 const isDiveIn = direction === 'in';
                 const duration = isDiveIn ? 0.85 : 0.75;
@@ -801,6 +784,28 @@ export default function Page() {
                         this.recalcPositions();
                     }
                 });
+
+                // High-Speed Cinematic Motion Blur on the Canvas Container during dive-in / pull-back
+                const canvasEl = this.container;
+                if (canvasEl) {
+                    const blurObj = { blur: 0 };
+                    const maxBlur = isDiveIn ? 10 : 8;
+                    
+                    this.blurTween = gsap.timeline({
+                        onUpdate: () => {
+                            if (blurObj.blur > 0.2) {
+                                canvasEl.style.filter = `blur(${blurObj.blur.toFixed(1)}px)`;
+                            } else {
+                                canvasEl.style.filter = 'none';
+                            }
+                        },
+                        onComplete: () => {
+                            canvasEl.style.filter = 'none';
+                        }
+                    })
+                    .to(blurObj, { blur: maxBlur, duration: duration * 0.42, ease: "power2.in" })
+                    .to(blurObj, { blur: 0, duration: duration * 0.58, ease: "power3.out" });
+                }
 
                 // Subtle Camera Recoil / Momentum Settle
                 const showcase = document.getElementById('portfolio-showcase');
@@ -899,6 +904,7 @@ export default function Page() {
             // Proper context cleanup method mapping
             destroy() {
                 if (this.zoomTween) this.zoomTween.kill();
+                if (this.blurTween) this.blurTween.kill();
                 if (this.fxTimeline) this.fxTimeline.kill();
                 gsap.ticker.remove(this.renderBound);
                 window.removeEventListener('resize', this.resizeBound);
@@ -910,57 +916,6 @@ export default function Page() {
 
         // --- DEPLOY INSTANCE ---
         async function fetchGraphicsAndInit() {
-            const curatedGraphics = [
-                {
-                    image_url: 'https://pub-72c28e7d3884434bac75ca152fdf30bb.r2.dev/Graphics/1785782739074_3.png',
-                    category: 'Event Poster',
-                    title: 'The Paddle Party Poster Design',
-                    case_study: 'A playful and high-contrast summer sports event poster designed for tournament promotion.'
-                },
-                {
-                    image_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
-                    category: '3D & Motion',
-                    title: 'Chromatic Wave Identity',
-                    case_study: 'Fluid 3D color gradients and dynamic geometry crafted for a next-gen digital brand.'
-                },
-                {
-                    image_url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1000&q=80',
-                    category: 'Branding',
-                    title: 'Neon Circuit Sound Festival',
-                    case_study: 'Cyberpunk typographic visual language and poster series for an electronic music festival.'
-                },
-                {
-                    image_url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80',
-                    category: 'Packaging',
-                    title: 'Minimalist Artisan Botanical',
-                    case_study: 'Luxury eco-conscious skincare packaging system using foil-stamped typography.'
-                },
-                {
-                    image_url: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1000&q=80',
-                    category: 'Fine Art',
-                    title: 'Ethereal Renaissance Dream',
-                    case_study: 'Classical oil portraiture blended with modern abstract geometric light filters.'
-                },
-                {
-                    image_url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=1000&q=80',
-                    category: 'Concept Art',
-                    title: 'Hyperdrive Warp Chamber',
-                    case_study: 'Sci-fi spatial environment exploration featuring volumetric neon light beams.'
-                },
-                {
-                    image_url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1000&q=80',
-                    category: 'Typography',
-                    title: 'Brutalist Monolith Type',
-                    case_study: 'Heavy architectural glyph design exploring extreme negative space.'
-                },
-                {
-                    image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1000&q=80',
-                    category: 'Album Art',
-                    title: 'Midnight Astral Echoes',
-                    case_study: 'Holographic metallic vinyl sleeve design for an ambient synthwave record.'
-                }
-            ];
-
             let fetchedItems = [];
 
             try {
@@ -968,31 +923,29 @@ export default function Page() {
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.length > 0) {
-                        // Blend real Supabase items with curated portfolio items if fewer than 8 exist
-                        if (data.length < 8) {
-                            fetchedItems = [...data, ...curatedGraphics.slice(data.length)];
-                        } else {
-                            fetchedItems = data;
-                        }
-                        setGraphics(fetchedItems);
-                    } else {
-                        fetchedItems = curatedGraphics;
-                        setGraphics(curatedGraphics);
+                        fetchedItems = data;
+                        setGraphics(data);
                     }
-                } else {
-                    fetchedItems = curatedGraphics;
-                    setGraphics(curatedGraphics);
                 }
             } catch (err) {
                 console.error("Failed to fetch graphics from Supabase", err);
-                fetchedItems = curatedGraphics;
-                setGraphics(curatedGraphics);
+            }
+
+            // Fallback to verified image if no items exist in database
+            if (fetchedItems.length === 0) {
+                fetchedItems = [{
+                    image_url: 'https://pub-72c28e7d3884434bac75ca152fdf30bb.r2.dev/Graphics/1785782739074_3.png',
+                    category: 'Event Poster',
+                    title: 'The Paddle Party Poster Design',
+                    case_study: 'A playful and high-contrast summer sports event poster designed for tournament promotion.'
+                }];
+                setGraphics(fetchedItems);
             }
 
             const graphicCanvas = new InfiniteCanvas('canvas-container', {
                 imageSize: '20',       // 20vw sizing base
-                gap: '0.5',            // Minimal 0.5vw gap so images are cleanly aligned
-                customItems: fetchedItems // Dynamically loaded from Supabase / curated gallery
+                gap: '1.5',            // Clean 1.5vw gap so cards never touch or overlap
+                customItems: fetchedItems // Strictly real uploaded graphics
             });
             window.canvasEngine = graphicCanvas;
         }
