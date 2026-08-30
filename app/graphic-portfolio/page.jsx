@@ -258,9 +258,39 @@ export default function Page() {
             } catch (e) {}
         }
 
+        function playSlideSound(direction = 1) {
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                const osc = ctx.createOscillator();
+                const oscGain = ctx.createGain();
+                osc.type = 'sine';
+
+                if (direction > 0) {
+                    osc.frequency.setValueAtTime(520, now);
+                    osc.frequency.exponentialRampToValueAtTime(780, now + 0.1);
+                } else {
+                    osc.frequency.setValueAtTime(780, now);
+                    osc.frequency.exponentialRampToValueAtTime(520, now + 0.1);
+                }
+
+                oscGain.gain.setValueAtTime(0.01, now);
+                oscGain.gain.linearRampToValueAtTime(0.09, now + 0.02);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+                osc.connect(oscGain);
+                oscGain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.13);
+            } catch (e) {}
+        }
+
         // --- SPECIFIC VIEW SEQUENTIAL MODAL MANAGER ---
         let currentSpecificList = [];
         let currentSpecificIndex = 0;
+        let isSlidingSpecific = false;
 
         function renderSpecificModalContent(item) {
             if (!item) return;
@@ -278,15 +308,22 @@ export default function Page() {
             const titleEl = document.getElementById('specific-title');
             const catEl = document.getElementById('specific-category');
             const csEl = document.getElementById('specific-case-study');
+            const countEl = document.getElementById('specific-counter');
 
             if (imgEl) {
                 imgEl.src = item.image_url || item.img_src || item.imgSrc || item.url || (item.imgEl ? item.imgEl.src : '') || '';
                 imgEl.style.transform = 'scale(1)';
                 imgEl.style.transformOrigin = 'center center';
+                imgEl.style.filter = '';
+                imgEl.style.opacity = '1';
+                gsap.set(imgEl, { xPercent: 0, scale: 1 });
             }
             if (titleEl) titleEl.innerText = item.title || (item.el ? item.el.dataset.title : '') || dummyTitles[currentSpecificIndex % dummyTitles.length];
             if (catEl) catEl.innerText = item.category || (item.el ? item.el.dataset.category : '') || 'Graphic Design';
             if (csEl) csEl.innerText = item.case_study || (item.el ? item.el.dataset.case_study : '') || dummyCaseStudies[currentSpecificIndex % dummyCaseStudies.length];
+            if (countEl && currentSpecificList && currentSpecificList.length > 0) {
+                countEl.innerText = `${(currentSpecificIndex + 1).toString().padStart(2, '0')} / ${currentSpecificList.length.toString().padStart(2, '0')}`;
+            }
 
             const slider = document.getElementById('magnify-slider');
             if (slider) slider.value = 1.5;
@@ -320,39 +357,139 @@ export default function Page() {
 
         function navigateSpecificModal(direction, withTransition = true) {
             if (!currentSpecificList || currentSpecificList.length <= 1) return;
+            if (isSlidingSpecific) return; // Prevent overlapping animation glitches
 
             const len = currentSpecificList.length;
             currentSpecificIndex = (currentSpecificIndex + direction + len) % len;
             const targetItem = currentSpecificList[currentSpecificIndex];
 
+            // Play tactile acoustic feedback
+            playSlideSound(direction);
+
+            // Button micro-pulse feedback
+            const activeBtn = direction > 0 ? document.getElementById('specific-next-btn') : document.getElementById('specific-prev-btn');
+            if (activeBtn) {
+                gsap.fromTo(activeBtn, { scale: 0.82 }, { scale: 1, duration: 0.35, ease: "back.out(2)" });
+            }
+
             if (withTransition) {
-                const img = document.getElementById('specific-img');
-                const info = document.querySelector('.specific-view-info');
-                
-                if (img) {
-                    gsap.to(img, {
-                        opacity: 0,
-                        x: -direction * 25,
-                        scale: 0.96,
-                        duration: 0.15,
-                        ease: "power2.in",
-                        onComplete: () => {
-                            renderSpecificModalContent(targetItem);
-                            gsap.fromTo(img, 
-                                { opacity: 0, x: direction * 25, scale: 0.96 },
-                                { opacity: 1, x: 0, scale: 1, duration: 0.25, ease: "power2.out" }
-                            );
-                        }
-                    });
-                } else {
-                    renderSpecificModalContent(targetItem);
+                isSlidingSpecific = true;
+                const container = document.querySelector('.specific-view-img-container');
+                const currImg = document.getElementById('specific-img');
+                const titleEl = document.getElementById('specific-title');
+                const catEl = document.getElementById('specific-category');
+                const csEl = document.getElementById('specific-case-study');
+                const countEl = document.getElementById('specific-counter');
+
+                // Animate text elements with kinetic spring motion
+                if (titleEl) {
+                    gsap.fromTo(titleEl, 
+                        { opacity: 0, x: direction * 35, filter: 'blur(6px)' }, 
+                        { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.45, ease: "power3.out" }
+                    );
+                }
+                if (catEl) {
+                    gsap.fromTo(catEl, 
+                        { opacity: 0, y: -10 }, 
+                        { opacity: 1, y: 0, duration: 0.38, ease: "power2.out" }
+                    );
+                }
+                if (csEl) {
+                    gsap.fromTo(csEl, 
+                        { opacity: 0, y: 16, filter: 'blur(4px)' }, 
+                        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.48, delay: 0.04, ease: "power3.out" }
+                    );
+                }
+                if (countEl) {
+                    gsap.fromTo(countEl, 
+                        { scale: 0.75, opacity: 0 }, 
+                        { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(2)" }
+                    );
                 }
 
-                if (info) {
-                    gsap.fromTo(info,
-                        { opacity: 0.8, y: direction * 6 },
-                        { opacity: 1, y: 0, duration: 0.25, ease: "power2.out" }
-                    );
+                // Update text content
+                const dummyTitles = ['Neon Brand Identity', 'Event Poster Vibe', 'Tech Startup Logo', 'Creative Thumbnail', 'Web Redesign'];
+                const dummyCaseStudies = [
+                  "This project focused on creating a bold, eye-catching aesthetic. We used high-contrast colors and custom typography to make the brand instantly recognizable.",
+                  "The goal was to design something clean and modern. By stripping away unnecessary elements, we created a minimalist design that speaks volumes.",
+                  "This was built for maximum engagement. We used vibrant gradients and dynamic layouts to capture attention in less than a second.",
+                  "Designed specifically to resonate with a younger demographic. It blends modern aesthetics with retro elements to create a nostalgic yet fresh vibe.",
+                  "A complete visual overhaul. We maintained the core identity but modernized the geometry and color palette for a premium feel."
+                ];
+                if (titleEl) titleEl.innerText = targetItem.title || (targetItem.el ? targetItem.el.dataset.title : '') || dummyTitles[currentSpecificIndex % dummyTitles.length];
+                if (catEl) catEl.innerText = targetItem.category || (targetItem.el ? targetItem.el.dataset.category : '') || 'Graphic Design';
+                if (csEl) csEl.innerText = targetItem.case_study || (targetItem.el ? targetItem.el.dataset.case_study : '') || dummyCaseStudies[currentSpecificIndex % dummyCaseStudies.length];
+                if (countEl) countEl.innerText = `${(currentSpecificIndex + 1).toString().padStart(2, '0')} / ${len.toString().padStart(2, '0')}`;
+
+                const nextSrc = targetItem.image_url || targetItem.img_src || targetItem.imgSrc || targetItem.url || (targetItem.imgEl ? targetItem.imgEl.src : '') || '';
+
+                if (container && currImg) {
+                    // Create new incoming image element for true dual-layer sliding stage
+                    const nextImg = document.createElement('img');
+                    nextImg.src = nextSrc;
+                    nextImg.className = 'specific-view-img';
+                    nextImg.alt = 'Specific View';
+                    nextImg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; max-width: 100%; max-height: 100%; display: block; will-change: transform, opacity, filter;';
+                    nextImg.onerror = () => {
+                        nextImg.onerror = null;
+                        nextImg.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
+                    };
+
+                    container.appendChild(nextImg);
+
+                    // Set initial position of incoming image
+                    gsap.set(nextImg, {
+                        xPercent: direction * 100,
+                        scale: 0.92,
+                        opacity: 0,
+                        filter: 'brightness(0.6) blur(6px)'
+                    });
+
+                    // Micro-elastic bounce on container
+                    gsap.to(container, {
+                        scale: 0.985,
+                        duration: 0.18,
+                        ease: "power2.out",
+                        yoyo: true,
+                        repeat: 1
+                    });
+
+                    const tl = gsap.timeline({
+                        onComplete: () => {
+                            if (currImg.parentNode === container) {
+                                container.removeChild(currImg);
+                            }
+                            nextImg.id = 'specific-img';
+                            nextImg.style.position = 'relative';
+                            nextImg.style.filter = '';
+                            nextImg.style.transform = 'scale(1)';
+                            nextImg.style.transformOrigin = 'center center';
+                            isSlidingSpecific = false;
+                        }
+                    });
+
+                    // Slide out current image
+                    tl.to(currImg, {
+                        xPercent: -direction * 100,
+                        scale: 0.88,
+                        opacity: 0,
+                        filter: 'brightness(0.5) blur(8px)',
+                        duration: 0.46,
+                        ease: "power3.inOut"
+                    }, 0);
+
+                    // Slide in next image
+                    tl.to(nextImg, {
+                        xPercent: 0,
+                        scale: 1,
+                        opacity: 1,
+                        filter: 'brightness(1) blur(0px)',
+                        duration: 0.46,
+                        ease: "power3.inOut"
+                    }, 0);
+                } else {
+                    renderSpecificModalContent(targetItem);
+                    isSlidingSpecific = false;
                 }
             } else {
                 renderSpecificModalContent(targetItem);
@@ -528,7 +665,11 @@ export default function Page() {
                     img.style.display = 'block';
 
                     el.style.width = 'max-content';
-                    el.style.height = 'max-content';
+                    // Seed randomized zero-gravity physical parameters for each card
+                    const seed = i + 1;
+                    const randVal = (Math.sin(seed * 9999) + 1) * 0.5;
+                    const randVal2 = (Math.cos(seed * 7777) + 1) * 0.5;
+                    const randVal3 = (Math.sin(seed * 3333) + 1) * 0.5;
 
                     const itemObj = {
                         el: el,
@@ -536,11 +677,19 @@ export default function Page() {
                         index: i,
                         sizeFactor: chosenFactor,
                         isVisible: true,
+                        // Zero Gravity Physical State (Front-facing 2D only)
                         floatX: 0,
                         floatY: 0,
-                        rotX: 0,
-                        rotY: 0,
-                        rotZ: 0
+                        rotZ: 0,
+                        vx: 0,
+                        vy: 0,
+                        vRot: 0,
+                        mass: 0.75 + randVal * 0.5,
+                        wanderSpeed: 0.25 + randVal3 * 0.45,
+                        wanderFreq: 0.0006 + randVal * 0.0008,
+                        targetRotZ: (randVal - 0.5) * 18, // Unique natural resting tilt (-9 to +9 deg)
+                        phaseX: randVal * Math.PI * 2,
+                        phaseY: randVal2 * Math.PI * 2
                     };
 
                     // Mobile fast double-tap detection + desktop dblclick fallback
@@ -1101,39 +1250,52 @@ export default function Page() {
                     const wrappedX = this.wrap(absoluteX, -limitX, limitX);
                     const wrappedY = this.wrap(absoluteY, -limitY, limitY);
 
-                    // Zero Gravity Floating Physics & 3D Inertia Drift
-                    let targetFloatX = 0;
-                    let targetFloatY = 0;
-                    let targetRotZ = 0;
-                    let targetRotX = 0;
-                    let targetRotY = 0;
-
+                    // --- REAL ZERO GRAVITY 2D FRONT-FACING CARD PHYSICS ---
                     if (isTripp) {
-                        // Harmonic zero-gravity floating undulation (each card floats organically on its unique cosmic frequency)
-                        targetFloatX = Math.sin(time * 0.0012 + item.index * 0.7) * (14 * zoom);
-                        targetFloatY = Math.cos(time * 0.0010 + item.index * 0.9) * (18 * zoom);
-                        targetRotZ = Math.sin(time * 0.0008 + item.index * 0.5) * 4.5;
+                        // 1. Organic multi-frequency harmonic turbulence
+                        const t = time * item.wanderFreq;
+                        const harmonicForceX = Math.sin(t + item.phaseX) * 0.09 + Math.cos(t * 1.6 + item.phaseY) * 0.045;
+                        const harmonicForceY = Math.cos(t + item.phaseY) * 0.09 + Math.sin(t * 1.4 + item.phaseX) * 0.045;
+                        
+                        item.vx += (harmonicForceX * item.wanderSpeed) / item.mass;
+                        item.vy += (harmonicForceY * item.wanderSpeed) / item.mass;
 
-                        // Interactive 3D inertia rotation driven by pan velocity
-                        targetRotX = Math.cos(time * 0.0011 + item.index * 0.6) * 5 + (globalVelY * 0.35);
-                        targetRotY = Math.sin(time * 0.0011 + item.index * 0.6) * 5 - (globalVelX * 0.35);
+                        // 2. Drag momentum inertia (canvas panning pushes floating cards in 2D space)
+                        if (Math.abs(globalVelX) > 0.01 || Math.abs(globalVelY) > 0.01) {
+                            item.vx += (globalVelX * 0.04) / item.mass;
+                            item.vy += (globalVelY * 0.04) / item.mass;
+                            item.vRot += ((-globalVelX + globalVelY) * 0.007) / item.mass;
+                        }
 
-                        // Clamp rotation angles so cards never invert or clip
-                        targetRotX = Math.max(-20, Math.min(20, targetRotX));
-                        targetRotY = Math.max(-20, Math.min(20, targetRotY));
+                        // 3. Ultra-soft tether spring to prevent cards drifting off into infinity
+                        const spring = 0.0005;
+                        item.vx -= item.floatX * spring;
+                        item.vy -= item.floatY * spring;
 
-                        item.floatX += (targetFloatX - item.floatX) * 0.08;
-                        item.floatY += (targetFloatY - item.floatY) * 0.08;
-                        item.rotZ += (targetRotZ - item.rotZ) * 0.08;
-                        item.rotX += (targetRotX - item.rotX) * 0.1;
-                        item.rotY += (targetRotY - item.rotY) * 0.1;
+                        // 4. Low zero-g space vacuum damping (high momentum retention)
+                        item.vx *= 0.985;
+                        item.vy *= 0.985;
+
+                        item.floatX += item.vx * (zoom * 0.8 + 0.2);
+                        item.floatY += item.vy * (zoom * 0.8 + 0.2);
+
+                        // 5. Pure 2D Angular Momentum (Front-Facing Z-rotation only, no 3D tilt)
+                        const rotSpring = 0.0012;
+                        item.vRot -= (item.rotZ - item.targetRotZ) * rotSpring;
+                        item.vRot += Math.sin(t * 0.9 + item.phaseX) * 0.012; // gentle organic wobble
+                        item.vRot *= 0.98;
+                        item.rotZ += item.vRot;
+
+                        // Max 2D tilt clamp for clean aesthetics
+                        item.rotZ = Math.max(-26, Math.min(26, item.rotZ));
                     } else {
-                        // Smoothly lerp back to 0 when exiting Tripp mode
+                        // Smoothly lerp back to 0 & damp velocities on exit
+                        item.vx *= 0.85;
+                        item.vy *= 0.85;
+                        item.vRot *= 0.85;
                         item.floatX += (0 - item.floatX) * 0.12;
                         item.floatY += (0 - item.floatY) * 0.12;
                         item.rotZ += (0 - item.rotZ) * 0.12;
-                        item.rotX += (0 - item.rotX) * 0.12;
-                        item.rotY += (0 - item.rotY) * 0.12;
                     }
 
                     const finalX = wrappedX + item.floatX;
@@ -1152,8 +1314,8 @@ export default function Page() {
                             item.el.style.visibility = 'visible';
                             item.isVisible = true;
                         }
-                        if (isTripp || Math.abs(item.rotZ) > 0.01 || Math.abs(item.rotX) > 0.01 || Math.abs(item.rotY) > 0.01 || Math.abs(item.floatX) > 0.1 || Math.abs(item.floatY) > 0.1) {
-                            item.el.style.transform = `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)}) rotateX(${item.rotX.toFixed(2)}deg) rotateY(${item.rotY.toFixed(2)}deg) rotateZ(${item.rotZ.toFixed(2)}deg)`;
+                        if (isTripp || Math.abs(item.rotZ) > 0.02 || Math.abs(item.floatX) > 0.1 || Math.abs(item.floatY) > 0.1) {
+                            item.el.style.transform = `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)}) rotate(${item.rotZ.toFixed(2)}deg)`;
                         } else {
                             item.el.style.transform = `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)})`;
                         }
@@ -1424,12 +1586,19 @@ export default function Page() {
                     animateSpace();
                     window.addEventListener('resize', resizeSpace);
 
-                    // Cosmic Zero-Gravity Lift-Off wave
+                    // Cosmic Zero-Gravity Lift-Off wave with randomized physics impulse
                     if (window.canvasEngine && window.canvasEngine.items) {
                         window.canvasEngine.items.forEach((item, idx) => {
+                            const angle = Math.random() * Math.PI * 2;
+                            const impulse = (0.8 + Math.random() * 1.5) / item.mass;
+                            item.vx = Math.cos(angle) * impulse;
+                            item.vy = Math.sin(angle) * impulse;
+                            item.vRot = ((Math.random() - 0.5) * 0.45) / item.mass;
+                            item.targetRotZ = (Math.random() - 0.5) * 20;
+
                             const delay = (idx % 8) * 0.02;
                             gsap.fromTo(item.el, 
-                                { scale: 0.93 },
+                                { scale: 0.94 },
                                 { scale: 1, duration: 0.75, delay: delay, ease: "back.out(1.4)" }
                             );
                         });
@@ -1556,8 +1725,7 @@ export default function Page() {
             height: 100%;
             opacity: 0.9;
             transition: opacity 0.5s ease;
-            transform-style: preserve-3d;
-            perspective: 1200px;
+            transform-style: flat;
             pointer-events: none;
         }
 
@@ -1578,7 +1746,7 @@ export default function Page() {
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
             transform-origin: center center;
-            transform-style: preserve-3d;
+            transform-style: flat;
             pointer-events: auto;
             transition: box-shadow 0.4s ease, border-color 0.4s ease, background-color 0.4s ease;
         }
@@ -2191,13 +2359,15 @@ export default function Page() {
             border-radius: 16px;
             box-shadow: 0 40px 100px rgba(0, 0, 0, 0.95), 0 0 60px rgba(235, 215, 63, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            transform: scale(0.85) translateY(20px);
+            transition: box-shadow 0.4s ease, border-color 0.4s ease;
+        }
+
+        .specific-view-overlay:not(.active) .specific-view-img {
             opacity: 0;
-            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+            transform: scale(0.85) translateY(20px);
         }
 
         .specific-view-overlay.active .specific-view-img {
-            transform: scale(1) translateY(0);
             opacity: 1;
         }
         
@@ -2923,7 +3093,21 @@ export default function Page() {
           {/* Spotlight text glow effect */}
           <div className="text-spotlight"></div>
           <div className="specific-view-scroll-area">
-            <div className="specific-category" id="specific-category">Category</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div className="specific-category" id="specific-category">Category</div>
+              <div id="specific-counter" style={{
+                fontFamily: 'Panchang, sans-serif',
+                fontSize: '0.75rem',
+                color: '#ebd73f',
+                letterSpacing: '2px',
+                fontWeight: 700,
+                background: 'rgba(235, 215, 63, 0.1)',
+                padding: '4px 10px',
+                borderRadius: '20px',
+                border: '1px solid rgba(235, 215, 63, 0.25)',
+                whiteSpace: 'nowrap'
+              }}>01 / 01</div>
+            </div>
             <h2 className="specific-title" id="specific-title">Project Title</h2>
             <h3 className="specific-case-study-heading">THE VISION</h3>
             <div className="specific-case-study" id="specific-case-study">Case study details...</div>
