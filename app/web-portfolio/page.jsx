@@ -8,10 +8,6 @@ export default function Page() {
   const { isGenz } = useGenz() || { isGenz: false };
   const [activeProjectIdx, setActiveProjectIdx] = useState(0);
   const [selectedCaseStudy, setSelectedCaseStudy] = useState(null);
-  const [deviceMode, setDeviceMode] = useState({}); // { [idx]: 'desktop' | 'mobile' }
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fullscreenUrl, setFullscreenUrl] = useState('');
-  const [fullscreenTitle, setFullscreenTitle] = useState('');
 
   const audioCtxRef = useRef(null);
 
@@ -20,14 +16,14 @@ export default function Page() {
       id: 'bharatup',
       title: 'BharatUp',
       tagline: 'Bridging Ambitious Students with Industry Knowledge',
-      category: 'E-Learning & EdTech Platform',
-      badge: 'Education Tech',
+      category: 'E-Learning Platform',
+      badge: 'EdTech Platform',
       desc: 'An ultra-fast, student-first digital educational platform engineered for high concurrency, seamless video course streaming, interactive quiz modules, and frictionless checkout.',
-      url: 'https://www.bharatup.online',
+      url: 'https://www.bharatup.online/',
       displayUrl: 'bharatup.online',
+      image: '/images/web-portfolio/bharatup.jpg',
       status: 'Live & Scaling',
       color: '#3b82f6',
-      gradient: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)',
       stats: [
         { label: 'Lighthouse Score', value: '99/100' },
         { label: 'Active Learners', value: '25K+' },
@@ -35,8 +31,7 @@ export default function Page() {
       ],
       techStack: ['Next.js 14', 'TypeScript', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Razorpay', 'Framer Motion'],
       challenge: 'Traditional e-learning platforms in India suffer from slow load times on low-bandwidth mobile networks and clunky navigation.',
-      solution: 'We architected a lightweight, server-rendered Next.js application with edge caching, sub-second search, and an intuitive dark/light UI tailored for high retention.',
-      previewTheme: 'elearning'
+      solution: 'We architected a lightweight, server-rendered Next.js application with edge caching, sub-second search, and an intuitive dark/light UI tailored for high retention.'
     },
     {
       id: 'pinaka',
@@ -45,11 +40,11 @@ export default function Page() {
       category: 'Healthcare & Clinical SaaS',
       badge: 'Healthcare',
       desc: 'A clinical healthcare web platform built to streamline patient appointment scheduling, digital medical consultation records, doctor profiles, and emergency triage access.',
-      url: 'https://www.pinakacareclinic.com',
+      url: 'https://www.pinakacareclinic.com/',
       displayUrl: 'pinakacareclinic.com',
+      image: '/images/web-portfolio/pinakacare.jpg',
       status: 'Live & Certified',
       color: '#10b981',
-      gradient: 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)',
       stats: [
         { label: 'Booking Conversion', value: '+340%' },
         { label: 'Mobile Readiness', value: '100%' },
@@ -57,8 +52,7 @@ export default function Page() {
       ],
       techStack: ['Next.js', 'React 18', 'Tailwind CSS', 'Framer Motion', 'Cloudflare Edge', 'Resend API'],
       challenge: 'Medical clinics often struggle with high bounce rates due to confusing form layouts and anxiety-inducing legacy hospital designs.',
-      solution: 'Designed a soothing, high-trust visual language with instant slot booking, automated WhatsApp confirmations, and a HIPAA-compliant digital intake flow.',
-      previewTheme: 'healthcare'
+      solution: 'Designed a soothing, high-trust visual language with instant slot booking, automated WhatsApp confirmations, and a HIPAA-compliant digital intake flow.'
     },
     {
       id: 'goatsociety',
@@ -67,11 +61,11 @@ export default function Page() {
       category: 'Luxury Lifestyle & Web3 Platform',
       badge: 'Brand Community',
       desc: 'A digital cultural hub and exclusive streetwear/lifestyle brand platform featuring immersive motion physics, kinetic typography, and high-impact visual storytelling.',
-      url: 'https://goatsociety.in',
+      url: 'https://goatsociety.in/',
       displayUrl: 'goatsociety.in',
+      image: '/images/web-portfolio/goatsociety.jpg',
       status: 'Live & Exclusive',
       color: '#f59e0b',
-      gradient: 'linear-gradient(135deg, #78350f 0%, #18181b 100%)',
       stats: [
         { label: 'Frame Rate', value: '60 FPS' },
         { label: 'User Engagement', value: '4.8m' },
@@ -79,8 +73,7 @@ export default function Page() {
       ],
       techStack: ['Next.js', 'GSAP', 'WebGL / Canvas', 'Tailwind CSS', 'Web Audio API', 'Cloudflare R2'],
       challenge: 'Creating a web presence that feels raw, premium, and distinct without compromising mobile performance or loading speed.',
-      solution: 'Crafted GPU-composited parallax layers, custom micro-interactions, and dark brutalist aesthetics that establish instant brand dominance.',
-      previewTheme: 'streetwear'
+      solution: 'Crafted GPU-composited parallax layers, custom micro-interactions, and dark brutalist aesthetics that establish instant brand dominance.'
     },
     {
       id: 'rasmlai',
@@ -89,11 +82,11 @@ export default function Page() {
       category: 'AI Interface & Product Engineering',
       badge: 'AI Application',
       desc: 'An AI workspace engineered for generative intelligence, streaming LLM reasoning, code synthesis, and multi-modal creative workflows in a minimalist dark interface.',
-      url: 'https://rasmlai.vercel.app',
+      url: 'https://rasmlai.vercel.app/',
       displayUrl: 'rasmlai.vercel.app',
+      image: '/images/web-portfolio/rasmlai.jpg',
       status: 'Live on Vercel',
       color: '#8b5cf6',
-      gradient: 'linear-gradient(135deg, #4c1d95 0%, #09090b 100%)',
       stats: [
         { label: 'Stream Latency', value: '12ms' },
         { label: 'Architecture', value: 'Edge AI' },
@@ -101,8 +94,7 @@ export default function Page() {
       ],
       techStack: ['Next.js 15', 'React 19', 'OpenAI API', 'Vercel AI SDK', 'Tailwind CSS', 'Lucide'],
       challenge: 'AI web apps frequently suffer from sluggish streaming token rendering and complicated settings menus.',
-      solution: 'Engineered a hyper-clean, keyboard-driven UI with real-time markdown token rendering, smart prompt caching, and zero visual clutter.',
-      previewTheme: 'ai'
+      solution: 'Engineered a hyper-clean, keyboard-driven UI with real-time markdown token rendering, smart prompt caching, and zero visual clutter.'
     }
   ];
 
@@ -222,7 +214,7 @@ export default function Page() {
 
     const onMouseDown = (e) => {
       if (!pinContainer) return;
-      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.interactive-bar')) return;
+      if (e.target.closest('button') || e.target.closest('a')) return;
       isDown = true;
       isDragging = false;
       startX = e.pageX - pinContainer.offsetLeft;
@@ -271,7 +263,6 @@ export default function Page() {
       if (e.key === 'ArrowLeft') prevCard();
       if (e.key === 'Escape') {
         setSelectedCaseStudy(null);
-        setIsFullscreen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -309,21 +300,13 @@ export default function Page() {
     };
   }, [activeProjectIdx]);
 
-  const toggleDeviceMode = (idx, mode, e) => {
-    if (e) e.stopPropagation();
+  const handleCardClick = (proj, e) => {
+    // If user clicked inside the Case Study button, don't redirect to external site
+    if (e.target.closest('.btn-case-study') || e.target.closest('.case-study-prevent')) {
+      return;
+    }
     playSound('click');
-    setDeviceMode(prev => ({
-      ...prev,
-      [idx]: mode
-    }));
-  };
-
-  const openFullscreen = (proj, e) => {
-    if (e) e.stopPropagation();
-    playSound('open');
-    setFullscreenUrl(proj.url);
-    setFullscreenTitle(proj.title);
-    setIsFullscreen(true);
+    window.open(proj.url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -504,38 +487,39 @@ export default function Page() {
         /* High-End Glassmorphic Browser Chassis Card */
         .web-card-chassis {
           position: relative;
-          width: 72vw;
-          max-width: 1100px;
-          height: 72dvh;
-          min-height: 520px;
+          width: 74vw;
+          max-width: 1150px;
+          height: 74dvh;
+          min-height: 540px;
           border-radius: 20px;
-          background: rgba(12, 12, 16, 0.85);
+          background: rgba(12, 12, 16, 0.95);
           border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+          box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(25px);
           -webkit-backdrop-filter: blur(25px);
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+          cursor: pointer;
+          transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
           flex-shrink: 0;
         }
 
         .web-card-chassis:hover {
-          border-color: rgba(235, 215, 63, 0.4);
-          box-shadow: 0 35px 80px rgba(0, 0, 0, 0.9), 0 0 35px rgba(235, 215, 63, 0.12);
-          transform: translateY(-4px);
+          border-color: rgba(235, 215, 63, 0.5);
+          box-shadow: 0 40px 90px rgba(0, 0, 0, 0.95), 0 0 40px rgba(235, 215, 63, 0.16);
+          transform: translateY(-6px) scale(1.01);
         }
 
         /* macOS Window Header Toolbar */
         .browser-toolbar {
           height: 48px;
-          background: rgba(20, 20, 26, 0.95);
+          background: rgba(20, 20, 26, 0.98);
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 18px;
+          padding: 0 20px;
           user-select: none;
           z-index: 20;
         }
@@ -561,21 +545,21 @@ export default function Page() {
           align-items: center;
           gap: 8px;
           background: rgba(5, 5, 5, 0.6);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 20px;
-          padding: 5px 16px;
+          padding: 5px 18px;
           font-size: 0.78rem;
-          color: rgba(255, 255, 255, 0.75);
+          color: rgba(255, 255, 255, 0.85);
           font-family: 'Clash Display', sans-serif;
           letter-spacing: 0.5px;
           transition: all 0.25s ease;
           text-decoration: none;
         }
 
-        .browser-url-pill:hover {
+        .web-card-chassis:hover .browser-url-pill {
           border-color: var(--brand-yellow);
           color: #ffffff;
-          background: rgba(235, 215, 63, 0.08);
+          background: rgba(235, 215, 63, 0.12);
         }
 
         .browser-url-pill svg {
@@ -587,46 +571,20 @@ export default function Page() {
         .browser-actions {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 12px;
         }
 
-        .device-toggle-btn {
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: rgba(255, 255, 255, 0.7);
-          border-radius: 8px;
-          padding: 4px 8px;
-          font-size: 0.7rem;
+        .status-beacon-pill {
           font-family: 'Panchang', sans-serif;
+          font-size: 0.65rem;
           font-weight: 700;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          transition: all 0.2s ease;
-        }
-
-        .device-toggle-btn.active, .device-toggle-btn:hover {
-          background: rgba(235, 215, 63, 0.18);
-          color: var(--brand-yellow);
-          border-color: rgba(235, 215, 63, 0.5);
-        }
-
-        .icon-btn {
-          width: 30px;
-          height: 30px;
-          border-radius: 8px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          color: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
-        }
-        .icon-btn:hover {
-          background: var(--brand-yellow);
-          color: #050505;
-          border-color: var(--brand-yellow);
+          color: #10b981;
+          background: rgba(16, 185, 129, 0.12);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          border-radius: 20px;
+          padding: 3px 10px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
         }
 
         /* Viewport Showcase Body */
@@ -639,95 +597,71 @@ export default function Page() {
           background: #09090c;
         }
 
-        /* Inner Web Mockup Frame */
-        .mockup-stage {
+        /* Screenshot Container with Kinetic Hover-Parallax */
+        .screenshot-viewport {
           position: absolute;
           inset: 0;
           width: 100%;
           height: 100%;
+          overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
-          overflow: hidden;
-          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .mockup-mobile-frame {
-          width: 320px;
-          height: 94%;
-          border-radius: 36px;
-          border: 10px solid #1c1c24;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1);
-          overflow: hidden;
-          position: relative;
-          background: #000;
-        }
-
-        /* Bespoke Interactive Vector UI Mockups */
-        .bespoke-ui-canvas {
+        .screenshot-img {
           width: 100%;
           height: 100%;
-          display: flex;
-          flex-direction: column;
-          position: relative;
-          overflow: hidden;
+          object-fit: cover;
+          object-position: top center;
+          transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
+          will-change: transform;
         }
 
-        /* Hero Banner inside the Mockup */
-        .mockup-hero-banner {
-          height: 100%;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          padding: 40px;
-          position: relative;
-          background-size: cover;
-          background-position: center;
+        .web-card-chassis:hover .screenshot-img {
+          transform: scale(1.03) translateY(-10px);
+          filter: brightness(1.05);
         }
 
-        .mockup-brand-glow {
+        /* Floating Click-to-Redirect Center Beacon Badge */
+        .hover-beacon-overlay {
           position: absolute;
-          top: -20%;
-          right: -10%;
-          width: 60%;
-          height: 80%;
-          border-radius: 50%;
-          filter: blur(90px);
-          opacity: 0.25;
+          inset: 0;
+          background: rgba(5, 5, 8, 0.35);
+          opacity: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: opacity 0.35s ease;
           pointer-events: none;
+          z-index: 8;
         }
 
-        /* Floating Interactive UI Elements */
-        .mockup-floating-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 16px;
-          margin-top: 20px;
-          z-index: 5;
+        .web-card-chassis:hover .hover-beacon-overlay {
+          opacity: 1;
         }
 
-        .mockup-stat-card {
-          background: rgba(18, 18, 24, 0.75);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 12px;
-          padding: 14px 18px;
-          backdrop-filter: blur(15px);
-        }
-
-        .mockup-stat-card .val {
-          font-family: 'Panchang', sans-serif;
-          font-size: 1.25rem;
-          font-weight: 800;
+        .hover-launch-badge {
+          background: rgba(14, 14, 20, 0.85);
+          border: 1px solid var(--brand-yellow);
           color: #ffffff;
+          padding: 14px 28px;
+          border-radius: 40px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.75rem;
+          font-weight: 800;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(235, 215, 63, 0.3);
+          transform: translateY(15px);
+          transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .mockup-stat-card .lbl {
-          font-size: 0.7rem;
-          color: rgba(255, 255, 255, 0.6);
-          margin-top: 4px;
-          text-transform: uppercase;
-          letter-spacing: 1px;
+        .web-card-chassis:hover .hover-launch-badge {
+          transform: translateY(0);
         }
 
         /* Bottom Project Info Overlay & Tech Stack */
@@ -736,14 +670,15 @@ export default function Page() {
           bottom: 0;
           left: 0;
           right: 0;
-          background: linear-gradient(to top, rgba(8, 8, 12, 0.98) 0%, rgba(8, 8, 12, 0.85) 65%, transparent 100%);
-          padding: 30px 40px;
+          background: linear-gradient(to top, rgba(8, 8, 12, 0.98) 0%, rgba(8, 8, 12, 0.88) 65%, transparent 100%);
+          padding: 24px 35px;
           z-index: 10;
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
           gap: 20px;
-          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          pointer-events: auto;
         }
 
         .card-main-meta {
@@ -764,25 +699,25 @@ export default function Page() {
           font-weight: 700;
           letter-spacing: 1.5px;
           text-transform: uppercase;
-          margin-bottom: 12px;
+          margin-bottom: 10px;
         }
 
         .card-headline {
           font-family: 'Panchang', sans-serif;
-          font-size: 2.2rem;
+          font-size: 2.1rem;
           font-weight: 800;
           color: #ffffff;
           line-height: 1.1;
           letter-spacing: -0.5px;
           text-transform: uppercase;
-          margin-bottom: 8px;
+          margin-bottom: 6px;
         }
 
         .card-tagline {
-          font-size: 0.95rem;
-          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.92rem;
+          color: rgba(255, 255, 255, 0.75);
           line-height: 1.4;
-          margin-bottom: 16px;
+          margin-bottom: 14px;
         }
 
         .card-tech-pills {
@@ -792,11 +727,11 @@ export default function Page() {
         }
 
         .tech-pill {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: rgba(255, 255, 255, 0.85);
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: rgba(255, 255, 255, 0.9);
           border-radius: 6px;
-          padding: 3px 10px;
+          padding: 4px 10px;
           font-size: 0.72rem;
           font-family: 'Clash Display', sans-serif;
           font-weight: 500;
@@ -810,12 +745,12 @@ export default function Page() {
           flex-shrink: 0;
         }
 
-        .btn-inspect {
+        .btn-case-study {
           background: rgba(255, 255, 255, 0.08);
           color: #ffffff;
-          border: 1px solid rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.18);
           border-radius: 30px;
-          padding: 12px 22px;
+          padding: 12px 20px;
           font-family: 'Panchang', sans-serif;
           font-size: 0.7rem;
           font-weight: 700;
@@ -826,13 +761,13 @@ export default function Page() {
           gap: 8px;
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .btn-inspect:hover {
-          background: rgba(255, 255, 255, 0.18);
+        .btn-case-study:hover {
+          background: rgba(255, 255, 255, 0.2);
           border-color: #ffffff;
           transform: translateY(-2px);
         }
 
-        .btn-launch {
+        .btn-launch-pill {
           background: var(--brand-yellow);
           color: #050505;
           border: 1px solid var(--brand-yellow);
@@ -850,11 +785,11 @@ export default function Page() {
           box-shadow: 0 4px 20px rgba(235, 215, 63, 0.35);
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .btn-launch:hover {
+        .web-card-chassis:hover .btn-launch-pill {
           background: #ffffff;
           border-color: #ffffff;
           box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
-          transform: translateY(-2px) scale(1.03);
+          transform: translateY(-2px) scale(1.04);
         }
 
         /* Floating Nav Arrows */
@@ -990,34 +925,6 @@ export default function Page() {
           transform: scale(1.1);
         }
 
-        /* Fullscreen Live Modal */
-        .fs-live-modal {
-          position: fixed;
-          inset: 0;
-          z-index: 9999;
-          background: #050505;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .fs-live-bar {
-          height: 52px;
-          background: #111116;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 24px;
-        }
-
-        .fs-live-frame {
-          flex: 1;
-          width: 100%;
-          height: 100%;
-          border: none;
-          background: #ffffff;
-        }
-
         /* Mobile Responsive Adjustments */
         @media screen and (max-width: 900px) {
           .web-card-chassis {
@@ -1035,7 +942,7 @@ export default function Page() {
             font-size: 1.5rem;
           }
           .card-footer-info {
-            padding: 20px;
+            padding: 18px;
             flex-direction: column;
             align-items: flex-start;
           }
@@ -1052,10 +959,6 @@ export default function Page() {
           .drawer-content {
             width: 100vw;
             padding: 30px 20px;
-          }
-          .mockup-floating-grid {
-            grid-template-columns: 1fr;
-            gap: 8px;
           }
         }
       `}} />
@@ -1115,177 +1018,103 @@ export default function Page() {
       {/* Horizontal Carousel Track */}
       <div id="pin-container">
         <div className="slider-wrap">
-          {projects.map((proj, idx) => {
-            const currentMode = deviceMode[idx] || 'desktop';
-            const isMobileView = currentMode === 'mobile';
+          {projects.map((proj, idx) => (
+            <div 
+              key={proj.id} 
+              className="web-card-chassis"
+              onClick={(e) => handleCardClick(proj, e)}
+              title={`Click to open ${proj.displayUrl} live site`}
+            >
+              {/* macOS Style Browser Header */}
+              <div className="browser-toolbar">
+                <div className="traffic-lights">
+                  <div className="traffic-dot dot-red" />
+                  <div className="traffic-dot dot-yellow" />
+                  <div className="traffic-dot dot-green" />
+                </div>
 
-            return (
-              <div key={proj.id} className="web-card-chassis">
-                {/* macOS Style Browser Header */}
-                <div className="browser-toolbar">
-                  <div className="traffic-lights">
-                    <div className="traffic-dot dot-red" />
-                    <div className="traffic-dot dot-yellow" />
-                    <div className="traffic-dot dot-green" />
+                <div className="browser-url-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  <span>https://{proj.displayUrl}</span>
+                </div>
+
+                <div className="browser-actions">
+                  <div className="status-beacon-pill">
+                    ● LIVE SITE
                   </div>
+                </div>
+              </div>
 
-                  <a 
-                    href={proj.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="browser-url-pill"
-                    onClick={() => playSound('click')}
-                    title={`Open ${proj.displayUrl} in New Tab`}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    <span>https://{proj.displayUrl}</span>
-                  </a>
-
-                  <div className="browser-actions">
-                    <button 
-                      className={`device-toggle-btn ${!isMobileView ? 'active' : ''}`}
-                      onClick={(e) => toggleDeviceMode(idx, 'desktop', e)}
-                      title="Desktop View"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                        <line x1="8" y1="21" x2="16" y2="21"></line>
-                        <line x1="12" y1="17" x2="12" y2="21"></line>
+              {/* Viewport Body with High-Resolution Screenshot & Hover Reveal */}
+              <div className="card-viewport-body">
+                <div className="screenshot-viewport">
+                  <img 
+                    src={proj.image} 
+                    alt={`${proj.title} Website Screenshot`} 
+                    className="screenshot-img"
+                    loading="lazy"
+                  />
+                  
+                  {/* Hover Floating Launch Beacon */}
+                  <div className="hover-beacon-overlay">
+                    <div className="hover-launch-badge">
+                      <span>Visit Live Website</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
                       </svg>
-                    </button>
-                    <button 
-                      className={`device-toggle-btn ${isMobileView ? 'active' : ''}`}
-                      onClick={(e) => toggleDeviceMode(idx, 'mobile', e)}
-                      title="Mobile View"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                      </svg>
-                    </button>
-                    <button 
-                      className="icon-btn" 
-                      onClick={(e) => openFullscreen(proj, e)}
-                      title="Maximize Fullscreen Experience"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="15 3 21 3 21 9"></polyline>
-                        <polyline points="9 21 3 21 3 15"></polyline>
-                        <line x1="21" y1="3" x2="14" y2="10"></line>
-                        <line x1="3" y1="21" x2="10" y2="14"></line>
-                      </svg>
-                    </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Viewport Body with Bespoke Vector Showcase & Smart Fallback */}
-                <div className="card-viewport-body">
-                  <div className={`mockup-stage ${isMobileView ? 'mockup-mobile-frame' : ''}`}>
-                    <div className="bespoke-ui-canvas" style={{ background: proj.gradient }}>
-                      <div className="mockup-brand-glow" style={{ background: proj.color }} />
-
-                      <div className="mockup-hero-banner">
-                        <div>
-                          <div style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            padding: '6px 14px',
-                            borderRadius: '30px',
-                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                            color: '#ffffff',
-                            fontSize: '0.75rem',
-                            fontFamily: 'Panchang, sans-serif',
-                            fontWeight: 700,
-                            letterSpacing: '1px',
-                            marginBottom: '16px'
-                          }}>
-                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: proj.color }} />
-                            {proj.status}
-                          </div>
-
-                          <h3 style={{
-                            fontFamily: 'Panchang, sans-serif',
-                            fontSize: isMobileView ? '1.4rem' : '2.4rem',
-                            fontWeight: 800,
-                            color: '#ffffff',
-                            letterSpacing: '-0.5px',
-                            textTransform: 'uppercase',
-                            maxWidth: '700px',
-                            lineHeight: 1.15
-                          }}>
-                            {proj.title}
-                          </h3>
-                        </div>
-
-                        {/* Interactive UI Metric Grid */}
-                        <div className="mockup-floating-grid">
-                          {proj.stats.map((st, sIdx) => (
-                            <div key={sIdx} className="mockup-stat-card">
-                              <div className="val" style={{ color: proj.color }}>{st.value}</div>
-                              <div className="lbl">{st.label}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                {/* Card Meta & Action Footer */}
+                <div className="card-footer-info">
+                  <div className="card-main-meta">
+                    <div className="card-category-badge">
+                      <span>●</span>
+                      <span>{proj.category}</span>
+                    </div>
+                    <div className="card-headline">{proj.title}</div>
+                    <div className="card-tagline">{proj.tagline}</div>
+                    <div className="card-tech-pills">
+                      {proj.techStack.map((tech, tIdx) => (
+                        <span key={tIdx} className="tech-pill">{tech}</span>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Card Meta & Action Footer */}
-                  <div className="card-footer-info">
-                    <div className="card-main-meta">
-                      <div className="card-category-badge">
-                        <span>●</span>
-                        <span>{proj.category}</span>
-                      </div>
-                      <div className="card-headline">{proj.title}</div>
-                      <div className="card-tagline">{proj.tagline}</div>
-                      <div className="card-tech-pills">
-                        {proj.techStack.map((tech, tIdx) => (
-                          <span key={tIdx} className="tech-pill">{tech}</span>
-                        ))}
-                      </div>
-                    </div>
+                  <div className="card-action-group">
+                    <button 
+                      className="btn-case-study case-study-prevent" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playSound('open');
+                        setSelectedCaseStudy(proj);
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                      <span>Case Study</span>
+                    </button>
 
-                    <div className="card-action-group">
-                      <button 
-                        className="btn-inspect" 
-                        onClick={() => {
-                          playSound('open');
-                          setSelectedCaseStudy(proj);
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <line x1="12" y1="16" x2="12" y2="12"></line>
-                          <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg>
-                        <span>Case Study</span>
-                      </button>
-
-                      <a 
-                        href={proj.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="btn-launch"
-                        onClick={() => playSound('click')}
-                      >
-                        <span>Experience</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="7" y1="17" x2="17" y2="7"></line>
-                          <polyline points="7 7 17 7 17 17"></polyline>
-                        </svg>
-                      </a>
+                    <div className="btn-launch-pill">
+                      <span>Launch Live</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
+                      </svg>
                     </div>
                   </div>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -1391,7 +1220,7 @@ export default function Page() {
                   href={selectedCaseStudy.url} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="btn-launch"
+                  className="btn-launch-pill"
                   onClick={() => playSound('click')}
                 >
                   <span>Launch Live Platform</span>
@@ -1405,49 +1234,6 @@ export default function Page() {
           )}
         </div>
       </div>
-
-      {/* Fullscreen Live Modal */}
-      {isFullscreen && (
-        <div className="fs-live-modal">
-          <div className="fs-live-bar">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div className="traffic-lights">
-                <div className="traffic-dot dot-red" />
-                <div className="traffic-dot dot-yellow" />
-                <div className="traffic-dot dot-green" />
-              </div>
-              <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.85rem', fontWeight: 800, color: '#fff' }}>
-                {fullscreenTitle}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <a 
-                href={fullscreenUrl} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="btn-inspect" 
-                style={{ padding: '6px 14px', fontSize: '0.65rem' }}
-              >
-                Open in External Tab ↗
-              </a>
-              <button 
-                className="drawer-close-btn" 
-                style={{ width: 34, height: 34 }} 
-                onClick={() => setIsFullscreen(false)}
-                title="Close Fullscreen"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-          <iframe 
-            src={fullscreenUrl} 
-            className="fs-live-frame" 
-            title={fullscreenTitle}
-            allow="fullscreen"
-          />
-        </div>
-      )}
     </>
   );
 }
