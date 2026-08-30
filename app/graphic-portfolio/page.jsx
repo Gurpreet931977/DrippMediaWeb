@@ -44,6 +44,218 @@ export default function Page() {
         let globalVelX = 0;
         let globalVelY = 0;
 
+        // --- GTA V CINEMATIC AUDIO SYNTHESIZER (Pure Web Audio API - Zero Asset Latency) ---
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx && typeof window !== 'undefined') {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playGTAZoomSound(direction) {
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                if (direction === 'in') {
+                    // Dive-bomb sound: rushing descending wind + Doppler tone + tactical lock-on blip + sub-bass landing thud
+                    
+                    // 1. Synthesize rushing wind noise with bandpass sweep
+                    const bufferSize = Math.floor(ctx.sampleRate * 0.9);
+                    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                    const output = noiseBuffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
+                    const whiteNoise = ctx.createBufferSource();
+                    whiteNoise.buffer = noiseBuffer;
+
+                    const filter = ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(2800, now);
+                    filter.frequency.exponentialRampToValueAtTime(320, now + 0.7);
+                    filter.Q.setValueAtTime(3.0, now);
+
+                    const noiseGain = ctx.createGain();
+                    noiseGain.gain.setValueAtTime(0.01, now);
+                    noiseGain.gain.linearRampToValueAtTime(0.28, now + 0.15);
+                    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+
+                    whiteNoise.connect(filter);
+                    filter.connect(noiseGain);
+                    noiseGain.connect(ctx.destination);
+                    whiteNoise.start(now);
+                    whiteNoise.stop(now + 0.8);
+
+                    // 2. Descending tone Doppler pitch
+                    const osc = ctx.createOscillator();
+                    const oscGain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(520, now);
+                    osc.frequency.exponentialRampToValueAtTime(65, now + 0.65);
+
+                    oscGain.gain.setValueAtTime(0.01, now);
+                    oscGain.gain.linearRampToValueAtTime(0.12, now + 0.1);
+                    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+                    osc.connect(oscGain);
+                    oscGain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.7);
+
+                    // 3. Sub-bass landing impact thud at t = 0.58s
+                    const subOsc = ctx.createOscillator();
+                    const subGain = ctx.createGain();
+                    subOsc.type = 'sine';
+                    subOsc.frequency.setValueAtTime(140, now + 0.58);
+                    subOsc.frequency.exponentialRampToValueAtTime(35, now + 0.95);
+
+                    subGain.gain.setValueAtTime(0.0, now);
+                    subGain.gain.setValueAtTime(0.4, now + 0.58);
+                    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+
+                    subOsc.connect(subGain);
+                    subGain.connect(ctx.destination);
+                    subOsc.start(now + 0.58);
+                    subOsc.stop(now + 1.0);
+
+                    // 4. Tactical high-pitch beep/chirp
+                    const chirp = ctx.createOscillator();
+                    const chirpGain = ctx.createGain();
+                    chirp.type = 'sine';
+                    chirp.frequency.setValueAtTime(1850, now + 0.55);
+                    chirpGain.gain.setValueAtTime(0.08, now + 0.55);
+                    chirpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+                    chirp.connect(chirpGain);
+                    chirpGain.connect(ctx.destination);
+                    chirp.start(now + 0.55);
+                    chirp.stop(now + 0.68);
+
+                } else {
+                    // Zoom Out: Pulling up to stratosphere whoosh + ascending pitch + satellite radio pulse
+                    
+                    // 1. Ascending wind noise
+                    const bufferSize = Math.floor(ctx.sampleRate * 0.9);
+                    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                    const output = noiseBuffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
+                    const whiteNoise = ctx.createBufferSource();
+                    whiteNoise.buffer = noiseBuffer;
+
+                    const filter = ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(300, now);
+                    filter.frequency.exponentialRampToValueAtTime(3200, now + 0.7);
+                    filter.Q.setValueAtTime(2.5, now);
+
+                    const noiseGain = ctx.createGain();
+                    noiseGain.gain.setValueAtTime(0.01, now);
+                    noiseGain.gain.linearRampToValueAtTime(0.28, now + 0.2);
+                    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+                    whiteNoise.connect(filter);
+                    filter.connect(noiseGain);
+                    noiseGain.connect(ctx.destination);
+                    whiteNoise.start(now);
+                    whiteNoise.stop(now + 0.85);
+
+                    // 2. Ascending tone oscillator
+                    const osc = ctx.createOscillator();
+                    const oscGain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(80, now);
+                    osc.frequency.exponentialRampToValueAtTime(750, now + 0.7);
+
+                    oscGain.gain.setValueAtTime(0.01, now);
+                    oscGain.gain.linearRampToValueAtTime(0.14, now + 0.2);
+                    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+
+                    osc.connect(oscGain);
+                    oscGain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.8);
+
+                    // 3. Satellite telemetry blip
+                    const blip = ctx.createOscillator();
+                    const blipGain = ctx.createGain();
+                    blip.type = 'sine';
+                    blip.frequency.setValueAtTime(2200, now + 0.05);
+                    blipGain.gain.setValueAtTime(0.07, now + 0.05);
+                    blipGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    blip.connect(blipGain);
+                    blipGain.connect(ctx.destination);
+                    blip.start(now + 0.05);
+                    blip.stop(now + 0.22);
+                }
+            } catch (e) {
+                // AudioContext error safeguard
+            }
+        }
+
+        function playTripToggleSound(isGoingTripp) {
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                if (isGoingTripp) {
+                    // Shimmering cosmic resonance chime + ascending resonance sweep
+                    const osc = ctx.createOscillator();
+                    const oscGain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.45);
+
+                    oscGain.gain.setValueAtTime(0.01, now);
+                    oscGain.gain.linearRampToValueAtTime(0.18, now + 0.12);
+                    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+                    osc.connect(oscGain);
+                    oscGain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.7);
+
+                    // Ambient harmonic crystal chime
+                    const chime = ctx.createOscillator();
+                    const chimeGain = ctx.createGain();
+                    chime.type = 'triangle';
+                    chime.frequency.setValueAtTime(1320, now + 0.08);
+                    chimeGain.gain.setValueAtTime(0.08, now + 0.08);
+                    chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+                    chime.connect(chimeGain);
+                    chimeGain.connect(ctx.destination);
+                    chime.start(now + 0.08);
+                    chime.stop(now + 0.6);
+                } else {
+                    // Gravitational implosion / settle
+                    const osc = ctx.createOscillator();
+                    const oscGain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.4);
+
+                    oscGain.gain.setValueAtTime(0.01, now);
+                    oscGain.gain.linearRampToValueAtTime(0.15, now + 0.08);
+                    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+                    osc.connect(oscGain);
+                    oscGain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.55);
+                }
+            } catch (e) {}
+        }
+
         // --- INFINITE CANVAS ENGINE ---
         class InfiniteCanvas {
             constructor(containerId, options = {}) {
@@ -149,7 +361,7 @@ export default function Page() {
                         el.dataset.title = sourceItem.title || dummyTitles[i % dummyTitles.length];
                         el.dataset.case_study = sourceItem.case_study || dummyCaseStudies[i % dummyCaseStudies.length];
                       } else {
-                          const dummyImages = Array.from({ length: 12 }).map((_, i) => `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`);
+                          const dummyImages = Array.from({ length: 12 }).map((_, i) => `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`);
                           img.src = dummyImages[i % dummyImages.length];
                         
                         el.dataset.category = 'Concept Art';
@@ -165,7 +377,7 @@ export default function Page() {
                     // Smart Fallback placeholder
                     img.onerror = () => {
                         img.onerror = null; // Prevent infinite loop
-                        img.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='20' fill='%23999'%3EImage Error%3C/text%3E%3C/svg%3E`; 
+                        img.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='20' fill='%23999'%3EImage Error%3C/text%3E%3C/svg%3E`; 
                     };
 
                     el.appendChild(img);
@@ -299,28 +511,19 @@ export default function Page() {
                     });
                 });
                 
-                // Zoom Controls
+                // GTA V Zoom Controls
                 const zoomInBtn = document.getElementById('zoom-in-btn');
                 const zoomOutBtn = document.getElementById('zoom-out-btn');
                 if (zoomInBtn) {
-                    zoomInBtn.addEventListener('click', () => { 
-                        if (this.isListView) return;
-                        this.state.targetZoom = Math.min(2.5, this.state.targetZoom + 0.3); 
+                    zoomInBtn.addEventListener('click', (e) => { 
+                        e.stopPropagation();
+                        this.triggerGTAZoom('in');
                     });
                 }
                 if (zoomOutBtn) {
-                    zoomOutBtn.addEventListener('click', () => { 
-                        if (this.isListView) return;
-                        const isMobile = window.innerWidth <= 768;
-                        const appliedSize = isMobile ? this.imageSize * 1.5 : this.imageSize;
-                        const appliedGap = isMobile ? this.gap * 1.5 : this.gap;
-                        const gridWidthVw = this.cols * (appliedSize + appliedGap);
-                        const gridHeightVw = this.rows * (appliedSize + appliedGap);
-                        const minZoomX = 100 / gridWidthVw;
-                        const minZoomY = (window.innerHeight / window.innerWidth * 100) / gridHeightVw;
-                        const minZoom = Math.max(minZoomX, minZoomY, 0.2);
-                        
-                        this.state.targetZoom = Math.max(minZoom, this.state.targetZoom - 0.3); 
+                    zoomOutBtn.addEventListener('click', (e) => { 
+                        e.stopPropagation();
+                        this.triggerGTAZoom('out');
                     });
                 }
 
@@ -340,7 +543,7 @@ export default function Page() {
                     }
                 });
 
-                // Keyboard interactions (Space to Reset, Enter to Toggle List, M to toggle Space)
+                // Keyboard interactions (Space to Reset, Enter to Toggle List, M to toggle Space, +/- to GTA Zoom)
                 this.isListView = false;
 
                 // Tap on Reset UI
@@ -370,6 +573,16 @@ export default function Page() {
                         if (sv && sv.classList.contains('active')) {
                             sv.classList.remove('active');
                         }
+                    }
+
+                    // GTA V Zoom Keybindings (+ / = to zoom in, - / _ to zoom out)
+                    if ((e.code === 'Equal' || e.key === '+' || e.key === '=') && !this.isListView && !document.getElementById('specific-view').classList.contains('active')) {
+                        e.preventDefault();
+                        this.triggerGTAZoom('in');
+                    }
+                    if ((e.code === 'Minus' || e.key === '-' || e.key === '_') && !this.isListView && !document.getElementById('specific-view').classList.contains('active')) {
+                        e.preventDefault();
+                        this.triggerGTAZoom('out');
                     }
 
                     // M: Toggle Space Mode
@@ -449,6 +662,245 @@ export default function Page() {
                 this.renderBound = this.render.bind(this);
             }
 
+            // --- GTA V DYNAMIC ZOOM ENGINE ---
+            triggerGTAZoom(direction) {
+                if (this.isListView) return;
+                const specificView = document.getElementById('specific-view');
+                if (specificView && specificView.classList.contains('active')) return;
+
+                const isMobile = window.innerWidth <= 768;
+                const appliedSize = isMobile ? this.imageSize * 1.5 : this.imageSize;
+                const appliedGap = isMobile ? this.gap * 1.5 : this.gap;
+                const gridWidthVw = this.cols * (appliedSize + appliedGap);
+                const gridHeightVw = this.rows * (appliedSize + appliedGap);
+                const minZoomX = 100 / gridWidthVw;
+                const minZoomY = (window.innerHeight / window.innerWidth * 100) / gridHeightVw;
+                const minZoom = Math.max(minZoomX, minZoomY, 0.32);
+                const maxZoom = 2.65;
+
+                const zoomSteps = [
+                    minZoom,
+                    Math.max(minZoom + 0.25, 0.68),
+                    1.15,
+                    1.80,
+                    maxZoom
+                ].filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a - b);
+
+                let targetZoom = this.state.targetZoom;
+                const current = this.state.targetZoom;
+
+                if (direction === 'in') {
+                    const nextTier = zoomSteps.find(z => z > current + 0.08);
+                    targetZoom = nextTier !== undefined ? nextTier : Math.min(maxZoom, current + 0.35);
+                } else {
+                    const prevTier = [...zoomSteps].reverse().find(z => z < current - 0.08);
+                    targetZoom = prevTier !== undefined ? prevTier : Math.max(minZoom, current - 0.35);
+                }
+
+                // Play synthesized zero-latency GTA sound
+                playGTAZoomSound(direction);
+
+                // Trigger space warp in tripp mode
+                if (typeof window.__triggerSpaceWarp === 'function' && spaceModeActive) {
+                    window.__triggerSpaceWarp(direction);
+                }
+
+                // Execute GTA transition
+                this.executeGTAZoomAnimation(targetZoom, direction);
+            }
+
+            executeGTAZoomAnimation(targetZoom, direction) {
+                this.state.targetZoom = targetZoom;
+
+                if (this.zoomTween) this.zoomTween.kill();
+                if (this.fxTimeline) this.fxTimeline.kill();
+
+                const isDiveIn = direction === 'in';
+                const startZoom = this.state.zoom;
+
+                const hud = document.getElementById('gta-satellite-hud');
+                const reticle = document.getElementById('gta-reticle');
+                const altitudeVal = document.getElementById('gta-altitude-val');
+                const zoomVal = document.getElementById('gta-zoom-val');
+                const modeVal = document.getElementById('gta-mode-val');
+                const targetLabel = document.getElementById('gta-target-label');
+                const speedVignette = document.getElementById('gta-speed-vignette');
+                const scanlines = document.getElementById('gta-scanlines');
+                const flashWhite = document.getElementById('gta-flash-white');
+                const showcase = document.getElementById('portfolio-showcase');
+                const canvasCont = document.getElementById('canvas-container');
+
+                const calculateAltitude = (z) => {
+                    const norm = Math.max(0.2, z);
+                    return Math.round((28000 / (norm * 1.4)) + (1 / norm) * 1200);
+                };
+
+                const startAlt = calculateAltitude(startZoom);
+                const endAlt = calculateAltitude(targetZoom);
+                const altObj = { alt: startAlt, zoom: startZoom };
+
+                const getModeText = (z) => {
+                    if (z <= 0.55) return 'SATELLITE ORBIT';
+                    if (z <= 0.95) return 'STRATOSPHERE';
+                    if (z <= 1.45) return 'REGIONAL AERIAL';
+                    if (z <= 2.1) return 'TACTICAL SECTOR';
+                    return 'STREET RECON';
+                };
+
+                const duration = isDiveIn ? 0.92 : 0.82;
+                const ease = isDiveIn ? "power4.inOut" : "power3.inOut";
+
+                // 1. Camera Zoom Tween
+                this.zoomTween = gsap.to(this.state, {
+                    zoom: targetZoom,
+                    duration: duration,
+                    ease: ease,
+                    onUpdate: () => {
+                        this.updateMetrics();
+                        this.recalcPositions();
+                    }
+                });
+
+                // 2. Altitude & Telemetry counter
+                gsap.to(altObj, {
+                    alt: endAlt,
+                    zoom: targetZoom,
+                    duration: duration,
+                    ease: ease,
+                    onUpdate: () => {
+                        if (altitudeVal) altitudeVal.innerText = `${Math.round(altObj.alt).toLocaleString()} FT`;
+                        if (zoomVal) zoomVal.innerText = `${altObj.zoom.toFixed(2)}X`;
+                        if (modeVal) modeVal.innerText = getModeText(altObj.zoom);
+                    }
+                });
+
+                // 3. Visual FX Timeline
+                this.fxTimeline = gsap.timeline();
+
+                if (hud) {
+                    this.fxTimeline.to(hud, { opacity: 1, duration: 0.15 }, 0);
+                }
+
+                if (isDiveIn) {
+                    // DIVE BOMB (ZOOM IN)
+                    if (reticle) {
+                        this.fxTimeline.fromTo(reticle, 
+                            { opacity: 0.4, scale: 1.6, rotate: -15 },
+                            { opacity: 1, scale: 1, rotate: 0, duration: 0.55, ease: "power4.out" },
+                            0
+                        );
+                        if (targetLabel) {
+                            targetLabel.innerText = "DIVE ACQUIRED // 09";
+                        }
+                    }
+
+                    if (speedVignette) {
+                        this.fxTimeline.fromTo(speedVignette, 
+                            { opacity: 0, scale: 0.9 },
+                            { opacity: 0.8, scale: 1.15, duration: 0.38, ease: "power2.in", yoyo: true, repeat: 1 },
+                            0.05
+                        );
+                    }
+
+                    if (scanlines) {
+                        this.fxTimeline.fromTo(scanlines, 
+                            { opacity: 0 },
+                            { opacity: 0.55, duration: 0.35, yoyo: true, repeat: 1, ease: "sine.inOut" },
+                            0.1
+                        );
+                    }
+
+                    if (canvasCont) {
+                        this.fxTimeline.to(canvasCont, {
+                            filter: 'drop-shadow(-5px 0px 0px rgba(255, 40, 40, 0.7)) drop-shadow(5px 0px 0px rgba(40, 240, 255, 0.7)) blur(1.5px)',
+                            duration: 0.28,
+                            ease: "power2.inOut",
+                            yoyo: true,
+                            repeat: 1,
+                            onComplete: () => {
+                                gsap.set(canvasCont, { filter: 'none' });
+                            }
+                        }, 0.18);
+                    }
+
+                    // Ground Impact Shake on Landing
+                    this.fxTimeline.add(() => {
+                        gsap.fromTo(showcase, 
+                            { x: () => (Math.random() - 0.5) * 14, y: () => (Math.random() - 0.5) * 14 },
+                            { x: 0, y: 0, duration: 0.45, ease: "elastic.out(1.2, 0.2)", clearProps: "x,y" }
+                        );
+
+                        if (flashWhite) {
+                            gsap.fromTo(flashWhite, 
+                                { opacity: 0.25 },
+                                { opacity: 0, duration: 0.35, ease: "power2.out" }
+                            );
+                        }
+
+                        if (targetLabel) targetLabel.innerText = "COORDINATE LOCKED";
+                    }, 0.58);
+
+                    if (reticle) {
+                        this.fxTimeline.to(reticle, { opacity: 0.3, scale: 0.9, duration: 0.5, ease: "power2.out" }, 1.0);
+                    }
+                    if (hud) {
+                        this.fxTimeline.to(hud, { opacity: 0.75, duration: 0.5 }, 1.1);
+                    }
+
+                } else {
+                    // STRATOSPHERE PULL-UP (ZOOM OUT)
+                    gsap.fromTo(showcase, 
+                        { y: 12 },
+                        { y: 0, duration: 0.6, ease: "power3.out", clearProps: "y" }
+                    );
+
+                    if (reticle) {
+                        this.fxTimeline.fromTo(reticle, 
+                            { opacity: 0.8, scale: 0.9, rotate: 0 },
+                            { opacity: 0.4, scale: 2.2, rotate: 15, duration: 0.65, ease: "power3.out" },
+                            0
+                        );
+                        if (targetLabel) targetLabel.innerText = "ORBITAL SURVEY";
+                    }
+
+                    if (speedVignette) {
+                        this.fxTimeline.fromTo(speedVignette, 
+                            { opacity: 0, scale: 1.2 },
+                            { opacity: 0.7, scale: 0.95, duration: 0.38, ease: "power2.in", yoyo: true, repeat: 1 },
+                            0.05
+                        );
+                    }
+
+                    if (scanlines) {
+                        this.fxTimeline.fromTo(scanlines, 
+                            { opacity: 0 },
+                            { opacity: 0.6, duration: 0.38, yoyo: true, repeat: 1, ease: "sine.inOut" },
+                            0.1
+                        );
+                    }
+
+                    if (canvasCont) {
+                        this.fxTimeline.to(canvasCont, {
+                            filter: 'drop-shadow(-4px 0px 0px rgba(255, 50, 50, 0.6)) drop-shadow(4px 0px 0px rgba(50, 200, 255, 0.6)) blur(1px)',
+                            duration: 0.28,
+                            ease: "power2.inOut",
+                            yoyo: true,
+                            repeat: 1,
+                            onComplete: () => {
+                                gsap.set(canvasCont, { filter: 'none' });
+                            }
+                        }, 0.15);
+                    }
+
+                    if (hud) {
+                        this.fxTimeline.to(hud, { opacity: 0.75, duration: 0.6 }, 0.9);
+                    }
+                    if (reticle) {
+                        this.fxTimeline.to(reticle, { opacity: 0.25, scale: 1.0, duration: 0.5 }, 1.0);
+                    }
+                }
+            }
+
             wrap(value, min, max) {
                 const range = max - min;
                 return ((((value - min) % range) + range) % range) + min;
@@ -474,17 +926,25 @@ export default function Page() {
                 this.state.x += (this.state.targetX - this.state.x) * 0.2;
                 this.state.y += (this.state.targetY - this.state.y) * 0.2;
 
-                if (Math.abs(this.state.targetZoom - this.state.zoom) > 0.001) {
-                    this.state.zoom += (this.state.targetZoom - this.state.zoom) * 0.1;
-                    this.updateMetrics();
-                    this.recalcPositions();
+                if (!this.zoomTween || !this.zoomTween.isActive()) {
+                    if (Math.abs(this.state.targetZoom - this.state.zoom) > 0.001) {
+                        this.state.zoom += (this.state.targetZoom - this.state.zoom) * 0.1;
+                        this.updateMetrics();
+                        this.recalcPositions();
+                    }
                 }
 
-                const limitX = this.gridWidth / 2;
-                const limitY = this.gridHeight / 2;
+                const halfVW = window.innerWidth * 0.5;
+                const halfVH = window.innerHeight * 0.5;
+                const itemHalf = (this.itemSizePx * 0.5) || 120;
+
+                // Set wrapping boundaries comfortably outside the visible viewport
+                const limitX = Math.max(this.gridWidth / 2, halfVW + itemHalf * 2);
+                const limitY = Math.max(this.gridHeight / 2, halfVH + itemHalf * 2);
 
                 // Real-time zero gravity baseline calculation
                 const time = Date.now() * 0.001;
+                const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
                 for (let i = 0; i < this.items.length; i++) {
                     const item = this.items[i];
@@ -502,7 +962,7 @@ export default function Page() {
                         item.basex += item.driftX;
                         item.basey += item.driftY;
 
-                        // Slowly slowly wrap the basex/basey within massive bounds so they never totally vanish
+                        // Slowly wrap the basex/basey within massive bounds so they never totally vanish
                         item.basex = this.wrap(item.basex, -this.gridWidth, this.gridWidth);
                         item.basey = this.wrap(item.basey, -this.gridHeight, this.gridHeight);
                     } else {
@@ -532,7 +992,7 @@ export default function Page() {
                         floatX = Math.sin(time + item.index) * 15;
                         floatY = Math.cos(time + item.index) * 15;
 
-                        // Smooth fluid 3D Physics: Calculate target rotation based on reduced pan velocity (0.5 instead of 1.5)
+                        // Smooth fluid 3D Physics: Calculate target rotation based on pan velocity
                         let targetRotY = -globalVelX * 0.5;
                         let targetRotX = globalVelY * 0.5;
 
@@ -549,17 +1009,57 @@ export default function Page() {
                         item.rotY += (0 - item.rotY) * 0.1;
                     }
 
+                    const finalX = wrappedX + floatX;
+                    const finalY = wrappedY + floatY;
+
+                    // Smooth Edge Dissolve & Deep Space Horizon Scaling
+                    const fadeThresholdX = halfVW + (itemHalf * 0.4);
+                    const fadeThresholdY = halfVH + (itemHalf * 0.4);
+                    const normX = Math.abs(finalX) / fadeThresholdX;
+                    const normY = Math.abs(finalY) / fadeThresholdY;
+                    const edgeProximity = Math.max(normX, normY);
+
+                    let opacity = 1.0;
+                    let scale = 1.0;
+                    let blurPx = 0;
+
+                    if (spaceModeActive) {
+                        // In TRIPP Mode: Ethereal Cosmic Horizon Dissolve & Deep-Space Scaling
+                        // Cards gently start dissolving from 60% distance to screen edge, completely fading out at 110%
+                        if (edgeProximity > 0.60) {
+                            const t = Math.min(1, Math.max(0, (edgeProximity - 0.60) / 0.50));
+                            const smoothT = t * t * (3 - 2 * t);
+                            opacity = Math.max(0, 1 - smoothT);
+                            scale = 1 - (smoothT * 0.32); // Gracefully shrinks to 0.68 into deep cosmic space
+                            blurPx = smoothT * 4;
+                        }
+                    } else {
+                        // In Normal Mode: Seamless boundary feathering before wrapping seam
+                        if (edgeProximity > 0.85) {
+                            const t = Math.min(1, Math.max(0, (edgeProximity - 0.85) / 0.30));
+                            const smoothT = t * t * (3 - 2 * t);
+                            opacity = Math.max(0, 1 - smoothT);
+                        }
+                    }
+
                     // Use fast set for 60fps with Hardware Acceleration
                     const transformProps = {
-                        x: wrappedX + floatX,
-                        y: wrappedY + floatY,
+                        x: finalX,
+                        y: finalY,
+                        scale: scale,
+                        opacity: opacity,
                         force3D: true // GPU Hardware acceleration
                     };
                     
-                    // Only apply expensive 3D rotations on desktop to save battery/performance on mobile
-                    if (!window.matchMedia("(max-width: 768px)").matches) {
+                    // Only apply expensive 3D rotations & blur on desktop to save battery/performance on mobile
+                    if (!isMobile) {
                         transformProps.rotationX = item.rotX;
                         transformProps.rotationY = item.rotY;
+                        if (spaceModeActive && blurPx > 0.4 && opacity < 0.96) {
+                            transformProps.filter = `blur(${blurPx.toFixed(1)}px)`;
+                        } else {
+                            transformProps.filter = 'none';
+                        }
                     }
 
                     gsap.set(item.el, transformProps);
@@ -568,6 +1068,8 @@ export default function Page() {
 
             // Proper context cleanup method mapping
             destroy() {
+                if (this.zoomTween) this.zoomTween.kill();
+                if (this.fxTimeline) this.fxTimeline.kill();
                 gsap.ticker.remove(this.renderBound);
                 window.removeEventListener('resize', this.resizeBound);
                 if (this.container) {
@@ -580,7 +1082,7 @@ export default function Page() {
         async function fetchGraphicsAndInit() {
             let fetchedItems = [];
             const dummyGraphics = Array.from({ length: 12 }).map((_, i) => ({
-                image_url: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`,
+                image_url: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`,
                 category: i % 2 === 0 ? 'Concept Art' : 'Branding',
                 title: `Placeholder Project ${i + 1}`,
                 case_study: 'This is a premium placeholder image because no graphics were found in the database. Add some graphics in the Admin Panel!'
@@ -620,6 +1122,7 @@ export default function Page() {
                 gap: '0.5',            // Minimal 0.5vw gap so images are nearly touching
                 customItems: fetchedItems // Dynamically loaded from Supabase
             });
+            window.canvasEngine = graphicCanvas;
         }
         
         fetchGraphicsAndInit();
@@ -631,6 +1134,15 @@ export default function Page() {
         let stars = [];
         const numStars = window.innerWidth <= 768 ? 250 : 800; // Less particles on mobile
         let spaceAnimationId;
+        const warpState = { speed: 0, direction: 'in' };
+
+        window.__triggerSpaceWarp = (direction) => {
+            warpState.direction = direction;
+            gsap.killTweensOf(warpState);
+            gsap.timeline()
+                .to(warpState, { speed: direction === 'in' ? 55 : 35, duration: 0.35, ease: "power2.in" })
+                .to(warpState, { speed: 0, duration: 0.65, ease: "power3.out" });
+        };
 
         function resizeSpace() {
             spaceCanvas.width = window.innerWidth;
@@ -654,13 +1166,29 @@ export default function Page() {
         function animateSpace() {
             ctx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
 
-            // Subtle center drift
+            // Center origin
             const cx = spaceCanvas.width / 2;
             const cy = spaceCanvas.height / 2;
+            const currentWarp = warpState.speed;
+            const isWarping = currentWarp > 0.1;
 
             stars.forEach(star => {
-                // Move stars towards viewer natively, but dramatically react to user pan velocity 
-                star.z -= 0.5;
+                const prevZ = star.z;
+                const prevK = 128.0 / Math.max(1, prevZ);
+                const prevPx = (star.x - cx) * prevK + cx;
+                const prevPy = (star.y - cy) * prevK + cy;
+
+                if (isWarping) {
+                    if (warpState.direction === 'in') {
+                        star.z -= (0.5 + currentWarp);
+                    } else {
+                        star.z += (currentWarp * 0.8);
+                        star.y += (currentWarp * 0.5);
+                    }
+                } else {
+                    // Move stars towards viewer natively, but dramatically react to user pan velocity 
+                    star.z -= 0.5;
+                }
 
                 // Allow stars to pan left/right/up/down based on canvas drag
                 star.x -= globalVelX * 0.2;
@@ -677,13 +1205,28 @@ export default function Page() {
                     star.z = spaceCanvas.width;
                     star.x = Math.random() * spaceCanvas.width;
                     star.y = Math.random() * spaceCanvas.height;
+                } else if (star.z > spaceCanvas.width * 1.5) {
+                    star.z = 10;
+                    star.x = Math.random() * spaceCanvas.width;
+                    star.y = Math.random() * spaceCanvas.height;
                 }
 
                 // Calculate 3D projection
-                const k = 128.0 / star.z;
+                const k = 128.0 / Math.max(1, star.z);
                 const px = (star.x - cx) * k + cx;
                 const py = (star.y - cy) * k + cy;
                 const size = Math.max(0.1, star.size * k);
+
+                // Draw warp trail if in hyperdrive speed
+                if (isWarping && currentWarp > 1.5) {
+                    ctx.beginPath();
+                    ctx.moveTo(prevPx, prevPy);
+                    ctx.lineTo(px, py);
+                    const trailAlpha = Math.min(0.9, star.opacity * (currentWarp / 25));
+                    ctx.strokeStyle = `rgba(235, 215, 63, ${trailAlpha})`;
+                    ctx.lineWidth = Math.min(3.5, size * 1.5);
+                    ctx.stroke();
+                }
 
                 // Draw star
                 ctx.beginPath();
@@ -700,164 +1243,145 @@ export default function Page() {
         function toggleSpaceMode() {
             // Safety block: prevent enabling Tripp from List View
             const showcase = document.getElementById('portfolio-showcase');
-            if (showcase.classList.contains('list-view-mode') && !spaceModeActive) {
+            if (showcase && showcase.classList.contains('list-view-mode') && !spaceModeActive) {
                 return;
             }
 
             const btn = document.getElementById('tripp-toggle-btn');
             const btnText = document.getElementById('tripp-btn-text');
-            const showcaseCanvas = document.querySelector('.infinite-canvas');
+            if (!btn) return;
 
-            // Find origin position from the button
             const btnRect = btn.getBoundingClientRect();
             const originX = btnRect.left + btnRect.width / 2;
             const originY = btnRect.top + btnRect.height / 2;
 
             const isGoingTripp = !spaceModeActive;
-            const liquidColor = isGoingTripp ? 'var(--brand-yellow)' : 'var(--deep-black)';
-            const _isMobileEffect = window.innerWidth <= 900;
+            playTripToggleSound(isGoingTripp);
 
-            // Create container for spill animation
-            const spillContainer = document.createElement('div');
-            spillContainer.style.position = 'fixed';
-            spillContainer.style.zIndex = '50';
-            spillContainer.style.pointerEvents = 'none';
-
-            if (!_isMobileEffect) {
-                // Add SVG filter for gooey drips if not present (Desktop only - heavy on mobile)
-                if (!document.getElementById('goo-filter-svg')) {
-                    const svgNS = "http://www.w3.org/2000/svg";
-                    const svg = document.createElementNS(svgNS, "svg");
-                    svg.id = "goo-filter-svg";
-                    svg.style.position = "absolute";
-                    svg.style.width = "0";
-                    svg.style.height = "0";
-                    svg.style.visibility = "hidden";
-                    svg.innerHTML = `
-                        <defs>
-                            <filter id="goo">
-                                <feGaussianBlur in="SourceGraphic" stdDeviation="20" result="blur" />
-                                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -15" result="goo" />
-                                <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
-                            </filter>
-                        </defs>
-                    `;
-                    document.body.appendChild(svg);
-                }
-                spillContainer.style.inset = '-300px'; // Generous overflow for splatters
-                spillContainer.style.filter = 'url(#goo)';
-                spillContainer.style.WebkitFilter = 'url(#goo)';
-            } else {
-                spillContainer.style.inset = '-150px'; // Increased inset for mobile to fix bottom gap
-            }
-            document.body.appendChild(spillContainer);
-
-            // Helper to create liquid blobs
-            const createBlob = () => {
-                const drop = document.createElement('div');
-                drop.style.position = 'absolute';
-                // Offset origin by the inset of the container
-                const insetOffset = _isMobileEffect ? 150 : 300;
-                drop.style.left = (originX + insetOffset) + 'px';
-                drop.style.top = (originY + insetOffset) + 'px';
-                drop.style.width = '0px';
-                drop.style.height = '0px';
-                drop.style.borderRadius = '50%';
-                drop.style.background = liquidColor;
-                spillContainer.appendChild(drop);
-
-                // GSAP transforms for perfect centering
-                gsap.set(drop, { xPercent: -50, yPercent: -50, x: 0, y: 0 });
-                return drop;
-            };
-
-            const mainBlob = createBlob();
-            // Splash droplets (12 for desktop, 0 on mobile to prevent lag)
-            const droplets = _isMobileEffect ? [] : Array.from({ length: 12 }).map(() => createBlob());
-
+            // Compute maximum distance to screen corners for portal expansion
             const maxDist = Math.hypot(
                 Math.max(originX, window.innerWidth - originX),
                 Math.max(originY, window.innerHeight - originY)
             );
-            // Overshoot target size to cover screen completely despite goo erosion
-            const targetSize = maxDist * (_isMobileEffect ? 4.5 : 2.8);
+            const targetRadius = maxDist * 1.25;
 
             btn.style.pointerEvents = 'none';
 
-            // High velocity timeline
+            // High-performance hardware-accelerated portal overlay (zero SVG filter overhead, 60fps GPU compositor)
+            const portalOverlay = document.createElement('div');
+            portalOverlay.className = 'tripp-portal-overlay';
+            portalOverlay.style.cssText = `
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 60;
+                clip-path: circle(0px at ${originX}px ${originY}px);
+                -webkit-clip-path: circle(0px at ${originX}px ${originY}px);
+                background: ${isGoingTripp 
+                    ? `radial-gradient(circle at ${originX}px ${originY}px, rgba(235, 215, 63, 0.3) 0%, rgba(20, 20, 25, 0.95) 45%, rgba(5, 5, 8, 1) 100%)` 
+                    : `radial-gradient(circle at ${originX}px ${originY}px, rgba(235, 215, 63, 0.15) 0%, rgba(15, 15, 18, 0.95) 55%, rgba(10, 10, 10, 1) 100%)`
+                };
+            `;
+
+            // Luminous golden shockwave ring
+            const shockwave = document.createElement('div');
+            shockwave.className = 'tripp-shockwave-ring';
+            shockwave.style.cssText = `
+                position: fixed;
+                left: ${originX}px;
+                top: ${originY}px;
+                width: 0px;
+                height: 0px;
+                border-radius: 50%;
+                border: 2px solid rgba(235, 215, 63, 0.85);
+                box-shadow: 0 0 35px rgba(235, 215, 63, 0.7), inset 0 0 20px rgba(235, 215, 63, 0.4);
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+                z-index: 65;
+            `;
+
+            document.body.appendChild(portalOverlay);
+            document.body.appendChild(shockwave);
+
             const tl = gsap.timeline({
                 onComplete: () => {
-                    // Toggle exactly when screen is fully covered by liquid
-                    spaceModeActive = !spaceModeActive;
-                    document.body.classList.toggle('space-mode-active');
-
-                    if (spaceModeActive) {
-                        btn.classList.add('active-tripp');
-                        btnText.innerText = 'TRIPPING';
-                        initSpace();
-                        animateSpace();
-                        window.addEventListener('resize', resizeSpace);
-
-                        // Modern, sharp, super smooth entry
-                        gsap.set(showcaseCanvas, { scale: 1.15, opacity: 0 });
-                        gsap.to(showcaseCanvas, { scale: 1, opacity: 0.9, duration: 1.2, ease: "power3.out" });
-                    } else {
-                        btn.classList.remove('active-tripp');
-                        btnText.innerText = 'TRIPP';
-                        cancelAnimationFrame(spaceAnimationId);
-                        window.removeEventListener('resize', resizeSpace);
-
-                        // Gentle settle back
-                        gsap.set(showcaseCanvas, { scale: 0.9, opacity: 0 });
-                        gsap.to(showcaseCanvas, { scale: 1, opacity: 0.9, duration: 1.2, ease: "power3.out" });
-                    }
-
-                    // Morphing fade out
-                    gsap.to(spillContainer, {
-                        opacity: 0,
-                        duration: 0.4,
-                        ease: "power2.inOut",
-                        onComplete: () => {
-                            spillContainer.remove();
-                            btn.style.pointerEvents = 'auto';
-                        }
-                    });
+                    portalOverlay.remove();
+                    shockwave.remove();
+                    btn.style.pointerEvents = 'auto';
                 }
             });
 
-            // Fast, punchy animations
-            // 1. Splatter out droplets violently
-            droplets.forEach((drop, i) => {
-                const angle = (i / droplets.length) * Math.PI * 2 + (Math.random() * 0.5 - 0.25);
-                const dist = 60 + Math.random() * (window.innerWidth * 0.35);
-                const size = 30 + Math.random() * 80;
+            // 1. Shockwave expands smoothly
+            tl.to(shockwave, {
+                width: targetRadius * 2,
+                height: targetRadius * 2,
+                opacity: 0,
+                duration: 0.75,
+                ease: "power2.out"
+            }, 0);
 
-                // Shoot out fast
-                tl.to(drop, {
-                    x: Math.cos(angle) * dist,
-                    y: Math.sin(angle) * dist,
-                    width: size,
-                    height: size,
-                    duration: 0.4 + Math.random() * 0.2,
-                    ease: "power3.out"
-                }, 0);
+            // 2. Portal sweeps seamlessly across the screen
+            const clipPathObj = { r: 0 };
+            tl.to(clipPathObj, {
+                r: targetRadius,
+                duration: 0.65,
+                ease: "power3.inOut",
+                onUpdate: () => {
+                    const val = `circle(${clipPathObj.r}px at ${originX}px ${originY}px)`;
+                    portalOverlay.style.clipPath = val;
+                    portalOverlay.style.webkitClipPath = val;
+                }
+            }, 0);
 
-                // Merge back into main blob expanding
-                tl.to(drop, {
-                    width: targetSize * 0.6,
-                    height: targetSize * 0.6,
-                    duration: 0.5,
-                    ease: "expo.in"
-                }, 0.2);
-            });
+            // 3. Switch space states halfway through the portal sweep for 100% seamless continuity
+            tl.add(() => {
+                spaceModeActive = !spaceModeActive;
+                document.body.classList.toggle('space-mode-active');
 
-            // 2. Main blob expands radically
-            tl.to(mainBlob, {
-                width: targetSize,
-                height: targetSize,
-                duration: 0.6,
-                ease: "expo.inOut"
-            }, 0.1);
+                if (spaceModeActive) {
+                    btn.classList.add('active-tripp');
+                    if (btnText) btnText.innerText = 'TRIPPING';
+                    initSpace();
+                    animateSpace();
+                    window.addEventListener('resize', resizeSpace);
+
+                    // Cosmic Lift-Off: Give cards an organic zero-gravity initial float
+                    if (window.canvasEngine && window.canvasEngine.items) {
+                        window.canvasEngine.items.forEach((item, idx) => {
+                            const delay = (idx % 8) * 0.025;
+                            gsap.fromTo(item.el, 
+                                { scale: 0.94 },
+                                { scale: 1, duration: 0.75, delay: delay, ease: "back.out(1.4)" }
+                            );
+                        });
+                    }
+                } else {
+                    btn.classList.remove('active-tripp');
+                    if (btnText) btnText.innerText = 'TRIPP';
+                    cancelAnimationFrame(spaceAnimationId);
+                    window.removeEventListener('resize', resizeSpace);
+
+                    // Magnetic Return: Smoothly settle cards back
+                    if (window.canvasEngine && window.canvasEngine.items) {
+                        window.canvasEngine.items.forEach((item, idx) => {
+                            const delay = (idx % 6) * 0.02;
+                            gsap.to(item.el, {
+                                scale: 1,
+                                duration: 0.6,
+                                delay: delay,
+                                ease: "power2.out"
+                            });
+                        });
+                    }
+                }
+            }, 0.35);
+
+            // 4. Smooth dissolve of portal overlay as world settles
+            tl.to(portalOverlay, {
+                opacity: 0,
+                duration: 0.38,
+                ease: "power2.out"
+            }, 0.55);
         }
 
         // Bind click to the new UI button
@@ -867,6 +1391,9 @@ export default function Page() {
       ScrollTrigger.getAll().forEach(t => t.kill());
       if (window.canvasEngine) {
         window.canvasEngine.destroy();
+      }
+      if (audioCtx) {
+        audioCtx.close().catch(() => {});
       }
     };
   }, []);
@@ -1789,47 +2316,313 @@ export default function Page() {
             transform: translateY(0) scale(1);
         }
 
+        /* GTA V SATELLITE HUD & CINEMATIC TRANSITIONS */
+        .gta-satellite-hud {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 80;
+            overflow: hidden;
+            opacity: 0.75;
+            transition: opacity 0.5s ease;
+        }
+
+        .gta-satellite-hud.hidden,
+        body:has(#specific-view.active) .gta-satellite-hud,
+        body:has(#portfolio-showcase.list-view-mode) .gta-satellite-hud {
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+
+        .gta-hud-top-left {
+            position: absolute;
+            top: 35px;
+            left: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            transition: opacity 0.4s ease;
+        }
+
+        .gta-live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--brand-yellow);
+        }
+
+        .gta-rec-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff3333;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff3333;
+            animation: gtaBlink 1s infinite alternate ease-in-out;
+        }
+
+        @keyframes gtaBlink {
+            0% { opacity: 0.3; transform: scale(0.85); }
+            100% { opacity: 1; transform: scale(1.15); }
+        }
+
+        .gta-hud-coords {
+            display: flex;
+            gap: 15px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .gta-hud-sub {
+            font-size: 0.6rem;
+            color: rgba(235, 215, 63, 0.6);
+            letter-spacing: 1.5px;
+        }
+
+        .gta-hud-top-right {
+            position: absolute;
+            top: 95px;
+            right: 35px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+            font-family: 'Panchang', sans-serif;
+            z-index: 10;
+        }
+
+        .gta-hud-metric {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            background: rgba(12, 12, 14, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 6px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+        }
+
+        .gta-metric-label {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.58rem;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .gta-metric-val {
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--brand-yellow);
+            letter-spacing: 1px;
+        }
+
+        /* Center Target Acquisition Reticle */
+        .gta-target-reticle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 240px;
+            height: 240px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: 0.25;
+            transition: opacity 0.3s ease;
+        }
+
+        .gta-bracket {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-color: var(--brand-yellow);
+            border-style: solid;
+            border-width: 0;
+            box-shadow: 0 0 15px rgba(235, 215, 63, 0.4);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .gta-bracket-tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; }
+        .gta-bracket-tr { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; }
+        .gta-bracket-bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; }
+        .gta-bracket-br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; }
+
+        .gta-crosshair-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gta-ch-x {
+            position: absolute;
+            width: 20px;
+            height: 1.5px;
+            background: rgba(235, 215, 63, 0.8);
+            box-shadow: 0 0 6px rgba(235, 215, 63, 0.6);
+        }
+
+        .gta-ch-y {
+            position: absolute;
+            height: 20px;
+            width: 1.5px;
+            background: rgba(235, 215, 63, 0.8);
+            box-shadow: 0 0 6px rgba(235, 215, 63, 0.6);
+        }
+
+        .gta-radar-ring {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border: 1px dashed rgba(235, 215, 63, 0.4);
+            border-radius: 50%;
+            animation: gtaRadarSpin 6s linear infinite;
+        }
+
+        @keyframes gtaRadarSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .gta-target-label {
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            font-weight: 700;
+            color: var(--brand-yellow);
+            white-space: nowrap;
+            background: rgba(10, 10, 10, 0.85);
+            padding: 3px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(235, 215, 63, 0.3);
+            text-transform: uppercase;
+        }
+
+        /* Speed Vignette & Blur Tunnel */
+        .gta-speed-vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            background: radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.5) 65%, rgba(0, 0, 0, 0.9) 100%);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+            z-index: 70;
+        }
+
+        .gta-scanline-pass {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.25),
+                rgba(0, 0, 0, 0.25) 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            z-index: 75;
+        }
+
+        .gta-flash-white {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: #ffffff;
+            opacity: 0;
+            z-index: 90;
+        }
+
         .infinite-zoom-controls {
             position: fixed;
             bottom: 50px;
             right: 50px;
             display: flex;
-            gap: 5px;
-            z-index: 50;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
             transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            background: rgba(15, 15, 15, 0.6);
-            backdrop-filter: blur(20px);
-            padding: 6px;
+            background: rgba(15, 15, 18, 0.75);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 6px 10px;
             border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.7), inset 0 1px 10px rgba(255,255,255,0.03);
+            border: 1px solid rgba(235, 215, 63, 0.2);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 20px rgba(235, 215, 63, 0.08), inset 0 1px 0 rgba(255,255,255,0.1);
         }
+
         .zoom-btn {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: transparent;
-            border: none;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            font-family: 'Clash Display', sans-serif;
+            font-family: 'Panchang', sans-serif;
             outline: none;
+            user-select: none;
         }
+
         .zoom-btn:hover {
-            background: rgba(235, 215, 63, 0.15);
+            background: rgba(235, 215, 63, 0.2);
             color: var(--brand-yellow);
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(235, 215, 63, 0.2);
+            border-color: rgba(235, 215, 63, 0.5);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(235, 215, 63, 0.3);
         }
+
+        .zoom-btn:active {
+            transform: scale(0.92);
+            background: var(--brand-yellow);
+            color: #000;
+        }
+
         @media (max-width: 768px) {
             .infinite-zoom-controls {
                 bottom: 30px;
                 right: 30px;
+            }
+            .gta-hud-top-left {
+                top: 25px;
+                left: 85px;
+                font-size: 0.62rem;
+            }
+            .gta-hud-top-right {
+                top: 135px;
+                right: 20px;
+                transform: scale(0.85);
+                transform-origin: top right;
+            }
+            .gta-target-reticle {
+                width: 170px;
+                height: 170px;
             }
         }
 
@@ -1887,7 +2680,9 @@ export default function Page() {
         }
 
         .space-mode-active .canvas-item {
-            box-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 35px rgba(235, 215, 63, 0.14);
+            border: 1px solid rgba(235, 215, 63, 0.2);
+            background-color: rgba(18, 18, 22, 0.9);
             /* Ethereal glow in space */
         }
 
@@ -1965,9 +2760,60 @@ export default function Page() {
   <div className="cursor" id="cursor" />
   <div className="drag-instruction" id="drag-msg">{isGenz ? 'swipe / scroll to explore' : 'Drag / Scroll to Explore'}</div>
   
+  {/* GTA V Satellite HUD & Cinematic FX Layer */}
+  <div id="gta-satellite-hud" className={`gta-satellite-hud ${isListViewActive ? 'hidden' : ''}`}>
+    {/* Top Left Live Satellite Telemetry */}
+    <div className="gta-hud-top-left">
+      <div className="gta-live-indicator">
+        <span className="gta-rec-dot"></span>
+        <span className="gta-hud-bold">SAT-ORBIT // 09</span>
+      </div>
+      <div className="gta-hud-coords">
+        <span>LAT 34°03&apos;14&quot; N</span>
+        <span>LON 118°14&apos;37&quot; W</span>
+      </div>
+      <div className="gta-hud-sub">SYS_FEED: OPTICAL_RECON</div>
+    </div>
+
+    {/* Top Right Altitude & Zoom Telemetry */}
+    <div className="gta-hud-top-right">
+      <div className="gta-hud-metric">
+        <span className="gta-metric-label">ALTITUDE</span>
+        <span className="gta-metric-val" id="gta-altitude-val">14,200 FT</span>
+      </div>
+      <div className="gta-hud-metric">
+        <span className="gta-metric-label">MAGNIFICATION</span>
+        <span className="gta-metric-val" id="gta-zoom-val">1.00X</span>
+      </div>
+      <div className="gta-hud-metric">
+        <span className="gta-metric-label">CAMERA MODE</span>
+        <span className="gta-metric-val" id="gta-mode-val">REGIONAL AERIAL</span>
+      </div>
+    </div>
+
+    {/* Center Target Lock Reticle */}
+    <div className="gta-target-reticle" id="gta-reticle">
+      <div className="gta-bracket gta-bracket-tl"></div>
+      <div className="gta-bracket gta-bracket-tr"></div>
+      <div className="gta-bracket gta-bracket-bl"></div>
+      <div className="gta-bracket gta-bracket-br"></div>
+      <div className="gta-crosshair-center">
+        <div className="gta-ch-x"></div>
+        <div className="gta-ch-y"></div>
+        <div className="gta-radar-ring"></div>
+      </div>
+      <div className="gta-target-label" id="gta-target-label">TARGET LOCKED</div>
+    </div>
+
+    {/* Speed Vignette, Scanlines & Flash */}
+    <div className="gta-speed-vignette" id="gta-speed-vignette"></div>
+    <div className="gta-scanline-pass" id="gta-scanlines"></div>
+    <div className="gta-flash-white" id="gta-flash-white"></div>
+  </div>
+
   <div className="infinite-zoom-controls" id="infinite-zoom-controls" style={{ opacity: isListViewActive ? 0 : 1, pointerEvents: isListViewActive ? 'none' : 'auto' }}>
-      <button className="zoom-btn" id="zoom-out-btn" title="Zoom Out">−</button>
-      <button className="zoom-btn" id="zoom-in-btn" title="Zoom In">+</button>
+      <button className="zoom-btn" id="zoom-out-btn" title="Zoom Out (Orbit Pull-Up)">−</button>
+      <button className="zoom-btn" id="zoom-in-btn" title="Zoom In (Dive-Bomb)">+</button>
   </div>
 
   <div className="specific-view-overlay" id="specific-view">
@@ -2023,7 +2869,7 @@ export default function Page() {
               style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', maxWidth: '100%', maxHeight: '100%', display: 'block' }}
               onError={(e) => {
                   e.currentTarget.onerror = null;
-                  e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
+                  e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
               }}
             />
           </div>
@@ -2358,7 +3204,7 @@ export default function Page() {
                                 style={{ width: '100%', display: 'block', objectFit: 'contain' }}
                                 onError={(e) => {
                                     e.currentTarget.onerror = null;
-                                    e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
+                                    e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
                                 }}
                               />
                           </div>
