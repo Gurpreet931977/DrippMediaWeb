@@ -266,7 +266,6 @@ export default function Page() {
                 this.container.innerHTML = '';
 
                 this.imageSize = parseFloat(options.imageSize) || 20;
-                this.numberOfImages = options.numberOfImages || 32;
                 this.gap = parseFloat(options.gap) || 0.5;
                 this.customItems = options.customItems || [];
 
@@ -285,8 +284,11 @@ export default function Page() {
                     lastPointer: { x: 0, y: 0 }
                 };
 
-                this.cols = Math.ceil(Math.sqrt(this.numberOfImages));
-                this.rows = Math.ceil(this.numberOfImages / this.cols);
+                // Even number of columns guarantees seamless 2-column alternating brick wrapping
+                const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+                this.cols = isMobile ? 8 : 12;
+                this.rows = isMobile ? 8 : 8;
+                this.totalItems = this.cols * this.rows;
 
                 this.updateMetrics();
                 this.init();
@@ -300,6 +302,9 @@ export default function Page() {
                 gsap.ticker.add(this.renderBound);
                 
                 this.resizeBound = () => {
+                    const mobileNow = window.innerWidth <= 768;
+                    this.cols = mobileNow ? 8 : 12;
+                    this.rows = mobileNow ? 8 : 8;
                     this.updateMetrics();
                     this.recalcPositions();
                 };
@@ -307,12 +312,11 @@ export default function Page() {
             }
 
             updateMetrics() {
-                // Determine responsive sizing. Boost size on mobile so it doesn't look empty
-                const isMobile = window.innerWidth <= 768;
+                const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
                 const appliedSize = isMobile ? this.imageSize * 2 : this.imageSize;
                 const appliedGap = isMobile ? this.gap * 1.5 : this.gap;
 
-                const vw = window.innerWidth / 100;
+                const vw = (typeof window !== 'undefined' ? window.innerWidth : 1440) / 100;
                 this.itemSizePx = appliedSize * vw * this.state.zoom;
                 this.gapPx = appliedGap * vw * this.state.zoom;
                 this.stepX = this.itemSizePx + this.gapPx;
@@ -323,7 +327,7 @@ export default function Page() {
             }
 
             init() {
-                for (let i = 0; i < this.numberOfImages; i++) {
+                for (let i = 0; i < this.totalItems; i++) {
                     const el = document.createElement('div');
                     el.className = 'canvas-item is-loading';
 
@@ -333,11 +337,10 @@ export default function Page() {
                     img.onload = () => {
                         el.classList.remove('is-loading');
                         img.classList.add('loaded');
-                        // Smart layout: recalculate grid now that natural aspect ratio is known
                         this.recalcPositions();
                     };
 
-                    // Map to custom URLs from database if available, looping if there are fewer URLs than total grid items
+                    // Map to custom URLs from database if available, cycling continuously
                     if (this.customItems && this.customItems.length > 0) {
                         const sourceItem = this.customItems[i % this.customItems.length];
                         img.src = sourceItem.image_url || sourceItem.img_src || sourceItem.imgSrc || sourceItem.url || sourceItem.src || '';
@@ -360,9 +363,9 @@ export default function Page() {
 
                         el.dataset.title = sourceItem.title || dummyTitles[i % dummyTitles.length];
                         el.dataset.case_study = sourceItem.case_study || dummyCaseStudies[i % dummyCaseStudies.length];
-                      } else {
-                          const dummyImages = Array.from({ length: 12 }).map((_, i) => `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`);
-                          img.src = dummyImages[i % dummyImages.length];
+                    } else {
+                        const dummyImages = Array.from({ length: 12 }).map((_, i) => `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`);
+                        img.src = dummyImages[i % dummyImages.length];
                         
                         el.dataset.category = 'Concept Art';
                         const catLabel = document.createElement('div');
@@ -383,7 +386,7 @@ export default function Page() {
                     el.appendChild(img);
                     this.container.appendChild(el);
 
-                    // Symmetrical fixed size factor so every item is exactly the identical size and uniform gaps hold
+                    // Symmetrical fixed size factor
                     const chosenFactor = 0.9;
                     const randDriftX = (Math.random() - 0.5) * 1.5;
                     const randDriftY = (Math.random() - 0.5) * 1.5;
@@ -394,12 +397,10 @@ export default function Page() {
                         basey: 0,
                         index: i,
                         sizeFactor: chosenFactor,
-                        // Random base drift momentum for "real" zero gravity 
                         baseDriftX: randDriftX,
                         baseDriftY: randDriftY,
                         driftX: randDriftX,
                         driftY: randDriftY,
-                        // Persistent smooth 3D rotation states
                         rotX: 0,
                         rotY: 0
                     });
@@ -427,13 +428,11 @@ export default function Page() {
 
                 for (let i = 0; i < this.items.length; i++) {
                     const item = this.items[i];
-                    // Wrapper naturally shrink-wraps to contents
                     item.el.style.width = 'max-content';
                     item.el.style.height = 'max-content';
 
                     const img = item.el.querySelector('img');
                     if (img) {
-                        // Image width scales to strict grid size, height scales proportionally to aspect ratio
                         img.style.width = `${this.itemSizePx * item.sizeFactor}px`;
                         img.style.height = 'auto';
                         img.style.maxWidth = 'none';
@@ -444,12 +443,12 @@ export default function Page() {
                     const col = i % this.cols;
                     const row = Math.floor(i / this.cols);
 
-                    // Symmetrical Diagonal Grid Layout
-                    const diagonalStagger = col * (this.stepY / 2);
+                    // Alternating Brick Stagger (period 2) ensuring symmetrical tiling
+                    const staggerY = (col % 2 === 1) ? (this.stepY * 0.5) : 0;
 
-                    // Compute final base coordinates symmetrically spread from center origin
+                    // Final base coordinates symmetrically spread from center origin
                     item.basex = (col * this.stepX) - (this.gridWidth / 2) + (this.stepX / 2);
-                    item.basey = (row * this.stepY) - (this.gridHeight / 2) + (this.stepY / 2) + diagonalStagger;
+                    item.basey = (row * this.stepY) - (this.gridHeight / 2) + (this.stepY / 2) + staggerY;
                 }
             }
 
@@ -638,9 +637,8 @@ export default function Page() {
                     // Intelligently find the item closest to center of the viewport
                     let minDistance = Infinity;
                     const halfVW = window.innerWidth * 0.5;
-                    const halfVH = window.innerHeight * 0.5;
-                    const limitX = Math.max(this.gridWidth / 2, halfVW + 200);
-                    const limitY = Math.max(this.gridHeight / 2, halfVH + 200);
+                    const limitX = this.gridWidth / 2;
+                    const limitY = this.gridHeight / 2;
 
                     for (let i = 0; i < this.items.length; i++) {
                         const cur = this.items[i];
@@ -721,33 +719,18 @@ export default function Page() {
                 const specificView = document.getElementById('specific-view');
                 if (specificView && specificView.classList.contains('active')) return;
 
-                const isMobile = window.innerWidth <= 768;
-                const appliedSize = isMobile ? this.imageSize * 1.5 : this.imageSize;
-                const appliedGap = isMobile ? this.gap * 1.5 : this.gap;
-                const gridWidthVw = this.cols * (appliedSize + appliedGap);
-                const gridHeightVw = this.rows * (appliedSize + appliedGap);
-                const minZoomX = 100 / gridWidthVw;
-                const minZoomY = (window.innerHeight / window.innerWidth * 100) / gridHeightVw;
-                const minZoom = Math.max(minZoomX, minZoomY, 0.32);
-                const maxZoom = 2.65;
-
-                const zoomSteps = [
-                    minZoom,
-                    Math.max(minZoom + 0.25, 0.68),
-                    1.15,
-                    1.80,
-                    maxZoom
-                ].filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a - b);
+                // Rich, variable multi-stage zoom options (from 22% ultra-wide canvas to 280% macro zoom)
+                const zoomSteps = [0.22, 0.35, 0.48, 0.62, 0.78, 1.00, 1.28, 1.65, 2.10, 2.80];
 
                 let targetZoom = this.state.targetZoom;
                 const current = this.state.targetZoom;
 
                 if (direction === 'in') {
-                    const nextTier = zoomSteps.find(z => z > current + 0.08);
-                    targetZoom = nextTier !== undefined ? nextTier : Math.min(maxZoom, current + 0.35);
+                    const nextTier = zoomSteps.find(z => z > current + 0.04);
+                    targetZoom = nextTier !== undefined ? nextTier : zoomSteps[zoomSteps.length - 1];
                 } else {
-                    const prevTier = [...zoomSteps].reverse().find(z => z < current - 0.08);
-                    targetZoom = prevTier !== undefined ? prevTier : Math.max(minZoom, current - 0.35);
+                    const prevTier = [...zoomSteps].reverse().find(z => z < current - 0.04);
+                    targetZoom = prevTier !== undefined ? prevTier : zoomSteps[0];
                 }
 
                 // Play synthesized zero-latency GTA sound
@@ -838,9 +821,9 @@ export default function Page() {
                 const halfVH = window.innerHeight * 0.5;
                 const itemHalf = (this.itemSizePx * 0.5) || 120;
 
-                // Set wrapping boundaries comfortably outside the visible viewport
-                const limitX = Math.max(this.gridWidth / 2, halfVW + itemHalf * 2);
-                const limitY = Math.max(this.gridHeight / 2, halfVH + itemHalf * 2);
+                // Exact modulo wrapping boundaries matching grid dimensions
+                const limitX = this.gridWidth / 2;
+                const limitY = this.gridHeight / 2;
 
                 // Real-time zero gravity baseline calculation
                 const time = Date.now() * 0.001;
@@ -866,21 +849,21 @@ export default function Page() {
                         item.basex = this.wrap(item.basex, -this.gridWidth, this.gridWidth);
                         item.basey = this.wrap(item.basey, -this.gridHeight, this.gridHeight);
                     } else {
-                        // Return slowly back to their home grid slots
+                        // Return smoothly back to their home grid slots
                         const col = i % this.cols;
                         const row = Math.floor(i / this.cols);
-                        const diagonalStagger = col * (this.stepY / 2);
+                        const staggerY = (col % 2 === 1) ? (this.stepY * 0.5) : 0;
                         const homeX = (col * this.stepX) - (this.gridWidth / 2) + (this.stepX / 2);
-                        const homeY = (row * this.stepY) - (this.gridHeight / 2) + (this.stepY / 2) + diagonalStagger;
+                        const homeY = (row * this.stepY) - (this.gridHeight / 2) + (this.stepY / 2) + staggerY;
 
-                        item.basex += (homeX - item.basex) * 0.05;
-                        item.basey += (homeY - item.basey) * 0.05;
+                        item.basex += (homeX - item.basex) * 0.06;
+                        item.basey += (homeY - item.basey) * 0.06;
                     }
 
                     let absoluteX = item.basex + this.state.x;
                     let absoluteY = item.basey + this.state.y;
 
-                    // Infinite wrapping magic boundaries
+                    // Exact infinite wrapping magic boundaries
                     let wrappedX = this.wrap(absoluteX, -limitX, limitX);
                     let wrappedY = this.wrap(absoluteY, -limitY, limitY);
 
@@ -912,9 +895,9 @@ export default function Page() {
                     const finalX = wrappedX + floatX;
                     const finalY = wrappedY + floatY;
 
-                    // Smooth Edge Dissolve & Deep Space Horizon Scaling
-                    const fadeThresholdX = halfVW + (itemHalf * 0.4);
-                    const fadeThresholdY = halfVH + (itemHalf * 0.4);
+                    // Edge Proximity calculation for Cosmic Horizon
+                    const fadeThresholdX = halfVW + (itemHalf * 0.6);
+                    const fadeThresholdY = halfVH + (itemHalf * 0.6);
                     const normX = Math.abs(finalX) / fadeThresholdX;
                     const normY = Math.abs(finalY) / fadeThresholdY;
                     const edgeProximity = Math.max(normX, normY);
@@ -924,22 +907,18 @@ export default function Page() {
                     let blurPx = 0;
 
                     if (spaceModeActive) {
-                        // In TRIPP Mode: Ethereal Cosmic Horizon Dissolve & Deep-Space Scaling
-                        // Cards gently start dissolving from 60% distance to screen edge, completely fading out at 110%
-                        if (edgeProximity > 0.60) {
-                            const t = Math.min(1, Math.max(0, (edgeProximity - 0.60) / 0.50));
-                            const smoothT = t * t * (3 - 2 * t);
-                            opacity = Math.max(0, 1 - smoothT);
-                            scale = 1 - (smoothT * 0.32); // Gracefully shrinks to 0.68 into deep cosmic space
-                            blurPx = smoothT * 4;
-                        }
-                    } else {
-                        // In Normal Mode: Seamless boundary feathering before wrapping seam
+                        // In TRIPP Mode: Ethereal Cosmic Horizon Dissolve only at outer edges
                         if (edgeProximity > 0.85) {
                             const t = Math.min(1, Math.max(0, (edgeProximity - 0.85) / 0.30));
                             const smoothT = t * t * (3 - 2 * t);
                             opacity = Math.max(0, 1 - smoothT);
+                            scale = 1 - (smoothT * 0.32); // Gracefully shrinks to 0.68 into deep cosmic space
+                            blurPx = smoothT * 3;
                         }
+                    } else {
+                        // In Normal Mode: Pure 1.0 opacity across all visible cards (no artificial blank spaces)
+                        opacity = 1.0;
+                        scale = 1.0;
                     }
 
                     // Use fast set for 60fps with Hardware Acceleration
@@ -1009,17 +988,9 @@ export default function Page() {
                 setGraphics(dummyGraphics);
             }
 
-            // OPTIMIZATION: Dynamically scale DOM elements to prevent lag on low-end devices
-            const isMobile = window.innerWidth <= 768;
-            const minElementsNeeded = isMobile ? 30 : 49; 
-            const baseLength = fetchedItems.length > 0 ? fetchedItems.length : 12;
-            const multiplier = Math.ceil(minElementsNeeded / baseLength);
-            const optimizedCount = baseLength * multiplier;
-
             const graphicCanvas = new InfiniteCanvas('canvas-container', {
                 imageSize: '20',       // 20vw sizing base
-                numberOfImages: optimizedCount, // Drastically reduced DOM nodes
-                gap: '0.5',            // Minimal 0.5vw gap so images are nearly touching
+                gap: '0.5',            // Minimal 0.5vw gap so images are cleanly aligned
                 customItems: fetchedItems // Dynamically loaded from Supabase
             });
             window.canvasEngine = graphicCanvas;
@@ -1158,32 +1129,28 @@ export default function Page() {
             const isGoingTripp = !spaceModeActive;
             playTripToggleSound(isGoingTripp);
 
-            // Compute maximum distance to screen corners for portal expansion
+            // Compute maximum distance to screen corners for 100% solid whole-page coverage
             const maxDist = Math.hypot(
                 Math.max(originX, window.innerWidth - originX),
                 Math.max(originY, window.innerHeight - originY)
-            );
-            const targetRadius = maxDist * 1.25;
+            ) * 1.5;
 
             btn.style.pointerEvents = 'none';
 
-            // High-performance hardware-accelerated portal overlay (zero SVG filter overhead, 60fps GPU compositor)
-            const portalOverlay = document.createElement('div');
-            portalOverlay.className = 'tripp-portal-overlay';
-            portalOverlay.style.cssText = `
+            // Solid Full-Page Cosmic Veil
+            const solidCurtain = document.createElement('div');
+            solidCurtain.className = 'tripp-solid-curtain';
+            solidCurtain.style.cssText = `
                 position: fixed;
                 inset: 0;
                 pointer-events: none;
-                z-index: 60;
+                z-index: 120;
+                background: #070709;
                 clip-path: circle(0px at ${originX}px ${originY}px);
                 -webkit-clip-path: circle(0px at ${originX}px ${originY}px);
-                background: ${isGoingTripp 
-                    ? `radial-gradient(circle at ${originX}px ${originY}px, rgba(235, 215, 63, 0.3) 0%, rgba(20, 20, 25, 0.95) 45%, rgba(5, 5, 8, 1) 100%)` 
-                    : `radial-gradient(circle at ${originX}px ${originY}px, rgba(235, 215, 63, 0.15) 0%, rgba(15, 15, 18, 0.95) 55%, rgba(10, 10, 10, 1) 100%)`
-                };
             `;
 
-            // Luminous golden shockwave ring
+            // Radiant golden shockwave leading edge
             const shockwave = document.createElement('div');
             shockwave.className = 'tripp-shockwave-ring';
             shockwave.style.cssText = `
@@ -1193,47 +1160,47 @@ export default function Page() {
                 width: 0px;
                 height: 0px;
                 border-radius: 50%;
-                border: 2px solid rgba(235, 215, 63, 0.85);
-                box-shadow: 0 0 35px rgba(235, 215, 63, 0.7), inset 0 0 20px rgba(235, 215, 63, 0.4);
+                border: 3px solid rgba(235, 215, 63, 0.95);
+                box-shadow: 0 0 50px rgba(235, 215, 63, 0.8), inset 0 0 25px rgba(235, 215, 63, 0.5);
                 transform: translate(-50%, -50%);
                 pointer-events: none;
-                z-index: 65;
+                z-index: 125;
             `;
 
-            document.body.appendChild(portalOverlay);
+            document.body.appendChild(solidCurtain);
             document.body.appendChild(shockwave);
 
             const tl = gsap.timeline({
                 onComplete: () => {
-                    portalOverlay.remove();
+                    solidCurtain.remove();
                     shockwave.remove();
                     btn.style.pointerEvents = 'auto';
                 }
             });
 
-            // 1. Shockwave expands smoothly
+            // 1. Expanding Golden Shockwave
             tl.to(shockwave, {
-                width: targetRadius * 2,
-                height: targetRadius * 2,
+                width: maxDist * 2,
+                height: maxDist * 2,
                 opacity: 0,
-                duration: 0.75,
+                duration: 0.85,
                 ease: "power2.out"
             }, 0);
 
-            // 2. Portal sweeps seamlessly across the screen
+            // 2. Solid Curtain Sweeps and Engulfs 100% of the entire page
             const clipPathObj = { r: 0 };
             tl.to(clipPathObj, {
-                r: targetRadius,
-                duration: 0.65,
-                ease: "power3.inOut",
+                r: maxDist,
+                duration: 0.45,
+                ease: "power2.inOut",
                 onUpdate: () => {
                     const val = `circle(${clipPathObj.r}px at ${originX}px ${originY}px)`;
-                    portalOverlay.style.clipPath = val;
-                    portalOverlay.style.webkitClipPath = val;
+                    solidCurtain.style.clipPath = val;
+                    solidCurtain.style.webkitClipPath = val;
                 }
             }, 0);
 
-            // 3. Switch space states halfway through the portal sweep for 100% seamless continuity
+            // 3. Switch states at full 100% solid coverage (seamless, zero flicker)
             tl.add(() => {
                 spaceModeActive = !spaceModeActive;
                 document.body.classList.toggle('space-mode-active');
@@ -1245,13 +1212,13 @@ export default function Page() {
                     animateSpace();
                     window.addEventListener('resize', resizeSpace);
 
-                    // Cosmic Lift-Off: Give cards an organic zero-gravity initial float
+                    // Cosmic Zero-Gravity Lift-Off
                     if (window.canvasEngine && window.canvasEngine.items) {
                         window.canvasEngine.items.forEach((item, idx) => {
-                            const delay = (idx % 8) * 0.025;
+                            const delay = (idx % 8) * 0.02;
                             gsap.fromTo(item.el, 
-                                { scale: 0.94 },
-                                { scale: 1, duration: 0.75, delay: delay, ease: "back.out(1.4)" }
+                                { scale: 0.92 },
+                                { scale: 1, duration: 0.7, delay: delay, ease: "back.out(1.4)" }
                             );
                         });
                     }
@@ -1264,24 +1231,24 @@ export default function Page() {
                     // Magnetic Return: Smoothly settle cards back
                     if (window.canvasEngine && window.canvasEngine.items) {
                         window.canvasEngine.items.forEach((item, idx) => {
-                            const delay = (idx % 6) * 0.02;
+                            const delay = (idx % 6) * 0.015;
                             gsap.to(item.el, {
                                 scale: 1,
-                                duration: 0.6,
+                                duration: 0.5,
                                 delay: delay,
                                 ease: "power2.out"
                             });
                         });
                     }
                 }
-            }, 0.35);
+            }, 0.45);
 
-            // 4. Smooth dissolve of portal overlay as world settles
-            tl.to(portalOverlay, {
+            // 4. Smooth curtain dissolve revealing the new world across the entire screen
+            tl.to(solidCurtain, {
                 opacity: 0,
-                duration: 0.38,
+                duration: 0.40,
                 ease: "power2.out"
-            }, 0.55);
+            }, 0.45);
         }
 
         // Bind click to the new UI button
