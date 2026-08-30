@@ -46,6 +46,8 @@ export default function Page() {
 
         // --- GTA V CINEMATIC AUDIO SYNTHESIZER (Pure Web Audio API - Zero Asset Latency) ---
         let audioCtx = null;
+        let cachedNoiseBuffer = null;
+
         function getAudioContext() {
             if (!audioCtx && typeof window !== 'undefined') {
                 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -59,6 +61,18 @@ export default function Page() {
             return audioCtx;
         }
 
+        function getNoiseBuffer(ctx) {
+            if (!cachedNoiseBuffer || cachedNoiseBuffer.sampleRate !== ctx.sampleRate) {
+                const bufferSize = Math.floor(ctx.sampleRate * 0.9);
+                cachedNoiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const output = cachedNoiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+            }
+            return cachedNoiseBuffer;
+        }
+
         function playGTAZoomSound(direction) {
             try {
                 const ctx = getAudioContext();
@@ -68,15 +82,9 @@ export default function Page() {
                 if (direction === 'in') {
                     // Dive-bomb sound: rushing descending wind + Doppler tone + tactical lock-on blip + sub-bass landing thud
                     
-                    // 1. Synthesize rushing wind noise with bandpass sweep
-                    const bufferSize = Math.floor(ctx.sampleRate * 0.9);
-                    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                    const output = noiseBuffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) {
-                        output[i] = Math.random() * 2 - 1;
-                    }
+                    // 1. Synthesize rushing wind noise with bandpass sweep (using pre-cached buffer)
                     const whiteNoise = ctx.createBufferSource();
-                    whiteNoise.buffer = noiseBuffer;
+                    whiteNoise.buffer = getNoiseBuffer(ctx);
 
                     const filter = ctx.createBiquadFilter();
                     filter.type = 'bandpass';
@@ -120,7 +128,7 @@ export default function Page() {
 
                     subGain.gain.setValueAtTime(0.0, now);
                     subGain.gain.setValueAtTime(0.4, now + 0.58);
-                    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+                    subGain.exponentialRampToValueAtTime(0.001, now + 0.95);
 
                     subOsc.connect(subGain);
                     subGain.connect(ctx.destination);
@@ -142,15 +150,9 @@ export default function Page() {
                 } else {
                     // Zoom Out: Pulling up to stratosphere whoosh + ascending pitch + satellite radio pulse
                     
-                    // 1. Ascending wind noise
-                    const bufferSize = Math.floor(ctx.sampleRate * 0.9);
-                    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                    const output = noiseBuffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) {
-                        output[i] = Math.random() * 2 - 1;
-                    }
+                    // 1. Ascending wind noise (using pre-cached buffer)
                     const whiteNoise = ctx.createBufferSource();
-                    whiteNoise.buffer = noiseBuffer;
+                    whiteNoise.buffer = getNoiseBuffer(ctx);
 
                     const filter = ctx.createBiquadFilter();
                     filter.type = 'bandpass';
@@ -256,7 +258,7 @@ export default function Page() {
             } catch (e) {}
         }
 
-        // --- INFINITE CANVAS ENGINE ---
+        // --- INFINITE CANVAS ENGINE (GPU-Accelerated Composite Architecture) ---
         class InfiniteCanvas {
             constructor(containerId, options = {}) {
                 this.container = document.getElementById(containerId);
@@ -284,12 +286,8 @@ export default function Page() {
                     lastPointer: { x: 0, y: 0 }
                 };
 
-                // Even number of columns guarantees seamless 2-column alternating brick wrapping
-                const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-                this.cols = isMobile ? 10 : 16;
-                this.rows = isMobile ? 10 : 10;
-                this.totalItems = this.cols * this.rows;
-
+                // Responsive device grid sizing (Mobile: 6x6=36, Tablet: 8x6=48, Desktop: 12x8=96)
+                this.calcResponsiveGrid();
                 this.updateMetrics();
                 this.init();
 
@@ -298,17 +296,31 @@ export default function Page() {
 
                 this.bindEvents();
 
-                // 60fps binding for position updates 
+                // 60-120fps hardware ticker binding
                 gsap.ticker.add(this.renderBound);
                 
                 this.resizeBound = () => {
-                    const mobileNow = window.innerWidth <= 768;
-                    this.cols = mobileNow ? 10 : 16;
-                    this.rows = mobileNow ? 10 : 10;
-                    this.updateMetrics();
-                    this.recalcPositions();
+                    const prevCols = this.cols;
+                    const prevRows = this.rows;
+                    this.calcResponsiveGrid();
+                    if (prevCols !== this.cols || prevRows !== this.rows) {
+                        this.updateMetrics();
+                        this.init();
+                    } else {
+                        this.updateMetrics();
+                        this.recalcBaseDimensions();
+                    }
                 };
                 window.addEventListener('resize', this.resizeBound);
+            }
+
+            calcResponsiveGrid() {
+                const w = typeof window !== 'undefined' ? window.innerWidth : 1440;
+                const isMobile = w <= 768;
+                const isTablet = w > 768 && w <= 1024;
+                this.cols = isMobile ? 6 : (isTablet ? 8 : 12);
+                this.rows = isMobile ? 6 : (isTablet ? 6 : 8);
+                this.totalItems = this.cols * this.rows;
             }
 
             getMinZoom() {
@@ -338,32 +350,36 @@ export default function Page() {
                 const appliedGap = isMobile ? this.gap * 1.5 : this.gap;
 
                 const vw = (typeof window !== 'undefined' ? window.innerWidth : 1440) / 100;
-                this.itemSizePx = appliedSize * vw * this.state.zoom;
-                this.gapPx = appliedGap * vw * this.state.zoom;
+                this.baseItemSizePx = appliedSize * vw;
+                this.baseGapPx = appliedGap * vw;
 
                 // Smart aspect ratio caching for tall portrait poster cards (1:1.45)
                 const currentAspectRatio = this.maxAspectRatio || 1.45;
-                const maxItemHeightPx = this.itemSizePx * currentAspectRatio;
+                this.baseMaxItemHeightPx = this.baseItemSizePx * currentAspectRatio;
 
-                this.stepX = this.itemSizePx + this.gapPx;
-                this.stepY = maxItemHeightPx + this.gapPx;
+                this.baseStepX = this.baseItemSizePx + this.baseGapPx;
+                this.baseStepY = this.baseMaxItemHeightPx + this.baseGapPx;
 
-                this.gridWidth = this.cols * this.stepX;
-                this.gridHeight = this.rows * this.stepY;
+                this.baseGridWidth = this.cols * this.baseStepX;
+                this.baseGridHeight = this.rows * this.baseStepY;
             }
 
             init() {
+                this.container.innerHTML = '';
+                this.items = [];
+
                 for (let i = 0; i < this.totalItems; i++) {
                     const el = document.createElement('div');
                     el.className = 'canvas-item is-loading';
 
                     const img = document.createElement('img');
+                    img.decoding = 'async';
                     
                     // Add loaded class when image successfully loads
                     img.onload = () => {
                         el.classList.remove('is-loading');
                         img.classList.add('loaded');
-                        this.recalcPositions();
+                        this.recalcAspectRatios();
                     };
 
                     const itemIndex = this.customItems && this.customItems.length > 0 
@@ -391,7 +407,7 @@ export default function Page() {
                         el.classList.remove('is-loading');
                         img.onerror = null;
                         img.src = 'https://pub-72c28e7d3884434bac75ca152fdf30bb.r2.dev/Graphics/1785782739074_3.png'; 
-                        this.recalcPositions();
+                        this.recalcAspectRatios();
                     };
 
                     el.appendChild(img);
@@ -400,98 +416,153 @@ export default function Page() {
                     // Symmetrical fixed size factor
                     const chosenFactor = 0.9;
 
-                    this.items.push({
+                    img.style.width = `${this.baseItemSizePx * chosenFactor}px`;
+                    img.style.height = 'auto';
+                    img.style.maxWidth = 'none';
+                    img.style.maxHeight = 'none';
+                    img.style.display = 'block';
+
+                    el.style.width = 'max-content';
+                    el.style.height = 'max-content';
+
+                    const itemObj = {
                         el: el,
-                        basex: 0,
-                        basey: 0,
+                        imgEl: img,
                         index: i,
                         sizeFactor: chosenFactor,
-                        rotX: 0,
-                        rotY: 0
+                        isVisible: true
+                    };
+
+                    // Mobile fast double-tap detection + desktop dblclick fallback
+                    let lastTap = 0;
+                    let tapStartX = 0;
+                    let tapStartY = 0;
+
+                    el.addEventListener('pointerdown', (ev) => {
+                        tapStartX = ev.clientX;
+                        tapStartY = ev.clientY;
                     });
+
+                    el.addEventListener('pointerup', (ev) => {
+                        const dist = Math.hypot(ev.clientX - tapStartX, ev.clientY - tapStartY);
+                        if (dist > 15) return; // Ignore if user was dragging/panning
+
+                        const now = Date.now();
+                        const timesince = now - lastTap;
+                        if (timesince < 350 && timesince > 0) {
+                            this.openSpecificView(itemObj);
+                            lastTap = 0;
+                        } else {
+                            lastTap = now;
+                        }
+                    });
+
+                    el.addEventListener('dblclick', () => {
+                        this.openSpecificView(itemObj);
+                    });
+
+                    this.items.push(itemObj);
                 }
-                this.recalcPositions();
             }
 
-            recalcPositions() {
-                // Find maximum aspect ratio among loaded images to smartly size grid rows
+            recalcAspectRatios() {
                 let maxAspectRatio = 1.45;
                 for (let i = 0; i < this.items.length; i++) {
-                    const img = this.items[i].el.querySelector('img');
+                    const img = this.items[i].imgEl;
                     if (img && img.naturalWidth && img.naturalHeight) {
                         const ratio = img.naturalHeight / img.naturalWidth;
                         if (ratio > maxAspectRatio) maxAspectRatio = ratio;
                     }
                 }
-                this.maxAspectRatio = maxAspectRatio;
+                if (Math.abs(maxAspectRatio - (this.maxAspectRatio || 1.45)) > 0.02) {
+                    this.maxAspectRatio = maxAspectRatio;
+                    this.updateMetrics();
+                }
+            }
 
-                const maxItemHeightPx = this.itemSizePx * this.maxAspectRatio;
-                this.stepX = this.itemSizePx + this.gapPx;
-                this.stepY = maxItemHeightPx + this.gapPx;
-                this.gridWidth = this.cols * this.stepX;
-                this.gridHeight = this.rows * this.stepY;
-
+            recalcBaseDimensions() {
                 for (let i = 0; i < this.items.length; i++) {
                     const item = this.items[i];
-                    item.el.style.width = 'max-content';
-                    item.el.style.height = 'max-content';
-
-                    const img = item.el.querySelector('img');
-                    if (img) {
-                        img.style.width = `${this.itemSizePx * item.sizeFactor}px`;
-                        img.style.height = 'auto';
-                        img.style.maxWidth = 'none';
-                        img.style.maxHeight = 'none';
-                        img.style.display = 'block';
+                    if (item.imgEl) {
+                        item.imgEl.style.width = `${this.baseItemSizePx * item.sizeFactor}px`;
                     }
-
-                    const col = i % this.cols;
-                    const row = Math.floor(i / this.cols);
-
-                    // Alternating Brick Stagger (period 2) ensuring symmetrical tiling
-                    const staggerY = (col % 2 === 1) ? (this.stepY * 0.5) : 0;
-
-                    // Final base coordinates symmetrically spread from center origin
-                    item.basex = (col * this.stepX) - (this.gridWidth / 2) + (this.stepX / 2);
-                    item.basey = (row * this.stepY) - (this.gridHeight / 2) + (this.stepY / 2) + staggerY;
                 }
             }
 
             bindEvents() {
+                this.activePointers = new Map();
+                this.initialPinchDistance = 0;
+                this.initialPinchZoom = 1;
+
                 // Bind to window instead of container so dragging on blank margin space still pans the canvas
                 window.addEventListener('pointerdown', (e) => {
                     // Ignore clicks if list view or specific view is open
                     if (this.isListView || document.getElementById('specific-view').classList.contains('active')) return;
 
-                    this.state.isDragging = true;
-                    this.state.lastPointer.x = e.clientX;
-                    this.state.lastPointer.y = e.clientY;
-                    this.state.velX = 0;
-                    this.state.velY = 0;
-                    gsap.killTweensOf(this.state);
-                    cursor.classList.add('active');
+                    this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+                    if (this.activePointers.size === 1) {
+                        this.state.isDragging = true;
+                        this.state.lastPointer.x = e.clientX;
+                        this.state.lastPointer.y = e.clientY;
+                        this.state.velX = 0;
+                        this.state.velY = 0;
+                        gsap.killTweensOf(this.state);
+                        const c = document.getElementById('cursor');
+                        if (c) c.classList.add('active');
+                    } else if (this.activePointers.size === 2) {
+                        // Two-finger pinch gesture start
+                        const pts = Array.from(this.activePointers.values());
+                        this.initialPinchDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                        this.initialPinchZoom = this.state.zoom;
+                        if (this.zoomTween) this.zoomTween.kill();
+                    }
                 });
 
                 window.addEventListener('pointermove', (e) => {
-                    if (!this.state.isDragging) return;
+                    if (!this.activePointers.has(e.pointerId)) return;
+                    this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-                    const dx = e.clientX - this.state.lastPointer.x;
-                    const dy = e.clientY - this.state.lastPointer.y;
+                    if (this.activePointers.size === 2 && this.initialPinchDistance > 10) {
+                        // Real-time 2-finger pinch to zoom for mobile users
+                        const pts = Array.from(this.activePointers.values());
+                        const curDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                        const factor = curDist / this.initialPinchDistance;
+                        const minZoom = Math.max(0.38, Number(this.getMinZoom().toFixed(2)));
+                        const maxZoom = 2.80;
+                        const targetZ = Math.min(maxZoom, Math.max(minZoom, this.initialPinchZoom * factor));
+                        this.state.targetZoom = targetZ;
+                        this.state.zoom = targetZ;
+                    } else if (this.state.isDragging && this.activePointers.size === 1) {
+                        const dx = e.clientX - this.state.lastPointer.x;
+                        const dy = e.clientY - this.state.lastPointer.y;
 
-                    this.state.targetX += dx;
-                    this.state.targetY += dy;
+                        this.state.targetX += dx;
+                        this.state.targetY += dy;
 
-                    this.state.velX = dx;
-                    this.state.velY = dy;
+                        this.state.velX = dx;
+                        this.state.velY = dy;
 
-                    this.state.lastPointer.x = e.clientX;
-                    this.state.lastPointer.y = e.clientY;
+                        this.state.lastPointer.x = e.clientX;
+                        this.state.lastPointer.y = e.clientY;
+                    }
                 });
 
-                window.addEventListener('pointerup', () => {
-                    this.state.isDragging = false;
-                    cursor.classList.remove('active');
-                });
+                const handlePointerEnd = (e) => {
+                    this.activePointers.delete(e.pointerId);
+                    if (this.activePointers.size === 0) {
+                        this.state.isDragging = false;
+                        const c = document.getElementById('cursor');
+                        if (c) c.classList.remove('active');
+                    } else if (this.activePointers.size === 1) {
+                        const remaining = Array.from(this.activePointers.values())[0];
+                        this.state.lastPointer.x = remaining.x;
+                        this.state.lastPointer.y = remaining.y;
+                    }
+                };
+
+                window.addEventListener('pointerup', handlePointerEnd);
+                window.addEventListener('pointercancel', handlePointerEnd);
 
                 // Bind wheel to window instead of container so it catches scrolls anywhere on empty screen
                 window.addEventListener('wheel', (e) => {
@@ -501,13 +572,6 @@ export default function Page() {
                     this.state.velX = -e.deltaX * 0.5;
                     this.state.velY = -e.deltaY * 0.5;
                 }, { passive: true });
-
-                // Specific View (Double Click + Click to close) logic
-                this.items.forEach(item => {
-                    item.el.addEventListener('dblclick', () => {
-                        this.openSpecificView(item);
-                    });
-                });
 
                 // Top-Right Interactive Pill Buttons
                 const listViewBtn = document.getElementById('list-view-helper');
@@ -641,14 +705,23 @@ export default function Page() {
                 if (!item && this.items && this.items.length > 0) {
                     // Intelligently find the item closest to center of the viewport
                     let minDistance = Infinity;
-                    const halfVW = window.innerWidth * 0.5;
-                    const limitX = this.gridWidth / 2;
-                    const limitY = this.gridHeight / 2;
+                    const zoom = this.state.zoom;
+                    const stepX = this.baseStepX * zoom;
+                    const stepY = this.baseStepY * zoom;
+                    const gridWidth = this.cols * stepX;
+                    const gridHeight = this.rows * stepY;
+                    const limitX = gridWidth * 0.5;
+                    const limitY = gridHeight * 0.5;
 
                     for (let i = 0; i < this.items.length; i++) {
                         const cur = this.items[i];
-                        const absX = cur.basex + this.state.x;
-                        const absY = cur.basey + this.state.y;
+                        const col = cur.index % this.cols;
+                        const row = Math.floor(cur.index / this.cols);
+                        const staggerY = (col % 2 === 1) ? (stepY * 0.5) : 0;
+                        const homeX = (col * stepX) - limitX + (stepX * 0.5);
+                        const homeY = (row * stepY) - limitY + (stepY * 0.5) + staggerY;
+                        const absX = homeX + this.state.x;
+                        const absY = homeY + this.state.y;
                         const wx = this.wrap(absX, -limitX, limitX);
                         const wy = this.wrap(absY, -limitY, limitY);
                         const dist = Math.hypot(wx, wy);
@@ -661,7 +734,7 @@ export default function Page() {
 
                 if (!item || !item.el) return;
 
-                const img = item.el.querySelector('img');
+                const img = item.imgEl || item.el.querySelector('img');
                 const src = img ? img.src : '';
                 document.getElementById('specific-img').src = src;
                 document.getElementById('specific-title').innerText = item.el.dataset.title || 'Untitled Project';
@@ -768,59 +841,30 @@ export default function Page() {
                 this.state.targetZoom = targetZoom;
 
                 if (this.zoomTween) this.zoomTween.kill();
-                if (this.blurTween) this.blurTween.kill();
 
                 const isDiveIn = direction === 'in';
-                const duration = isDiveIn ? 0.85 : 0.75;
-                const ease = isDiveIn ? "power4.inOut" : "power3.inOut";
+                const duration = isDiveIn ? 0.65 : 0.55;
+                const ease = isDiveIn ? "power3.inOut" : "power2.out";
 
-                // Camera Kinetic Zoom Tween
+                // Camera Kinetic Zoom Tween (smoothly interpolates zoom; render() handles GPU transforms)
                 this.zoomTween = gsap.to(this.state, {
                     zoom: targetZoom,
                     duration: duration,
-                    ease: ease,
-                    onUpdate: () => {
-                        this.updateMetrics();
-                        this.recalcPositions();
-                    }
+                    ease: ease
                 });
 
-                // High-Speed Cinematic Motion Blur on the Canvas Container during dive-in / pull-back
-                const canvasEl = this.container;
-                if (canvasEl) {
-                    const blurObj = { blur: 0 };
-                    const maxBlur = isDiveIn ? 10 : 8;
-                    
-                    this.blurTween = gsap.timeline({
-                        onUpdate: () => {
-                            if (blurObj.blur > 0.2) {
-                                canvasEl.style.filter = `blur(${blurObj.blur.toFixed(1)}px)`;
-                            } else {
-                                canvasEl.style.filter = 'none';
-                            }
-                        },
-                        onComplete: () => {
-                            canvasEl.style.filter = 'none';
-                        }
-                    })
-                    .to(blurObj, { blur: maxBlur, duration: duration * 0.42, ease: "power2.in" })
-                    .to(blurObj, { blur: 0, duration: duration * 0.58, ease: "power3.out" });
-                }
-
-                // Subtle Camera Recoil / Momentum Settle
+                // Subtle hardware-accelerated camera recoil settle on the viewport
                 const showcase = document.getElementById('portfolio-showcase');
                 if (showcase) {
                     if (isDiveIn) {
-                        gsap.delayedCall(duration * 0.6, () => {
-                            gsap.fromTo(showcase, 
-                                { x: () => (Math.random() - 0.5) * 8, y: () => (Math.random() - 0.5) * 8 },
-                                { x: 0, y: 0, duration: 0.4, ease: "elastic.out(1.2, 0.3)", clearProps: "x,y" }
-                            );
-                        });
+                        gsap.fromTo(showcase, 
+                            { scale: 0.99 },
+                            { scale: 1, duration: 0.45, ease: "power2.out", clearProps: "scale" }
+                        );
                     } else {
                         gsap.fromTo(showcase, 
-                            { y: 8 },
-                            { y: 0, duration: 0.5, ease: "power3.out", clearProps: "y" }
+                            { scale: 1.01 },
+                            { scale: 1, duration: 0.45, ease: "power2.out", clearProps: "scale" }
                         );
                     }
                 }
@@ -853,59 +897,58 @@ export default function Page() {
 
                 if (!this.zoomTween || !this.zoomTween.isActive()) {
                     if (Math.abs(this.state.targetZoom - this.state.zoom) > 0.001) {
-                        this.state.zoom += (this.state.targetZoom - this.state.zoom) * 0.1;
-                        this.updateMetrics();
-                        this.recalcPositions();
+                        this.state.zoom += (this.state.targetZoom - this.state.zoom) * 0.15;
                     }
                 }
 
-                const halfVW = window.innerWidth * 0.5;
-                const halfVH = window.innerHeight * 0.5;
-                const itemHalf = (this.itemSizePx * 0.5) || 120;
+                const zoom = this.state.zoom;
+                const stepX = this.baseStepX * zoom;
+                const stepY = this.baseStepY * zoom;
+                const gridWidth = this.cols * stepX;
+                const gridHeight = this.rows * stepY;
+                const limitX = gridWidth * 0.5;
+                const limitY = gridHeight * 0.5;
 
-                // Exact modulo wrapping boundaries matching grid dimensions
-                const limitX = this.gridWidth / 2;
-                const limitY = this.gridHeight / 2;
+                const halfVW = (typeof window !== 'undefined' ? window.innerWidth : 1440) * 0.5;
+                const halfVH = (typeof window !== 'undefined' ? window.innerHeight : 900) * 0.5;
+                const cullingMargin = (this.baseItemSizePx * zoom) + 120;
 
                 for (let i = 0; i < this.items.length; i++) {
                     const item = this.items[i];
 
-                    // Exact grid coordinates calculation
                     const col = i % this.cols;
                     const row = Math.floor(i / this.cols);
-                    const staggerY = (col % 2 === 1) ? (this.stepY * 0.5) : 0;
-                    const homeX = (col * this.stepX) - (this.gridWidth / 2) + (this.stepX / 2);
-                    const homeY = (row * this.stepY) - (this.gridHeight / 2) + (this.stepY / 2) + staggerY;
+                    const staggerY = (col % 2 === 1) ? (stepY * 0.5) : 0;
+                    const homeX = (col * stepX) - limitX + (stepX * 0.5);
+                    const homeY = (row * stepY) - limitY + (stepY * 0.5) + staggerY;
 
-                    let absoluteX = homeX + this.state.x;
-                    let absoluteY = homeY + this.state.y;
+                    const absoluteX = homeX + this.state.x;
+                    const absoluteY = homeY + this.state.y;
 
-                    // Exact infinite wrapping magic boundaries
-                    let wrappedX = this.wrap(absoluteX, -limitX, limitX);
-                    let wrappedY = this.wrap(absoluteY, -limitY, limitY);
+                    const wrappedX = this.wrap(absoluteX, -limitX, limitX);
+                    const wrappedY = this.wrap(absoluteY, -limitY, limitY);
 
-                    // Strict Single Flat Depth Layer: All cards locked at 1.0 scale, static zIndex, zero forward/backward clipping
-                    gsap.set(item.el, {
-                        x: wrappedX,
-                        y: wrappedY,
-                        xPercent: -50,
-                        yPercent: -50,
-                        scale: 1.0,
-                        opacity: 1.0,
-                        zIndex: 1,
-                        rotationX: 0,
-                        rotationY: 0,
-                        filter: 'none',
-                        force3D: true // GPU Hardware acceleration
-                    });
+                    // Frustum Culling Check
+                    const isOffscreen = Math.abs(wrappedX) > (halfVW + cullingMargin) || Math.abs(wrappedY) > (halfVH + cullingMargin);
+
+                    if (isOffscreen) {
+                        if (item.isVisible) {
+                            item.el.style.visibility = 'hidden';
+                            item.isVisible = false;
+                        }
+                    } else {
+                        if (!item.isVisible) {
+                            item.el.style.visibility = 'visible';
+                            item.isVisible = true;
+                        }
+                        item.el.style.transform = `translate3d(${wrappedX.toFixed(1)}px, ${wrappedY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)})`;
+                    }
                 }
             }
 
             // Proper context cleanup method mapping
             destroy() {
                 if (this.zoomTween) this.zoomTween.kill();
-                if (this.blurTween) this.blurTween.kill();
-                if (this.fxTimeline) this.fxTimeline.kill();
                 gsap.ticker.remove(this.renderBound);
                 window.removeEventListener('resize', this.resizeBound);
                 if (this.container) {
@@ -1288,6 +1331,7 @@ export default function Page() {
             opacity: 0.9;
             transition: opacity 0.5s ease;
             transform-style: flat;
+            pointer-events: none;
         }
 
         #portfolio-showcase:hover .infinite-canvas {
@@ -1302,8 +1346,12 @@ export default function Page() {
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            transform: translate(-50%, -50%);
             will-change: transform;
+            contain: layout style paint;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            transform-origin: center center;
+            pointer-events: auto;
         }
 
         /* Creative Geometric Morphing Loader */
@@ -1742,7 +1790,6 @@ export default function Page() {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.05);
             display: inline-block;
-            /* Crucial for CSS column masonry */
         }
 
         /* Remove creative staggers to let native columns flow neatly */
@@ -1756,7 +1803,6 @@ export default function Page() {
             height: auto;
             position: relative;
             object-fit: cover;
-            /* Keeps image structurally sound without squeezing */
             border-radius: 4px;
             filter: none;
             transition: transform 0.5s ease;
@@ -1778,34 +1824,57 @@ export default function Page() {
             display: block;
             column-count: 3;
             column-gap: 20px;
+            touch-action: pan-y;
         }
 
         @media (max-width: 900px) {
             .list-view-mode .infinite-canvas {
                 column-count: 2;
+                padding: 90px 4vw;
             }
         }
 
-        @media (max-width: 500px) {
+        @media (max-width: 550px) {
             .list-view-mode .infinite-canvas {
                 column-count: 1;
+                padding: 80px 16px;
             }
         }
 
         /* Mobile specific adjustments for guidelines */
-        @media (max-width: 900px) {
+        @media (max-width: 768px) {
+            .nav-back {
+                top: max(16px, env(safe-area-inset-top));
+                left: 16px;
+                width: 44px;
+                height: 44px;
+                font-size: 1.25rem;
+            }
             .drag-instruction {
-                bottom: 100px;
+                bottom: max(75px, env(safe-area-inset-bottom) + 55px);
+                font-size: 0.52rem;
+                letter-spacing: 2px;
+                color: rgba(255, 255, 255, 0.45);
                 white-space: nowrap;
             }
             .features-list {
-                font-size: 0.5rem;
-                top: 80px;
-                right: 20px;
-                gap: 10px;
+                top: max(16px, env(safe-area-inset-top));
+                right: 16px;
+                gap: 8px;
             }
-            #list-view-helper {
-                display: none !important;
+            .feature-item {
+                padding: 4px 6px 4px 10px;
+                border-radius: 20px;
+                gap: 6px;
+            }
+            .feature-item > span:first-child {
+                font-size: 0.62rem;
+                letter-spacing: 0.8px;
+            }
+            .feature-key {
+                padding: 3px 8px;
+                font-size: 0.54rem;
+                border-radius: 12px;
             }
             .desktop-text {
                 display: none !important;
@@ -1813,13 +1882,41 @@ export default function Page() {
             .mobile-text {
                 display: inline !important;
             }
+            .sp-wrapper {
+                bottom: max(20px, env(safe-area-inset-bottom));
+                left: 16px;
+                transform: scale(0.88);
+                transform-origin: bottom left;
+            }
+            .infinite-zoom-controls {
+                bottom: max(20px, env(safe-area-inset-bottom));
+                right: 16px;
+                padding: 4px 6px;
+                gap: 6px;
+            }
+            .zoom-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (pointer: coarse), (hover: none) {
+            .cursor {
+                display: none !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+            }
+            * {
+                cursor: auto !important;
+            }
         }
 
         .mobile-text {
             display: none;
         }
 
-        /* Specific View overlay for Double Click */
+        /* Specific View overlay for Double Click / 2x Tap */
         .specific-view-overlay {
             position: fixed;
             inset: 0;
@@ -2064,18 +2161,32 @@ export default function Page() {
             height: 1px;
             background: #ebd73f;
         }
-        }
         
         @media (max-width: 900px) {
+            .specific-view-overlay {
+                padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)) 16px;
+                cursor: default;
+            }
             .specific-view-content-wrapper {
                 flex-direction: column;
+                width: 100%;
                 height: 100%;
                 overflow-y: auto;
-                padding: 40px 0;
+                -webkit-overflow-scrolling: touch;
+                padding: 55px 0 30px 0;
+                gap: 20px;
+            }
+            .close-specific-view {
+                top: max(16px, env(safe-area-inset-top));
+                right: 16px;
+                width: 42px;
+                height: 42px;
             }
             .specific-view-img-container {
                 height: auto;
-                max-height: 60vh;
+                max-height: 48vh;
+                width: 100%;
+                flex: none;
             }
             .specific-view-info {
                 max-width: 100%;
@@ -2084,13 +2195,22 @@ export default function Page() {
                 flex: none;
                 overflow: visible;
                 margin-right: 0;
+                border-radius: 20px;
             }
             .specific-view-scroll-area {
-                padding: 35px 25px;
+                padding: 26px 20px;
                 height: auto;
                 overflow: visible;
                 -webkit-mask-image: none;
                 mask-image: none;
+            }
+            .specific-title {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+            .specific-case-study {
+                font-size: 0.95rem;
+                line-height: 1.65;
             }
         }
         
@@ -2169,13 +2289,6 @@ export default function Page() {
             transform: scale(0.92);
             background: var(--brand-yellow);
             color: #000;
-        }
-
-        @media (max-width: 768px) {
-            .infinite-zoom-controls {
-                bottom: 30px;
-                right: 30px;
-            }
         }
 
         .close-specific-view {
