@@ -258,6 +258,111 @@ export default function Page() {
             } catch (e) {}
         }
 
+        // --- SPECIFIC VIEW SEQUENTIAL MODAL MANAGER ---
+        let currentSpecificList = [];
+        let currentSpecificIndex = 0;
+
+        function renderSpecificModalContent(item) {
+            if (!item) return;
+
+            const dummyTitles = ['Neon Brand Identity', 'Event Poster Vibe', 'Tech Startup Logo', 'Creative Thumbnail', 'Web Redesign'];
+            const dummyCaseStudies = [
+              "This project focused on creating a bold, eye-catching aesthetic. We used high-contrast colors and custom typography to make the brand instantly recognizable.",
+              "The goal was to design something clean and modern. By stripping away unnecessary elements, we created a minimalist design that speaks volumes.",
+              "This was built for maximum engagement. We used vibrant gradients and dynamic layouts to capture attention in less than a second.",
+              "Designed specifically to resonate with a younger demographic. It blends modern aesthetics with retro elements to create a nostalgic yet fresh vibe.",
+              "A complete visual overhaul. We maintained the core identity but modernized the geometry and color palette for a premium feel."
+            ];
+
+            const imgEl = document.getElementById('specific-img');
+            const titleEl = document.getElementById('specific-title');
+            const catEl = document.getElementById('specific-category');
+            const csEl = document.getElementById('specific-case-study');
+
+            if (imgEl) {
+                imgEl.src = item.image_url || item.img_src || item.imgSrc || item.url || (item.imgEl ? item.imgEl.src : '') || '';
+                imgEl.style.transform = 'scale(1)';
+                imgEl.style.transformOrigin = 'center center';
+            }
+            if (titleEl) titleEl.innerText = item.title || (item.el ? item.el.dataset.title : '') || dummyTitles[currentSpecificIndex % dummyTitles.length];
+            if (catEl) catEl.innerText = item.category || (item.el ? item.el.dataset.category : '') || 'Graphic Design';
+            if (csEl) csEl.innerText = item.case_study || (item.el ? item.el.dataset.case_study : '') || dummyCaseStudies[currentSpecificIndex % dummyCaseStudies.length];
+
+            const slider = document.getElementById('magnify-slider');
+            if (slider) slider.value = 1.5;
+        }
+
+        function openSpecificModal(itemData, list = null) {
+            if (list && list.length > 0) {
+                currentSpecificList = list;
+            } else if (window.canvasEngine && window.canvasEngine.customItems && window.canvasEngine.customItems.length > 0) {
+                currentSpecificList = window.canvasEngine.customItems;
+            }
+
+            if (typeof itemData === 'number') {
+                currentSpecificIndex = itemData;
+            } else if (itemData) {
+                const targetSrc = itemData.image_url || itemData.img_src || itemData.imgSrc || itemData.url || (itemData.imgEl ? itemData.imgEl.src : '') || (itemData.el ? (itemData.el.querySelector('img') ? itemData.el.querySelector('img').src : '') : '');
+                const targetTitle = itemData.title || (itemData.el ? itemData.el.dataset.title : '');
+                
+                let foundIdx = currentSpecificList.findIndex(x => {
+                    const xSrc = x.image_url || x.img_src || x.imgSrc || x.url || '';
+                    return (xSrc && targetSrc && (xSrc === targetSrc || targetSrc.includes(xSrc) || xSrc.includes(targetSrc))) || (x.title && targetTitle && x.title === targetTitle);
+                });
+
+                currentSpecificIndex = foundIdx >= 0 ? foundIdx : 0;
+            }
+
+            renderSpecificModalContent(currentSpecificList[currentSpecificIndex]);
+            const modal = document.getElementById('specific-view');
+            if (modal) modal.classList.add('active');
+        }
+
+        function navigateSpecificModal(direction, withTransition = true) {
+            if (!currentSpecificList || currentSpecificList.length <= 1) return;
+
+            const len = currentSpecificList.length;
+            currentSpecificIndex = (currentSpecificIndex + direction + len) % len;
+            const targetItem = currentSpecificList[currentSpecificIndex];
+
+            if (withTransition) {
+                const img = document.getElementById('specific-img');
+                const info = document.querySelector('.specific-view-info');
+                
+                if (img) {
+                    gsap.to(img, {
+                        opacity: 0,
+                        x: -direction * 25,
+                        scale: 0.96,
+                        duration: 0.15,
+                        ease: "power2.in",
+                        onComplete: () => {
+                            renderSpecificModalContent(targetItem);
+                            gsap.fromTo(img, 
+                                { opacity: 0, x: direction * 25, scale: 0.96 },
+                                { opacity: 1, x: 0, scale: 1, duration: 0.25, ease: "power2.out" }
+                            );
+                        }
+                    });
+                } else {
+                    renderSpecificModalContent(targetItem);
+                }
+
+                if (info) {
+                    gsap.fromTo(info,
+                        { opacity: 0.8, y: direction * 6 },
+                        { opacity: 1, y: 0, duration: 0.25, ease: "power2.out" }
+                    );
+                }
+            } else {
+                renderSpecificModalContent(targetItem);
+            }
+        }
+
+        // Expose to window for global access from React components
+        window.openSpecificModal = openSpecificModal;
+        window.navigateSpecificModal = navigateSpecificModal;
+
         // --- INFINITE CANVAS ENGINE (GPU-Accelerated Composite Architecture) ---
         class InfiniteCanvas {
             constructor(containerId, options = {}) {
@@ -430,7 +535,12 @@ export default function Page() {
                         imgEl: img,
                         index: i,
                         sizeFactor: chosenFactor,
-                        isVisible: true
+                        isVisible: true,
+                        floatX: 0,
+                        floatY: 0,
+                        rotX: 0,
+                        rotY: 0,
+                        rotZ: 0
                     };
 
                     // Mobile fast double-tap detection + desktop dblclick fallback
@@ -608,6 +718,24 @@ export default function Page() {
                     });
                 }
 
+                // Previous / Next Modal Arrows
+                const prevBtn = document.getElementById('specific-prev-btn');
+                const nextBtn = document.getElementById('specific-next-btn');
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigateSpecificModal(-1);
+                    });
+                }
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigateSpecificModal(1);
+                    });
+                }
+
                 // Click to close via "X" button
                 document.getElementById('close-specific').addEventListener('click', () => {
                     document.getElementById('specific-view').classList.remove('active');
@@ -618,13 +746,47 @@ export default function Page() {
                     const isContent = e.target.closest('.specific-view-img-container') || 
                                       e.target.closest('.specific-view-info') || 
                                       e.target.closest('#magnify-slider') ||
+                                      e.target.closest('.specific-nav-btn') ||
                                       e.target.closest('.close-specific-view');
                     if (!isContent) {
                         document.getElementById('specific-view').classList.remove('active');
                     }
                 });
 
-                // Keyboard interactions (Space to Reset, Enter to Toggle List, M to toggle Space, +/- to GTA Zoom)
+                // Touch swipe gestures inside specific view modal
+                let touchStartX = 0;
+                let touchStartY = 0;
+                const specificOverlay = document.getElementById('specific-view');
+                if (specificOverlay) {
+                    specificOverlay.addEventListener('touchstart', (e) => {
+                        if (e.touches.length === 1) {
+                            touchStartX = e.touches[0].clientX;
+                            touchStartY = e.touches[0].clientY;
+                        }
+                    }, { passive: true });
+
+                    specificOverlay.addEventListener('touchend', (e) => {
+                        if (e.changedTouches.length === 1 && specificOverlay.classList.contains('active')) {
+                            const touchEndX = e.changedTouches[0].clientX;
+                            const touchEndY = e.changedTouches[0].clientY;
+                            const dx = touchEndX - touchStartX;
+                            const dy = touchEndY - touchStartY;
+
+                            // Horizontal swipe detection (> 45px delta and horizontal gesture)
+                            if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+                                if (dx < 0) {
+                                    // Swiped Left -> Go Next
+                                    navigateSpecificModal(1);
+                                } else {
+                                    // Swiped Right -> Go Prev
+                                    navigateSpecificModal(-1);
+                                }
+                            }
+                        }
+                    }, { passive: true });
+                }
+
+                // Keyboard interactions (Space to Reset, Enter to Toggle List, M to toggle Space, +/- to GTA Zoom, Left/Right for Specific View)
                 this.isListView = false;
 
                 // Tap on Reset UI
@@ -653,6 +815,21 @@ export default function Page() {
                         const sv = document.getElementById('specific-view');
                         if (sv && sv.classList.contains('active')) {
                             sv.classList.remove('active');
+                        }
+                    }
+
+                    // Arrow Keys: Navigate through images when in Specific View
+                    const sv = document.getElementById('specific-view');
+                    if (sv && sv.classList.contains('active')) {
+                        if (e.code === 'ArrowLeft' || e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            navigateSpecificModal(-1);
+                            return;
+                        }
+                        if (e.code === 'ArrowRight' || e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            navigateSpecificModal(1);
+                            return;
                         }
                     }
 
@@ -732,15 +909,8 @@ export default function Page() {
                     }
                 }
 
-                if (!item || !item.el) return;
-
-                const img = item.imgEl || item.el.querySelector('img');
-                const src = img ? img.src : '';
-                document.getElementById('specific-img').src = src;
-                document.getElementById('specific-title').innerText = item.el.dataset.title || 'Untitled Project';
-                document.getElementById('specific-category').innerText = item.el.dataset.category || 'Uncategorized';
-                document.getElementById('specific-case-study').innerText = item.el.dataset.case_study || 'No details provided.';
-                document.getElementById('specific-view').classList.add('active');
+                if (!item) return;
+                openSpecificModal(item, this.customItems);
             }
 
             toggleListView() {
@@ -913,6 +1083,9 @@ export default function Page() {
                 const halfVH = (typeof window !== 'undefined' ? window.innerHeight : 900) * 0.5;
                 const cullingMargin = (this.baseItemSizePx * zoom) + 120;
 
+                const time = performance.now();
+                const isTripp = typeof spaceModeActive !== 'undefined' && spaceModeActive;
+
                 for (let i = 0; i < this.items.length; i++) {
                     const item = this.items[i];
 
@@ -928,8 +1101,46 @@ export default function Page() {
                     const wrappedX = this.wrap(absoluteX, -limitX, limitX);
                     const wrappedY = this.wrap(absoluteY, -limitY, limitY);
 
-                    // Frustum Culling Check
-                    const isOffscreen = Math.abs(wrappedX) > (halfVW + cullingMargin) || Math.abs(wrappedY) > (halfVH + cullingMargin);
+                    // Zero Gravity Floating Physics & 3D Inertia Drift
+                    let targetFloatX = 0;
+                    let targetFloatY = 0;
+                    let targetRotZ = 0;
+                    let targetRotX = 0;
+                    let targetRotY = 0;
+
+                    if (isTripp) {
+                        // Harmonic zero-gravity floating undulation (each card floats organically on its unique cosmic frequency)
+                        targetFloatX = Math.sin(time * 0.0012 + item.index * 0.7) * (14 * zoom);
+                        targetFloatY = Math.cos(time * 0.0010 + item.index * 0.9) * (18 * zoom);
+                        targetRotZ = Math.sin(time * 0.0008 + item.index * 0.5) * 4.5;
+
+                        // Interactive 3D inertia rotation driven by pan velocity
+                        targetRotX = Math.cos(time * 0.0011 + item.index * 0.6) * 5 + (globalVelY * 0.35);
+                        targetRotY = Math.sin(time * 0.0011 + item.index * 0.6) * 5 - (globalVelX * 0.35);
+
+                        // Clamp rotation angles so cards never invert or clip
+                        targetRotX = Math.max(-20, Math.min(20, targetRotX));
+                        targetRotY = Math.max(-20, Math.min(20, targetRotY));
+
+                        item.floatX += (targetFloatX - item.floatX) * 0.08;
+                        item.floatY += (targetFloatY - item.floatY) * 0.08;
+                        item.rotZ += (targetRotZ - item.rotZ) * 0.08;
+                        item.rotX += (targetRotX - item.rotX) * 0.1;
+                        item.rotY += (targetRotY - item.rotY) * 0.1;
+                    } else {
+                        // Smoothly lerp back to 0 when exiting Tripp mode
+                        item.floatX += (0 - item.floatX) * 0.12;
+                        item.floatY += (0 - item.floatY) * 0.12;
+                        item.rotZ += (0 - item.rotZ) * 0.12;
+                        item.rotX += (0 - item.rotX) * 0.12;
+                        item.rotY += (0 - item.rotY) * 0.12;
+                    }
+
+                    const finalX = wrappedX + item.floatX;
+                    const finalY = wrappedY + item.floatY;
+
+                    // Frustum Culling Check (accounting for floating margin)
+                    const isOffscreen = Math.abs(finalX) > (halfVW + cullingMargin) || Math.abs(finalY) > (halfVH + cullingMargin);
 
                     if (isOffscreen) {
                         if (item.isVisible) {
@@ -941,7 +1152,11 @@ export default function Page() {
                             item.el.style.visibility = 'visible';
                             item.isVisible = true;
                         }
-                        item.el.style.transform = `translate3d(${wrappedX.toFixed(1)}px, ${wrappedY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)})`;
+                        if (isTripp || Math.abs(item.rotZ) > 0.01 || Math.abs(item.rotX) > 0.01 || Math.abs(item.rotY) > 0.01 || Math.abs(item.floatX) > 0.1 || Math.abs(item.floatY) > 0.1) {
+                            item.el.style.transform = `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)}) rotateX(${item.rotX.toFixed(2)}deg) rotateY(${item.rotY.toFixed(2)}deg) rotateZ(${item.rotZ.toFixed(2)}deg)`;
+                        } else {
+                            item.el.style.transform = `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)})`;
+                        }
                     }
                 }
             }
@@ -1208,6 +1423,17 @@ export default function Page() {
                     initSpace();
                     animateSpace();
                     window.addEventListener('resize', resizeSpace);
+
+                    // Cosmic Zero-Gravity Lift-Off wave
+                    if (window.canvasEngine && window.canvasEngine.items) {
+                        window.canvasEngine.items.forEach((item, idx) => {
+                            const delay = (idx % 8) * 0.02;
+                            gsap.fromTo(item.el, 
+                                { scale: 0.93 },
+                                { scale: 1, duration: 0.75, delay: delay, ease: "back.out(1.4)" }
+                            );
+                        });
+                    }
                 } else {
                     btn.classList.remove('active-tripp');
                     if (btnText) btnText.innerText = 'TRIPP';
@@ -1330,7 +1556,8 @@ export default function Page() {
             height: 100%;
             opacity: 0.9;
             transition: opacity 0.5s ease;
-            transform-style: flat;
+            transform-style: preserve-3d;
+            perspective: 1200px;
             pointer-events: none;
         }
 
@@ -1351,7 +1578,9 @@ export default function Page() {
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
             transform-origin: center center;
+            transform-style: preserve-3d;
             pointer-events: auto;
+            transition: box-shadow 0.4s ease, border-color 0.4s ease, background-color 0.4s ease;
         }
 
         /* Creative Geometric Morphing Loader */
@@ -2321,6 +2550,66 @@ export default function Page() {
             box-shadow: 0 4px 25px rgba(235, 215, 63, 0.15);
         }
 
+        .specific-nav-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(18, 18, 22, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9200;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            outline: none;
+            user-select: none;
+        }
+
+        .specific-nav-btn:hover {
+            background: rgba(235, 215, 63, 0.2);
+            color: var(--brand-yellow);
+            border-color: rgba(235, 215, 63, 0.6);
+            transform: translateY(-50%) scale(1.12);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(235, 215, 63, 0.3);
+        }
+
+        .specific-nav-btn:active {
+            transform: translateY(-50%) scale(0.92);
+            background: var(--brand-yellow);
+            color: #000;
+        }
+
+        .specific-nav-prev {
+            left: 35px;
+        }
+
+        .specific-nav-next {
+            right: 35px;
+        }
+
+        @media (max-width: 900px) {
+            .specific-nav-btn {
+                width: 42px;
+                height: 42px;
+                background: rgba(14, 14, 18, 0.85);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+            }
+            .specific-nav-prev {
+                left: 10px;
+            }
+            .specific-nav-next {
+                right: 10px;
+            }
+        }
+
         /* Space Background Canvas */
         #space-canvas {
             position: fixed;
@@ -2361,6 +2650,86 @@ export default function Page() {
             0% { transform: translate(0, 0) scale(1); }
             50% { transform: translate(-100px, -80px) scale(1.3); }
             100% { transform: translate(50px, -40px) scale(0.85); }
+        }
+
+        .react-list-view-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 30px 5vw 60px 5vw;
+            z-index: 10;
+            background: #070708;
+            touch-action: pan-y;
+        }
+
+        .list-view-inner-content {
+            position: relative;
+            z-index: 1;
+            padding-left: 60px;
+        }
+
+        .collections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 35px;
+        }
+
+        .archive-masonry-grid {
+            column-count: 3;
+            column-gap: 20px;
+        }
+
+        .magnify-slider-container {
+            position: absolute;
+            bottom: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(15,15,15,0.85);
+            padding: 10px 25px;
+            border-radius: 40px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(235, 215, 63, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            z-index: 10;
+        }
+
+        @media (max-width: 900px) {
+            .list-view-inner-content {
+                padding-left: 0px !important;
+            }
+            .react-list-view-container {
+                padding: max(75px, env(safe-area-inset-top) + 60px) 16px 80px 16px !important;
+            }
+            .collections-grid {
+                grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)) !important;
+                gap: 20px !important;
+            }
+            .archive-masonry-grid {
+                column-count: 2 !important;
+                column-gap: 16px !important;
+            }
+            .magnify-slider-container {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                transform: none;
+                margin: 12px auto 0 auto;
+                padding: 6px 16px;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .archive-masonry-grid {
+                column-count: 1 !important;
+            }
         }
     ` }} />
 
@@ -2448,7 +2817,32 @@ export default function Page() {
         <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     </div>
-      <div className="specific-view-content-wrapper">
+
+    {/* Previous Arrow Button */}
+    <button 
+      className="specific-nav-btn specific-nav-prev" 
+      id="specific-prev-btn" 
+      title="Previous Image (← Left Arrow / Swipe Right)" 
+      aria-label="Previous Graphic"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+
+    {/* Next Arrow Button */}
+    <button 
+      className="specific-nav-btn specific-nav-next" 
+      id="specific-next-btn" 
+      title="Next Image (Right Arrow → / Swipe Left)" 
+      aria-label="Next Graphic"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+
+    <div className="specific-view-content-wrapper">
         <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', position: 'relative' }}>
           <div 
             className="specific-view-img-container"
@@ -2500,7 +2894,7 @@ export default function Page() {
             />
           </div>
           
-          <div style={{ position: 'absolute', bottom: '0px', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(15,15,15,0.85)', padding: '10px 25px', borderRadius: '40px', backdropFilter: 'blur(20px)', border: '1px solid rgba(235, 215, 63, 0.2)', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', zIndex: 10 }}>
+          <div className="magnify-slider-container">
             <span style={{ color: '#ebd73f', fontSize: '0.75rem', fontFamily: 'Panchang, sans-serif', letterSpacing: '2px', textTransform: 'uppercase' }}>Zoom Power</span>
             <input 
               type="range" 
@@ -2544,18 +2938,7 @@ export default function Page() {
     </div>
     
     {isListViewActive && (
-      <div className="react-list-view-container" style={{ 
-          position: 'absolute', 
-          top: 0, 
-          left: 0, 
-          width: '100%', 
-          height: '100%', 
-          overflowY: 'auto', 
-          padding: '30px 5vw 60px 5vw', 
-          zIndex: 10, 
-          background: '#070708',
-          position: 'relative'
-      }}
+      <div className="react-list-view-container"
       onMouseMove={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
           const x = e.clientX - rect.left;
@@ -2615,9 +2998,9 @@ export default function Page() {
           }}></div>
 
           {activeCategory === null ? (
-              <div style={{ position: 'relative', zIndex: 1, paddingLeft: '60px' }}>
+              <div className="list-view-inner-content">
                   {/* Category Section Header */}
-                  <div style={{ marginBottom: '30px', paddingLeft: '0px' }}>
+                  <div style={{ marginBottom: '30px' }}>
                       <div style={{ 
                           display: 'flex', 
                           alignItems: 'center', 
@@ -2646,7 +3029,7 @@ export default function Page() {
                       </h1>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '35px' }}>
+                  <div className="collections-grid">
                   {Array.from(new Set(graphics.flatMap(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean)))).map((cat, idx) => {
                       const count = graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(cat)).length;
                       return (
@@ -2784,8 +3167,8 @@ export default function Page() {
               </div>
           </div>
       ) : (
-              <div style={{ position: 'relative', zIndex: 1, paddingLeft: '60px' }}>
-                  <div style={{ marginBottom: '20px', paddingLeft: '0px' }}>
+              <div className="list-view-inner-content">
+                  <div style={{ marginBottom: '20px' }}>
                       <div style={{ 
                           display: 'flex', 
                           alignItems: 'center', 
@@ -2803,23 +3186,14 @@ export default function Page() {
                       </div>
                       <h2 style={{ margin: 0, fontSize: '2.2rem', color: '#ffffff', letterSpacing: '1.5px', textTransform: 'uppercase', fontFamily: 'Panchang, sans-serif' }}>{activeCategory}</h2>
                   </div>  
-                  <div style={{ columnCount: 3, columnGap: '20px' }}>
+                  <div className="archive-masonry-grid">
                       {graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(activeCategory)).map((item, idx) => (
                           <div key={idx} style={{ marginBottom: '20px', breakInside: 'avoid', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: '#111', cursor: 'zoom-in', transition: 'transform 0.3s ease' }}
                           onClick={() => {
-                              document.getElementById('specific-img').src = item.image_url;
-                              const dummyTitles = ['Neon Brand Identity', 'Event Poster Vibe', 'Tech Startup Logo', 'Creative Thumbnail', 'Web Redesign'];
-                              const dummyCaseStudies = [
-                                "This project focused on creating a bold, eye-catching aesthetic. We used high-contrast colors and custom typography to make the brand instantly recognizable.",
-                                "The goal was to design something clean and modern. By stripping away unnecessary elements, we created a minimalist design that speaks volumes.",
-                                "This was built for maximum engagement. We used vibrant gradients and dynamic layouts to capture attention in less than a second.",
-                                "Designed specifically to resonate with a younger demographic. It blends modern aesthetics with retro elements to create a nostalgic yet fresh vibe.",
-                                "A complete visual overhaul. We maintained the core identity but modernized the geometry and color palette for a premium feel."
-                              ];
-                              document.getElementById('specific-title').innerText = item.title || dummyTitles[idx % dummyTitles.length];
-                              document.getElementById('specific-category').innerText = item.category || 'Uncategorized';
-                              document.getElementById('specific-case-study').innerText = item.case_study || dummyCaseStudies[idx % dummyCaseStudies.length];
-                              document.getElementById('specific-view').classList.add('active');
+                              const activeList = graphics.filter(g => (g.category || 'Uncategorized').split(',').map(c => c.trim()).filter(Boolean).includes(activeCategory));
+                              if (typeof window !== 'undefined' && typeof window.openSpecificModal === 'function') {
+                                  window.openSpecificModal(idx, activeList);
+                              }
                           }}
                           onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
                           onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -2835,10 +3209,6 @@ export default function Page() {
                               />
                           </div>
                       ))}
-                      <style dangerouslySetInnerHTML={{ __html: `
-                          @media (max-width: 900px) { .react-list-view-container > div > div:last-child { column-count: 2 !important; } }
-                          @media (max-width: 500px) { .react-list-view-container > div > div:last-child { column-count: 1 !important; } }
-                      `}} />
                   </div>
               </div>
           )}
