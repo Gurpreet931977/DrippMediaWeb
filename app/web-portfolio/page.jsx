@@ -389,51 +389,58 @@ export default function Page() {
           background-color: #ffffff;
         }
 
-        /* Modernized Header */
+        /* High-End Editorial Header */
         .portfolio-header {
           position: fixed;
-          top: 32px;
+          top: 30px;
           right: 45px;
           z-index: 900;
           text-align: right;
           pointer-events: none;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+        }
+
+        .header-kicker {
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.58rem;
+          font-weight: 700;
+          letter-spacing: 3px;
+          color: rgba(255, 255, 255, 0.45);
+          text-transform: uppercase;
+          margin-bottom: 5px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .header-kicker::before {
+          content: '//';
+          color: var(--brand-yellow);
+          font-weight: 800;
         }
 
         .portfolio-header h1 {
           font-family: 'Panchang', sans-serif;
           font-weight: 800;
-          font-size: 1.8rem;
+          font-size: 1.65rem;
           text-transform: uppercase;
-          letter-spacing: 2px;
+          letter-spacing: 2.5px;
           color: var(--pure-white);
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 12px;
-        }
-
-        .portfolio-header h1 .live-dot {
-          width: 10px;
-          height: 10px;
-          background: #10b981;
-          border-radius: 50%;
-          box-shadow: 0 0 12px #10b981;
-          animation: livePulse 2s infinite;
-        }
-
-        @keyframes livePulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.3); opacity: 0.5; }
+          line-height: 1.1;
+          text-shadow: 0 4px 25px rgba(0, 0, 0, 0.9);
         }
 
         .portfolio-header p {
-          font-family: 'Clash Display', sans-serif;
-          font-size: 0.75rem;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.65rem;
           color: var(--brand-yellow);
-          letter-spacing: 3px;
+          letter-spacing: 4px;
           text-transform: uppercase;
-          margin-top: 4px;
-          font-weight: 600;
+          margin-top: 6px;
+          font-weight: 700;
+          opacity: 0.95;
         }
 
         /* Ambient Background Grid & Radial Glow */
@@ -866,6 +873,55 @@ export default function Page() {
           letter-spacing: 2px;
         }
 
+        /* Curated Archive High-End Discrete Notice */
+        .portfolio-archive-note {
+          position: fixed;
+          bottom: 25px;
+          left: 35px;
+          z-index: 100;
+          background: rgba(14, 14, 18, 0.75);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 8px 18px;
+          border-radius: 30px;
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          pointer-events: auto;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+          transition: border-color 0.3s ease, background 0.3s ease;
+        }
+
+        .portfolio-archive-note:hover {
+          border-color: rgba(235, 215, 63, 0.4);
+          background: rgba(20, 20, 26, 0.9);
+        }
+
+        .archive-badge {
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.58rem;
+          font-weight: 800;
+          color: var(--brand-yellow);
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+
+        .archive-separator {
+          width: 3px;
+          height: 3px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        .archive-desc {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.72rem;
+          color: rgba(255, 255, 255, 0.65);
+          letter-spacing: 0.3px;
+        }
+
         /* Case Study Slide-out Modal / Drawer */
         .case-study-drawer {
           position: fixed;
@@ -960,6 +1016,9 @@ export default function Page() {
             width: 100vw;
             padding: 30px 20px;
           }
+          .portfolio-archive-note {
+            display: none;
+          }
         }
       `}} />
 
@@ -978,13 +1037,11 @@ export default function Page() {
         </svg>
       </a>
 
-      {/* Header Info */}
+      {/* High-End Editorial Header Info */}
       <div className="portfolio-header">
-        <h1>
-          <span>{isGenz ? 'digital builds' : 'Web Portfolio'}</span>
-          <span className="live-dot" title="Systems Active" />
-        </h1>
-        <p>{isGenz ? 'interactive flagship code' : 'Bespoke Digital Experiences'}</p>
+        <div className="header-kicker">{isGenz ? 'flagship production' : 'Bespoke Production'}</div>
+        <h1>{isGenz ? 'web builds' : 'Web Portfolio'}</h1>
+        <p>{isGenz ? 'interactive digital experiences' : 'Interactive Experiences'}</p>
       </div>
 
       {/* Floating Prev & Next Arrow Buttons */}
@@ -998,6 +1055,13 @@ export default function Page() {
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
       </button>
+
+      {/* High-End Discrete Curated Archive Notice */}
+      <div className="portfolio-archive-note">
+        <span className="archive-badge">✦ CURATED ARCHIVE</span>
+        <span className="archive-separator" />
+        <span className="archive-desc">Hand-picked public builds • Private client systems & NDA deployments upon inquiry</span>
+      </div>
 
       {/* Bottom Minimal HUD Status */}
       <div className="slider-bottom-hud">
