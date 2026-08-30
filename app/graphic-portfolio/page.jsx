@@ -862,112 +862,37 @@ export default function Page() {
                 const limitX = this.gridWidth / 2;
                 const limitY = this.gridHeight / 2;
 
-                // Real-time zero gravity baseline calculation
-                const time = Date.now() * 0.001;
-                const isMobile = window.matchMedia("(max-width: 768px)").matches;
-
                 for (let i = 0; i < this.items.length; i++) {
                     const item = this.items[i];
 
-                    // Grid home coordinates calculation
+                    // Exact grid coordinates calculation
                     const col = i % this.cols;
                     const row = Math.floor(i / this.cols);
                     const staggerY = (col % 2 === 1) ? (this.stepY * 0.5) : 0;
                     const homeX = (col * this.stepX) - (this.gridWidth / 2) + (this.stepX / 2);
                     const homeY = (row * this.stepY) - (this.gridHeight / 2) + (this.stepY / 2) + staggerY;
 
-                    // Smooth zero-gravity spring elasticity to maintain gapless non-overlapping layout
-                    item.basex += (homeX - item.basex) * 0.06;
-                    item.basey += (homeY - item.basey) * 0.06;
-
-                    let absoluteX = item.basex + this.state.x;
-                    let absoluteY = item.basey + this.state.y;
+                    let absoluteX = homeX + this.state.x;
+                    let absoluteY = homeY + this.state.y;
 
                     // Exact infinite wrapping magic boundaries
                     let wrappedX = this.wrap(absoluteX, -limitX, limitX);
                     let wrappedY = this.wrap(absoluteY, -limitY, limitY);
 
-                    // Add harmonic zero-gravity float and 3D velocity rotation in space mode
-                    let floatX = 0;
-                    let floatY = 0;
-
-                    if (spaceModeActive) {
-                        floatX = Math.sin(time * 0.8 + item.index * 0.4) * 8;
-                        floatY = Math.cos(time * 0.8 + item.index * 0.4) * 8;
-
-                        // Smooth fluid 3D Physics: Calculate target rotation based on pan velocity
-                        let targetRotY = -globalVelX * 0.4;
-                        let targetRotX = globalVelY * 0.4;
-
-                        // Cap target rotation mathematically to prevent complete flipping
-                        targetRotY = Math.max(-25, Math.min(25, targetRotY));
-                        targetRotX = Math.max(-25, Math.min(25, targetRotX));
-
-                        // Lerp the item's persistent rotation towards the target slowly for a water-like smooth bend
-                        item.rotX += (targetRotX - item.rotX) * 0.1;
-                        item.rotY += (targetRotY - item.rotY) * 0.1;
-                    } else {
-                        // Smoothly reset rotations to zero when turning TRIPP mode off
-                        item.rotX += (0 - item.rotX) * 0.1;
-                        item.rotY += (0 - item.rotY) * 0.1;
-                    }
-
-                    const finalX = wrappedX + floatX;
-                    const finalY = wrappedY + floatY;
-
-                    // Edge Proximity calculation for Cosmic Horizon
-                    const fadeThresholdX = halfVW + (itemHalf * 0.6);
-                    const fadeThresholdY = halfVH + (itemHalf * 0.6);
-                    const normX = Math.abs(finalX) / fadeThresholdX;
-                    const normY = Math.abs(finalY) / fadeThresholdY;
-                    const edgeProximity = Math.max(normX, normY);
-
-                    let opacity = 1.0;
-                    let scale = 1.0;
-                    let blurPx = 0;
-
-                    if (spaceModeActive) {
-                        // In TRIPP Mode: Ethereal Cosmic Horizon Dissolve only at outer edges
-                        if (edgeProximity > 0.88) {
-                            const t = Math.min(1, Math.max(0, (edgeProximity - 0.88) / 0.25));
-                            const smoothT = t * t * (3 - 2 * t);
-                            opacity = Math.max(0, 1 - smoothT);
-                            scale = 1 - (smoothT * 0.30); // Gracefully shrinks to 0.70 into deep cosmic space
-                            blurPx = smoothT * 2.5;
-                        }
-                    } else {
-                        // In Normal Mode: Pure 1.0 opacity across all visible cards (no artificial blank spaces)
-                        opacity = 1.0;
-                        scale = 1.0;
-                    }
-
-                    // Strict depth layering: closer/sharp cards ALWAYS render above depth/blurred cards
-                    const zIndex = Math.round(scale * 100);
-
-                    // Use fast set for 60fps with Hardware Acceleration
-                    const transformProps = {
-                        x: finalX,
-                        y: finalY,
+                    // Strict Single Flat Depth Layer: All cards locked at 1.0 scale, static zIndex, zero forward/backward clipping
+                    gsap.set(item.el, {
+                        x: wrappedX,
+                        y: wrappedY,
                         xPercent: -50,
                         yPercent: -50,
-                        scale: scale,
-                        opacity: opacity,
-                        zIndex: zIndex,
+                        scale: 1.0,
+                        opacity: 1.0,
+                        zIndex: 1,
+                        rotationX: 0,
+                        rotationY: 0,
+                        filter: 'none',
                         force3D: true // GPU Hardware acceleration
-                    };
-                    
-                    // Only apply expensive 3D rotations & blur on desktop to save battery/performance on mobile
-                    if (!isMobile) {
-                        transformProps.rotationX = item.rotX;
-                        transformProps.rotationY = item.rotY;
-                        if (spaceModeActive && blurPx > 0.5 && opacity < 0.88) {
-                            transformProps.filter = `blur(${blurPx.toFixed(1)}px)`;
-                        } else {
-                            transformProps.filter = 'none';
-                        }
-                    }
-
-                    gsap.set(item.el, transformProps);
+                    });
                 }
             }
 
@@ -1287,35 +1212,11 @@ export default function Page() {
                     initSpace();
                     animateSpace();
                     window.addEventListener('resize', resizeSpace);
-
-                    // Cosmic Zero-Gravity Lift-Off
-                    if (window.canvasEngine && window.canvasEngine.items) {
-                        window.canvasEngine.items.forEach((item, idx) => {
-                            const delay = (idx % 8) * 0.02;
-                            gsap.fromTo(item.el, 
-                                { scale: 0.92 },
-                                { scale: 1, duration: 0.7, delay: delay, ease: "back.out(1.4)" }
-                            );
-                        });
-                    }
                 } else {
                     btn.classList.remove('active-tripp');
                     if (btnText) btnText.innerText = 'TRIPP';
                     cancelAnimationFrame(spaceAnimationId);
                     window.removeEventListener('resize', resizeSpace);
-
-                    // Magnetic Return: Smoothly settle cards back
-                    if (window.canvasEngine && window.canvasEngine.items) {
-                        window.canvasEngine.items.forEach((item, idx) => {
-                            const delay = (idx % 6) * 0.015;
-                            gsap.to(item.el, {
-                                scale: 1,
-                                duration: 0.5,
-                                delay: delay,
-                                ease: "power2.out"
-                            });
-                        });
-                    }
                 }
             }, 0.45);
 
@@ -1433,7 +1334,7 @@ export default function Page() {
             height: 100%;
             opacity: 0.9;
             transition: opacity 0.5s ease;
-            transform-style: preserve-3d;
+            transform-style: flat;
         }
 
         #portfolio-showcase:hover .infinite-canvas {
