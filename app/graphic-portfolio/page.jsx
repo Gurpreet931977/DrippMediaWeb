@@ -286,8 +286,8 @@ export default function Page() {
 
                 // Even number of columns guarantees seamless 2-column alternating brick wrapping
                 const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-                this.cols = isMobile ? 8 : 12;
-                this.rows = isMobile ? 8 : 8;
+                this.cols = isMobile ? 10 : 16;
+                this.rows = isMobile ? 10 : 10;
                 this.totalItems = this.cols * this.rows;
 
                 this.updateMetrics();
@@ -303,12 +303,33 @@ export default function Page() {
                 
                 this.resizeBound = () => {
                     const mobileNow = window.innerWidth <= 768;
-                    this.cols = mobileNow ? 8 : 12;
-                    this.rows = mobileNow ? 8 : 8;
+                    this.cols = mobileNow ? 10 : 16;
+                    this.rows = mobileNow ? 10 : 10;
                     this.updateMetrics();
                     this.recalcPositions();
                 };
                 window.addEventListener('resize', this.resizeBound);
+            }
+
+            getMinZoom() {
+                const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+                const appliedSize = isMobile ? this.imageSize * 2 : this.imageSize;
+                const appliedGap = isMobile ? this.gap * 1.5 : this.gap;
+                const currentAspectRatio = this.maxAspectRatio || 1.45;
+
+                const stepX = appliedSize + appliedGap;
+                const stepY = (appliedSize * currentAspectRatio) + appliedGap;
+
+                const totalGridWidthVw = this.cols * stepX;
+                const totalGridHeightVw = this.rows * stepY;
+
+                const vhInVw = typeof window !== 'undefined' ? (window.innerHeight / window.innerWidth) * 100 : 56.25;
+
+                // Minimum zoom required so that the grid ALWAYS spans >= 105vw and >= 105vh
+                const minZoomX = 105 / totalGridWidthVw;
+                const minZoomY = (vhInVw * 1.05) / totalGridHeightVw;
+
+                return Math.max(minZoomX, minZoomY);
             }
 
             updateMetrics() {
@@ -319,8 +340,13 @@ export default function Page() {
                 const vw = (typeof window !== 'undefined' ? window.innerWidth : 1440) / 100;
                 this.itemSizePx = appliedSize * vw * this.state.zoom;
                 this.gapPx = appliedGap * vw * this.state.zoom;
+
+                // Smart aspect ratio caching for tall portrait poster cards (1:1.45)
+                const currentAspectRatio = this.maxAspectRatio || 1.45;
+                const maxItemHeightPx = this.itemSizePx * currentAspectRatio;
+
                 this.stepX = this.itemSizePx + this.gapPx;
-                this.stepY = this.itemSizePx + this.gapPx;
+                this.stepY = maxItemHeightPx + this.gapPx;
 
                 this.gridWidth = this.cols * this.stepX;
                 this.gridHeight = this.rows * this.stepY;
@@ -340,9 +366,16 @@ export default function Page() {
                         this.recalcPositions();
                     };
 
-                    // Map to custom URLs from database if available, cycling continuously
+                    const col = i % this.cols;
+                    const row = Math.floor(i / this.cols);
+
+                    // 2D pseudo-random stride so adjacent rows and columns never repeat identical artwork
+                    const itemIndex = this.customItems && this.customItems.length > 0 
+                        ? (col * 3 + row * 5 + i) % this.customItems.length 
+                        : 0;
+
                     if (this.customItems && this.customItems.length > 0) {
-                        const sourceItem = this.customItems[i % this.customItems.length];
+                        const sourceItem = this.customItems[itemIndex];
                         img.src = sourceItem.image_url || sourceItem.img_src || sourceItem.imgSrc || sourceItem.url || sourceItem.src || '';
                         if (sourceItem.category) {
                             el.dataset.category = sourceItem.category;
@@ -361,26 +394,16 @@ export default function Page() {
                           "A complete visual overhaul. We maintained the core identity but modernized the geometry and color palette for a premium feel."
                         ];
 
-                        el.dataset.title = sourceItem.title || dummyTitles[i % dummyTitles.length];
-                        el.dataset.case_study = sourceItem.case_study || dummyCaseStudies[i % dummyCaseStudies.length];
-                    } else {
-                        const dummyImages = Array.from({ length: 12 }).map((_, i) => `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`);
-                        img.src = dummyImages[i % dummyImages.length];
-                        
-                        el.dataset.category = 'Concept Art';
-                        const catLabel = document.createElement('div');
-                        catLabel.className = 'infinite-cat-label';
-                        catLabel.innerText = 'Concept Art';
-                        el.appendChild(catLabel);
-                        
-                        el.dataset.title = 'Placeholder Project';
-                        el.dataset.case_study = 'This is a premium placeholder image because no graphics were found in the database. Add some graphics in the Admin Panel!';
+                        el.dataset.title = sourceItem.title || dummyTitles[itemIndex % dummyTitles.length];
+                        el.dataset.case_study = sourceItem.case_study || dummyCaseStudies[itemIndex % dummyCaseStudies.length];
                     }
 
-                    // Smart Fallback placeholder
+                    // Smart Fallback placeholder with immediate loaded status
                     img.onerror = () => {
-                        img.onerror = null; // Prevent infinite loop
-                        img.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='20' fill='%23999'%3EImage Error%3C/text%3E%3C/svg%3E`; 
+                        el.classList.remove('is-loading');
+                        img.onerror = null;
+                        img.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='1160'%3E%3Crect width='800' height='1160' fill='%23141416'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='32' fill='%23ebd73f'%3EDripp Portfolio Project%3C/text%3E%3C/svg%3E`; 
+                        this.recalcPositions();
                     };
 
                     el.appendChild(img);
@@ -410,7 +433,7 @@ export default function Page() {
 
             recalcPositions() {
                 // Find maximum aspect ratio among loaded images to smartly size grid rows
-                let maxAspectRatio = 1;
+                let maxAspectRatio = 1.45;
                 for (let i = 0; i < this.items.length; i++) {
                     const img = this.items[i].el.querySelector('img');
                     if (img && img.naturalWidth && img.naturalHeight) {
@@ -418,9 +441,9 @@ export default function Page() {
                         if (ratio > maxAspectRatio) maxAspectRatio = ratio;
                     }
                 }
+                this.maxAspectRatio = maxAspectRatio;
 
-                // Adjust stepY intelligently to accommodate the tallest image naturally
-                const maxItemHeightPx = this.itemSizePx * maxAspectRatio;
+                const maxItemHeightPx = this.itemSizePx * this.maxAspectRatio;
                 this.stepX = this.itemSizePx + this.gapPx;
                 this.stepY = maxItemHeightPx + this.gapPx;
                 this.gridWidth = this.cols * this.stepX;
@@ -719,8 +742,22 @@ export default function Page() {
                 const specificView = document.getElementById('specific-view');
                 if (specificView && specificView.classList.contains('active')) return;
 
-                // Rich, variable multi-stage zoom options (from 22% ultra-wide canvas to 280% macro zoom)
-                const zoomSteps = [0.22, 0.35, 0.48, 0.62, 0.78, 1.00, 1.28, 1.65, 2.10, 2.80];
+                const minZoom = Math.max(0.38, Number(this.getMinZoom().toFixed(2)));
+                const maxZoom = 2.80;
+
+                // Rich, gapless variable zoom ladder guaranteed to never reveal black screen borders
+                const rawSteps = [
+                    minZoom,
+                    Number((minZoom + 0.14).toFixed(2)),
+                    Number((minZoom + 0.30).toFixed(2)),
+                    Number((minZoom + 0.48).toFixed(2)),
+                    1.00,
+                    1.28,
+                    1.65,
+                    2.15,
+                    maxZoom
+                ];
+                const zoomSteps = rawSteps.filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a - b);
 
                 let targetZoom = this.state.targetZoom;
                 const current = this.state.targetZoom;
@@ -832,33 +869,16 @@ export default function Page() {
                 for (let i = 0; i < this.items.length; i++) {
                     const item = this.items[i];
 
-                    // REAL Zero Gravity: Un-anchor from the grid and continuously drift through space
-                    if (spaceModeActive) {
-                        // Absorb pan inertia (drag/scroll) to physically scatter the photos in zero gravity
-                        item.driftX += globalVelX * 0.02 * item.sizeFactor;
-                        item.driftY += globalVelY * 0.02 * item.sizeFactor;
+                    // Grid home coordinates calculation
+                    const col = i % this.cols;
+                    const row = Math.floor(i / this.cols);
+                    const staggerY = (col % 2 === 1) ? (this.stepY * 0.5) : 0;
+                    const homeX = (col * this.stepX) - (this.gridWidth / 2) + (this.stepX / 2);
+                    const homeY = (row * this.stepY) - (this.gridHeight / 2) + (this.stepY / 2) + staggerY;
 
-                        // Smoothly dissipate the absorbed inertia back to the base resting drift speed
-                        item.driftX += (item.baseDriftX - item.driftX) * 0.08;
-                        item.driftY += (item.baseDriftY - item.driftY) * 0.08;
-
-                        item.basex += item.driftX;
-                        item.basey += item.driftY;
-
-                        // Slowly wrap the basex/basey within massive bounds so they never totally vanish
-                        item.basex = this.wrap(item.basex, -this.gridWidth, this.gridWidth);
-                        item.basey = this.wrap(item.basey, -this.gridHeight, this.gridHeight);
-                    } else {
-                        // Return smoothly back to their home grid slots
-                        const col = i % this.cols;
-                        const row = Math.floor(i / this.cols);
-                        const staggerY = (col % 2 === 1) ? (this.stepY * 0.5) : 0;
-                        const homeX = (col * this.stepX) - (this.gridWidth / 2) + (this.stepX / 2);
-                        const homeY = (row * this.stepY) - (this.gridHeight / 2) + (this.stepY / 2) + staggerY;
-
-                        item.basex += (homeX - item.basex) * 0.06;
-                        item.basey += (homeY - item.basey) * 0.06;
-                    }
+                    // Smooth zero-gravity spring elasticity to maintain gapless non-overlapping layout
+                    item.basex += (homeX - item.basex) * 0.06;
+                    item.basey += (homeY - item.basey) * 0.06;
 
                     let absoluteX = item.basex + this.state.x;
                     let absoluteY = item.basey + this.state.y;
@@ -867,21 +887,21 @@ export default function Page() {
                     let wrappedX = this.wrap(absoluteX, -limitX, limitX);
                     let wrappedY = this.wrap(absoluteY, -limitY, limitY);
 
-                    // Add trippy zero-gravity float and 3D velocity rotation effect if space mode is active
+                    // Add harmonic zero-gravity float and 3D velocity rotation in space mode
                     let floatX = 0;
                     let floatY = 0;
 
                     if (spaceModeActive) {
-                        floatX = Math.sin(time + item.index) * 15;
-                        floatY = Math.cos(time + item.index) * 15;
+                        floatX = Math.sin(time * 0.8 + item.index * 0.4) * 8;
+                        floatY = Math.cos(time * 0.8 + item.index * 0.4) * 8;
 
                         // Smooth fluid 3D Physics: Calculate target rotation based on pan velocity
-                        let targetRotY = -globalVelX * 0.5;
-                        let targetRotX = globalVelY * 0.5;
+                        let targetRotY = -globalVelX * 0.4;
+                        let targetRotX = globalVelY * 0.4;
 
                         // Cap target rotation mathematically to prevent complete flipping
-                        targetRotY = Math.max(-30, Math.min(30, targetRotY));
-                        targetRotX = Math.max(-30, Math.min(30, targetRotX));
+                        targetRotY = Math.max(-25, Math.min(25, targetRotY));
+                        targetRotX = Math.max(-25, Math.min(25, targetRotX));
 
                         // Lerp the item's persistent rotation towards the target slowly for a water-like smooth bend
                         item.rotX += (targetRotX - item.rotX) * 0.1;
@@ -908,12 +928,12 @@ export default function Page() {
 
                     if (spaceModeActive) {
                         // In TRIPP Mode: Ethereal Cosmic Horizon Dissolve only at outer edges
-                        if (edgeProximity > 0.85) {
-                            const t = Math.min(1, Math.max(0, (edgeProximity - 0.85) / 0.30));
+                        if (edgeProximity > 0.88) {
+                            const t = Math.min(1, Math.max(0, (edgeProximity - 0.88) / 0.25));
                             const smoothT = t * t * (3 - 2 * t);
                             opacity = Math.max(0, 1 - smoothT);
-                            scale = 1 - (smoothT * 0.32); // Gracefully shrinks to 0.68 into deep cosmic space
-                            blurPx = smoothT * 3;
+                            scale = 1 - (smoothT * 0.30); // Gracefully shrinks to 0.70 into deep cosmic space
+                            blurPx = smoothT * 2.5;
                         }
                     } else {
                         // In Normal Mode: Pure 1.0 opacity across all visible cards (no artificial blank spaces)
@@ -921,12 +941,18 @@ export default function Page() {
                         scale = 1.0;
                     }
 
+                    // Strict depth layering: closer/sharp cards ALWAYS render above depth/blurred cards
+                    const zIndex = Math.round(scale * 100);
+
                     // Use fast set for 60fps with Hardware Acceleration
                     const transformProps = {
                         x: finalX,
                         y: finalY,
+                        xPercent: -50,
+                        yPercent: -50,
                         scale: scale,
                         opacity: opacity,
+                        zIndex: zIndex,
                         force3D: true // GPU Hardware acceleration
                     };
                     
@@ -934,7 +960,7 @@ export default function Page() {
                     if (!isMobile) {
                         transformProps.rotationX = item.rotX;
                         transformProps.rotationY = item.rotY;
-                        if (spaceModeActive && blurPx > 0.4 && opacity < 0.96) {
+                        if (spaceModeActive && blurPx > 0.5 && opacity < 0.88) {
                             transformProps.filter = `blur(${blurPx.toFixed(1)}px)`;
                         } else {
                             transformProps.filter = 'none';
@@ -959,39 +985,89 @@ export default function Page() {
 
         // --- DEPLOY INSTANCE ---
         async function fetchGraphicsAndInit() {
+            const curatedGraphics = [
+                {
+                    image_url: 'https://pub-72c28e7d3884434bac75ca152fdf30bb.r2.dev/Graphics/1785782739074_3.png',
+                    category: 'Event Poster',
+                    title: 'The Paddle Party Poster Design',
+                    case_study: 'A playful and high-contrast summer sports event poster designed for tournament promotion.'
+                },
+                {
+                    image_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
+                    category: '3D & Motion',
+                    title: 'Chromatic Wave Identity',
+                    case_study: 'Fluid 3D color gradients and dynamic geometry crafted for a next-gen digital brand.'
+                },
+                {
+                    image_url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1000&q=80',
+                    category: 'Branding',
+                    title: 'Neon Circuit Sound Festival',
+                    case_study: 'Cyberpunk typographic visual language and poster series for an electronic music festival.'
+                },
+                {
+                    image_url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80',
+                    category: 'Packaging',
+                    title: 'Minimalist Artisan Botanical',
+                    case_study: 'Luxury eco-conscious skincare packaging system using foil-stamped typography.'
+                },
+                {
+                    image_url: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1000&q=80',
+                    category: 'Fine Art',
+                    title: 'Ethereal Renaissance Dream',
+                    case_study: 'Classical oil portraiture blended with modern abstract geometric light filters.'
+                },
+                {
+                    image_url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=1000&q=80',
+                    category: 'Concept Art',
+                    title: 'Hyperdrive Warp Chamber',
+                    case_study: 'Sci-fi spatial environment exploration featuring volumetric neon light beams.'
+                },
+                {
+                    image_url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1000&q=80',
+                    category: 'Typography',
+                    title: 'Brutalist Monolith Type',
+                    case_study: 'Heavy architectural glyph design exploring extreme negative space.'
+                },
+                {
+                    image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1000&q=80',
+                    category: 'Album Art',
+                    title: 'Midnight Astral Echoes',
+                    case_study: 'Holographic metallic vinyl sleeve design for an ambient synthwave record.'
+                }
+            ];
+
             let fetchedItems = [];
-            const dummyGraphics = Array.from({ length: 12 }).map((_, i) => ({
-                image_url: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EProject ${i + 1}%3C/text%3E%3C/svg%3E`,
-                category: i % 2 === 0 ? 'Concept Art' : 'Branding',
-                title: `Placeholder Project ${i + 1}`,
-                case_study: 'This is a premium placeholder image because no graphics were found in the database. Add some graphics in the Admin Panel!'
-            }));
 
             try {
                 const res = await fetch('/api/graphics');
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.length > 0) {
-                        fetchedItems = data;
-                        setGraphics(data);
+                        // Blend real Supabase items with curated portfolio items if fewer than 8 exist
+                        if (data.length < 8) {
+                            fetchedItems = [...data, ...curatedGraphics.slice(data.length)];
+                        } else {
+                            fetchedItems = data;
+                        }
+                        setGraphics(fetchedItems);
                     } else {
-                        fetchedItems = dummyGraphics;
-                        setGraphics(dummyGraphics);
+                        fetchedItems = curatedGraphics;
+                        setGraphics(curatedGraphics);
                     }
                 } else {
-                    fetchedItems = dummyGraphics;
-                    setGraphics(dummyGraphics);
+                    fetchedItems = curatedGraphics;
+                    setGraphics(curatedGraphics);
                 }
             } catch (err) {
                 console.error("Failed to fetch graphics from Supabase", err);
-                fetchedItems = dummyGraphics;
-                setGraphics(dummyGraphics);
+                fetchedItems = curatedGraphics;
+                setGraphics(curatedGraphics);
             }
 
             const graphicCanvas = new InfiniteCanvas('canvas-container', {
                 imageSize: '20',       // 20vw sizing base
                 gap: '0.5',            // Minimal 0.5vw gap so images are cleanly aligned
-                customItems: fetchedItems // Dynamically loaded from Supabase
+                customItems: fetchedItems // Dynamically loaded from Supabase / curated gallery
             });
             window.canvasEngine = graphicCanvas;
         }
