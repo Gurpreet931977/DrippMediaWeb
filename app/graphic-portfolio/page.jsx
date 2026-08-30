@@ -501,15 +501,28 @@ export default function Page() {
                 // Specific View (Double Click + Click to close) logic
                 this.items.forEach(item => {
                     item.el.addEventListener('dblclick', () => {
-                        if (this.isListView) return;
-                        const src = item.el.querySelector('img').src;
-                        document.getElementById('specific-img').src = src;
-                        document.getElementById('specific-title').innerText = item.el.dataset.title || 'Untitled Project';
-                        document.getElementById('specific-category').innerText = item.el.dataset.category || 'Uncategorized';
-                        document.getElementById('specific-case-study').innerText = item.el.dataset.case_study || 'No details provided.';
-                        document.getElementById('specific-view').classList.add('active');
+                        this.openSpecificView(item);
                     });
                 });
+
+                // Top-Right Interactive Pill Buttons
+                const listViewBtn = document.getElementById('list-view-helper');
+                if (listViewBtn) {
+                    listViewBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.toggleListView();
+                    });
+                }
+
+                const specificViewBtn = document.getElementById('specific-view-helper');
+                if (specificViewBtn) {
+                    specificViewBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.openSpecificView();
+                    });
+                }
                 
                 // GTA V Zoom Controls
                 const zoomInBtn = document.getElementById('zoom-in-btn');
@@ -609,57 +622,97 @@ export default function Page() {
                     // Enter: Toggle between Infinite 2D Grid and 1D List View
                     if (e.code === 'Enter') {
                         e.preventDefault();
-
-                        // Safety requirement: Transition out of TRIPP mode if active before going to List View
-                        if (spaceModeActive) {
-                            toggleSpaceMode(); // Instantly toggles the space states back to normal
-                        }
-
-                        this.isListView = !this.isListView;
-                        const showcase = document.getElementById('portfolio-showcase');
-                        const dragMsg = document.getElementById('drag-msg');
-
-                        const spWrapper = document.querySelector('.sp-wrapper');
-                        const listViewHelperText = document.querySelector('#list-view-helper span:first-child');
-
-                        if (this.isListView) {
-                            showcase.classList.add('list-view-mode');
-                            showcase.style.overflowY = 'auto'; // Enable native v-scroll
-                            if (dragMsg) dragMsg.classList.add('hidden'); // Hide Drag msg completely in list
-                            const resetHelperNode = document.getElementById('reset-helper');
-                            if (resetHelperNode) resetHelperNode.classList.add('hidden'); // Hide Spc helper
-                            if (spWrapper) spWrapper.style.display = 'none';
-                            if (listViewHelperText) listViewHelperText.innerText = 'Infinite View';
-
-                            gsap.ticker.remove(this.renderBound); // stop render loop
-
-                            // Tell React to show the category folder view
-                            setIsListViewActive(true);
-                            setActiveCategory(null);
-                        } else {
-                            showcase.classList.remove('list-view-mode');
-                            showcase.style.overflowY = 'hidden';
-                            if (dragMsg) dragMsg.classList.remove('hidden'); // Show Drag msg again
-                            const resetHelperNode2 = document.getElementById('reset-helper');
-                            if (resetHelperNode2) resetHelperNode2.classList.remove('hidden');
-                            if (spWrapper) spWrapper.style.display = 'block';
-                            if (listViewHelperText) listViewHelperText.innerText = 'List View';
-
-                            setIsListViewActive(false);
-
-                            // Snap to original state before turning renderer back on to prevent jumping
-                            this.state.x = 0;
-                            this.state.y = 0;
-                            this.state.targetX = 0;
-                            this.state.targetY = 0;
-
-                            gsap.ticker.add(this.renderBound); // restart loop
-                        }
+                        this.toggleListView();
                     }
                 });
 
                 // Cache bound function to cleanly add/remove from GSAP ticker
                 this.renderBound = this.render.bind(this);
+            }
+
+            openSpecificView(targetItem) {
+                if (this.isListView) return;
+                
+                let item = targetItem;
+                if (!item && this.items && this.items.length > 0) {
+                    // Intelligently find the item closest to center of the viewport
+                    let minDistance = Infinity;
+                    const halfVW = window.innerWidth * 0.5;
+                    const halfVH = window.innerHeight * 0.5;
+                    const limitX = Math.max(this.gridWidth / 2, halfVW + 200);
+                    const limitY = Math.max(this.gridHeight / 2, halfVH + 200);
+
+                    for (let i = 0; i < this.items.length; i++) {
+                        const cur = this.items[i];
+                        const absX = cur.basex + this.state.x;
+                        const absY = cur.basey + this.state.y;
+                        const wx = this.wrap(absX, -limitX, limitX);
+                        const wy = this.wrap(absY, -limitY, limitY);
+                        const dist = Math.hypot(wx, wy);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            item = cur;
+                        }
+                    }
+                }
+
+                if (!item || !item.el) return;
+
+                const img = item.el.querySelector('img');
+                const src = img ? img.src : '';
+                document.getElementById('specific-img').src = src;
+                document.getElementById('specific-title').innerText = item.el.dataset.title || 'Untitled Project';
+                document.getElementById('specific-category').innerText = item.el.dataset.category || 'Uncategorized';
+                document.getElementById('specific-case-study').innerText = item.el.dataset.case_study || 'No details provided.';
+                document.getElementById('specific-view').classList.add('active');
+            }
+
+            toggleListView() {
+                // Safety requirement: Transition out of TRIPP mode if active before going to List View
+                if (spaceModeActive) {
+                    toggleSpaceMode(); // Instantly toggles the space states back to normal
+                }
+
+                this.isListView = !this.isListView;
+                const showcase = document.getElementById('portfolio-showcase');
+                const dragMsg = document.getElementById('drag-msg');
+
+                const spWrapper = document.querySelector('.sp-wrapper');
+                const listViewHelperText = document.querySelector('#list-view-helper span:first-child');
+
+                if (this.isListView) {
+                    showcase.classList.add('list-view-mode');
+                    showcase.style.overflowY = 'auto'; // Enable native v-scroll
+                    if (dragMsg) dragMsg.classList.add('hidden'); // Hide Drag msg completely in list
+                    const resetHelperNode = document.getElementById('reset-helper');
+                    if (resetHelperNode) resetHelperNode.classList.add('hidden'); // Hide Spc helper
+                    if (spWrapper) spWrapper.style.display = 'none';
+                    if (listViewHelperText) listViewHelperText.innerText = 'Infinite View';
+
+                    gsap.ticker.remove(this.renderBound); // stop render loop
+
+                    // Tell React to show the category folder view
+                    setIsListViewActive(true);
+                    setActiveCategory(null);
+                } else {
+                    showcase.classList.remove('list-view-mode');
+                    showcase.style.overflowY = 'hidden';
+                    if (dragMsg) dragMsg.classList.remove('hidden'); // Show Drag msg again
+                    const resetHelperNode2 = document.getElementById('reset-helper');
+                    if (resetHelperNode2) resetHelperNode2.classList.remove('hidden');
+                    if (spWrapper) spWrapper.style.display = 'block';
+                    if (listViewHelperText) listViewHelperText.innerText = 'List View';
+
+                    setIsListViewActive(false);
+
+                    // Snap to original state before turning renderer back on to prevent jumping
+                    this.state.x = 0;
+                    this.state.y = 0;
+                    this.state.targetX = 0;
+                    this.state.targetY = 0;
+
+                    gsap.ticker.add(this.renderBound); // restart loop
+                }
             }
 
             // --- GTA V DYNAMIC ZOOM ENGINE ---
@@ -713,44 +766,12 @@ export default function Page() {
                 this.state.targetZoom = targetZoom;
 
                 if (this.zoomTween) this.zoomTween.kill();
-                if (this.fxTimeline) this.fxTimeline.kill();
 
                 const isDiveIn = direction === 'in';
-                const startZoom = this.state.zoom;
-
-                const hud = document.getElementById('gta-satellite-hud');
-                const reticle = document.getElementById('gta-reticle');
-                const altitudeVal = document.getElementById('gta-altitude-val');
-                const zoomVal = document.getElementById('gta-zoom-val');
-                const modeVal = document.getElementById('gta-mode-val');
-                const targetLabel = document.getElementById('gta-target-label');
-                const speedVignette = document.getElementById('gta-speed-vignette');
-                const scanlines = document.getElementById('gta-scanlines');
-                const flashWhite = document.getElementById('gta-flash-white');
-                const showcase = document.getElementById('portfolio-showcase');
-                const canvasCont = document.getElementById('canvas-container');
-
-                const calculateAltitude = (z) => {
-                    const norm = Math.max(0.2, z);
-                    return Math.round((28000 / (norm * 1.4)) + (1 / norm) * 1200);
-                };
-
-                const startAlt = calculateAltitude(startZoom);
-                const endAlt = calculateAltitude(targetZoom);
-                const altObj = { alt: startAlt, zoom: startZoom };
-
-                const getModeText = (z) => {
-                    if (z <= 0.55) return 'SATELLITE ORBIT';
-                    if (z <= 0.95) return 'STRATOSPHERE';
-                    if (z <= 1.45) return 'REGIONAL AERIAL';
-                    if (z <= 2.1) return 'TACTICAL SECTOR';
-                    return 'STREET RECON';
-                };
-
-                const duration = isDiveIn ? 0.92 : 0.82;
+                const duration = isDiveIn ? 0.85 : 0.75;
                 const ease = isDiveIn ? "power4.inOut" : "power3.inOut";
 
-                // 1. Camera Zoom Tween
+                // Camera Kinetic Zoom Tween
                 this.zoomTween = gsap.to(this.state, {
                     zoom: targetZoom,
                     duration: duration,
@@ -761,142 +782,21 @@ export default function Page() {
                     }
                 });
 
-                // 2. Altitude & Telemetry counter
-                gsap.to(altObj, {
-                    alt: endAlt,
-                    zoom: targetZoom,
-                    duration: duration,
-                    ease: ease,
-                    onUpdate: () => {
-                        if (altitudeVal) altitudeVal.innerText = `${Math.round(altObj.alt).toLocaleString()} FT`;
-                        if (zoomVal) zoomVal.innerText = `${altObj.zoom.toFixed(2)}X`;
-                        if (modeVal) modeVal.innerText = getModeText(altObj.zoom);
-                    }
-                });
-
-                // 3. Visual FX Timeline
-                this.fxTimeline = gsap.timeline();
-
-                if (hud) {
-                    this.fxTimeline.to(hud, { opacity: 1, duration: 0.15 }, 0);
-                }
-
-                if (isDiveIn) {
-                    // DIVE BOMB (ZOOM IN)
-                    if (reticle) {
-                        this.fxTimeline.fromTo(reticle, 
-                            { opacity: 0.4, scale: 1.6, rotate: -15 },
-                            { opacity: 1, scale: 1, rotate: 0, duration: 0.55, ease: "power4.out" },
-                            0
-                        );
-                        if (targetLabel) {
-                            targetLabel.innerText = "DIVE ACQUIRED // 09";
-                        }
-                    }
-
-                    if (speedVignette) {
-                        this.fxTimeline.fromTo(speedVignette, 
-                            { opacity: 0, scale: 0.9 },
-                            { opacity: 0.8, scale: 1.15, duration: 0.38, ease: "power2.in", yoyo: true, repeat: 1 },
-                            0.05
-                        );
-                    }
-
-                    if (scanlines) {
-                        this.fxTimeline.fromTo(scanlines, 
-                            { opacity: 0 },
-                            { opacity: 0.55, duration: 0.35, yoyo: true, repeat: 1, ease: "sine.inOut" },
-                            0.1
-                        );
-                    }
-
-                    if (canvasCont) {
-                        this.fxTimeline.to(canvasCont, {
-                            filter: 'drop-shadow(-5px 0px 0px rgba(255, 40, 40, 0.7)) drop-shadow(5px 0px 0px rgba(40, 240, 255, 0.7)) blur(1.5px)',
-                            duration: 0.28,
-                            ease: "power2.inOut",
-                            yoyo: true,
-                            repeat: 1,
-                            onComplete: () => {
-                                gsap.set(canvasCont, { filter: 'none' });
-                            }
-                        }, 0.18);
-                    }
-
-                    // Ground Impact Shake on Landing
-                    this.fxTimeline.add(() => {
-                        gsap.fromTo(showcase, 
-                            { x: () => (Math.random() - 0.5) * 14, y: () => (Math.random() - 0.5) * 14 },
-                            { x: 0, y: 0, duration: 0.45, ease: "elastic.out(1.2, 0.2)", clearProps: "x,y" }
-                        );
-
-                        if (flashWhite) {
-                            gsap.fromTo(flashWhite, 
-                                { opacity: 0.25 },
-                                { opacity: 0, duration: 0.35, ease: "power2.out" }
+                // Subtle Camera Recoil / Momentum Settle
+                const showcase = document.getElementById('portfolio-showcase');
+                if (showcase) {
+                    if (isDiveIn) {
+                        gsap.delayedCall(duration * 0.6, () => {
+                            gsap.fromTo(showcase, 
+                                { x: () => (Math.random() - 0.5) * 8, y: () => (Math.random() - 0.5) * 8 },
+                                { x: 0, y: 0, duration: 0.4, ease: "elastic.out(1.2, 0.3)", clearProps: "x,y" }
                             );
-                        }
-
-                        if (targetLabel) targetLabel.innerText = "COORDINATE LOCKED";
-                    }, 0.58);
-
-                    if (reticle) {
-                        this.fxTimeline.to(reticle, { opacity: 0.3, scale: 0.9, duration: 0.5, ease: "power2.out" }, 1.0);
-                    }
-                    if (hud) {
-                        this.fxTimeline.to(hud, { opacity: 0.75, duration: 0.5 }, 1.1);
-                    }
-
-                } else {
-                    // STRATOSPHERE PULL-UP (ZOOM OUT)
-                    gsap.fromTo(showcase, 
-                        { y: 12 },
-                        { y: 0, duration: 0.6, ease: "power3.out", clearProps: "y" }
-                    );
-
-                    if (reticle) {
-                        this.fxTimeline.fromTo(reticle, 
-                            { opacity: 0.8, scale: 0.9, rotate: 0 },
-                            { opacity: 0.4, scale: 2.2, rotate: 15, duration: 0.65, ease: "power3.out" },
-                            0
+                        });
+                    } else {
+                        gsap.fromTo(showcase, 
+                            { y: 8 },
+                            { y: 0, duration: 0.5, ease: "power3.out", clearProps: "y" }
                         );
-                        if (targetLabel) targetLabel.innerText = "ORBITAL SURVEY";
-                    }
-
-                    if (speedVignette) {
-                        this.fxTimeline.fromTo(speedVignette, 
-                            { opacity: 0, scale: 1.2 },
-                            { opacity: 0.7, scale: 0.95, duration: 0.38, ease: "power2.in", yoyo: true, repeat: 1 },
-                            0.05
-                        );
-                    }
-
-                    if (scanlines) {
-                        this.fxTimeline.fromTo(scanlines, 
-                            { opacity: 0 },
-                            { opacity: 0.6, duration: 0.38, yoyo: true, repeat: 1, ease: "sine.inOut" },
-                            0.1
-                        );
-                    }
-
-                    if (canvasCont) {
-                        this.fxTimeline.to(canvasCont, {
-                            filter: 'drop-shadow(-4px 0px 0px rgba(255, 50, 50, 0.6)) drop-shadow(4px 0px 0px rgba(50, 200, 255, 0.6)) blur(1px)',
-                            duration: 0.28,
-                            ease: "power2.inOut",
-                            yoyo: true,
-                            repeat: 1,
-                            onComplete: () => {
-                                gsap.set(canvasCont, { filter: 'none' });
-                            }
-                        }, 0.15);
-                    }
-
-                    if (hud) {
-                        this.fxTimeline.to(hud, { opacity: 0.75, duration: 0.6 }, 0.9);
-                    }
-                    if (reticle) {
-                        this.fxTimeline.to(reticle, { opacity: 0.25, scale: 1.0, duration: 0.5 }, 1.0);
                     }
                 }
             }
@@ -1652,16 +1552,23 @@ export default function Page() {
             padding: 5px 6px 5px 14px;
             border-radius: 30px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             color: #ffffff;
             font-weight: 500;
+            user-select: none;
         }
 
         .feature-item:hover {
-            background: rgba(22, 22, 28, 0.95);
-            border-color: rgba(235, 215, 63, 0.5);
-            transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(235, 215, 63, 0.2);
+            background: rgba(24, 24, 30, 0.95);
+            border-color: rgba(235, 215, 63, 0.6);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8), 0 0 18px rgba(235, 215, 63, 0.25);
+        }
+
+        .feature-item:active {
+            transform: translateY(0px) scale(0.96);
+            background: rgba(235, 215, 63, 0.15);
+            border-color: var(--brand-yellow);
         }
 
         .feature-item > span:first-child {
@@ -2316,243 +2223,6 @@ export default function Page() {
             transform: translateY(0) scale(1);
         }
 
-        /* GTA V SATELLITE HUD & CINEMATIC TRANSITIONS */
-        .gta-satellite-hud {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 80;
-            overflow: hidden;
-            opacity: 0.75;
-            transition: opacity 0.5s ease;
-        }
-
-        .gta-satellite-hud.hidden,
-        body:has(#specific-view.active) .gta-satellite-hud,
-        body:has(#portfolio-showcase.list-view-mode) .gta-satellite-hud {
-            opacity: 0 !important;
-            visibility: hidden !important;
-        }
-
-        .gta-hud-top-left {
-            position: absolute;
-            top: 35px;
-            left: 100px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            font-family: 'Clash Display', sans-serif;
-            font-size: 0.75rem;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.7);
-            text-transform: uppercase;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-            transition: opacity 0.4s ease;
-        }
-
-        .gta-live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: 'Panchang', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--brand-yellow);
-        }
-
-        .gta-rec-dot {
-            width: 8px;
-            height: 8px;
-            background: #ff3333;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #ff3333;
-            animation: gtaBlink 1s infinite alternate ease-in-out;
-        }
-
-        @keyframes gtaBlink {
-            0% { opacity: 0.3; transform: scale(0.85); }
-            100% { opacity: 1; transform: scale(1.15); }
-        }
-
-        .gta-hud-coords {
-            display: flex;
-            gap: 15px;
-            color: rgba(255, 255, 255, 0.85);
-            font-size: 0.7rem;
-            font-weight: 500;
-        }
-
-        .gta-hud-sub {
-            font-size: 0.6rem;
-            color: rgba(235, 215, 63, 0.6);
-            letter-spacing: 1.5px;
-        }
-
-        .gta-hud-top-right {
-            position: absolute;
-            top: 95px;
-            right: 35px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: flex-end;
-            font-family: 'Panchang', sans-serif;
-            z-index: 10;
-        }
-
-        .gta-hud-metric {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            background: rgba(12, 12, 14, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 6px 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
-        }
-
-        .gta-metric-label {
-            font-family: 'Clash Display', sans-serif;
-            font-size: 0.58rem;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.5);
-            text-transform: uppercase;
-        }
-
-        .gta-metric-val {
-            font-family: 'Panchang', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--brand-yellow);
-            letter-spacing: 1px;
-        }
-
-        /* Center Target Acquisition Reticle */
-        .gta-target-reticle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 240px;
-            height: 240px;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            opacity: 0.25;
-            transition: opacity 0.3s ease;
-        }
-
-        .gta-bracket {
-            position: absolute;
-            width: 32px;
-            height: 32px;
-            border-color: var(--brand-yellow);
-            border-style: solid;
-            border-width: 0;
-            box-shadow: 0 0 15px rgba(235, 215, 63, 0.4);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .gta-bracket-tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; }
-        .gta-bracket-tr { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; }
-        .gta-bracket-bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; }
-        .gta-bracket-br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; }
-
-        .gta-crosshair-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .gta-ch-x {
-            position: absolute;
-            width: 20px;
-            height: 1.5px;
-            background: rgba(235, 215, 63, 0.8);
-            box-shadow: 0 0 6px rgba(235, 215, 63, 0.6);
-        }
-
-        .gta-ch-y {
-            position: absolute;
-            height: 20px;
-            width: 1.5px;
-            background: rgba(235, 215, 63, 0.8);
-            box-shadow: 0 0 6px rgba(235, 215, 63, 0.6);
-        }
-
-        .gta-radar-ring {
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            border: 1px dashed rgba(235, 215, 63, 0.4);
-            border-radius: 50%;
-            animation: gtaRadarSpin 6s linear infinite;
-        }
-
-        @keyframes gtaRadarSpin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .gta-target-label {
-            position: absolute;
-            bottom: -35px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: 'Panchang', sans-serif;
-            font-size: 0.65rem;
-            letter-spacing: 3px;
-            font-weight: 700;
-            color: var(--brand-yellow);
-            white-space: nowrap;
-            background: rgba(10, 10, 10, 0.85);
-            padding: 3px 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(235, 215, 63, 0.3);
-            text-transform: uppercase;
-        }
-
-        /* Speed Vignette & Blur Tunnel */
-        .gta-speed-vignette {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            opacity: 0;
-            background: radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.5) 65%, rgba(0, 0, 0, 0.9) 100%);
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
-            z-index: 70;
-        }
-
-        .gta-scanline-pass {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            opacity: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0.25),
-                rgba(0, 0, 0, 0.25) 2px,
-                transparent 2px,
-                transparent 4px
-            );
-            z-index: 75;
-        }
-
-        .gta-flash-white {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            background: #ffffff;
-            opacity: 0;
-            z-index: 90;
-        }
-
         .infinite-zoom-controls {
             position: fixed;
             bottom: 50px;
@@ -2567,8 +2237,8 @@ export default function Page() {
             -webkit-backdrop-filter: blur(25px);
             padding: 6px 10px;
             border-radius: 40px;
-            border: 1px solid rgba(235, 215, 63, 0.2);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 20px rgba(235, 215, 63, 0.08), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1);
         }
 
         .zoom-btn {
@@ -2594,7 +2264,7 @@ export default function Page() {
             background: rgba(235, 215, 63, 0.2);
             color: var(--brand-yellow);
             border-color: rgba(235, 215, 63, 0.5);
-            transform: scale(1.1);
+            transform: scale(1.08);
             box-shadow: 0 0 20px rgba(235, 215, 63, 0.3);
         }
 
@@ -2608,21 +2278,6 @@ export default function Page() {
             .infinite-zoom-controls {
                 bottom: 30px;
                 right: 30px;
-            }
-            .gta-hud-top-left {
-                top: 25px;
-                left: 85px;
-                font-size: 0.62rem;
-            }
-            .gta-hud-top-right {
-                top: 135px;
-                right: 20px;
-                transform: scale(0.85);
-                transform-origin: top right;
-            }
-            .gta-target-reticle {
-                width: 170px;
-                height: 170px;
             }
         }
 
@@ -2742,14 +2397,26 @@ export default function Page() {
     </div>
   </div>
   <div className={`features-list ${isListViewActive ? 'hidden' : ''}`}>
-    <div className="feature-item" id="list-view-helper">
+    <div 
+      className="feature-item" 
+      id="list-view-helper"
+      role="button"
+      tabIndex={0}
+      title="Switch to Feed/List View (Enter / Tap)"
+    >
       <span>{isGenz ? 'feed view' : 'List View'}</span>
       <span className="feature-key">
         <span className="desktop-text">Enter</span>
         <span className="mobile-text">Tap</span>
       </span>
     </div>
-    <div className="feature-item">
+    <div 
+      className="feature-item" 
+      id="specific-view-helper"
+      role="button"
+      tabIndex={0}
+      title="Inspect Center Project Case Study (Double Click / 2x Tap)"
+    >
       <span>{isGenz ? 'enhance' : 'Specific View'}</span>
       <span className="feature-key">
         <span className="desktop-text">{isGenz ? '2x click' : 'Double Click'}</span>
@@ -2759,61 +2426,10 @@ export default function Page() {
   </div>
   <div className="cursor" id="cursor" />
   <div className="drag-instruction" id="drag-msg">{isGenz ? 'swipe / scroll to explore' : 'Drag / Scroll to Explore'}</div>
-  
-  {/* GTA V Satellite HUD & Cinematic FX Layer */}
-  <div id="gta-satellite-hud" className={`gta-satellite-hud ${isListViewActive ? 'hidden' : ''}`}>
-    {/* Top Left Live Satellite Telemetry */}
-    <div className="gta-hud-top-left">
-      <div className="gta-live-indicator">
-        <span className="gta-rec-dot"></span>
-        <span className="gta-hud-bold">SAT-ORBIT // 09</span>
-      </div>
-      <div className="gta-hud-coords">
-        <span>LAT 34°03&apos;14&quot; N</span>
-        <span>LON 118°14&apos;37&quot; W</span>
-      </div>
-      <div className="gta-hud-sub">SYS_FEED: OPTICAL_RECON</div>
-    </div>
-
-    {/* Top Right Altitude & Zoom Telemetry */}
-    <div className="gta-hud-top-right">
-      <div className="gta-hud-metric">
-        <span className="gta-metric-label">ALTITUDE</span>
-        <span className="gta-metric-val" id="gta-altitude-val">14,200 FT</span>
-      </div>
-      <div className="gta-hud-metric">
-        <span className="gta-metric-label">MAGNIFICATION</span>
-        <span className="gta-metric-val" id="gta-zoom-val">1.00X</span>
-      </div>
-      <div className="gta-hud-metric">
-        <span className="gta-metric-label">CAMERA MODE</span>
-        <span className="gta-metric-val" id="gta-mode-val">REGIONAL AERIAL</span>
-      </div>
-    </div>
-
-    {/* Center Target Lock Reticle */}
-    <div className="gta-target-reticle" id="gta-reticle">
-      <div className="gta-bracket gta-bracket-tl"></div>
-      <div className="gta-bracket gta-bracket-tr"></div>
-      <div className="gta-bracket gta-bracket-bl"></div>
-      <div className="gta-bracket gta-bracket-br"></div>
-      <div className="gta-crosshair-center">
-        <div className="gta-ch-x"></div>
-        <div className="gta-ch-y"></div>
-        <div className="gta-radar-ring"></div>
-      </div>
-      <div className="gta-target-label" id="gta-target-label">TARGET LOCKED</div>
-    </div>
-
-    {/* Speed Vignette, Scanlines & Flash */}
-    <div className="gta-speed-vignette" id="gta-speed-vignette"></div>
-    <div className="gta-scanline-pass" id="gta-scanlines"></div>
-    <div className="gta-flash-white" id="gta-flash-white"></div>
-  </div>
 
   <div className="infinite-zoom-controls" id="infinite-zoom-controls" style={{ opacity: isListViewActive ? 0 : 1, pointerEvents: isListViewActive ? 'none' : 'auto' }}>
-      <button className="zoom-btn" id="zoom-out-btn" title="Zoom Out (Orbit Pull-Up)">−</button>
-      <button className="zoom-btn" id="zoom-in-btn" title="Zoom In (Dive-Bomb)">+</button>
+      <button className="zoom-btn" id="zoom-out-btn" title="Zoom Out">−</button>
+      <button className="zoom-btn" id="zoom-in-btn" title="Zoom In">+</button>
   </div>
 
   <div className="specific-view-overlay" id="specific-view">
