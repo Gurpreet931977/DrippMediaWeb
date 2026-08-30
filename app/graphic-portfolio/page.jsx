@@ -287,22 +287,49 @@ export default function Page() {
             } catch (e) {}
         }
 
-        // --- SPECIFIC VIEW SEQUENTIAL MODAL MANAGER ---
+        // --- SPECIFIC VIEW SEQUENTIAL MODAL MANAGER (INFINITE LOOPING CAROUSEL) ---
         let currentSpecificList = [];
         let currentSpecificIndex = 0;
         let isSlidingSpecific = false;
 
+        const dummyTitles = [
+            'The Paddle Party Poster Design',
+            'Neon Cyberpunk Brand Identity',
+            'Summer Soundwave Festival Artwork',
+            'Minimalist Architectural Monogram',
+            'Futuristic Streetwear Capsule Visuals',
+            'Acid Gradient Album Artwork',
+            'Editorial Swiss Grid Typography Poster',
+            'High-Octane Energy Drink Packaging'
+        ];
+
+        const dummyCategories = [
+            'Poster Design',
+            'Brand Identity',
+            'Festival Campaign',
+            'Logo & Identity',
+            'Fashion & Apparel',
+            'Album Art',
+            'Editorial Print',
+            'Packaging & 3D'
+        ];
+
+        const dummyCaseStudies = [
+            "We designed this poster to feel fun, modern, and social. The deep green background sets a sporty court vibe right away. Bright pink and pastel elements pop against the green, drawing eyes straight to the event details.",
+            "A high-voltage visual identity built for a nocturnal lifestyle brand. We fused saturated neon palettes with sharp bespoke typography to deliver unmistakable presence in dark mode environments.",
+            "Designed for maximum crowd energy and ticket conversion. Dynamic layered typography breaks through the horizon with high-contrast chromatic flares.",
+            "Built upon pure geometric precision and Swiss modernist principles. Stripping away ornamentation created a bold identity that commands authority.",
+            "A gritty editorial visual narrative developed for a high-concept streetwear drop. Blends analog halftone textures with raw brutalist typography.",
+            "An expressive visual soundscape created for a breakthrough synth-wave release. Flowing liquid gradients mirror the undulating audio frequencies.",
+            "A masterclass in asymmetric grid systems and kinetic type hierarchy. High-contrast typography directs the viewer's gaze through structured whitespace.",
+            "Engineered to shatter shelf monotony. Vibrant holographic foils paired with metallic inks create an intense visual kick designed for instant recall."
+        ];
+
         function renderSpecificModalContent(item) {
             if (!item) return;
 
-            const dummyTitles = ['Neon Brand Identity', 'Event Poster Vibe', 'Tech Startup Logo', 'Creative Thumbnail', 'Web Redesign'];
-            const dummyCaseStudies = [
-              "This project focused on creating a bold, eye-catching aesthetic. We used high-contrast colors and custom typography to make the brand instantly recognizable.",
-              "The goal was to design something clean and modern. By stripping away unnecessary elements, we created a minimalist design that speaks volumes.",
-              "This was built for maximum engagement. We used vibrant gradients and dynamic layouts to capture attention in less than a second.",
-              "Designed specifically to resonate with a younger demographic. It blends modern aesthetics with retro elements to create a nostalgic yet fresh vibe.",
-              "A complete visual overhaul. We maintained the core identity but modernized the geometry and color palette for a premium feel."
-            ];
+            const len = (currentSpecificList && currentSpecificList.length > 0) ? currentSpecificList.length : 8;
+            const idx = currentSpecificIndex;
 
             const imgEl = document.getElementById('specific-img');
             const titleEl = document.getElementById('specific-title');
@@ -318,11 +345,11 @@ export default function Page() {
                 imgEl.style.opacity = '1';
                 gsap.set(imgEl, { xPercent: 0, scale: 1 });
             }
-            if (titleEl) titleEl.innerText = item.title || (item.el ? item.el.dataset.title : '') || dummyTitles[currentSpecificIndex % dummyTitles.length];
-            if (catEl) catEl.innerText = item.category || (item.el ? item.el.dataset.category : '') || 'Graphic Design';
-            if (csEl) csEl.innerText = item.case_study || (item.el ? item.el.dataset.case_study : '') || dummyCaseStudies[currentSpecificIndex % dummyCaseStudies.length];
-            if (countEl && currentSpecificList && currentSpecificList.length > 0) {
-                countEl.innerText = `${(currentSpecificIndex + 1).toString().padStart(2, '0')} / ${currentSpecificList.length.toString().padStart(2, '0')}`;
+            if (titleEl) titleEl.innerText = item.title || (item.el ? item.el.dataset.title : '') || dummyTitles[idx % dummyTitles.length];
+            if (catEl) catEl.innerText = item.category || (item.el ? item.el.dataset.category : '') || dummyCategories[idx % dummyCategories.length];
+            if (csEl) csEl.innerText = item.case_study || (item.el ? item.el.dataset.case_study : '') || dummyCaseStudies[idx % dummyCaseStudies.length];
+            if (countEl) {
+                countEl.innerText = `${(idx + 1).toString().padStart(2, '0')} / ${len.toString().padStart(2, '0')}`;
             }
 
             const slider = document.getElementById('magnify-slider');
@@ -330,14 +357,35 @@ export default function Page() {
         }
 
         function openSpecificModal(itemData, list = null) {
+            let rawList = [];
             if (list && list.length > 0) {
-                currentSpecificList = list;
+                rawList = list;
             } else if (window.canvasEngine && window.canvasEngine.customItems && window.canvasEngine.customItems.length > 0) {
-                currentSpecificList = window.canvasEngine.customItems;
+                rawList = window.canvasEngine.customItems;
+            }
+
+            // If there's only 1 item in the dataset, expand it to an 8-item infinite sequence loop so it's always unlimited slidable
+            if (rawList.length === 1) {
+                const base = rawList[0];
+                currentSpecificList = Array.from({ length: 8 }, (_, i) => ({
+                    ...base,
+                    title: i === 0 ? (base.title || dummyTitles[0]) : dummyTitles[i % dummyTitles.length],
+                    category: i === 0 ? (base.category || dummyCategories[0]) : dummyCategories[i % dummyCategories.length],
+                    case_study: i === 0 ? (base.case_study || dummyCaseStudies[0]) : dummyCaseStudies[i % dummyCaseStudies.length]
+                }));
+            } else if (rawList.length > 1) {
+                currentSpecificList = rawList;
+            } else {
+                currentSpecificList = Array.from({ length: 8 }, (_, i) => ({
+                    image_url: 'https://pub-72c28e7d3884434bac75ca152fdf30bb.r2.dev/Graphics/1785782739074_3.png',
+                    title: dummyTitles[i % dummyTitles.length],
+                    category: dummyCategories[i % dummyCategories.length],
+                    case_study: dummyCaseStudies[i % dummyCaseStudies.length]
+                }));
             }
 
             if (typeof itemData === 'number') {
-                currentSpecificIndex = itemData;
+                currentSpecificIndex = itemData % currentSpecificList.length;
             } else if (itemData) {
                 const targetSrc = itemData.image_url || itemData.img_src || itemData.imgSrc || itemData.url || (itemData.imgEl ? itemData.imgEl.src : '') || (itemData.el ? (itemData.el.querySelector('img') ? itemData.el.querySelector('img').src : '') : '');
                 const targetTitle = itemData.title || (itemData.el ? itemData.el.dataset.title : '');
@@ -356,7 +404,7 @@ export default function Page() {
         }
 
         function navigateSpecificModal(direction, withTransition = true) {
-            if (!currentSpecificList || currentSpecificList.length <= 1) return;
+            if (!currentSpecificList || currentSpecificList.length === 0) return;
             if (isSlidingSpecific) return; // Prevent overlapping animation glitches
 
             const len = currentSpecificList.length;
@@ -408,18 +456,11 @@ export default function Page() {
                 }
 
                 // Update text content
-                const dummyTitles = ['Neon Brand Identity', 'Event Poster Vibe', 'Tech Startup Logo', 'Creative Thumbnail', 'Web Redesign'];
-                const dummyCaseStudies = [
-                  "This project focused on creating a bold, eye-catching aesthetic. We used high-contrast colors and custom typography to make the brand instantly recognizable.",
-                  "The goal was to design something clean and modern. By stripping away unnecessary elements, we created a minimalist design that speaks volumes.",
-                  "This was built for maximum engagement. We used vibrant gradients and dynamic layouts to capture attention in less than a second.",
-                  "Designed specifically to resonate with a younger demographic. It blends modern aesthetics with retro elements to create a nostalgic yet fresh vibe.",
-                  "A complete visual overhaul. We maintained the core identity but modernized the geometry and color palette for a premium feel."
-                ];
-                if (titleEl) titleEl.innerText = targetItem.title || (targetItem.el ? targetItem.el.dataset.title : '') || dummyTitles[currentSpecificIndex % dummyTitles.length];
-                if (catEl) catEl.innerText = targetItem.category || (targetItem.el ? targetItem.el.dataset.category : '') || 'Graphic Design';
-                if (csEl) csEl.innerText = targetItem.case_study || (targetItem.el ? targetItem.el.dataset.case_study : '') || dummyCaseStudies[currentSpecificIndex % dummyCaseStudies.length];
-                if (countEl) countEl.innerText = `${(currentSpecificIndex + 1).toString().padStart(2, '0')} / ${len.toString().padStart(2, '0')}`;
+                const idx = currentSpecificIndex;
+                if (titleEl) titleEl.innerText = targetItem.title || (targetItem.el ? targetItem.el.dataset.title : '') || dummyTitles[idx % dummyTitles.length];
+                if (catEl) catEl.innerText = targetItem.category || (targetItem.el ? targetItem.el.dataset.category : '') || dummyCategories[idx % dummyCategories.length];
+                if (csEl) csEl.innerText = targetItem.case_study || (targetItem.el ? targetItem.el.dataset.case_study : '') || dummyCaseStudies[idx % dummyCaseStudies.length];
+                if (countEl) countEl.innerText = `${(idx + 1).toString().padStart(2, '0')} / ${len.toString().padStart(2, '0')}`;
 
                 const nextSrc = targetItem.image_url || targetItem.img_src || targetItem.imgSrc || targetItem.url || (targetItem.imgEl ? targetItem.imgEl.src : '') || '';
 
@@ -1171,6 +1212,42 @@ export default function Page() {
                     duration: duration,
                     ease: ease
                 });
+
+                // Lightweight lag-free motion blur & radial speed streak flash
+                const blurOverlay = document.getElementById('zoom-motion-blur-overlay');
+                const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+                const maxBlur = isMobile ? 2.5 : 4.5;
+
+                if (blurOverlay) {
+                    gsap.killTweensOf(blurOverlay);
+                    gsap.timeline()
+                        .fromTo(blurOverlay, 
+                            { opacity: 0, scale: isDiveIn ? 0.96 : 1.04 },
+                            { opacity: isMobile ? 0.55 : 0.85, scale: 1, duration: 0.18, ease: "power2.out" }
+                        )
+                        .to(blurOverlay, { opacity: 0, duration: duration - 0.18, ease: "power3.out" });
+                }
+
+                // Camera single-container motion blur (cleans up immediately upon deceleration)
+                const canvasEl = this.container;
+                if (canvasEl) {
+                    const blurObj = { blur: 0 };
+                    gsap.killTweensOf(blurObj);
+                    gsap.timeline({
+                        onUpdate: () => {
+                            if (blurObj.blur > 0.05) {
+                                canvasEl.style.filter = `blur(${blurObj.blur.toFixed(1)}px)`;
+                            } else {
+                                canvasEl.style.filter = '';
+                            }
+                        },
+                        onComplete: () => {
+                            canvasEl.style.filter = '';
+                        }
+                    })
+                    .to(blurObj, { blur: maxBlur, duration: 0.18, ease: "power2.in" })
+                    .to(blurObj, { blur: 0, duration: duration - 0.18, ease: "power3.out" });
+                }
 
                 // Subtle hardware-accelerated camera recoil settle on the viewport
                 const showcase = document.getElementById('portfolio-showcase');
@@ -2780,6 +2857,29 @@ export default function Page() {
             }
         }
 
+        /* High-Performance Radial Zoom Motion Blur Overlay */
+        .zoom-motion-blur-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 85;
+            opacity: 0;
+            background: radial-gradient(circle at center, transparent 35%, rgba(235, 215, 63, 0.08) 65%, rgba(0, 0, 0, 0.5) 100%);
+            mix-blend-mode: screen;
+            will-change: opacity, transform;
+            transition: opacity 0.1s ease;
+        }
+
+        .zoom-motion-blur-overlay::after {
+            content: '';
+            position: absolute;
+            inset: -10%;
+            background: repeating-radial-gradient(circle at center, transparent 0, transparent 8px, rgba(235, 215, 63, 0.06) 9px, transparent 10px);
+            mask-image: radial-gradient(circle at center, transparent 20%, black 75%);
+            -webkit-mask-image: radial-gradient(circle at center, transparent 20%, black 75%);
+            pointer-events: none;
+        }
+
         /* Space Background Canvas */
         #space-canvas {
             position: fixed;
@@ -3117,6 +3217,7 @@ export default function Page() {
   </div>
   {/* Drop-in wrapper mimicking user's React implementation */}
   <div id="portfolio-showcase">
+    <div className="zoom-motion-blur-overlay" id="zoom-motion-blur-overlay" />
     <div className="infinite-canvas" id="canvas-container" style={{ display: isListViewActive ? 'none' : 'block' }}>
       {/* Items injected by JS */}
     </div>
