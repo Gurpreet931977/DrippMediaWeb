@@ -53,9 +53,9 @@ export default function WebPortfolioManager() {
     video_url: '',
     tech_stack: ['Next.js 14', 'TypeScript', 'Tailwind CSS'],
     stats: [
-      { label: 'Lighthouse Score', value: '99/100' },
-      { label: 'Active Reach', value: '25K+' },
-      { label: 'Page Load Speed', value: '0.4s' }
+      { label: 'Page Load Time', value: '0.35s' },
+      { label: 'SEO Score', value: '100%' },
+      { label: 'Conversion Growth', value: '+300%' }
     ],
     pillars: [
       { title: '01 / SUB-SECOND TTFB', desc: 'Edge-rendered architecture ensuring instant delivery across global nodes.' },

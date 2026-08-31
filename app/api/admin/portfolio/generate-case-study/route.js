@@ -24,9 +24,9 @@ export async function POST(request) {
           { title: '03 / SCALABLE EDGE', desc: 'Zero cold-start compute with automated cloud cache invalidation.' }
         ],
         stats: [
-          { label: 'Lighthouse Score', value: '99/100' },
-          { label: 'Load Speed', value: '0.4s' },
-          { label: 'Conversion Lift', value: '+280%' }
+          { label: 'Page Load Time', value: '0.35s' },
+          { label: 'SEO Score', value: '100%' },
+          { label: 'Conversion Growth', value: '+300%' }
         ]
       });
     }
@@ -45,18 +45,18 @@ Strictly return ONLY a valid JSON object matching this exact schema (no markdown
   "category": "Strategic industry category (e.g. Healthcare & Clinical Web, Luxury Fragrance & Commerce, EdTech Platform, Generative AI Studio)",
   "badge": "Short 2-3 word pill badge",
   "description": "High-impact 2-sentence summary of the engineering and user experience",
-  "challenge": "A compelling 2-3 sentence breakdown of the client problem, legacy blockers, or industry pain points",
-  "solution": "A sophisticated 2-3 sentence explanation of the technical architecture, design decisions, edge caching, and performance optimizations delivered",
+  "challenge": "A compelling 2-3 sentence breakdown of the client problem, legacy blockers, or industry pain points in simple client-friendly terms",
+  "solution": "A sophisticated 2-3 sentence explanation of the technical architecture, custom design, and speed optimizations delivered",
   "pillars": [
-    { "title": "01 / SUB-SECOND TTFB", "desc": "Edge-rendered architecture ensuring instant delivery across global nodes." },
-    { "title": "02 / KINETIC MOTION", "desc": "60 FPS physics-based micro-interactions tailored for high conversion." },
-    { "title": "03 / SCALABLE EDGE", "desc": "Zero cold-start compute with automated cloud cache invalidation." }
+    { "title": "01 / SUB-SECOND SPEED", "desc": "Edge-rendered architecture ensuring instant page delivery." },
+    { "title": "02 / BESPOKE DESIGN", "desc": "Custom brand aesthetic engineered for maximum client conversion." },
+    { "title": "03 / MOBILE PERFECTION", "desc": "Flawless responsiveness across all devices and screen sizes." }
   ],
   "techStack": ["Next.js 15", "TypeScript", "Tailwind CSS", "Framer Motion", "Supabase", "PostgreSQL"],
   "stats": [
-    { "label": "Lighthouse Score", "value": "99/100" },
-    { "label": "Impact Metric", "value": "+340%" },
-    { "label": "Speed / Latency", "value": "0.3s" }
+    { "label": "Page Load Time", "value": "0.35s" },
+    { "label": "SEO Score", "value": "100%" },
+    { "label": "Conversion Growth", "value": "+300%" }
   ]
 }`;
 
@@ -109,9 +109,9 @@ Strictly return ONLY a valid JSON object matching this exact schema (no markdown
       solution: `Architected a modern, lightweight Next.js platform featuring server-side rendering, global edge caching, and interactive micro-animations.`,
       techStack: ['Next.js 15', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'PostgreSQL'],
       stats: [
-        { label: 'Lighthouse Score', value: '99/100' },
-        { label: 'Load Speed', value: '0.4s' },
-        { label: 'Performance', value: '60 FPS' }
+        { label: 'Page Load Time', value: '0.35s' },
+        { label: 'SEO Score', value: '100%' },
+        { label: 'Conversion Growth', value: '+300%' }
       ]
     });
   }

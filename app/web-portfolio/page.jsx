@@ -17,9 +17,9 @@ const DEFAULT_PROJECTS = [
     image: '/images/web-portfolio/bharatup.jpg',
     color: '#ebd73f',
     stats: [
-      { label: 'Overall Quality Score', value: '99/100' },
-      { label: 'Active Reach', value: '25K+' },
-      { label: 'Instant Load Speed', value: '0.4s' }
+      { label: 'Page Load Time', value: '0.40s' },
+      { label: 'SEO Score', value: '100%' },
+      { label: 'Conversion Growth', value: '+280%' }
     ],
     techStack: ['Next.js 14', 'TypeScript', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Framer Motion'],
     challenge: 'Building a modern, credible online presence for growing businesses that loads instantly and stands out from standard templates.',
@@ -37,9 +37,9 @@ const DEFAULT_PROJECTS = [
     image: '/images/web-portfolio/pinakacare.jpg',
     color: '#ebd73f',
     stats: [
-      { label: 'Booking Increase', value: '+340%' },
-      { label: 'Mobile Experience', value: '100%' },
-      { label: 'Page Load Speed', value: '0.28s' }
+      { label: 'Page Load Time', value: '0.28s' },
+      { label: 'SEO Score', value: '100%' },
+      { label: 'Conversion Growth', value: '+340%' }
     ],
     techStack: ['Next.js', 'React 18', 'Tailwind CSS', 'Framer Motion', 'Cloudflare Edge'],
     challenge: 'Traditional clinic websites are often cluttered and confusing, making it difficult for patients to quickly book an appointment.',
@@ -57,9 +57,9 @@ const DEFAULT_PROJECTS = [
     image: '/images/web-portfolio/goatsociety.jpg',
     color: '#ebd73f',
     stats: [
-      { label: 'Smooth Browsing', value: '60 FPS' },
-      { label: 'Customer Retention', value: '+220%' },
-      { label: 'Fast Checkout', value: '< 2s' }
+      { label: 'Page Load Time', value: '0.35s' },
+      { label: 'SEO Score', value: '100%' },
+      { label: 'Conversion Growth', value: '+220%' }
     ],
     techStack: ['Next.js', 'Tailwind CSS', 'Framer Motion', 'E-Commerce Core', 'Cloudflare CDN'],
     challenge: 'Showcasing luxury perfumes with clear bottle size options without slowing down the shopping experience on phones.',
@@ -77,9 +77,9 @@ const DEFAULT_PROJECTS = [
     image: '/images/web-portfolio/rasmlai.jpg',
     color: '#ebd73f',
     stats: [
-      { label: 'Instant AI Replies', value: '12ms' },
-      { label: 'Reliable Cloud Setup', value: '99.9%' },
-      { label: 'Overall Quality Score', value: '100/100' }
+      { label: 'Page Load Time', value: '0.32s' },
+      { label: 'SEO Score', value: '100%' },
+      { label: 'Conversion Growth', value: '+310%' }
     ],
     techStack: ['Next.js 15', 'React 19', 'OpenAI API', 'Vercel AI SDK', 'Tailwind CSS'],
     challenge: 'Creating a warm, peaceful space where anyone feels safe and comfortable talking with an AI companion.',

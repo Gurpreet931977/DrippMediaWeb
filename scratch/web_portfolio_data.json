@@ -13,16 +13,16 @@
     "color": "#3b82f6",
     "stats": [
       {
-        "label": "Lighthouse Score",
-        "value": "99/100"
+        "label": "Page Load Time",
+        "value": "0.40s"
       },
       {
-        "label": "Active Reach",
-        "value": "25K+"
+        "label": "SEO Score",
+        "value": "100%"
       },
       {
-        "label": "Page Load Speed",
-        "value": "0.4s"
+        "label": "Conversion Growth",
+        "value": "+280%"
       }
     ],
     "techStack": [
@@ -41,10 +41,10 @@
       "PostgreSQL",
       "Framer Motion"
     ],
-    "challenge": "Creating a high-credibility digital gateway that communicates modern business acceleration with sub-second performance.",
-    "case_study_challenge": "Creating a high-credibility digital gateway that communicates modern business acceleration with sub-second performance.",
-    "solution": "We architected a lightweight, server-rendered Next.js application with edge caching, dark aesthetic, and frictionless responsiveness.",
-    "case_study_solution": "We architected a lightweight, server-rendered Next.js application with edge caching, dark aesthetic, and frictionless responsiveness.",
+    "challenge": "Building a modern, credible online presence for growing businesses that loads instantly and stands out from standard templates.",
+    "case_study_challenge": "Building a modern, credible online presence for growing businesses that loads instantly and stands out from standard templates.",
+    "solution": "We designed a custom, fast website with smooth animations, high-converting layouts, and effortless mobile browsing.",
+    "case_study_solution": "We designed a custom, fast website with smooth animations, high-converting layouts, and effortless mobile browsing.",
     "is_visible": true,
     "sort_order": 100
   },
@@ -62,16 +62,16 @@
     "color": "#10b981",
     "stats": [
       {
-        "label": "Booking Conversion",
-        "value": "+340%"
+        "label": "Page Load Time",
+        "value": "0.28s"
       },
       {
-        "label": "Mobile Readiness",
+        "label": "SEO Score",
         "value": "100%"
       },
       {
-        "label": "TTFB Server Latency",
-        "value": "0.28s"
+        "label": "Conversion Growth",
+        "value": "+340%"
       }
     ],
     "techStack": [
@@ -88,10 +88,10 @@
       "Framer Motion",
       "Cloudflare Edge"
     ],
-    "challenge": "Medical clinics often suffer from confusing appointment layouts and outdated interfaces that reduce patient trust.",
-    "case_study_challenge": "Medical clinics often suffer from confusing appointment layouts and outdated interfaces that reduce patient trust.",
-    "solution": "Designed a soothing, high-trust visual language with instant slot booking, clean treatment catalog, and fast mobile intake.",
-    "case_study_solution": "Designed a soothing, high-trust visual language with instant slot booking, clean treatment catalog, and fast mobile intake.",
+    "challenge": "Traditional clinic websites are often cluttered and confusing, making it difficult for patients to quickly book an appointment.",
+    "case_study_challenge": "Traditional clinic websites are often cluttered and confusing, making it difficult for patients to quickly book an appointment.",
+    "solution": "We built a soothing, high-trust website where patients can explore treatments and book a doctor consultation in just a few taps.",
+    "case_study_solution": "We built a soothing, high-trust website where patients can explore treatments and book a doctor consultation in just a few taps.",
     "is_visible": true,
     "sort_order": 90
   },
@@ -109,16 +109,16 @@
     "color": "#f59e0b",
     "stats": [
       {
-        "label": "Catalog Performance",
-        "value": "60 FPS"
+        "label": "Page Load Time",
+        "value": "0.35s"
       },
       {
-        "label": "User Retention",
+        "label": "SEO Score",
+        "value": "100%"
+      },
+      {
+        "label": "Conversion Growth",
         "value": "+220%"
-      },
-      {
-        "label": "Checkout Speed",
-        "value": "< 2s"
       }
     ],
     "techStack": [
@@ -135,10 +135,10 @@
       "E-Commerce Core",
       "Cloudflare CDN"
     ],
-    "challenge": "Creating a high-end luxury aesthetic that showcases perfume notes and sizes clearly without slowing down mobile catalog scrolling.",
-    "case_study_challenge": "Creating a high-end luxury aesthetic that showcases perfume notes and sizes clearly without slowing down mobile catalog scrolling.",
-    "solution": "Crafted minimal typography, high-res visual product cards, and instant decant size selectors for maximum checkout efficiency.",
-    "case_study_solution": "Crafted minimal typography, high-res visual product cards, and instant decant size selectors for maximum checkout efficiency.",
+    "challenge": "Showcasing luxury perfumes with clear bottle size options without slowing down the shopping experience on phones.",
+    "case_study_challenge": "Showcasing luxury perfumes with clear bottle size options without slowing down the shopping experience on phones.",
+    "solution": "We designed an elegant storefront with crisp product photos, 1-tap size pickers, and a fast, friction-free checkout.",
+    "case_study_solution": "We designed an elegant storefront with crisp product photos, 1-tap size pickers, and a fast, friction-free checkout.",
     "is_visible": true,
     "sort_order": 80
   },
@@ -156,16 +156,16 @@
     "color": "#8b5cf6",
     "stats": [
       {
-        "label": "AI Response Latency",
-        "value": "12ms"
+        "label": "Page Load Time",
+        "value": "0.32s"
       },
       {
-        "label": "Architecture",
-        "value": "Edge AI"
+        "label": "SEO Score",
+        "value": "100%"
       },
       {
-        "label": "Lighthouse Score",
-        "value": "100/100"
+        "label": "Conversion Growth",
+        "value": "+310%"
       }
     ],
     "techStack": [
@@ -182,10 +182,10 @@
       "Vercel AI SDK",
       "Tailwind CSS"
     ],
-    "challenge": "Creating a calming, intimate digital environment where users feel secure expressing deep emotions.",
-    "case_study_challenge": "Creating a calming, intimate digital environment where users feel secure expressing deep emotions.",
-    "solution": "Engineered an ultra-clean, minimal interface with fluid animations, intuitive voice prompts, and zero friction onboarding.",
-    "case_study_solution": "Engineered an ultra-clean, minimal interface with fluid animations, intuitive voice prompts, and zero friction onboarding.",
+    "challenge": "Creating a warm, peaceful space where anyone feels safe and comfortable talking with an AI companion.",
+    "case_study_challenge": "Creating a warm, peaceful space where anyone feels safe and comfortable talking with an AI companion.",
+    "solution": "We built a minimalist, soothing interface with natural voice prompts, fluid transitions, and zero complicated setup steps.",
+    "case_study_solution": "We built a minimalist, soothing interface with natural voice prompts, fluid transitions, and zero complicated setup steps.",
     "is_visible": true,
     "sort_order": 70
   }
