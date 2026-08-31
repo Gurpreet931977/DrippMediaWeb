@@ -92,12 +92,23 @@ export default function Page() {
   const [projects, setProjects] = useState(DEFAULT_PROJECTS);
   const [activeProjectIdx, setActiveProjectIdx] = useState(0);
   const [selectedCaseStudy, setSelectedCaseStudy] = useState(null);
+  const [caseStudyTab, setCaseStudyTab] = useState('blueprint'); // 'blueprint' | 'metrics' | 'stack'
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const audioCtxRef = useRef(null);
   const hasDraggedRef = useRef(false);
   const hudRef = useRef(null);
   const dotsTrackRef = useRef(null);
   const isDotsDraggingRef = useRef(false);
+
+  const handleCopyLink = (proj) => {
+    playSound('click');
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(proj?.url || window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
 
   // Synchronize live web projects with database API
   useEffect(() => {
@@ -1108,19 +1119,19 @@ export default function Page() {
           letter-spacing: 2px;
         }
 
-        /* Case Study Slide-out Modal / Drawer */
+        /* High-End Cyber-Monograph Case Study Drawer */
         .case-study-drawer {
           position: fixed;
           inset: 0;
           z-index: 2000;
-          background: rgba(5, 5, 8, 0.85);
-          backdrop-filter: blur(30px);
-          -webkit-backdrop-filter: blur(30px);
+          background: rgba(4, 4, 8, 0.88);
+          backdrop-filter: blur(35px);
+          -webkit-backdrop-filter: blur(35px);
           display: flex;
           justify-content: flex-end;
           opacity: 0;
           pointer-events: none;
-          transition: opacity 0.35s ease;
+          transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .case-study-drawer.open {
@@ -1129,42 +1140,253 @@ export default function Page() {
         }
 
         .drawer-content {
-          width: 55vw;
-          max-width: 780px;
+          width: 62vw;
+          max-width: 900px;
+          min-width: 360px;
           height: 100%;
-          background: #0d0d12;
-          border-left: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: -20px 0 60px rgba(0, 0, 0, 0.9);
-          padding: 45px;
+          background: #09090e;
+          border-left: 1px solid rgba(235, 215, 63, 0.25);
+          box-shadow: -25px 0 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(235, 215, 63, 0.1);
+          padding: 36px 42px;
           overflow-y: auto;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
           transform: translateX(100%);
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .case-study-drawer.open .drawer-content {
           transform: translateX(0);
         }
 
-        .drawer-close-btn {
-          align-self: flex-end;
-          width: 42px;
-          height: 42px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.08);
+        .drawer-hero-banner {
+          position: relative;
+          width: 100%;
+          height: 190px;
+          border-radius: 20px;
+          overflow: hidden;
+          background: #050508;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          color: #ffffff;
+          margin-bottom: 24px;
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .drawer-hero-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: top center;
+          filter: brightness(0.6) contrast(1.1);
+          transition: transform 0.8s ease;
+        }
+        .drawer-hero-banner:hover .drawer-hero-img {
+          transform: scale(1.04);
+        }
+
+        .drawer-hero-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(9, 9, 14, 0.95) 0%, rgba(9, 9, 14, 0.4) 60%, transparent 100%);
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          padding: 20px 24px;
+        }
+
+        .drawer-header-actions {
           display: flex;
           align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+
+        .drawer-close-btn {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          color: #ffffff;
+          padding: 8px 16px;
+          border-radius: 30px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.65rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.25s ease;
         }
         .drawer-close-btn:hover {
           background: var(--brand-yellow);
           color: #050505;
-          transform: scale(1.1);
+          border-color: var(--brand-yellow);
+          transform: scale(1.04);
+          box-shadow: 0 0 20px rgba(235, 215, 63, 0.4);
+        }
+
+        /* Interactive Case Study Tab Navigation */
+        .case-study-tab-bar {
+          display: flex;
+          gap: 8px;
+          background: rgba(18, 18, 24, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          padding: 5px;
+          margin-bottom: 26px;
+        }
+
+        .case-tab-btn {
+          flex: 1;
+          background: transparent;
+          border: none;
+          border-radius: 12px;
+          padding: 11px 16px;
+          color: rgba(255, 255, 255, 0.65);
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.65rem;
+          font-weight: 700;
+          letter-spacing: 1px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .case-tab-btn:hover {
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.06);
+        }
+
+        .case-tab-btn.active {
+          background: var(--brand-yellow);
+          color: #050505;
+          box-shadow: 0 4px 20px rgba(235, 215, 63, 0.35);
+        }
+
+        /* Narrative Blueprint Cards */
+        .blueprint-card {
+          background: rgba(15, 15, 22, 0.75);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 18px;
+          padding: 22px 26px;
+          margin-bottom: 18px;
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+        .blueprint-card:hover {
+          border-color: rgba(235, 215, 63, 0.35);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .blueprint-card.highlight {
+          background: linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(15, 15, 22, 0.9) 100%);
+          border-color: rgba(235, 215, 63, 0.35);
+        }
+
+        .card-header-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.62rem;
+          font-weight: 800;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          margin-bottom: 10px;
+        }
+
+        /* Interactive Stats Matrix */
+        .stats-matrix-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+
+        .stat-metric-box {
+          background: rgba(15, 15, 22, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 18px;
+          padding: 22px;
+          position: relative;
+          transition: all 0.3s ease;
+        }
+        .stat-metric-box:hover {
+          border-color: var(--brand-yellow);
+          transform: translateY(-3px);
+          box-shadow: 0 10px 25px rgba(235, 215, 63, 0.15);
+        }
+
+        .stat-metric-value {
+          font-family: 'Panchang', sans-serif;
+          font-size: 1.9rem;
+          font-weight: 800;
+          color: #ffffff;
+          line-height: 1.1;
+          margin-bottom: 6px;
+        }
+
+        .stat-metric-label {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.82rem;
+          color: rgba(255, 255, 255, 0.65);
+        }
+
+        /* Pillars 3-Column Grid */
+        .pillars-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 14px;
+          margin-top: 18px;
+        }
+
+        .pillar-card {
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 14px;
+          padding: 16px;
+          transition: all 0.25s ease;
+        }
+        .pillar-card:hover {
+          border-color: var(--brand-yellow);
+          background: rgba(235, 215, 63, 0.06);
+        }
+        .pillar-title {
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.68rem;
+          font-weight: 700;
+          color: var(--brand-yellow);
+          margin-bottom: 6px;
+        }
+        .pillar-desc {
+          font-size: 0.78rem;
+          color: rgba(255, 255, 255, 0.75);
+          line-height: 1.4;
+        }
+
+        .btn-copy-blueprint {
+          background: rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          border-radius: 30px;
+          padding: 10px 18px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          transition: all 0.25s ease;
+        }
+        .btn-copy-blueprint:hover {
+          background: rgba(255, 255, 255, 0.18);
+          border-color: #ffffff;
         }
 
         /* Mobile Responsive Adjustments */
@@ -1387,126 +1609,298 @@ export default function Page() {
           {selectedCaseStudy && (
             <>
               <div>
-                <button 
-                  className="drawer-close-btn" 
-                  onClick={() => setSelectedCaseStudy(null)}
-                  title="Close Case Study (Esc)"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-
-                <div style={{ marginTop: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                    <div className="card-category-badge" style={{ margin: 0 }}>{selectedCaseStudy.category}</div>
+                {/* Header Action Bar */}
+                <div className="drawer-header-actions">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <div className="card-category-badge" style={{ margin: 0 }}>✦ {selectedCaseStudy.category}</div>
                     <div style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '5px',
-                      background: 'rgba(235, 215, 63, 0.1)',
-                      border: '1px solid rgba(235, 215, 63, 0.25)',
+                      background: 'rgba(235, 215, 63, 0.12)',
+                      border: '1px solid rgba(235, 215, 63, 0.3)',
                       borderRadius: '20px',
                       padding: '4px 12px',
                       fontFamily: 'Panchang, sans-serif',
                       fontSize: '0.58rem',
                       color: 'var(--brand-yellow)',
-                      fontWeight: 700,
+                      fontWeight: 800,
                       letterSpacing: '1px'
                     }}>
-                      ✦ ORLO AI ARCHITECTURAL BLUEPRINT
+                      ✦ ORLO AI ARCHITECTURAL DOSSIER
                     </div>
                   </div>
-                  <h2 style={{
-                    fontFamily: 'Panchang, sans-serif',
-                    fontSize: '2.5rem',
-                    fontWeight: 800,
-                    color: '#ffffff',
-                    textTransform: 'uppercase',
-                    lineHeight: 1.1,
-                    marginBottom: '12px'
-                  }}>
-                    {selectedCaseStudy.title}
-                  </h2>
-                  <p style={{
-                    fontSize: '1.1rem',
-                    color: 'var(--brand-yellow)',
-                    marginBottom: '35px',
-                    lineHeight: 1.4
-                  }}>
-                    {selectedCaseStudy.tagline}
-                  </p>
 
-                  <div style={{ marginBottom: '30px' }}>
-                    <h4 style={{
-                      fontFamily: 'Panchang, sans-serif',
-                      fontSize: '0.8rem',
-                      color: 'rgba(255, 255, 255, 0.5)',
-                      letterSpacing: '2px',
-                      textTransform: 'uppercase',
-                      marginBottom: '10px'
-                    }}>THE CHALLENGE</h4>
-                    <p style={{ fontSize: '1rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.85)' }}>
-                      {selectedCaseStudy.challenge}
-                    </p>
-                  </div>
+                  <button 
+                    className="drawer-close-btn" 
+                    onClick={() => setSelectedCaseStudy(null)}
+                    title="Close Case Study (Esc)"
+                  >
+                    <span>CLOSE</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
 
-                  <div style={{ marginBottom: '30px' }}>
-                    <h4 style={{
-                      fontFamily: 'Panchang, sans-serif',
-                      fontSize: '0.8rem',
-                      color: 'rgba(255, 255, 255, 0.5)',
-                      letterSpacing: '2px',
-                      textTransform: 'uppercase',
-                      marginBottom: '10px'
-                    }}>THE SOLUTION & ARCHITECTURE</h4>
-                    <p style={{ fontSize: '1rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.85)' }}>
-                      {selectedCaseStudy.solution}
-                    </p>
-                  </div>
-
-                  <div style={{ marginBottom: '30px' }}>
-                    <h4 style={{
-                      fontFamily: 'Panchang, sans-serif',
-                      fontSize: '0.8rem',
-                      color: 'rgba(255, 255, 255, 0.5)',
-                      letterSpacing: '2px',
-                      textTransform: 'uppercase',
-                      marginBottom: '12px'
-                    }}>CORE TECHNOLOGIES</h4>
-                    <div className="card-tech-pills">
-                      {selectedCaseStudy.techStack.map((tech, i) => (
-                        <span key={i} className="tech-pill" style={{ fontSize: '0.85rem', padding: '6px 14px' }}>{tech}</span>
-                      ))}
+                {/* Hero Visual Preview Banner */}
+                <div className="drawer-hero-banner">
+                  <img 
+                    src={selectedCaseStudy.image} 
+                    alt={selectedCaseStudy.title}
+                    className="drawer-hero-img"
+                  />
+                  <div className="drawer-hero-overlay">
+                    <div>
+                      <h2 style={{
+                        fontFamily: 'Panchang, sans-serif',
+                        fontSize: '2.2rem',
+                        fontWeight: 800,
+                        color: '#ffffff',
+                        textTransform: 'uppercase',
+                        lineHeight: 1.05,
+                        margin: '0 0 6px 0',
+                        letterSpacing: '-0.5px'
+                      }}>
+                        {selectedCaseStudy.title}
+                      </h2>
+                      <div style={{
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontSize: '0.95rem',
+                        color: 'var(--brand-yellow)',
+                        fontWeight: 600
+                      }}>
+                        {selectedCaseStudy.tagline}
+                      </div>
                     </div>
+
+                    <a 
+                      href={selectedCaseStudy.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hud-domain-capsule"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <span className="domain-live-pulse" />
+                      <span className="domain-text">{selectedCaseStudy.displayUrl}</span>
+                      <svg className="domain-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
+                      </svg>
+                    </a>
                   </div>
                 </div>
+
+                {/* Interactive Case Study Tab Switcher */}
+                <div className="case-study-tab-bar">
+                  <button 
+                    className={`case-tab-btn ${caseStudyTab === 'blueprint' ? 'active' : ''}`}
+                    onClick={() => { playSound('click'); setCaseStudyTab('blueprint'); }}
+                  >
+                    <span>✦</span>
+                    <span>Blueprint & Narrative</span>
+                  </button>
+                  <button 
+                    className={`case-tab-btn ${caseStudyTab === 'metrics' ? 'active' : ''}`}
+                    onClick={() => { playSound('click'); setCaseStudyTab('metrics'); }}
+                  >
+                    <span>⚡</span>
+                    <span>Performance & Vitals</span>
+                  </button>
+                  <button 
+                    className={`case-tab-btn ${caseStudyTab === 'stack' ? 'active' : ''}`}
+                    onClick={() => { playSound('click'); setCaseStudyTab('stack'); }}
+                  >
+                    <span>🛠</span>
+                    <span>Tech Architecture</span>
+                  </button>
+                </div>
+
+                {/* TAB 1: BLUEPRINT & NARRATIVE */}
+                {caseStudyTab === 'blueprint' && (
+                  <div>
+                    {/* The Strategic Challenge Card */}
+                    <div className="blueprint-card">
+                      <div className="card-header-badge" style={{ color: '#ef4444' }}>
+                        <span>●</span>
+                        <span>THE STRATEGIC CHALLENGE // 01</span>
+                      </div>
+                      <p style={{
+                        fontSize: '0.98rem',
+                        lineHeight: 1.6,
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        margin: 0,
+                        fontFamily: 'Clash Display, sans-serif'
+                      }}>
+                        "{selectedCaseStudy.challenge}"
+                      </p>
+                    </div>
+
+                    {/* The Orlo Architectural Solution Card */}
+                    <div className="blueprint-card highlight">
+                      <div className="card-header-badge" style={{ color: 'var(--brand-yellow)' }}>
+                        <span>✦</span>
+                        <span>THE ORLO ARCHITECTURAL SOLUTION // 02</span>
+                      </div>
+                      <p style={{
+                        fontSize: '0.98rem',
+                        lineHeight: 1.6,
+                        color: 'rgba(255, 255, 255, 0.92)',
+                        margin: '0 0 16px 0',
+                        fontFamily: 'Clash Display, sans-serif'
+                      }}>
+                        {selectedCaseStudy.solution}
+                      </p>
+
+                      {/* 3 Pillars Grid */}
+                      <div className="pillars-grid">
+                        <div className="pillar-card">
+                          <div className="pillar-title">01 / SUB-SECOND TTFB</div>
+                          <div className="pillar-desc">Edge-rendered architecture ensuring instant delivery across global nodes.</div>
+                        </div>
+                        <div className="pillar-card">
+                          <div className="pillar-title">02 / KINETIC MOTION</div>
+                          <div className="pillar-desc">60 FPS physics-based micro-interactions tailored for high conversion.</div>
+                        </div>
+                        <div className="pillar-card">
+                          <div className="pillar-title">03 / SCALABLE EDGE</div>
+                          <div className="pillar-desc">Zero cold-start compute with automated cloud cache invalidation.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: PERFORMANCE & METRICS */}
+                {caseStudyTab === 'metrics' && (
+                  <div>
+                    <div className="stats-matrix-grid">
+                      {Array.isArray(selectedCaseStudy.stats) && selectedCaseStudy.stats.length > 0 ? (
+                        selectedCaseStudy.stats.map((st, sIdx) => (
+                          <div key={sIdx} className="stat-metric-box">
+                            <div className="stat-metric-value" style={{ color: 'var(--brand-yellow)' }}>
+                              {st.value}
+                            </div>
+                            <div className="stat-metric-label">{st.label}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <>
+                          <div className="stat-metric-box">
+                            <div className="stat-metric-value" style={{ color: '#10b981' }}>99/100</div>
+                            <div className="stat-metric-label">Lighthouse Performance</div>
+                          </div>
+                          <div className="stat-metric-box">
+                            <div className="stat-metric-value" style={{ color: 'var(--brand-yellow)' }}>0.35s</div>
+                            <div className="stat-metric-label">Time to Interactive (TTI)</div>
+                          </div>
+                          <div className="stat-metric-box">
+                            <div className="stat-metric-value" style={{ color: '#38bdf8' }}>100%</div>
+                            <div className="stat-metric-label">SEO & Best Practices</div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="blueprint-card">
+                      <div className="card-header-badge" style={{ color: '#10b981' }}>
+                        <span>●</span>
+                        <span>INFRASTRUCTURE & RELIABILITY SCORE</span>
+                      </div>
+                      <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.8)', lineHeight: 1.5, margin: 0 }}>
+                        Engineered for zero layout shift (CLS: 0.00), instant First Contentful Paint (&lt; 0.4s), and sub-millisecond edge API routing with 99.99% uptime SLA.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: TECH ARCHITECTURE */}
+                {caseStudyTab === 'stack' && (
+                  <div>
+                    <div className="blueprint-card">
+                      <div className="card-header-badge" style={{ color: 'var(--brand-yellow)' }}>
+                        <span>✦</span>
+                        <span>INTEGRATED TECHNOLOGY ECOSYSTEM</span>
+                      </div>
+                      <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.75)', lineHeight: 1.5, marginBottom: '18px' }}>
+                        Every layer of the codebase is constructed with cutting-edge production frameworks:
+                      </p>
+                      <div className="card-tech-pills" style={{ gap: '10px' }}>
+                        {selectedCaseStudy.techStack.map((tech, i) => (
+                          <div 
+                            key={i} 
+                            style={{
+                              background: 'rgba(235, 215, 63, 0.1)',
+                              border: '1px solid rgba(235, 215, 63, 0.35)',
+                              borderRadius: '10px',
+                              padding: '8px 16px',
+                              fontFamily: 'Clash Display, sans-serif',
+                              fontSize: '0.85rem',
+                              fontWeight: 600,
+                              color: '#ffffff',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <span style={{ color: 'var(--brand-yellow)' }}>✦</span>
+                            <span>{tech}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
+              {/* Bottom Fixed Portal Deck */}
               <div style={{
-                paddingTop: '25px',
+                paddingTop: '24px',
                 borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '12px'
               }}>
-                <div style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.75rem', color: '#10b981' }}>
-                  ● PRODUCTION DEPLOYED
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontFamily: 'Panchang, sans-serif',
+                  fontSize: '0.68rem',
+                  color: '#10b981',
+                  fontWeight: 700
+                }}>
+                  <span className="domain-live-pulse" style={{ background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
+                  <span>PRODUCTION DEPLOYED</span>
                 </div>
-                <a 
-                  href={selectedCaseStudy.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="btn-launch-pill"
-                  onClick={() => playSound('click')}
-                >
-                  <span>Launch Live Platform</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="7" y1="17" x2="17" y2="7"></line>
-                    <polyline points="7 7 17 7 17 17"></polyline>
-                  </svg>
-                </a>
+
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <button
+                    className="btn-copy-blueprint"
+                    onClick={() => handleCopyLink(selectedCaseStudy)}
+                    title="Copy Live Project Link"
+                  >
+                    <span>{copiedLink ? '✓ Copied Link' : 'Copy Link'}</span>
+                  </button>
+
+                  <a 
+                    href={selectedCaseStudy.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn-launch-pill"
+                    onClick={() => playSound('click')}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <span>Launch Live Platform</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="7" y1="17" x2="17" y2="7"></line>
+                      <polyline points="7 7 17 7 17 17"></polyline>
+                    </svg>
+                  </a>
+                </div>
               </div>
             </>
           )}
