@@ -781,14 +781,14 @@ export default function Page() {
           bottom: 0;
           left: 0;
           right: 0;
-          background: linear-gradient(to top, rgba(8, 8, 12, 0.98) 0%, rgba(8, 8, 12, 0.88) 65%, transparent 100%);
-          padding: 20px 30px;
+          background: linear-gradient(to top, rgba(8, 8, 12, 0.98) 0%, rgba(8, 8, 12, 0.9) 60%, rgba(8, 8, 12, 0.4) 85%, transparent 100%);
+          padding: 22px 30px;
           z-index: 10;
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
           gap: 16px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-top: none;
           pointer-events: auto;
         }
 
@@ -869,13 +869,33 @@ export default function Page() {
           text-transform: uppercase;
           display: inline-flex;
           align-items: center;
-          gap: 7px;
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          gap: 8px;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          cursor: pointer;
         }
+
+        .btn-case-study .case-study-icon {
+          color: var(--brand-yellow);
+          transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
         .btn-case-study:hover {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: #ffffff;
+          background: rgba(235, 215, 63, 0.18);
+          border-color: var(--brand-yellow);
+          color: #ffffff;
           transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(235, 215, 63, 0.25);
+        }
+
+        .btn-case-study:hover .case-study-icon {
+          transform: rotate(90deg) scale(1.3);
+          filter: drop-shadow(0 0 8px rgba(235, 215, 63, 0.9));
         }
 
         .btn-launch-pill {
@@ -1273,12 +1293,13 @@ export default function Page() {
                         playSound('open');
                         setSelectedCaseStudy(proj);
                       }}
+                      title={`Open ${proj.title} Architectural Case Study`}
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                      </svg>
+                      <span className="case-study-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z"></path>
+                        </svg>
+                      </span>
                       <span>Case Study</span>
                     </button>
 

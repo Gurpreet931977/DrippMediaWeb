@@ -5,8 +5,9 @@ import {
   Globe, PlusCircle, Sparkles, Camera, ArrowUp, ArrowDown, 
   Edit2, Trash2, Eye, EyeOff, ExternalLink, Check, X, 
   AlertCircle, CheckCircle2, RefreshCw, Layers, Cpu, BarChart3,
-  FileText, ShieldCheck, UploadCloud
+  FileText, ShieldCheck, UploadCloud, Crop, Maximize2, Image as ImageIcon
 } from 'lucide-react';
+import ImageCropperModal from './ImageCropperModal';
 
 const DEFAULT_WEB_CATEGORIES = [
   'Enterprise Digital Platform',
@@ -61,7 +62,17 @@ export default function WebPortfolioManager() {
 
   const [newTechInput, setNewTechInput] = useState('');
   const [editItemModal, setEditItemModal] = useState({ show: false, item: null });
-  const fileInputRef = useRef(null);
+  
+  // Cropper Modal State
+  const [cropperModal, setCropperModal] = useState({
+    isOpen: false,
+    imageSrc: '',
+    target: 'create', // 'create' | 'edit'
+    projectTitle: ''
+  });
+
+  const fileInputCreateRef = useRef(null);
+  const fileInputEditRef = useRef(null);
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
@@ -93,6 +104,73 @@ export default function WebPortfolioManager() {
   useEffect(() => {
     fetchWebItems();
   }, []);
+
+  // Image Upload Handler (triggers Cropper)
+  const handleFileUpload = (e, target = 'create') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showNotification('error', 'Please select a valid image file');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      setCropperModal({
+        isOpen: true,
+        imageSrc: dataUrl,
+        target,
+        projectTitle: target === 'create' ? formData.title : (editItemModal.item?.title || '')
+      });
+      // Reset input value so same file can be re-uploaded if desired
+      e.target.value = '';
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Open Cropper on existing image
+  const handleOpenCropper = (imageSrc, target = 'create', title = '') => {
+    if (!imageSrc) {
+      showNotification('error', 'No image selected to crop. Please upload an image or enter a URL first.');
+      return;
+    }
+    setCropperModal({
+      isOpen: true,
+      imageSrc,
+      target,
+      projectTitle: title || (target === 'create' ? formData.title : (editItemModal.item?.title || ''))
+    });
+  };
+
+  // Save Cropped Image from Cropper Modal
+  const handleSaveCroppedImage = (croppedDataUrl) => {
+    if (cropperModal.target === 'create') {
+      setFormData(prev => ({ ...prev, image_url: croppedDataUrl }));
+    } else if (cropperModal.target === 'edit') {
+      setEditItemModal(prev => ({
+        ...prev,
+        item: {
+          ...prev.item,
+          image_url: croppedDataUrl,
+          image: croppedDataUrl
+        }
+      }));
+    }
+    showNotification('success', '✦ Screenshot cropped and framed to 16:10 successfully!');
+  };
+
+  // Remove Thumbnail
+  const handleRemoveImage = (target = 'create') => {
+    if (target === 'create') {
+      setFormData(prev => ({ ...prev, image_url: '' }));
+    } else {
+      setEditItemModal(prev => ({
+        ...prev,
+        item: { ...prev.item, image_url: '', image: '' }
+      }));
+    }
+    showNotification('success', 'Screenshot removed');
+  };
 
   // Orlo AI Case Study Generator
   const handleGenerateOrloCaseStudy = async (targetFormData, setTargetForm) => {
@@ -138,7 +216,7 @@ export default function WebPortfolioManager() {
     }
   };
 
-  // Auto-capture screenshot
+  // Auto-capture screenshot and prompt cropper
   const handleAutoCapture = async (targetFormData, setTargetForm) => {
     if (!targetFormData.url) {
       showNotification('error', 'Please enter a Live Website URL to capture');
@@ -162,7 +240,13 @@ export default function WebPortfolioManager() {
         const data = await res.json();
         if (data.image_url) {
           setTargetForm(prev => ({ ...prev, image_url: data.image_url }));
-          showNotification('success', 'Screenshot captured and linked successfully!');
+          showNotification('success', '📸 Live screenshot captured! Opening Cropper to adjust frame...');
+          setCropperModal({
+            isOpen: true,
+            imageSrc: data.image_url,
+            target: targetFormData === formData ? 'create' : 'edit',
+            projectTitle: targetFormData.title
+          });
         }
       } else {
         throw new Error('Capture failed');
@@ -533,40 +617,176 @@ export default function WebPortfolioManager() {
               </div>
             </div>
 
-            {/* Screenshot Preview & URL */}
-            <div style={{ marginBottom: '25px' }}>
-              <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '8px', display: 'block', fontFamily: 'Clash Display, sans-serif' }}>
-                Screenshot Image URL or Path
-              </label>
-              <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <input 
-                  type="text" 
-                  placeholder="/images/web-portfolio/my-site.jpg or https://..."
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  style={{
-                    flex: 1,
-                    background: 'rgba(0,0,0,0.5)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '12px',
-                    padding: '12px 16px',
-                    color: '#fff',
-                    fontFamily: 'inherit'
-                  }}
-                />
-                {formData.image_url && (
-                  <div style={{
-                    width: '100px',
-                    height: '56px',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    border: '1px solid rgba(235, 215, 63, 0.3)',
-                    flexShrink: 0
-                  }}>
-                    <img src={formData.image_url} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                )}
+            {/* Screenshot & Visual Cropper Manager */}
+            <div style={{
+              marginBottom: '28px',
+              background: 'rgba(20, 20, 28, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              padding: '20px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                <div>
+                  <label style={{ color: '#fff', fontSize: '0.9rem', fontFamily: 'Panchang, sans-serif', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ImageIcon size={16} color="#ebd73f" /> Project Thumbnail & Preview
+                  </label>
+                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.74rem' }}>
+                    Standard main page format: 16:10 chassis crop (1600 × 1000px)
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <input
+                    type="file"
+                    ref={fileInputCreateRef}
+                    onChange={(e) => handleFileUpload(e, 'create')}
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputCreateRef.current?.click()}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.18)',
+                      borderRadius: '10px',
+                      padding: '8px 14px',
+                      color: '#ffffff',
+                      fontSize: '0.75rem',
+                      fontFamily: 'Clash Display, sans-serif',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <UploadCloud size={14} /> Upload & Crop
+                  </button>
+
+                  {formData.image_url && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenCropper(formData.image_url, 'create', formData.title)}
+                      style={{
+                        background: 'rgba(235, 215, 63, 0.15)',
+                        border: '1px solid rgba(235, 215, 63, 0.4)',
+                        borderRadius: '10px',
+                        padding: '8px 14px',
+                        color: '#ebd73f',
+                        fontSize: '0.75rem',
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <Crop size={14} /> ✦ Open Cropper (16:10)
+                    </button>
+                  )}
+
+                  {formData.image_url && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage('create')}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '10px',
+                        padding: '8px 12px',
+                        color: '#ef4444',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer'
+                      }}
+                      title="Remove image"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {formData.image_url ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: '16px', alignItems: 'center' }}>
+                  <div 
+                    onClick={() => handleOpenCropper(formData.image_url, 'create', formData.title)}
+                    style={{
+                      width: '180px',
+                      aspectRatio: '16 / 10',
+                      borderRadius: '10px',
+                      overflow: 'hidden',
+                      border: '1px solid rgba(235, 215, 63, 0.4)',
+                      background: '#050508',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.6)'
+                    }}
+                    title="Click to re-crop/adjust"
+                  >
+                    <img src={formData.image_url} alt="thumbnail preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: 'rgba(0,0,0,0.75)',
+                      padding: '4px',
+                      textAlign: 'center',
+                      fontSize: '0.62rem',
+                      fontFamily: 'Panchang, sans-serif',
+                      color: '#ebd73f'
+                    }}>
+                      CLICK TO CROP
+                    </div>
+                  </div>
+
+                  <div>
+                    <input 
+                      type="text" 
+                      placeholder="/images/web-portfolio/my-site.jpg or https://..."
+                      value={formData.image_url}
+                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                      style={{
+                        width: '100%',
+                        background: 'rgba(0,0,0,0.5)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '10px',
+                        padding: '10px 14px',
+                        color: '#fff',
+                        fontSize: '0.82rem',
+                        fontFamily: 'inherit',
+                        marginBottom: '6px'
+                      }}
+                    />
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>
+                      Tip: You can also paste an image link or local path directly.
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => fileInputCreateRef.current?.click()}
+                  style={{
+                    border: '2px dashed rgba(255, 255, 255, 0.15)',
+                    borderRadius: '12px',
+                    padding: '25px',
+                    textAlign: 'center',
+                    background: 'rgba(0,0,0,0.2)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <UploadCloud size={28} color="#ebd73f" style={{ margin: '0 auto 8px' }} />
+                  <div style={{ color: '#fff', fontSize: '0.85rem', fontFamily: 'Clash Display, sans-serif', fontWeight: 600 }}>
+                    Click to Upload Screenshot & Frame to 16:10
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem', marginTop: '4px' }}>
+                    Or use "Auto-Capture" with your live website URL above
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Tech Stack Tags Manager */}
@@ -1083,17 +1303,134 @@ export default function WebPortfolioManager() {
               />
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px' }}>Screenshot Image Path</label>
-              <input 
-                type="text" 
-                value={editItemModal.item.image_url || editItemModal.item.image || ''} 
-                onChange={(e) => setEditItemModal({
-                  ...editItemModal,
-                  item: { ...editItemModal.item, image_url: e.target.value, image: e.target.value }
-                })}
-                style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff' }}
-              />
+            {/* Screenshot Image Section in Edit Modal */}
+            <div style={{
+              marginBottom: '20px',
+              background: '#14141c',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '14px',
+              padding: '16px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                <label style={{ fontSize: '0.82rem', color: '#fff', fontFamily: 'Panchang, sans-serif', fontWeight: 700 }}>
+                  Project Thumbnail (16:10 Chassis Frame)
+                </label>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <input
+                    type="file"
+                    ref={fileInputEditRef}
+                    onChange={(e) => handleFileUpload(e, 'edit')}
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputEditRef.current?.click()}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.18)',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
+                      color: '#ffffff',
+                      fontSize: '0.72rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <UploadCloud size={13} /> Upload & Crop
+                  </button>
+
+                  {(editItemModal.item.image_url || editItemModal.item.image) && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenCropper(editItemModal.item.image_url || editItemModal.item.image, 'edit', editItemModal.item.title)}
+                      style={{
+                        background: 'rgba(235, 215, 63, 0.15)',
+                        border: '1px solid rgba(235, 215, 63, 0.4)',
+                        borderRadius: '8px',
+                        padding: '6px 12px',
+                        color: '#ebd73f',
+                        fontSize: '0.72rem',
+                        fontFamily: 'Panchang, sans-serif',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <Crop size={13} /> ✦ Open Cropper
+                    </button>
+                  )}
+
+                  {(editItemModal.item.image_url || editItemModal.item.image) && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage('edit')}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '8px',
+                        padding: '6px 10px',
+                        color: '#ef4444',
+                        cursor: 'pointer'
+                      }}
+                      title="Remove image"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '12px', alignItems: 'center' }}>
+                <div 
+                  onClick={() => handleOpenCropper(editItemModal.item.image_url || editItemModal.item.image, 'edit', editItemModal.item.title)}
+                  style={{
+                    width: '130px',
+                    aspectRatio: '16 / 10',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    border: '1px solid rgba(235, 215, 63, 0.3)',
+                    background: '#050508',
+                    cursor: 'pointer',
+                    position: 'relative'
+                  }}
+                  title="Click to crop"
+                >
+                  <img 
+                    src={editItemModal.item.image_url || editItemModal.item.image || '/images/web-portfolio/bharatup.jpg'} 
+                    alt="thumbnail" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    background: 'rgba(0,0,0,0.7)',
+                    padding: '2px',
+                    textAlign: 'center',
+                    fontSize: '0.55rem',
+                    fontFamily: 'Panchang, sans-serif',
+                    color: '#ebd73f'
+                  }}>
+                    CROP
+                  </div>
+                </div>
+                <input 
+                  type="text" 
+                  value={editItemModal.item.image_url || editItemModal.item.image || ''} 
+                  onChange={(e) => setEditItemModal({
+                    ...editItemModal,
+                    item: { ...editItemModal.item, image_url: e.target.value, image: e.target.value }
+                  })}
+                  placeholder="/images/web-portfolio/... or https://..."
+                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.8rem' }}
+                />
+              </div>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
@@ -1163,6 +1500,15 @@ export default function WebPortfolioManager() {
           </div>
         </div>
       )}
+
+      {/* Interactive Screenshot Cropper & Framing Modal */}
+      <ImageCropperModal
+        isOpen={cropperModal.isOpen}
+        imageSrc={cropperModal.imageSrc}
+        onClose={() => setCropperModal(prev => ({ ...prev, isOpen: false }))}
+        onSave={handleSaveCroppedImage}
+        projectTitle={cropperModal.projectTitle}
+      />
     </div>
   );
 }
