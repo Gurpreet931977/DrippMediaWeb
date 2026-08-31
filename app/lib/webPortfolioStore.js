@@ -199,6 +199,7 @@ export async function addWebPortfolioItem(itemData) {
     video_url: itemData.video_url || itemData.video || '',
     color: itemData.color || '#ebd73f',
     stats: itemData.stats || [],
+    pillars: itemData.pillars || [],
     techStack: Array.isArray(itemData.tech_stack || itemData.techStack) ? (itemData.tech_stack || itemData.techStack) : [],
     tech_stack: Array.isArray(itemData.tech_stack || itemData.techStack) ? (itemData.tech_stack || itemData.techStack) : [],
     challenge: itemData.case_study_challenge || itemData.challenge || '',

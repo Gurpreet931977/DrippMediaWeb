@@ -57,6 +57,11 @@ export default function WebPortfolioManager() {
       { label: 'Active Reach', value: '25K+' },
       { label: 'Page Load Speed', value: '0.4s' }
     ],
+    pillars: [
+      { title: '01 / SUB-SECOND TTFB', desc: 'Edge-rendered architecture ensuring instant delivery across global nodes.' },
+      { title: '02 / KINETIC MOTION', desc: '60 FPS physics-based micro-interactions tailored for high conversion.' },
+      { title: '03 / SCALABLE EDGE', desc: 'Zero cold-start compute with automated cloud cache invalidation.' }
+    ],
     case_study_challenge: '',
     case_study_solution: '',
     orlo_notes: ''
@@ -247,10 +252,11 @@ export default function WebPortfolioManager() {
           category: aiData.category || prev.category,
           case_study_challenge: aiData.challenge || prev.case_study_challenge,
           case_study_solution: aiData.solution || prev.case_study_solution,
+          pillars: Array.isArray(aiData.pillars) && aiData.pillars.length > 0 ? aiData.pillars : prev.pillars,
           tech_stack: Array.isArray(aiData.techStack) && aiData.techStack.length > 0 ? aiData.techStack : prev.tech_stack,
           stats: Array.isArray(aiData.stats) && aiData.stats.length > 0 ? aiData.stats : prev.stats
         }));
-        showNotification('success', '✦ Orlo AI Case Study synthesized successfully!');
+        showNotification('success', 'Orlo AI Case Study synthesized successfully');
       } else {
         throw new Error('AI generation failed');
       }
@@ -258,6 +264,72 @@ export default function WebPortfolioManager() {
       showNotification('error', 'Orlo AI generation failed: ' + e.message);
     } finally {
       setIsGeneratingAI(false);
+    }
+  };
+
+  // Stats helpers
+  const handleStatChange = (idx, field, val, isEdit = false) => {
+    if (isEdit) {
+      const updated = [...(editItemModal.item.stats || [])];
+      updated[idx] = { ...updated[idx], [field]: val };
+      setEditItemModal(prev => ({ ...prev, item: { ...prev.item, stats: updated } }));
+    } else {
+      const updated = [...formData.stats];
+      updated[idx] = { ...updated[idx], [field]: val };
+      setFormData(prev => ({ ...prev, stats: updated }));
+    }
+  };
+
+  const handleAddStat = (isEdit = false) => {
+    if (isEdit) {
+      setEditItemModal(prev => ({
+        ...prev,
+        item: {
+          ...prev.item,
+          stats: [...(prev.item.stats || []), { label: 'Metric Name', value: '100%' }]
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        stats: [...prev.stats, { label: 'Metric Name', value: '100%' }]
+      }));
+    }
+  };
+
+  const handleRemoveStat = (idx, isEdit = false) => {
+    if (isEdit) {
+      setEditItemModal(prev => ({
+        ...prev,
+        item: {
+          ...prev.item,
+          stats: prev.item.stats.filter((_, i) => i !== idx)
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        stats: prev.stats.filter((_, i) => i !== idx)
+      }));
+    }
+  };
+
+  // Pillar helpers
+  const handlePillarChange = (idx, field, val, isEdit = false) => {
+    if (isEdit) {
+      const currentPillars = Array.isArray(editItemModal.item.pillars) && editItemModal.item.pillars.length > 0
+        ? [...editItemModal.item.pillars]
+        : [
+            { title: '01 / SUB-SECOND TTFB', desc: 'Edge-rendered architecture ensuring instant delivery across global nodes.' },
+            { title: '02 / KINETIC MOTION', desc: '60 FPS physics-based micro-interactions tailored for high conversion.' },
+            { title: '03 / SCALABLE EDGE', desc: 'Zero cold-start compute with automated cloud cache invalidation.' }
+          ];
+      currentPillars[idx] = { ...currentPillars[idx], [field]: val };
+      setEditItemModal(prev => ({ ...prev, item: { ...prev.item, pillars: currentPillars } }));
+    } else {
+      const updated = [...formData.pillars];
+      updated[idx] = { ...updated[idx], [field]: val };
+      setFormData(prev => ({ ...prev, pillars: updated }));
     }
   };
 
@@ -269,7 +341,7 @@ export default function WebPortfolioManager() {
     }
 
     setIsCapturingScreenshot(true);
-    showNotification('success', '📸 Capturing high-resolution screenshot from live website...');
+    showNotification('success', 'Capturing high-resolution screenshot from live website...');
 
     try {
       const res = await fetch('/api/admin/portfolio/capture-screenshot', {
@@ -285,7 +357,7 @@ export default function WebPortfolioManager() {
         const data = await res.json();
         if (data.image_url) {
           setTargetForm(prev => ({ ...prev, image_url: data.image_url }));
-          showNotification('success', '📸 Live screenshot captured! Opening Cropper to adjust frame...');
+          showNotification('success', 'Live screenshot captured! Opening Cropper to adjust frame...');
           setCropperModal({
             isOpen: true,
             imageSrc: data.image_url,
@@ -354,6 +426,7 @@ export default function WebPortfolioManager() {
         video: formData.video_url || '',
         tech_stack: formData.tech_stack,
         stats: formData.stats,
+        pillars: formData.pillars,
         case_study_challenge: formData.case_study_challenge || '',
         case_study_solution: formData.case_study_solution || '',
         is_visible: true,
@@ -1139,7 +1212,7 @@ export default function WebPortfolioManager() {
                 }}
               />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
                   <label style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.75rem', fontFamily: 'Panchang, sans-serif', display: 'block', marginBottom: '6px' }}>
                     THE CHALLENGE
@@ -1182,6 +1255,79 @@ export default function WebPortfolioManager() {
                       resize: 'vertical'
                     }}
                   />
+                </div>
+              </div>
+
+              {/* 3 Architectural Execution Pillars */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.75rem', fontFamily: 'Panchang, sans-serif', display: 'block', marginBottom: '8px' }}>
+                  ✦ 3 ARCHITECTURAL EXECUTION PILLARS
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                  {(formData.pillars || []).map((pillar, pIdx) => (
+                    <div key={pIdx} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '12px' }}>
+                      <input
+                        type="text"
+                        value={pillar.title}
+                        onChange={(e) => handlePillarChange(pIdx, 'title', e.target.value, false)}
+                        placeholder={`0${pIdx + 1} / TITLE`}
+                        style={{ width: '100%', background: '#111116', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '6px', padding: '6px 8px', color: '#ebd73f', fontSize: '0.72rem', fontFamily: 'Panchang, sans-serif', fontWeight: 700, marginBottom: '6px' }}
+                      />
+                      <textarea
+                        rows="2"
+                        value={pillar.desc}
+                        onChange={(e) => handlePillarChange(pIdx, 'desc', e.target.value, false)}
+                        placeholder="Pillar description..."
+                        style={{ width: '100%', background: '#111116', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '6px 8px', color: '#fff', fontSize: '0.75rem', resize: 'vertical' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Performance & Vitals Matrix (Stats) */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.75rem', fontFamily: 'Panchang, sans-serif' }}>
+                    ✦ PERFORMANCE & VITALS MATRIX
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => handleAddStat(false)}
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '4px 10px', color: '#fff', fontSize: '0.72rem', cursor: 'pointer' }}
+                  >
+                    + Add Metric
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+                  {(formData.stats || []).map((st, sIdx) => (
+                    <div key={sIdx} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px' }}>
+                      <input
+                        type="text"
+                        value={st.value}
+                        onChange={(e) => handleStatChange(sIdx, 'value', e.target.value, false)}
+                        placeholder="99/100 or 0.4s"
+                        style={{ width: '100%', background: '#111116', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '6px', padding: '6px 8px', color: '#ebd73f', fontSize: '0.85rem', fontWeight: 800, fontFamily: 'Panchang, sans-serif', marginBottom: '6px' }}
+                      />
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={st.label}
+                          onChange={(e) => handleStatChange(sIdx, 'label', e.target.value, false)}
+                          placeholder="Metric Label"
+                          style={{ flex: 1, background: '#111116', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '4px 8px', color: '#fff', fontSize: '0.75rem' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveStat(sIdx, false)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px' }}
+                          title="Delete metric"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -1375,7 +1521,29 @@ export default function WebPortfolioManager() {
                   {/* Actions */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <button
-                      onClick={() => setEditItemModal({ show: true, item: { ...item, tech_stack: techList } })}
+                      onClick={() => {
+                        const techList = Array.isArray(item.tech_stack) ? item.tech_stack : (Array.isArray(item.techStack) ? item.techStack : []);
+                        const statsList = Array.isArray(item.stats) && item.stats.length > 0 ? item.stats : [
+                          { label: 'Lighthouse Score', value: '99/100' },
+                          { label: 'Active Reach', value: '25K+' },
+                          { label: 'Page Load Speed', value: '0.4s' }
+                        ];
+                        const pillarsList = Array.isArray(item.pillars) && item.pillars.length > 0 ? item.pillars : [
+                          { title: '01 / SUB-SECOND TTFB', desc: 'Edge-rendered architecture ensuring instant delivery across global nodes.' },
+                          { title: '02 / KINETIC MOTION', desc: '60 FPS physics-based micro-interactions tailored for high conversion.' },
+                          { title: '03 / SCALABLE EDGE', desc: 'Zero cold-start compute with automated cloud cache invalidation.' }
+                        ];
+                        setEditItemModal({
+                          show: true,
+                          item: {
+                            ...item,
+                            tech_stack: techList,
+                            stats: statsList,
+                            pillars: pillarsList,
+                            display_url: item.display_url || item.displayUrl || (item.url ? item.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : '')
+                          }
+                        });
+                      }}
                       style={{
                         background: 'rgba(235, 215, 63, 0.1)',
                         border: '1px solid rgba(235, 215, 63, 0.3)',
@@ -1426,12 +1594,12 @@ export default function WebPortfolioManager() {
         )}
       </div>
 
-      {/* Edit Web Project Modal */}
+      {/* Edit Web Project Modal (Full Capabilities) */}
       {editItemModal.show && editItemModal.item && (
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.8)',
+          background: 'rgba(0,0,0,0.85)',
           backdropFilter: 'blur(15px)',
           zIndex: 9999,
           display: 'flex',
@@ -1444,16 +1612,21 @@ export default function WebPortfolioManager() {
             border: '1px solid rgba(255,255,255,0.15)',
             borderRadius: '20px',
             width: '100%',
-            maxWidth: '750px',
+            maxWidth: '850px',
             maxHeight: '90vh',
             overflowY: 'auto',
-            padding: '35px',
-            boxShadow: '0 25px 70px rgba(0,0,0,0.9)'
+            padding: '32px',
+            boxShadow: '0 25px 70px rgba(0,0,0,0.95)'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-              <h3 style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.3rem', color: '#fff', margin: 0 }}>
-                Edit Web Build: {editItemModal.item.title}
-              </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
+              <div>
+                <h3 style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.25rem', color: '#fff', margin: '0 0 4px 0' }}>
+                  Edit Web Build: {editItemModal.item.title}
+                </h3>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
+                  Modify core metadata, media assets, Orlo AI case study blueprint, pillars, and metrics.
+                </span>
+              </div>
               <button 
                 onClick={() => setEditItemModal({ show: false, item: null })}
                 style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem' }}
@@ -1462,9 +1635,10 @@ export default function WebPortfolioManager() {
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            {/* Row 1: Name & URL */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
               <div>
-                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px' }}>Project Name</label>
+                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>Project Name *</label>
                 <input 
                   type="text" 
                   value={editItemModal.item.title || ''} 
@@ -1472,39 +1646,92 @@ export default function WebPortfolioManager() {
                     ...editItemModal,
                     item: { ...editItemModal.item, title: e.target.value }
                   })}
-                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff' }}
+                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
                 />
               </div>
               <div>
-                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px' }}>Live URL</label>
-                <input 
-                  type="text" 
-                  value={editItemModal.item.url || ''} 
-                  onChange={(e) => setEditItemModal({
-                    ...editItemModal,
-                    item: { ...editItemModal.item, url: e.target.value }
-                  })}
-                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff' }}
-                />
+                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>Live Website URL *</label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input 
+                    type="text" 
+                    value={editItemModal.item.url || ''} 
+                    onChange={(e) => setEditItemModal({
+                      ...editItemModal,
+                      item: { ...editItemModal.item, url: e.target.value }
+                    })}
+                    style={{ flex: 1, background: '#181820', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAutoCapture(editItemModal.item, (updater) => {
+                      const updated = typeof updater === 'function' ? updater(editItemModal.item) : updater;
+                      setEditItemModal({ ...editItemModal, item: updated });
+                    })}
+                    disabled={isCapturingScreenshot}
+                    style={{
+                      background: 'rgba(235, 215, 63, 0.15)',
+                      border: '1px solid rgba(235, 215, 63, 0.3)',
+                      borderRadius: '8px',
+                      padding: '0 12px',
+                      color: '#ebd73f',
+                      fontSize: '0.72rem',
+                      cursor: 'pointer'
+                    }}
+                    title="Auto-capture screenshot"
+                  >
+                    <Camera size={14} />
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px' }}>Tagline</label>
-              <input 
-                type="text" 
-                value={editItemModal.item.tagline || ''} 
-                onChange={(e) => setEditItemModal({
-                  ...editItemModal,
-                  item: { ...editItemModal.item, tagline: e.target.value }
-                })}
-                style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff' }}
-              />
+            {/* Row 2: Tagline, Category, Display URL Capsule */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 0.9fr', gap: '14px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>Tagline</label>
+                <input 
+                  type="text" 
+                  value={editItemModal.item.tagline || ''} 
+                  onChange={(e) => setEditItemModal({
+                    ...editItemModal,
+                    item: { ...editItemModal.item, tagline: e.target.value }
+                  })}
+                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>Category</label>
+                <select
+                  value={editItemModal.item.category || allCategories[0]}
+                  onChange={(e) => setEditItemModal({
+                    ...editItemModal,
+                    item: { ...editItemModal.item, category: e.target.value }
+                  })}
+                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
+                >
+                  {allCategories.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>Display URL Capsule</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. bharatup.online"
+                  value={editItemModal.item.display_url || editItemModal.item.displayUrl || ''} 
+                  onChange={(e) => setEditItemModal({
+                    ...editItemModal,
+                    item: { ...editItemModal.item, display_url: e.target.value, displayUrl: e.target.value }
+                  })}
+                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
+                />
+              </div>
             </div>
 
             {/* Screenshot Image Section in Edit Modal */}
             <div style={{
-              marginBottom: '20px',
+              marginBottom: '16px',
               background: '#14141c',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '14px',
@@ -1560,7 +1787,7 @@ export default function WebPortfolioManager() {
                         gap: '5px'
                       }}
                     >
-                      <Crop size={13} /> ✦ Open Cropper
+                      <Crop size={13} /> Open Cropper
                     </button>
                   )}
 
@@ -1634,7 +1861,7 @@ export default function WebPortfolioManager() {
 
             {/* Video / Screen Recording Section in Edit Modal */}
             <div style={{
-              marginBottom: '20px',
+              marginBottom: '16px',
               background: '#14141c',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '14px',
@@ -1724,7 +1951,7 @@ export default function WebPortfolioManager() {
                       fontFamily: 'Panchang, sans-serif',
                       color: '#ebd73f'
                     }}>
-                      ▶ LOOPING
+                      LOOPING
                     </div>
                   </div>
                   <input 
@@ -1757,11 +1984,80 @@ export default function WebPortfolioManager() {
               )}
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <label style={{ fontSize: '0.8rem', color: '#ebd73f', fontFamily: 'Panchang, sans-serif' }}>
-                  ✦ ORLO AI CASE STUDY
-                </label>
+            {/* Tech Stack Tags Manager in Edit Modal */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ color: '#888', fontSize: '0.8rem', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>
+                Tech Stack Badges
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                {(editItemModal.item.tech_stack || []).map((tech, idx) => (
+                  <span 
+                    key={idx}
+                    style={{
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      borderRadius: '16px',
+                      padding: '3px 10px',
+                      color: '#fff',
+                      fontSize: '0.75rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    {tech}
+                    <button 
+                      type="button" 
+                      onClick={() => removeTechTag(tech, true)}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}
+                    >
+                      <X size={11} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input 
+                  type="text"
+                  placeholder="Add technology..."
+                  value={newTechInput}
+                  onChange={(e) => setNewTechInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTechTag(newTechInput, true); }}}
+                  style={{
+                    flex: 1,
+                    background: '#181820',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    color: '#fff',
+                    fontSize: '0.8rem'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => addTechTag(newTechInput, true)}
+                  style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', padding: '6px 12px', color: '#fff', fontSize: '0.75rem', cursor: 'pointer' }}
+                >
+                  + Add
+                </button>
+              </div>
+            </div>
+
+            {/* ORLO AI CASE STUDY SYNTHESIZER IN EDIT MODAL */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(15, 15, 22, 0.8) 100%)',
+              border: '1px solid rgba(235, 215, 63, 0.3)',
+              borderRadius: '16px',
+              padding: '18px',
+              marginBottom: '20px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Sparkles size={16} color="#ebd73f" />
+                  <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.8rem', fontWeight: 800, color: '#ebd73f' }}>
+                    ORLO AI CASE STUDY SYNTHESIZER
+                  </span>
+                </div>
                 <button
                   type="button"
                   onClick={() => handleGenerateOrloCaseStudy(editItemModal.item, (updater) => {
@@ -1770,40 +2066,132 @@ export default function WebPortfolioManager() {
                   })}
                   disabled={isGeneratingAI}
                   style={{
-                    background: 'rgba(235, 215, 63, 0.15)',
-                    border: '1px solid rgba(235, 215, 63, 0.3)',
-                    borderRadius: '12px',
-                    padding: '4px 12px',
-                    color: '#ebd73f',
-                    fontSize: '0.72rem',
-                    cursor: 'pointer'
+                    background: 'var(--brand-yellow, #ebd73f)',
+                    color: '#050505',
+                    border: 'none',
+                    borderRadius: '16px',
+                    padding: '6px 14px',
+                    fontFamily: 'Panchang, sans-serif',
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
                   }}
                 >
-                  <Sparkles size={12} /> {isGeneratingAI ? 'Regenerating...' : 'Regenerate with Orlo AI'}
+                  <Sparkles size={12} /> {isGeneratingAI ? 'Synthesizing...' : 'Regenerate with Orlo AI'}
                 </button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <textarea 
-                  rows="3" 
-                  placeholder="The Challenge..."
-                  value={editItemModal.item.case_study_challenge || editItemModal.item.challenge || ''} 
-                  onChange={(e) => setEditItemModal({
-                    ...editItemModal,
-                    item: { ...editItemModal.item, case_study_challenge: e.target.value, challenge: e.target.value }
-                  })}
-                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
-                />
-                <textarea 
-                  rows="3" 
-                  placeholder="The Solution & Architecture..."
-                  value={editItemModal.item.case_study_solution || editItemModal.item.solution || ''} 
-                  onChange={(e) => setEditItemModal({
-                    ...editItemModal,
-                    item: { ...editItemModal.item, case_study_solution: e.target.value, solution: e.target.value }
-                  })}
-                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label style={{ fontSize: '0.72rem', color: '#ebd73f', fontFamily: 'Panchang, sans-serif', display: 'block', marginBottom: '4px' }}>
+                    THE CHALLENGE
+                  </label>
+                  <textarea 
+                    rows="3" 
+                    placeholder="The Challenge..."
+                    value={editItemModal.item.case_study_challenge || editItemModal.item.challenge || ''} 
+                    onChange={(e) => setEditItemModal({
+                      ...editItemModal,
+                      item: { ...editItemModal.item, case_study_challenge: e.target.value, challenge: e.target.value }
+                    })}
+                    style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.82rem', resize: 'vertical' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.72rem', color: '#ebd73f', fontFamily: 'Panchang, sans-serif', display: 'block', marginBottom: '4px' }}>
+                    THE ARCHITECTURAL SOLUTION
+                  </label>
+                  <textarea 
+                    rows="3" 
+                    placeholder="The Solution & Architecture..."
+                    value={editItemModal.item.case_study_solution || editItemModal.item.solution || ''} 
+                    onChange={(e) => setEditItemModal({
+                      ...editItemModal,
+                      item: { ...editItemModal.item, case_study_solution: e.target.value, solution: e.target.value }
+                    })}
+                    style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.82rem', resize: 'vertical' }}
+                  />
+                </div>
+              </div>
+
+              {/* 3 Architectural Execution Pillars in Edit Modal */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.72rem', fontFamily: 'Panchang, sans-serif', display: 'block', marginBottom: '8px' }}>
+                  ✦ 3 ARCHITECTURAL EXECUTION PILLARS
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                  {(editItemModal.item.pillars || [
+                    { title: '01 / SUB-SECOND TTFB', desc: 'Edge-rendered architecture ensuring instant delivery across global nodes.' },
+                    { title: '02 / KINETIC MOTION', desc: '60 FPS physics-based micro-interactions tailored for high conversion.' },
+                    { title: '03 / SCALABLE EDGE', desc: 'Zero cold-start compute with automated cloud cache invalidation.' }
+                  ]).map((pillar, pIdx) => (
+                    <div key={pIdx} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '10px' }}>
+                      <input
+                        type="text"
+                        value={pillar.title}
+                        onChange={(e) => handlePillarChange(pIdx, 'title', e.target.value, true)}
+                        placeholder={`0${pIdx + 1} / TITLE`}
+                        style={{ width: '100%', background: '#111116', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '6px', padding: '5px 8px', color: '#ebd73f', fontSize: '0.7rem', fontFamily: 'Panchang, sans-serif', fontWeight: 700, marginBottom: '6px' }}
+                      />
+                      <textarea
+                        rows="2"
+                        value={pillar.desc}
+                        onChange={(e) => handlePillarChange(pIdx, 'desc', e.target.value, true)}
+                        placeholder="Pillar description..."
+                        style={{ width: '100%', background: '#111116', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '5px 8px', color: '#fff', fontSize: '0.72rem', resize: 'vertical' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Performance & Vitals Matrix (Stats) in Edit Modal */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.72rem', fontFamily: 'Panchang, sans-serif' }}>
+                    ✦ PERFORMANCE & VITALS MATRIX
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => handleAddStat(true)}
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', padding: '3px 8px', color: '#fff', fontSize: '0.7rem', cursor: 'pointer' }}
+                  >
+                    + Add Metric
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                  {(editItemModal.item.stats || []).map((st, sIdx) => (
+                    <div key={sIdx} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '8px' }}>
+                      <input
+                        type="text"
+                        value={st.value}
+                        onChange={(e) => handleStatChange(sIdx, 'value', e.target.value, true)}
+                        placeholder="99/100 or 0.4s"
+                        style={{ width: '100%', background: '#111116', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '6px', padding: '5px 8px', color: '#ebd73f', fontSize: '0.8rem', fontWeight: 800, fontFamily: 'Panchang, sans-serif', marginBottom: '5px' }}
+                      />
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={st.label}
+                          onChange={(e) => handleStatChange(sIdx, 'label', e.target.value, true)}
+                          placeholder="Metric Label"
+                          style={{ flex: 1, background: '#111116', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveStat(sIdx, true)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px' }}
+                          title="Delete metric"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 

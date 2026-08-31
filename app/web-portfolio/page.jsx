@@ -15,7 +15,7 @@ const DEFAULT_PROJECTS = [
     url: 'https://www.bharatup.online/',
     displayUrl: 'bharatup.online',
     image: '/images/web-portfolio/bharatup.jpg',
-    color: '#3b82f6',
+    color: '#ebd73f',
     stats: [
       { label: 'Lighthouse Score', value: '99/100' },
       { label: 'Active Reach', value: '25K+' },
@@ -35,7 +35,7 @@ const DEFAULT_PROJECTS = [
     url: 'https://www.pinakacareclinic.com/',
     displayUrl: 'pinakacareclinic.com',
     image: '/images/web-portfolio/pinakacare.jpg',
-    color: '#10b981',
+    color: '#ebd73f',
     stats: [
       { label: 'Booking Conversion', value: '+340%' },
       { label: 'Mobile Readiness', value: '100%' },
@@ -55,7 +55,7 @@ const DEFAULT_PROJECTS = [
     url: 'https://goatsociety.in/',
     displayUrl: 'goatsociety.in',
     image: '/images/web-portfolio/goatsociety.jpg',
-    color: '#f59e0b',
+    color: '#ebd73f',
     stats: [
       { label: 'Catalog Performance', value: '60 FPS' },
       { label: 'User Retention', value: '+220%' },
@@ -75,7 +75,7 @@ const DEFAULT_PROJECTS = [
     url: 'https://rasmlai.vercel.app/',
     displayUrl: 'rasmlai.vercel.app',
     image: '/images/web-portfolio/rasmlai.jpg',
-    color: '#8b5cf6',
+    color: '#ebd73f',
     stats: [
       { label: 'AI Response Latency', value: '12ms' },
       { label: 'Architecture', value: 'Edge AI' },
@@ -122,7 +122,7 @@ export default function Page() {
       .catch(() => {});
   }, []);
 
-  // Synthesize minimal coding & hacking terminal SFX (tactile mechanical clicks & cyber data packet chirps)
+  // Cinematic Hollywood Cyber Terminal & Hacking SFX Engine
   const playSound = (type = 'click') => {
     try {
       if (!audioCtxRef.current) {
@@ -136,94 +136,176 @@ export default function Page() {
       const now = ctx.currentTime;
 
       if (type === 'click') {
-        // Tactile Mechanical Terminal Keystroke / Cyber Tap
+        // Hollywood Tactical Cyber Keystroke (Mechanical noise transient + resonant saw chirp)
+        // 1. Noise transient for mechanical microswitch leaf contact
+        const noiseSize = Math.floor(ctx.sampleRate * 0.015);
+        const noiseBuf = ctx.createBuffer(1, noiseSize, ctx.sampleRate);
+        const noiseData = noiseBuf.getChannelData(0);
+        for (let i = 0; i < noiseSize; i++) {
+          noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (noiseSize * 0.3));
+        }
+        const noiseNode = ctx.createBufferSource();
+        noiseNode.buffer = noiseBuf;
+
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.setValueAtTime(3200, now);
+        noiseFilter.Q.setValueAtTime(4, now);
+
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.09, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.018);
+
+        noiseNode.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        noiseNode.start(now);
+
+        // 2. Resonant Cyber Stutter Pulse
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         const filter = ctx.createBiquadFilter();
 
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(1400, now);
-        osc.frequency.exponentialRampToValueAtTime(320, now + 0.035);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(2400, now);
+        osc.frequency.exponentialRampToValueAtTime(480, now + 0.032);
 
         filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(1800, now);
-        filter.Q.setValueAtTime(3, now);
+        filter.frequency.setValueAtTime(1900, now);
+        filter.Q.setValueAtTime(6, now);
 
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+        gain.gain.setValueAtTime(0.07, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.038);
 
         osc.connect(filter);
         filter.connect(gain);
         gain.connect(ctx.destination);
 
         osc.start(now);
-        osc.stop(now + 0.045);
+        osc.stop(now + 0.042);
       } else if (type === 'slide') {
-        // High-Speed Data Packet Stream / Buffer Shift Chirp
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        // High-Speed Fiber Optical Data Stream / Packet Shifter (FM Modulated)
+        const carrier = ctx.createOscillator();
+        const modulator = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const carrierGain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(750, now);
-        osc.frequency.exponentialRampToValueAtTime(1350, now + 0.03);
-        osc.frequency.exponentialRampToValueAtTime(450, now + 0.06);
+        modulator.type = 'sawtooth';
+        modulator.frequency.setValueAtTime(180, now);
+        modulator.frequency.exponentialRampToValueAtTime(40, now + 0.08);
 
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.065);
+        modGain.gain.setValueAtTime(600, now);
+        modGain.gain.exponentialRampToValueAtTime(50, now + 0.08);
 
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+        carrier.type = 'triangle';
+        carrier.frequency.setValueAtTime(950, now);
+        carrier.frequency.exponentialRampToValueAtTime(2200, now + 0.04);
+        carrier.frequency.exponentialRampToValueAtTime(520, now + 0.09);
 
-        osc.start(now);
-        osc.stop(now + 0.07);
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1600, now);
+        filter.Q.setValueAtTime(5, now);
+
+        carrierGain.gain.setValueAtTime(0.08, now);
+        carrierGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.095);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(filter);
+        filter.connect(carrierGain);
+        carrierGain.connect(ctx.destination);
+
+        modulator.start(now);
+        carrier.start(now);
+        modulator.stop(now + 0.1);
+        carrier.stop(now + 0.1);
       } else if (type === 'open') {
-        // Cyber Terminal Dossier Decrypt / Access Granted Sequence
+        // Hollywood Mainframe Terminal Decrypt & Access Granted Sequence
+        // 1. Rapid 3-burst micro-scan telemetry
+        const freqs = [1100, 1650, 2400];
+        freqs.forEach((freq, idx) => {
+          const t = now + idx * 0.022;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(freq, t);
+          osc.frequency.exponentialRampToValueAtTime(freq * 1.2, t + 0.015);
+          gain.gain.setValueAtTime(0.04, t);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.02);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.022);
+        });
+
+        // 2. High-Tech Authorization Chime (Dual harmonic sine burst)
+        const tChime = now + 0.075;
+        const oscChime1 = ctx.createOscillator();
+        const oscChime2 = ctx.createOscillator();
+        const gainChime = ctx.createGain();
+
+        oscChime1.type = 'sine';
+        oscChime1.frequency.setValueAtTime(1760, tChime);
+        oscChime1.frequency.exponentialRampToValueAtTime(1980, tChime + 0.18);
+
+        oscChime2.type = 'triangle';
+        oscChime2.frequency.setValueAtTime(3520, tChime);
+        oscChime2.frequency.exponentialRampToValueAtTime(3960, tChime + 0.18);
+
+        gainChime.gain.setValueAtTime(0.08, tChime);
+        gainChime.gain.exponentialRampToValueAtTime(0.0001, tChime + 0.22);
+
+        oscChime1.connect(gainChime);
+        oscChime2.connect(gainChime);
+        gainChime.connect(ctx.destination);
+
+        oscChime1.start(tChime);
+        oscChime2.start(tChime);
+        oscChime1.stop(tChime + 0.23);
+        oscChime2.stop(tChime + 0.23);
+      } else if (type === 'copy') {
+        // Holographic Data Injection / Telemetry Buffer Sync Pulse
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
-        const gain1 = ctx.createGain();
-        const gain2 = ctx.createGain();
+        const gain = ctx.createGain();
 
-        // Tone 1: Terminal handshake
-        osc1.type = 'triangle';
-        osc1.frequency.setValueAtTime(920, now);
-        osc1.frequency.exponentialRampToValueAtTime(1200, now + 0.04);
-        gain1.gain.setValueAtTime(0.06, now);
-        gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(1200, now);
+        osc1.frequency.exponentialRampToValueAtTime(2800, now + 0.06);
 
-        // Tone 2: Access confirmation pulse
         osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(1840, now + 0.03);
-        osc2.frequency.exponentialRampToValueAtTime(2400, now + 0.08);
-        gain2.gain.setValueAtTime(0, now);
-        gain2.gain.setValueAtTime(0.05, now + 0.03);
-        gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+        osc2.frequency.setValueAtTime(2400, now);
+        osc2.frequency.exponentialRampToValueAtTime(3600, now + 0.07);
 
-        osc1.connect(gain1);
-        gain1.connect(ctx.destination);
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.07, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
 
         osc1.start(now);
-        osc1.stop(now + 0.06);
-        osc2.start(now + 0.03);
+        osc2.start(now);
+        osc1.stop(now + 0.11);
         osc2.stop(now + 0.11);
-      } else if (type === 'copy') {
-        // ACK packet confirmation blip
+      } else if (type === 'hover') {
+        // Cyber Radar Lock-on Target Acquisition Ping
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(1600, now);
-        osc.frequency.setValueAtTime(2100, now + 0.04);
+        osc.frequency.setValueAtTime(2800, now);
+        osc.frequency.exponentialRampToValueAtTime(3400, now + 0.02);
 
-        gain.gain.setValueAtTime(0.06, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+        gain.gain.setValueAtTime(0.03, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
 
         osc.connect(gain);
         gain.connect(ctx.destination);
 
         osc.start(now);
-        osc.stop(now + 0.09);
+        osc.stop(now + 0.03);
       }
     } catch (e) {}
   };
@@ -1335,6 +1417,213 @@ export default function Page() {
           pointer-events: auto;
         }
 
+        /* Left Side High-End Client Conversion Beacon */
+        .drawer-conversion-hub {
+          position: absolute;
+          left: 4vw;
+          top: 50%;
+          transform: translateY(-46%) scale(0.96);
+          width: clamp(280px, 28vw, 380px);
+          background: rgba(10, 10, 16, 0.88);
+          backdrop-filter: blur(28px);
+          -webkit-backdrop-filter: blur(28px);
+          border: 1px solid rgba(235, 215, 63, 0.35);
+          border-radius: 20px;
+          padding: 28px 24px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(235, 215, 63, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+          opacity: 0;
+          pointer-events: none;
+          z-index: 2010;
+          transition: opacity 0.5s 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .case-study-drawer.open .drawer-conversion-hub {
+          opacity: 1;
+          transform: translateY(-50%) scale(1);
+          pointer-events: auto;
+        }
+
+        /* Sci-Fi Corner Brackets */
+        .hub-bracket {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          border-color: var(--brand-yellow);
+          border-style: solid;
+          opacity: 0.85;
+        }
+        .hub-bracket-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-top-left-radius: 6px; }
+        .hub-bracket-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; border-top-right-radius: 6px; }
+        .hub-bracket-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; border-bottom-left-radius: 6px; }
+        .hub-bracket-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-bottom-right-radius: 6px; }
+
+        .hub-eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(235, 215, 63, 0.12);
+          border: 1px solid rgba(235, 215, 63, 0.3);
+          border-radius: 20px;
+          padding: 4px 10px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.58rem;
+          font-weight: 800;
+          color: var(--brand-yellow);
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          margin-bottom: 14px;
+        }
+
+        .hub-pulse-star {
+          animation: beaconPulseStar 2.5s infinite ease-in-out;
+          color: var(--brand-yellow);
+        }
+
+        .hub-title {
+          font-family: 'Panchang', sans-serif;
+          font-size: 1.08rem;
+          font-weight: 800;
+          color: #ffffff;
+          line-height: 1.3;
+          margin: 0 0 10px 0;
+          letter-spacing: -0.3px;
+          text-transform: uppercase;
+        }
+
+        .hub-desc {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.82rem;
+          line-height: 1.5;
+          color: rgba(255, 255, 255, 0.75);
+          margin: 0 0 16px 0;
+        }
+
+        .hub-perks-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-bottom: 20px;
+          padding: 12px 14px;
+          background: rgba(0, 0, 0, 0.4);
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .hub-perk-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.76rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        .hub-perk-item .perk-bullet {
+          color: var(--brand-yellow);
+          font-size: 0.65rem;
+        }
+
+        /* High-Impact Interactive CTA Button */
+        .hub-cta-button {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          width: 100%;
+          background: var(--brand-yellow);
+          color: #050505;
+          padding: 13px 20px;
+          border-radius: 30px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.72rem;
+          font-weight: 800;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          text-decoration: none;
+          overflow: hidden;
+          box-shadow: 0 10px 30px rgba(235, 215, 63, 0.35), 0 4px 12px rgba(0, 0, 0, 0.5);
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          cursor: pointer;
+        }
+
+        .hub-cta-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 40px rgba(235, 215, 63, 0.55), 0 0 25px rgba(235, 215, 63, 0.8);
+          background: #ffe347;
+          color: #000;
+        }
+
+        .hub-cta-shimmer {
+          position: absolute;
+          top: 0;
+          left: -150%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+          transform: skewX(-25deg);
+          animation: beaconSweep 2.8s infinite ease-in-out;
+        }
+
+        .hub-cta-star {
+          font-size: 0.8rem;
+          transition: transform 0.3s ease;
+        }
+        .hub-cta-button:hover .hub-cta-star {
+          transform: rotate(45deg) scale(1.2);
+        }
+
+        .hub-cta-arrow {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: #050505;
+          color: var(--brand-yellow);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.3s ease;
+        }
+
+        .hub-cta-button:hover .hub-cta-arrow {
+          transform: translate(2px, -2px);
+        }
+
+        .hub-telemetry {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.52rem;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.5);
+          letter-spacing: 0.8px;
+          margin-top: 14px;
+          text-align: center;
+        }
+
+        .telemetry-live-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: var(--brand-yellow);
+          box-shadow: 0 0 8px var(--brand-yellow);
+          animation: pulseGlow 2s infinite ease-in-out;
+        }
+
+        @media (max-width: 1024px) {
+          .drawer-conversion-hub {
+            display: none;
+          }
+          .drawer-content {
+            width: 100vw;
+            max-width: 100vw;
+            padding: 24px 20px;
+          }
+        }
+
         .drawer-content {
           width: 62vw;
           max-width: 900px;
@@ -1397,27 +1686,71 @@ export default function Page() {
           margin-bottom: 20px;
         }
 
+        /* High-End Cyber Animated Close Button */
         .drawer-close-btn {
+          position: relative;
           display: flex;
           align-items: center;
-          gap: 7px;
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.16);
+          gap: 9px;
+          background: rgba(18, 18, 24, 0.85);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.18);
           color: #ffffff;
-          padding: 8px 16px;
+          padding: 8px 18px;
           border-radius: 30px;
           font-family: 'Panchang', sans-serif;
           font-size: 0.65rem;
-          font-weight: 700;
+          font-weight: 800;
+          letter-spacing: 1.5px;
           cursor: pointer;
-          transition: all 0.25s ease;
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
         }
+
         .drawer-close-btn:hover {
           background: var(--brand-yellow);
           color: #050505;
           border-color: var(--brand-yellow);
-          transform: scale(1.04);
-          box-shadow: 0 0 20px rgba(235, 215, 63, 0.4);
+          transform: translateY(-2px) scale(1.04);
+          box-shadow: 0 0 25px rgba(235, 215, 63, 0.5), 0 8px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .drawer-close-btn:active {
+          transform: translateY(0) scale(0.97);
+        }
+
+        .close-icon-wrap {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.1);
+          transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .drawer-close-btn:hover .close-icon-wrap {
+          transform: rotate(90deg) scale(1.15);
+          background: #050505;
+          color: var(--brand-yellow);
+        }
+
+        .close-btn-shimmer {
+          position: absolute;
+          top: 0;
+          left: -150%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+          transform: skewX(-25deg);
+          transition: left 0.6s ease;
+        }
+
+        .drawer-close-btn:hover .close-btn-shimmer {
+          left: 150%;
         }
 
         /* Interactive Case Study Tab Navigation */
@@ -1461,37 +1794,90 @@ export default function Page() {
           box-shadow: 0 4px 20px rgba(235, 215, 63, 0.35);
         }
 
-        /* Narrative Blueprint Cards */
+        /* High-Tech Editorial Monograph Cards */
         .blueprint-card {
-          background: rgba(15, 15, 22, 0.75);
+          background: rgba(14, 14, 20, 0.85);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 18px;
-          padding: 22px 26px;
+          padding: 24px 28px;
           margin-bottom: 18px;
           position: relative;
           overflow: hidden;
-          transition: all 0.3s ease;
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
+
         .blueprint-card:hover {
-          border-color: rgba(235, 215, 63, 0.35);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+          border-color: rgba(235, 215, 63, 0.45);
+          transform: translateY(-2px);
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 25px rgba(235, 215, 63, 0.08);
         }
 
         .blueprint-card.highlight {
-          background: linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(15, 15, 22, 0.9) 100%);
+          background: linear-gradient(135deg, rgba(235, 215, 63, 0.06) 0%, rgba(12, 12, 18, 0.95) 100%);
           border-color: rgba(235, 215, 63, 0.35);
         }
 
-        .card-header-badge {
+        /* Subtle Corner Accent Lines on Blueprint Cards */
+        .card-corner-reticle {
+          position: absolute;
+          width: 8px;
+          height: 8px;
+          border-color: var(--brand-yellow);
+          border-style: solid;
+          opacity: 0.7;
+          pointer-events: none;
+        }
+        .card-reticle-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-top-left-radius: 4px; }
+        .card-reticle-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-bottom-right-radius: 4px; }
+
+        /* Modern Monograph Badge */
+        .monograph-badge {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 20px;
+          padding: 4px 12px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.62rem;
+          font-size: 0.58rem;
           font-weight: 800;
           letter-spacing: 1.5px;
           text-transform: uppercase;
-          margin-bottom: 10px;
+          color: #ffffff;
+          margin-bottom: 14px;
+        }
+
+        .monograph-badge.highlight {
+          background: rgba(235, 215, 63, 0.12);
+          border-color: rgba(235, 215, 63, 0.4);
+          color: var(--brand-yellow);
+        }
+
+        .monograph-badge .badge-spark {
+          color: var(--brand-yellow);
+          font-size: 0.65rem;
+        }
+
+        .monograph-badge .badge-index {
+          font-size: 0.52rem;
+          padding: 1px 6px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          color: var(--brand-yellow);
+          margin-left: 2px;
+        }
+
+        .blueprint-quote-text {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 1.02rem;
+          line-height: 1.65;
+          color: #ffffff;
+          margin: 0;
+          font-weight: 500;
+          letter-spacing: -0.2px;
         }
 
         /* Interactive Stats Matrix */
@@ -1503,7 +1889,7 @@ export default function Page() {
         }
 
         .stat-metric-box {
-          background: rgba(15, 15, 22, 0.85);
+          background: rgba(14, 14, 20, 0.85);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 18px;
           padding: 22px;
@@ -1520,15 +1906,16 @@ export default function Page() {
           font-family: 'Panchang', sans-serif;
           font-size: 1.9rem;
           font-weight: 800;
-          color: #ffffff;
+          color: var(--brand-yellow);
           line-height: 1.1;
           margin-bottom: 6px;
+          text-shadow: 0 0 18px rgba(235, 215, 63, 0.3);
         }
 
         .stat-metric-label {
           font-family: 'Clash Display', sans-serif;
           font-size: 0.82rem;
-          color: rgba(255, 255, 255, 0.65);
+          color: rgba(255, 255, 255, 0.75);
         }
 
         /* Pillars 3-Column Grid */
@@ -1536,31 +1923,39 @@ export default function Page() {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
           gap: 14px;
-          margin-top: 18px;
+          margin-top: 20px;
         }
 
         .pillar-card {
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.09);
           border-radius: 14px;
           padding: 16px;
           transition: all 0.25s ease;
+          position: relative;
+          overflow: hidden;
         }
+
         .pillar-card:hover {
           border-color: var(--brand-yellow);
           background: rgba(235, 215, 63, 0.06);
+          transform: translateY(-2px);
         }
+
         .pillar-title {
           font-family: 'Panchang', sans-serif;
           font-size: 0.68rem;
           font-weight: 700;
           color: var(--brand-yellow);
           margin-bottom: 6px;
+          letter-spacing: 0.5px;
         }
+
         .pillar-desc {
-          font-size: 0.78rem;
-          color: rgba(255, 255, 255, 0.75);
-          line-height: 1.4;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.8rem;
+          color: rgba(255, 255, 255, 0.8);
+          line-height: 1.5;
         }
 
         .btn-copy-blueprint {
@@ -1625,526 +2020,620 @@ export default function Page() {
             display: none;
           }
         }
+
+        /* Gen-Z Mode: Strict All-Lowercase Aesthetic & Web Slang */
+        .genz-mode,
+        .genz-mode * {
+          text-transform: lowercase !important;
+        }
       `}} />
 
-      {/* Custom Cursor */}
-      <div className="cursor" id="cursor" />
+      <div className={`web-portfolio-wrapper ${isGenz ? 'genz-mode' : ''}`}>
+        {/* Custom Cursor */}
+        <div className="cursor" id="cursor" />
 
-      {/* Ambient Visual Grid & Glow */}
-      <div className="bg-grid" />
-      <div className="ambient-glow-top" />
+        {/* Ambient Visual Grid & Glow */}
+        <div className="bg-grid" />
+        <div className="ambient-glow-top" />
 
-      {/* Navigation Back to Home */}
-      <a href="/" className="nav-back" title="Back to Headquarters">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-      </a>
+        {/* Navigation Back to Home */}
+        <a href="/" className="nav-back" title="Back to Headquarters">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </a>
 
-      {/* High-End Editorial Header Info (Generous space from cards) */}
-      <div className="portfolio-header">
-        <div className="header-kicker">{isGenz ? 'flagship production' : 'Bespoke Production'}</div>
-        <h1>{isGenz ? 'web builds' : 'Web Portfolio'}</h1>
-        <p>{isGenz ? 'interactive digital experiences' : 'Interactive Experiences'}</p>
-      </div>
-
-      {/* Floating Minimal Side Arrows */}
-      <button className="slider-nav-btn nav-prev-btn" onClick={prevCard} title="Previous Web Build (←)">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-      </button>
-      <button className="slider-nav-btn nav-next-btn" onClick={nextCard} title="Next Web Build (→)">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      </button>
-
-      {/* Unified Single Bottom Minimal HUD */}
-      <div className="slider-bottom-hud" ref={hudRef}>
-        <span className="hud-archive-badge">✦ CURATED ARCHIVE</span>
-        <span className="hud-archive-text">Hand-picked public builds</span>
-        <div className="hud-divider" />
-        <div className="hud-dots" ref={dotsTrackRef} title="Click any dot to jump">
-          {projects.map((_, i) => (
-            <div 
-              key={i} 
-              className={`hud-dot ${activeProjectIdx === i ? 'active' : ''}`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                scrollToCard(i);
-              }}
-              title={`Jump to build 0${i + 1}`}
-            />
-          ))}
+        {/* High-End Editorial Header Info (Generous space from cards) */}
+        <div className="portfolio-header">
+          <div className="header-kicker">{isGenz ? '// flagship web drops' : '// Bespoke Production'}</div>
+          <h1>{isGenz ? 'web portfolio' : 'Web Portfolio'}</h1>
+          <p>{isGenz ? 'zero mid websites • engineered to convert' : 'Interactive Experiences'}</p>
         </div>
-        <div className="hud-counter">
-          {(activeProjectIdx + 1).toString().padStart(2, '0')} / {projects.length.toString().padStart(2, '0')}
+
+        {/* Floating Minimal Side Arrows */}
+        <button 
+          className="slider-nav-btn nav-prev-btn" 
+          onClick={prevCard} 
+          onMouseEnter={() => playSound('hover')}
+          title="Previous Web Build (←)"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <button 
+          className="slider-nav-btn nav-next-btn" 
+          onClick={nextCard} 
+          onMouseEnter={() => playSound('hover')}
+          title="Next Web Build (→)"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+
+        {/* Unified Single Bottom Minimal HUD */}
+        <div className="slider-bottom-hud" ref={hudRef}>
+          <span className="hud-archive-badge">{isGenz ? '✦ curated archive' : '✦ CURATED ARCHIVE'}</span>
+          <span className="hud-archive-text">{isGenz ? 'hand-picked fire builds' : 'Hand-picked public builds'}</span>
+          <div className="hud-divider" />
+          <div className="hud-dots" ref={dotsTrackRef} title="Click any dot to jump">
+            {projects.map((_, i) => (
+              <div 
+                key={i} 
+                className={`hud-dot ${activeProjectIdx === i ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  scrollToCard(i);
+                }}
+                title={`Jump to build 0${i + 1}`}
+              />
+            ))}
+          </div>
+          <div className="hud-counter">
+            {(activeProjectIdx + 1).toString().padStart(2, '0')} / {projects.length.toString().padStart(2, '0')}
+          </div>
         </div>
-      </div>
 
-      {/* Horizontal Carousel Track */}
-      <div id="pin-container">
-        <div className="slider-wrap">
-          {projects.map((proj, idx) => (
-            <div 
-              key={proj.id} 
-              className="web-card-chassis"
-              onClick={(e) => handleCardClick(proj, e)}
-              title={`Click to open ${proj.displayUrl} live site`}
-            >
-              {/* Corner Cyber Brackets */}
-              <div className="corner-bracket bracket-tl" />
-              <div className="corner-bracket bracket-tr" />
-              <div className="corner-bracket bracket-bl" />
-              <div className="corner-bracket bracket-br" />
+        {/* Horizontal Carousel Track */}
+        <div id="pin-container">
+          <div className="slider-wrap">
+            {projects.map((proj, idx) => (
+              <div 
+                key={proj.id} 
+                className="web-card-chassis"
+                onClick={(e) => handleCardClick(proj, e)}
+                title={`Click to open ${proj.displayUrl} live site`}
+              >
+                {/* Corner Cyber Brackets */}
+                <div className="corner-bracket bracket-tl" />
+                <div className="corner-bracket bracket-tr" />
+                <div className="corner-bracket bracket-bl" />
+                <div className="corner-bracket bracket-br" />
 
-              {/* Floating Cyber Telemetry Header */}
-              <div className="card-top-hud">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div className="hud-index-badge">
-                    <span className="hud-sparkle">✦</span>
-                    <span>{String(idx + 1).padStart(2, '0')} // ARCHIVE</span>
-                  </div>
-                  {(proj.video || proj.video_url) && (
-                    <div style={{
-                      background: 'rgba(235, 215, 63, 0.15)',
-                      border: '1px solid rgba(235, 215, 63, 0.35)',
-                      borderRadius: '20px',
-                      padding: '4px 10px',
-                      fontFamily: 'Panchang, sans-serif',
-                      fontSize: '0.55rem',
-                      fontWeight: 800,
-                      color: 'var(--brand-yellow)',
-                      letterSpacing: '1px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}>
-                      ▶ VIDEO LOOP
+                {/* Floating Cyber Telemetry Header */}
+                <div className="card-top-hud">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="hud-index-badge">
+                      <span className="hud-sparkle">✦</span>
+                      <span>{isGenz ? `0${idx + 1} // dropped build` : `${String(idx + 1).padStart(2, '0')} // ARCHIVE`}</span>
                     </div>
-                  )}
-                </div>
-
-                <div 
-                  className="hud-domain-capsule"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(proj.url, '_blank', 'noopener,noreferrer');
-                  }}
-                  title={`Launch https://${proj.displayUrl}`}
-                >
-                  <div className="domain-signal-wave" title="Live Edge Transmission">
-                    <span className="signal-bar" />
-                    <span className="signal-bar" />
-                    <span className="signal-bar" />
-                  </div>
-                  <span className="domain-text">{proj.displayUrl}</span>
-                  <svg className="domain-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="7" y1="17" x2="17" y2="7"></line>
-                    <polyline points="7 7 17 7 17 17"></polyline>
-                  </svg>
-                </div>
-              </div>
-
-              {/* Viewport Body with Real Website Screenshot or Looping Screen Recording */}
-              <div className="card-viewport-body">
-                <div className="screenshot-viewport">
-                  {proj.video || proj.video_url ? (
-                    <video 
-                      src={proj.video || proj.video_url}
-                      poster={proj.image || proj.image_url}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      preload="metadata"
-                      className="screenshot-media screenshot-video"
-                    />
-                  ) : (
-                    <img 
-                      src={proj.image || proj.image_url} 
-                      alt={`${proj.title} Website Screenshot`} 
-                      className="screenshot-media screenshot-img"
-                      loading="lazy"
-                    />
-                  )}
-                  
-                  {/* High-End Cyber Target Hover Beacon */}
-                  <div className="hover-beacon-overlay">
-                    <div className="beacon-target-rig">
-                      {/* Holographic Radar Lock-on Reticle */}
-                      <div className="beacon-reticle">
-                        <span className="reticle-corner reticle-tl" />
-                        <span className="reticle-corner reticle-tr" />
-                        <span className="reticle-corner reticle-bl" />
-                        <span className="reticle-corner reticle-br" />
-                      </div>
-
-                      {/* Core Launch Badge Capsule */}
-                      <div className="hover-launch-badge">
-                        <div className="beacon-shimmer" />
-                        <span className="beacon-spark-icon">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z"></path>
-                          </svg>
-                        </span>
-                        <span>EXPLORE LIVE BUILD</span>
-                        <div className="beacon-arrow-bubble">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="7" y1="17" x2="17" y2="7"></line>
-                            <polyline points="7 7 17 7 17 17"></polyline>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Meta & Action Footer */}
-                <div className="card-footer-info">
-                  <div className="card-main-meta">
-                    <div className="card-category-badge">
-                      <span>✦</span>
-                      <span>{proj.category}</span>
-                    </div>
-                    <div className="card-headline">{proj.title}</div>
-                    <div className="card-tagline">{proj.tagline}</div>
-                    <div className="card-tech-pills">
-                      {proj.techStack.map((tech, tIdx) => (
-                        <span key={tIdx} className="tech-pill">{tech}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="card-action-group">
-                    <button 
-                      className="btn-case-study case-study-prevent" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        playSound('open');
-                        setSelectedCaseStudy(proj);
-                      }}
-                      title={`Open ${proj.title} Architectural Case Study`}
-                    >
-                      <span className="case-study-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z"></path>
-                        </svg>
-                      </span>
-                      <span>Case Study</span>
-                    </button>
-
-                    <div className="btn-launch-pill">
-                      <span>Launch Live</span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="7" y1="17" x2="17" y2="7"></line>
-                        <polyline points="7 7 17 7 17 17"></polyline>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Case Study Slide-out Drawer */}
-      <div 
-        className={`case-study-drawer ${selectedCaseStudy ? 'open' : ''}`}
-        onClick={() => setSelectedCaseStudy(null)}
-      >
-        <div className="drawer-content" onClick={(e) => e.stopPropagation()}>
-          {selectedCaseStudy && (
-            <>
-              <div>
-                {/* Header Action Bar */}
-                <div className="drawer-header-actions">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <div className="card-category-badge" style={{ margin: 0 }}>✦ {selectedCaseStudy.category}</div>
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      background: 'rgba(235, 215, 63, 0.12)',
-                      border: '1px solid rgba(235, 215, 63, 0.3)',
-                      borderRadius: '20px',
-                      padding: '4px 12px',
-                      fontFamily: 'Panchang, sans-serif',
-                      fontSize: '0.58rem',
-                      color: 'var(--brand-yellow)',
-                      fontWeight: 800,
-                      letterSpacing: '1px'
-                    }}>
-                      ✦ ORLO AI ARCHITECTURAL DOSSIER
-                    </div>
-                  </div>
-
-                  <button 
-                    className="drawer-close-btn" 
-                    onClick={() => setSelectedCaseStudy(null)}
-                    title="Close Case Study (Esc)"
-                  >
-                    <span>CLOSE</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Hero Visual Preview Banner */}
-                <div className="drawer-hero-banner">
-                  <img 
-                    src={selectedCaseStudy.image} 
-                    alt={selectedCaseStudy.title}
-                    className="drawer-hero-img"
-                  />
-                  <div className="drawer-hero-overlay">
-                    <div>
-                      <h2 style={{
-                        fontFamily: 'Panchang, sans-serif',
-                        fontSize: '2.2rem',
-                        fontWeight: 800,
-                        color: '#ffffff',
-                        textTransform: 'uppercase',
-                        lineHeight: 1.05,
-                        margin: '0 0 6px 0',
-                        letterSpacing: '-0.5px'
-                      }}>
-                        {selectedCaseStudy.title}
-                      </h2>
+                    {(proj.video || proj.video_url) && (
                       <div style={{
-                        fontFamily: 'Clash Display, sans-serif',
-                        fontSize: '0.95rem',
+                        background: 'rgba(235, 215, 63, 0.15)',
+                        border: '1px solid rgba(235, 215, 63, 0.35)',
+                        borderRadius: '20px',
+                        padding: '4px 10px',
+                        fontFamily: 'Panchang, sans-serif',
+                        fontSize: '0.55rem',
+                        fontWeight: 800,
                         color: 'var(--brand-yellow)',
-                        fontWeight: 600
+                        letterSpacing: '1px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
                       }}>
-                        {selectedCaseStudy.tagline}
+                        <span>{isGenz ? 'video loop' : 'VIDEO LOOP'}</span>
                       </div>
-                    </div>
+                    )}
+                  </div>
 
-                    <a 
-                      href={selectedCaseStudy.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="hud-domain-capsule"
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <div className="domain-signal-wave" title="Live Edge Transmission">
-                        <span className="signal-bar" />
-                        <span className="signal-bar" />
-                        <span className="signal-bar" />
-                      </div>
-                      <span className="domain-text">{selectedCaseStudy.displayUrl}</span>
-                      <svg className="domain-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="7" y1="17" x2="17" y2="7"></line>
-                        <polyline points="7 7 17 7 17 17"></polyline>
-                      </svg>
-                    </a>
+                  <div 
+                    className="hud-domain-capsule"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(proj.url, '_blank', 'noopener,noreferrer');
+                    }}
+                    title={`Launch https://${proj.displayUrl}`}
+                  >
+                    <div className="domain-signal-wave" title="Live Edge Transmission">
+                      <span className="signal-bar" />
+                      <span className="signal-bar" />
+                      <span className="signal-bar" />
+                    </div>
+                    <span className="domain-text">{proj.displayUrl}</span>
+                    <svg className="domain-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="7" y1="17" x2="17" y2="7"></line>
+                      <polyline points="7 7 17 7 17 17"></polyline>
+                    </svg>
                   </div>
                 </div>
 
-                {/* Interactive Case Study Tab Switcher */}
-                <div className="case-study-tab-bar">
-                  <button 
-                    className={`case-tab-btn ${caseStudyTab === 'blueprint' ? 'active' : ''}`}
-                    onClick={() => { playSound('click'); setCaseStudyTab('blueprint'); }}
-                  >
-                    <span>✦</span>
-                    <span>Blueprint & Narrative</span>
-                  </button>
-                  <button 
-                    className={`case-tab-btn ${caseStudyTab === 'metrics' ? 'active' : ''}`}
-                    onClick={() => { playSound('click'); setCaseStudyTab('metrics'); }}
-                  >
-                    <span>⚡</span>
-                    <span>Performance & Vitals</span>
-                  </button>
-                  <button 
-                    className={`case-tab-btn ${caseStudyTab === 'stack' ? 'active' : ''}`}
-                    onClick={() => { playSound('click'); setCaseStudyTab('stack'); }}
-                  >
-                    <span>🛠</span>
-                    <span>Tech Architecture</span>
-                  </button>
-                </div>
-
-                {/* TAB 1: BLUEPRINT & NARRATIVE */}
-                {caseStudyTab === 'blueprint' && (
-                  <div>
-                    {/* The Strategic Challenge Card */}
-                    <div className="blueprint-card">
-                      <div className="card-header-badge" style={{ color: '#ef4444' }}>
-                        <span>●</span>
-                        <span>THE STRATEGIC CHALLENGE // 01</span>
-                      </div>
-                      <p style={{
-                        fontSize: '0.98rem',
-                        lineHeight: 1.6,
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        margin: 0,
-                        fontFamily: 'Clash Display, sans-serif'
-                      }}>
-                        "{selectedCaseStudy.challenge}"
-                      </p>
-                    </div>
-
-                    {/* The Orlo Architectural Solution Card */}
-                    <div className="blueprint-card highlight">
-                      <div className="card-header-badge" style={{ color: 'var(--brand-yellow)' }}>
-                        <span>✦</span>
-                        <span>THE ORLO ARCHITECTURAL SOLUTION // 02</span>
-                      </div>
-                      <p style={{
-                        fontSize: '0.98rem',
-                        lineHeight: 1.6,
-                        color: 'rgba(255, 255, 255, 0.92)',
-                        margin: '0 0 16px 0',
-                        fontFamily: 'Clash Display, sans-serif'
-                      }}>
-                        {selectedCaseStudy.solution}
-                      </p>
-
-                      {/* 3 Pillars Grid */}
-                      <div className="pillars-grid">
-                        <div className="pillar-card">
-                          <div className="pillar-title">01 / SUB-SECOND TTFB</div>
-                          <div className="pillar-desc">Edge-rendered architecture ensuring instant delivery across global nodes.</div>
+                {/* Viewport Body with Real Website Screenshot or Looping Screen Recording */}
+                <div className="card-viewport-body">
+                  <div className="screenshot-viewport">
+                    {proj.video || proj.video_url ? (
+                      <video 
+                        src={proj.video || proj.video_url}
+                        poster={proj.image || proj.image_url}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="screenshot-media screenshot-video"
+                      />
+                    ) : (
+                      <img 
+                        src={proj.image || proj.image_url} 
+                        alt={`${proj.title} Website Screenshot`} 
+                        className="screenshot-media screenshot-img"
+                        loading="lazy"
+                      />
+                    )}
+                    
+                    {/* High-End Cyber Target Hover Beacon */}
+                    <div className="hover-beacon-overlay">
+                      <div className="beacon-target-rig">
+                        {/* Holographic Radar Lock-on Reticle */}
+                        <div className="beacon-reticle">
+                          <span className="reticle-corner reticle-tl" />
+                          <span className="reticle-corner reticle-tr" />
+                          <span className="reticle-corner reticle-bl" />
+                          <span className="reticle-corner reticle-br" />
                         </div>
-                        <div className="pillar-card">
-                          <div className="pillar-title">02 / KINETIC MOTION</div>
-                          <div className="pillar-desc">60 FPS physics-based micro-interactions tailored for high conversion.</div>
-                        </div>
-                        <div className="pillar-card">
-                          <div className="pillar-title">03 / SCALABLE EDGE</div>
-                          <div className="pillar-desc">Zero cold-start compute with automated cloud cache invalidation.</div>
+
+                        {/* Core Launch Badge Capsule */}
+                        <div 
+                          className="hover-launch-badge"
+                          onMouseEnter={() => playSound('hover')}
+                        >
+                          <div className="beacon-shimmer" />
+                          <span className="beacon-spark-icon">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z"></path>
+                            </svg>
+                          </span>
+                          <span>{isGenz ? 'explore live site' : 'EXPLORE LIVE BUILD'}</span>
+                          <div className="beacon-arrow-bubble">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="7" y1="17" x2="17" y2="7"></line>
+                              <polyline points="7 7 17 7 17 17"></polyline>
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
 
-                {/* TAB 2: PERFORMANCE & METRICS */}
-                {caseStudyTab === 'metrics' && (
-                  <div>
-                    <div className="stats-matrix-grid">
-                      {Array.isArray(selectedCaseStudy.stats) && selectedCaseStudy.stats.length > 0 ? (
-                        selectedCaseStudy.stats.map((st, sIdx) => (
-                          <div key={sIdx} className="stat-metric-box">
-                            <div className="stat-metric-value" style={{ color: 'var(--brand-yellow)' }}>
-                              {st.value}
-                            </div>
-                            <div className="stat-metric-label">{st.label}</div>
-                          </div>
-                        ))
-                      ) : (
-                        <>
-                          <div className="stat-metric-box">
-                            <div className="stat-metric-value" style={{ color: '#10b981' }}>99/100</div>
-                            <div className="stat-metric-label">Lighthouse Performance</div>
-                          </div>
-                          <div className="stat-metric-box">
-                            <div className="stat-metric-value" style={{ color: 'var(--brand-yellow)' }}>0.35s</div>
-                            <div className="stat-metric-label">Time to Interactive (TTI)</div>
-                          </div>
-                          <div className="stat-metric-box">
-                            <div className="stat-metric-value" style={{ color: '#38bdf8' }}>100%</div>
-                            <div className="stat-metric-label">SEO & Best Practices</div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    <div className="blueprint-card">
-                      <div className="card-header-badge" style={{ color: '#10b981' }}>
-                        <span>●</span>
-                        <span>INFRASTRUCTURE & RELIABILITY SCORE</span>
-                      </div>
-                      <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.8)', lineHeight: 1.5, margin: 0 }}>
-                        Engineered for zero layout shift (CLS: 0.00), instant First Contentful Paint (&lt; 0.4s), and sub-millisecond edge API routing with 99.99% uptime SLA.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 3: TECH ARCHITECTURE */}
-                {caseStudyTab === 'stack' && (
-                  <div>
-                    <div className="blueprint-card">
-                      <div className="card-header-badge" style={{ color: 'var(--brand-yellow)' }}>
+                  {/* Card Meta & Action Footer */}
+                  <div className="card-footer-info">
+                    <div className="card-main-meta">
+                      <div className="card-category-badge">
                         <span>✦</span>
-                        <span>INTEGRATED TECHNOLOGY ECOSYSTEM</span>
+                        <span>{isGenz ? proj.category.toLowerCase() : proj.category}</span>
                       </div>
-                      <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.75)', lineHeight: 1.5, marginBottom: '18px' }}>
-                        Every layer of the codebase is constructed with cutting-edge production frameworks:
-                      </p>
-                      <div className="card-tech-pills" style={{ gap: '10px' }}>
-                        {selectedCaseStudy.techStack.map((tech, i) => (
-                          <div 
-                            key={i} 
-                            style={{
-                              background: 'rgba(235, 215, 63, 0.1)',
-                              border: '1px solid rgba(235, 215, 63, 0.35)',
-                              borderRadius: '10px',
-                              padding: '8px 16px',
-                              fontFamily: 'Clash Display, sans-serif',
-                              fontSize: '0.85rem',
-                              fontWeight: 600,
-                              color: '#ffffff',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px'
-                            }}
-                          >
-                            <span style={{ color: 'var(--brand-yellow)' }}>✦</span>
-                            <span>{tech}</span>
-                          </div>
+                      <div className="card-headline">{proj.title}</div>
+                      <div className="card-tagline">{proj.tagline}</div>
+                      <div className="card-tech-pills">
+                        {proj.techStack.map((tech, tIdx) => (
+                          <span key={tIdx} className="tech-pill">{isGenz ? tech.toLowerCase() : tech}</span>
                         ))}
                       </div>
                     </div>
+
+                    <div className="card-action-group">
+                      <button 
+                        className="btn-case-study case-study-prevent" 
+                        onMouseEnter={() => playSound('hover')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playSound('open');
+                          setSelectedCaseStudy(proj);
+                        }}
+                        title={`Open ${proj.title} Architectural Case Study`}
+                      >
+                        <span className="case-study-icon">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z"></path>
+                          </svg>
+                        </span>
+                        <span>{isGenz ? 'case study' : 'Case Study'}</span>
+                      </button>
+
+                      <div className="btn-launch-pill">
+                        <span>{isGenz ? 'launch site' : 'Launch Live'}</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="7" y1="17" x2="17" y2="7"></line>
+                          <polyline points="7 7 17 7 17 17"></polyline>
+                        </svg>
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
+            ))}
+          </div>
+        </div>
+        {/* Case Study Slide-out Drawer */}
+        <div 
+          className={`case-study-drawer ${selectedCaseStudy ? 'open' : ''}`}
+          onClick={() => setSelectedCaseStudy(null)}
+        >
+          {/* Left Side Client Conversion Station */}
+          <div 
+            className="drawer-conversion-hub" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Subtle Cyber Target Reticles */}
+            <span className="hub-bracket hub-bracket-tl" />
+            <span className="hub-bracket hub-bracket-tr" />
+            <span className="hub-bracket hub-bracket-bl" />
+            <span className="hub-bracket hub-bracket-br" />
 
-              {/* Bottom Fixed Portal Deck */}
-              <div style={{
-                paddingTop: '24px',
-                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '12px'
-              }}>
-                <button
-                  className="btn-copy-blueprint"
-                  onClick={() => handleCopyLink(selectedCaseStudy)}
-                  title="Copy Live Project Link"
-                >
-                  <span>{copiedLink ? '✓ Copied Link' : 'Copy Link'}</span>
-                </button>
+            {/* Glowing Status Chip */}
+            <div className="hub-eyebrow">
+              <span className="hub-pulse-star">✦</span>
+              <span>{isGenz ? 'start your build' : 'COMMISSION YOUR BUILD'}</span>
+            </div>
 
-                <a 
-                  href={selectedCaseStudy.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="btn-launch-pill"
-                  onClick={() => playSound('click')}
-                  style={{ textDecoration: 'none' }}
-                >
-                  <span>Launch Live Platform</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="7" y1="17" x2="17" y2="7"></line>
-                    <polyline points="7 7 17 7 17 17"></polyline>
-                  </svg>
-                </a>
+            {/* Impact Title */}
+            <h3 className="hub-title">
+              {isGenz ? 'want a platform this clean?' : 'WANT A FLAGSHIP PLATFORM LIKE THIS?'}
+            </h3>
+
+            {/* Value Prop Description */}
+            <p className="hub-desc">
+              {isGenz
+                ? 'we build high-aesthetic web ecosystems with 60 fps micro-motion, sub-second load times, and zero mid design.'
+                : 'We architect bespoke web ecosystems with 60 FPS kinetic micro-interactions, sub-second TTFB latency, and high-conversion engineering.'}
+            </p>
+
+            {/* Quick Value Metrics Matrix */}
+            <div className="hub-perks-list">
+              <div className="hub-perk-item">
+                <span className="perk-bullet">✦</span>
+                <span>{isGenz ? '100% custom next.js & framer motion' : '100% Custom Next.js Architecture'}</span>
               </div>
-            </>
-          )}
+              <div className="hub-perk-item">
+                <span className="perk-bullet">✦</span>
+                <span>{isGenz ? 'sub-second load times & edge caching' : 'Sub-Second Server TTFB & Edge Caching'}</span>
+              </div>
+              <div className="hub-perk-item">
+                <span className="perk-bullet">✦</span>
+                <span>{isGenz ? 'turnkey delivery in 2–3 weeks' : 'Turnkey Delivery in 2–3 Weeks'}</span>
+              </div>
+            </div>
+
+            {/* Primary High-Conversion CTA Button */}
+            <a
+              href="mailto:contact@drippmedia.com?subject=Project Inquiry: Custom Web Platform Build"
+              onClick={(e) => {
+                e.stopPropagation();
+                playSound('click');
+              }}
+              className="hub-cta-button"
+              title="Start your custom web build project"
+            >
+              <div className="hub-cta-shimmer" />
+              <span className="hub-cta-star">✦</span>
+              <span>{isGenz ? 'build yours now' : 'BUILD YOUR PLATFORM'}</span>
+              <div className="hub-cta-arrow">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </div>
+            </a>
+
+            {/* Secondary Telemetry Tag */}
+            <div className="hub-telemetry">
+              <span className="telemetry-live-dot" />
+              <span>{isGenz ? 'est. kickoff: this week • accepting builds' : 'EST. KICKOFF: THIS WEEK • ACCEPTING BUILDS'}</span>
+            </div>
+          </div>
+
+          <div className="drawer-content" onClick={(e) => e.stopPropagation()}>
+            {selectedCaseStudy && (
+              <>
+                <div>
+                  {/* Header Action Bar */}
+                  <div className="drawer-header-actions">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="card-category-badge" style={{ margin: 0 }}>✦ {isGenz ? selectedCaseStudy.category.toLowerCase() : selectedCaseStudy.category}</div>
+                    </div>
+
+                    <button 
+                      className="drawer-close-btn" 
+                      onClick={() => {
+                        playSound('click');
+                        setSelectedCaseStudy(null);
+                      }}
+                      title="Close Case Study (Esc)"
+                    >
+                      <div className="close-btn-shimmer" />
+                      <span>{isGenz ? 'close' : 'CLOSE'}</span>
+                      <div className="close-icon-wrap">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Hero Visual Preview Banner */}
+                  <div className="drawer-hero-banner">
+                    <img 
+                      src={selectedCaseStudy.image} 
+                      alt={selectedCaseStudy.title}
+                      className="drawer-hero-img"
+                    />
+                    <div className="drawer-hero-overlay">
+                      <div>
+                        <h2 style={{
+                          fontFamily: 'Panchang, sans-serif',
+                          fontSize: '2.2rem',
+                          fontWeight: 800,
+                          color: '#ffffff',
+                          textTransform: isGenz ? 'lowercase' : 'uppercase',
+                          lineHeight: 1.05,
+                          margin: '0 0 6px 0',
+                          letterSpacing: '-0.5px'
+                        }}>
+                          {selectedCaseStudy.title}
+                        </h2>
+                        <div style={{
+                          fontFamily: 'Clash Display, sans-serif',
+                          fontSize: '0.95rem',
+                          color: 'var(--brand-yellow)',
+                          fontWeight: 600
+                        }}>
+                          {selectedCaseStudy.tagline}
+                        </div>
+                      </div>
+
+                      <a 
+                        href={selectedCaseStudy.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="hud-domain-capsule"
+                        style={{ textDecoration: 'none' }}
+                      >
+                        <div className="domain-signal-wave" title="Live Edge Transmission">
+                          <span className="signal-bar" />
+                          <span className="signal-bar" />
+                          <span className="signal-bar" />
+                        </div>
+                        <span className="domain-text">{selectedCaseStudy.displayUrl}</span>
+                        <svg className="domain-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="7" y1="17" x2="17" y2="7"></line>
+                          <polyline points="7 7 17 7 17 17"></polyline>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Interactive Case Study Tab Switcher */}
+                  <div className="case-study-tab-bar">
+                    <button 
+                      className={`case-tab-btn ${caseStudyTab === 'blueprint' ? 'active' : ''}`}
+                      onClick={() => { playSound('click'); setCaseStudyTab('blueprint'); }}
+                    >
+                      <span>{isGenz ? 'blueprint & story' : 'Blueprint & Narrative'}</span>
+                    </button>
+                    <button 
+                      className={`case-tab-btn ${caseStudyTab === 'metrics' ? 'active' : ''}`}
+                      onClick={() => { playSound('click'); setCaseStudyTab('metrics'); }}
+                    >
+                      <span>{isGenz ? 'speed & vitals' : 'Performance & Vitals'}</span>
+                    </button>
+                    <button 
+                      className={`case-tab-btn ${caseStudyTab === 'stack' ? 'active' : ''}`}
+                      onClick={() => { playSound('click'); setCaseStudyTab('stack'); }}
+                    >
+                      <span>{isGenz ? 'tech stack' : 'Tech Architecture'}</span>
+                    </button>
+                  </div>
+
+                  {/* TAB 1: BLUEPRINT & NARRATIVE */}
+                  {caseStudyTab === 'blueprint' && (
+                    <div>
+                      {/* The Strategic Challenge Card */}
+                      <div className="blueprint-card">
+                        <span className="card-corner-reticle card-reticle-tl" />
+                        <span className="card-corner-reticle card-reticle-br" />
+                        <div className="monograph-badge">
+                          <span className="badge-spark">✦</span>
+                          <span className="badge-label">{isGenz ? 'the strategic challenge' : 'THE STRATEGIC CHALLENGE'}</span>
+                          <span className="badge-index">01</span>
+                        </div>
+                        <p className="blueprint-quote-text">
+                          "{selectedCaseStudy.challenge}"
+                        </p>
+                      </div>
+
+                      {/* The Architectural Solution Card */}
+                      <div className="blueprint-card highlight">
+                        <span className="card-corner-reticle card-reticle-tl" />
+                        <span className="card-corner-reticle card-reticle-br" />
+                        <div className="monograph-badge highlight">
+                          <span className="badge-spark">✦</span>
+                          <span className="badge-label">{isGenz ? 'the architectural solution' : 'THE ARCHITECTURAL SOLUTION'}</span>
+                          <span className="badge-index">02</span>
+                        </div>
+                        <p className="blueprint-quote-text" style={{ marginBottom: '18px', color: 'rgba(255, 255, 255, 0.95)' }}>
+                          {selectedCaseStudy.solution}
+                        </p>
+
+                        {/* 3 Pillars Grid */}
+                        <div className="pillars-grid">
+                          {Array.isArray(selectedCaseStudy.pillars) && selectedCaseStudy.pillars.length > 0 ? (
+                            selectedCaseStudy.pillars.map((pillar, pIdx) => (
+                              <div key={pIdx} className="pillar-card">
+                                <div className="pillar-title">{pillar.title || `0${pIdx + 1} / PILLAR`}</div>
+                                <div className="pillar-desc">{pillar.desc || pillar.description || ''}</div>
+                              </div>
+                            ))
+                          ) : (
+                            <>
+                              <div className="pillar-card">
+                                <div className="pillar-title">{isGenz ? '01 / sub-second ttfb' : '01 / SUB-SECOND TTFB'}</div>
+                                <div className="pillar-desc">{isGenz ? 'edge-rendered architecture ensuring instant delivery worldwide.' : 'Edge-rendered architecture ensuring instant delivery across global nodes.'}</div>
+                              </div>
+                              <div className="pillar-card">
+                                <div className="pillar-title">{isGenz ? '02 / kinetic motion' : '02 / KINETIC MOTION'}</div>
+                                <div className="pillar-desc">{isGenz ? '60 fps physics-based micro-interactions tailored for high conversion.' : '60 FPS physics-based micro-interactions tailored for high conversion.'}</div>
+                              </div>
+                              <div className="pillar-card">
+                                <div className="pillar-title">{isGenz ? '03 / scalable edge' : '03 / SCALABLE EDGE'}</div>
+                                <div className="pillar-desc">{isGenz ? 'zero cold-start compute with automated cloud cache invalidation.' : 'Zero cold-start compute with automated cloud cache invalidation.'}</div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 2: PERFORMANCE & METRICS */}
+                  {caseStudyTab === 'metrics' && (
+                    <div>
+                      <div className="stats-matrix-grid">
+                        {Array.isArray(selectedCaseStudy.stats) && selectedCaseStudy.stats.length > 0 ? (
+                          selectedCaseStudy.stats.map((st, sIdx) => (
+                            <div key={sIdx} className="stat-metric-box">
+                              <div className="stat-metric-value">
+                                {st.value}
+                              </div>
+                              <div className="stat-metric-label">{isGenz ? st.label.toLowerCase() : st.label}</div>
+                            </div>
+                          ))
+                        ) : (
+                          <>
+                            <div className="stat-metric-box">
+                              <div className="stat-metric-value">99/100</div>
+                              <div className="stat-metric-label">{isGenz ? 'lighthouse performance' : 'Lighthouse Performance'}</div>
+                            </div>
+                            <div className="stat-metric-box">
+                              <div className="stat-metric-value" style={{ color: '#ffffff' }}>0.35s</div>
+                              <div className="stat-metric-label">{isGenz ? 'time to interactive (tti)' : 'Time to Interactive (TTI)'}</div>
+                            </div>
+                            <div className="stat-metric-box">
+                              <div className="stat-metric-value">100%</div>
+                              <div className="stat-metric-label">{isGenz ? 'seo & best practices' : 'SEO & Best Practices'}</div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="blueprint-card">
+                        <span className="card-corner-reticle card-reticle-tl" />
+                        <span className="card-corner-reticle card-reticle-br" />
+                        <div className="monograph-badge">
+                          <span className="badge-spark">✦</span>
+                          <span className="badge-label">{isGenz ? 'speed & reliability score' : 'INFRASTRUCTURE & RELIABILITY SCORE'}</span>
+                          <span className="badge-index">SLA</span>
+                        </div>
+                        <p className="blueprint-quote-text" style={{ fontSize: '0.92rem', color: 'rgba(255, 255, 255, 0.9)' }}>
+                          {isGenz
+                            ? 'engineered for zero layout shift (cls: 0.00), instant first contentful paint (< 0.4s), and sub-millisecond edge api routing with 99.99% uptime.'
+                            : 'Engineered for zero layout shift (CLS: 0.00), instant First Contentful Paint (< 0.4s), and sub-millisecond edge API routing with 99.99% uptime SLA.'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 3: TECH ARCHITECTURE */}
+                  {caseStudyTab === 'stack' && (
+                    <div>
+                      <div className="blueprint-card">
+                        <span className="card-corner-reticle card-reticle-tl" />
+                        <span className="card-corner-reticle card-reticle-br" />
+                        <div className="monograph-badge highlight">
+                          <span className="badge-spark">✦</span>
+                          <span className="badge-label">{isGenz ? 'integrated tech ecosystem' : 'INTEGRATED TECHNOLOGY ECOSYSTEM'}</span>
+                          <span className="badge-index">STACK</span>
+                        </div>
+                        <p className="blueprint-quote-text" style={{ fontSize: '0.92rem', color: 'rgba(255, 255, 255, 0.85)', marginBottom: '18px' }}>
+                          {isGenz ? 'every layer of the codebase is built with production frameworks:' : 'Every layer of the codebase is constructed with cutting-edge production frameworks:'}
+                        </p>
+                        <div className="card-tech-pills" style={{ gap: '10px' }}>
+                          {selectedCaseStudy.techStack.map((tech, i) => (
+                            <div 
+                              key={i} 
+                              style={{
+                                background: 'rgba(235, 215, 63, 0.1)',
+                                border: '1px solid rgba(235, 215, 63, 0.35)',
+                                borderRadius: '10px',
+                                padding: '8px 16px',
+                                fontFamily: 'Clash Display, sans-serif',
+                                fontSize: '0.85rem',
+                                fontWeight: 600,
+                                color: '#ffffff',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}
+                            >
+                              <span style={{ color: 'var(--brand-yellow)' }}>✦</span>
+                              <span>{isGenz ? tech.toLowerCase() : tech}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom Fixed Portal Deck */}
+                <div style={{
+                  paddingTop: '24px',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '12px'
+                }}>
+                  <button
+                    className="btn-copy-blueprint"
+                    onClick={() => handleCopyLink(selectedCaseStudy)}
+                    title="Copy Live Project Link"
+                  >
+                    <span>{copiedLink ? (isGenz ? '✓ copied link' : '✓ Copied Link') : (isGenz ? 'copy link' : 'Copy Link')}</span>
+                  </button>
+
+                  <a 
+                    href={selectedCaseStudy.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn-launch-pill"
+                    onClick={() => playSound('click')}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <span>{isGenz ? 'launch live platform' : 'Launch Live Platform'}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="7" y1="17" x2="17" y2="7"></line>
+                      <polyline points="7 7 17 7 17 17"></polyline>
+                    </svg>
+                  </a>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </>

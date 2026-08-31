@@ -18,6 +18,11 @@ export async function POST(request) {
         challenge: `Legacy web solutions often struggle with high bounce rates, slow mobile load times, and clunky user journeys that hinder customer retention and brand authority.`,
         solution: `We architected a modern, lightweight Next.js platform featuring server-side rendering, global edge caching, and interactive micro-animations that establish market dominance.`,
         techStack: ['Next.js 15', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Supabase', 'Vercel Edge'],
+        pillars: [
+          { title: '01 / SUB-SECOND TTFB', desc: 'Edge-rendered architecture ensuring instant delivery across global nodes.' },
+          { title: '02 / KINETIC MOTION', desc: '60 FPS physics-based micro-interactions tailored for high conversion.' },
+          { title: '03 / SCALABLE EDGE', desc: 'Zero cold-start compute with automated cloud cache invalidation.' }
+        ],
         stats: [
           { label: 'Lighthouse Score', value: '99/100' },
           { label: 'Load Speed', value: '0.4s' },
@@ -42,6 +47,11 @@ Strictly return ONLY a valid JSON object matching this exact schema (no markdown
   "description": "High-impact 2-sentence summary of the engineering and user experience",
   "challenge": "A compelling 2-3 sentence breakdown of the client problem, legacy blockers, or industry pain points",
   "solution": "A sophisticated 2-3 sentence explanation of the technical architecture, design decisions, edge caching, and performance optimizations delivered",
+  "pillars": [
+    { "title": "01 / SUB-SECOND TTFB", "desc": "Edge-rendered architecture ensuring instant delivery across global nodes." },
+    { "title": "02 / KINETIC MOTION", "desc": "60 FPS physics-based micro-interactions tailored for high conversion." },
+    { "title": "03 / SCALABLE EDGE", "desc": "Zero cold-start compute with automated cloud cache invalidation." }
+  ],
   "techStack": ["Next.js 15", "TypeScript", "Tailwind CSS", "Framer Motion", "Supabase", "PostgreSQL"],
   "stats": [
     { "label": "Lighthouse Score", "value": "99/100" },
