@@ -561,40 +561,60 @@ export default function ImageCropperModal({
             /* Main Page Card Simulation Preview */
             <div style={{ width: '100%', maxWidth: '780px' }}>
               <div style={{
-                borderRadius: '20px',
-                background: '#0c0c10',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '24px',
+                background: '#08080c',
+                border: '1px solid rgba(235, 215, 63, 0.4)',
                 overflow: 'hidden',
-                boxShadow: '0 25px 70px rgba(0,0,0,0.9), 0 0 35px rgba(235, 215, 63, 0.15)',
+                boxShadow: '0 30px 80px rgba(0,0,0,0.95), 0 0 35px rgba(235, 215, 63, 0.15)',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                position: 'relative'
               }}>
-                {/* macOS Toolbar */}
+                {/* Cyber Corner Brackets */}
+                <div style={{ position: 'absolute', top: '12px', left: '12px', width: '14px', height: '14px', borderTop: '2px solid #ebd73f', borderLeft: '2px solid #ebd73f', zIndex: 20 }} />
+                <div style={{ position: 'absolute', top: '12px', right: '12px', width: '14px', height: '14px', borderTop: '2px solid #ebd73f', borderRight: '2px solid #ebd73f', zIndex: 20 }} />
+
+                {/* Floating Top Cyber-HUD */}
                 <div style={{
-                  height: '40px',
-                  background: '#14141a',
-                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  padding: '16px 20px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '0 16px'
+                  zIndex: 15,
+                  background: 'linear-gradient(to bottom, rgba(6, 6, 10, 0.85) 0%, transparent 100%)'
                 }}>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f56' }} />
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffbd2e' }} />
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#27c93f' }} />
-                  </div>
                   <div style={{
-                    background: 'rgba(0,0,0,0.6)',
-                    borderRadius: '14px',
-                    padding: '2px 14px',
-                    fontSize: '0.72rem',
-                    color: 'rgba(255,255,255,0.7)',
-                    fontFamily: 'Clash Display, sans-serif'
+                    background: 'rgba(12, 12, 18, 0.75)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '20px',
+                    padding: '4px 12px',
+                    fontFamily: 'Panchang, sans-serif',
+                    fontSize: '0.58rem',
+                    fontWeight: 700,
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    letterSpacing: '1px'
                   }}>
-                    https://live-preview.com
+                    <span style={{ color: '#ebd73f' }}>✦</span> 01 // ARCHIVE
                   </div>
-                  <div style={{ width: '50px' }} />
+
+                  <div style={{
+                    background: 'rgba(14, 14, 20, 0.8)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(235, 215, 63, 0.3)',
+                    borderRadius: '20px',
+                    padding: '4px 14px',
+                    fontFamily: 'Clash Display, sans-serif',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    color: '#ffffff'
+                  }}>
+                    live-preview.online ↗
+                  </div>
                 </div>
 
                 {/* Card Body Simulation */}

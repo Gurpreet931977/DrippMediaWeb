@@ -608,7 +608,7 @@ export default function Page() {
           width: max-content;
         }
 
-        /* High-End Glassmorphic Browser Chassis Card with Enhanced Viewing Scale */
+        /* High-End Futuristic Monolithic Cyber-Canvas Card */
         .web-card-chassis {
           position: relative;
           width: 78vw;
@@ -617,95 +617,142 @@ export default function Page() {
           max-height: 630px;
           min-height: 480px;
           margin-top: 15px;
-          border-radius: 20px;
-          background: rgba(12, 12, 16, 0.95);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(25px);
-          -webkit-backdrop-filter: blur(25px);
+          border-radius: 24px;
+          background: #08080c;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
           display: flex;
           flex-direction: column;
           overflow: hidden;
           cursor: pointer;
-          transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
           flex-shrink: 0;
         }
 
         .web-card-chassis:hover {
-          border-color: rgba(235, 215, 63, 0.5);
-          box-shadow: 0 35px 85px rgba(0, 0, 0, 0.95), 0 0 35px rgba(235, 215, 63, 0.16);
-          transform: translateY(-6px) scale(1.01);
+          border-color: rgba(235, 215, 63, 0.6);
+          box-shadow: 0 40px 100px rgba(0, 0, 0, 0.95), 0 0 45px rgba(235, 215, 63, 0.2);
+          transform: translateY(-8px) scale(1.015);
         }
 
-        /* macOS Window Header Toolbar (Clean without extra badges) */
-        .browser-toolbar {
-          height: 44px;
-          background: rgba(20, 20, 26, 0.98);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        /* Cyber Corner Holographic Hairline Brackets */
+        .corner-bracket {
+          position: absolute;
+          width: 16px;
+          height: 16px;
+          pointer-events: none;
+          z-index: 25;
+          opacity: 0.35;
+          transition: all 0.35s ease;
+        }
+        .bracket-tl { top: 14px; left: 14px; border-top: 2px solid #ffffff; border-left: 2px solid #ffffff; }
+        .bracket-tr { top: 14px; right: 14px; border-top: 2px solid #ffffff; border-right: 2px solid #ffffff; }
+        .bracket-bl { bottom: 14px; left: 14px; border-bottom: 2px solid #ffffff; border-left: 2px solid #ffffff; }
+        .bracket-br { bottom: 14px; right: 14px; border-bottom: 2px solid #ffffff; border-right: 2px solid #ffffff; }
+
+        .web-card-chassis:hover .corner-bracket {
+          opacity: 1;
+          border-color: var(--brand-yellow);
+          filter: drop-shadow(0 0 6px rgba(235, 215, 63, 0.8));
+        }
+
+        /* Floating Top Cyber-HUD Header */
+        .card-top-hud {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          padding: 20px 24px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 18px;
-          user-select: none;
           z-index: 20;
+          pointer-events: none;
+          background: linear-gradient(to bottom, rgba(6, 6, 10, 0.85) 0%, rgba(6, 6, 10, 0.4) 60%, transparent 100%);
         }
 
-        .traffic-lights {
-          display: flex;
-          gap: 7px;
-          align-items: center;
-          width: 80px;
-        }
-
-        .traffic-dot {
-          width: 11px;
-          height: 11px;
-          border-radius: 50%;
-          transition: transform 0.2s ease;
-        }
-        .dot-red { background: #ff5f56; }
-        .dot-yellow { background: #ffbd2e; }
-        .dot-green { background: #27c93f; }
-
-        .browser-url-pill {
-          display: flex;
+        .hud-index-badge {
+          display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: rgba(5, 5, 5, 0.6);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 20px;
-          padding: 4px 16px;
-          font-size: 0.76rem;
+          background: rgba(12, 12, 18, 0.7);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 30px;
+          padding: 6px 14px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.62rem;
+          font-weight: 700;
           color: rgba(255, 255, 255, 0.85);
+          letter-spacing: 1.5px;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+          transition: all 0.3s ease;
+        }
+
+        .hud-sparkle {
+          color: var(--brand-yellow);
+          font-size: 0.7rem;
+        }
+
+        .hud-domain-capsule {
+          pointer-events: auto;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(14, 14, 20, 0.75);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 30px;
+          padding: 6px 16px;
           font-family: 'Clash Display', sans-serif;
-          letter-spacing: 0.5px;
-          transition: all 0.25s ease;
-        }
-
-        .web-card-chassis:hover .browser-url-pill {
-          border-color: var(--brand-yellow);
+          font-size: 0.78rem;
+          font-weight: 600;
           color: #ffffff;
-          background: rgba(235, 215, 63, 0.12);
+          letter-spacing: 0.5px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .browser-url-pill svg {
-          width: 12px;
-          height: 12px;
-          color: #10b981;
+        .domain-live-pulse {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: var(--brand-yellow);
+          box-shadow: 0 0 10px var(--brand-yellow);
+          animation: pulseGlow 2s infinite ease-in-out;
         }
 
-        .toolbar-spacer {
-          width: 80px;
+        @keyframes pulseGlow {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.4); opacity: 1; filter: drop-shadow(0 0 6px var(--brand-yellow)); }
         }
 
-        /* Viewport Showcase Body */
+        .web-card-chassis:hover .hud-domain-capsule {
+          border-color: var(--brand-yellow);
+          background: rgba(235, 215, 63, 0.16);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(235, 215, 63, 0.3);
+        }
+
+        .domain-arrow {
+          transition: transform 0.3s ease;
+          color: var(--brand-yellow);
+        }
+
+        .web-card-chassis:hover .domain-arrow {
+          transform: translate(2px, -2px);
+        }
+
+        /* Viewport Showcase Body (Edge-to-edge frameless) */
         .card-viewport-body {
           position: relative;
           flex: 1;
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          background: #09090c;
+          background: #050508;
         }
 
         /* Real Screenshot Container with Kinetic Hover-Parallax */
@@ -725,25 +772,25 @@ export default function Page() {
           height: 100%;
           object-fit: cover;
           object-position: top center;
-          transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
+          transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s ease;
           will-change: transform;
         }
 
         .web-card-chassis:hover .screenshot-img {
-          transform: scale(1.03) translateY(-8px);
-          filter: brightness(1.05);
+          transform: scale(1.04) translateY(-6px);
+          filter: brightness(1.06) contrast(1.02);
         }
 
-        /* Floating Click-to-Redirect Center Beacon Badge */
+        /* Floating Center Telemetry Crosshair / Explore Beacon */
         .hover-beacon-overlay {
           position: absolute;
           inset: 0;
-          background: rgba(5, 5, 8, 0.35);
+          background: radial-gradient(circle at center, rgba(5, 5, 8, 0.25) 0%, rgba(5, 5, 8, 0.55) 80%);
           opacity: 0;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: opacity 0.35s ease;
+          transition: opacity 0.4s ease;
           pointer-events: none;
           z-index: 8;
         }
@@ -753,10 +800,12 @@ export default function Page() {
         }
 
         .hover-launch-badge {
-          background: rgba(14, 14, 20, 0.9);
+          background: rgba(10, 10, 15, 0.88);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
           border: 1px solid var(--brand-yellow);
           color: #ffffff;
-          padding: 12px 24px;
+          padding: 12px 26px;
           border-radius: 40px;
           font-family: 'Panchang', sans-serif;
           font-size: 0.72rem;
@@ -766,13 +815,13 @@ export default function Page() {
           display: flex;
           align-items: center;
           gap: 10px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(235, 215, 63, 0.3);
-          transform: translateY(15px);
-          transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 30px rgba(235, 215, 63, 0.35);
+          transform: translateY(20px) scale(0.92);
+          transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .web-card-chassis:hover .hover-launch-badge {
-          transform: translateY(0);
+          transform: translateY(0) scale(1);
         }
 
         /* Bottom Project Info Overlay & Tech Stack */
@@ -1228,26 +1277,37 @@ export default function Page() {
               onClick={(e) => handleCardClick(proj, e)}
               title={`Click to open ${proj.displayUrl} live site`}
             >
-              {/* macOS Style Browser Header (Clean with no LIVE SITE text) */}
-              <div className="browser-toolbar">
-                <div className="traffic-lights">
-                  <div className="traffic-dot dot-red" />
-                  <div className="traffic-dot dot-yellow" />
-                  <div className="traffic-dot dot-green" />
+              {/* Corner Cyber Brackets */}
+              <div className="corner-bracket bracket-tl" />
+              <div className="corner-bracket bracket-tr" />
+              <div className="corner-bracket bracket-bl" />
+              <div className="corner-bracket bracket-br" />
+
+              {/* Floating Cyber Telemetry Header */}
+              <div className="card-top-hud">
+                <div className="hud-index-badge">
+                  <span className="hud-sparkle">✦</span>
+                  <span>{String(idx + 1).padStart(2, '0')} // ARCHIVE</span>
                 </div>
 
-                <div className="browser-url-pill">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                <div 
+                  className="hud-domain-capsule"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(proj.url, '_blank', 'noopener,noreferrer');
+                  }}
+                  title={`Launch https://${proj.displayUrl}`}
+                >
+                  <span className="domain-live-pulse" />
+                  <span className="domain-text">{proj.displayUrl}</span>
+                  <svg className="domain-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
                   </svg>
-                  <span>https://{proj.displayUrl}</span>
                 </div>
-
-                <div className="toolbar-spacer" />
               </div>
 
-              {/* Viewport Body with Real Website Screenshot & Hover Reveal */}
+              {/* Viewport Body with Real Website Screenshot & Kinetic Hover */}
               <div className="card-viewport-body">
                 <div className="screenshot-viewport">
                   <img 
@@ -1260,7 +1320,7 @@ export default function Page() {
                   {/* Hover Floating Launch Beacon */}
                   <div className="hover-beacon-overlay">
                     <div className="hover-launch-badge">
-                      <span>Visit Live Website</span>
+                      <span>✦ EXPLORE BUILD</span>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="7" y1="17" x2="17" y2="7"></line>
                         <polyline points="7 7 17 7 17 17"></polyline>
@@ -1273,7 +1333,7 @@ export default function Page() {
                 <div className="card-footer-info">
                   <div className="card-main-meta">
                     <div className="card-category-badge">
-                      <span>●</span>
+                      <span>✦</span>
                       <span>{proj.category}</span>
                     </div>
                     <div className="card-headline">{proj.title}</div>
