@@ -28,49 +28,68 @@ export async function POST(request) {
     
     const filename = `${cleanSlug}-${Date.now()}.jpg`;
     const publicDir = path.join(process.cwd(), 'public', 'images', 'web-portfolio');
-
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
-
     const outputPath = path.join(publicDir, filename);
     const publicUrl = `/images/web-portfolio/${filename}`;
 
-    let captured = false;
+    let isFsWritable = false;
+    try {
+      if (!fs.existsSync(publicDir)) {
+        fs.mkdirSync(publicDir, { recursive: true });
+      }
+      isFsWritable = true;
+    } catch (e) {
+      isFsWritable = false;
+    }
+
+    let finalImageUrl = null;
     const chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
-    // Tier 1: Local Chrome Headless (macOS server / local dev)
-    if (fs.existsSync(chromePath)) {
+    // Tier 1: Local Chrome Headless (if local macOS dev and filesystem is writable)
+    if (isFsWritable && fs.existsSync(chromePath)) {
       try {
         const command = `"${chromePath}" --headless=new --disable-gpu --no-sandbox --disable-dev-shm-usage --window-size=1600,1000 --hide-scrollbars --virtual-time-budget=7000 --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --screenshot="${outputPath}" "${targetUrl}"`;
-        await execAsync(command).catch((err) => {
-          console.warn('Chrome process notice:', err.message);
-        });
+        await execAsync(command).catch(() => {});
 
         if (fs.existsSync(outputPath) && fs.statSync(outputPath).size > 2000) {
-          captured = true;
+          finalImageUrl = publicUrl;
         }
       } catch (err) {
         console.warn('Local Chrome capture error:', err.message);
       }
     }
 
-    // Tier 2: High-Resolution Cloud Screenshot Fallbacks
-    if (!captured) {
+    // Tier 2: Ultra-Fast Cloud Screenshot Engines (WordPress mshots ~400ms, Microlink, Thum.io)
+    if (!finalImageUrl) {
       const fallbackServices = [
+        `https://s.wordpress.com/mshots/v1/${encodeURIComponent(targetUrl)}?w=1600`,
         `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}&screenshot=true&meta=false&embed=screenshot.url`,
-        `https://image.thum.io/get/width/1600/crop/1000/noanimate/${targetUrl}`,
-        `https://s.wordpress.com/mshots/v1/${encodeURIComponent(targetUrl)}?w=1600`
+        `https://image.thum.io/get/width/1600/crop/1000/noanimate/${targetUrl}`
       ];
 
       for (const serviceUrl of fallbackServices) {
         try {
-          const response = await fetch(serviceUrl, { signal: AbortSignal.timeout(10000) });
+          const response = await fetch(serviceUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
+            signal: AbortSignal.timeout(8000)
+          });
+
           if (response.ok) {
             const buffer = await response.arrayBuffer();
             if (buffer.byteLength > 2000) {
-              fs.writeFileSync(outputPath, Buffer.from(buffer));
-              captured = true;
+              if (isFsWritable) {
+                try {
+                  fs.writeFileSync(outputPath, Buffer.from(buffer));
+                  finalImageUrl = publicUrl;
+                  break;
+                } catch (writeErr) {
+                  // Fall back to data URL if writing fails
+                }
+              }
+              
+              // Serverless / Read-Only fallback: return as Data URL
+              const mime = response.headers.get('content-type') || 'image/jpeg';
+              const base64 = Buffer.from(buffer).toString('base64');
+              finalImageUrl = `data:${mime};base64,${base64}`;
               break;
             }
           }
@@ -80,10 +99,10 @@ export async function POST(request) {
       }
     }
 
-    if (captured && fs.existsSync(outputPath)) {
+    if (finalImageUrl) {
       return Response.json({
         success: true,
-        image_url: publicUrl,
+        image_url: finalImageUrl,
         normalized_url: targetUrl,
         suggested_title: title || domainName.split('.')[0].replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
       });

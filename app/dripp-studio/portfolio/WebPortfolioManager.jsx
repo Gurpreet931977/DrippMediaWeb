@@ -240,11 +240,85 @@ export default function WebPortfolioManager() {
     showNotification('success', 'Screenshot removed');
   };
 
+  // 1-Click Magic AI Autopilot (Captures Live Screenshot + Synthesizes Entire Project Metadata)
+  const handleMagicAutoBuild = async (targetFormData, setTargetForm) => {
+    let rawUrl = (targetFormData.url || '').trim();
+    if (!rawUrl) {
+      showNotification('error', 'Please enter a Website URL first (e.g. www.thestallionmetallist.com)');
+      return;
+    }
+
+    if (!/^https?:\/\//i.test(rawUrl)) {
+      rawUrl = 'https://' + rawUrl;
+    }
+
+    setIsGeneratingAI(true);
+    setIsCapturingScreenshot(true);
+    showNotification('success', '✦ Orlo AI is analyzing website, detecting tech stack & capturing 16:10 live screenshot...');
+
+    try {
+      // Run Screenshot Capture and AI Case Study Synthesis in Parallel
+      const [screenshotRes, aiRes] = await Promise.allSettled([
+        fetch('/api/admin/portfolio/capture-screenshot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: rawUrl, title: targetFormData.title })
+        }).then(r => r.json()),
+
+        fetch('/api/admin/portfolio/generate-case-study', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: rawUrl,
+            title: targetFormData.title,
+            category: targetFormData.category,
+            notes: targetFormData.orlo_notes
+          })
+        }).then(r => r.json())
+      ]);
+
+      const screenshotData = screenshotRes.status === 'fulfilled' ? screenshotRes.value : {};
+      const aiData = aiRes.status === 'fulfilled' ? aiRes.value : {};
+
+      const derivedTitle = targetFormData.title || aiData.title || screenshotData.suggested_title || rawUrl.replace(/^https?:\/\//i, '').split('/')[0];
+      const domain = aiData.displayUrl || rawUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+      const imageUrl = screenshotData.image_url || targetFormData.image_url || '/images/web-portfolio/bharatup.jpg';
+
+      setTargetForm(prev => ({
+        ...prev,
+        url: rawUrl,
+        title: derivedTitle,
+        display_url: domain,
+        tagline: aiData.tagline || prev.tagline,
+        category: aiData.category || prev.category,
+        image_url: imageUrl,
+        case_study_challenge: aiData.challenge || prev.case_study_challenge,
+        case_study_solution: aiData.solution || prev.case_study_solution,
+        pillars: Array.isArray(aiData.pillars) && aiData.pillars.length > 0 ? aiData.pillars : prev.pillars,
+        tech_stack: Array.isArray(aiData.techStack) && aiData.techStack.length > 0 ? aiData.techStack : prev.tech_stack,
+        stats: Array.isArray(aiData.stats) && aiData.stats.length > 0 ? aiData.stats : prev.stats
+      }));
+
+      showNotification('success', '✨ All project details synthesized! Review & edit anything below before publishing.');
+
+    } catch (err) {
+      showNotification('error', 'Magic AI Autopilot error: ' + err.message);
+    } finally {
+      setIsGeneratingAI(false);
+      setIsCapturingScreenshot(false);
+    }
+  };
+
   // Orlo AI Case Study Generator
   const handleGenerateOrloCaseStudy = async (targetFormData, setTargetForm) => {
-    if (!targetFormData.title && !targetFormData.url) {
+    let rawUrl = (targetFormData.url || '').trim();
+    if (!targetFormData.title && !rawUrl) {
       showNotification('error', 'Please enter a Website Title or URL first');
       return;
+    }
+
+    if (rawUrl && !/^https?:\/\//i.test(rawUrl)) {
+      rawUrl = 'https://' + rawUrl;
     }
 
     setIsGeneratingAI(true);
@@ -256,7 +330,7 @@ export default function WebPortfolioManager() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: targetFormData.title,
-          url: targetFormData.url,
+          url: rawUrl,
           category: targetFormData.category,
           notes: targetFormData.orlo_notes
         })
@@ -266,15 +340,17 @@ export default function WebPortfolioManager() {
         const aiData = await res.json();
         setTargetForm(prev => ({
           ...prev,
+          title: prev.title || aiData.title,
           tagline: aiData.tagline || prev.tagline,
           category: aiData.category || prev.category,
+          display_url: prev.display_url || aiData.displayUrl,
           case_study_challenge: aiData.challenge || prev.case_study_challenge,
           case_study_solution: aiData.solution || prev.case_study_solution,
           pillars: Array.isArray(aiData.pillars) && aiData.pillars.length > 0 ? aiData.pillars : prev.pillars,
           tech_stack: Array.isArray(aiData.techStack) && aiData.techStack.length > 0 ? aiData.techStack : prev.tech_stack,
           stats: Array.isArray(aiData.stats) && aiData.stats.length > 0 ? aiData.stats : prev.stats
         }));
-        showNotification('success', 'Orlo AI Case Study synthesized successfully');
+        showNotification('success', '✨ Orlo AI Case Study synthesized successfully');
       } else {
         throw new Error('AI generation failed');
       }
@@ -658,6 +734,89 @@ export default function WebPortfolioManager() {
             </div>
           </div>
 
+          {/* 1-Click Magic AI Autopilot Banner */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.12) 0%, rgba(20, 20, 30, 0.95) 100%)',
+            border: '1px solid rgba(235, 215, 63, 0.35)',
+            borderRadius: '16px',
+            padding: '20px 24px',
+            marginBottom: '26px',
+            boxShadow: '0 8px 30px rgba(235, 215, 63, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={18} color="#ebd73f" />
+                <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.85rem', fontWeight: 800, color: '#ebd73f', letterSpacing: '0.4px' }}>
+                  1-CLICK MAGIC AI AUTOPILOT
+                </span>
+              </div>
+              <span style={{ fontSize: '0.74rem', fontFamily: 'Clash Display, sans-serif', color: 'rgba(255,255,255,0.7)' }}>
+                Enter website URL → AI captures screenshot, detects tech stack & synthesizes full case study
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input 
+                type="text"
+                placeholder="Enter Live Website URL (e.g. www.thestallionmetallist.com or https://...)"
+                value={formData.url}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({
+                    ...prev,
+                    url: val,
+                    display_url: prev.display_url || val.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+                  }));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleMagicAutoBuild(formData, setFormData);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  minWidth: '260px',
+                  background: 'rgba(0,0,0,0.6)',
+                  border: '1px solid rgba(235, 215, 63, 0.35)',
+                  borderRadius: '12px',
+                  padding: '12px 18px',
+                  color: '#fff',
+                  fontSize: '0.88rem',
+                  fontFamily: 'Clash Display, sans-serif'
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => handleMagicAutoBuild(formData, setFormData)}
+                disabled={isGeneratingAI || isCapturingScreenshot}
+                style={{
+                  background: 'var(--brand-yellow, #ebd73f)',
+                  color: '#050505',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '12px 22px',
+                  fontFamily: 'Panchang, sans-serif',
+                  fontSize: '0.76rem',
+                  fontWeight: 800,
+                  cursor: (isGeneratingAI || isCapturingScreenshot) ? 'wait' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 20px rgba(235, 215, 63, 0.4)',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <Sparkles size={15} />
+                {(isGeneratingAI || isCapturingScreenshot) ? '✦ AI Autopilot Working...' : '✦ Auto-Build with AI (1-Click)'}
+              </button>
+            </div>
+            <div style={{ marginTop: '8px', fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'Clash Display, sans-serif' }}>
+              ✦ All synthesized details will be populated in the form below — you can review, edit, or adjust anything before publishing.
+            </div>
+          </div>
+
           <form onSubmit={handleSaveNewProject}>
             {/* Row 1: Title & Live URL */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '22px' }}>
@@ -677,7 +836,7 @@ export default function WebPortfolioManager() {
                     borderRadius: '12px',
                     padding: '12px 16px',
                     color: '#fff',
-                    fontFamily: 'inherit'
+                    fontFamily: 'Clash Display, sans-serif'
                   }}
                   required
                 />
@@ -733,7 +892,7 @@ export default function WebPortfolioManager() {
                     title="Auto-capture screenshot from live URL"
                   >
                     <Camera size={16} />
-                    {isCapturingScreenshot ? 'Capturing...' : 'Auto-Capture'}
+                    {isCapturingScreenshot ? 'Capturing...' : 'Capture Screenshot'}
                   </button>
                 </div>
               </div>
@@ -1812,189 +1971,170 @@ export default function WebPortfolioManager() {
         )}
       </div>
 
-      {/* Edit Web Project Modal (Full Capabilities) */}
+      {/* Edit Web Project Modal (Full Capabilities - Fixed Header/Footer Chassis) */}
       {editItemModal.show && editItemModal.item && (
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(15px)',
+          background: 'rgba(4, 4, 8, 0.88)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           zIndex: 9999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '20px'
+          padding: '24px 16px',
+          overflowY: 'auto'
         }}>
           <div style={{
-            background: '#0d0d12',
-            border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: '20px',
+            background: '#0a0a0f',
+            border: '1px solid rgba(255, 255, 255, 0.14)',
+            borderRadius: '24px',
             width: '100%',
-            maxWidth: '850px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            padding: '32px',
-            boxShadow: '0 25px 70px rgba(0,0,0,0.95)'
+            maxWidth: '880px',
+            height: '88vh',
+            maxHeight: '820px',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 50px rgba(235, 215, 63, 0.08)'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
-              <div>
-                <h3 style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.25rem', color: '#fff', margin: '0 0 4px 0' }}>
-                  Edit Web Build: {editItemModal.item.title}
-                </h3>
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
-                  Modify core metadata, media assets, Orlo AI case study blueprint, pillars, and metrics.
-                </span>
+            {/* Fixed Modal Header */}
+            <div style={{
+              padding: '18px 28px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'rgba(15, 15, 22, 0.95)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexShrink: 0
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '10px',
+                  background: 'rgba(235, 215, 63, 0.15)',
+                  border: '1px solid rgba(235, 215, 63, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ebd73f'
+                }}>
+                  <Edit2 size={18} />
+                </div>
+                <div>
+                  <h3 style={{
+                    fontFamily: 'Panchang, sans-serif',
+                    fontSize: '1.08rem',
+                    fontWeight: 800,
+                    color: '#ffffff',
+                    margin: 0,
+                    letterSpacing: '0.4px'
+                  }}>
+                    Edit Web Build: {editItemModal.item.title || 'Untitled Project'}
+                  </h3>
+                  <p style={{
+                    fontFamily: 'Clash Display, sans-serif',
+                    fontSize: '0.76rem',
+                    color: 'rgba(255, 255, 255, 0.55)',
+                    margin: '2px 0 0 0'
+                  }}>
+                    Modify core metadata, 16:10 chassis crop, and Orlo AI case study blueprint
+                  </p>
+                </div>
               </div>
-              <button 
+
+              <button
                 onClick={() => setEditItemModal({ show: false, item: null })}
-                style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem' }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Close Editor"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
-            {/* Row 1: Name & URL */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>Project Name *</label>
-                <input 
-                  type="text" 
-                  value={editItemModal.item.title || ''} 
-                  onChange={(e) => setEditItemModal({
-                    ...editItemModal,
-                    item: { ...editItemModal.item, title: e.target.value }
-                  })}
-                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>Live Website URL *</label>
-                <div style={{ display: 'flex', gap: '6px' }}>
+            {/* Scrollable Modal Content Body */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '24px 28px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px'
+            }}>
+              {/* Row 1: Name & Live URL */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif', fontWeight: 600 }}>
+                    Project Name *
+                  </label>
                   <input 
                     type="text" 
-                    value={editItemModal.item.url || ''} 
+                    value={editItemModal.item.title || ''} 
                     onChange={(e) => setEditItemModal({
                       ...editItemModal,
-                      item: { ...editItemModal.item, url: e.target.value }
+                      item: { ...editItemModal.item, title: e.target.value }
                     })}
-                    style={{ flex: 1, background: '#181820', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleAutoCapture(editItemModal.item, (updater) => {
-                      const updated = typeof updater === 'function' ? updater(editItemModal.item) : updater;
-                      setEditItemModal({ ...editItemModal, item: updated });
-                    })}
-                    disabled={isCapturingScreenshot}
                     style={{
-                      background: 'rgba(235, 215, 63, 0.15)',
-                      border: '1px solid rgba(235, 215, 63, 0.3)',
-                      borderRadius: '8px',
-                      padding: '0 12px',
-                      color: '#ebd73f',
-                      fontSize: '0.72rem',
-                      cursor: 'pointer'
+                      width: '100%',
+                      background: 'rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '10px',
+                      padding: '10px 14px',
+                      color: '#fff',
+                      fontSize: '0.88rem',
+                      fontFamily: 'Clash Display, sans-serif'
                     }}
-                    title="Auto-capture screenshot"
-                  >
-                    <Camera size={14} />
-                  </button>
+                  />
                 </div>
-              </div>
-            </div>
-
-            {/* Row 2: Tagline, Category, Display URL Capsule */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 0.9fr', gap: '14px', marginBottom: '16px' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>Tagline</label>
-                <input 
-                  type="text" 
-                  value={editItemModal.item.tagline || ''} 
-                  onChange={(e) => setEditItemModal({
-                    ...editItemModal,
-                    item: { ...editItemModal.item, tagline: e.target.value }
-                  })}
-                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>Category</label>
-                <select
-                  value={editItemModal.item.category || allCategories[0]}
-                  onChange={(e) => setEditItemModal({
-                    ...editItemModal,
-                    item: { ...editItemModal.item, category: e.target.value }
-                  })}
-                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
-                >
-                  {allCategories.map((cat, idx) => (
-                    <option key={idx} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>Display URL Capsule</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. bharatup.online"
-                  value={editItemModal.item.display_url || editItemModal.item.displayUrl || ''} 
-                  onChange={(e) => setEditItemModal({
-                    ...editItemModal,
-                    item: { ...editItemModal.item, display_url: e.target.value, displayUrl: e.target.value }
-                  })}
-                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.85rem' }}
-                />
-              </div>
-            </div>
-
-            {/* Screenshot Image Section in Edit Modal */}
-            <div style={{
-              marginBottom: '16px',
-              background: '#14141c',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '14px',
-              padding: '16px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                <label style={{ fontSize: '0.82rem', color: '#fff', fontFamily: 'Panchang, sans-serif', fontWeight: 700 }}>
-                  Project Thumbnail (16:10 Chassis Frame)
-                </label>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  <input
-                    type="file"
-                    ref={fileInputEditRef}
-                    onChange={(e) => handleFileUpload(e, 'edit')}
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputEditRef.current?.click()}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.18)',
-                      borderRadius: '8px',
-                      padding: '6px 12px',
-                      color: '#ffffff',
-                      fontSize: '0.72rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px'
-                    }}
-                  >
-                    <UploadCloud size={13} /> Upload & Crop
-                  </button>
-
-                  {(editItemModal.item.image_url || editItemModal.item.image) && (
+                <div>
+                  <label style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif', fontWeight: 600 }}>
+                    Live Website URL *
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      type="text" 
+                      value={editItemModal.item.url || ''} 
+                      onChange={(e) => setEditItemModal({
+                        ...editItemModal,
+                        item: { ...editItemModal.item, url: e.target.value }
+                      })}
+                      style={{
+                        flex: 1,
+                        background: 'rgba(0,0,0,0.5)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '10px',
+                        padding: '10px 14px',
+                        color: '#fff',
+                        fontSize: '0.88rem',
+                        fontFamily: 'Clash Display, sans-serif'
+                      }}
+                    />
                     <button
                       type="button"
-                      onClick={() => handleOpenCropper(editItemModal.item.image_url || editItemModal.item.image, 'edit', editItemModal.item.title)}
+                      onClick={() => handleAutoCapture(editItemModal.item, (updater) => {
+                        const updated = typeof updater === 'function' ? updater(editItemModal.item) : updater;
+                        setEditItemModal({ ...editItemModal, item: updated });
+                      })}
+                      disabled={isCapturingScreenshot}
                       style={{
                         background: 'rgba(235, 215, 63, 0.15)',
-                        border: '1px solid rgba(235, 215, 63, 0.4)',
-                        borderRadius: '8px',
-                        padding: '6px 12px',
+                        border: '1px solid rgba(235, 215, 63, 0.35)',
+                        borderRadius: '10px',
+                        padding: '0 14px',
                         color: '#ebd73f',
                         fontSize: '0.72rem',
                         fontFamily: 'Panchang, sans-serif',
@@ -2002,453 +2142,633 @@ export default function WebPortfolioManager() {
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
+                        gap: '6px',
+                        whiteSpace: 'nowrap'
+                      }}
+                      title="Auto-capture live screenshot"
+                    >
+                      <Camera size={14} />
+                      {isCapturingScreenshot ? '...' : 'Capture'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Tagline, Category, Display URL Capsule */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 0.9fr', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif', fontWeight: 600 }}>
+                    Hook Tagline
+                  </label>
+                  <input 
+                    type="text" 
+                    value={editItemModal.item.tagline || ''} 
+                    onChange={(e) => setEditItemModal({
+                      ...editItemModal,
+                      item: { ...editItemModal.item, tagline: e.target.value }
+                    })}
+                    style={{
+                      width: '100%',
+                      background: 'rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '10px',
+                      padding: '10px 14px',
+                      color: '#fff',
+                      fontSize: '0.88rem',
+                      fontFamily: 'Clash Display, sans-serif'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif', fontWeight: 600 }}>
+                    Category
+                  </label>
+                  <select
+                    value={editItemModal.item.category || allCategories[0]}
+                    onChange={(e) => setEditItemModal({
+                      ...editItemModal,
+                      item: { ...editItemModal.item, category: e.target.value }
+                    })}
+                    style={{
+                      width: '100%',
+                      background: '#121218',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '10px',
+                      padding: '10px 14px',
+                      color: '#fff',
+                      fontSize: '0.88rem',
+                      fontFamily: 'Clash Display, sans-serif'
+                    }}
+                  >
+                    {allCategories.map((cat, idx) => (
+                      <option key={idx} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif', fontWeight: 600 }}>
+                    Display URL Capsule
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. thestallionmetallist.com"
+                    value={editItemModal.item.display_url || editItemModal.item.displayUrl || ''} 
+                    onChange={(e) => setEditItemModal({
+                      ...editItemModal,
+                      item: { ...editItemModal.item, display_url: e.target.value, displayUrl: e.target.value }
+                    })}
+                    style={{
+                      width: '100%',
+                      background: 'rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '10px',
+                      padding: '10px 14px',
+                      color: '#fff',
+                      fontSize: '0.88rem',
+                      fontFamily: 'Clash Display, sans-serif'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Screenshot Image Section in Edit Modal */}
+              <div style={{
+                background: 'rgba(18, 18, 24, 0.7)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
+                padding: '18px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                  <label style={{ fontSize: '0.8rem', color: '#fff', fontFamily: 'Panchang, sans-serif', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Camera size={15} color="#ebd73f" /> Project Thumbnail (16:10 Chassis Frame)
+                  </label>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <input
+                      type="file"
+                      ref={fileInputEditRef}
+                      onChange={(e) => handleFileUpload(e, 'edit')}
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputEditRef.current?.click()}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.18)',
+                        borderRadius: '8px',
+                        padding: '6px 12px',
+                        color: '#ffffff',
+                        fontSize: '0.72rem',
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
                         gap: '5px'
                       }}
                     >
-                      <Crop size={13} /> Open Cropper
+                      <UploadCloud size={13} /> Upload & Crop
                     </button>
-                  )}
 
-                  {(editItemModal.item.image_url || editItemModal.item.image) && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage('edit')}
-                      style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        borderRadius: '8px',
-                        padding: '6px 10px',
-                        color: '#ef4444',
-                        cursor: 'pointer'
-                      }}
-                      title="Remove image"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )}
-                </div>
-              </div>
+                    {(editItemModal.item.image_url || editItemModal.item.image) && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenCropper(editItemModal.item.image_url || editItemModal.item.image, 'edit', editItemModal.item.title)}
+                        style={{
+                          background: 'rgba(235, 215, 63, 0.15)',
+                          border: '1px solid rgba(235, 215, 63, 0.4)',
+                          borderRadius: '8px',
+                          padding: '6px 12px',
+                          color: '#ebd73f',
+                          fontSize: '0.72rem',
+                          fontFamily: 'Panchang, sans-serif',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <Crop size={13} /> Open Cropper
+                      </button>
+                    )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '12px', alignItems: 'center' }}>
-                <div 
-                  onClick={() => handleOpenCropper(editItemModal.item.image_url || editItemModal.item.image, 'edit', editItemModal.item.title)}
-                  style={{
-                    width: '130px',
-                    aspectRatio: '16 / 10',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    border: '1px solid rgba(235, 215, 63, 0.3)',
-                    background: '#050508',
-                    cursor: 'pointer',
-                    position: 'relative'
-                  }}
-                  title="Click to crop"
-                >
-                  <img 
-                    src={editItemModal.item.image_url || editItemModal.item.image || '/images/web-portfolio/bharatup.jpg'} 
-                    alt="thumbnail" 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                  />
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: 'rgba(0,0,0,0.7)',
-                    padding: '2px',
-                    textAlign: 'center',
-                    fontSize: '0.55rem',
-                    fontFamily: 'Panchang, sans-serif',
-                    color: '#ebd73f'
-                  }}>
-                    CROP
+                    {(editItemModal.item.image_url || editItemModal.item.image) && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage('edit')}
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '8px',
+                          padding: '6px 10px',
+                          color: '#ef4444',
+                          cursor: 'pointer'
+                        }}
+                        title="Remove image"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
                   </div>
                 </div>
-                <input 
-                  type="text" 
-                  value={editItemModal.item.image_url || editItemModal.item.image || ''} 
-                  onChange={(e) => setEditItemModal({
-                    ...editItemModal,
-                    item: { ...editItemModal.item, image_url: e.target.value, image: e.target.value }
-                  })}
-                  placeholder="/images/web-portfolio/... or https://..."
-                  style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.8rem' }}
-                />
-              </div>
-            </div>
 
-            {/* Video / Screen Recording Section in Edit Modal */}
-            <div style={{
-              marginBottom: '16px',
-              background: '#14141c',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '14px',
-              padding: '16px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                <label style={{ fontSize: '0.82rem', color: '#fff', fontFamily: 'Panchang, sans-serif', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Video size={14} color="#ebd73f" /> Screen Recording Video (Looping)
-                </label>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  <input
-                    type="file"
-                    ref={fileInputVideoEditRef}
-                    onChange={(e) => handleVideoUpload(e, 'edit')}
-                    accept="video/mp4,video/webm,video/quicktime"
-                    style={{ display: 'none' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputVideoEditRef.current?.click()}
+                <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '14px', alignItems: 'center' }}>
+                  <div 
+                    onClick={() => handleOpenCropper(editItemModal.item.image_url || editItemModal.item.image, 'edit', editItemModal.item.title)}
                     style={{
-                      background: 'rgba(235, 215, 63, 0.15)',
-                      border: '1px solid rgba(235, 215, 63, 0.4)',
-                      borderRadius: '8px',
-                      padding: '6px 12px',
-                      color: '#ebd73f',
-                      fontSize: '0.72rem',
-                      fontFamily: 'Clash Display, sans-serif',
-                      fontWeight: 600,
+                      width: '140px',
+                      aspectRatio: '16 / 10',
+                      borderRadius: '10px',
+                      overflow: 'hidden',
+                      border: '1px solid rgba(235, 215, 63, 0.35)',
+                      background: '#050508',
                       cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px'
+                      position: 'relative'
                     }}
+                    title="Click to crop"
                   >
-                    <UploadCloud size={13} /> Upload Video
-                  </button>
-
-                  {(editItemModal.item.video_url || editItemModal.item.video) && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveVideo('edit')}
-                      style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        borderRadius: '8px',
-                        padding: '6px 10px',
-                        color: '#ef4444',
-                        cursor: 'pointer'
-                      }}
-                      title="Remove video"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {(editItemModal.item.video_url || editItemModal.item.video) ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'center' }}>
-                  <div style={{
-                    width: '150px',
-                    aspectRatio: '16 / 10',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    border: '1px solid rgba(235, 215, 63, 0.3)',
-                    background: '#050508',
-                    position: 'relative'
-                  }}>
-                    <video
-                      src={editItemModal.item.video_url || editItemModal.item.video}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    <img 
+                      src={editItemModal.item.image_url || editItemModal.item.image || '/images/web-portfolio/bharatup.jpg'} 
+                      alt="thumbnail" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                     />
                     <div style={{
                       position: 'absolute',
                       bottom: 0,
                       left: 0,
                       right: 0,
-                      background: 'rgba(0,0,0,0.8)',
-                      padding: '2px',
+                      background: 'rgba(0,0,0,0.75)',
+                      padding: '3px',
                       textAlign: 'center',
-                      fontSize: '0.52rem',
+                      fontSize: '0.55rem',
                       fontFamily: 'Panchang, sans-serif',
+                      fontWeight: 700,
                       color: '#ebd73f'
                     }}>
-                      LOOPING
+                      CROP 16:10
                     </div>
                   </div>
                   <input 
                     type="text" 
-                    value={editItemModal.item.video_url || editItemModal.item.video || ''} 
+                    value={editItemModal.item.image_url || editItemModal.item.image || ''} 
                     onChange={(e) => setEditItemModal({
                       ...editItemModal,
-                      item: { ...editItemModal.item, video_url: e.target.value, video: e.target.value }
+                      item: { ...editItemModal.item, image_url: e.target.value, image: e.target.value }
                     })}
-                    placeholder="/videos/portfolio/... or https://..."
-                    style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.8rem' }}
+                    placeholder="/images/web-portfolio/... or https://..."
+                    style={{ width: '100%', background: '#121218', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 14px', color: '#fff', fontSize: '0.82rem', fontFamily: 'Clash Display, sans-serif' }}
                   />
                 </div>
-              ) : (
-                <div 
-                  onClick={() => fileInputVideoEditRef.current?.click()}
-                  style={{
-                    border: '1px dashed rgba(255, 255, 255, 0.15)',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    textAlign: 'center',
-                    background: 'rgba(0,0,0,0.2)',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <span style={{ color: '#ebd73f', fontSize: '0.75rem', fontFamily: 'Clash Display, sans-serif' }}>
-                    + Upload .mp4 / .webm video recording
-                  </span>
-                </div>
-              )}
-            </div>
+              </div>
 
-            {/* Tech Stack Tags Manager in Edit Modal */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: '#888', fontSize: '0.8rem', display: 'block', marginBottom: '6px', fontFamily: 'Clash Display, sans-serif' }}>
-                Tech Stack Badges
-              </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
-                {(editItemModal.item.tech_stack || []).map((tech, idx) => (
-                  <span 
-                    key={idx}
+              {/* Video / Screen Recording Section in Edit Modal */}
+              <div style={{
+                background: 'rgba(18, 18, 24, 0.7)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
+                padding: '18px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                  <label style={{ fontSize: '0.8rem', color: '#fff', fontFamily: 'Panchang, sans-serif', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Video size={15} color="#ebd73f" /> Screen Recording Video (Looping Demo)
+                  </label>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <input
+                      type="file"
+                      ref={fileInputVideoEditRef}
+                      onChange={(e) => handleVideoUpload(e, 'edit')}
+                      accept="video/mp4,video/webm,video/quicktime"
+                      style={{ display: 'none' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputVideoEditRef.current?.click()}
+                      style={{
+                        background: 'rgba(235, 215, 63, 0.15)',
+                        border: '1px solid rgba(235, 215, 63, 0.4)',
+                        borderRadius: '8px',
+                        padding: '6px 12px',
+                        color: '#ebd73f',
+                        fontSize: '0.72rem',
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <UploadCloud size={13} /> Upload Video
+                    </button>
+
+                    {(editItemModal.item.video_url || editItemModal.item.video) && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveVideo('edit')}
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '8px',
+                          padding: '6px 10px',
+                          color: '#ef4444',
+                          cursor: 'pointer'
+                        }}
+                        title="Remove video"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {(editItemModal.item.video_url || editItemModal.item.video) ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '14px', alignItems: 'center' }}>
+                    <div style={{
+                      width: '150px',
+                      aspectRatio: '16 / 10',
+                      borderRadius: '10px',
+                      overflow: 'hidden',
+                      border: '1px solid rgba(235, 215, 63, 0.3)',
+                      background: '#050508',
+                      position: 'relative'
+                    }}>
+                      <video
+                        src={editItemModal.item.video_url || editItemModal.item.video}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: 'rgba(0,0,0,0.8)',
+                        padding: '2px',
+                        textAlign: 'center',
+                        fontSize: '0.52rem',
+                        fontFamily: 'Panchang, sans-serif',
+                        color: '#ebd73f'
+                      }}>
+                        LOOPING
+                      </div>
+                    </div>
+                    <input 
+                      type="text" 
+                      value={editItemModal.item.video_url || editItemModal.item.video || ''} 
+                      onChange={(e) => setEditItemModal({
+                        ...editItemModal,
+                        item: { ...editItemModal.item, video_url: e.target.value, video: e.target.value }
+                      })}
+                      placeholder="/videos/portfolio/... or https://..."
+                      style={{ width: '100%', background: '#121218', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 14px', color: '#fff', fontSize: '0.82rem', fontFamily: 'Clash Display, sans-serif' }}
+                    />
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => fileInputVideoEditRef.current?.click()}
                     style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      borderRadius: '16px',
-                      padding: '3px 10px',
-                      color: '#fff',
-                      fontSize: '0.75rem',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px'
+                      border: '1px dashed rgba(255, 255, 255, 0.15)',
+                      borderRadius: '10px',
+                      padding: '14px',
+                      textAlign: 'center',
+                      background: 'rgba(0,0,0,0.2)',
+                      cursor: 'pointer'
                     }}
                   >
-                    {tech}
-                    <button 
-                      type="button" 
-                      onClick={() => removeTechTag(tech, true)}
-                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}
-                    >
-                      <X size={11} />
-                    </button>
-                  </span>
-                ))}
+                    <span style={{ color: '#ebd73f', fontSize: '0.78rem', fontFamily: 'Clash Display, sans-serif' }}>
+                      + Upload .mp4 / .webm video recording to enable looping chassis demo
+                    </span>
+                  </div>
+                )}
               </div>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <input 
-                  type="text"
-                  placeholder="Add technology..."
-                  value={newTechInput}
-                  onChange={(e) => setNewTechInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTechTag(newTechInput, true); }}}
-                  style={{
-                    flex: 1,
-                    background: '#181820',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '6px',
-                    padding: '6px 10px',
-                    color: '#fff',
-                    fontSize: '0.8rem'
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => addTechTag(newTechInput, true)}
-                  style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', padding: '6px 12px', color: '#fff', fontSize: '0.75rem', cursor: 'pointer' }}
-                >
-                  + Add
-                </button>
+
+              {/* Tech Stack Tags Manager in Edit Modal */}
+              <div>
+                <label style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.82rem', display: 'block', marginBottom: '8px', fontFamily: 'Clash Display, sans-serif', fontWeight: 600 }}>
+                  Tech Stack Badges
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                  {(editItemModal.item.tech_stack || []).map((tech, idx) => (
+                    <span 
+                      key={idx}
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        borderRadius: '16px',
+                        padding: '4px 12px',
+                        color: '#fff',
+                        fontSize: '0.75rem',
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontWeight: 600,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      {tech}
+                      <button 
+                        type="button" 
+                        onClick={() => removeTechTag(tech, true)}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text"
+                    placeholder="Add technology (e.g. Next.js 15, Tailwind, Supabase)..."
+                    value={newTechInput}
+                    onChange={(e) => setNewTechInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTechTag(newTechInput, true); }}}
+                    style={{
+                      flex: 1,
+                      background: '#121218',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '10px',
+                      padding: '8px 14px',
+                      color: '#fff',
+                      fontSize: '0.82rem',
+                      fontFamily: 'Clash Display, sans-serif'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => addTechTag(newTechInput, true)}
+                    style={{
+                      background: 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: '10px',
+                      padding: '8px 16px',
+                      color: '#fff',
+                      fontSize: '0.76rem',
+                      fontFamily: 'Panchang, sans-serif',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    + Add
+                  </button>
+                </div>
+              </div>
+
+              {/* ORLO AI CASE STUDY SYNTHESIZER IN EDIT MODAL */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(15, 15, 22, 0.9) 100%)',
+                border: '1px solid rgba(235, 215, 63, 0.35)',
+                borderRadius: '18px',
+                padding: '20px',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.5)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Sparkles size={16} color="#ebd73f" />
+                    <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.82rem', fontWeight: 800, color: '#ebd73f', letterSpacing: '0.5px' }}>
+                      ORLO AI CASE STUDY SYNTHESIZER
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateOrloCaseStudy(editItemModal.item, (updater) => {
+                      const updated = typeof updater === 'function' ? updater(editItemModal.item) : updater;
+                      setEditItemModal({ ...editItemModal, item: updated });
+                    })}
+                    disabled={isGeneratingAI}
+                    style={{
+                      background: 'var(--brand-yellow, #ebd73f)',
+                      color: '#050505',
+                      border: 'none',
+                      borderRadius: '16px',
+                      padding: '7px 16px',
+                      fontFamily: 'Panchang, sans-serif',
+                      fontSize: '0.7rem',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 2px 10px rgba(235, 215, 63, 0.3)'
+                    }}
+                  >
+                    <Sparkles size={12} /> {isGeneratingAI ? 'Synthesizing...' : 'Regenerate with Orlo AI'}
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', color: '#ebd73f', fontFamily: 'Panchang, sans-serif', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
+                      THE CHALLENGE
+                    </label>
+                    <textarea 
+                      rows="3" 
+                      placeholder="The Challenge..."
+                      value={editItemModal.item.case_study_challenge || editItemModal.item.challenge || ''} 
+                      onChange={(e) => setEditItemModal({
+                        ...editItemModal,
+                        item: { ...editItemModal.item, case_study_challenge: e.target.value, challenge: e.target.value }
+                      })}
+                      style={{ width: '100%', background: '#121218', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 12px', color: '#fff', fontSize: '0.82rem', fontFamily: 'Clash Display, sans-serif', resize: 'vertical' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', color: '#ebd73f', fontFamily: 'Panchang, sans-serif', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
+                      THE ARCHITECTURAL SOLUTION
+                    </label>
+                    <textarea 
+                      rows="3" 
+                      placeholder="The Solution & Architecture..."
+                      value={editItemModal.item.case_study_solution || editItemModal.item.solution || ''} 
+                      onChange={(e) => setEditItemModal({
+                        ...editItemModal,
+                        item: { ...editItemModal.item, case_study_solution: e.target.value, solution: e.target.value }
+                      })}
+                      style={{ width: '100%', background: '#121218', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 12px', color: '#fff', fontSize: '0.82rem', fontFamily: 'Clash Display, sans-serif', resize: 'vertical' }}
+                    />
+                  </div>
+                </div>
+
+                {/* 3 Architectural Execution Pillars in Edit Modal */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.72rem', fontFamily: 'Panchang, sans-serif', fontWeight: 700, display: 'block', marginBottom: '8px' }}>
+                    ✦ 3 ARCHITECTURAL EXECUTION PILLARS
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+                    {(editItemModal.item.pillars || [
+                      { title: '01 / SUB-SECOND TTFB', desc: 'Edge-rendered architecture ensuring instant delivery across global nodes.' },
+                      { title: '02 / KINETIC MOTION', desc: '60 FPS physics-based micro-interactions tailored for high conversion.' },
+                      { title: '03 / SCALABLE EDGE', desc: 'Zero cold-start compute with automated cloud cache invalidation.' }
+                    ]).map((pillar, pIdx) => (
+                      <div key={pIdx} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px' }}>
+                        <input
+                          type="text"
+                          value={pillar.title}
+                          onChange={(e) => handlePillarChange(pIdx, 'title', e.target.value, true)}
+                          placeholder={`0${pIdx + 1} / TITLE`}
+                          style={{ width: '100%', background: '#111116', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '6px', padding: '6px 8px', color: '#ebd73f', fontSize: '0.72rem', fontFamily: 'Panchang, sans-serif', fontWeight: 700, marginBottom: '6px' }}
+                        />
+                        <textarea
+                          rows="2"
+                          value={pillar.desc}
+                          onChange={(e) => handlePillarChange(pIdx, 'desc', e.target.value, true)}
+                          placeholder="Pillar description..."
+                          style={{ width: '100%', background: '#111116', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '6px 8px', color: '#fff', fontSize: '0.75rem', fontFamily: 'Clash Display, sans-serif', resize: 'vertical' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Performance & Vitals Matrix (Stats) in Edit Modal */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.72rem', fontFamily: 'Panchang, sans-serif', fontWeight: 700 }}>
+                      ✦ PERFORMANCE & VITALS MATRIX
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleAddStat(true)}
+                      style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', padding: '3px 10px', color: '#fff', fontSize: '0.72rem', fontFamily: 'Clash Display, sans-serif', cursor: 'pointer' }}
+                    >
+                      + Add Metric
+                    </button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+                    {(editItemModal.item.stats || []).map((st, sIdx) => (
+                      <div key={sIdx} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px' }}>
+                        <input
+                          type="text"
+                          value={st.value}
+                          onChange={(e) => handleStatChange(sIdx, 'value', e.target.value, true)}
+                          placeholder="99/100 or 0.4s"
+                          style={{ width: '100%', background: '#111116', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '6px', padding: '6px 8px', color: '#ebd73f', fontSize: '0.82rem', fontWeight: 800, fontFamily: 'Panchang, sans-serif', marginBottom: '6px' }}
+                        />
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            value={st.label}
+                            onChange={(e) => handleStatChange(sIdx, 'label', e.target.value, true)}
+                            placeholder="Metric Label"
+                            style={{ flex: 1, background: '#111116', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '5px 8px', color: '#fff', fontSize: '0.75rem', fontFamily: 'Clash Display, sans-serif' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveStat(sIdx, true)}
+                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px' }}
+                            title="Delete metric"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* ORLO AI CASE STUDY SYNTHESIZER IN EDIT MODAL */}
+            {/* Fixed Modal Bottom Footer */}
             <div style={{
-              background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(15, 15, 22, 0.8) 100%)',
-              border: '1px solid rgba(235, 215, 63, 0.3)',
-              borderRadius: '16px',
-              padding: '18px',
-              marginBottom: '20px'
+              padding: '16px 28px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'rgba(12, 12, 18, 0.98)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexShrink: 0
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Sparkles size={16} color="#ebd73f" />
-                  <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.8rem', fontWeight: 800, color: '#ebd73f' }}>
-                    ORLO AI CASE STUDY SYNTHESIZER
-                  </span>
-                </div>
-                <button
+              <span style={{ fontSize: '0.74rem', color: 'rgba(255,255,255,0.45)', fontFamily: 'Clash Display, sans-serif' }}>
+                ✦ Changes will update the live public portfolio immediately upon saving.
+              </span>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
                   type="button"
-                  onClick={() => handleGenerateOrloCaseStudy(editItemModal.item, (updater) => {
-                    const updated = typeof updater === 'function' ? updater(editItemModal.item) : updater;
-                    setEditItemModal({ ...editItemModal, item: updated });
-                  })}
-                  disabled={isGeneratingAI}
-                  style={{
-                    background: 'var(--brand-yellow, #ebd73f)',
-                    color: '#050505',
-                    border: 'none',
-                    borderRadius: '16px',
-                    padding: '6px 14px',
+                  onClick={() => setEditItemModal({ show: false, item: null })}
+                  style={{ 
+                    background: 'rgba(255,255,255,0.08)', 
+                    border: '1px solid rgba(255,255,255,0.18)', 
+                    borderRadius: '24px', 
+                    padding: '10px 22px', 
+                    color: '#ffffff', 
+                    fontFamily: 'Clash Display, sans-serif',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  onClick={handleSaveEdit}
+                  style={{ 
+                    background: 'var(--brand-yellow, #ebd73f)', 
+                    border: 'none', 
+                    borderRadius: '24px', 
+                    padding: '10px 26px', 
+                    color: '#050505', 
                     fontFamily: 'Panchang, sans-serif',
-                    fontSize: '0.7rem',
-                    fontWeight: 800,
+                    fontSize: '0.78rem',
+                    fontWeight: 800, 
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '6px',
+                    boxShadow: '0 4px 20px rgba(235, 215, 63, 0.4)',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  <Sparkles size={12} /> {isGeneratingAI ? 'Synthesizing...' : 'Regenerate with Orlo AI'}
+                  <Check size={16} /> Save Changes
                 </button>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
-                <div>
-                  <label style={{ fontSize: '0.72rem', color: '#ebd73f', fontFamily: 'Panchang, sans-serif', display: 'block', marginBottom: '4px' }}>
-                    THE CHALLENGE
-                  </label>
-                  <textarea 
-                    rows="3" 
-                    placeholder="The Challenge..."
-                    value={editItemModal.item.case_study_challenge || editItemModal.item.challenge || ''} 
-                    onChange={(e) => setEditItemModal({
-                      ...editItemModal,
-                      item: { ...editItemModal.item, case_study_challenge: e.target.value, challenge: e.target.value }
-                    })}
-                    style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.82rem', resize: 'vertical' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.72rem', color: '#ebd73f', fontFamily: 'Panchang, sans-serif', display: 'block', marginBottom: '4px' }}>
-                    THE ARCHITECTURAL SOLUTION
-                  </label>
-                  <textarea 
-                    rows="3" 
-                    placeholder="The Solution & Architecture..."
-                    value={editItemModal.item.case_study_solution || editItemModal.item.solution || ''} 
-                    onChange={(e) => setEditItemModal({
-                      ...editItemModal,
-                      item: { ...editItemModal.item, case_study_solution: e.target.value, solution: e.target.value }
-                    })}
-                    style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.82rem', resize: 'vertical' }}
-                  />
-                </div>
-              </div>
-
-              {/* 3 Architectural Execution Pillars in Edit Modal */}
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.72rem', fontFamily: 'Panchang, sans-serif', display: 'block', marginBottom: '8px' }}>
-                  ✦ 3 ARCHITECTURAL EXECUTION PILLARS
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
-                  {(editItemModal.item.pillars || [
-                    { title: '01 / SUB-SECOND TTFB', desc: 'Edge-rendered architecture ensuring instant delivery across global nodes.' },
-                    { title: '02 / KINETIC MOTION', desc: '60 FPS physics-based micro-interactions tailored for high conversion.' },
-                    { title: '03 / SCALABLE EDGE', desc: 'Zero cold-start compute with automated cloud cache invalidation.' }
-                  ]).map((pillar, pIdx) => (
-                    <div key={pIdx} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '10px' }}>
-                      <input
-                        type="text"
-                        value={pillar.title}
-                        onChange={(e) => handlePillarChange(pIdx, 'title', e.target.value, true)}
-                        placeholder={`0${pIdx + 1} / TITLE`}
-                        style={{ width: '100%', background: '#111116', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '6px', padding: '5px 8px', color: '#ebd73f', fontSize: '0.7rem', fontFamily: 'Panchang, sans-serif', fontWeight: 700, marginBottom: '6px' }}
-                      />
-                      <textarea
-                        rows="2"
-                        value={pillar.desc}
-                        onChange={(e) => handlePillarChange(pIdx, 'desc', e.target.value, true)}
-                        placeholder="Pillar description..."
-                        style={{ width: '100%', background: '#111116', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '5px 8px', color: '#fff', fontSize: '0.72rem', resize: 'vertical' }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Performance & Vitals Matrix (Stats) in Edit Modal */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <label style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.72rem', fontFamily: 'Panchang, sans-serif' }}>
-                    ✦ PERFORMANCE & VITALS MATRIX
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => handleAddStat(true)}
-                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', padding: '3px 8px', color: '#fff', fontSize: '0.7rem', cursor: 'pointer' }}
-                  >
-                    + Add Metric
-                  </button>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
-                  {(editItemModal.item.stats || []).map((st, sIdx) => (
-                    <div key={sIdx} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '8px' }}>
-                      <input
-                        type="text"
-                        value={st.value}
-                        onChange={(e) => handleStatChange(sIdx, 'value', e.target.value, true)}
-                        placeholder="99/100 or 0.4s"
-                        style={{ width: '100%', background: '#111116', border: '1px solid rgba(235, 215, 63, 0.4)', borderRadius: '6px', padding: '5px 8px', color: '#ebd73f', fontSize: '0.8rem', fontWeight: 800, fontFamily: 'Panchang, sans-serif', marginBottom: '5px' }}
-                      />
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                        <input
-                          type="text"
-                          value={st.label}
-                          onChange={(e) => handleStatChange(sIdx, 'label', e.target.value, true)}
-                          placeholder="Metric Label"
-                          style={{ flex: 1, background: '#111116', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem' }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveStat(sIdx, true)}
-                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px' }}
-                          title="Delete metric"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '14px', marginTop: '20px' }}>
-              <button 
-                onClick={() => setEditItemModal({ show: false, item: null })}
-                style={{ 
-                  background: 'rgba(255,255,255,0.08)', 
-                  border: '1px solid rgba(255,255,255,0.18)', 
-                  borderRadius: '24px', 
-                  padding: '12px 24px', 
-                  color: '#ffffff', 
-                  fontFamily: 'Clash Display, sans-serif',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSaveEdit}
-                style={{ 
-                  background: 'var(--brand-yellow, #ebd73f)', 
-                  border: 'none', 
-                  borderRadius: '24px', 
-                  padding: '12px 28px', 
-                  color: '#050505', 
-                  fontFamily: 'Panchang, sans-serif',
-                  fontSize: '0.82rem',
-                  fontWeight: 800, 
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 20px rgba(235, 215, 63, 0.4)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Save Changes
-              </button>
             </div>
           </div>
         </div>
