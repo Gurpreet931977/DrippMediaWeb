@@ -17,13 +17,13 @@ const DEFAULT_PROJECTS = [
     image: '/images/web-portfolio/bharatup.jpg',
     color: '#ebd73f',
     stats: [
-      { label: 'Lighthouse Score', value: '99/100' },
+      { label: 'Overall Quality Score', value: '99/100' },
       { label: 'Active Reach', value: '25K+' },
-      { label: 'Page Load Speed', value: '0.4s' }
+      { label: 'Instant Load Speed', value: '0.4s' }
     ],
     techStack: ['Next.js 14', 'TypeScript', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Framer Motion'],
-    challenge: 'Creating a high-credibility digital gateway that communicates modern business acceleration with sub-second performance.',
-    solution: 'We architected a lightweight, server-rendered Next.js application with edge caching, dark aesthetic, and frictionless responsiveness.'
+    challenge: 'Building a modern, credible online presence for growing businesses that loads instantly and stands out from standard templates.',
+    solution: 'We designed a custom, fast website with smooth animations, high-converting layouts, and effortless mobile browsing.'
   },
   {
     id: 'pinaka',
@@ -31,19 +31,19 @@ const DEFAULT_PROJECTS = [
     tagline: 'Skin, Laser & Dermatology Clinic in South Bopal, Ahmedabad',
     category: 'Healthcare & Clinical Web',
     badge: 'Healthcare',
-    desc: 'A clinical healthcare platform built to streamline patient consultation bookings, doctor profiles, and multi-specialty dermatology services.',
+    desc: 'A modern medical clinic website built to help patients easily discover treatments, view doctor profiles, and book appointments online.',
     url: 'https://www.pinakacareclinic.com/',
     displayUrl: 'pinakacareclinic.com',
     image: '/images/web-portfolio/pinakacare.jpg',
     color: '#ebd73f',
     stats: [
-      { label: 'Booking Conversion', value: '+340%' },
-      { label: 'Mobile Readiness', value: '100%' },
-      { label: 'TTFB Server Latency', value: '0.28s' }
+      { label: 'Booking Increase', value: '+340%' },
+      { label: 'Mobile Experience', value: '100%' },
+      { label: 'Page Load Speed', value: '0.28s' }
     ],
     techStack: ['Next.js', 'React 18', 'Tailwind CSS', 'Framer Motion', 'Cloudflare Edge'],
-    challenge: 'Medical clinics often suffer from confusing appointment layouts and outdated interfaces that reduce patient trust.',
-    solution: 'Designed a soothing, high-trust visual language with instant slot booking, clean treatment catalog, and fast mobile intake.'
+    challenge: 'Traditional clinic websites are often cluttered and confusing, making it difficult for patients to quickly book an appointment.',
+    solution: 'We built a soothing, high-trust website where patients can explore treatments and book a doctor consultation in just a few taps.'
   },
   {
     id: 'goatsociety',
@@ -51,19 +51,19 @@ const DEFAULT_PROJECTS = [
     tagline: 'Authentic Decanted Fragrances & Lifestyle E-Commerce',
     category: 'Luxury Fragrance & Commerce',
     badge: 'Luxury E-Com',
-    desc: 'An exclusive e-commerce boutique featuring 100% authentic decanted fragrances, sterile extraction standards, and sleek catalog navigation.',
+    desc: 'An online fragrance store featuring authentic luxury perfumes, easy size selection, and smooth mobile checkout.',
     url: 'https://goatsociety.in/',
     displayUrl: 'goatsociety.in',
     image: '/images/web-portfolio/goatsociety.jpg',
     color: '#ebd73f',
     stats: [
-      { label: 'Catalog Performance', value: '60 FPS' },
-      { label: 'User Retention', value: '+220%' },
-      { label: 'Checkout Speed', value: '< 2s' }
+      { label: 'Smooth Browsing', value: '60 FPS' },
+      { label: 'Customer Retention', value: '+220%' },
+      { label: 'Fast Checkout', value: '< 2s' }
     ],
     techStack: ['Next.js', 'Tailwind CSS', 'Framer Motion', 'E-Commerce Core', 'Cloudflare CDN'],
-    challenge: 'Creating a high-end luxury aesthetic that showcases perfume notes and sizes clearly without slowing down mobile catalog scrolling.',
-    solution: 'Crafted minimal typography, high-res visual product cards, and instant decant size selectors for maximum checkout efficiency.'
+    challenge: 'Showcasing luxury perfumes with clear bottle size options without slowing down the shopping experience on phones.',
+    solution: 'We designed an elegant storefront with crisp product photos, 1-tap size pickers, and a fast, friction-free checkout.'
   },
   {
     id: 'rasmlai',
@@ -71,19 +71,19 @@ const DEFAULT_PROJECTS = [
     tagline: 'A Safe Space to Express Every Emotion • AI Companion for Wellness',
     category: 'AI Companion & Product Web',
     badge: 'AI Application',
-    desc: 'A voice-first AI companion workspace engineered to help users process feelings, express emotions, and engage in reflective dialogue.',
+    desc: 'A private, voice-first AI companion website designed to help people express feelings, talk through ideas, and feel supported.',
     url: 'https://rasmlai.vercel.app/',
     displayUrl: 'rasmlai.vercel.app',
     image: '/images/web-portfolio/rasmlai.jpg',
     color: '#ebd73f',
     stats: [
-      { label: 'AI Response Latency', value: '12ms' },
-      { label: 'Architecture', value: 'Edge AI' },
-      { label: 'Lighthouse Score', value: '100/100' }
+      { label: 'Instant AI Replies', value: '12ms' },
+      { label: 'Reliable Cloud Setup', value: '99.9%' },
+      { label: 'Overall Quality Score', value: '100/100' }
     ],
     techStack: ['Next.js 15', 'React 19', 'OpenAI API', 'Vercel AI SDK', 'Tailwind CSS'],
-    challenge: 'Creating a calming, intimate digital environment where users feel secure expressing deep emotions.',
-    solution: 'Engineered an ultra-clean, minimal interface with fluid animations, intuitive voice prompts, and zero friction onboarding.'
+    challenge: 'Creating a warm, peaceful space where anyone feels safe and comfortable talking with an AI companion.',
+    solution: 'We built a minimalist, soothing interface with natural voice prompts, fluid transitions, and zero complicated setup steps.'
   }
 ];
 
@@ -1417,24 +1417,36 @@ export default function Page() {
           pointer-events: auto;
         }
 
-        /* Left Side Minimal Luxury Client Conversion Station */
+        /* High-End Luxury Client Acquisition Station */
         .drawer-conversion-hub {
           position: absolute;
-          left: 4vw;
+          left: 3.5vw;
           top: 50%;
           transform: translateY(-46%) scale(0.96);
-          width: clamp(240px, 20vw, 290px);
-          background: rgba(10, 10, 15, 0.75);
-          backdrop-filter: blur(30px);
-          -webkit-backdrop-filter: blur(30px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 18px;
-          padding: 22px 20px;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(235, 215, 63, 0.05);
+          width: clamp(310px, 27vw, 380px);
+          background: linear-gradient(165deg, rgba(22, 22, 32, 0.92) 0%, rgba(8, 8, 14, 0.96) 100%);
+          backdrop-filter: blur(35px);
+          -webkit-backdrop-filter: blur(35px);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 22px;
+          padding: 28px 26px;
+          box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95), 0 0 35px rgba(235, 215, 63, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.18);
           opacity: 0;
           pointer-events: none;
           z-index: 2010;
-          transition: opacity 0.4s 0.1s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s 0.1s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
+          transition: opacity 0.45s 0.1s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s 0.1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .drawer-conversion-hub::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 10%;
+          right: 10%;
+          height: 1.5px;
+          background: linear-gradient(90deg, transparent, var(--brand-yellow), transparent);
+          opacity: 0.8;
         }
 
         .case-study-drawer.open .drawer-conversion-hub {
@@ -1447,12 +1459,16 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
+          background: rgba(235, 215, 63, 0.12);
+          border: 1px solid rgba(235, 215, 63, 0.3);
+          border-radius: 20px;
+          padding: 4px 12px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.54rem;
+          font-size: 0.56rem;
           font-weight: 800;
           color: var(--brand-yellow);
           letter-spacing: 1.2px;
-          margin-bottom: 8px;
+          margin-bottom: 12px;
         }
 
         .hub-pulse-star {
@@ -1462,42 +1478,46 @@ export default function Page() {
 
         .hub-title {
           font-family: 'Panchang', sans-serif;
-          font-size: 0.86rem;
+          font-size: 1.05rem;
           font-weight: 800;
           color: #ffffff;
-          line-height: 1.35;
-          margin: 0 0 8px 0;
-          letter-spacing: -0.2px;
+          line-height: 1.32;
+          margin: 0 0 10px 0;
+          letter-spacing: -0.3px;
         }
 
         .hub-desc {
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.78rem;
-          line-height: 1.45;
-          color: rgba(255, 255, 255, 0.65);
-          margin: 0 0 14px 0;
+          font-size: 0.84rem;
+          line-height: 1.5;
+          color: rgba(255, 255, 255, 0.75);
+          margin: 0 0 18px 0;
         }
 
         .hub-perks-list {
           display: flex;
           flex-direction: column;
-          gap: 7px;
-          margin-bottom: 16px;
+          gap: 9px;
+          margin-bottom: 22px;
+          padding: 12px 14px;
+          background: rgba(0, 0, 0, 0.35);
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .hub-perk-item {
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 9px;
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.74rem;
-          font-weight: 500;
-          color: rgba(255, 255, 255, 0.85);
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.92);
         }
 
         .hub-perk-item .perk-bullet {
           color: var(--brand-yellow);
-          font-size: 0.6rem;
+          font-size: 0.7rem;
         }
 
         /* High-Impact Interactive CTA Button */
@@ -1506,29 +1526,32 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
+          gap: 10px;
           width: 100%;
           background: var(--brand-yellow);
           color: #050505;
-          padding: 10px 16px;
-          border-radius: 24px;
+          padding: 14px 22px;
+          border-radius: 30px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.64rem;
+          font-size: 0.72rem;
           font-weight: 800;
-          letter-spacing: 1px;
+          letter-spacing: 1.2px;
           text-decoration: none;
           overflow: hidden;
-          white-space: nowrap;
-          box-shadow: 0 6px 20px rgba(235, 215, 63, 0.25);
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 10px 30px rgba(235, 215, 63, 0.35), 0 0 15px rgba(235, 215, 63, 0.2);
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
           cursor: pointer;
         }
 
         .hub-cta-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(235, 215, 63, 0.5), 0 0 20px rgba(235, 215, 63, 0.6);
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 16px 45px rgba(235, 215, 63, 0.6), 0 0 30px rgba(235, 215, 63, 0.9);
           background: #ffe347;
           color: #000;
+        }
+
+        .hub-cta-button:active {
+          transform: translateY(-1px) scale(0.98);
         }
 
         .hub-cta-shimmer {
@@ -1537,46 +1560,46 @@ export default function Page() {
           left: -150%;
           width: 100%;
           height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
           transform: skewX(-25deg);
-          animation: beaconSweep 2.8s infinite ease-in-out;
+          animation: beaconSweep 2.6s infinite ease-in-out;
         }
 
         .hub-cta-star {
-          font-size: 0.75rem;
+          font-size: 0.82rem;
           transition: transform 0.3s ease;
         }
         .hub-cta-button:hover .hub-cta-star {
-          transform: rotate(45deg) scale(1.15);
+          transform: rotate(45deg) scale(1.2);
         }
 
         .hub-cta-arrow {
-          width: 18px;
-          height: 18px;
+          width: 22px;
+          height: 22px;
           border-radius: 50%;
           background: #050505;
           color: var(--brand-yellow);
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: transform 0.3s ease;
+          transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .hub-cta-button:hover .hub-cta-arrow {
-          transform: translate(2px, -2px);
+          transform: translate(2px, -2px) scale(1.1);
         }
 
         .hub-telemetry {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 6px;
+          gap: 7px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.5rem;
+          font-size: 0.54rem;
           font-weight: 700;
-          color: rgba(255, 255, 255, 0.4);
-          letter-spacing: 0.6px;
-          margin-top: 12px;
+          color: rgba(255, 255, 255, 0.55);
+          letter-spacing: 0.8px;
+          margin-top: 14px;
           text-align: center;
         }
 
@@ -1982,10 +2005,87 @@ export default function Page() {
           }
         }
 
-        /* Gen-Z Mode: Strict All-Lowercase Aesthetic & Web Slang */
+        /* Gen-Z Mode: Sleek, Tight Letter-Spacing & Balanced Modern Weight */
         .genz-mode,
         .genz-mode * {
           text-transform: lowercase !important;
+        }
+
+        .genz-mode {
+          letter-spacing: -0.015em;
+        }
+
+        /* Headings and Display Titles */
+        .genz-mode .header-title,
+        .genz-mode .card-title,
+        .genz-mode .hub-title {
+          font-weight: 700 !important;
+          letter-spacing: -0.03em !important;
+        }
+
+        .genz-mode .header-kicker {
+          letter-spacing: 0.5px !important;
+          font-weight: 600 !important;
+        }
+
+        .genz-mode .header-sub {
+          letter-spacing: -0.01em !important;
+          font-weight: 450 !important;
+          opacity: 0.85;
+        }
+
+        /* Micro Badges & Kickers */
+        .genz-mode .card-category-badge,
+        .genz-mode .card-index-tag,
+        .genz-mode .hud-kicker,
+        .genz-mode .hub-eyebrow,
+        .genz-mode .monograph-badge {
+          letter-spacing: 0.3px !important;
+          font-weight: 650 !important;
+        }
+
+        /* Body and Descriptions */
+        .genz-mode .card-desc,
+        .genz-mode .hub-desc,
+        .genz-mode .blueprint-quote-text,
+        .genz-mode .pillar-desc,
+        .genz-mode .hub-perk-item {
+          letter-spacing: -0.01em !important;
+          font-weight: 450 !important;
+          line-height: 1.55;
+        }
+
+        /* Interactive Buttons & Tabs */
+        .genz-mode .btn-launch-pill,
+        .genz-mode .btn-case-study,
+        .genz-mode .hub-cta-button,
+        .genz-mode .drawer-close-btn,
+        .genz-mode .case-tab-btn,
+        .genz-mode .btn-copy-blueprint,
+        .genz-mode .hud-domain-capsule {
+          letter-spacing: 0.2px !important;
+          font-weight: 650 !important;
+        }
+
+        .genz-mode .hub-telemetry,
+        .genz-mode .hud-archive-text {
+          letter-spacing: 0.2px !important;
+          font-weight: 500 !important;
+        }
+
+        .genz-mode .stat-metric-value {
+          letter-spacing: -0.03em !important;
+          font-weight: 700 !important;
+        }
+
+        .genz-mode .stat-metric-label {
+          letter-spacing: 0px !important;
+          font-weight: 450 !important;
+        }
+
+        .genz-mode .pillar-title {
+          letter-spacing: 0.2px !important;
+          font-weight: 650 !important;
         }
       `}} />
 
@@ -2233,7 +2333,7 @@ export default function Page() {
           className={`case-study-drawer ${selectedCaseStudy ? 'open' : ''}`}
           onClick={() => setSelectedCaseStudy(null)}
         >
-          {/* Left Side Minimal Luxury Client Conversion Station */}
+          {/* Left Side High-End Luxury Client Acquisition Station */}
           <div 
             className="drawer-conversion-hub" 
             onClick={(e) => e.stopPropagation()}
@@ -2241,52 +2341,62 @@ export default function Page() {
             {/* Clean Status Chip */}
             <div className="hub-eyebrow">
               <span className="hub-pulse-star">✦</span>
-              <span>{isGenz ? 'start a build' : 'COMMISSION A BUILD'}</span>
+              <span>{isGenz ? 'ready for your own website?' : 'READY FOR YOUR OWN WEBSITE?'}</span>
             </div>
 
-            {/* Compact Impact Title */}
+            {/* High-Impact Benefit Title */}
             <h3 className="hub-title">
-              {isGenz ? 'want a site this clean?' : 'WANT A SITE LIKE THIS?'}
+              {isGenz ? 'let’s build something incredible for you' : 'LET’S BUILD SOMETHING EXTRAORDINARY'}
             </h3>
 
-            {/* Clean Value Prop */}
+            {/* Clear Value Prop */}
             <p className="hub-desc">
               {isGenz
-                ? 'we build high-aesthetic web platforms with 60 fps motion & instant load speeds.'
-                : 'We architect bespoke digital platforms with 60 FPS motion & sub-second speed.'}
+                ? 'we build custom websites that make your brand look top tier and actually convert visitors into paying clients.'
+                : 'We design custom websites that elevate your brand and turn daily visitors into high-paying clients.'}
             </p>
 
-            {/* Minimal Perks Matrix */}
+            {/* Client-Focused Benefits List */}
             <div className="hub-perks-list">
               <div className="hub-perk-item">
                 <span className="perk-bullet">✦</span>
-                <span>{isGenz ? '100% custom next.js architecture' : '100% Custom Next.js Architecture'}</span>
+                <span>{isGenz ? '100% custom design built for your brand' : '100% Custom Design Built For Your Brand'}</span>
               </div>
               <div className="hub-perk-item">
                 <span className="perk-bullet">✦</span>
-                <span>{isGenz ? 'sub-second edge load & 2-3 wk delivery' : 'Sub-Second Edge Load & 2-3 Wk Delivery'}</span>
+                <span>{isGenz ? 'fast & flawless on all phones & laptops' : 'Fast & Flawless on Phones & Laptops'}</span>
+              </div>
+              <div className="hub-perk-item">
+                <span className="perk-bullet">✦</span>
+                <span>{isGenz ? 'done & launched for you in 2–3 weeks' : 'Done & Launched For You in 2–3 Weeks'}</span>
               </div>
             </div>
 
-            {/* Primary High-Conversion CTA Button */}
+            {/* Primary High-Impact CTA Button */}
             <a
-              href="mailto:contact@drippmedia.com?subject=Project Inquiry: Custom Web Platform Build"
+              href="mailto:contact@drippmedia.com?subject=Project Inquiry: Custom Website Build"
               onClick={(e) => {
                 e.stopPropagation();
                 playSound('click');
               }}
               className="hub-cta-button"
-              title="Start your custom web build project"
+              title="Start your custom website project"
             >
               <div className="hub-cta-shimmer" />
               <span className="hub-cta-star">✦</span>
-              <span>{isGenz ? 'start your project ↗' : 'START YOUR BUILD ↗'}</span>
+              <span>{isGenz ? 'get your website started' : 'GET YOUR WEBSITE STARTED'}</span>
+              <div className="hub-cta-arrow">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </div>
             </a>
 
-            {/* Secondary Telemetry Tag */}
+            {/* Secondary Guarantee Tag */}
             <div className="hub-telemetry">
               <span className="telemetry-live-dot" />
-              <span>{isGenz ? 'accepting builds this week' : 'ACCEPTING BUILDS THIS WEEK'}</span>
+              <span>{isGenz ? 'fast reply • free project consultation' : 'FAST 24-HR RESPONSE • FREE CONSULTATION'}</span>
             </div>
           </div>
 
@@ -2377,30 +2487,30 @@ export default function Page() {
                       className={`case-tab-btn ${caseStudyTab === 'blueprint' ? 'active' : ''}`}
                       onClick={() => { playSound('click'); setCaseStudyTab('blueprint'); }}
                     >
-                      <span>{isGenz ? 'blueprint & story' : 'Blueprint & Narrative'}</span>
+                      <span>{isGenz ? 'story & solution' : 'Story & Solution'}</span>
                     </button>
                     <button 
                       className={`case-tab-btn ${caseStudyTab === 'metrics' ? 'active' : ''}`}
                       onClick={() => { playSound('click'); setCaseStudyTab('metrics'); }}
                     >
-                      <span>{isGenz ? 'speed & vitals' : 'Performance & Vitals'}</span>
+                      <span>{isGenz ? 'speed & results' : 'Speed & Results'}</span>
                     </button>
                     <button 
                       className={`case-tab-btn ${caseStudyTab === 'stack' ? 'active' : ''}`}
                       onClick={() => { playSound('click'); setCaseStudyTab('stack'); }}
                     >
-                      <span>{isGenz ? 'tech stack' : 'Tech Architecture'}</span>
+                      <span>{isGenz ? 'tools & tech' : 'Tools & Technologies'}</span>
                     </button>
                   </div>
 
-                  {/* TAB 1: BLUEPRINT & NARRATIVE */}
+                  {/* TAB 1: STORY & SOLUTION */}
                   {caseStudyTab === 'blueprint' && (
                     <div>
                       {/* The Strategic Challenge Card */}
                       <div className="blueprint-card">
                         <div className="monograph-badge">
                           <span className="badge-spark">✦</span>
-                          <span className="badge-label">{isGenz ? 'the strategic challenge' : 'THE STRATEGIC CHALLENGE'}</span>
+                          <span className="badge-label">{isGenz ? "the client's goal" : "THE CLIENT'S GOAL"}</span>
                         </div>
                         <p className="blueprint-quote-text">
                           "{selectedCaseStudy.challenge}"
@@ -2411,7 +2521,7 @@ export default function Page() {
                       <div className="blueprint-card highlight">
                         <div className="monograph-badge highlight">
                           <span className="badge-spark">✦</span>
-                          <span className="badge-label">{isGenz ? 'the architectural solution' : 'THE ARCHITECTURAL SOLUTION'}</span>
+                          <span className="badge-label">{isGenz ? 'how we built it' : 'HOW WE BUILT IT'}</span>
                         </div>
                         <p className="blueprint-quote-text" style={{ marginBottom: '16px', color: 'rgba(255, 255, 255, 0.95)' }}>
                           {selectedCaseStudy.solution}
@@ -2422,23 +2532,23 @@ export default function Page() {
                           {Array.isArray(selectedCaseStudy.pillars) && selectedCaseStudy.pillars.length > 0 ? (
                             selectedCaseStudy.pillars.map((pillar, pIdx) => (
                               <div key={pIdx} className="pillar-card">
-                                <div className="pillar-title">{pillar.title || `0${pIdx + 1} / PILLAR`}</div>
+                                <div className="pillar-title">{pillar.title || `0${pIdx + 1} / FEATURE`}</div>
                                 <div className="pillar-desc">{pillar.desc || pillar.description || ''}</div>
                               </div>
                             ))
                           ) : (
                             <>
                               <div className="pillar-card">
-                                <div className="pillar-title">{isGenz ? '01 / sub-second ttfb' : '01 / SUB-SECOND TTFB'}</div>
-                                <div className="pillar-desc">{isGenz ? 'edge-rendered architecture ensuring instant delivery worldwide.' : 'Edge-rendered architecture ensuring instant delivery across global nodes.'}</div>
+                                <div className="pillar-title">{isGenz ? '01 / instant load speed' : '01 / INSTANT LOAD SPEED'}</div>
+                                <div className="pillar-desc">{isGenz ? 'opens in the blink of an eye with zero waiting or lag.' : 'Pages open immediately with zero waiting or lag.'}</div>
                               </div>
                               <div className="pillar-card">
-                                <div className="pillar-title">{isGenz ? '02 / kinetic motion' : '02 / KINETIC MOTION'}</div>
-                                <div className="pillar-desc">{isGenz ? '60 fps physics-based micro-interactions tailored for high conversion.' : '60 FPS physics-based micro-interactions tailored for high conversion.'}</div>
+                                <div className="pillar-title">{isGenz ? '02 / smooth visuals' : '02 / SMOOTH ANIMATIONS'}</div>
+                                <div className="pillar-desc">{isGenz ? 'clean interactive motion that keeps visitors engaged.' : 'Fluid interactive motion that keeps visitors engaged.'}</div>
                               </div>
                               <div className="pillar-card">
-                                <div className="pillar-title">{isGenz ? '03 / scalable edge' : '03 / SCALABLE EDGE'}</div>
-                                <div className="pillar-desc">{isGenz ? 'zero cold-start compute with automated cloud cache invalidation.' : 'Zero cold-start compute with automated cloud cache invalidation.'}</div>
+                                <div className="pillar-title">{isGenz ? '03 / built to grow' : '03 / BUILT TO GROW'}</div>
+                                <div className="pillar-desc">{isGenz ? 'cloud setup ready to handle huge traffic spikes effortlessly.' : 'Reliable cloud setup ready to handle huge traffic spikes effortlessly.'}</div>
                               </div>
                             </>
                           )}
@@ -2447,7 +2557,7 @@ export default function Page() {
                     </div>
                   )}
 
-                  {/* TAB 2: PERFORMANCE & METRICS */}
+                  {/* TAB 2: SPEED & RESULTS */}
                   {caseStudyTab === 'metrics' && (
                     <div>
                       <div className="stats-matrix-grid">
@@ -2464,15 +2574,15 @@ export default function Page() {
                           <>
                             <div className="stat-metric-box">
                               <div className="stat-metric-value">99/100</div>
-                              <div className="stat-metric-label">{isGenz ? 'lighthouse performance' : 'Lighthouse Performance'}</div>
+                              <div className="stat-metric-label">{isGenz ? 'overall quality score' : 'Overall Quality Score'}</div>
                             </div>
                             <div className="stat-metric-box">
                               <div className="stat-metric-value" style={{ color: '#ffffff' }}>0.35s</div>
-                              <div className="stat-metric-label">{isGenz ? 'time to interactive (tti)' : 'Time to Interactive (TTI)'}</div>
+                              <div className="stat-metric-label">{isGenz ? 'instant load speed' : 'Instant Load Speed'}</div>
                             </div>
                             <div className="stat-metric-box">
                               <div className="stat-metric-value">100%</div>
-                              <div className="stat-metric-label">{isGenz ? 'seo & best practices' : 'SEO & Best Practices'}</div>
+                              <div className="stat-metric-label">{isGenz ? 'mobile & search ready' : 'Mobile & Search Ready'}</div>
                             </div>
                           </>
                         )}
@@ -2481,27 +2591,27 @@ export default function Page() {
                       <div className="blueprint-card">
                         <div className="monograph-badge">
                           <span className="badge-spark">✦</span>
-                          <span className="badge-label">{isGenz ? 'speed & reliability score' : 'INFRASTRUCTURE & RELIABILITY SCORE'}</span>
+                          <span className="badge-label">{isGenz ? 'speed & reliability' : 'SPEED & RELIABILITY'}</span>
                         </div>
                         <p className="blueprint-quote-text" style={{ fontSize: '0.92rem', color: 'rgba(255, 255, 255, 0.9)' }}>
                           {isGenz
-                            ? 'engineered for zero layout shift (cls: 0.00), instant first contentful paint (< 0.4s), and sub-millisecond edge api routing with 99.99% uptime.'
-                            : 'Engineered for zero layout shift (CLS: 0.00), instant First Contentful Paint (< 0.4s), and sub-millisecond edge API routing with 99.99% uptime SLA.'}
+                            ? 'tested and optimized to open in under half a second on any device, with smooth scrolling and 24/7 reliability.'
+                            : 'Tested and optimized to load in less than half a second anywhere in the world, with smooth scrolling on all phones and laptops.'}
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {/* TAB 3: TECH ARCHITECTURE */}
+                  {/* TAB 3: TOOLS & TECHNOLOGIES */}
                   {caseStudyTab === 'stack' && (
                     <div>
                       <div className="blueprint-card">
                         <div className="monograph-badge highlight">
                           <span className="badge-spark">✦</span>
-                          <span className="badge-label">{isGenz ? 'integrated tech ecosystem' : 'INTEGRATED TECHNOLOGY ECOSYSTEM'}</span>
+                          <span className="badge-label">{isGenz ? 'modern web tools' : 'MODERN WEB TOOLS'}</span>
                         </div>
                         <p className="blueprint-quote-text" style={{ fontSize: '0.92rem', color: 'rgba(255, 255, 255, 0.85)', marginBottom: '18px' }}>
-                          {isGenz ? 'every layer of the codebase is built with production frameworks:' : 'Every layer of the codebase is constructed with cutting-edge production frameworks:'}
+                          {isGenz ? 'crafted using the best modern web tools for maximum speed, security, and design:' : 'Crafted using the world’s leading modern web tools for maximum speed, security, and design:'}
                         </p>
                         <div className="card-tech-pills" style={{ gap: '10px' }}>
                           {selectedCaseStudy.techStack.map((tech, i) => (
@@ -2557,7 +2667,7 @@ export default function Page() {
                     onClick={() => playSound('click')}
                     style={{ textDecoration: 'none' }}
                   >
-                    <span>{isGenz ? 'launch live platform' : 'Launch Live Platform'}</span>
+                    <span>{isGenz ? 'visit live website ↗' : 'Visit Live Website ↗'}</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="7" y1="17" x2="17" y2="7"></line>
                       <polyline points="7 7 17 7 17 17"></polyline>
