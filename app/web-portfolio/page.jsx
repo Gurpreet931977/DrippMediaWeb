@@ -1859,48 +1859,33 @@ export default function Page() {
                 paddingTop: '24px',
                 borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 alignItems: 'center',
                 flexWrap: 'wrap',
                 gap: '12px'
               }}>
-                <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontFamily: 'Panchang, sans-serif',
-                  fontSize: '0.68rem',
-                  color: '#10b981',
-                  fontWeight: 700
-                }}>
-                  <span className="domain-live-pulse" style={{ background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
-                  <span>PRODUCTION DEPLOYED</span>
-                </div>
+                <button
+                  className="btn-copy-blueprint"
+                  onClick={() => handleCopyLink(selectedCaseStudy)}
+                  title="Copy Live Project Link"
+                >
+                  <span>{copiedLink ? '✓ Copied Link' : 'Copy Link'}</span>
+                </button>
 
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <button
-                    className="btn-copy-blueprint"
-                    onClick={() => handleCopyLink(selectedCaseStudy)}
-                    title="Copy Live Project Link"
-                  >
-                    <span>{copiedLink ? '✓ Copied Link' : 'Copy Link'}</span>
-                  </button>
-
-                  <a 
-                    href={selectedCaseStudy.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="btn-launch-pill"
-                    onClick={() => playSound('click')}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <span>Launch Live Platform</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="7" y1="17" x2="17" y2="7"></line>
-                      <polyline points="7 7 17 7 17 17"></polyline>
-                    </svg>
-                  </a>
-                </div>
+                <a 
+                  href={selectedCaseStudy.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="btn-launch-pill"
+                  onClick={() => playSound('click')}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <span>Launch Live Platform</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </a>
               </div>
             </>
           )}
