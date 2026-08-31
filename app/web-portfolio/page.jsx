@@ -1417,7 +1417,7 @@ export default function Page() {
           pointer-events: auto;
         }
 
-        /* High-End Luxury Client Acquisition Station */
+        /* High-End Luxury Animated Client Acquisition Station */
         .drawer-conversion-hub {
           position: absolute;
           left: 3.5vw;
@@ -1438,37 +1438,87 @@ export default function Page() {
           transition: opacity 0.45s 0.1s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s 0.1s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .drawer-conversion-hub::before {
-          content: '';
+        .hub-top-beam {
           position: absolute;
           top: 0;
-          left: 10%;
-          right: 10%;
-          height: 1.5px;
+          left: -60%;
+          width: 60%;
+          height: 2px;
           background: linear-gradient(90deg, transparent, var(--brand-yellow), transparent);
-          opacity: 0.8;
+          animation: hubBeamSweep 3.5s ease-in-out infinite;
+          pointer-events: none;
+        }
+
+        @keyframes hubBeamSweep {
+          0% { left: -60%; }
+          50% { left: 100%; }
+          100% { left: 100%; }
         }
 
         .case-study-drawer.open .drawer-conversion-hub {
           opacity: 1;
           transform: translateY(-50%) scale(1);
           pointer-events: auto;
+          animation: hubFloatingLevitate 5s ease-in-out infinite, hubAmbientGlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes hubFloatingLevitate {
+          0%, 100% {
+            transform: translateY(-50%) scale(1);
+          }
+          50% {
+            transform: translateY(-52.5%) scale(1.008);
+          }
+        }
+
+        @keyframes hubAmbientGlow {
+          0% {
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95), 0 0 25px rgba(235, 215, 63, 0.08);
+          }
+          50% {
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 45px rgba(235, 215, 63, 0.22);
+          }
+          100% {
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95), 0 0 25px rgba(235, 215, 63, 0.08);
+          }
         }
 
         .hub-eyebrow {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          background: rgba(235, 215, 63, 0.12);
-          border: 1px solid rgba(235, 215, 63, 0.3);
+          gap: 8px;
+          background: rgba(235, 215, 63, 0.1);
+          border: 1px solid rgba(235, 215, 63, 0.35);
           border-radius: 20px;
-          padding: 4px 12px;
+          padding: 5px 14px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.56rem;
-          font-weight: 800;
+          font-size: 0.6rem;
+          font-weight: 600;
           color: var(--brand-yellow);
-          letter-spacing: 1.2px;
-          margin-bottom: 12px;
+          letter-spacing: 0.8px;
+          margin-bottom: 14px;
+        }
+
+        .eyebrow-signal-bars {
+          display: inline-flex;
+          align-items: center;
+          gap: 2.5px;
+          height: 9px;
+        }
+        .signal-mini-bar {
+          width: 2px;
+          height: 100%;
+          background: var(--brand-yellow);
+          border-radius: 1px;
+          animation: miniEqualizer 1.2s ease-in-out infinite;
+        }
+        .signal-mini-bar:nth-child(1) { animation-delay: 0s; }
+        .signal-mini-bar:nth-child(2) { animation-delay: 0.3s; height: 60%; }
+        .signal-mini-bar:nth-child(3) { animation-delay: 0.6s; height: 80%; }
+
+        @keyframes miniEqualizer {
+          0%, 100% { transform: scaleY(0.4); }
+          50% { transform: scaleY(1); }
         }
 
         .hub-pulse-star {
@@ -1477,50 +1527,60 @@ export default function Page() {
         }
 
         .hub-title {
-          font-family: 'Panchang', sans-serif;
-          font-size: 1.05rem;
-          font-weight: 800;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 1.32rem;
+          font-weight: 600;
           color: #ffffff;
-          line-height: 1.32;
-          margin: 0 0 10px 0;
-          letter-spacing: -0.3px;
+          line-height: 1.28;
+          margin: 0 0 12px 0;
+          letter-spacing: -0.4px;
         }
 
         .hub-desc {
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.84rem;
-          line-height: 1.5;
-          color: rgba(255, 255, 255, 0.75);
-          margin: 0 0 18px 0;
+          font-size: 0.88rem;
+          font-weight: 400;
+          line-height: 1.55;
+          color: rgba(255, 255, 255, 0.8);
+          margin: 0 0 20px 0;
         }
 
         .hub-perks-list {
           display: flex;
           flex-direction: column;
-          gap: 9px;
-          margin-bottom: 22px;
-          padding: 12px 14px;
-          background: rgba(0, 0, 0, 0.35);
+          gap: 10px;
+          margin-bottom: 24px;
+          padding: 14px 16px;
+          background: rgba(0, 0, 0, 0.4);
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.07);
         }
 
         .hub-perk-item {
           display: flex;
           align-items: center;
-          gap: 9px;
+          gap: 10px;
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.8rem;
-          font-weight: 600;
+          font-size: 0.84rem;
+          font-weight: 500;
           color: rgba(255, 255, 255, 0.92);
         }
 
         .hub-perk-item .perk-bullet {
           color: var(--brand-yellow);
-          font-size: 0.7rem;
+          font-size: 0.75rem;
+          display: inline-block;
+          animation: perkSparkGlow 3s ease-in-out infinite;
+        }
+        .hub-perk-item:nth-child(2) .perk-bullet { animation-delay: 0.8s; }
+        .hub-perk-item:nth-child(3) .perk-bullet { animation-delay: 1.6s; }
+
+        @keyframes perkSparkGlow {
+          0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 0px transparent); }
+          50% { transform: scale(1.3) rotate(45deg); filter: drop-shadow(0 0 6px var(--brand-yellow)); }
         }
 
-        /* High-Impact Interactive CTA Button */
+        /* High-Impact Animated Interactive CTA Button */
         .hub-cta-button {
           position: relative;
           display: flex;
@@ -1530,17 +1590,24 @@ export default function Page() {
           width: 100%;
           background: var(--brand-yellow);
           color: #050505;
-          padding: 14px 22px;
+          padding: 13px 20px;
           border-radius: 30px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.72rem;
-          font-weight: 800;
-          letter-spacing: 1.2px;
+          font-size: 0.66rem;
+          font-weight: 700;
+          letter-spacing: 0.8px;
           text-decoration: none;
           overflow: hidden;
-          box-shadow: 0 10px 30px rgba(235, 215, 63, 0.35), 0 0 15px rgba(235, 215, 63, 0.2);
+          white-space: nowrap;
+          box-shadow: 0 8px 25px rgba(235, 215, 63, 0.35), 0 0 15px rgba(235, 215, 63, 0.2);
+          animation: ctaAmbientPulse 3s ease-in-out infinite alternate;
           transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
           cursor: pointer;
+        }
+
+        @keyframes ctaAmbientPulse {
+          0% { box-shadow: 0 8px 25px rgba(235, 215, 63, 0.3), 0 0 15px rgba(235, 215, 63, 0.15); }
+          100% { box-shadow: 0 12px 35px rgba(235, 215, 63, 0.55), 0 0 25px rgba(235, 215, 63, 0.35); }
         }
 
         .hub-cta-button:hover {
@@ -1589,27 +1656,50 @@ export default function Page() {
           transform: translate(2px, -2px) scale(1.1);
         }
 
-        .hub-telemetry {
+        .hub-telemetry-row {
           display: flex;
           align-items: center;
           justify-content: center;
+          gap: 16px;
+          margin-top: 15px;
+          flex-wrap: wrap;
+        }
+
+        .hub-telemetry-point {
+          display: inline-flex;
+          align-items: center;
           gap: 7px;
-          font-family: 'Panchang', sans-serif;
-          font-size: 0.54rem;
-          font-weight: 700;
-          color: rgba(255, 255, 255, 0.55);
-          letter-spacing: 0.8px;
-          margin-top: 14px;
-          text-align: center;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.76rem;
+          font-weight: 500;
+          color: rgba(255, 255, 255, 0.72);
+          letter-spacing: 0.2px;
+          white-space: nowrap;
         }
 
         .telemetry-live-dot {
-          width: 5px;
-          height: 5px;
+          position: relative;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
           background: var(--brand-yellow);
           box-shadow: 0 0 8px var(--brand-yellow);
-          animation: pulseGlow 2s infinite ease-in-out;
+          display: inline-block;
+          flex-shrink: 0;
+        }
+
+        .telemetry-live-dot::after {
+          content: '';
+          position: absolute;
+          inset: -3px;
+          border-radius: 50%;
+          border: 1px solid var(--brand-yellow);
+          animation: radarRingPulse 2s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+        }
+
+        @keyframes radarRingPulse {
+          0% { transform: scale(0.6); opacity: 1; }
+          100% { transform: scale(2.2); opacity: 0; }
         }
 
         @media (max-width: 1024px) {
@@ -2005,87 +2095,140 @@ export default function Page() {
           }
         }
 
-        /* Gen-Z Mode: Sleek, Tight Letter-Spacing & Balanced Modern Weight */
+        /* Gen-Z Mode: High-Legibility Clash Display Typography */
         .genz-mode,
         .genz-mode * {
           text-transform: lowercase !important;
         }
 
-        .genz-mode {
-          letter-spacing: -0.015em;
+        /* In Gen-Z mode, switch all display elements to Clash Display for razor-sharp lowercase readability */
+        .genz-mode .header-title,
+        .genz-mode .header-kicker,
+        .genz-mode .header-sub,
+        .genz-mode .card-headline,
+        .genz-mode .card-category-badge,
+        .genz-mode .card-index-tag,
+        .genz-mode .btn-case-study,
+        .genz-mode .btn-launch-pill,
+        .genz-mode .hover-launch-badge,
+        .genz-mode .hud-kicker,
+        .genz-mode .hud-archive-text,
+        .genz-mode .hud-domain-capsule,
+        .genz-mode .domain-text,
+        .genz-mode .drawer-close-btn,
+        .genz-mode .case-tab-btn,
+        .genz-mode .monograph-badge,
+        .genz-mode .pillar-title,
+        .genz-mode .stat-metric-value,
+        .genz-mode .hub-eyebrow,
+        .genz-mode .hub-cta-button,
+        .genz-mode .hub-title,
+        .genz-mode .hud-index-num {
+          font-family: 'Clash Display', sans-serif !important;
         }
 
-        /* Headings and Display Titles */
-        .genz-mode .header-title,
-        .genz-mode .card-title,
-        .genz-mode .hub-title {
+        /* Specific sizing, weights and tracking for Gen-Z elements */
+        .genz-mode .header-title {
           font-weight: 700 !important;
-          letter-spacing: -0.03em !important;
+          font-size: clamp(2.4rem, 4.5vw, 3.6rem) !important;
+          letter-spacing: -0.04em !important;
+          line-height: 1.05 !important;
         }
 
         .genz-mode .header-kicker {
-          letter-spacing: 0.5px !important;
           font-weight: 600 !important;
+          font-size: 0.85rem !important;
+          letter-spacing: 0.5px !important;
+          color: rgba(255, 255, 255, 0.7) !important;
         }
 
         .genz-mode .header-sub {
-          letter-spacing: -0.01em !important;
-          font-weight: 450 !important;
-          opacity: 0.85;
-        }
-
-        /* Micro Badges & Kickers */
-        .genz-mode .card-category-badge,
-        .genz-mode .card-index-tag,
-        .genz-mode .hud-kicker,
-        .genz-mode .hub-eyebrow,
-        .genz-mode .monograph-badge {
+          font-weight: 600 !important;
+          font-size: 0.92rem !important;
           letter-spacing: 0.3px !important;
-          font-weight: 650 !important;
+          color: var(--brand-yellow) !important;
         }
 
-        /* Body and Descriptions */
+        .genz-mode .card-headline {
+          font-weight: 700 !important;
+          font-size: clamp(1.8rem, 3.2vw, 2.5rem) !important;
+          letter-spacing: -0.03em !important;
+          line-height: 1.1 !important;
+        }
+
+        .genz-mode .card-tagline,
         .genz-mode .card-desc,
         .genz-mode .hub-desc,
         .genz-mode .blueprint-quote-text,
-        .genz-mode .pillar-desc,
-        .genz-mode .hub-perk-item {
-          letter-spacing: -0.01em !important;
+        .genz-mode .pillar-desc {
+          font-family: 'Clash Display', sans-serif !important;
           font-weight: 450 !important;
-          line-height: 1.55;
+          letter-spacing: -0.01em !important;
+          line-height: 1.55 !important;
         }
 
-        /* Interactive Buttons & Tabs */
-        .genz-mode .btn-launch-pill,
+        .genz-mode .card-category-badge,
+        .genz-mode .card-index-tag,
+        .genz-mode .monograph-badge,
+        .genz-mode .hub-eyebrow {
+          font-weight: 600 !important;
+          font-size: 0.72rem !important;
+          letter-spacing: 0.4px !important;
+        }
+
         .genz-mode .btn-case-study,
-        .genz-mode .hub-cta-button,
-        .genz-mode .drawer-close-btn,
-        .genz-mode .case-tab-btn,
-        .genz-mode .btn-copy-blueprint,
-        .genz-mode .hud-domain-capsule {
+        .genz-mode .btn-launch-pill,
+        .genz-mode .hover-launch-badge {
+          font-weight: 600 !important;
+          font-size: 0.82rem !important;
           letter-spacing: 0.2px !important;
-          font-weight: 650 !important;
         }
 
-        .genz-mode .hub-telemetry,
+        .genz-mode .hud-kicker,
         .genz-mode .hud-archive-text {
+          font-weight: 550 !important;
+          letter-spacing: 0.3px !important;
+        }
+
+        .genz-mode .case-tab-btn {
+          font-weight: 600 !important;
+          font-size: 0.8rem !important;
           letter-spacing: 0.2px !important;
-          font-weight: 500 !important;
         }
 
         .genz-mode .stat-metric-value {
-          letter-spacing: -0.03em !important;
           font-weight: 700 !important;
+          letter-spacing: -0.03em !important;
         }
 
         .genz-mode .stat-metric-label {
-          letter-spacing: 0px !important;
+          font-family: 'Clash Display', sans-serif !important;
           font-weight: 450 !important;
+          letter-spacing: 0px !important;
         }
 
         .genz-mode .pillar-title {
-          letter-spacing: 0.2px !important;
           font-weight: 650 !important;
+          letter-spacing: 0.2px !important;
+        }
+
+        .genz-mode .hub-title {
+          font-weight: 650 !important;
+          font-size: 1.35rem !important;
+          letter-spacing: -0.03em !important;
+          line-height: 1.25 !important;
+        }
+
+        .genz-mode .hub-cta-button {
+          font-weight: 700 !important;
+          font-size: 0.8rem !important;
+          letter-spacing: 0.4px !important;
+        }
+
+        .genz-mode .drawer-close-btn {
+          font-weight: 600 !important;
+          font-size: 0.75rem !important;
+          letter-spacing: 0.3px !important;
         }
       `}} />
 
@@ -2333,15 +2476,23 @@ export default function Page() {
           className={`case-study-drawer ${selectedCaseStudy ? 'open' : ''}`}
           onClick={() => setSelectedCaseStudy(null)}
         >
-          {/* Left Side High-End Luxury Client Acquisition Station */}
+          {/* Left Side High-End Luxury Animated Client Acquisition Station */}
           <div 
             className="drawer-conversion-hub" 
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Clean Status Chip */}
+            {/* Animated Top Light Beam */}
+            <div className="hub-top-beam" />
+
+            {/* Clean Status Chip with Wave */}
             <div className="hub-eyebrow">
               <span className="hub-pulse-star">✦</span>
               <span>{isGenz ? 'ready for your own website?' : 'READY FOR YOUR OWN WEBSITE?'}</span>
+              <div className="eyebrow-signal-bars">
+                <span className="signal-mini-bar" />
+                <span className="signal-mini-bar" />
+                <span className="signal-mini-bar" />
+              </div>
             </div>
 
             {/* High-Impact Benefit Title */}
@@ -2393,10 +2544,16 @@ export default function Page() {
               </div>
             </a>
 
-            {/* Secondary Guarantee Tag */}
-            <div className="hub-telemetry">
-              <span className="telemetry-live-dot" />
-              <span>{isGenz ? 'fast reply • free project consultation' : 'FAST 24-HR RESPONSE • FREE CONSULTATION'}</span>
+            {/* 2-Point Guarantee Bar */}
+            <div className="hub-telemetry-row">
+              <div className="hub-telemetry-point">
+                <span className="telemetry-live-dot" />
+                <span>{isGenz ? 'fast 24-hr response' : 'Fast 24-Hr Response'}</span>
+              </div>
+              <div className="hub-telemetry-point">
+                <span style={{ color: 'var(--brand-yellow)', fontSize: '0.7rem', display: 'inline-block' }}>✦</span>
+                <span>{isGenz ? 'free consultation' : 'Free Consultation'}</span>
+              </div>
             </div>
           </div>
 
@@ -2667,7 +2824,7 @@ export default function Page() {
                     onClick={() => playSound('click')}
                     style={{ textDecoration: 'none' }}
                   >
-                    <span>{isGenz ? 'visit live website ↗' : 'Visit Live Website ↗'}</span>
+                    <span>{isGenz ? 'visit live website' : 'Visit Live Website'}</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="7" y1="17" x2="17" y2="7"></line>
                       <polyline points="7 7 17 7 17 17"></polyline>
