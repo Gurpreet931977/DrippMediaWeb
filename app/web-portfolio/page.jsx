@@ -778,30 +778,36 @@ export default function Page() {
           justify-content: center;
         }
 
-        .screenshot-img {
+        .screenshot-media {
           width: 100%;
           height: 100%;
           object-fit: cover;
           object-position: top center;
           transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s ease;
           will-change: transform;
+          display: block;
         }
 
-        .web-card-chassis:hover .screenshot-img {
+        .screenshot-video {
+          pointer-events: none;
+          background: #050508;
+        }
+
+        .web-card-chassis:hover .screenshot-media {
           transform: scale(1.04) translateY(-6px);
           filter: brightness(1.06) contrast(1.02);
         }
 
-        /* Floating Center Telemetry Crosshair / Explore Beacon */
+        /* High-End Cyber Target Hover Beacon */
         .hover-beacon-overlay {
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at center, rgba(5, 5, 8, 0.25) 0%, rgba(5, 5, 8, 0.55) 80%);
+          background: radial-gradient(circle at center, rgba(8, 8, 14, 0.35) 0%, rgba(5, 5, 8, 0.75) 100%);
           opacity: 0;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: opacity 0.4s ease;
+          transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
           pointer-events: none;
           z-index: 8;
         }
@@ -810,13 +816,59 @@ export default function Page() {
           opacity: 1;
         }
 
+        /* Sci-Fi Target Reticle Bracket Wrapper */
+        .beacon-target-rig {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transform: translateY(22px) scale(0.9);
+          transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .web-card-chassis:hover .beacon-target-rig {
+          transform: translateY(0) scale(1);
+        }
+
+        /* Radar Lock-on Brackets around the button */
+        .beacon-reticle {
+          position: absolute;
+          width: calc(100% + 28px);
+          height: calc(100% + 24px);
+          pointer-events: none;
+          transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+          opacity: 0;
+          transform: scale(1.18);
+        }
+
+        .web-card-chassis:hover .beacon-reticle {
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        .reticle-corner {
+          position: absolute;
+          width: 9px;
+          height: 9px;
+          border-color: var(--brand-yellow);
+          border-style: solid;
+          opacity: 0.85;
+          transition: border-color 0.3s ease;
+        }
+        .reticle-tl { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; }
+        .reticle-tr { top: 0; right: 0; border-width: 1.5px 1.5px 0 0; }
+        .reticle-bl { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; }
+        .reticle-br { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; }
+
+        /* The Core Beacon Button Capsule */
         .hover-launch-badge {
-          background: rgba(10, 10, 15, 0.88);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid var(--brand-yellow);
+          position: relative;
+          background: linear-gradient(135deg, rgba(16, 16, 24, 0.95) 0%, rgba(8, 8, 12, 0.98) 100%);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(235, 215, 63, 0.55);
           color: #ffffff;
-          padding: 12px 26px;
+          padding: 12px 24px;
           border-radius: 40px;
           font-family: 'Panchang', sans-serif;
           font-size: 0.72rem;
@@ -825,14 +877,69 @@ export default function Page() {
           text-transform: uppercase;
           display: flex;
           align-items: center;
-          gap: 10px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 30px rgba(235, 215, 63, 0.35);
-          transform: translateY(20px) scale(0.92);
-          transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          gap: 12px;
+          overflow: hidden;
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9), 0 0 35px rgba(235, 215, 63, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Continuous Holographic Light Sweep */
+        .beacon-shimmer {
+          position: absolute;
+          top: 0;
+          left: -150%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(235, 215, 63, 0.28), transparent);
+          transform: skewX(-25deg);
+          animation: beaconSweep 3s infinite ease-in-out;
+        }
+
+        @keyframes beaconSweep {
+          0% { left: -150%; }
+          50%, 100% { left: 150%; }
+        }
+
+        /* Spinning 4-Point Blueprint Star */
+        .beacon-spark-icon {
+          color: var(--brand-yellow);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+          animation: beaconPulseStar 2.5s infinite ease-in-out;
+        }
+
+        @keyframes beaconPulseStar {
+          0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 4px var(--brand-yellow)); }
+          50% { transform: scale(1.25) rotate(45deg); filter: drop-shadow(0 0 10px rgba(235, 215, 63, 0.9)); }
+        }
+
+        /* Dynamic Arrow Sub-Capsule */
+        .beacon-arrow-bubble {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: rgba(235, 215, 63, 0.15);
+          border: 1px solid rgba(235, 215, 63, 0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--brand-yellow);
+          transition: all 0.3s ease;
         }
 
         .web-card-chassis:hover .hover-launch-badge {
-          transform: translateY(0) scale(1);
+          border-color: var(--brand-yellow);
+          background: linear-gradient(135deg, rgba(24, 24, 36, 0.98) 0%, rgba(12, 12, 18, 1) 100%);
+          box-shadow: 0 16px 50px rgba(0, 0, 0, 0.95), 0 0 45px rgba(235, 215, 63, 0.45);
+        }
+
+        .web-card-chassis:hover .beacon-arrow-bubble {
+          background: var(--brand-yellow);
+          color: #050505;
+          transform: translate(2px, -2px);
+          box-shadow: 0 0 12px rgba(235, 215, 63, 0.8);
         }
 
         /* Bottom Project Info Overlay & Tech Stack */
@@ -1507,9 +1614,29 @@ export default function Page() {
 
               {/* Floating Cyber Telemetry Header */}
               <div className="card-top-hud">
-                <div className="hud-index-badge">
-                  <span className="hud-sparkle">✦</span>
-                  <span>{String(idx + 1).padStart(2, '0')} // ARCHIVE</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="hud-index-badge">
+                    <span className="hud-sparkle">✦</span>
+                    <span>{String(idx + 1).padStart(2, '0')} // ARCHIVE</span>
+                  </div>
+                  {(proj.video || proj.video_url) && (
+                    <div style={{
+                      background: 'rgba(235, 215, 63, 0.15)',
+                      border: '1px solid rgba(235, 215, 63, 0.35)',
+                      borderRadius: '20px',
+                      padding: '4px 10px',
+                      fontFamily: 'Panchang, sans-serif',
+                      fontSize: '0.55rem',
+                      fontWeight: 800,
+                      color: 'var(--brand-yellow)',
+                      letterSpacing: '1px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      ▶ VIDEO LOOP
+                    </div>
+                  )}
                 </div>
 
                 <div 
@@ -1529,24 +1656,56 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* Viewport Body with Real Website Screenshot & Kinetic Hover */}
+              {/* Viewport Body with Real Website Screenshot or Looping Screen Recording */}
               <div className="card-viewport-body">
                 <div className="screenshot-viewport">
-                  <img 
-                    src={proj.image} 
-                    alt={`${proj.title} Website Screenshot`} 
-                    className="screenshot-img"
-                    loading="lazy"
-                  />
+                  {proj.video || proj.video_url ? (
+                    <video 
+                      src={proj.video || proj.video_url}
+                      poster={proj.image || proj.image_url}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      preload="metadata"
+                      className="screenshot-media screenshot-video"
+                    />
+                  ) : (
+                    <img 
+                      src={proj.image || proj.image_url} 
+                      alt={`${proj.title} Website Screenshot`} 
+                      className="screenshot-media screenshot-img"
+                      loading="lazy"
+                    />
+                  )}
                   
-                  {/* Hover Floating Launch Beacon */}
+                  {/* High-End Cyber Target Hover Beacon */}
                   <div className="hover-beacon-overlay">
-                    <div className="hover-launch-badge">
-                      <span>✦ EXPLORE BUILD</span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="7" y1="17" x2="17" y2="7"></line>
-                        <polyline points="7 7 17 7 17 17"></polyline>
-                      </svg>
+                    <div className="beacon-target-rig">
+                      {/* Holographic Radar Lock-on Reticle */}
+                      <div className="beacon-reticle">
+                        <span className="reticle-corner reticle-tl" />
+                        <span className="reticle-corner reticle-tr" />
+                        <span className="reticle-corner reticle-bl" />
+                        <span className="reticle-corner reticle-br" />
+                      </div>
+
+                      {/* Core Launch Badge Capsule */}
+                      <div className="hover-launch-badge">
+                        <div className="beacon-shimmer" />
+                        <span className="beacon-spark-icon">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z"></path>
+                          </svg>
+                        </span>
+                        <span>EXPLORE LIVE BUILD</span>
+                        <div className="beacon-arrow-bubble">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="7" y1="17" x2="17" y2="7"></line>
+                            <polyline points="7 7 17 7 17 17"></polyline>
+                          </svg>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

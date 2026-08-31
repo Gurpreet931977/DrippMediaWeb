@@ -5,7 +5,8 @@ import {
   Globe, PlusCircle, Sparkles, Camera, ArrowUp, ArrowDown, 
   Edit2, Trash2, Eye, EyeOff, ExternalLink, Check, X, 
   AlertCircle, CheckCircle2, RefreshCw, Layers, Cpu, BarChart3,
-  FileText, ShieldCheck, UploadCloud, Crop, Maximize2, Image as ImageIcon
+  FileText, ShieldCheck, UploadCloud, Crop, Maximize2, Image as ImageIcon,
+  Video, Film, Play
 } from 'lucide-react';
 import ImageCropperModal from './ImageCropperModal';
 
@@ -49,6 +50,7 @@ export default function WebPortfolioManager() {
     url: '',
     display_url: '',
     image_url: '',
+    video_url: '',
     tech_stack: ['Next.js 14', 'TypeScript', 'Tailwind CSS'],
     stats: [
       { label: 'Lighthouse Score', value: '99/100' },
@@ -73,6 +75,8 @@ export default function WebPortfolioManager() {
 
   const fileInputCreateRef = useRef(null);
   const fileInputEditRef = useRef(null);
+  const fileInputVideoCreateRef = useRef(null);
+  const fileInputVideoEditRef = useRef(null);
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
@@ -122,10 +126,51 @@ export default function WebPortfolioManager() {
         target,
         projectTitle: target === 'create' ? formData.title : (editItemModal.item?.title || '')
       });
-      // Reset input value so same file can be re-uploaded if desired
       e.target.value = '';
     };
     reader.readAsDataURL(file);
+  };
+
+  // Video Upload Handler (.mp4, .webm, .mov)
+  const handleVideoUpload = (e, target = 'create') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('video/')) {
+      showNotification('error', 'Please select a valid video file (MP4, WebM, MOV)');
+      return;
+    }
+    if (file.size > 80 * 1024 * 1024) {
+      showNotification('error', 'Video file is too large (max 80MB). Please compress before uploading.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      if (target === 'create') {
+        setFormData(prev => ({ ...prev, video_url: dataUrl }));
+      } else {
+        setEditItemModal(prev => ({
+          ...prev,
+          item: { ...prev.item, video_url: dataUrl, video: dataUrl }
+        }));
+      }
+      showNotification('success', '🎬 Video / Screen Recording attached successfully!');
+      e.target.value = '';
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Remove Video
+  const handleRemoveVideo = (target = 'create') => {
+    if (target === 'create') {
+      setFormData(prev => ({ ...prev, video_url: '' }));
+    } else {
+      setEditItemModal(prev => ({
+        ...prev,
+        item: { ...prev.item, video_url: '', video: '' }
+      }));
+    }
+    showNotification('success', 'Video recording removed');
   };
 
   // Open Cropper on existing image
@@ -305,6 +350,8 @@ export default function WebPortfolioManager() {
         url: formData.url.startsWith('http') ? formData.url : `https://${formData.url}`,
         display_url: formData.display_url || formData.url.replace(/^https?:\/\//, '').replace(/\/$/, ''),
         image_url: formData.image_url || '/images/web-portfolio/bharatup.jpg',
+        video_url: formData.video_url || '',
+        video: formData.video_url || '',
         tech_stack: formData.tech_stack,
         stats: formData.stats,
         case_study_challenge: formData.case_study_challenge || '',
@@ -784,6 +831,158 @@ export default function WebPortfolioManager() {
                   </div>
                   <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem', marginTop: '4px' }}>
                     Or use "Auto-Capture" with your live website URL above
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Screen Recording / Looping Video Showcase Section */}
+            <div style={{
+              marginBottom: '28px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '22px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                <div>
+                  <label style={{ color: '#fff', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontFamily: 'Panchang, sans-serif', fontWeight: 700 }}>
+                    <Video size={16} color="#ebd73f" /> Screen Recording / Video Showcase (Looping)
+                  </label>
+                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.74rem' }}>
+                    Plays silently in continuous 60fps loop with instant screenshot fallback.
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <input
+                    type="file"
+                    ref={fileInputVideoCreateRef}
+                    onChange={(e) => handleVideoUpload(e, 'create')}
+                    accept="video/mp4,video/webm,video/quicktime"
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputVideoCreateRef.current?.click()}
+                    style={{
+                      background: 'rgba(235, 215, 63, 0.15)',
+                      border: '1px solid rgba(235, 215, 63, 0.4)',
+                      borderRadius: '10px',
+                      padding: '8px 14px',
+                      color: '#ebd73f',
+                      fontSize: '0.75rem',
+                      fontFamily: 'Clash Display, sans-serif',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <UploadCloud size={14} /> Upload Video (.mp4 / .webm)
+                  </button>
+
+                  {formData.video_url && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveVideo('create')}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '10px',
+                        padding: '8px 12px',
+                        color: '#ef4444',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer'
+                      }}
+                      title="Remove video"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {formData.video_url ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '16px', alignItems: 'center' }}>
+                  <div style={{
+                    width: '220px',
+                    aspectRatio: '16 / 10',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    border: '1px solid rgba(235, 215, 63, 0.4)',
+                    background: '#050508',
+                    position: 'relative',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.6)'
+                  }}>
+                    <video
+                      src={formData.video_url}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: 'rgba(0,0,0,0.8)',
+                      padding: '4px',
+                      textAlign: 'center',
+                      fontSize: '0.6rem',
+                      fontFamily: 'Panchang, sans-serif',
+                      color: '#ebd73f',
+                      letterSpacing: '1px'
+                    }}>
+                      ▶ LIVE LOOP PREVIEW
+                    </div>
+                  </div>
+
+                  <div>
+                    <input 
+                      type="text" 
+                      placeholder="/videos/portfolio/my-demo.mp4 or https://..."
+                      value={formData.video_url}
+                      onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                      style={{
+                        width: '100%',
+                        background: 'rgba(0,0,0,0.5)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '10px',
+                        padding: '10px 14px',
+                        color: '#fff',
+                        fontSize: '0.82rem',
+                        fontFamily: 'inherit',
+                        marginBottom: '6px'
+                      }}
+                    />
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>
+                      Attached video will auto-loop silently with zero buffer lag.
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => fileInputVideoCreateRef.current?.click()}
+                  style={{
+                    border: '2px dashed rgba(255, 255, 255, 0.12)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    textAlign: 'center',
+                    background: 'rgba(0,0,0,0.15)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Film size={24} color="#ebd73f" style={{ margin: '0 auto 6px' }} />
+                  <div style={{ color: '#fff', fontSize: '0.82rem', fontFamily: 'Clash Display, sans-serif', fontWeight: 600 }}>
+                    Upload Screen Recording Video (Optional)
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem', marginTop: '2px' }}>
+                    Supports .mp4, .webm, .mov — automatically turns the portfolio card into a looping cinematic demo
                   </div>
                 </div>
               )}
@@ -1431,6 +1630,131 @@ export default function WebPortfolioManager() {
                   style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.8rem' }}
                 />
               </div>
+            </div>
+
+            {/* Video / Screen Recording Section in Edit Modal */}
+            <div style={{
+              marginBottom: '20px',
+              background: '#14141c',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '14px',
+              padding: '16px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                <label style={{ fontSize: '0.82rem', color: '#fff', fontFamily: 'Panchang, sans-serif', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Video size={14} color="#ebd73f" /> Screen Recording Video (Looping)
+                </label>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <input
+                    type="file"
+                    ref={fileInputVideoEditRef}
+                    onChange={(e) => handleVideoUpload(e, 'edit')}
+                    accept="video/mp4,video/webm,video/quicktime"
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputVideoEditRef.current?.click()}
+                    style={{
+                      background: 'rgba(235, 215, 63, 0.15)',
+                      border: '1px solid rgba(235, 215, 63, 0.4)',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
+                      color: '#ebd73f',
+                      fontSize: '0.72rem',
+                      fontFamily: 'Clash Display, sans-serif',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <UploadCloud size={13} /> Upload Video
+                  </button>
+
+                  {(editItemModal.item.video_url || editItemModal.item.video) && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveVideo('edit')}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '8px',
+                        padding: '6px 10px',
+                        color: '#ef4444',
+                        cursor: 'pointer'
+                      }}
+                      title="Remove video"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {(editItemModal.item.video_url || editItemModal.item.video) ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'center' }}>
+                  <div style={{
+                    width: '150px',
+                    aspectRatio: '16 / 10',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    border: '1px solid rgba(235, 215, 63, 0.3)',
+                    background: '#050508',
+                    position: 'relative'
+                  }}>
+                    <video
+                      src={editItemModal.item.video_url || editItemModal.item.video}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: 'rgba(0,0,0,0.8)',
+                      padding: '2px',
+                      textAlign: 'center',
+                      fontSize: '0.52rem',
+                      fontFamily: 'Panchang, sans-serif',
+                      color: '#ebd73f'
+                    }}>
+                      ▶ LOOPING
+                    </div>
+                  </div>
+                  <input 
+                    type="text" 
+                    value={editItemModal.item.video_url || editItemModal.item.video || ''} 
+                    onChange={(e) => setEditItemModal({
+                      ...editItemModal,
+                      item: { ...editItemModal.item, video_url: e.target.value, video: e.target.value }
+                    })}
+                    placeholder="/videos/portfolio/... or https://..."
+                    style={{ width: '100%', background: '#181820', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: '#fff', fontSize: '0.8rem' }}
+                  />
+                </div>
+              ) : (
+                <div 
+                  onClick={() => fileInputVideoEditRef.current?.click()}
+                  style={{
+                    border: '1px dashed rgba(255, 255, 255, 0.15)',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    background: 'rgba(0,0,0,0.2)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span style={{ color: '#ebd73f', fontSize: '0.75rem', fontFamily: 'Clash Display, sans-serif' }}>
+                    + Upload .mp4 / .webm video recording
+                  </span>
+                </div>
+              )}
             </div>
 
             <div style={{ marginBottom: '20px' }}>

@@ -195,6 +195,8 @@ export async function addWebPortfolioItem(itemData) {
     display_url: itemData.display_url || itemData.displayUrl || (itemData.url ? itemData.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : ''),
     image: itemData.image_url || itemData.image || '/images/web-portfolio/bharatup.jpg',
     image_url: itemData.image_url || itemData.image || '/images/web-portfolio/bharatup.jpg',
+    video: itemData.video_url || itemData.video || '',
+    video_url: itemData.video_url || itemData.video || '',
     color: itemData.color || '#ebd73f',
     stats: itemData.stats || [],
     techStack: Array.isArray(itemData.tech_stack || itemData.techStack) ? (itemData.tech_stack || itemData.techStack) : [],
