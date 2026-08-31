@@ -96,7 +96,8 @@ export default function Page() {
   const audioCtxRef = useRef(null);
   const hasDraggedRef = useRef(false);
   const hudRef = useRef(null);
-  const isHudDraggingRef = useRef(false);
+  const dotsTrackRef = useRef(null);
+  const isDotsDraggingRef = useRef(false);
 
   // Synchronize live web projects with database API
   useEffect(() => {
@@ -165,7 +166,7 @@ export default function Page() {
       const targetScroll = card.offsetLeft - (pinContainer.clientWidth - card.clientWidth) / 2;
       gsap.to(pinContainer, {
         scrollLeft: Math.max(0, targetScroll),
-        duration: 0.65,
+        duration: 0.6,
         ease: "power3.out"
       });
     }
@@ -199,7 +200,7 @@ export default function Page() {
     window.addEventListener('mousemove', handleMouseMove);
 
     const pinContainer = document.getElementById('pin-container');
-    const hudElement = hudRef.current;
+    const dotsTrackElement = dotsTrackRef.current;
 
     // Custom wheel / trackpad horizontal scrolling
     const handleWheel = (e) => {
@@ -288,40 +289,44 @@ export default function Page() {
       }
     };
 
-    // 2. HUD Scrubber hold-and-drag physics
-    let isHudDown = false;
-    const updateScrollFromHud = (clientX) => {
-      if (!pinContainer || !hudElement) return;
-      const rect = hudElement.getBoundingClientRect();
-      const relX = Math.max(0, Math.min(rect.width, clientX - rect.left));
-      const progress = relX / rect.width;
-      const maxScroll = pinContainer.scrollWidth - pinContainer.clientWidth;
-      pinContainer.scrollLeft = progress * maxScroll;
+    // 2. Dots Track Scrubbing Physics (Scoped exclusively to the dots track)
+    let isDotsDown = false;
+    let lastScrubbedIdx = -1;
+
+    const scrubToDotFromPointer = (clientX) => {
+      if (!dotsTrackElement || !projects.length) return;
+      const rect = dotsTrackElement.getBoundingClientRect();
+      const progress = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const targetIdx = Math.max(0, Math.min(projects.length - 1, Math.floor(progress * projects.length)));
+      if (targetIdx !== lastScrubbedIdx) {
+        lastScrubbedIdx = targetIdx;
+        scrollToCard(targetIdx);
+      }
     };
 
-    const onHudDown = (e) => {
-      isHudDown = true;
-      isHudDraggingRef.current = true;
-      hudElement?.classList.add('hud-dragging');
+    const onDotsDown = (e) => {
+      e.stopPropagation();
+      isDotsDown = true;
+      isDotsDraggingRef.current = true;
+      dotsTrackElement?.classList.add('dots-scrubbing');
       if (cursor) cursor.classList.add('grabbing');
-      gsap.killTweensOf(pinContainer);
       const clientX = e.clientX || (e.touches && e.touches[0]?.clientX) || 0;
-      updateScrollFromHud(clientX);
+      scrubToDotFromPointer(clientX);
     };
 
-    const onHudMove = (e) => {
-      if (!isHudDown) return;
+    const onDotsMove = (e) => {
+      if (!isDotsDown) return;
       const clientX = e.clientX || (e.touches && e.touches[0]?.clientX) || 0;
-      updateScrollFromHud(clientX);
+      scrubToDotFromPointer(clientX);
     };
 
-    const onHudUp = () => {
-      if (isHudDown) {
-        isHudDown = false;
-        isHudDraggingRef.current = false;
-        hudElement?.classList.remove('hud-dragging');
+    const onDotsUp = () => {
+      if (isDotsDown) {
+        isDotsDown = false;
+        isDotsDraggingRef.current = false;
+        dotsTrackElement?.classList.remove('dots-scrubbing');
         if (cursor) cursor.classList.remove('grabbing');
-        snapToNearestCard();
+        lastScrubbedIdx = -1;
       }
     };
 
@@ -335,14 +340,14 @@ export default function Page() {
     window.addEventListener('mouseup', onPointerUp);
     window.addEventListener('touchend', onPointerUp);
 
-    if (hudElement) {
-      hudElement.addEventListener('mousedown', onHudDown);
-      hudElement.addEventListener('touchstart', onHudDown, { passive: true });
+    if (dotsTrackElement) {
+      dotsTrackElement.addEventListener('mousedown', onDotsDown);
+      dotsTrackElement.addEventListener('touchstart', onDotsDown, { passive: true });
     }
-    window.addEventListener('mousemove', onHudMove);
-    window.addEventListener('touchmove', onHudMove, { passive: false });
-    window.addEventListener('mouseup', onHudUp);
-    window.addEventListener('touchend', onHudUp);
+    window.addEventListener('mousemove', onDotsMove);
+    window.addEventListener('touchmove', onDotsMove, { passive: false });
+    window.addEventListener('mouseup', onDotsUp);
+    window.addEventListener('touchend', onDotsUp);
 
     // Keyboard navigation
     const handleKeyDown = (e) => {
@@ -376,10 +381,10 @@ export default function Page() {
       window.removeEventListener('touchmove', onPointerMove);
       window.removeEventListener('mouseup', onPointerUp);
       window.removeEventListener('touchend', onPointerUp);
-      window.removeEventListener('mousemove', onHudMove);
-      window.removeEventListener('touchmove', onHudMove);
-      window.removeEventListener('mouseup', onHudUp);
-      window.removeEventListener('touchend', onHudUp);
+      window.removeEventListener('mousemove', onDotsMove);
+      window.removeEventListener('touchmove', onDotsMove);
+      window.removeEventListener('mouseup', onDotsUp);
+      window.removeEventListener('touchend', onDotsUp);
       window.removeEventListener('keydown', handleKeyDown);
 
       if (pinContainer) {
@@ -388,9 +393,9 @@ export default function Page() {
         pinContainer.removeEventListener('touchstart', onPointerDown);
         pinContainer.removeEventListener('scroll', handleScroll);
       }
-      if (hudElement) {
-        hudElement.removeEventListener('mousedown', onHudDown);
-        hudElement.removeEventListener('touchstart', onHudDown);
+      if (dotsTrackElement) {
+        dotsTrackElement.removeEventListener('mousedown', onDotsDown);
+        dotsTrackElement.removeEventListener('touchstart', onDotsDown);
       }
       if (audioCtxRef.current) {
         audioCtxRef.current.close().catch(() => {});
@@ -597,24 +602,24 @@ export default function Page() {
         .slider-wrap {
           display: flex;
           align-items: center;
-          padding: 0 14vw;
-          gap: 6vw;
+          padding: 0 11vw;
+          gap: 5vw;
           height: 100%;
           width: max-content;
         }
 
-        /* High-End Glassmorphic Browser Chassis Card with Guaranteed Clearance */
+        /* High-End Glassmorphic Browser Chassis Card with Enhanced Viewing Scale */
         .web-card-chassis {
           position: relative;
-          width: 70vw;
-          max-width: 1020px;
-          height: 60dvh;
-          max-height: 520px;
-          min-height: 400px;
-          margin-top: 25px;
-          border-radius: 18px;
+          width: 78vw;
+          max-width: 1220px;
+          height: 68dvh;
+          max-height: 630px;
+          min-height: 480px;
+          margin-top: 15px;
+          border-radius: 20px;
           background: rgba(12, 12, 16, 0.95);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.14);
           box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(25px);
           -webkit-backdrop-filter: blur(25px);
@@ -987,36 +992,43 @@ export default function Page() {
 
         .hud-dots {
           display: flex;
-          gap: 8px;
+          gap: 10px;
           align-items: center;
-          padding: 2px 4px;
+          padding: 6px 10px;
+          cursor: pointer;
+          user-select: none;
+          touch-action: none;
         }
 
         .hud-dot {
-          width: 7px;
-          height: 7px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.25);
+          background: rgba(255, 255, 255, 0.35);
           transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
           cursor: pointer;
+          position: relative;
+          display: inline-block;
         }
+
+        /* Generous invisible hit target around each dot for effortless clicking */
+        .hud-dot::before {
+          content: '';
+          position: absolute;
+          inset: -12px -8px;
+          cursor: pointer;
+        }
+
         .hud-dot:hover {
-          background: rgba(255, 255, 255, 0.6);
-          transform: scale(1.25);
+          background: rgba(255, 255, 255, 0.9);
+          transform: scale(1.35);
         }
 
         .hud-dot.active {
-          width: 26px;
+          width: 28px;
           border-radius: 12px;
           background: var(--brand-yellow);
-          box-shadow: 0 0 12px rgba(235, 215, 63, 0.6);
-        }
-
-        .hud-dot.active {
-          width: 24px;
-          border-radius: 10px;
-          background: var(--brand-yellow);
-          box-shadow: 0 0 10px rgba(235, 215, 63, 0.5);
+          box-shadow: 0 0 14px rgba(235, 215, 63, 0.7);
         }
 
         .hud-counter {
@@ -1162,17 +1174,18 @@ export default function Page() {
         </svg>
       </button>
 
-      {/* Unified Single Bottom Minimal HUD (Hold and Draggable Scrubber) */}
-      <div className="slider-bottom-hud" ref={hudRef} title="Click, hold & drag to scrub portfolio">
+      {/* Unified Single Bottom Minimal HUD */}
+      <div className="slider-bottom-hud" ref={hudRef}>
         <span className="hud-archive-badge">✦ CURATED ARCHIVE</span>
         <span className="hud-archive-text">Hand-picked public builds</span>
         <div className="hud-divider" />
-        <div className="hud-dots">
+        <div className="hud-dots" ref={dotsTrackRef} title="Click any dot to jump">
           {projects.map((_, i) => (
             <div 
               key={i} 
               className={`hud-dot ${activeProjectIdx === i ? 'active' : ''}`}
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 scrollToCard(i);
               }}
