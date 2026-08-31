@@ -917,9 +917,13 @@ export default function PortfolioManager() {
   };
 
   return (
-    <div className={styles.mainContent}>
+    <div className="portfolio-page-wrapper">
       <style>{`
-
+        .portfolio-page-wrapper {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
         .hover-pop-btn:hover {
             transform: scale(1.05);
             background: rgba(235, 215, 63, 0.2) !important;
@@ -929,7 +933,8 @@ export default function PortfolioManager() {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 50px;
+            margin-top: 0;
+            margin-bottom: 28px;
             position: relative;
         }
         .portfolio-header::after {
@@ -2326,7 +2331,7 @@ export default function PortfolioManager() {
       )}
 
       <div className="portfolio-header">
-        <h1 className={styles.pageTitle} style={{ zIndex: 10, position: 'relative' }}>Portfolio Manager</h1>
+        <h1 className={styles.title} style={{ zIndex: 10, position: 'relative', margin: 0, fontSize: '2.2rem' }}>Portfolio Manager</h1>
         <div className="tabs">
           <button className={`tab-btn ${activeTab === TABS.REELS ? 'active' : ''}`} onClick={() => setActiveTab(TABS.REELS)}>
              <Smartphone size={18} /> Short Form

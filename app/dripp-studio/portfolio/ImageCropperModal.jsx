@@ -13,6 +13,11 @@ export default function ImageCropperModal({
   onClose, 
   onSave, 
   projectTitle = 'Web Project',
+  category = 'Enterprise Digital Platform',
+  tagline = '',
+  displayUrl = '',
+  techStack = [],
+  indexNum = '01',
   aspectRatio = 16 / 10 // Exact 1600x1000 ratio matching main page chassis
 }) {
   const [scale, setScale] = useState(1);
@@ -558,134 +563,237 @@ export default function ImageCropperModal({
               </div>
             </>
           ) : (
-            /* Main Page Card Simulation Preview */
+            /* Main Page Card Simulation Preview (1:1 with /web-portfolio) */
             <div style={{ width: '100%', maxWidth: '780px' }}>
-              <div style={{
-                borderRadius: '24px',
-                background: '#08080c',
-                border: '1px solid rgba(235, 215, 63, 0.4)',
-                overflow: 'hidden',
-                boxShadow: '0 30px 80px rgba(0,0,0,0.95), 0 0 35px rgba(235, 215, 63, 0.15)',
-                display: 'flex',
-                flexDirection: 'column',
-                position: 'relative'
-              }}>
-                {/* Cyber Corner Brackets */}
-                <div style={{ position: 'absolute', top: '12px', left: '12px', width: '14px', height: '14px', borderTop: '2px solid #ebd73f', borderLeft: '2px solid #ebd73f', zIndex: 20 }} />
-                <div style={{ position: 'absolute', top: '12px', right: '12px', width: '14px', height: '14px', borderTop: '2px solid #ebd73f', borderRight: '2px solid #ebd73f', zIndex: 20 }} />
+              {(() => {
+                const cleanDomain = (displayUrl || 'live-preview.online')
+                  .replace(/^https?:\/\//, '')
+                  .replace(/\/$/, '');
+                const formattedTechStack = Array.isArray(techStack) 
+                  ? techStack 
+                  : (typeof techStack === 'string' ? techStack.split(',').map(s => s.trim()).filter(Boolean) : ['Next.js', 'Tailwind CSS', 'Framer Motion']);
 
-                {/* Floating Top Cyber-HUD */}
-                <div style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  padding: '16px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  zIndex: 15,
-                  background: 'linear-gradient(to bottom, rgba(6, 6, 10, 0.85) 0%, transparent 100%)'
-                }}>
+                return (
                   <div style={{
-                    background: 'rgba(12, 12, 18, 0.75)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: '20px',
-                    padding: '4px 12px',
-                    fontFamily: 'Panchang, sans-serif',
-                    fontSize: '0.58rem',
-                    fontWeight: 700,
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    letterSpacing: '1px'
-                  }}>
-                    <span style={{ color: '#ebd73f' }}>✦</span> 01 // ARCHIVE
-                  </div>
-
-                  <div style={{
-                    background: 'rgba(14, 14, 20, 0.8)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(235, 215, 63, 0.3)',
-                    borderRadius: '20px',
-                    padding: '4px 14px',
-                    fontFamily: 'Clash Display, sans-serif',
-                    fontSize: '0.72rem',
-                    fontWeight: 600,
-                    color: '#ffffff'
-                  }}>
-                    live-preview.online ↗
-                  </div>
-                </div>
-
-                {/* Card Body Simulation */}
-                <div style={{
-                  position: 'relative',
-                  width: '100%',
-                  aspectRatio: '16 / 10',
-                  overflow: 'hidden',
-                  background: '#050508'
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${scale})`,
-                    transformOrigin: 'center center'
-                  }}>
-                    <img
-                      src={imageSrc}
-                      alt="simulation"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  </div>
-
-                  {/* Gradient Overlay & Metadata Simulation */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: 'linear-gradient(to top, rgba(8, 8, 12, 0.98) 0%, rgba(8, 8, 12, 0.88) 60%, transparent 100%)',
-                    padding: '20px 24px',
+                    borderRadius: '24px',
+                    background: '#08080c',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    overflow: 'hidden',
+                    boxShadow: '0 30px 80px rgba(0,0,0,0.95), 0 0 35px rgba(235, 215, 63, 0.15)',
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-end'
+                    flexDirection: 'column',
+                    position: 'relative'
                   }}>
-                    <div>
-                      <div style={{
-                        color: '#ebd73f',
-                        fontFamily: 'Panchang, sans-serif',
-                        fontSize: '0.55rem',
-                        fontWeight: 700,
-                        letterSpacing: '1.5px',
-                        marginBottom: '6px'
-                      }}>
-                        ✦ ENTERPRISE DIGITAL PLATFORM
-                      </div>
-                      <h4 style={{
-                        fontFamily: 'Panchang, sans-serif',
-                        fontSize: '1.4rem',
-                        fontWeight: 800,
-                        color: '#ffffff',
-                        margin: 0,
-                        textTransform: 'uppercase'
-                      }}>
-                        {projectTitle || 'Live Project'}
-                      </h4>
-                    </div>
+                    {/* Cyber Corner Brackets */}
+                    <div style={{ position: 'absolute', top: '12px', left: '12px', width: '14px', height: '14px', borderTop: '2px solid #ebd73f', borderLeft: '2px solid #ebd73f', zIndex: 20 }} />
+                    <div style={{ position: 'absolute', top: '12px', right: '12px', width: '14px', height: '14px', borderTop: '2px solid #ebd73f', borderRight: '2px solid #ebd73f', zIndex: 20 }} />
+                    <div style={{ position: 'absolute', bottom: '12px', left: '12px', width: '14px', height: '14px', borderBottom: '2px solid #ebd73f', borderLeft: '2px solid #ebd73f', zIndex: 20 }} />
+                    <div style={{ position: 'absolute', bottom: '12px', right: '12px', width: '14px', height: '14px', borderBottom: '2px solid #ebd73f', borderRight: '2px solid #ebd73f', zIndex: 20 }} />
+
+                    {/* Floating Top Cyber-HUD */}
                     <div style={{
-                      background: '#ebd73f',
-                      color: '#050505',
-                      fontFamily: 'Panchang, sans-serif',
-                      fontSize: '0.65rem',
-                      fontWeight: 800,
-                      padding: '8px 16px',
-                      borderRadius: '20px'
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      padding: '16px 20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      zIndex: 15,
+                      background: 'linear-gradient(to bottom, rgba(6, 6, 10, 0.85) 0%, transparent 100%)'
                     }}>
-                      LAUNCH LIVE ↗
+                      <div style={{
+                        background: 'rgba(12, 12, 18, 0.75)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '20px',
+                        padding: '4px 12px',
+                        fontFamily: 'Panchang, sans-serif',
+                        fontSize: '0.58rem',
+                        fontWeight: 700,
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        letterSpacing: '1px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <span style={{ color: '#ebd73f' }}>✦</span> {indexNum || '01'} // ARCHIVE
+                      </div>
+
+                      <div style={{
+                        background: 'rgba(14, 14, 20, 0.8)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(235, 215, 63, 0.3)',
+                        borderRadius: '20px',
+                        padding: '4px 14px',
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        color: '#ffffff',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', height: '10px' }}>
+                          <span style={{ width: '2px', height: '100%', background: '#ebd73f', borderRadius: '1px', display: 'inline-block' }} />
+                          <span style={{ width: '2px', height: '60%', background: '#ebd73f', borderRadius: '1px', display: 'inline-block' }} />
+                          <span style={{ width: '2px', height: '80%', background: '#ebd73f', borderRadius: '1px', display: 'inline-block' }} />
+                        </div>
+                        <span>{cleanDomain}</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="7" y1="17" x2="17" y2="7"></line>
+                          <polyline points="7 7 17 7 17 17"></polyline>
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Card Body Simulation */}
+                    <div style={{
+                      position: 'relative',
+                      width: '100%',
+                      aspectRatio: '16 / 10',
+                      overflow: 'hidden',
+                      background: '#050508'
+                    }}>
+                      <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${scale})`,
+                        transformOrigin: 'center center'
+                      }}>
+                        <img
+                          src={imageSrc}
+                          alt="simulation"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+
+                      {/* Gradient Overlay & Metadata Simulation */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: 'linear-gradient(to top, rgba(8, 8, 12, 0.98) 0%, rgba(8, 8, 12, 0.9) 60%, rgba(8, 8, 12, 0.4) 85%, transparent 100%)',
+                        padding: '20px 24px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-end',
+                        gap: '16px'
+                      }}>
+                        <div style={{ maxWidth: '65%' }}>
+                          <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            background: 'rgba(235, 215, 63, 0.12)',
+                            color: '#ebd73f',
+                            border: '1px solid rgba(235, 215, 63, 0.3)',
+                            borderRadius: '20px',
+                            padding: '3px 12px',
+                            fontFamily: 'Panchang, sans-serif',
+                            fontSize: '0.58rem',
+                            fontWeight: 700,
+                            letterSpacing: '1.5px',
+                            textTransform: 'uppercase',
+                            marginBottom: '8px'
+                          }}>
+                            ✦ {category || 'ENTERPRISE DIGITAL PLATFORM'}
+                          </div>
+                          <h4 style={{
+                            fontFamily: 'Panchang, sans-serif',
+                            fontSize: '1.5rem',
+                            fontWeight: 800,
+                            color: '#ffffff',
+                            margin: '0 0 4px 0',
+                            textTransform: 'uppercase',
+                            lineHeight: 1.1,
+                            letterSpacing: '-0.5px'
+                          }}>
+                            {projectTitle || 'Live Project'}
+                          </h4>
+                          {tagline && (
+                            <div style={{
+                              fontFamily: 'Clash Display, sans-serif',
+                              fontSize: '0.8rem',
+                              color: 'rgba(255, 255, 255, 0.75)',
+                              lineHeight: 1.35,
+                              marginBottom: '10px'
+                            }}>
+                              {tagline}
+                            </div>
+                          )}
+                          {formattedTechStack.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                              {formattedTechStack.map((tech, tIdx) => (
+                                <span 
+                                  key={tIdx} 
+                                  style={{
+                                    background: 'rgba(255, 255, 255, 0.06)',
+                                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                                    color: 'rgba(255, 255, 255, 0.9)',
+                                    borderRadius: '6px',
+                                    padding: '2px 8px',
+                                    fontSize: '0.65rem',
+                                    fontFamily: 'Clash Display, sans-serif',
+                                    fontWeight: 500
+                                  }}
+                                >
+                                  {tech}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                          <div style={{
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            color: '#ffffff',
+                            border: '1px solid rgba(255, 255, 255, 0.18)',
+                            borderRadius: '30px',
+                            padding: '8px 14px',
+                            fontFamily: 'Panchang, sans-serif',
+                            fontSize: '0.62rem',
+                            fontWeight: 700,
+                            letterSpacing: '1.2px',
+                            textTransform: 'uppercase',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            backdropFilter: 'blur(12px)'
+                          }}>
+                            <span style={{ color: '#ebd73f' }}>✦</span> Case Study
+                          </div>
+
+                          <div style={{
+                            background: '#ebd73f',
+                            color: '#050505',
+                            border: '1px solid #ebd73f',
+                            borderRadius: '30px',
+                            padding: '8px 16px',
+                            fontFamily: 'Panchang, sans-serif',
+                            fontSize: '0.65rem',
+                            fontWeight: 800,
+                            letterSpacing: '1.2px',
+                            textTransform: 'uppercase',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}>
+                            <span>Launch Live</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="7" y1="17" x2="17" y2="7"></line>
+                              <polyline points="7 7 17 7 17 17"></polyline>
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
           )}
         </div>

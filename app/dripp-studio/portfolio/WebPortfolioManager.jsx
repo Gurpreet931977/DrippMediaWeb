@@ -125,11 +125,20 @@ export default function WebPortfolioManager() {
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target.result;
+      const isCreate = target === 'create';
+      const item = isCreate ? formData : (editItemModal.item || {});
+      const itemIndex = isCreate ? items.length + 1 : (items.findIndex(it => it.id === item.id) + 1 || 1);
+
       setCropperModal({
         isOpen: true,
         imageSrc: dataUrl,
         target,
-        projectTitle: target === 'create' ? formData.title : (editItemModal.item?.title || '')
+        projectTitle: item.title || '',
+        category: item.category || 'Enterprise Digital Platform',
+        tagline: item.tagline || '',
+        displayUrl: item.display_url || item.displayUrl || item.url || '',
+        techStack: item.tech_stack || item.techStack || ['Next.js', 'Tailwind CSS'],
+        indexNum: String(itemIndex).padStart(2, '0')
       });
       e.target.value = '';
     };
@@ -184,11 +193,20 @@ export default function WebPortfolioManager() {
       showNotification('error', 'No image selected to crop. Please upload an image or enter a URL first.');
       return;
     }
+    const isCreate = target === 'create';
+    const item = isCreate ? formData : (editItemModal.item || {});
+    const itemIndex = isCreate ? items.length + 1 : (items.findIndex(it => it.id === item.id) + 1 || 1);
+
     setCropperModal({
       isOpen: true,
       imageSrc,
       target,
-      projectTitle: title || (target === 'create' ? formData.title : (editItemModal.item?.title || ''))
+      projectTitle: title || item.title || '',
+      category: item.category || 'Enterprise Digital Platform',
+      tagline: item.tagline || '',
+      displayUrl: item.display_url || item.displayUrl || item.url || '',
+      techStack: item.tech_stack || item.techStack || ['Next.js', 'Tailwind CSS'],
+      indexNum: String(itemIndex).padStart(2, '0')
     });
   };
 
@@ -358,11 +376,18 @@ export default function WebPortfolioManager() {
         if (data.image_url) {
           setTargetForm(prev => ({ ...prev, image_url: data.image_url }));
           showNotification('success', 'Live screenshot captured! Opening Cropper to adjust frame...');
+          const isCreate = targetFormData === formData;
+          const itemIndex = isCreate ? items.length + 1 : (items.findIndex(it => it.id === targetFormData.id) + 1 || 1);
           setCropperModal({
             isOpen: true,
             imageSrc: data.image_url,
-            target: targetFormData === formData ? 'create' : 'edit',
-            projectTitle: targetFormData.title
+            target: isCreate ? 'create' : 'edit',
+            projectTitle: targetFormData.title || '',
+            category: targetFormData.category || 'Enterprise Digital Platform',
+            tagline: targetFormData.tagline || '',
+            displayUrl: targetFormData.display_url || targetFormData.url || '',
+            techStack: targetFormData.tech_stack || ['Next.js', 'Tailwind CSS'],
+            indexNum: String(itemIndex).padStart(2, '0')
           });
         }
       } else {
@@ -2220,6 +2245,11 @@ export default function WebPortfolioManager() {
         onClose={() => setCropperModal(prev => ({ ...prev, isOpen: false }))}
         onSave={handleSaveCroppedImage}
         projectTitle={cropperModal.projectTitle}
+        category={cropperModal.category}
+        tagline={cropperModal.tagline}
+        displayUrl={cropperModal.displayUrl}
+        techStack={cropperModal.techStack}
+        indexNum={cropperModal.indexNum}
       />
     </div>
   );
