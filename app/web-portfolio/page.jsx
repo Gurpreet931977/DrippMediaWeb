@@ -122,7 +122,7 @@ export default function Page() {
       .catch(() => {});
   }, []);
 
-  // Synthesize rich Web Audio acoustic feedback
+  // Synthesize minimal coding & hacking terminal SFX (tactile mechanical clicks & cyber data packet chirps)
   const playSound = (type = 'click') => {
     try {
       if (!audioCtxRef.current) {
@@ -134,35 +134,96 @@ export default function Page() {
       }
 
       const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
 
-      if (type === 'slide') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(320, now);
-        osc.frequency.exponentialRampToValueAtTime(580, now + 0.12);
-        gain.gain.setValueAtTime(0.06, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-        osc.start(now);
-        osc.stop(now + 0.16);
-      } else if (type === 'open') {
+      if (type === 'click') {
+        // Tactile Mechanical Terminal Keystroke / Cyber Tap
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.exponentialRampToValueAtTime(880, now + 0.18);
+        osc.frequency.setValueAtTime(1400, now);
+        osc.frequency.exponentialRampToValueAtTime(320, now + 0.035);
+
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1800, now);
+        filter.Q.setValueAtTime(3, now);
+
         gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
         osc.start(now);
-        osc.stop(now + 0.23);
-      } else {
+        osc.stop(now + 0.045);
+      } else if (type === 'slide') {
+        // High-Speed Data Packet Stream / Buffer Shift Chirp
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(700, now);
-        osc.frequency.exponentialRampToValueAtTime(350, now + 0.08);
+        osc.frequency.setValueAtTime(750, now);
+        osc.frequency.exponentialRampToValueAtTime(1350, now + 0.03);
+        osc.frequency.exponentialRampToValueAtTime(450, now + 0.06);
+
         gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.065);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
         osc.start(now);
-        osc.stop(now + 0.1);
+        osc.stop(now + 0.07);
+      } else if (type === 'open') {
+        // Cyber Terminal Dossier Decrypt / Access Granted Sequence
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        const gain2 = ctx.createGain();
+
+        // Tone 1: Terminal handshake
+        osc1.type = 'triangle';
+        osc1.frequency.setValueAtTime(920, now);
+        osc1.frequency.exponentialRampToValueAtTime(1200, now + 0.04);
+        gain1.gain.setValueAtTime(0.06, now);
+        gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+
+        // Tone 2: Access confirmation pulse
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(1840, now + 0.03);
+        osc2.frequency.exponentialRampToValueAtTime(2400, now + 0.08);
+        gain2.gain.setValueAtTime(0, now);
+        gain2.gain.setValueAtTime(0.05, now + 0.03);
+        gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+
+        osc1.start(now);
+        osc1.stop(now + 0.06);
+        osc2.start(now + 0.03);
+        osc2.stop(now + 0.11);
+      } else if (type === 'copy') {
+        // ACK packet confirmation blip
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1600, now);
+        osc.frequency.setValueAtTime(2100, now + 0.04);
+
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.09);
       }
     } catch (e) {}
   };
@@ -726,18 +787,46 @@ export default function Page() {
           transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .domain-live-pulse {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: var(--brand-yellow);
-          box-shadow: 0 0 10px var(--brand-yellow);
-          animation: pulseGlow 2s infinite ease-in-out;
+        /* Dynamic Live Transmission Waveform / Equalizer */
+        .domain-signal-wave {
+          display: inline-flex;
+          align-items: flex-end;
+          gap: 2.5px;
+          height: 12px;
+          padding-bottom: 1px;
         }
 
-        @keyframes pulseGlow {
-          0%, 100% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.4); opacity: 1; filter: drop-shadow(0 0 6px var(--brand-yellow)); }
+        .signal-bar {
+          width: 2.5px;
+          border-radius: 2px;
+          background: var(--brand-yellow);
+          box-shadow: 0 0 8px rgba(235, 215, 63, 0.7);
+          animation: signalHarmonic 1.2s infinite ease-in-out;
+        }
+
+        .signal-bar:nth-child(1) {
+          height: 4px;
+          animation-delay: 0s;
+        }
+
+        .signal-bar:nth-child(2) {
+          height: 11px;
+          animation-delay: 0.22s;
+        }
+
+        .signal-bar:nth-child(3) {
+          height: 6px;
+          animation-delay: 0.44s;
+        }
+
+        @keyframes signalHarmonic {
+          0%, 100% { transform: scaleY(0.45); opacity: 0.7; }
+          50% { transform: scaleY(1.3); opacity: 1; filter: drop-shadow(0 0 6px var(--brand-yellow)); }
+        }
+
+        .hud-domain-capsule:hover .signal-bar {
+          animation-duration: 0.55s;
+          box-shadow: 0 0 10px rgba(235, 215, 63, 0.95);
         }
 
         .web-card-chassis:hover .hud-domain-capsule {
@@ -1647,7 +1736,11 @@ export default function Page() {
                   }}
                   title={`Launch https://${proj.displayUrl}`}
                 >
-                  <span className="domain-live-pulse" />
+                  <div className="domain-signal-wave" title="Live Edge Transmission">
+                    <span className="signal-bar" />
+                    <span className="signal-bar" />
+                    <span className="signal-bar" />
+                  </div>
                   <span className="domain-text">{proj.displayUrl}</span>
                   <svg className="domain-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="7" y1="17" x2="17" y2="7"></line>
@@ -1841,7 +1934,11 @@ export default function Page() {
                       className="hud-domain-capsule"
                       style={{ textDecoration: 'none' }}
                     >
-                      <span className="domain-live-pulse" />
+                      <div className="domain-signal-wave" title="Live Edge Transmission">
+                        <span className="signal-bar" />
+                        <span className="signal-bar" />
+                        <span className="signal-bar" />
+                      </div>
                       <span className="domain-text">{selectedCaseStudy.displayUrl}</span>
                       <svg className="domain-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="7" y1="17" x2="17" y2="7"></line>
