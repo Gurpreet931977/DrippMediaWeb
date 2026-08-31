@@ -1387,38 +1387,58 @@ export default function WebPortfolioManager() {
       </div>
 
       {/* Web Projects List */}
-      <div style={{ marginTop: '30px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.2rem', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Layers size={20} color="#ebd73f" /> Live Web Builds ({items.length})
+      <div style={{ marginTop: '40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
+          <h3 style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.25rem', fontWeight: 800, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '12px', letterSpacing: '0.4px' }}>
+            <Layers size={22} color="#ebd73f" /> 
+            <span>Live Web Builds</span>
+            <span style={{ 
+              background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.2) 0%, rgba(235, 215, 63, 0.08) 100%)', 
+              border: '1px solid rgba(235, 215, 63, 0.45)', 
+              color: '#ebd73f', 
+              padding: '3px 12px', 
+              borderRadius: '20px', 
+              fontSize: '0.78rem',
+              fontFamily: 'Panchang, sans-serif',
+              fontWeight: 800,
+              boxShadow: '0 0 14px rgba(235, 215, 63, 0.15)'
+            }}>
+              {items.length}
+            </span>
           </h3>
           <button 
             onClick={fetchWebItems}
             style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '10px',
-              padding: '6px 14px',
-              color: '#fff',
-              fontSize: '0.78rem',
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              borderRadius: '12px',
+              padding: '8px 18px',
+              color: '#ffffff',
+              fontFamily: 'Clash Display, sans-serif',
+              fontSize: '0.82rem',
+              fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '8px',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.35)',
+              transition: 'all 0.2s ease'
             }}
           >
-            <RefreshCw size={14} /> Refresh List
+            <RefreshCw size={14} color="#ebd73f" /> Refresh List
           </button>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>Loading web portfolio items...</div>
+          <div style={{ textAlign: 'center', padding: '48px', color: 'rgba(255,255,255,0.6)', fontFamily: 'Clash Display, sans-serif', fontSize: '0.95rem' }}>
+            Loading web portfolio items...
+          </div>
         ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', background: 'rgba(15,15,20,0.5)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)', color: '#888' }}>
+          <div style={{ textAlign: 'center', padding: '50px', background: 'rgba(15,15,22,0.6)', borderRadius: '18px', border: '1px dashed rgba(235,215,63,0.3)', color: 'rgba(255,255,255,0.7)', fontFamily: 'Clash Display, sans-serif' }}>
             No web portfolio items yet. Add your first build above!
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {items.map((item, index) => {
               const isVisible = item.is_visible !== false;
               const techList = Array.isArray(item.tech_stack) 
@@ -1429,83 +1449,181 @@ export default function WebPortfolioManager() {
                 <div 
                   key={item.id || index}
                   style={{
-                    background: 'rgba(18, 18, 24, 0.85)',
-                    border: `1px solid ${isVisible ? 'rgba(255, 255, 255, 0.08)' : 'rgba(239, 68, 68, 0.3)'}`,
-                    borderRadius: '16px',
+                    background: isVisible 
+                      ? 'linear-gradient(145deg, rgba(22, 22, 30, 0.9) 0%, rgba(13, 13, 18, 0.95) 100%)' 
+                      : 'linear-gradient(145deg, rgba(18, 18, 22, 0.65) 0%, rgba(10, 10, 14, 0.75) 100%)',
+                    border: isVisible ? '1px solid rgba(255, 255, 255, 0.1)' : '1px dashed rgba(239, 68, 68, 0.4)',
+                    borderRadius: '18px',
                     padding: '18px 24px',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '20px',
-                    transition: 'all 0.2s ease',
-                    opacity: isVisible ? 1 : 0.6
+                    transition: 'all 0.25s ease',
+                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(16px)',
+                    opacity: isVisible ? 1 : 0.68,
+                    position: 'relative'
                   }}
                 >
-                  {/* Reorder Buttons */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {/* Reorder & Index Badge Column */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                     <button 
                       onClick={() => moveItem(index, 'up')}
                       disabled={index === 0}
-                      style={{ background: 'none', border: 'none', color: index === 0 ? '#444' : '#ebd73f', cursor: index === 0 ? 'default' : 'pointer', padding: '2px' }}
+                      style={{ 
+                        background: index === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(235, 215, 63, 0.12)', 
+                        border: `1px solid ${index === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(235, 215, 63, 0.35)'}`, 
+                        color: index === 0 ? 'rgba(255,255,255,0.18)' : '#ebd73f', 
+                        cursor: index === 0 ? 'not-allowed' : 'pointer', 
+                        padding: '5px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                      title="Move Up"
                     >
-                      <ArrowUp size={16} />
+                      <ArrowUp size={14} />
                     </button>
+                    <span style={{ 
+                      fontFamily: 'Panchang, sans-serif', 
+                      fontSize: '0.65rem', 
+                      fontWeight: 800, 
+                      color: isVisible ? '#ebd73f' : 'rgba(255,255,255,0.4)',
+                      padding: '2px 0'
+                    }}>
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
                     <button 
                       onClick={() => moveItem(index, 'down')}
                       disabled={index === items.length - 1}
-                      style={{ background: 'none', border: 'none', color: index === items.length - 1 ? '#444' : '#ebd73f', cursor: index === items.length - 1 ? 'default' : 'pointer', padding: '2px' }}
+                      style={{ 
+                        background: index === items.length - 1 ? 'rgba(255,255,255,0.02)' : 'rgba(235, 215, 63, 0.12)', 
+                        border: `1px solid ${index === items.length - 1 ? 'rgba(255,255,255,0.05)' : 'rgba(235, 215, 63, 0.35)'}`, 
+                        color: index === items.length - 1 ? 'rgba(255,255,255,0.18)' : '#ebd73f', 
+                        cursor: index === items.length - 1 ? 'not-allowed' : 'pointer', 
+                        padding: '5px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                      title="Move Down"
                     >
-                      <ArrowDown size={16} />
+                      <ArrowDown size={14} />
                     </button>
                   </div>
 
-                  {/* Screenshot Thumbnail */}
+                  {/* Screenshot / Media Thumbnail Chassis */}
                   <div style={{
-                    width: '120px',
-                    height: '75px',
-                    borderRadius: '10px',
+                    width: '130px',
+                    height: '81px',
+                    borderRadius: '12px',
                     overflow: 'hidden',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    background: '#000',
+                    border: '1px solid rgba(235, 215, 63, 0.25)',
+                    background: '#08080c',
                     flexShrink: 0,
-                    position: 'relative'
+                    position: 'relative',
+                    boxShadow: '0 6px 18px rgba(0,0,0,0.6)'
                   }}>
                     <img 
                       src={item.image_url || item.image || '/images/web-portfolio/bharatup.jpg'} 
                       alt={item.title} 
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                     />
+                    {(item.video_url || item.video) && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '5px',
+                        left: '5px',
+                        background: 'rgba(0,0,0,0.8)',
+                        border: '1px solid rgba(235, 215, 63, 0.45)',
+                        borderRadius: '5px',
+                        padding: '2px 5px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        color: '#ebd73f',
+                        fontSize: '0.55rem',
+                        fontFamily: 'Panchang, sans-serif',
+                        fontWeight: 800
+                      }}>
+                        <Video size={10} color="#ebd73f" /> VIDEO
+                      </div>
+                    )}
                   </div>
 
-                  {/* Project Info */}
+                  {/* Project Information */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                      <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px', flexWrap: 'wrap' }}>
+                      <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.15rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.3px' }}>
                         {item.title}
                       </span>
                       <span style={{
-                        background: 'rgba(235, 215, 63, 0.12)',
+                        background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.16) 0%, rgba(235, 215, 63, 0.06) 100%)',
                         color: '#ebd73f',
-                        border: '1px solid rgba(235, 215, 63, 0.3)',
-                        borderRadius: '12px',
-                        padding: '2px 8px',
-                        fontSize: '0.65rem',
+                        border: '1px solid rgba(235, 215, 63, 0.4)',
+                        borderRadius: '20px',
+                        padding: '3px 10px',
+                        fontSize: '0.68rem',
                         fontFamily: 'Panchang, sans-serif',
-                        fontWeight: 700
+                        fontWeight: 700,
+                        letterSpacing: '0.4px',
+                        textTransform: 'uppercase',
+                        boxShadow: '0 0 12px rgba(235, 215, 63, 0.1)'
                       }}>
                         {item.category}
                       </span>
                       {item.case_study_challenge && (
-                        <span style={{ fontSize: '0.68rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <CheckCircle2 size={12} /> Case Study Ready
+                        <span style={{ 
+                          fontSize: '0.72rem', 
+                          fontFamily: 'Clash Display, sans-serif',
+                          fontWeight: 600,
+                          color: '#34d399', 
+                          background: 'rgba(16, 185, 129, 0.14)',
+                          border: '1px solid rgba(52, 211, 153, 0.4)',
+                          borderRadius: '20px',
+                          padding: '3px 10px',
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          gap: '5px',
+                          boxShadow: '0 0 12px rgba(16, 185, 129, 0.18)'
+                        }}>
+                          <CheckCircle2 size={13} color="#34d399" /> Case Study Ready
+                        </span>
+                      )}
+                      {!isVisible && (
+                        <span style={{
+                          fontSize: '0.68rem',
+                          fontFamily: 'Panchang, sans-serif',
+                          fontWeight: 700,
+                          color: '#f87171',
+                          background: 'rgba(239, 68, 68, 0.14)',
+                          border: '1px solid rgba(239, 68, 68, 0.4)',
+                          borderRadius: '20px',
+                          padding: '2px 9px'
+                        }}>
+                          HIDDEN
                         </span>
                       )}
                     </div>
 
-                    <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.65)', marginBottom: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ 
+                      fontSize: '0.88rem', 
+                      color: 'rgba(255, 255, 255, 0.88)', 
+                      fontFamily: 'Clash Display, sans-serif',
+                      fontWeight: 500,
+                      marginBottom: '8px', 
+                      whiteSpace: 'nowrap', 
+                      overflow: 'hidden', 
+                      textOverflow: 'ellipsis' 
+                    }}>
                       {item.tagline || item.url}
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       <a 
                         href={item.url} 
                         target="_blank" 
@@ -1513,27 +1631,37 @@ export default function WebPortfolioManager() {
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '5px',
+                          gap: '6px',
+                          background: 'rgba(235, 215, 63, 0.08)',
+                          border: '1px solid rgba(235, 215, 63, 0.3)',
+                          borderRadius: '8px',
+                          padding: '3px 10px',
                           color: '#ebd73f',
                           fontSize: '0.78rem',
-                          textDecoration: 'none'
+                          fontFamily: 'Clash Display, sans-serif',
+                          fontWeight: 600,
+                          textDecoration: 'none',
+                          transition: 'all 0.2s ease'
                         }}
                       >
-                        <span>{item.display_url || item.url}</span>
+                        <span>{item.display_url || (item.url ? item.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : '')}</span>
                         <ExternalLink size={12} />
                       </a>
 
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        {techList.slice(0, 4).map((tech, tIdx) => (
+                      <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                        {techList.slice(0, 5).map((tech, tIdx) => (
                           <span 
                             key={tIdx} 
                             style={{
-                              background: 'rgba(255,255,255,0.05)',
-                              border: '1px solid rgba(255,255,255,0.08)',
-                              borderRadius: '4px',
-                              padding: '1px 6px',
-                              fontSize: '0.68rem',
-                              color: 'rgba(255,255,255,0.8)'
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              border: '1px solid rgba(255, 255, 255, 0.16)',
+                              borderRadius: '6px',
+                              padding: '2px 8px',
+                              fontSize: '0.72rem',
+                              fontFamily: 'Clash Display, sans-serif',
+                              fontWeight: 600,
+                              color: '#f8fafc',
+                              letterSpacing: '0.2px'
                             }}
                           >
                             {tech}
@@ -1543,8 +1671,19 @@ export default function WebPortfolioManager() {
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {/* Actions Hub (Edit, Visibility, Delete) */}
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px',
+                    background: 'rgba(0, 0, 0, 0.35)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    padding: '6px 8px',
+                    borderRadius: '14px',
+                    backdropFilter: 'blur(10px)',
+                    flexShrink: 0
+                  }}>
+                    {/* Edit Project Button */}
                     <button
                       onClick={() => {
                         const techList = Array.isArray(item.tech_stack) ? item.tech_stack : (Array.isArray(item.techStack) ? item.techStack : []);
@@ -1570,46 +1709,76 @@ export default function WebPortfolioManager() {
                         });
                       }}
                       style={{
-                        background: 'rgba(235, 215, 63, 0.1)',
-                        border: '1px solid rgba(235, 215, 63, 0.3)',
-                        borderRadius: '8px',
+                        background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.16) 0%, rgba(235, 215, 63, 0.04) 100%)',
+                        border: '1px solid rgba(235, 215, 63, 0.4)',
+                        borderRadius: '10px',
                         color: '#ebd73f',
-                        padding: '8px',
-                        cursor: 'pointer'
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        boxShadow: '0 2px 10px rgba(235, 215, 63, 0.12)',
+                        transition: 'all 0.2s ease'
                       }}
-                      title="Edit Project"
+                      title="Edit Web Build"
                     >
-                      <Edit2 size={16} />
+                      <Edit2 size={14} color="#ebd73f" />
+                      <span>Edit</span>
                     </button>
 
+                    {/* Visibility Toggle Button */}
                     <button
                       onClick={() => toggleVisibility(item.id, isVisible)}
                       style={{
-                        background: isVisible ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                        border: `1px solid ${isVisible ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                        borderRadius: '8px',
-                        color: isVisible ? '#10b981' : '#ef4444',
-                        padding: '8px',
-                        cursor: 'pointer'
+                        background: isVisible 
+                          ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(16, 185, 129, 0.05) 100%)' 
+                          : 'linear-gradient(135deg, rgba(148, 163, 184, 0.12) 0%, rgba(100, 116, 139, 0.04) 100%)',
+                        border: `1px solid ${isVisible ? 'rgba(52, 211, 153, 0.45)' : 'rgba(148, 163, 184, 0.35)'}`,
+                        borderRadius: '10px',
+                        color: isVisible ? '#34d399' : '#cbd5e1',
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        boxShadow: isVisible ? '0 2px 10px rgba(16, 185, 129, 0.15)' : 'none',
+                        transition: 'all 0.2s ease'
                       }}
-                      title={isVisible ? 'Hide from public portfolio' : 'Make live'}
+                      title={isVisible ? 'Live on Public Portfolio (Click to Hide)' : 'Hidden from Public (Click to Make Live)'}
                     >
-                      {isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+                      {isVisible ? <Eye size={14} color="#34d399" /> : <EyeOff size={14} color="#94a3b8" />}
+                      <span>{isVisible ? 'Live' : 'Hidden'}</span>
                     </button>
 
+                    {/* Delete Button */}
                     <button
                       onClick={() => deleteItem(item.id)}
                       style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        borderRadius: '8px',
-                        color: '#ef4444',
-                        padding: '8px',
-                        cursor: 'pointer'
+                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(220, 38, 38, 0.04) 100%)',
+                        border: '1px solid rgba(239, 68, 68, 0.4)',
+                        borderRadius: '10px',
+                        color: '#f87171',
+                        padding: '8px 11px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        boxShadow: '0 2px 10px rgba(239, 68, 68, 0.12)',
+                        transition: 'all 0.2s ease'
                       }}
                       title="Delete Project"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={14} color="#f87171" />
                     </button>
                   </div>
                 </div>
@@ -2220,16 +2389,39 @@ export default function WebPortfolioManager() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '14px', marginTop: '20px' }}>
               <button 
                 onClick={() => setEditItemModal({ show: false, item: null })}
-                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '20px', padding: '10px 20px', color: '#fff', cursor: 'pointer' }}
+                style={{ 
+                  background: 'rgba(255,255,255,0.08)', 
+                  border: '1px solid rgba(255,255,255,0.18)', 
+                  borderRadius: '24px', 
+                  padding: '12px 24px', 
+                  color: '#ffffff', 
+                  fontFamily: 'Clash Display, sans-serif',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 Cancel
               </button>
               <button 
                 onClick={handleSaveEdit}
-                style={{ background: '#ebd73f', border: 'none', borderRadius: '20px', padding: '10px 24px', color: '#050505', fontWeight: 800, cursor: 'pointer' }}
+                style={{ 
+                  background: 'var(--brand-yellow, #ebd73f)', 
+                  border: 'none', 
+                  borderRadius: '24px', 
+                  padding: '12px 28px', 
+                  color: '#050505', 
+                  fontFamily: 'Panchang, sans-serif',
+                  fontSize: '0.82rem',
+                  fontWeight: 800, 
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 20px rgba(235, 215, 63, 0.4)',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 Save Changes
               </button>
