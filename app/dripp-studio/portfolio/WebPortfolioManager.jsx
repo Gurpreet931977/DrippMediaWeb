@@ -353,9 +353,15 @@ export default function WebPortfolioManager() {
 
   // Auto-capture screenshot and prompt cropper
   const handleAutoCapture = async (targetFormData, setTargetForm) => {
-    if (!targetFormData.url) {
+    let rawUrl = (targetFormData.url || '').trim();
+    if (!rawUrl) {
       showNotification('error', 'Please enter a Live Website URL to capture');
       return;
+    }
+
+    // Normalize protocol
+    if (!/^https?:\/\//i.test(rawUrl)) {
+      rawUrl = 'https://' + rawUrl;
     }
 
     setIsCapturingScreenshot(true);
@@ -366,35 +372,46 @@ export default function WebPortfolioManager() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          url: targetFormData.url,
+          url: rawUrl,
           title: targetFormData.title
         })
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.image_url) {
-          setTargetForm(prev => ({ ...prev, image_url: data.image_url }));
-          showNotification('success', 'Live screenshot captured! Opening Cropper to adjust frame...');
-          const isCreate = targetFormData === formData;
-          const itemIndex = isCreate ? items.length + 1 : (items.findIndex(it => it.id === targetFormData.id) + 1 || 1);
-          setCropperModal({
-            isOpen: true,
-            imageSrc: data.image_url,
-            target: isCreate ? 'create' : 'edit',
-            projectTitle: targetFormData.title || '',
-            category: targetFormData.category || 'Enterprise Digital Platform',
-            tagline: targetFormData.tagline || '',
-            displayUrl: targetFormData.display_url || targetFormData.url || '',
-            techStack: targetFormData.tech_stack || ['Next.js', 'Tailwind CSS'],
-            indexNum: String(itemIndex).padStart(2, '0')
-          });
-        }
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success && data.image_url) {
+        const domain = rawUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+        const suggestedTitle = targetFormData.title || data.suggested_title || '';
+        
+        setTargetForm(prev => ({ 
+          ...prev, 
+          url: rawUrl,
+          display_url: prev.display_url || domain,
+          title: prev.title || suggestedTitle,
+          image_url: data.image_url 
+        }));
+
+        showNotification('success', '✨ Live screenshot captured! Opening Cropper to adjust frame...');
+        
+        const isCreate = targetFormData === formData;
+        const itemIndex = isCreate ? items.length + 1 : (items.findIndex(it => it.id === targetFormData.id) + 1 || 1);
+        
+        setCropperModal({
+          isOpen: true,
+          imageSrc: data.image_url,
+          target: isCreate ? 'create' : 'edit',
+          projectTitle: suggestedTitle || targetFormData.title || '',
+          category: targetFormData.category || 'Enterprise Digital Platform',
+          tagline: targetFormData.tagline || '',
+          displayUrl: targetFormData.display_url || domain,
+          techStack: targetFormData.tech_stack || ['Next.js', 'Tailwind CSS'],
+          indexNum: String(itemIndex).padStart(2, '0')
+        });
       } else {
-        throw new Error('Capture failed');
+        throw new Error(data.error || 'Failed to capture screenshot from live website');
       }
     } catch (e) {
-      showNotification('error', 'Screenshot capture error: ' + e.message);
+      showNotification('error', 'Screenshot error: ' + e.message);
     } finally {
       setIsCapturingScreenshot(false);
     }
@@ -672,10 +689,17 @@ export default function WebPortfolioManager() {
                 </label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input 
-                    type="url" 
-                    placeholder="https://www.example.com/"
+                    type="text" 
+                    placeholder="e.g. www.thestallionmetallist.com or https://..."
                     value={formData.url}
-                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        url: val,
+                        display_url: prev.display_url || val.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+                      }));
+                    }}
                     style={{
                       flex: 1,
                       background: 'rgba(0,0,0,0.5)',
@@ -683,7 +707,7 @@ export default function WebPortfolioManager() {
                       borderRadius: '12px',
                       padding: '12px 16px',
                       color: '#fff',
-                      fontFamily: 'inherit'
+                      fontFamily: 'Clash Display, sans-serif'
                     }}
                     required
                   />
