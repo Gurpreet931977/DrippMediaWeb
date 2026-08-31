@@ -1417,24 +1417,24 @@ export default function Page() {
           pointer-events: auto;
         }
 
-        /* Left Side High-End Client Conversion Beacon */
+        /* Left Side Minimal Luxury Client Conversion Station */
         .drawer-conversion-hub {
           position: absolute;
           left: 4vw;
           top: 50%;
           transform: translateY(-46%) scale(0.96);
-          width: clamp(280px, 28vw, 380px);
-          background: rgba(10, 10, 16, 0.88);
-          backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
-          border: 1px solid rgba(235, 215, 63, 0.35);
-          border-radius: 20px;
-          padding: 28px 24px;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(235, 215, 63, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+          width: clamp(240px, 20vw, 290px);
+          background: rgba(10, 10, 15, 0.75);
+          backdrop-filter: blur(30px);
+          -webkit-backdrop-filter: blur(30px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 18px;
+          padding: 22px 20px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(235, 215, 63, 0.05);
           opacity: 0;
           pointer-events: none;
           z-index: 2010;
-          transition: opacity 0.5s 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: opacity 0.4s 0.1s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s 0.1s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .case-study-drawer.open .drawer-conversion-hub {
@@ -1443,35 +1443,16 @@ export default function Page() {
           pointer-events: auto;
         }
 
-        /* Sci-Fi Corner Brackets */
-        .hub-bracket {
-          position: absolute;
-          width: 10px;
-          height: 10px;
-          border-color: var(--brand-yellow);
-          border-style: solid;
-          opacity: 0.85;
-        }
-        .hub-bracket-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-top-left-radius: 6px; }
-        .hub-bracket-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; border-top-right-radius: 6px; }
-        .hub-bracket-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; border-bottom-left-radius: 6px; }
-        .hub-bracket-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-bottom-right-radius: 6px; }
-
         .hub-eyebrow {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          background: rgba(235, 215, 63, 0.12);
-          border: 1px solid rgba(235, 215, 63, 0.3);
-          border-radius: 20px;
-          padding: 4px 10px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.58rem;
+          font-size: 0.54rem;
           font-weight: 800;
           color: var(--brand-yellow);
-          letter-spacing: 1.5px;
-          text-transform: uppercase;
-          margin-bottom: 14px;
+          letter-spacing: 1.2px;
+          margin-bottom: 8px;
         }
 
         .hub-pulse-star {
@@ -1481,47 +1462,42 @@ export default function Page() {
 
         .hub-title {
           font-family: 'Panchang', sans-serif;
-          font-size: 1.08rem;
+          font-size: 0.86rem;
           font-weight: 800;
           color: #ffffff;
-          line-height: 1.3;
-          margin: 0 0 10px 0;
-          letter-spacing: -0.3px;
-          text-transform: uppercase;
+          line-height: 1.35;
+          margin: 0 0 8px 0;
+          letter-spacing: -0.2px;
         }
 
         .hub-desc {
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.82rem;
-          line-height: 1.5;
-          color: rgba(255, 255, 255, 0.75);
-          margin: 0 0 16px 0;
+          font-size: 0.78rem;
+          line-height: 1.45;
+          color: rgba(255, 255, 255, 0.65);
+          margin: 0 0 14px 0;
         }
 
         .hub-perks-list {
           display: flex;
           flex-direction: column;
-          gap: 8px;
-          margin-bottom: 20px;
-          padding: 12px 14px;
-          background: rgba(0, 0, 0, 0.4);
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          gap: 7px;
+          margin-bottom: 16px;
         }
 
         .hub-perk-item {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 7px;
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.76rem;
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.9);
+          font-size: 0.74rem;
+          font-weight: 500;
+          color: rgba(255, 255, 255, 0.85);
         }
 
         .hub-perk-item .perk-bullet {
           color: var(--brand-yellow);
-          font-size: 0.65rem;
+          font-size: 0.6rem;
         }
 
         /* High-Impact Interactive CTA Button */
@@ -1530,27 +1506,27 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 10px;
+          gap: 8px;
           width: 100%;
           background: var(--brand-yellow);
           color: #050505;
-          padding: 13px 20px;
-          border-radius: 30px;
+          padding: 10px 16px;
+          border-radius: 24px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.72rem;
+          font-size: 0.64rem;
           font-weight: 800;
-          letter-spacing: 1.5px;
-          text-transform: uppercase;
+          letter-spacing: 1px;
           text-decoration: none;
           overflow: hidden;
-          box-shadow: 0 10px 30px rgba(235, 215, 63, 0.35), 0 4px 12px rgba(0, 0, 0, 0.5);
-          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          white-space: nowrap;
+          box-shadow: 0 6px 20px rgba(235, 215, 63, 0.25);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
           cursor: pointer;
         }
 
         .hub-cta-button:hover {
           transform: translateY(-2px);
-          box-shadow: 0 15px 40px rgba(235, 215, 63, 0.55), 0 0 25px rgba(235, 215, 63, 0.8);
+          box-shadow: 0 10px 30px rgba(235, 215, 63, 0.5), 0 0 20px rgba(235, 215, 63, 0.6);
           background: #ffe347;
           color: #000;
         }
@@ -1567,16 +1543,16 @@ export default function Page() {
         }
 
         .hub-cta-star {
-          font-size: 0.8rem;
+          font-size: 0.75rem;
           transition: transform 0.3s ease;
         }
         .hub-cta-button:hover .hub-cta-star {
-          transform: rotate(45deg) scale(1.2);
+          transform: rotate(45deg) scale(1.15);
         }
 
         .hub-cta-arrow {
-          width: 22px;
-          height: 22px;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
           background: #050505;
           color: var(--brand-yellow);
@@ -1596,11 +1572,11 @@ export default function Page() {
           justify-content: center;
           gap: 6px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.52rem;
+          font-size: 0.5rem;
           font-weight: 700;
-          color: rgba(255, 255, 255, 0.5);
-          letter-spacing: 0.8px;
-          margin-top: 14px;
+          color: rgba(255, 255, 255, 0.4);
+          letter-spacing: 0.6px;
+          margin-top: 12px;
           text-align: center;
         }
 
@@ -1625,14 +1601,14 @@ export default function Page() {
         }
 
         .drawer-content {
-          width: 62vw;
-          max-width: 900px;
+          width: clamp(620px, 66vw, 920px);
+          max-width: 920px;
           min-width: 360px;
           height: 100%;
-          background: #09090e;
-          border-left: 1px solid rgba(235, 215, 63, 0.25);
-          box-shadow: -25px 0 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(235, 215, 63, 0.1);
-          padding: 36px 42px;
+          background: #08080c;
+          border-left: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: -20px 0 60px rgba(0, 0, 0, 0.95);
+          padding: 32px 38px;
           overflow-y: auto;
           display: flex;
           flex-direction: column;
@@ -1648,13 +1624,13 @@ export default function Page() {
         .drawer-hero-banner {
           position: relative;
           width: 100%;
-          height: 190px;
-          border-radius: 20px;
+          height: 170px;
+          border-radius: 16px;
           overflow: hidden;
           background: #050508;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          margin-bottom: 24px;
-          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          margin-bottom: 20px;
+          box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
         }
 
         .drawer-hero-img {
@@ -1662,28 +1638,28 @@ export default function Page() {
           height: 100%;
           object-fit: cover;
           object-position: top center;
-          filter: brightness(0.6) contrast(1.1);
+          filter: brightness(0.65) contrast(1.05);
           transition: transform 0.8s ease;
         }
         .drawer-hero-banner:hover .drawer-hero-img {
-          transform: scale(1.04);
+          transform: scale(1.03);
         }
 
         .drawer-hero-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(9, 9, 14, 0.95) 0%, rgba(9, 9, 14, 0.4) 60%, transparent 100%);
+          background: linear-gradient(to top, rgba(8, 8, 12, 0.95) 0%, rgba(8, 8, 12, 0.35) 60%, transparent 100%);
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
-          padding: 20px 24px;
+          padding: 18px 22px;
         }
 
         .drawer-header-actions {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 20px;
+          margin-bottom: 18px;
         }
 
         /* High-End Cyber Animated Close Button */
@@ -1695,14 +1671,14 @@ export default function Page() {
           background: rgba(18, 18, 24, 0.85);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.18);
+          border: 1px solid rgba(255, 255, 255, 0.14);
           color: #ffffff;
-          padding: 8px 18px;
+          padding: 7px 16px;
           border-radius: 30px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.65rem;
+          font-size: 0.62rem;
           font-weight: 800;
-          letter-spacing: 1.5px;
+          letter-spacing: 1.2px;
           cursor: pointer;
           transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
           overflow: hidden;
@@ -1756,25 +1732,25 @@ export default function Page() {
         /* Interactive Case Study Tab Navigation */
         .case-study-tab-bar {
           display: flex;
-          gap: 8px;
-          background: rgba(18, 18, 24, 0.85);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 16px;
-          padding: 5px;
-          margin-bottom: 26px;
+          gap: 6px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 14px;
+          padding: 4px;
+          margin-bottom: 22px;
         }
 
         .case-tab-btn {
           flex: 1;
           background: transparent;
           border: none;
-          border-radius: 12px;
-          padding: 11px 16px;
-          color: rgba(255, 255, 255, 0.65);
+          border-radius: 10px;
+          padding: 9px 14px;
+          color: rgba(255, 255, 255, 0.6);
           font-family: 'Panchang', sans-serif;
-          font-size: 0.65rem;
+          font-size: 0.62rem;
           font-weight: 700;
-          letter-spacing: 1px;
+          letter-spacing: 0.8px;
           cursor: pointer;
           display: flex;
           align-items: center;
@@ -1785,80 +1761,65 @@ export default function Page() {
 
         .case-tab-btn:hover {
           color: #ffffff;
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(255, 255, 255, 0.05);
         }
 
         .case-tab-btn.active {
           background: var(--brand-yellow);
           color: #050505;
-          box-shadow: 0 4px 20px rgba(235, 215, 63, 0.35);
+          box-shadow: 0 2px 14px rgba(235, 215, 63, 0.3);
         }
 
         /* High-Tech Editorial Monograph Cards */
         .blueprint-card {
-          background: rgba(14, 14, 20, 0.85);
+          background: rgba(255, 255, 255, 0.025);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 18px;
-          padding: 24px 28px;
-          margin-bottom: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          border-radius: 16px;
+          padding: 20px 24px;
+          margin-bottom: 14px;
           position: relative;
           overflow: hidden;
-          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .blueprint-card:hover {
-          border-color: rgba(235, 215, 63, 0.45);
-          transform: translateY(-2px);
-          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 25px rgba(235, 215, 63, 0.08);
+          border-color: rgba(235, 215, 63, 0.3);
+          background: rgba(255, 255, 255, 0.035);
         }
 
         .blueprint-card.highlight {
-          background: linear-gradient(135deg, rgba(235, 215, 63, 0.06) 0%, rgba(12, 12, 18, 0.95) 100%);
-          border-color: rgba(235, 215, 63, 0.35);
+          background: linear-gradient(135deg, rgba(235, 215, 63, 0.04) 0%, rgba(255, 255, 255, 0.025) 100%);
+          border-color: rgba(235, 215, 63, 0.25);
         }
-
-        /* Subtle Corner Accent Lines on Blueprint Cards */
-        .card-corner-reticle {
-          position: absolute;
-          width: 8px;
-          height: 8px;
-          border-color: var(--brand-yellow);
-          border-style: solid;
-          opacity: 0.7;
-          pointer-events: none;
-        }
-        .card-reticle-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-top-left-radius: 4px; }
-        .card-reticle-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-bottom-right-radius: 4px; }
 
         /* Modern Monograph Badge */
         .monograph-badge {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
           background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 20px;
-          padding: 4px 12px;
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          border-radius: 16px;
+          padding: 3px 10px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.58rem;
+          font-size: 0.54rem;
           font-weight: 800;
-          letter-spacing: 1.5px;
-          text-transform: uppercase;
+          letter-spacing: 1.2px;
           color: #ffffff;
-          margin-bottom: 14px;
+          margin-bottom: 12px;
         }
 
         .monograph-badge.highlight {
-          background: rgba(235, 215, 63, 0.12);
-          border-color: rgba(235, 215, 63, 0.4);
+          background: rgba(235, 215, 63, 0.09);
+          border-color: rgba(235, 215, 63, 0.3);
           color: var(--brand-yellow);
         }
 
         .monograph-badge .badge-spark {
           color: var(--brand-yellow);
-          font-size: 0.65rem;
+          font-size: 0.6rem;
         }
 
         .monograph-badge .badge-index {
@@ -2272,48 +2233,38 @@ export default function Page() {
           className={`case-study-drawer ${selectedCaseStudy ? 'open' : ''}`}
           onClick={() => setSelectedCaseStudy(null)}
         >
-          {/* Left Side Client Conversion Station */}
+          {/* Left Side Minimal Luxury Client Conversion Station */}
           <div 
             className="drawer-conversion-hub" 
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Subtle Cyber Target Reticles */}
-            <span className="hub-bracket hub-bracket-tl" />
-            <span className="hub-bracket hub-bracket-tr" />
-            <span className="hub-bracket hub-bracket-bl" />
-            <span className="hub-bracket hub-bracket-br" />
-
-            {/* Glowing Status Chip */}
+            {/* Clean Status Chip */}
             <div className="hub-eyebrow">
               <span className="hub-pulse-star">✦</span>
-              <span>{isGenz ? 'start your build' : 'COMMISSION YOUR BUILD'}</span>
+              <span>{isGenz ? 'start a build' : 'COMMISSION A BUILD'}</span>
             </div>
 
-            {/* Impact Title */}
+            {/* Compact Impact Title */}
             <h3 className="hub-title">
-              {isGenz ? 'want a platform this clean?' : 'WANT A FLAGSHIP PLATFORM LIKE THIS?'}
+              {isGenz ? 'want a site this clean?' : 'WANT A SITE LIKE THIS?'}
             </h3>
 
-            {/* Value Prop Description */}
+            {/* Clean Value Prop */}
             <p className="hub-desc">
               {isGenz
-                ? 'we build high-aesthetic web ecosystems with 60 fps micro-motion, sub-second load times, and zero mid design.'
-                : 'We architect bespoke web ecosystems with 60 FPS kinetic micro-interactions, sub-second TTFB latency, and high-conversion engineering.'}
+                ? 'we build high-aesthetic web platforms with 60 fps motion & instant load speeds.'
+                : 'We architect bespoke digital platforms with 60 FPS motion & sub-second speed.'}
             </p>
 
-            {/* Quick Value Metrics Matrix */}
+            {/* Minimal Perks Matrix */}
             <div className="hub-perks-list">
               <div className="hub-perk-item">
                 <span className="perk-bullet">✦</span>
-                <span>{isGenz ? '100% custom next.js & framer motion' : '100% Custom Next.js Architecture'}</span>
+                <span>{isGenz ? '100% custom next.js architecture' : '100% Custom Next.js Architecture'}</span>
               </div>
               <div className="hub-perk-item">
                 <span className="perk-bullet">✦</span>
-                <span>{isGenz ? 'sub-second load times & edge caching' : 'Sub-Second Server TTFB & Edge Caching'}</span>
-              </div>
-              <div className="hub-perk-item">
-                <span className="perk-bullet">✦</span>
-                <span>{isGenz ? 'turnkey delivery in 2–3 weeks' : 'Turnkey Delivery in 2–3 Weeks'}</span>
+                <span>{isGenz ? 'sub-second edge load & 2-3 wk delivery' : 'Sub-Second Edge Load & 2-3 Wk Delivery'}</span>
               </div>
             </div>
 
@@ -2329,19 +2280,13 @@ export default function Page() {
             >
               <div className="hub-cta-shimmer" />
               <span className="hub-cta-star">✦</span>
-              <span>{isGenz ? 'build yours now' : 'BUILD YOUR PLATFORM'}</span>
-              <div className="hub-cta-arrow">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="7" y1="17" x2="17" y2="7"></line>
-                  <polyline points="7 7 17 7 17 17"></polyline>
-                </svg>
-              </div>
+              <span>{isGenz ? 'start your project ↗' : 'START YOUR BUILD ↗'}</span>
             </a>
 
             {/* Secondary Telemetry Tag */}
             <div className="hub-telemetry">
               <span className="telemetry-live-dot" />
-              <span>{isGenz ? 'est. kickoff: this week • accepting builds' : 'EST. KICKOFF: THIS WEEK • ACCEPTING BUILDS'}</span>
+              <span>{isGenz ? 'accepting builds this week' : 'ACCEPTING BUILDS THIS WEEK'}</span>
             </div>
           </div>
 
@@ -2385,7 +2330,7 @@ export default function Page() {
                       <div>
                         <h2 style={{
                           fontFamily: 'Panchang, sans-serif',
-                          fontSize: '2.2rem',
+                          fontSize: '2rem',
                           fontWeight: 800,
                           color: '#ffffff',
                           textTransform: isGenz ? 'lowercase' : 'uppercase',
@@ -2397,7 +2342,7 @@ export default function Page() {
                         </h2>
                         <div style={{
                           fontFamily: 'Clash Display, sans-serif',
-                          fontSize: '0.95rem',
+                          fontSize: '0.92rem',
                           color: 'var(--brand-yellow)',
                           fontWeight: 600
                         }}>
@@ -2453,12 +2398,9 @@ export default function Page() {
                     <div>
                       {/* The Strategic Challenge Card */}
                       <div className="blueprint-card">
-                        <span className="card-corner-reticle card-reticle-tl" />
-                        <span className="card-corner-reticle card-reticle-br" />
                         <div className="monograph-badge">
                           <span className="badge-spark">✦</span>
                           <span className="badge-label">{isGenz ? 'the strategic challenge' : 'THE STRATEGIC CHALLENGE'}</span>
-                          <span className="badge-index">01</span>
                         </div>
                         <p className="blueprint-quote-text">
                           "{selectedCaseStudy.challenge}"
@@ -2467,14 +2409,11 @@ export default function Page() {
 
                       {/* The Architectural Solution Card */}
                       <div className="blueprint-card highlight">
-                        <span className="card-corner-reticle card-reticle-tl" />
-                        <span className="card-corner-reticle card-reticle-br" />
                         <div className="monograph-badge highlight">
                           <span className="badge-spark">✦</span>
                           <span className="badge-label">{isGenz ? 'the architectural solution' : 'THE ARCHITECTURAL SOLUTION'}</span>
-                          <span className="badge-index">02</span>
                         </div>
-                        <p className="blueprint-quote-text" style={{ marginBottom: '18px', color: 'rgba(255, 255, 255, 0.95)' }}>
+                        <p className="blueprint-quote-text" style={{ marginBottom: '16px', color: 'rgba(255, 255, 255, 0.95)' }}>
                           {selectedCaseStudy.solution}
                         </p>
 
@@ -2540,12 +2479,9 @@ export default function Page() {
                       </div>
 
                       <div className="blueprint-card">
-                        <span className="card-corner-reticle card-reticle-tl" />
-                        <span className="card-corner-reticle card-reticle-br" />
                         <div className="monograph-badge">
                           <span className="badge-spark">✦</span>
                           <span className="badge-label">{isGenz ? 'speed & reliability score' : 'INFRASTRUCTURE & RELIABILITY SCORE'}</span>
-                          <span className="badge-index">SLA</span>
                         </div>
                         <p className="blueprint-quote-text" style={{ fontSize: '0.92rem', color: 'rgba(255, 255, 255, 0.9)' }}>
                           {isGenz
@@ -2560,12 +2496,9 @@ export default function Page() {
                   {caseStudyTab === 'stack' && (
                     <div>
                       <div className="blueprint-card">
-                        <span className="card-corner-reticle card-reticle-tl" />
-                        <span className="card-corner-reticle card-reticle-br" />
                         <div className="monograph-badge highlight">
                           <span className="badge-spark">✦</span>
                           <span className="badge-label">{isGenz ? 'integrated tech ecosystem' : 'INTEGRATED TECHNOLOGY ECOSYSTEM'}</span>
-                          <span className="badge-index">STACK</span>
                         </div>
                         <p className="blueprint-quote-text" style={{ fontSize: '0.92rem', color: 'rgba(255, 255, 255, 0.85)', marginBottom: '18px' }}>
                           {isGenz ? 'every layer of the codebase is built with production frameworks:' : 'Every layer of the codebase is constructed with cutting-edge production frameworks:'}
