@@ -40,13 +40,18 @@ def init_db():
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             email       TEXT NOT NULL UNIQUE,
             expertise   TEXT,
+            whatsapp    TEXT,
             created_at  TEXT NOT NULL
         )
     """)
 
-    # Try adding expertise column to existing table if it was created earlier
+    # Try adding columns to existing table if created earlier
     try:
         c.execute("ALTER TABLE community ADD COLUMN expertise TEXT")
+    except sqlite3.OperationalError:
+        pass 
+    try:
+        c.execute("ALTER TABLE community ADD COLUMN whatsapp TEXT")
     except sqlite3.OperationalError:
         pass 
 
@@ -99,19 +104,24 @@ def update_lead_status(lead_id: int, status: str):
 
 # ─── Community ────────────────────────────────────────────────────────────────
 
-def save_community_email(email: str, expertise: str = None) -> bool:
+def save_community_email(email: str, expertise: str = None, whatsapp: str = None) -> bool:
     """Returns True if new signup, False if already exists."""
     conn = get_conn()
     c = conn.cursor()
     try:
         c.execute(
-            "INSERT INTO community (email, expertise, created_at) VALUES (?, ?, ?)",
-            (email, expertise, datetime.utcnow().isoformat())
+            "INSERT INTO community (email, expertise, whatsapp, created_at) VALUES (?, ?, ?, ?)",
+            (email, expertise, whatsapp, datetime.utcnow().isoformat())
         )
         conn.commit()
         conn.close()
         return True
     except sqlite3.IntegrityError:
+        c.execute(
+            "UPDATE community SET expertise = coalesce(?, expertise), whatsapp = coalesce(?, whatsapp) WHERE email = ?",
+            (expertise, whatsapp, email)
+        )
+        conn.commit()
         conn.close()
         return False
 

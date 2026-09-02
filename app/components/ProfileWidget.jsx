@@ -133,6 +133,22 @@ export default function ProfileWidget({ showScore, onLoginClick, hideShareScore 
         box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: dropdownFade 0.2s ease forwards;
         transform-origin: top right;
       }
+
+      body.light-theme .profile-dropdown-menu {
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      }
+
+      body.light-theme .desktop-only-btn {
+        background: rgba(0, 0, 0, 0.05) !important;
+        color: var(--deep-black) !important;
+        border: 1px solid rgba(0, 0, 0, 0.15) !important;
+      }
+      body.light-theme .desktop-only-btn:hover {
+        background: rgba(0, 0, 0, 0.1) !important;
+        border-color: rgba(0, 0, 0, 0.3) !important;
+      }
       
       @media (max-width: 768px) {
         .auth-btn-text { display: none !important; }

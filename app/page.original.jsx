@@ -97,13 +97,9 @@ export default function Page() {
                 const morphWord = btn.querySelector('.morph-word');
                 const morphFront = btn.querySelector('.morph-front');
                 const morphBack = btn.querySelector('.morph-back');
-                let widthFront = 0;
-                let widthBack = 0;
 
-                if (morphWord && morphFront && morphBack) {
-                    widthFront = morphFront.offsetWidth;
-                    widthBack = morphBack.offsetWidth;
-                    morphWord.style.width = widthFront + 'px';
+                if (morphWord && morphFront) {
+                    morphWord.style.width = morphFront.offsetWidth + 'px';
                 }
 
                 const isMobileDevice = window.innerWidth < 900;
@@ -233,7 +229,10 @@ export default function Page() {
 
                 const attractIn = () => {
                     isAttracting = true;
-                    if (morphWord) morphWord.style.width = widthBack + 'px';
+                    const curBack = btn.querySelector('.morph-back');
+                    if (morphWord && curBack) {
+                        morphWord.style.width = curBack.offsetWidth + 'px';
+                    }
                     // Button Power-up Glow
                     gsap.to(btn, {
                         boxShadow: "inset 0 0 40px rgba(235, 215, 63, 0.6), 0 0 100px rgba(235, 215, 63, 0.8)",
@@ -259,7 +258,10 @@ export default function Page() {
                 };
 
                 const attractOut = () => {
-                    if (morphWord) morphWord.style.width = widthFront + 'px';
+                    const curFront = btn.querySelector('.morph-front');
+                    if (morphWord && curFront) {
+                        morphWord.style.width = curFront.offsetWidth + 'px';
+                    }
                     // Remove power-up glow
                     gsap.to(btn, {
                         boxShadow: "inset 0 0 10px rgba(235, 215, 63, 0.1), 0 0 20px rgba(235, 215, 63, 0.1)",
@@ -392,7 +394,17 @@ export default function Page() {
             globalMouseY = e.clientY;
         });
 
-
+        // Global delegation for interactive hover states
+        window.addEventListener('mouseover', (e) => {
+            if (e.target && e.target.closest && e.target.closest('button, a, .btn, .modal-close, .modal-submit, .service-card, .selected-svc-badge, .social-link, .nav-link, [role="button"], input[type="submit"]')) {
+                cursor?.classList.add('active');
+            }
+        });
+        window.addEventListener('mouseout', (e) => {
+            if (e.target && e.target.closest && e.target.closest('button, a, .btn, .modal-close, .modal-submit, .service-card, .selected-svc-badge, .social-link, .nav-link, [role="button"], input[type="submit"]')) {
+                cursor?.classList.remove('active');
+            }
+        });
 
         // --- SMOOTH CURSOR TRAIL ---
         class SmoothTrail {
@@ -2030,10 +2042,11 @@ export default function Page() {
             }
         });
 
-        communityForm.addEventListener('submit', (e) => {
+        communityForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const email = communityForm.email.value.trim();
+            const whatsapp = communityForm.whatsapp ? communityForm.whatsapp.value.trim() : '';
             const expertise = communityForm.expertise ? communityForm.expertise.value.trim() : '';
 
             if (!email) return;
@@ -2042,6 +2055,15 @@ export default function Page() {
             communitySubmit.style.background = '#4CAF50';
             communitySubmit.style.color = '#fff';
             communitySubmit.disabled = true;
+
+            try {
+                // Post to API route
+                await fetch('/api/community', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, whatsapp, expertise })
+                }).catch(() => {});
+            } catch (err) {}
 
             setTimeout(() => {
                 closeCommunityModal();
@@ -2892,6 +2914,10 @@ export default function Page() {
         <div className="form-group">
           <label>Email Address</label>
           <input type="email" name="email" className="form-input" placeholder="Enter your best email" required />
+        </div>
+        <div className="form-group">
+          <label>WhatsApp Number</label>
+          <input type="tel" name="whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
         </div>
         <div className="form-group">
           <label>Your Expertise</label>

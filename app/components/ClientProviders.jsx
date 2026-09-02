@@ -330,88 +330,51 @@ function GlobalGenzToggle() {
       >
         <button 
             onClick={handleToggle}
+            className={`genz-floating-btn ${isSnapped && !isHovered ? 'state-snapped' : (isGenz ? 'state-genz' : 'state-default')}`}
             style={isMobile ? {
-                background: isGenz ? 'var(--brand-yellow)' : 'rgba(20, 20, 20, 0.9)',
-                color: isGenz ? '#000' : 'rgba(255,255,255,0.8)',
-                border: `1px solid ${isGenz ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.15)'}`,
                 borderRadius: '30px',
                 padding: '10px 20px',
                 width: 'auto',
                 height: 'auto',
-                fontFamily: "'Clash Display', sans-serif",
                 fontSize: '0.85rem',
                 fontWeight: 600,
                 cursor: 'pointer',
-                textTransform: 'uppercase',
                 letterSpacing: '1px',
-                boxShadow: isGenz ? '0 0 20px rgba(235, 215, 63, 0.4)' : '0 4px 15px rgba(0,0,0,0.5)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                userSelect: 'none',
             } : {
-                background: (isSnapped && !isHovered) ? 'var(--brand-yellow)' : (isGenz ? 'var(--brand-yellow)' : 'rgba(255, 255, 255, 0.03)'),
-                color: (isSnapped && !isHovered) ? 'transparent' : (isGenz ? '#000' : 'rgba(255,255,255,0.5)'),
-                border: (isSnapped && !isHovered) ? '1px solid transparent' : `1px solid ${isGenz ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.08)'}`,
                 borderRadius: (isSnapped && !isHovered) ? '3px' : '30px',
                 padding: (isSnapped && !isHovered) ? '0' : '6px 14px',
                 width: (isSnapped && !isHovered) ? '60px' : 'auto',
                 height: (isSnapped && !isHovered) ? '6px' : '28px',
                 transform: (isSnapped && !isHovered && ['left', 'right'].includes(snapCorner)) ? 'rotate(90deg)' : 'rotate(0deg)',
-                fontFamily: "'Clash Display', sans-serif",
                 fontSize: '0.65rem',
-                fontWeight: 500,
+                fontWeight: 600,
                 cursor: isDragging ? 'grabbing' : 'grab',
                 transition: isDragging ? 'none' : 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-                textTransform: 'uppercase',
-                letterSpacing: '2px',
-                whiteSpace: 'nowrap',
-                boxShadow: (isSnapped && !isHovered) ? 'none' : (isGenz ? '0 0 20px rgba(235, 215, 63, 0.4), inset 0 0 8px rgba(255,255,255,0.4)' : '0 4px 15px rgba(0,0,0,0.3)'),
-                backdropFilter: (isSnapped && !isHovered) ? 'none' : 'blur(12px)',
-                WebkitBackdropFilter: (isSnapped && !isHovered) ? 'none' : 'blur(12px)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                userSelect: 'none',
-                overflow: 'hidden'
             }}
             onMouseEnter={(e) => {
                if (isMobile) return;
                if (!isDragging && (!isSnapped || isHovered)) {
                   e.currentTarget.style.transform = 'scale(1.05)';
-                  if (!isGenz) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                      e.currentTarget.style.color = 'var(--pure-white)';
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-                  }
                }
             }}
             onMouseLeave={(e) => {
                if (isMobile) return;
                if (!isDragging) {
                   e.currentTarget.style.transform = (isSnapped && ['left', 'right'].includes(snapCorner)) ? 'rotate(90deg)' : 'rotate(0deg)';
-                  if (!isGenz) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                      e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                  }
                }
             }}
         >
-            <div style={{
+            <div 
+              className="genz-dot"
+              style={{
                 width: '6px',
                 height: '6px',
                 borderRadius: '50%',
-                background: isGenz ? '#000' : 'rgba(255,255,255,0.3)',
-                boxShadow: isGenz ? '0 0 5px rgba(0,0,0,0.5)' : 'none',
                 transition: 'all 0.5s ease',
                 opacity: (isSnapped && !isHovered && !isMobile) ? 0 : 1,
                 flexShrink: 0
-            }} />
+              }} 
+            />
             <span style={{ opacity: (isSnapped && !isHovered && !isMobile) ? 0 : 1, transition: 'opacity 0.3s ease' }}>GEN-Z</span>
         </button>
       </div>
@@ -420,6 +383,7 @@ function GlobalGenzToggle() {
 }
 
 import { ErrorLogProvider } from '../contexts/ErrorLogContext';
+import CustomValidationHandler from './CustomValidationHandler';
 
 export default function ClientProviders({ children }) {
   return (
@@ -427,6 +391,7 @@ export default function ClientProviders({ children }) {
       <GenzProvider>
         {children}
         <GlobalGenzToggle />
+        <CustomValidationHandler />
       </GenzProvider>
     </ErrorLogProvider>
   );

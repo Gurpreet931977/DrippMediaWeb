@@ -15,6 +15,20 @@ export default function Page() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   
   useEffect(() => {
+    // Dynamic recalculation of morph word width on GenZ mode change
+    const timer = setTimeout(() => {
+      const morphWords = document.querySelectorAll('.morph-word');
+      morphWords.forEach(mw => {
+        const front = mw.querySelector('.morph-front');
+        if (front) {
+          mw.style.width = front.offsetWidth + 'px';
+        }
+      });
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [isGenz]);
+
+  useEffect(() => {
     // Register GSAP
 
     if (!window.__inlineClickBound) {
@@ -103,13 +117,9 @@ export default function Page() {
                 const morphWord = btn.querySelector('.morph-word');
                 const morphFront = btn.querySelector('.morph-front');
                 const morphBack = btn.querySelector('.morph-back');
-                let widthFront = 0;
-                let widthBack = 0;
 
-                if (morphWord && morphFront && morphBack) {
-                    widthFront = morphFront.offsetWidth;
-                    widthBack = morphBack.offsetWidth;
-                    morphWord.style.width = widthFront + 'px';
+                if (morphWord && morphFront) {
+                    morphWord.style.width = morphFront.offsetWidth + 'px';
                 }
 
                 const isMobileDevice = window.innerWidth < 900;
@@ -239,7 +249,10 @@ export default function Page() {
 
                 const attractIn = () => {
                     isAttracting = true;
-                    if (morphWord) morphWord.style.width = widthBack + 'px';
+                    const curBack = btn.querySelector('.morph-back');
+                    if (morphWord && curBack) {
+                        morphWord.style.width = curBack.offsetWidth + 'px';
+                    }
                     // Button Power-up Glow
                     gsap.to(btn, {
                         boxShadow: "inset 0 0 40px rgba(235, 215, 63, 0.6), 0 0 100px rgba(235, 215, 63, 0.8)",
@@ -265,7 +278,10 @@ export default function Page() {
                 };
 
                 const attractOut = () => {
-                    if (morphWord) morphWord.style.width = widthFront + 'px';
+                    const curFront = btn.querySelector('.morph-front');
+                    if (morphWord && curFront) {
+                        morphWord.style.width = curFront.offsetWidth + 'px';
+                    }
                     // Remove power-up glow
                     gsap.to(btn, {
                         boxShadow: "inset 0 0 10px rgba(235, 215, 63, 0.1), 0 0 20px rgba(235, 215, 63, 0.1)",
@@ -398,7 +414,17 @@ export default function Page() {
             globalMouseY = e.clientY;
         });
 
-
+        // Global delegation for interactive hover states
+        window.addEventListener('mouseover', (e) => {
+            if (e.target && e.target.closest && e.target.closest('button, a, .btn, .modal-close, .modal-submit, .service-card, .selected-svc-badge, .social-link, .nav-link, [role="button"], input[type="submit"]')) {
+                cursor?.classList.add('active');
+            }
+        });
+        window.addEventListener('mouseout', (e) => {
+            if (e.target && e.target.closest && e.target.closest('button, a, .btn, .modal-close, .modal-submit, .service-card, .selected-svc-badge, .social-link, .nav-link, [role="button"], input[type="submit"]')) {
+                cursor?.classList.remove('active');
+            }
+        });
 
         // --- SMOOTH CURSOR TRAIL ---
         class SmoothTrail {
@@ -2036,10 +2062,11 @@ export default function Page() {
             }
         });
 
-        communityForm.addEventListener('submit', (e) => {
+        communityForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const email = communityForm.email.value.trim();
+            const whatsapp = communityForm.whatsapp ? communityForm.whatsapp.value.trim() : '';
             const expertise = communityForm.expertise ? communityForm.expertise.value.trim() : '';
 
             if (!email) return;
@@ -2048,6 +2075,15 @@ export default function Page() {
             communitySubmit.style.background = '#4CAF50';
             communitySubmit.style.color = '#fff';
             communitySubmit.disabled = true;
+
+            try {
+                // Post to API route
+                await fetch('/api/community', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, whatsapp, expertise })
+                }).catch(() => {});
+            } catch (err) {}
 
             setTimeout(() => {
                 closeCommunityModal();
@@ -2177,16 +2213,16 @@ export default function Page() {
       <a href="#">DRIPP</a>
     </div>
     <ul className="nav-links">
-      <li><a href="#work" className="nav-link">{isGenz ? 'lore' : 'Work'}</a></li>
-      <li><a href="#services" className="nav-link">{isGenz ? 'vibes' : 'Services'}</a></li>
-      <li><a href="#founder-pin-section" className="nav-link">{isGenz ? 'tea' : 'About'}</a></li>
+      <li><a href="#work" className="nav-link">{isGenz ? 'work' : 'Work'}</a></li>
+      <li><a href="#services" className="nav-link">{isGenz ? 'services' : 'Services'}</a></li>
+      <li><a href="#founder-pin-section" className="nav-link">{isGenz ? 'about' : 'About'}</a></li>
       <li style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         <div className="c-nav-group">
           <a href="#community" className="c-nav-btn c-community" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `document.getElementById('community').scrollIntoView({behavior: 'smooth'})`, target: event.currentTarget, originalEvent: event } }))}>
-            <span className="c-txt-wrap"><span className="c-txt" data-text={isGenz ? 'the fam' : 'Community'}>{isGenz ? 'the fam' : 'Community'}</span></span>
+            <span className="c-txt-wrap"><span className="c-txt" data-text={isGenz ? 'the gang' : 'Community'}>{isGenz ? 'the gang' : 'Community'}</span></span>
           </a>
           <a href="#contact" className="c-nav-btn c-talk" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `document.getElementById('contact').scrollIntoView({behavior: 'smooth'})`, target: event.currentTarget, originalEvent: event } }))}>
-            <span className="c-txt-wrap"><span className="c-txt" data-text={isGenz ? 'slide in' : "Let's Talk"}>{isGenz ? 'slide in' : "Let's Talk"}</span></span>
+            <span className="c-txt-wrap"><span className="c-txt" data-text={isGenz ? "let's talk" : "Let's Talk"}>{isGenz ? "let's talk" : "Let's Talk"}</span></span>
             <svg className="c-arrow" viewBox="0 0 24 24">
               <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -2755,7 +2791,7 @@ export default function Page() {
         <div style={{marginTop: 40}}>
           <button className="attract-btn" data-default-text={isGenz ? 'join the cult' : 'Join Dripp Community'} onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `openCommunityModal(event)`, target: event.currentTarget, originalEvent: event } }))}>
             <span className="attract-btn-content">
-              <span className="btn-text" style={{position: 'relative', zIndex: 2}}>Join {isGenz ? 'the ' : 'Dripp '} <span className="morph-word"><span className="morph-word-inner"><span className="morph-front">{isGenz ? 'cult' : 'Community'}</span><span className="morph-back">{isGenz ? 'the fam' : 'Family'}</span></span></span></span>
+              <span className="btn-text" style={{position: 'relative', zIndex: 2}}>Join {isGenz ? 'the ' : 'Dripp '} <span className="morph-word"><span className="morph-word-inner"><span className="morph-front">{isGenz ? 'cult' : 'Community'}</span><span className="morph-back">{isGenz ? 'fam' : 'Family'}</span></span></span></span>
             </span>
           </button>
         </div>
@@ -2905,6 +2941,10 @@ export default function Page() {
           <input type="email" name="email" className="form-input" placeholder="Enter your best email" required />
         </div>
         <div className="form-group">
+          <label>WhatsApp Number</label>
+          <input type="tel" name="whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
+        </div>
+        <div className="form-group">
           <label>Your Expertise</label>
           <input type="text" name="expertise" className="form-input" placeholder="e.g. Designer, Editor, Developer" required />
         </div>
@@ -2913,78 +2953,6 @@ export default function Page() {
     </div>
   </div>
 </div>
-
-
-
-
-            
-            <a 
-                href="/arcade"
-                style={{
-                    position: 'fixed',
-                    bottom: '30px',
-                    right: '30px',
-                    zIndex: 9999,
-                    backgroundColor: 'rgba(235, 215, 63, 0.1)',
-                    border: '1px solid rgba(235, 215, 63, 0.5)',
-                    color: '#ebd73f',
-                    padding: '10px 20px',
-                    borderRadius: '30px',
-                    cursor: 'pointer',
-                    fontFamily: "'Clash Display', sans-serif",
-                    textDecoration: 'none',
-                    textTransform: 'uppercase',
-                    fontSize: '0.8rem',
-                    boxShadow: '0 0 15px rgba(235, 215, 63, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(235, 215, 63, 0.2)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(235, 215, 63, 0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
-            >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
-                    <line x1="6" y1="12" x2="10" y2="12"></line>
-                    <line x1="8" y1="10" x2="8" y2="14"></line>
-                    <line x1="15" y1="13" x2="15.01" y2="13"></line>
-                    <line x1="18" y1="11" x2="18.01" y2="11"></line>
-                </svg>
-                Arcade Mode
-            </a>
-
-            <a
-                href="/dripp-studio"
-                style={{
-                    position: 'fixed',
-                    bottom: '85px',
-                    right: '30px',
-                    zIndex: 9999,
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: 'rgba(255,255,255,0.7)',
-                    padding: '10px 20px',
-                    borderRadius: '30px',
-                    cursor: 'pointer',
-                    fontFamily: "'Clash Display', sans-serif",
-                    textTransform: 'uppercase',
-                    fontSize: '0.8rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.3s ease',
-                    textDecoration: 'none'
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.transform = 'scale(1.05)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; e.currentTarget.style.transform = 'scale(1)'; }}
-            >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                </svg>
-                Dripp Studio
-            </a>
     </>
-
   );
 }

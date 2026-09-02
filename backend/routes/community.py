@@ -18,11 +18,12 @@ def join_community():
     data  = request.get_json(silent=True) or {}
     email = data.get("email", "").strip()
     expertise = data.get("expertise", "").strip()
+    whatsapp = data.get("whatsapp", "").strip()
 
     if not email or "@" not in email:
         return jsonify({"success": False, "error": "A valid email is required."}), 400
 
-    is_new = save_community_email(email, expertise)
+    is_new = save_community_email(email, expertise, whatsapp)
 
     if is_new:
         try:

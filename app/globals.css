@@ -53,6 +53,15 @@
             font-family: 'Clash Display', sans-serif;
         }
 
+        input, textarea, select {
+            cursor: text;
+            caret-color: var(--brand-yellow);
+        }
+
+        button, a, [role="button"] {
+            cursor: pointer;
+        }
+
         body.loaded {
             opacity: 1;
         }
@@ -127,31 +136,34 @@
             left: 0;
             width: 20px;
             height: 20px;
-            border: 2px solid var(--pure-white);
+            border: 2px solid var(--brand-yellow);
             border-radius: 50%;
             pointer-events: none;
             z-index: 9999999;
             transform: translate(-50%, -50%);
-            mix-blend-mode: difference;
-            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            box-shadow: 0 0 12px rgba(235, 215, 63, 0.45);
+            transition: width 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), 
+                        height 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), 
+                        background-color 0.25s ease, 
+                        border-color 0.25s ease,
+                        box-shadow 0.25s ease,
+                        opacity 0.25s ease;
         }
 
         .cursor.active {
-            width: 60px;
-            height: 60px;
-            background-color: var(--pure-white);
-            mix-blend-mode: normal;
-            opacity: 0.8;
-            border-color: transparent;
+            width: 55px;
+            height: 55px;
+            background-color: rgba(235, 215, 63, 0.15);
+            border-color: var(--brand-yellow);
+            box-shadow: 0 0 25px rgba(235, 215, 63, 0.6);
             backdrop-filter: blur(2px);
         }
 
         .cursor.eating {
             background-color: var(--brand-yellow) !important;
             border-color: var(--brand-yellow) !important;
-            mix-blend-mode: normal !important;
-            opacity: 0.8;
-            box-shadow: 0 0 20px var(--brand-glow);
+            opacity: 0.9;
+            box-shadow: 0 0 25px var(--brand-glow);
         }
 
         #trail-canvas {
@@ -162,7 +174,6 @@
             height: 100%;
             z-index: 9998;
             pointer-events: none;
-            mix-blend-mode: difference;
         }
 
         /* --- UI OVERLAY --- */
@@ -962,7 +973,7 @@
         /* --- MORPH WORD SWAP (Smooth Slide) --- */
         .morph-word {
             display: inline-flex;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: flex-start;
             position: relative;
             overflow: hidden;
@@ -970,24 +981,24 @@
             /* match text line height exactly */
             vertical-align: bottom;
             /* perfectly align with adjoining text */
-            transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            margin-left: 0.2em;
-            /* nice spacing from Dripp */
+            transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-left: 0.25em;
+            /* nice spacing from prefix */
         }
 
         .morph-word-inner {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
             /* Forces children to their exact text width */
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .morph-front,
         .morph-back {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             height: 1.2em;
             white-space: nowrap;
         }
@@ -2762,6 +2773,259 @@
             font-size: 0.75rem;
             font-weight: 600;
             letter-spacing: 0.5px;
+        }
+
+        /* --- DRIPP SIGNATURE FORM VALIDATION TOOLTIP --- */
+        .dripp-validation-tooltip {
+            position: fixed;
+            z-index: 10000000;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #0c0c0c;
+            background: rgba(12, 12, 12, 0.95);
+            border: 1px solid rgba(235, 215, 63, 0.5);
+            border-radius: 12px;
+            padding: 10px 16px 10px 12px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(235, 215, 63, 0.25);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            font-family: 'Clash Display', sans-serif;
+            color: var(--pure-white);
+            pointer-events: auto;
+            cursor: pointer;
+            animation: drippTooltipPop 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transform-origin: top left;
+            max-width: 340px;
+        }
+
+        .dripp-validation-tooltip.dripp-tooltip-hide {
+            animation: drippTooltipFadeOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .dripp-tooltip-badge {
+            width: 22px;
+            height: 22px;
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            font-family: 'Panchang', sans-serif;
+            font-weight: 900;
+            font-size: 13px;
+            line-height: 1;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px rgba(235, 215, 63, 0.6);
+        }
+
+        .dripp-tooltip-text {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 500;
+            color: #ffffff;
+            line-height: 1.35;
+            letter-spacing: 0.3px;
+        }
+
+        /* Tooltip Arrow Beak */
+        .dripp-tooltip-arrow {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #0c0c0c;
+            border: 1px solid rgba(235, 215, 63, 0.5);
+            transform: rotate(45deg);
+            pointer-events: none;
+        }
+
+        .dripp-validation-tooltip.placement-bottom .dripp-tooltip-arrow {
+            top: -6px;
+            left: 20px;
+            border-bottom: none;
+            border-right: none;
+        }
+
+        .dripp-validation-tooltip.placement-top .dripp-tooltip-arrow {
+            bottom: -6px;
+            left: 20px;
+            border-top: none;
+            border-left: none;
+        }
+
+        /* Input Invalid Shake & Glow */
+        .dripp-input-invalid {
+            border-color: var(--brand-yellow) !important;
+            box-shadow: 0 0 15px rgba(235, 215, 63, 0.4) !important;
+            animation: drippInputShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes drippTooltipPop {
+            0% {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.92);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(2px) scale(1.02);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes drippTooltipFadeOut {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-6px) scale(0.95);
+            }
+        }
+
+        @keyframes drippInputShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px); }
+            40%, 80% { transform: translateX(4px); }
+        }
+
+        /* --- GLOBAL FLOATING GEN-Z TOGGLE --- */
+        .genz-floating-btn {
+            font-family: 'Clash Display', sans-serif !important;
+            text-transform: uppercase !important;
+            letter-spacing: 2px !important;
+            white-space: nowrap !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            user-select: none !important;
+            overflow: hidden !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease !important;
+        }
+
+        /* Dark Theme Default */
+        body:not(.light-theme) .genz-floating-btn.state-default {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: rgba(255, 255, 255, 0.75) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        body:not(.light-theme) .genz-floating-btn.state-default:hover {
+            background: rgba(255, 255, 255, 0.12) !important;
+            color: var(--pure-white) !important;
+            border-color: rgba(255, 255, 255, 0.35) !important;
+        }
+
+        body:not(.light-theme) .genz-floating-btn.state-default .genz-dot {
+            background: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        /* Light Theme Default - High Contrast */
+        body.light-theme .genz-floating-btn.state-default {
+            background: rgba(0, 0, 0, 0.06) !important;
+            color: var(--deep-black) !important;
+            border: 1px solid rgba(0, 0, 0, 0.22) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        body.light-theme .genz-floating-btn.state-default:hover {
+            background: rgba(0, 0, 0, 0.12) !important;
+            color: #000000 !important;
+            border-color: rgba(0, 0, 0, 0.45) !important;
+        }
+
+        body.light-theme .genz-floating-btn.state-default .genz-dot {
+            background: rgba(0, 0, 0, 0.7) !important;
+        }
+
+        /* Active Gen-Z Mode */
+        .genz-floating-btn.state-genz {
+            background: var(--brand-yellow) !important;
+            color: var(--deep-black) !important;
+            border: 1px solid var(--brand-yellow) !important;
+            box-shadow: 0 0 20px rgba(235, 215, 63, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.4) !important;
+            font-weight: 700 !important;
+        }
+
+        .genz-floating-btn.state-genz .genz-dot {
+            background: #000000 !important;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* Snapped state */
+        body:not(.light-theme) .genz-floating-btn.state-snapped {
+            background: var(--brand-yellow) !important;
+            border: 1px solid transparent !important;
+            box-shadow: 0 0 10px rgba(235, 215, 63, 0.4) !important;
+        }
+
+        body.light-theme .genz-floating-btn.state-snapped {
+            background: var(--deep-black) !important;
+            border: 1px solid var(--deep-black) !important;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        /* Mobile GEN-Z button */
+        @media (max-width: 768px) {
+            body.light-theme .genz-floating-btn.state-default {
+                background: rgba(255, 255, 255, 0.95) !important;
+                color: var(--deep-black) !important;
+                border: 1px solid rgba(0, 0, 0, 0.2) !important;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+            }
+            body:not(.light-theme) .genz-floating-btn.state-default {
+                background: rgba(20, 20, 20, 0.9) !important;
+                color: rgba(255, 255, 255, 0.85) !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            }
+        }
+
+        /* Light Theme Auth & Navigation Buttons */
+        body.light-theme .desktop-only-btn {
+            background: rgba(0, 0, 0, 0.05) !important;
+            color: var(--deep-black) !important;
+            border: 1px solid rgba(0, 0, 0, 0.15) !important;
+        }
+
+        body.light-theme .desktop-only-btn:hover {
+            background: rgba(0, 0, 0, 0.1) !important;
+            border-color: rgba(0, 0, 0, 0.3) !important;
+            color: var(--deep-black) !important;
+        }
+
+        /* --- GEN-Z MODE LOWERCASE TYPOGRAPHY --- */
+        body.genz-mode .nav-link,
+        body.genz-mode .c-nav-btn,
+        body.genz-mode .c-txt,
+        body.genz-mode .c-txt::after,
+        body.genz-mode .section-label,
+        body.genz-mode .founder-label,
+        body.genz-mode .builder-tab,
+        body.genz-mode .f-pill,
+        body.genz-mode .attract-btn,
+        body.genz-mode .attract-btn-content,
+        body.genz-mode .btn-text,
+        body.genz-mode .morph-front,
+        body.genz-mode .morph-back,
+        body.genz-mode .scroll-text,
+        body.genz-mode .back-title,
+        body.genz-mode .receipt-title,
+        body.genz-mode .glass-label,
+        body.genz-mode .auth-btn-text,
+        body.genz-mode .desktop-only-btn,
+        body.genz-mode .cards-title,
+        body.genz-mode .section-title,
+        body.genz-mode .builder-title,
+        body.genz-mode .mega-text {
+            text-transform: lowercase !important;
         }
 
         /* --- BRANDED FOOTER STYLES (INSIDE CLIENT CONNECTION) --- */
