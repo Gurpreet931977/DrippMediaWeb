@@ -2443,6 +2443,7 @@ export default function Page() {
           <div className="face face-front">
             <div className="face-bg">
               <div className="card-grid" />
+              <div className="card-ambient-glow glow-video" />
             </div>
             <div className="card-content">
               <div className="card-header">
@@ -2450,10 +2451,50 @@ export default function Page() {
                   <span className="status-dot" /> 01 / EDIT &amp; SHOOT
                 </span>
               </div>
+
+              {/* Interactive 4K Cinema Viewfinder Mockup */}
+              <div className="card-mockup card-mockup-cinema">
+                <div className="cinema-hud-top">
+                  <div className="rec-status">
+                    <span className="rec-dot-pulse" />
+                    <span className="rec-label">REC [4K 60FPS]</span>
+                  </div>
+                  <span className="rec-timecode">00:14:28:09</span>
+                </div>
+                <div className="cinema-reticle-wrap">
+                  <div className="reticle-corner tl" />
+                  <div className="reticle-corner tr" />
+                  <div className="reticle-corner bl" />
+                  <div className="reticle-corner br" />
+                  <div className="reticle-crosshair">+</div>
+                  <div className="cinema-meta-tag">LOG-C · ISO 400 · f/2.8</div>
+                  <div className="audio-equalizer">
+                    <span className="eq-bar bar-1" />
+                    <span className="eq-bar bar-2" />
+                    <span className="eq-bar bar-3" />
+                    <span className="eq-bar bar-4" />
+                    <span className="eq-bar bar-5" />
+                  </div>
+                </div>
+                <div className="cinema-timeline">
+                  <div className="timeline-track track-video">
+                    <span className="track-chip">A1 ProRes 4K</span>
+                  </div>
+                  <div className="timeline-track track-audio">
+                    <span className="track-chip">A2 Master Sound FX</span>
+                  </div>
+                  <div className="timeline-playhead" />
+                </div>
+              </div>
+
               <div className="card-body">
                 <h2>Video<br /><span>Production</span></h2>
-                <p className="front-desc">High-end video editing and professional shooting to capture your
-                  brand's essence.</p>
+                <p className="front-desc">High-end video editing and professional shooting to capture your brand's essence.</p>
+                <div className="card-trust-row">
+                  <span className="trust-pill">4K Cinema</span>
+                  <span className="trust-pill">98% Retention</span>
+                  <span className="trust-pill">Color Graded</span>
+                </div>
               </div>
             </div>
           </div>
@@ -2466,8 +2507,7 @@ export default function Page() {
               <div className="back-header">
                 <div className="back-title">The Cut</div>
               </div>
-              <p className="back-text">We handle the entire production pipeline to engineer captivating visual
-                dopamine.</p>
+              <p className="back-text">We handle the entire production pipeline to engineer captivating visual dopamine.</p>
               <div className="card-back-highlights">
                 <span className="highlight-chip">4K Cinema</span>
                 <span className="highlight-chip">Sound FX</span>
@@ -2476,7 +2516,11 @@ export default function Page() {
               <div style={{marginTop: 'auto', position: 'relative', zIndex: 10, transformStyle: 'preserve-3d'}}>
                 <a href="/video-portfolio" className="card-launch-btn">
                   <span className="card-btn-shimmer" />
-                  <span className="card-btn-icon">▶</span>
+                  <span className="card-btn-icon">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                  </span>
                   <span className="card-btn-text">View Video Reel</span>
                 </a>
               </div>
@@ -2490,6 +2534,7 @@ export default function Page() {
           <div className="face face-front">
             <div className="face-bg">
               <div className="card-grid" />
+              <div className="card-ambient-glow glow-graphics" />
             </div>
             <div className="card-content">
               <div className="card-header">
@@ -2497,10 +2542,51 @@ export default function Page() {
                   <span className="status-dot" /> 02 / GRAPHICS
                 </span>
               </div>
+
+              {/* Interactive 3D Poster Stack Mockup */}
+              <div className="card-mockup card-mockup-graphics">
+                <div className="figma-canvas-header">
+                  <span className="canvas-badge">FIGMA // CANVAS</span>
+                  <div className="canvas-swatches">
+                    <span className="swatch sw-gold" />
+                    <span className="swatch sw-dark" />
+                    <span className="swatch sw-white" />
+                  </div>
+                </div>
+                <div className="poster-stack-wrap">
+                  <div className="poster-layer layer-back">
+                    <span className="poster-num">02</span>
+                  </div>
+                  <div className="poster-layer layer-mid">
+                    <div className="poster-micro-grid" />
+                    <span className="poster-title-outline">DRIPP</span>
+                  </div>
+                  <div className="poster-layer layer-front">
+                    <div className="poster-glow-badge">IDENTITY</div>
+                    <div className="poster-main-text">VISUAL DOMINANCE</div>
+                    <div className="poster-bottom-row">
+                      <span className="poster-tag">300 DPI</span>
+                      <span className="poster-sparkle">✦</span>
+                    </div>
+                  </div>
+                  <div className="canvas-cursor-tag">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="3 3 11 22 14 14 22 11 3 3" />
+                    </svg>
+                    <span>Gurpreet</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="card-body">
                 <h2>Graphic<br /><span style={{fontSize: '1.55rem'}}>Designing</span></h2>
                 <p className="front-desc">Visual identities that melt faces. Bold typography &amp; surreal art.
                 </p>
+                <div className="card-trust-row">
+                  <span className="trust-pill">Vector Crisp</span>
+                  <span className="trust-pill">Design Systems</span>
+                  <span className="trust-pill">Billboard Ready</span>
+                </div>
               </div>
             </div>
           </div>
@@ -2513,8 +2599,7 @@ export default function Page() {
               <div className="back-header">
                 <div className="back-title">The Aesthetic</div>
               </div>
-              <p className="back-text">Scalable design systems that work seamlessly from Instagram stories to
-                billboards.</p>
+              <p className="back-text">Scalable design systems that work seamlessly from Instagram stories to billboards.</p>
               <div className="card-back-highlights">
                 <span className="highlight-chip">Brand Identity</span>
                 <span className="highlight-chip">3D Posters</span>
@@ -2537,6 +2622,7 @@ export default function Page() {
           <div className="face face-front">
             <div className="face-bg">
               <div className="card-grid" />
+              <div className="card-ambient-glow glow-web" />
             </div>
             <div className="card-content">
               <div className="card-header">
@@ -2544,10 +2630,47 @@ export default function Page() {
                   <span className="status-dot" /> 03 / WEB DEV
                 </span>
               </div>
+
+              {/* Interactive macOS Code & 100 Perf Frame Mockup */}
+              <div className="card-mockup card-mockup-web">
+                <div className="ide-window-header">
+                  <div className="ide-dots">
+                    <span className="ide-dot dot-r" />
+                    <span className="ide-dot dot-y" />
+                    <span className="ide-dot dot-g" />
+                  </div>
+                  <span className="ide-tab">Page.tsx</span>
+                </div>
+                <div className="ide-code-body">
+                  <div className="code-line"><span className="c-kw">import</span> <span className="c-fn">{`{ gsap }`}</span> <span className="c-kw">from</span> <span className="c-str">'gsap'</span></div>
+                  <div className="code-line"><span className="c-kw">const</span> <span className="c-var">Site</span> = <span className="c-fn">()</span> =&gt; <span className="c-sym">{`{`}</span></div>
+                  <div className="code-line indent"><span className="c-var">fps</span>: <span className="c-num">60</span>, <span className="c-var">cls</span>: <span className="c-num">0</span></div>
+                  <div className="code-line"><span className="c-sym">{`}`}</span></div>
+                  <div className="perf-meter-badge">
+                    <div className="perf-ring-circle">
+                      <svg width="28" height="28" viewBox="0 0 36 36">
+                        <path className="perf-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(74, 222, 128, 0.2)" strokeWidth="3" />
+                        <path className="perf-ring-fill" strokeDasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#4ade80" strokeWidth="3" />
+                      </svg>
+                      <span className="perf-score">100</span>
+                    </div>
+                    <div className="perf-labels">
+                      <span className="perf-status">PERFORMANCE</span>
+                      <span className="perf-metric">0.4s LCP · 60 FPS</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="card-body">
                 <h2>Website<br /><span>Development</span></h2>
                 <p className="front-desc">Immersive, high-performance websites optimized for the algorithm.
                 </p>
+                <div className="card-trust-row">
+                  <span className="trust-pill">100 Lighthouse</span>
+                  <span className="trust-pill">Next.js 14</span>
+                  <span className="trust-pill">GSAP 60FPS</span>
+                </div>
               </div>
             </div>
           </div>

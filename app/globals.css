@@ -5,8 +5,8 @@
             --brand-glow: rgba(235, 215, 63, 0.4);
             --deep-black: #050505;
             --pure-white: #ffffff;
-            --card-w: 280px;
-            --card-h: 380px;
+            --card-w: 290px;
+            --card-h: 420px;
         }
 
         * {
@@ -1105,17 +1105,21 @@
             position: absolute;
             inset: 0;
             border-radius: 24px;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
             transform-style: preserve-3d;
         }
 
         .face-front {
-            transform: rotateY(0deg);
+            transform: rotateY(0deg) translateZ(1px);
+            -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
         }
 
         .face-back {
-            transform: rotateY(180deg);
+            transform: rotateY(180deg) translateZ(1px);
+            -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
         }
 
         .face-bg {
@@ -1123,14 +1127,18 @@
             inset: 0;
             border-radius: inherit;
             overflow: hidden;
-            background: linear-gradient(165deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%);
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: linear-gradient(165deg, rgba(18, 18, 22, 0.99) 0%, rgba(8, 8, 10, 1) 100%);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             transition: border-color 0.5s ease;
+            -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
         }
 
         .face-back .face-bg {
-            background: var(--deep-black);
+            background: #050505 !important;
+            -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
         }
 
         /* Interactive Border Spotlight */
@@ -1193,24 +1201,52 @@
             transition: opacity 0.5s ease;
         }
 
+        /* Ambient colored glow per card */
+        .card-ambient-glow {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.15;
+            transition: opacity 0.5s ease;
+            z-index: 1;
+        }
+
+        .card-ambient-glow.glow-video {
+            background: radial-gradient(circle at 50% 40%, rgba(235, 215, 63, 0.25) 0%, transparent 70%);
+        }
+
+        .card-ambient-glow.glow-graphics {
+            background: radial-gradient(circle at 50% 40%, rgba(192, 132, 252, 0.22) 0%, transparent 70%);
+        }
+
+        .card-ambient-glow.glow-web {
+            background: radial-gradient(circle at 50% 40%, rgba(56, 189, 248, 0.22) 0%, transparent 70%);
+        }
+
+        .card-wrapper:hover .card-ambient-glow {
+            opacity: 0.35;
+        }
+
         /* Layout & Text Styles */
         .card-content,
         .back-content {
             position: relative;
             z-index: 2;
             height: 100%;
-            padding: 24px;
+            padding: 20px 18px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transform: translateZ(40px);
-            /* 3D Pop Out */
+            transform: translateZ(24px);
             transform-style: preserve-3d;
+            -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
         }
 
         .card-header {
             display: flex;
             justify-content: flex-start;
+            margin-bottom: 4px;
         }
 
         .glass-label {
@@ -1405,123 +1441,532 @@
             transform: scale(1.04);
         }
 
-        /* Ambient Video Media Layer in Card 1 */
-        .card-preview-media {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            opacity: 0.15;
-            transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            pointer-events: none;
+        /* --- INTERACTIVE CARD FRONT VISUAL MOCKUPS --- */
+        .card-mockup {
+            width: 100%;
+            height: 132px;
+            border-radius: 14px;
+            background: rgba(8, 8, 10, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
             overflow: hidden;
-            border-radius: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 9px 10px;
+            margin: 8px 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 20px rgba(0, 0, 0, 0.5);
         }
 
-        .card-preview-media::after {
-            content: '';
+        .card-wrapper:hover .card-mockup {
+            border-color: rgba(235, 215, 63, 0.35);
+            box-shadow: 0 0 22px rgba(235, 215, 63, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        /* 1. CINEMA VIEWFINDER MOCKUP (CARD 1) */
+        .card-mockup-cinema {
+            background: radial-gradient(ellipse at center, rgba(235, 215, 63, 0.04) 0%, rgba(8, 8, 10, 0.85) 80%);
+        }
+
+        .cinema-hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rec-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .rec-dot-pulse {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ef4444;
+            box-shadow: 0 0 8px #ef4444;
+            animation: livePing 1.4s infinite;
+        }
+
+        .rec-label {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #ef4444;
+            letter-spacing: 0.6px;
+        }
+
+        .rec-timecode {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--brand-yellow);
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(235, 215, 63, 0.4);
+        }
+
+        .cinema-reticle-wrap {
+            flex: 1;
+            position: relative;
+            margin: 4px 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .reticle-corner {
             position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(10, 10, 10, 0.2) 0%, rgba(10, 10, 10, 0.85) 100%);
+            width: 8px;
+            height: 8px;
+            border-color: rgba(235, 215, 63, 0.5);
+            transition: all 0.3s ease;
         }
 
-        .card-wrapper:hover .card-preview-media {
-            opacity: 0.35;
-            transform: scale(1.05);
+        .reticle-corner.tl { top: 0; left: 0; border-top: 1.5px solid; border-left: 1.5px solid; }
+        .reticle-corner.tr { top: 0; right: 0; border-top: 1.5px solid; border-right: 1.5px solid; }
+        .reticle-corner.bl { bottom: 0; left: 0; border-bottom: 1.5px solid; border-left: 1.5px solid; }
+        .reticle-corner.br { bottom: 0; right: 0; border-bottom: 1.5px solid; border-right: 1.5px solid; }
+
+        .card-wrapper:hover .reticle-corner {
+            border-color: var(--brand-yellow);
+            box-shadow: 0 0 6px rgba(235, 215, 63, 0.5);
         }
 
-        /* Graphic Multi-Poster Stack in Card 2 */
-        .card-graphic-stack {
+        .reticle-crosshair {
             position: absolute;
-            right: 14px;
-            bottom: 14px;
-            width: 110px;
-            height: 130px;
-            z-index: 1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(235, 215, 63, 0.6);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
             pointer-events: none;
-            opacity: 0.25;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .graphic-stack-item {
+        .cinema-meta-tag {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.56rem;
+            color: rgba(255, 255, 255, 0.55);
+            font-weight: 600;
+            padding-left: 2px;
+        }
+
+        .audio-equalizer {
+            display: flex;
+            align-items: flex-end;
+            gap: 2.5px;
+            height: 14px;
             position: absolute;
-            inset: 0;
-            border-radius: 12px;
-            background-size: cover;
-            background-position: center;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            right: 4px;
+            bottom: 2px;
         }
 
-        .graphic-stack-item.item-1 {
-            transform: rotate(-6deg) translateZ(0);
+        .eq-bar {
+            width: 3px;
+            border-radius: 2px;
+            background: var(--brand-yellow);
+            animation: eqBounce 1.2s infinite ease-in-out alternate;
         }
 
-        .graphic-stack-item.item-2 {
-            transform: rotate(6deg) translate(8px, -6px);
+        .eq-bar.bar-1 { height: 40%; animation-delay: 0.1s; }
+        .eq-bar.bar-2 { height: 85%; animation-delay: 0.3s; }
+        .eq-bar.bar-3 { height: 60%; animation-delay: 0.2s; }
+        .eq-bar.bar-4 { height: 100%; animation-delay: 0.4s; }
+        .eq-bar.bar-5 { height: 50%; animation-delay: 0.15s; }
+
+        @keyframes eqBounce {
+            0% { transform: scaleY(0.3); opacity: 0.6; }
+            100% { transform: scaleY(1); opacity: 1; }
         }
 
-        .card-wrapper:hover .card-graphic-stack {
-            opacity: 0.6;
-        }
-
-        .card-wrapper:hover .graphic-stack-item.item-1 {
-            transform: rotate(-10deg) translate(-10px, -4px) scale(1.04);
-        }
-
-        .card-wrapper:hover .graphic-stack-item.item-2 {
-            transform: rotate(10deg) translate(14px, -10px) scale(1.04);
-        }
-
-        /* Micro-Browser Mockup in Card 3 */
-        .card-browser-mockup {
-            position: absolute;
-            right: 14px;
-            bottom: 14px;
-            width: 140px;
-            height: 95px;
-            background: rgba(20, 20, 20, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 10px;
+        .cinema-timeline {
+            height: 24px;
+            background: rgba(0, 0, 0, 0.65);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+            padding: 2px 4px;
             overflow: hidden;
-            z-index: 1;
-            pointer-events: none;
-            opacity: 0.3;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
-        .browser-mockup-header {
-            height: 16px;
-            background: rgba(0, 0, 0, 0.5);
+        .timeline-track {
+            height: 8px;
+            border-radius: 3px;
             display: flex;
             align-items: center;
-            padding: 0 6px;
+            padding-left: 4px;
+        }
+
+        .timeline-track.track-video {
+            background: linear-gradient(90deg, rgba(235, 215, 63, 0.35) 0%, rgba(235, 215, 63, 0.15) 100%);
+            border-left: 2px solid var(--brand-yellow);
+        }
+
+        .timeline-track.track-audio {
+            background: linear-gradient(90deg, rgba(56, 189, 248, 0.35) 0%, rgba(56, 189, 248, 0.15) 100%);
+            border-left: 2px solid #38bdf8;
+        }
+
+        .track-chip {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1;
+        }
+
+        .timeline-playhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 45%;
+            width: 1.5px;
+            background: #ef4444;
+            box-shadow: 0 0 6px #ef4444;
+            transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .card-wrapper:hover .timeline-playhead {
+            left: 72%;
+        }
+
+        /* 2. 3D POSTER STACK MOCKUP (CARD 2) */
+        .card-mockup-graphics {
+            background: radial-gradient(ellipse at center, rgba(192, 132, 252, 0.05) 0%, rgba(8, 8, 10, 0.85) 80%);
+        }
+
+        .figma-canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        .canvas-badge {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.56rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.8px;
+        }
+
+        .canvas-swatches {
+            display: flex;
             gap: 4px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .browser-dot {
-            width: 4px;
-            height: 4px;
+        .swatch {
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .browser-dot.d1 { background: #ff5f56; }
-        .browser-dot.d2 { background: #ffbd2e; }
-        .browser-dot.d3 { background: #27c93f; }
+        .swatch.sw-gold { background: var(--brand-yellow); }
+        .swatch.sw-dark { background: #1a1a1e; }
+        .swatch.sw-white { background: #ffffff; }
 
-        .browser-mockup-body {
-            height: calc(100% - 16px);
-            background-size: cover;
-            background-position: top center;
+        .poster-stack-wrap {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 500px;
         }
 
-        .card-wrapper:hover .card-browser-mockup {
-            opacity: 0.65;
-            transform: translateY(-4px) scale(1.05);
-            border-color: rgba(235, 215, 63, 0.4);
+        .poster-layer {
+            position: absolute;
+            border-radius: 9px;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .poster-layer.layer-back {
+            width: 78%;
+            height: 64px;
+            background: rgba(22, 22, 28, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(-6deg) translate(-10px, -4px);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 10px;
+        }
+
+        .poster-num {
+            font-family: 'Panchang', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.08);
+        }
+
+        .poster-layer.layer-mid {
+            width: 82%;
+            height: 70px;
+            background: linear-gradient(135deg, rgba(32, 32, 40, 0.95), rgba(16, 16, 20, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            transform: rotate(5deg) translate(8px, -2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .poster-title-outline {
+            font-family: 'Panchang', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(235, 215, 63, 0.35);
+            letter-spacing: 2px;
+        }
+
+        .poster-layer.layer-front {
+            width: 86%;
+            height: 74px;
+            background: radial-gradient(circle at top left, rgba(235, 215, 63, 0.15) 0%, rgba(18, 18, 22, 0.98) 75%);
+            border: 1px solid rgba(235, 215, 63, 0.45);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            transform: translateZ(14px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 7px 9px;
+        }
+
+        .poster-glow-badge {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.54rem;
+            font-weight: 700;
+            color: var(--brand-yellow);
+            letter-spacing: 1px;
+        }
+
+        .poster-main-text {
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .poster-bottom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .poster-tag {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.54rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .poster-sparkle {
+            color: var(--brand-yellow);
+            font-size: 0.65rem;
+        }
+
+        .canvas-cursor-tag {
+            position: absolute;
+            bottom: 2px;
+            right: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.55rem;
+            font-weight: 700;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .card-wrapper:hover .poster-layer.layer-back {
+            transform: rotate(-11deg) translate(-16px, -8px) scale(0.98);
+        }
+
+        .card-wrapper:hover .poster-layer.layer-mid {
+            transform: rotate(10deg) translate(15px, -4px) scale(1.02);
+        }
+
+        .card-wrapper:hover .poster-layer.layer-front {
+            transform: translateZ(26px) scale(1.04);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(235, 215, 63, 0.25);
+            border-color: var(--brand-yellow);
+        }
+
+        .card-wrapper:hover .canvas-cursor-tag {
+            transform: translate(4px, -4px) scale(1.05);
+        }
+
+        /* 3. MACOS CODE & LIGHTHOUSE 100 FRAME (CARD 3) */
+        .card-mockup-web {
+            background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.05) 0%, rgba(8, 8, 10, 0.85) 80%);
+        }
+
+        .ide-window-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0 2px;
+            margin-bottom: 5px;
+        }
+
+        .ide-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .ide-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+
+        .ide-dot.dot-r { background: #ff5f56; }
+        .ide-dot.dot-y { background: #ffbd2e; }
+        .ide-dot.dot-g { background: #27c93f; }
+
+        .ide-tab {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.58rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1px 7px;
+            border-radius: 4px;
+        }
+
+        .ide-code-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 3px;
+            position: relative;
+        }
+
+        .code-line {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.62rem;
+            line-height: 1.35;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+        }
+
+        .code-line.indent {
+            padding-left: 10px;
+        }
+
+        .c-kw { color: #c084fc; font-weight: 600; }
+        .c-fn { color: var(--brand-yellow); font-weight: 600; }
+        .c-str { color: #4ade80; }
+        .c-var { color: #38bdf8; }
+        .c-sym { color: rgba(255, 255, 255, 0.5); }
+        .c-num { color: #fb923c; }
+
+        .perf-meter-badge {
+            position: absolute;
+            right: 2px;
+            bottom: 0px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(10, 10, 14, 0.95);
+            border: 1px solid rgba(74, 222, 128, 0.35);
+            padding: 4px 8px;
+            border-radius: 8px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .perf-ring-circle {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .perf-score {
+            position: absolute;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 800;
+            color: #4ade80;
+        }
+
+        .perf-labels {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+            gap: 2px;
+        }
+
+        .perf-status {
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.52rem;
+            font-weight: 800;
+            color: #4ade80;
+            letter-spacing: 0.5px;
+        }
+
+        .perf-metric {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.54rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+
+        .card-wrapper:hover .perf-meter-badge {
+            border-color: #4ade80;
+            box-shadow: 0 0 16px rgba(74, 222, 128, 0.35);
+            transform: scale(1.04);
+        }
+
+        /* --- TRUST METRIC PILLS --- */
+        .card-trust-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .trust-pill {
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.75);
+            letter-spacing: 0.3px;
+            transition: all 0.25s ease;
+        }
+
+        .card-wrapper:hover .trust-pill {
+            background: rgba(235, 215, 63, 0.12);
+            border-color: rgba(235, 215, 63, 0.35);
+            color: var(--brand-yellow);
+            transform: translateY(-1px);
         }
 
         /* Card Back Deliverable Highlights */
