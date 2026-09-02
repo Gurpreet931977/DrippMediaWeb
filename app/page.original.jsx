@@ -2272,15 +2272,41 @@ export default function Page() {
 
     {/* HERO DUAL CTAs */}
     <div className="hero-cta-group">
-      <a href="#services" className="hero-btn hero-btn-primary" onClick={(e) => { e.preventDefault(); document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }}>
-        <span>Get Instant Quote</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
+      <a 
+        href="#services" 
+        className="hero-btn hero-btn-primary" 
+        onClick={(e) => { 
+          e.preventDefault(); 
+          document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); 
+        }}
+      >
+        <span className="btn-shimmer" />
+        <span className="btn-label-group">
+          <span className="btn-sparkle">✦</span>
+          <span className="btn-main-text">Get Instant Quote</span>
+        </span>
+        <span className="btn-icon-capsule">
+          <svg className="btn-arrow-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 17L17 7M17 7H8M17 7V16" />
+          </svg>
+        </span>
       </a>
-      <a href="#work" className="hero-btn hero-btn-secondary" onClick={(e) => { e.preventDefault(); document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' }); }}>
-        <span className="play-pulse-dot" />
-        <span>Explore Portfolio</span>
+
+      <a 
+        href="#work" 
+        className="hero-btn hero-btn-secondary" 
+        onClick={(e) => { 
+          e.preventDefault(); 
+          document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' }); 
+        }}
+      >
+        <div className="radar-status-wrap">
+          <span className="radar-core-dot" />
+          <span className="radar-wave-1" />
+          <span className="radar-wave-2" />
+        </div>
+        <span className="btn-main-text">Explore Portfolio</span>
+        <span className="btn-counter-badge">3 REELS</span>
       </a>
     </div>
 
@@ -2319,15 +2345,11 @@ export default function Page() {
           <div className="face face-front">
             <div className="face-bg">
               <div className="card-grid" />
-              <div className="card-preview-media" style={{ background: 'radial-gradient(circle at 60% 40%, rgba(235, 215, 63, 0.25), transparent 70%)' }} />
             </div>
             <div className="card-content">
               <div className="card-header">
                 <span className="glass-label">
                   <span className="status-dot" /> 01 / EDIT &amp; SHOOT
-                </span>
-                <span className="card-peek-pill">
-                  <span className="peek-icon">▶</span> Reel Peek
                 </span>
               </div>
               <div className="card-body">
@@ -2354,9 +2376,10 @@ export default function Page() {
                 <span className="highlight-chip">Viral Hooks</span>
               </div>
               <div style={{marginTop: 'auto', position: 'relative', zIndex: 10, transformStyle: 'preserve-3d'}}>
-                <a href="/video-portfolio" className="btn btn-primary" style={{display: 'inline-block', textDecoration: 'none', textAlign: 'center', width: '100%', borderRadius: 8, padding: 12, fontSize: '0.8rem'}}>
-                  <span style={{position: 'relative', zIndex: 2}}>View Video Reel ↗</span>
-                  <div className="btn-fill" />
+                <a href="/video-portfolio" className="card-launch-btn">
+                  <span className="card-btn-shimmer" />
+                  <span className="card-btn-icon">▶</span>
+                  <span className="card-btn-text">View Video Reel</span>
                 </a>
               </div>
             </div>
@@ -2369,18 +2392,11 @@ export default function Page() {
           <div className="face face-front">
             <div className="face-bg">
               <div className="card-grid" />
-              <div className="card-graphic-stack">
-                <div className="graphic-stack-item item-1" style={{ backgroundImage: 'url(/posts/post1.png)' }} />
-                <div className="graphic-stack-item item-2" style={{ backgroundImage: 'url(/posts/post2.png)' }} />
-              </div>
             </div>
             <div className="card-content">
               <div className="card-header">
                 <span className="glass-label">
                   <span className="status-dot" /> 02 / GRAPHICS
-                </span>
-                <span className="card-peek-pill">
-                  <span className="peek-icon">✦</span> Visual Peek
                 </span>
               </div>
               <div className="card-body">
@@ -2407,9 +2423,10 @@ export default function Page() {
                 <span className="highlight-chip">Social Kits</span>
               </div>
               <div style={{marginTop: 'auto', position: 'relative', zIndex: 10, transformStyle: 'preserve-3d'}}>
-                <a href="/graphic-portfolio" className="btn btn-primary" style={{display: 'inline-block', textDecoration: 'none', textAlign: 'center', width: '100%', borderRadius: 8, padding: 12, fontSize: '0.8rem'}}>
-                  <span style={{position: 'relative', zIndex: 2}}>View Design Gallery ↗</span>
-                  <div className="btn-fill" />
+                <a href="/graphic-portfolio" className="card-launch-btn">
+                  <span className="card-btn-shimmer" />
+                  <span className="card-btn-icon">✦</span>
+                  <span className="card-btn-text">View Design Gallery</span>
                 </a>
               </div>
             </div>
@@ -2422,22 +2439,11 @@ export default function Page() {
           <div className="face face-front">
             <div className="face-bg">
               <div className="card-grid" />
-              <div className="card-browser-mockup">
-                <div className="browser-mockup-header">
-                  <span className="browser-dot d1" />
-                  <span className="browser-dot d2" />
-                  <span className="browser-dot d3" />
-                </div>
-                <div className="browser-mockup-body" style={{ backgroundImage: 'url(/images/web-portfolio/goatsociety.jpg)' }} />
-              </div>
             </div>
             <div className="card-content">
               <div className="card-header">
                 <span className="glass-label">
                   <span className="status-dot" /> 03 / WEB DEV
-                </span>
-                <span className="card-peek-pill">
-                  <span className="peek-icon">⚡</span> Web Peek
                 </span>
               </div>
               <div className="card-body">
@@ -2464,9 +2470,10 @@ export default function Page() {
                 <span className="highlight-chip">99+ Perf</span>
               </div>
               <div style={{marginTop: 'auto', position: 'relative', zIndex: 10, transformStyle: 'preserve-3d'}}>
-                <a href="/web-portfolio" className="btn btn-primary" style={{display: 'inline-block', textDecoration: 'none', textAlign: 'center', width: '100%', borderRadius: 8, padding: 12, fontSize: '0.8rem'}}>
-                  <span style={{position: 'relative', zIndex: 2}}>Explore Web Builds ↗</span>
-                  <div className="btn-fill" />
+                <a href="/web-portfolio" className="card-launch-btn">
+                  <span className="card-btn-shimmer" />
+                  <span className="card-btn-icon">⚡</span>
+                  <span className="card-btn-text">Explore Web Builds</span>
                 </a>
               </div>
             </div>
@@ -2789,6 +2796,16 @@ export default function Page() {
           the unconventional path so Dripp Media could deliver unconventional, high impact results. We don't
           do ordinary. We engineer content that commands the room.
         </p>
+        <div className="founder-badges-group">
+          <span className="founder-badge-pill">✦ Hands-On Creative Director</span>
+          <span className="founder-badge-pill">⚡ Direct Founder Line</span>
+          <span className="founder-badge-pill">🛡 100% Quality Standard</span>
+        </div>
+        <div>
+          <a href="https://wa.me/919319777777?text=Hey%20Gurpreet!%20I'm%20reaching%20out%20from%20the%20website%20to%20discuss%20a%20flagship%20project." target="_blank" rel="noopener noreferrer" className="founder-direct-btn">
+            <span>Talk to Gurpreet on WhatsApp ↗</span>
+          </a>
+        </div>
       </div>
       <div className="founder-card-wrap" id="founder-card-wrap">
         <div className="founder-3d-card" id="founder-3d-card">
@@ -2799,6 +2816,59 @@ export default function Page() {
       </div>
     </div>
   </section>
+
+  {/* --- FREQUENTLY ASKED QUESTIONS --- */}
+  <section className="faq-section" id="faq">
+    <div className="faq-container">
+      <div className="faq-header">
+        <span className="section-label">05 / CLARITY &amp; PROCESS</span>
+        <h2 className="faq-title">Frequently Asked <span>Questions.</span></h2>
+        <p className="faq-sub">Everything you need to know about our workflow, turnaround speed, revisions, and execution standards.</p>
+      </div>
+
+      <div className="faq-list">
+        {[
+          {
+            q: 'How fast is your turnaround time?',
+            a: 'Full custom web platforms are typically delivered within 2–3 weeks. Video editing sprints and graphic design packages range from 24 to 72 hours per asset.'
+          },
+          {
+            q: 'What is your revision guarantee?',
+            a: 'We iterate with you until you are 100% satisfied. We provide private review links with frame-by-frame and pixel-accurate feedback tools.'
+          },
+          {
+            q: 'How does day-to-day communication work?',
+            a: 'You get a dedicated, private Slack or WhatsApp war room with direct access to our core creative and engineering team, ensuring zero middlemen and rapid replies.'
+          },
+          {
+            q: 'Do you handle end-to-end production?',
+            a: 'Yes. From initial storyboarding, scripting, 3D rendering, and 4K cinema color-grading to full-stack Next.js web deployment and performance optimization.'
+          },
+          {
+            q: 'What technologies power your web builds?',
+            a: 'For web: Next.js, React, GSAP Motion, Three.js, Tailwind CSS, Supabase & WebGL. For video & design: Adobe Premiere Pro, After Effects, DaVinci Resolve, Figma, and Blender 3D.'
+          }
+        ].map((item, idx) => (
+          <div 
+            key={idx} 
+            className={`faq-item ${idx === 0 ? 'active' : ''}`}
+            onClick={(e) => {
+              e.currentTarget.classList.toggle('active');
+            }}
+          >
+            <div className="faq-question">
+              <span>{item.q}</span>
+              <span className="faq-toggle-icon">+</span>
+            </div>
+            <div className="faq-answer">
+              <p>{item.a}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
   <div className="info-container" id="about">
     {/* JOIN COMMUNITY SECTION */}
     <section className="join-community-section" id="community">

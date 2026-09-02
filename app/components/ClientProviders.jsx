@@ -253,26 +253,33 @@ function GlobalGenzToggle() {
     }, 1200);
   };
 
-  const getDisplayPosition = () => {
-    if (!isSnapped || !snapCorner || isMobile) return position;
-    if (isHovered) {
-      if (snapCorner === 'top') {
-        return { x: position.x, y: 12 };
-      }
-      if (snapCorner === 'bottom') {
-        return { x: position.x, y: (typeof window !== 'undefined' ? window.innerHeight : 800) - 56 };
-      }
-      if (snapCorner === 'left') {
-        return { x: 50 - (typeof window !== 'undefined' ? window.innerWidth : 1200) / 2, y: position.y };
-      }
-      if (snapCorner === 'right') {
-        return { x: ((typeof window !== 'undefined' ? window.innerWidth : 1200) - 50) - (typeof window !== 'undefined' ? window.innerWidth : 1200) / 2, y: position.y };
-      }
+  const getButtonTransform = () => {
+    if (isDragging) return 'none';
+    if (!isSnapped) {
+      return isHovered ? 'scale(1.06)' : 'scale(1)';
     }
-    return position;
+    // Snapped (sleeping mode)
+    if (!isHovered) {
+      if (['left', 'right'].includes(snapCorner)) {
+        return 'rotate(90deg) scale(0.95)';
+      }
+      return 'rotate(0deg) scale(0.95)';
+    }
+    // Snapped & Hovered (waking smoothly)
+    if (snapCorner === 'top') {
+      return 'translateY(10px) scale(1.04)';
+    }
+    if (snapCorner === 'bottom') {
+      return 'translateY(-10px) scale(1.04)';
+    }
+    if (snapCorner === 'left') {
+      return 'translateX(10px) scale(1.04)';
+    }
+    if (snapCorner === 'right') {
+      return 'translateX(-10px) scale(1.04)';
+    }
+    return 'scale(1.04)';
   };
-
-  const displayPos = getDisplayPosition();
 
   return (
     <>
@@ -343,9 +350,14 @@ function GlobalGenzToggle() {
           position: 'fixed',
           top: '20px',
           left: '50%',
-          transform: `translateX(-50%) translate(${displayPos.x}px, ${displayPos.y}px)`,
+          transform: `translateX(-50%) translate(${position.x}px, ${position.y}px)`,
           zIndex: 99999,
           touchAction: 'none',
+          padding: isSnapped ? '14px 18px' : '0px',
+          margin: isSnapped ? '-14px -18px' : '0px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           transition: isDragging ? 'none' : 'transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1)'
         }}
       >
@@ -362,13 +374,11 @@ function GlobalGenzToggle() {
                 cursor: 'pointer',
                 letterSpacing: '1px',
             } : {
-                borderRadius: (isSnapped && !isHovered) ? '3px' : '30px',
+                borderRadius: (isSnapped && !isHovered) ? '4px' : '30px',
                 padding: (isSnapped && !isHovered) ? '0px' : '6px 14px',
-                width: (isSnapped && !isHovered) ? '54px' : '92px',
-                height: (isSnapped && !isHovered) ? '5px' : '28px',
-                transform: (isSnapped && !isHovered && ['left', 'right'].includes(snapCorner)) 
-                  ? 'rotate(90deg) scale(0.95)' 
-                  : (isHovered && !isDragging ? 'scale(1.06)' : 'scale(1)'),
+                width: (isSnapped && !isHovered) ? '56px' : '96px',
+                height: (isSnapped && !isHovered) ? '6px' : '28px',
+                transform: getButtonTransform(),
                 fontSize: '0.65rem',
                 fontWeight: 600,
                 cursor: isDragging ? 'grabbing' : 'grab',
@@ -381,9 +391,9 @@ function GlobalGenzToggle() {
                 width: '6px',
                 height: '6px',
                 borderRadius: '50%',
-                transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 opacity: (isSnapped && !isHovered && !isMobile) ? 0 : 1,
-                transform: (isSnapped && !isHovered && !isMobile) ? 'scale(0.3)' : 'scale(1)',
+                transform: (isSnapped && !isHovered && !isMobile) ? 'scale(0.2)' : 'scale(1)',
                 flexShrink: 0
               }} 
             />
