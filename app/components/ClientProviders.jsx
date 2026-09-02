@@ -253,6 +253,27 @@ function GlobalGenzToggle() {
     }, 1200);
   };
 
+  const getDisplayPosition = () => {
+    if (!isSnapped || !snapCorner || isMobile) return position;
+    if (isHovered) {
+      if (snapCorner === 'top') {
+        return { x: position.x, y: 12 };
+      }
+      if (snapCorner === 'bottom') {
+        return { x: position.x, y: (typeof window !== 'undefined' ? window.innerHeight : 800) - 56 };
+      }
+      if (snapCorner === 'left') {
+        return { x: 50 - (typeof window !== 'undefined' ? window.innerWidth : 1200) / 2, y: position.y };
+      }
+      if (snapCorner === 'right') {
+        return { x: ((typeof window !== 'undefined' ? window.innerWidth : 1200) - 50) - (typeof window !== 'undefined' ? window.innerWidth : 1200) / 2, y: position.y };
+      }
+    }
+    return position;
+  };
+
+  const displayPos = getDisplayPosition();
+
   return (
     <>
       {isAnimating && (
@@ -322,10 +343,10 @@ function GlobalGenzToggle() {
           position: 'fixed',
           top: '20px',
           left: '50%',
-          transform: `translateX(-50%) translate(${position.x}px, ${position.y}px)`,
+          transform: `translateX(-50%) translate(${displayPos.x}px, ${displayPos.y}px)`,
           zIndex: 99999,
           touchAction: 'none',
-          transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+          transition: isDragging ? 'none' : 'transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1)'
         }}
       >
         <button 
@@ -342,26 +363,16 @@ function GlobalGenzToggle() {
                 letterSpacing: '1px',
             } : {
                 borderRadius: (isSnapped && !isHovered) ? '3px' : '30px',
-                padding: (isSnapped && !isHovered) ? '0' : '6px 14px',
-                width: (isSnapped && !isHovered) ? '60px' : 'auto',
-                height: (isSnapped && !isHovered) ? '6px' : '28px',
-                transform: (isSnapped && !isHovered && ['left', 'right'].includes(snapCorner)) ? 'rotate(90deg)' : 'rotate(0deg)',
+                padding: (isSnapped && !isHovered) ? '0px' : '6px 14px',
+                width: (isSnapped && !isHovered) ? '54px' : '92px',
+                height: (isSnapped && !isHovered) ? '5px' : '28px',
+                transform: (isSnapped && !isHovered && ['left', 'right'].includes(snapCorner)) 
+                  ? 'rotate(90deg) scale(0.95)' 
+                  : (isHovered && !isDragging ? 'scale(1.06)' : 'scale(1)'),
                 fontSize: '0.65rem',
                 fontWeight: 600,
                 cursor: isDragging ? 'grabbing' : 'grab',
-                transition: isDragging ? 'none' : 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-            onMouseEnter={(e) => {
-               if (isMobile) return;
-               if (!isDragging && (!isSnapped || isHovered)) {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-               }
-            }}
-            onMouseLeave={(e) => {
-               if (isMobile) return;
-               if (!isDragging) {
-                  e.currentTarget.style.transform = (isSnapped && ['left', 'right'].includes(snapCorner)) ? 'rotate(90deg)' : 'rotate(0deg)';
-               }
+                transition: isDragging ? 'none' : 'all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1)',
             }}
         >
             <div 
@@ -370,12 +381,19 @@ function GlobalGenzToggle() {
                 width: '6px',
                 height: '6px',
                 borderRadius: '50%',
-                transition: 'all 0.5s ease',
+                transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 opacity: (isSnapped && !isHovered && !isMobile) ? 0 : 1,
+                transform: (isSnapped && !isHovered && !isMobile) ? 'scale(0.3)' : 'scale(1)',
                 flexShrink: 0
               }} 
             />
-            <span style={{ opacity: (isSnapped && !isHovered && !isMobile) ? 0 : 1, transition: 'opacity 0.3s ease' }}>GEN-Z</span>
+            <span style={{ 
+              opacity: (isSnapped && !isHovered && !isMobile) ? 0 : 1, 
+              transform: (isSnapped && !isHovered && !isMobile) ? 'scale(0.8)' : 'scale(1)',
+              transition: 'opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' 
+            }}>
+              GEN-Z
+            </span>
         </button>
       </div>
     </>
