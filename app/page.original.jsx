@@ -786,6 +786,87 @@ export default function Page() {
                 .to(card2, { xPercent: -50, x: 0, rotation: 0, scale: 1, duration: 1 }, 0)
                 .to(card3, { xPercent: -50, x: spreadDistance, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)", duration: 1 }, 0);
 
+            // --- CLICK TO SCATTER / OPEN CARDS (SMOOTH CARD DEAL ANIMATION) ---
+            let isScatteredByClick = false;
+
+            const scatterCards = () => {
+                isScatteredByClick = true;
+                interactionEnabled = true;
+                enableInteraction();
+
+                if (navigator.vibrate) navigator.vibrate([45, 20, 45]);
+
+                // Smooth physical card-dealing timeline
+                const dealTl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+                // Card 2 (top ace) does a slight pop-up lift like drawing from the deck
+                dealTl
+                    .to(card2, {
+                        xPercent: -50,
+                        x: 0,
+                        y: -14,
+                        rotation: 0,
+                        scale: 1.04,
+                        filter: "blur(0px) brightness(1)",
+                        duration: 0.35,
+                        ease: "power2.out"
+                    }, 0)
+                    // Card 1 (left ace) shoots out smoothly with authentic card dealer snap
+                    .to(card1, {
+                        xPercent: -50,
+                        x: -spreadDistance,
+                        y: 0,
+                        rotation: 0,
+                        scale: 1,
+                        filter: "blur(0px) brightness(1)",
+                        duration: 0.75,
+                        ease: "back.out(1.2)"
+                    }, 0.08)
+                    // Card 3 (right ace) shoots out smoothly with matching snap
+                    .to(card3, {
+                        xPercent: -50,
+                        x: spreadDistance,
+                        y: 0,
+                        rotation: 0,
+                        scale: 1,
+                        filter: "blur(0px) brightness(1)",
+                        duration: 0.75,
+                        ease: "back.out(1.2)"
+                    }, 0.12)
+                    // Card 2 settles into place
+                    .to(card2, {
+                        y: 0,
+                        scale: 1,
+                        duration: 0.45,
+                        ease: "power2.inOut"
+                    }, 0.35);
+            };
+
+            const collapseCards = () => {
+                isScatteredByClick = false;
+                resetAllFlips();
+                interactionEnabled = false;
+
+                if (navigator.vibrate) navigator.vibrate([30]);
+
+                const gatherTl = gsap.timeline({ defaults: { ease: "power3.inOut", duration: 0.65 } });
+                gatherTl
+                    .to(card1, { xPercent: -50, x: -30, y: 15, rotation: -12, scale: 0.8, filter: "blur(4px) brightness(0.6)" }, 0)
+                    .to(card2, { xPercent: -50, x: 0, y: 0, rotation: 0, scale: 0.85, filter: "blur(0px) brightness(1)" }, 0.04)
+                    .to(card3, { xPercent: -50, x: 30, y: 15, rotation: 12, scale: 0.9, filter: "blur(4px) brightness(0.6)" }, 0.08);
+            };
+
+            const handleCardClick = (e) => {
+                // If user clicked an action link/button inside card back, allow standard navigation
+                if (e.target.closest('a, button')) return;
+
+                if (!isScatteredByClick) {
+                    scatterCards();
+                } else {
+                    collapseCards();
+                }
+            };
+
             // --- CARD INTERACTION & GLOW TRACKING ---
             const handleMouseEnter = (e) => {
                 const card = e.currentTarget;
@@ -854,6 +935,7 @@ export default function Page() {
                 card.addEventListener('touchstart', handleTouchStart, { passive: true });
                 card.addEventListener('mouseleave', handleMouseLeave);
                 card.addEventListener('mousemove', handleMouseMove);
+                card.addEventListener('click', handleCardClick);
             });
 
             return () => {
@@ -863,6 +945,7 @@ export default function Page() {
                     card.removeEventListener('touchstart', handleTouchStart);
                     card.removeEventListener('mouseleave', handleMouseLeave);
                     card.removeEventListener('mousemove', handleMouseMove);
+                    card.removeEventListener('click', handleCardClick);
                     gsap.set(card, { clearProps: 'all' });
                     const inner = card.querySelector('.card-inner');
                     if (inner) gsap.set(inner, { clearProps: 'all' });
@@ -2215,7 +2298,6 @@ export default function Page() {
           </a>
           <a href="#contact" className="c-nav-btn c-talk" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `document.getElementById('contact').scrollIntoView({behavior: 'smooth'})`, target: event.currentTarget, originalEvent: event } }))}>
             <span className="c-btn-shimmer" />
-            <span className="c-sparkle">✦</span>
             <span className="c-txt-wrap"><span className="c-txt" data-text="Let's Talk">Let's Talk</span></span>
             <span className="c-action-disc">
               <svg className="c-arrow-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
@@ -2920,35 +3002,63 @@ export default function Page() {
             tag: 'Delivery Timelines',
             q: 'How fast is your turnaround time?',
             a: 'Full custom web platforms are typically delivered within 2–3 weeks. Video editing sprints and graphic design packages range from 24 to 72 hours per asset with live staging previews.',
-            metric: '⚡ 24–72h Sprints · 2–3 Wk Flagship Drops'
+            icon: (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            ),
+            metric: '24–72h Sprints · 2–3 Wk Flagship Drops'
           },
           {
             id: '02',
             tag: 'Revision Guarantee',
             q: 'What is your revision guarantee?',
             a: 'We iterate with you until you are 100% satisfied. We provide private review links with frame-by-frame and pixel-accurate feedback tools so changes happen in hours, not days.',
-            metric: '✦ 100% Standard · Frame-Accurate Feedback'
+            icon: (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+              </svg>
+            ),
+            metric: '100% Standard · Frame-Accurate Feedback'
           },
           {
             id: '03',
             tag: 'Direct Communication',
             q: 'How does day-to-day communication work?',
             a: 'You get a dedicated, private Slack or WhatsApp war room with direct access to our core creative and engineering team, ensuring zero middlemen, instant voice notes, and rapid replies.',
-            metric: '💬 Private Slack / WhatsApp War Room'
+            icon: (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            ),
+            metric: 'Private Slack / WhatsApp War Room'
           },
           {
             id: '04',
             tag: 'End-To-End Execution',
             q: 'Do you handle end-to-end production?',
             a: 'Yes. From initial storyboarding, scripting, 3D rendering, and 4K cinema color-grading to full-stack Next.js web deployment and performance optimization—everything is crafted under one roof.',
-            metric: '🎬 3D Render → Next.js Web Deployment'
+            icon: (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="2" ry="2" />
+                <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 7h5M17 17h5" />
+              </svg>
+            ),
+            metric: '3D Render → Next.js Web Deployment'
           },
           {
             id: '05',
             tag: 'Modern Tech Stack',
             q: 'What technologies power your web builds?',
             a: 'For web: Next.js, React, GSAP Motion, Three.js, Tailwind CSS, Supabase & WebGL. For video & design: Adobe Premiere Pro, After Effects, DaVinci Resolve, Figma, and Blender 3D for unmatched visual fidelity.',
-            metric: '⚡ Next.js · GSAP · Three.js · Blender 3D'
+            icon: (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+              </svg>
+            ),
+            metric: 'Next.js · GSAP · Three.js · Blender 3D'
           }
         ].map((item, idx) => (
           <div 
@@ -2975,7 +3085,10 @@ export default function Page() {
               <div className="faq-answer-inner">
                 <div className="faq-answer-body">
                   <p className="faq-answer-text">{item.a}</p>
-                  <span className="faq-metric-tag">{item.metric}</span>
+                  <span className="faq-metric-tag">
+                    <span className="faq-metric-icon">{item.icon}</span>
+                    <span>{item.metric}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -3192,12 +3305,24 @@ export default function Page() {
   <div className="spacer" style={{height: '0vh'}} />
   {/* --- MODALS --- */}
   <div className="modal-overlay" id="contact-modal">
-    <div className="modal-container">
-      <button className="modal-close" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `closeContactModal()`, target: event.currentTarget, originalEvent: event } }))}>×</button>
-      <h3 className="modal-title">Let's Talk</h3>
-      <p className="modal-desc">Tell us about your project scope or book a 15-minute discovery call.</p>
+    <div className="modal-container contact-modal-box">
+      <button className="modal-close-disc" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `closeContactModal()`, target: event.currentTarget, originalEvent: event } }))} aria-label="Close modal">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+
+      <div className="modal-header-block">
+        <div className="modal-live-badge">
+          <span className="live-status-ping" />
+          <span>DIRECT STUDIO INTAKE · FAST 24H RESPONSE</span>
+        </div>
+        <h3 className="modal-title">Let's Talk.</h3>
+        <p className="modal-desc">Tell us about your project scope or book a 15-minute discovery call directly.</p>
+      </div>
       
-      {/* MODAL TABS */}
+      {/* MODAL TABS (Clean Vector Icons, Zero Emojis) */}
       <div className="modal-tabs">
         <button 
           type="button"
@@ -3212,7 +3337,13 @@ export default function Page() {
             if (fCall) fCall.style.display = 'none';
           }}
         >
-          ✉ Project Brief
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          <span>Project Brief</span>
         </button>
         <button 
           type="button"
@@ -3227,7 +3358,13 @@ export default function Page() {
             if (fCall) fCall.style.display = 'flex';
           }}
         >
-          📅 Book Strategy Call
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span>Book Strategy Call</span>
         </button>
       </div>
 
@@ -3235,23 +3372,81 @@ export default function Page() {
       <form className="modal-form" id="contact-form" style={{ display: 'flex' }}>
         <input type="hidden" name="services" defaultValue="{}" />
         <div id="contact-services-list" />
+
+        {/* Quick Scope Selector Chips */}
         <div className="form-group">
-          <label>Your Name</label>
-          <input type="text" name="name" className="form-input" placeholder="e.g. Alex Morgan" required />
+          <div className="field-label-row">
+            <label>Project Scope (Tap to Select)</label>
+            <span className="field-label-hint">Multiple allowed</span>
+          </div>
+          <div className="scope-chip-grid">
+            {[
+              { id: 'video', label: 'Video & Motion Editing' },
+              { id: 'graphics', label: 'Graphic Design & Identity' },
+              { id: 'web', label: 'Website Development' },
+              { id: 'retainer', label: 'Full Creative Retainer' }
+            ].map((chip) => (
+              <button
+                key={chip.id}
+                type="button"
+                className="scope-chip"
+                onClick={(e) => {
+                  const btn = e.currentTarget;
+                  btn.classList.toggle('active');
+                  const activeChips = Array.from(document.querySelectorAll('.scope-chip.active')).map(c => c.querySelector('.chip-text')?.textContent || c.textContent.trim());
+                  const msgBox = document.querySelector('#contact-form textarea[name="message"]');
+                  if (msgBox) {
+                    const currentVal = msgBox.value.replace(/^Scope: .*\n\n?/, '').trim();
+                    if (activeChips.length > 0) {
+                      msgBox.value = `Scope: ${activeChips.join(' · ')}\n\n${currentVal}`;
+                    } else {
+                      msgBox.value = currentVal;
+                    }
+                  }
+                }}
+              >
+                <span className="scope-chip-indicator">✦</span>
+                <span className="chip-text">{chip.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="form-group">
-          <label>Work Email</label>
-          <input type="email" name="email" className="form-input" placeholder="hello@company.com" required />
+
+        {/* 2-Column Responsive Name & Email */}
+        <div className="form-row-dual">
+          <div className="form-group">
+            <label>Your Name</label>
+            <input type="text" name="name" className="form-input" placeholder="e.g. Alex Morgan" required />
+          </div>
+          <div className="form-group">
+            <label>Work Email</label>
+            <input type="email" name="email" className="form-input" placeholder="hello@company.com" required />
+          </div>
         </div>
+
         <div className="form-group">
           <label>WhatsApp Number</label>
           <input type="tel" name="whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
         </div>
+
         <div className="form-group">
           <label>Project Scope / Message</label>
-          <textarea name="message" className="form-input" placeholder="Tell us what you're building, your timeline, or goals..." defaultValue={""} />
+          <textarea name="message" className="form-input" placeholder="Tell us what you're building, your target launch date, or reference links..." defaultValue={""} rows={3} />
         </div>
-        <button type="submit" className="modal-submit" id="contact-submit">Send Project Brief</button>
+
+        {/* 3D Capsule Action Button */}
+        <button type="submit" className="modal-submit-capsule" id="contact-submit">
+          <span className="modal-btn-shimmer" />
+          <div className="modal-btn-label">
+            <span className="modal-sparkle">✦</span>
+            <span className="modal-btn-text">Send Project Brief</span>
+          </div>
+          <div className="modal-action-disc">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 17L17 7M17 7H8M17 7V16" />
+            </svg>
+          </div>
+        </button>
       </form>
 
       {/* STRATEGY CALL FORM */}
@@ -3259,8 +3454,8 @@ export default function Page() {
         e.preventDefault();
         const callSubmit = document.getElementById('call-submit');
         if (callSubmit) {
-          callSubmit.innerText = 'Call Scheduled ✓';
-          callSubmit.style.background = '#4CAF50';
+          callSubmit.querySelector('.modal-btn-text').innerText = 'Call Confirmed';
+          callSubmit.style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
           callSubmit.style.color = '#fff';
         }
         const target = e.currentTarget;
@@ -3272,8 +3467,8 @@ export default function Page() {
         }, 1200);
       }}>
         <div className="call-meta-badge">
-          <span>✦</span>
-          <span>15-Min Strategy Call (Google Meet / Zoom)</span>
+          <span className="live-status-ping" />
+          <span>15-Min Strategy Session · Google Meet / Zoom</span>
         </div>
         <div className="slot-picker-label">Select Preferred Slot</div>
         <div className="slot-grid">
@@ -3290,19 +3485,32 @@ export default function Page() {
             </div>
           ))}
         </div>
-        <div className="form-group">
-          <label>Your Name</label>
-          <input type="text" name="call_name" className="form-input" placeholder="Your name" required />
-        </div>
-        <div className="form-group">
-          <label>Work Email</label>
-          <input type="email" name="call_email" className="form-input" placeholder="hello@company.com" required />
+        <div className="form-row-dual">
+          <div className="form-group">
+            <label>Your Name</label>
+            <input type="text" name="call_name" className="form-input" placeholder="Your name" required />
+          </div>
+          <div className="form-group">
+            <label>Work Email</label>
+            <input type="email" name="call_email" className="form-input" placeholder="hello@company.com" required />
+          </div>
         </div>
         <div className="form-group">
           <label>WhatsApp Number</label>
           <input type="tel" name="call_whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
         </div>
-        <button type="submit" className="modal-submit" id="call-submit">Confirm Strategy Call</button>
+        <button type="submit" className="modal-submit-capsule" id="call-submit">
+          <span className="modal-btn-shimmer" />
+          <div className="modal-btn-label">
+            <span className="modal-sparkle">✦</span>
+            <span className="modal-btn-text">Confirm Strategy Call</span>
+          </div>
+          <div className="modal-action-disc">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 17L17 7M17 7H8M17 7V16" />
+            </svg>
+          </div>
+        </button>
       </form>
     </div>
   </div>

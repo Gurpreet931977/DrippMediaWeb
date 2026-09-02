@@ -1067,6 +1067,7 @@
             top: 50%;
             left: 50%;
             transform-style: preserve-3d;
+            cursor: pointer;
             --mouse-x: 50%;
             --mouse-y: 50%;
         }
@@ -3917,6 +3918,16 @@
             letter-spacing: 0.4px;
         }
 
+        .faq-metric-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--brand-yellow);
+            flex-shrink: 0;
+            width: 14px;
+            height: 14px;
+        }
+
         /* --- HOTLINE DIRECT CONNECT CARD --- */
         .faq-hotline-card {
             position: relative;
@@ -4327,6 +4338,18 @@
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
+        .contact-modal-box {
+            max-width: 580px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(235, 215, 63, 0.09) 0%, rgba(13, 13, 16, 0.98) 70%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 28px;
+            padding: 38px 36px;
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), 0 0 60px rgba(235, 215, 63, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
         .modal-overlay.active .modal-container {
             transform: translateY(0) scale(1);
             opacity: 1;
@@ -4349,92 +4372,304 @@
             color: var(--pure-white);
         }
 
+        .modal-close-disc {
+            position: absolute;
+            top: 22px;
+            right: 22px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10;
+        }
+
+        .modal-close-disc:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            transform: rotate(90deg) scale(1.08);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-header-block {
+            margin-bottom: 20px;
+        }
+
+        .modal-live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: rgba(235, 215, 63, 0.08);
+            border: 1px solid rgba(235, 215, 63, 0.22);
+            color: var(--brand-yellow);
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
+        }
+
         .modal-title {
             font-family: 'Panchang', sans-serif;
-            font-size: 1.8rem;
-            color: var(--brand-yellow);
-            margin-bottom: 10px;
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--pure-white);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
         .modal-desc {
+            font-family: 'Clash Display', sans-serif;
             color: rgba(255, 255, 255, 0.6);
-            font-size: 0.95rem;
-            margin-bottom: 30px;
+            font-size: 0.92rem;
+            margin-bottom: 0;
             line-height: 1.5;
         }
 
         .modal-form {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
+        }
+
+        .field-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .field-label-hint {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-family: 'Clash Display', sans-serif;
+            text-transform: none;
+            font-weight: 500;
+        }
+
+        .scope-chip-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .scope-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.75);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .scope-chip:hover {
+            border-color: rgba(235, 215, 63, 0.35);
+            background: rgba(235, 215, 63, 0.06);
+            color: var(--pure-white);
+            transform: translateY(-1px);
+        }
+
+        .scope-chip.active {
+            background: rgba(235, 215, 63, 0.14);
+            border-color: var(--brand-yellow);
+            color: var(--brand-yellow);
+            box-shadow: 0 2px 10px rgba(235, 215, 63, 0.2);
+            font-weight: 700;
+        }
+
+        .scope-chip-indicator {
+            font-size: 0.72rem;
+            opacity: 0.6;
+            transition: transform 0.3s ease;
+        }
+
+        .scope-chip.active .scope-chip-indicator {
+            opacity: 1;
+            transform: rotate(45deg);
+        }
+
+        .form-row-dual {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 580px) {
+            .contact-modal-box {
+                padding: 28px 20px;
+                border-radius: 20px;
+            }
+            .scope-chip-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row-dual {
+                grid-template-columns: 1fr;
+            }
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .form-group label {
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.8);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.75);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
+            letter-spacing: 0.8px;
+            font-weight: 600;
         }
 
         .form-input {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.035);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            padding: 15px 20px;
+            padding: 12px 16px;
             color: var(--pure-white);
-            font-family: inherit;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.88rem;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .form-input:focus {
             outline: none;
             border-color: var(--brand-yellow);
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(235, 215, 63, 0.04);
+            box-shadow: 0 0 0 3px rgba(235, 215, 63, 0.12);
         }
 
         textarea.form-input {
             resize: vertical;
-            min-height: 100px;
+            min-height: 85px;
+            line-height: 1.45;
         }
 
+        /* Modal Submit 3D Cyber-Capsule (matching Get Instant Quote) */
+        .modal-submit-capsule {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #fff37a 0%, var(--brand-yellow) 40%, #d4bf1d 100%);
+            color: var(--deep-black);
+            padding: 10px 12px 10px 24px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            font-family: 'Clash Display', sans-serif;
+            font-weight: 700;
+            font-size: 0.92rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 0 0 1px rgba(235, 215, 63, 0.3),
+                        0 8px 24px rgba(235, 215, 63, 0.4),
+                        inset 0 1.5px 0 rgba(255, 255, 255, 0.75),
+                        inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-top: 6px;
+        }
+
+        .modal-submit-capsule:hover {
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 0 0 2px rgba(235, 215, 63, 0.6),
+                        0 12px 32px rgba(235, 215, 63, 0.55),
+                        inset 0 1.5px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .modal-submit-capsule .modal-btn-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .modal-submit-capsule .modal-sparkle {
+            font-size: 0.85rem;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-submit-capsule:hover .modal-sparkle {
+            transform: rotate(90deg) scale(1.25);
+        }
+
+        .modal-submit-capsule .modal-action-disc {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #000000;
+            color: var(--brand-yellow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .modal-submit-capsule:hover .modal-action-disc {
+            transform: scale(1.15) rotate(45deg);
+            background: #000000;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-btn-shimmer {
+            position: absolute;
+            top: -50%;
+            left: -120%;
+            width: 60%;
+            height: 200%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+            transform: skewX(-25deg);
+            pointer-events: none;
+            animation: btnShimmerSweep 5s infinite cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Legacy fallback for submit */
         .modal-submit {
             background: var(--brand-yellow);
             color: var(--deep-black);
             border: none;
-            padding: 18px;
+            padding: 16px;
             border-radius: 12px;
             font-family: 'Clash Display', sans-serif;
-            font-weight: 800;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
+            font-weight: 700;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
-            position: relative;
-            overflow: hidden;
         }
 
-        .modal-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(235, 215, 63, 0.3);
-            background: var(--pure-white);
-        }
-
-        .modal-submit.loading {
-            color: transparent;
+        .modal-submit.loading,
+        .modal-submit-capsule.loading {
+            color: transparent !important;
             pointer-events: none;
         }
 
-        .modal-submit.loading::after {
+        .modal-submit.loading::after,
+        .modal-submit-capsule.loading::after {
             content: '';
             position: absolute;
             top: 50%;
@@ -4446,6 +4681,7 @@
             border-radius: 50%;
             transform: translate(-50%, -50%) rotate(0deg);
             animation: spin 1s linear infinite;
+            z-index: 10;
         }
 
         @keyframes spin {
@@ -4455,7 +4691,7 @@
         }
 
         #contact-services-list {
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
@@ -4470,49 +4706,49 @@
             font-size: 0.75rem;
             font-weight: 600;
             letter-spacing: 0.5px;
+            font-family: 'Clash Display', sans-serif;
         }
 
         /* --- MODAL TABS & CALL BOOKING --- */
         .modal-tabs {
             display: flex;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(0, 0, 0, 0.45);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 4px;
-            gap: 4px;
-            margin-bottom: 24px;
+            gap: 6px;
+            margin-bottom: 20px;
         }
 
         .modal-tab-btn {
             flex: 1;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 16px;
+            border-radius: 10px;
+            border: 1px solid transparent;
             background: transparent;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.65);
             font-family: 'Clash Display', sans-serif;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .modal-tab-btn:hover {
             color: var(--pure-white);
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .modal-tab-btn.active {
-            background: var(--brand-yellow);
+            background: linear-gradient(135deg, #fff37a 0%, var(--brand-yellow) 40%, #d4bf1d 100%);
             color: var(--deep-black);
-            box-shadow: 0 4px 12px rgba(235, 215, 63, 0.25);
-        }
-
-        .call-booking-box {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 18px rgba(235, 215, 63, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.7);
         }
 
         .call-meta-badge {
@@ -4520,49 +4756,52 @@
             align-items: center;
             gap: 8px;
             padding: 8px 14px;
-            border-radius: 8px;
+            border-radius: 10px;
             background: rgba(235, 215, 63, 0.08);
             border: 1px solid rgba(235, 215, 63, 0.25);
             color: var(--brand-yellow);
             font-family: 'Clash Display', sans-serif;
             font-size: 0.78rem;
             font-weight: 600;
+            margin-bottom: 4px;
         }
 
         .slot-picker-label {
-            font-size: 0.8rem;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.78rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.8px;
+            color: rgba(255, 255, 255, 0.75);
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-top: 4px;
         }
 
         .slot-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
         }
 
         .slot-chip {
             padding: 10px 8px;
-            border-radius: 8px;
+            border-radius: 10px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: rgba(255, 255, 255, 0.85);
             font-family: 'Clash Display', sans-serif;
             font-size: 0.76rem;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             text-align: center;
-            transition: all 0.25s ease;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .slot-chip:hover {
             border-color: rgba(235, 215, 63, 0.4);
             background: rgba(235, 215, 63, 0.08);
             color: var(--brand-yellow);
+            transform: translateY(-1px);
         }
 
         .slot-chip.active {
@@ -4570,6 +4809,7 @@
             color: var(--deep-black);
             border-color: var(--brand-yellow);
             font-weight: 700;
+            box-shadow: 0 4px 14px rgba(235, 215, 63, 0.35);
         }
 
         /* WhatsApp Direct Action Button - Ultra-Modern Luxury Capsule */
@@ -5389,40 +5629,35 @@
             border-color: rgba(235, 215, 63, 0.3);
         }
 
-        /* Let's Talk - Get Instant Quote Signature Capsule Style */
+        /* Let's Talk - 3D Cyber-Capsule Style (matching Get Instant Quote) */
         .c-talk {
             position: relative;
-            background: var(--brand-yellow);
+            background: linear-gradient(135deg, #fff37a 0%, var(--brand-yellow) 40%, #d4bf1d 100%);
             color: var(--deep-black);
-            padding: 0 8px 0 14px;
-            gap: 6px;
+            padding: 0 8px 0 18px;
+            gap: 8px;
             border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
             font-family: 'Clash Display', sans-serif;
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px rgba(235, 215, 63, 0.25);
+            box-shadow: 0 0 0 1px rgba(235, 215, 63, 0.3),
+                        0 4px 18px rgba(235, 215, 63, 0.35),
+                        inset 0 1.5px 0 rgba(255, 255, 255, 0.75),
+                        inset 0 -2px 5px rgba(0, 0, 0, 0.2);
             overflow: hidden;
             transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .c-talk:hover {
-            background: var(--brand-yellow);
+            background: linear-gradient(135deg, #fff68f 0%, var(--brand-yellow) 45%, #d4bf1d 100%);
             color: var(--deep-black);
-            box-shadow: 0 6px 20px rgba(235, 215, 63, 0.5);
-            transform: translateY(-1px);
-        }
-
-        .c-sparkle {
-            font-size: 0.72rem;
-            color: var(--deep-black);
-            line-height: 1;
-            user-select: none;
-            transition: transform 0.35s ease;
-        }
-
-        .c-talk:hover .c-sparkle {
-            transform: rotate(90deg) scale(1.15);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 0 2px rgba(235, 215, 63, 0.6),
+                        0 10px 28px rgba(235, 215, 63, 0.55),
+                        inset 0 1.5px 0 rgba(255, 255, 255, 0.9),
+                        inset 0 -2px 5px rgba(0, 0, 0, 0.25);
         }
 
         .c-action-disc {

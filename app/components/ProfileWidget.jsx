@@ -135,11 +135,11 @@ export default function ProfileWidget({ showScore, onLoginClick, hideShareScore 
       }
 
       .auth-login-btn {
-        background: rgba(255, 255, 255, 0.05) !important;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
         color: var(--pure-white) !important;
         padding: 8px 18px !important;
         border-radius: 999px !important;
-        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        border: 1px solid rgba(255, 255, 255, 0.16) !important;
         font-family: 'Clash Display', sans-serif !important;
         font-size: 0.82rem !important;
         font-weight: 600 !important;
@@ -152,74 +152,46 @@ export default function ProfileWidget({ showScore, onLoginClick, hideShareScore 
         align-items: center !important;
         justify-content: center !important;
         height: 38px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
       }
       .auth-login-btn:hover {
-        background: rgba(255, 255, 255, 0.12) !important;
-        border-color: rgba(255, 255, 255, 0.3) !important;
+        background: rgba(255, 255, 255, 0.14) !important;
+        border-color: rgba(255, 255, 255, 0.35) !important;
         color: var(--pure-white) !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
       }
 
       .auth-signup-btn {
         position: relative !important;
-        background: var(--brand-yellow) !important;
+        background: linear-gradient(135deg, #fff37a 0%, var(--brand-yellow) 40%, #d4bf1d 100%) !important;
         color: var(--deep-black) !important;
-        padding: 0 8px 0 14px !important;
+        padding: 8px 22px !important;
         border-radius: 999px !important;
-        border: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.45) !important;
         font-family: 'Clash Display', sans-serif !important;
-        font-size: 0.82rem !important;
+        font-size: 0.84rem !important;
         font-weight: 700 !important;
         letter-spacing: 0.5px !important;
         cursor: pointer !important;
-        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        box-shadow: 0 4px 15px rgba(235, 215, 63, 0.25) !important;
+        box-shadow: 0 0 0 1px rgba(235, 215, 63, 0.3),
+                    0 6px 20px rgba(235, 215, 63, 0.35),
+                    inset 0 1.5px 0 rgba(255, 255, 255, 0.75),
+                    inset 0 -2px 5px rgba(0, 0, 0, 0.2) !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 6px !important;
         overflow: hidden !important;
         height: 38px !important;
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
       }
       .auth-signup-btn:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 6px 20px rgba(235, 215, 63, 0.5) !important;
-      }
-
-      .auth-sparkle {
-        font-size: 0.72rem;
-        color: var(--deep-black);
-        line-height: 1;
-        transition: transform 0.35s ease;
-      }
-      .auth-signup-btn:hover .auth-sparkle {
-        transform: rotate(90deg) scale(1.15);
-      }
-
-      .auth-action-disc {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: #050505;
-        color: var(--brand-yellow);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        margin-left: 2px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-      .auth-signup-btn:hover .auth-action-disc {
-        transform: scale(1.15) rotate(45deg);
-        background: #000000;
-        color: #ffffff;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
-      }
-
-      .auth-arrow-icon {
-        transition: transform 0.3s ease;
+        background: linear-gradient(135deg, #fff68f 0%, var(--brand-yellow) 45%, #d4bf1d 100%) !important;
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 0 0 2px rgba(235, 215, 63, 0.6),
+                    0 10px 28px rgba(235, 215, 63, 0.55),
+                    inset 0 1.5px 0 rgba(255, 255, 255, 0.9),
+                    inset 0 -2px 5px rgba(0, 0, 0, 0.25) !important;
       }
 
       .auth-shimmer-sweep {
@@ -329,13 +301,7 @@ export default function ProfileWidget({ showScore, onLoginClick, hideShareScore 
           onClick={() => onLoginClick('signup')}
         >
           <span className="auth-shimmer-sweep" />
-          <span className="auth-sparkle">✦</span>
           <span className="auth-btn-text">Sign Up</span>
-          <span className="auth-action-disc">
-            <svg className="auth-arrow-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7 17L17 7M17 7H8M17 7V16" />
-            </svg>
-          </span>
           <svg className="auth-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
              <circle cx="12" cy="7" r="4"></circle>
