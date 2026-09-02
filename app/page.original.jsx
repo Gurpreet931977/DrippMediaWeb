@@ -2214,10 +2214,14 @@ export default function Page() {
             <span className="c-txt-wrap"><span className="c-txt" data-text="Community">Community</span></span>
           </a>
           <a href="#contact" className="c-nav-btn c-talk" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `document.getElementById('contact').scrollIntoView({behavior: 'smooth'})`, target: event.currentTarget, originalEvent: event } }))}>
+            <span className="c-btn-shimmer" />
+            <span className="c-sparkle">✦</span>
             <span className="c-txt-wrap"><span className="c-txt" data-text="Let's Talk">Let's Talk</span></span>
-            <svg className="c-arrow" viewBox="0 0 24 24">
-              <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <span className="c-action-disc">
+              <svg className="c-arrow-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 17L17 7M17 7H8M17 7V16" />
+              </svg>
+            </span>
           </a>
         </div>
         
@@ -2307,13 +2311,18 @@ export default function Page() {
           document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' }); 
         }}
       >
-        <div className="radar-status-wrap">
-          <span className="radar-core-dot" />
-          <span className="radar-wave-1" />
-          <span className="radar-wave-2" />
+        <span className="sec-btn-shimmer" />
+        <div className="studio-deck-glyph">
+          <span className="deck-layer l1" />
+          <span className="deck-layer l2" />
+          <span className="deck-layer l3">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
+            </svg>
+          </span>
         </div>
         <span className="btn-main-text">Explore Portfolio</span>
-        <span className="btn-counter-badge">3 REELS</span>
+        <span className="btn-disciplines-badge">Video · Art · Web</span>
       </a>
     </div>
 

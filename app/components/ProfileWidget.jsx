@@ -134,24 +134,137 @@ export default function ProfileWidget({ showScore, onLoginClick, hideShareScore 
         transform-origin: top right;
       }
 
+      .auth-login-btn {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: var(--pure-white) !important;
+        padding: 8px 18px !important;
+        border-radius: 999px !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        font-family: 'Clash Display', sans-serif !important;
+        font-size: 0.82rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px !important;
+        cursor: pointer !important;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 38px !important;
+      }
+      .auth-login-btn:hover {
+        background: rgba(255, 255, 255, 0.12) !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        color: var(--pure-white) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+      }
+
+      .auth-signup-btn {
+        position: relative !important;
+        background: var(--brand-yellow) !important;
+        color: var(--deep-black) !important;
+        padding: 0 8px 0 14px !important;
+        border-radius: 999px !important;
+        border: none !important;
+        font-family: 'Clash Display', sans-serif !important;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        cursor: pointer !important;
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: 0 4px 15px rgba(235, 215, 63, 0.25) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        overflow: hidden !important;
+        height: 38px !important;
+      }
+      .auth-signup-btn:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 20px rgba(235, 215, 63, 0.5) !important;
+      }
+
+      .auth-sparkle {
+        font-size: 0.72rem;
+        color: var(--deep-black);
+        line-height: 1;
+        transition: transform 0.35s ease;
+      }
+      .auth-signup-btn:hover .auth-sparkle {
+        transform: rotate(90deg) scale(1.15);
+      }
+
+      .auth-action-disc {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #050505;
+        color: var(--brand-yellow);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-left: 2px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .auth-signup-btn:hover .auth-action-disc {
+        transform: scale(1.15) rotate(45deg);
+        background: #000000;
+        color: #ffffff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+      }
+
+      .auth-arrow-icon {
+        transition: transform 0.3s ease;
+      }
+
+      .auth-shimmer-sweep {
+        position: absolute;
+        top: -50%;
+        left: -100%;
+        width: 50%;
+        height: 200%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.5),
+          transparent
+        );
+        transform: skewX(-25deg);
+        pointer-events: none;
+        transition: all 0.5s ease;
+      }
+      .auth-signup-btn:hover .auth-shimmer-sweep {
+        left: 150%;
+      }
+
       body.light-theme .profile-dropdown-menu {
         background: rgba(255, 255, 255, 0.98);
         border: 1px solid rgba(0, 0, 0, 0.1);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       }
 
-      body.light-theme .desktop-only-btn {
+      body.light-theme .auth-login-btn {
         background: rgba(0, 0, 0, 0.05) !important;
         color: var(--deep-black) !important;
         border: 1px solid rgba(0, 0, 0, 0.15) !important;
       }
-      body.light-theme .desktop-only-btn:hover {
+      body.light-theme .auth-login-btn:hover {
         background: rgba(0, 0, 0, 0.1) !important;
         border-color: rgba(0, 0, 0, 0.3) !important;
       }
       
+      body.light-theme .auth-signup-btn {
+        background: var(--brand-yellow) !important;
+        color: var(--deep-black) !important;
+      }
+      
       @media (max-width: 768px) {
-        .auth-btn-text { display: none !important; }
+        .auth-btn-text, .auth-sparkle, .auth-action-disc { display: none !important; }
         .auth-btn-icon { display: block !important; }
         .desktop-only-btn { display: none !important; }
         .mobile-icon-btn { padding: 10px !important; border-radius: 50% !important; width: 42px; height: 42px; display: flex !important; justify-content: center; align-items: center; }
@@ -198,20 +311,11 @@ export default function ProfileWidget({ showScore, onLoginClick, hideShareScore 
 
   if (!user) {
     return (
-      <div style={{ display: 'flex', gap: '10px', zIndex: 9999 }}>
+      <div style={{ display: 'flex', gap: '10px', zIndex: 9999, alignItems: 'center' }}>
         {globalStyles}
         <button 
-          className="desktop-only-btn"
+          className="desktop-only-btn auth-login-btn"
           onClick={() => onLoginClick('login')}
-          style={{
-            background: 'rgba(255, 255, 255, 0.05)', color: 'var(--pure-white)',
-            padding: '10px 20px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.1)',
-            fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem',
-            cursor: 'pointer', transition: 'all 0.3s ease', backdropFilter: 'blur(10px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
         >
           <span className="auth-btn-text">Log In</span>
           <svg className="auth-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -221,19 +325,17 @@ export default function ProfileWidget({ showScore, onLoginClick, hideShareScore 
           </svg>
         </button>
         <button 
-          className="mobile-icon-btn desktop-only-btn"
+          className="mobile-icon-btn desktop-only-btn auth-signup-btn"
           onClick={() => onLoginClick('signup')}
-          style={{
-            background: 'var(--brand-yellow)', color: 'var(--deep-black)',
-            padding: '10px 20px', borderRadius: '14px', border: 'none',
-            fontFamily: "'Panchang', sans-serif", fontSize: '0.8rem',
-            cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 4px 15px rgba(235, 215, 63, 0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(235, 215, 63, 0.4)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(235, 215, 63, 0.2)'; }}
         >
+          <span className="auth-shimmer-sweep" />
+          <span className="auth-sparkle">✦</span>
           <span className="auth-btn-text">Sign Up</span>
+          <span className="auth-action-disc">
+            <svg className="auth-arrow-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 17L17 7M17 7H8M17 7V16" />
+            </svg>
+          </span>
           <svg className="auth-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
              <circle cx="12" cy="7" r="4"></circle>
