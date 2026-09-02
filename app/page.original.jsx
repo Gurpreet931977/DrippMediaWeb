@@ -353,6 +353,11 @@ export default function Page() {
                     { opacity: 1, y: 0, scale: 1, duration: 1.2, ease: "power3.out" },
                     "<0.6"
                 )
+                .fromTo(".hero-cta-group, .hero-trust-bar",
+                    { opacity: 0, y: 20 },
+                    { opacity: 1, y: 0, duration: 1, stagger: 0.15, ease: "power3.out" },
+                    "<0.2"
+                )
                 // 6. Smooth Navbar Entrance
                 .fromTo('.nav-logo',
                     { opacity: 0, x: -20 },
@@ -658,11 +663,11 @@ export default function Page() {
             if (!isMobileHero) {
                 heroTl.to("#word1", { x: -heroParallaxX, y: -heroParallaxY, opacity: 0, filter: "blur(20px)" }, 0);
                 heroTl.to("#word2", { x: heroParallaxX, y: heroParallaxY, opacity: 0, filter: "blur(20px)" }, 0);
-                heroTl.to(".hero-sub, .scroll-prompt", { opacity: 0, y: 50 }, 0);
+                heroTl.to(".hero-sub, .hero-cta-group, .hero-trust-bar, .scroll-prompt", { opacity: 0, y: 50 }, 0);
             } else {
                 heroTl.to("#word1", { x: -150, opacity: 0, filter: "blur(20px)" }, 0);
                 heroTl.to("#word2", { x: 150, opacity: 0, filter: "blur(20px)" }, 0);
-                heroTl.to(".scroll-prompt", { opacity: 0, y: 50 }, 0);
+                heroTl.to(".hero-cta-group, .hero-trust-bar, .scroll-prompt", { opacity: 0, y: 50 }, 0);
             }
         }
 
@@ -2264,6 +2269,43 @@ export default function Page() {
         beyond!
       </div>
     </div>
+
+    {/* HERO DUAL CTAs */}
+    <div className="hero-cta-group">
+      <a href="#services" className="hero-btn hero-btn-primary" onClick={(e) => { e.preventDefault(); document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }}>
+        <span>Get Instant Quote</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
+      </a>
+      <a href="#work" className="hero-btn hero-btn-secondary" onClick={(e) => { e.preventDefault(); document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' }); }}>
+        <span className="play-pulse-dot" />
+        <span>Explore Portfolio</span>
+      </a>
+    </div>
+
+    {/* METRIC TRUST BAR */}
+    <div className="hero-trust-bar">
+      <div className="trust-item">
+        <span className="trust-num">50M+</span>
+        <span className="trust-label">Organic Views</span>
+      </div>
+      <span className="trust-divider">✦</span>
+      <div className="trust-item">
+        <span className="trust-num">100+</span>
+        <span className="trust-label">Brands Scaled</span>
+      </div>
+      <span className="trust-divider">✦</span>
+      <div className="trust-item">
+        <span className="trust-num">2-3 Wks</span>
+        <span className="trust-label">Rapid Delivery</span>
+      </div>
+      <span className="trust-divider">✦</span>
+      <div className="trust-item">
+        <span className="trust-num">Top 1%</span>
+        <span className="trust-label">Design Standard</span>
+      </div>
+    </div>
   </section>
   {/* --- MODERN CREATIVE CARDS SECTION --- */}
   <section className="portfolio" id="work">
@@ -2277,11 +2319,15 @@ export default function Page() {
           <div className="face face-front">
             <div className="face-bg">
               <div className="card-grid" />
+              <div className="card-preview-media" style={{ background: 'radial-gradient(circle at 60% 40%, rgba(235, 215, 63, 0.25), transparent 70%)' }} />
             </div>
             <div className="card-content">
               <div className="card-header">
                 <span className="glass-label">
                   <span className="status-dot" /> 01 / EDIT &amp; SHOOT
+                </span>
+                <span className="card-peek-pill">
+                  <span className="peek-icon">▶</span> Reel Peek
                 </span>
               </div>
               <div className="card-body">
@@ -2302,9 +2348,14 @@ export default function Page() {
               </div>
               <p className="back-text">We handle the entire production pipeline to engineer captivating visual
                 dopamine.</p>
+              <div className="card-back-highlights">
+                <span className="highlight-chip">4K Cinema</span>
+                <span className="highlight-chip">Sound FX</span>
+                <span className="highlight-chip">Viral Hooks</span>
+              </div>
               <div style={{marginTop: 'auto', position: 'relative', zIndex: 10, transformStyle: 'preserve-3d'}}>
                 <a href="/video-portfolio" className="btn btn-primary" style={{display: 'inline-block', textDecoration: 'none', textAlign: 'center', width: '100%', borderRadius: 8, padding: 12, fontSize: '0.8rem'}}>
-                  <span style={{position: 'relative', zIndex: 2}}>View Video Portfolio</span>
+                  <span style={{position: 'relative', zIndex: 2}}>View Video Reel ↗</span>
                   <div className="btn-fill" />
                 </a>
               </div>
@@ -2318,11 +2369,18 @@ export default function Page() {
           <div className="face face-front">
             <div className="face-bg">
               <div className="card-grid" />
+              <div className="card-graphic-stack">
+                <div className="graphic-stack-item item-1" style={{ backgroundImage: 'url(/posts/post1.png)' }} />
+                <div className="graphic-stack-item item-2" style={{ backgroundImage: 'url(/posts/post2.png)' }} />
+              </div>
             </div>
             <div className="card-content">
               <div className="card-header">
                 <span className="glass-label">
                   <span className="status-dot" /> 02 / GRAPHICS
+                </span>
+                <span className="card-peek-pill">
+                  <span className="peek-icon">✦</span> Visual Peek
                 </span>
               </div>
               <div className="card-body">
@@ -2343,9 +2401,14 @@ export default function Page() {
               </div>
               <p className="back-text">Scalable design systems that work seamlessly from Instagram stories to
                 billboards.</p>
+              <div className="card-back-highlights">
+                <span className="highlight-chip">Brand Identity</span>
+                <span className="highlight-chip">3D Posters</span>
+                <span className="highlight-chip">Social Kits</span>
+              </div>
               <div style={{marginTop: 'auto', position: 'relative', zIndex: 10, transformStyle: 'preserve-3d'}}>
                 <a href="/graphic-portfolio" className="btn btn-primary" style={{display: 'inline-block', textDecoration: 'none', textAlign: 'center', width: '100%', borderRadius: 8, padding: 12, fontSize: '0.8rem'}}>
-                  <span style={{position: 'relative', zIndex: 2}}>View Graphics Portfolio</span>
+                  <span style={{position: 'relative', zIndex: 2}}>View Design Gallery ↗</span>
                   <div className="btn-fill" />
                 </a>
               </div>
@@ -2359,11 +2422,22 @@ export default function Page() {
           <div className="face face-front">
             <div className="face-bg">
               <div className="card-grid" />
+              <div className="card-browser-mockup">
+                <div className="browser-mockup-header">
+                  <span className="browser-dot d1" />
+                  <span className="browser-dot d2" />
+                  <span className="browser-dot d3" />
+                </div>
+                <div className="browser-mockup-body" style={{ backgroundImage: 'url(/images/web-portfolio/goatsociety.jpg)' }} />
+              </div>
             </div>
             <div className="card-content">
               <div className="card-header">
                 <span className="glass-label">
                   <span className="status-dot" /> 03 / WEB DEV
+                </span>
+                <span className="card-peek-pill">
+                  <span className="peek-icon">⚡</span> Web Peek
                 </span>
               </div>
               <div className="card-body">
@@ -2384,9 +2458,14 @@ export default function Page() {
               </div>
               <p className="back-text">From robust architecture to surreal animations, we build digital homes.
               </p>
+              <div className="card-back-highlights">
+                <span className="highlight-chip">Next.js</span>
+                <span className="highlight-chip">GSAP Motion</span>
+                <span className="highlight-chip">99+ Perf</span>
+              </div>
               <div style={{marginTop: 'auto', position: 'relative', zIndex: 10, transformStyle: 'preserve-3d'}}>
                 <a href="/web-portfolio" className="btn btn-primary" style={{display: 'inline-block', textDecoration: 'none', textAlign: 'center', width: '100%', borderRadius: 8, padding: 12, fontSize: '0.8rem'}}>
-                  <span style={{position: 'relative', zIndex: 2}}>View Web Portfolio</span>
+                  <span style={{position: 'relative', zIndex: 2}}>Explore Web Builds ↗</span>
                   <div className="btn-fill" />
                 </a>
               </div>
@@ -2670,7 +2749,18 @@ export default function Page() {
           </div>
           <div className="receipt-footer">
             <a href="#" className="custom-quote-btn" id="custom-quote-btn" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `openContactModal(event, true)`, target: event.currentTarget, originalEvent: event } }))}>
-              Request Quote
+              Request Custom Quote
+            </a>
+            <a href="#" className="whatsapp-scope-btn" id="whatsapp-scope-btn" onClick={(e) => {
+              e.preventDefault();
+              const services = Array.from(document.querySelectorAll('.receipt-item .item-name')).map(el => el.textContent.trim()).filter(Boolean);
+              const text = services.length > 0
+                ? `Hey Dripp Media! I selected these services on your builder: ${services.join(', ')}. Can you share scope and pricing?`
+                : `Hey Dripp Media! I want to discuss a new creative project with your team.`;
+              window.open(`https://wa.me/919319777777?text=${encodeURIComponent(text)}`, '_blank');
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+              <span>Instant WhatsApp Scope</span>
             </a>
           </div>
         </div>
@@ -2885,23 +2975,114 @@ export default function Page() {
     <div className="modal-container">
       <button className="modal-close" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `closeContactModal()`, target: event.currentTarget, originalEvent: event } }))}>×</button>
       <h3 className="modal-title">Let's Talk</h3>
-      <p className="modal-desc">Tell us about your project or enquiry. We'll get back to you with some magic.</p>
-      <form className="modal-form" id="contact-form">
+      <p className="modal-desc">Tell us about your project scope or book a 15-minute discovery call.</p>
+      
+      {/* MODAL TABS */}
+      <div className="modal-tabs">
+        <button 
+          type="button"
+          className="modal-tab-btn active" 
+          id="tab-btn-brief"
+          onClick={() => {
+            document.getElementById('tab-btn-brief')?.classList.add('active');
+            document.getElementById('tab-btn-call')?.classList.remove('active');
+            const fBrief = document.getElementById('contact-form');
+            const fCall = document.getElementById('contact-form-call');
+            if (fBrief) fBrief.style.display = 'flex';
+            if (fCall) fCall.style.display = 'none';
+          }}
+        >
+          ✉ Project Brief
+        </button>
+        <button 
+          type="button"
+          className="modal-tab-btn" 
+          id="tab-btn-call"
+          onClick={() => {
+            document.getElementById('tab-btn-call')?.classList.add('active');
+            document.getElementById('tab-btn-brief')?.classList.remove('active');
+            const fBrief = document.getElementById('contact-form');
+            const fCall = document.getElementById('contact-form-call');
+            if (fBrief) fBrief.style.display = 'none';
+            if (fCall) fCall.style.display = 'flex';
+          }}
+        >
+          📅 Book Strategy Call
+        </button>
+      </div>
+
+      {/* BRIEF FORM */}
+      <form className="modal-form" id="contact-form" style={{ display: 'flex' }}>
         <input type="hidden" name="services" defaultValue="{}" />
         <div id="contact-services-list" />
         <div className="form-group">
-          <label>Name</label>
-          <input type="text" name="name" className="form-input" placeholder="Your name" required />
+          <label>Your Name</label>
+          <input type="text" name="name" className="form-input" placeholder="e.g. Alex Morgan" required />
         </div>
         <div className="form-group">
-          <label>Email</label>
-          <input type="email" name="email" className="form-input" placeholder="hello@example.com" required />
+          <label>Work Email</label>
+          <input type="email" name="email" className="form-input" placeholder="hello@company.com" required />
         </div>
         <div className="form-group">
-          <label>Message</label>
-          <textarea name="message" className="form-input" placeholder="Tell us what you're building..." defaultValue={""} />
+          <label>WhatsApp Number</label>
+          <input type="tel" name="whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
         </div>
-        <button type="submit" className="modal-submit" id="contact-submit">Send Message</button>
+        <div className="form-group">
+          <label>Project Scope / Message</label>
+          <textarea name="message" className="form-input" placeholder="Tell us what you're building, your timeline, or goals..." defaultValue={""} />
+        </div>
+        <button type="submit" className="modal-submit" id="contact-submit">Send Project Brief</button>
+      </form>
+
+      {/* STRATEGY CALL FORM */}
+      <form className="modal-form" id="contact-form-call" style={{ display: 'none' }} onSubmit={(e) => {
+        e.preventDefault();
+        const callSubmit = document.getElementById('call-submit');
+        if (callSubmit) {
+          callSubmit.innerText = 'Call Scheduled ✓';
+          callSubmit.style.background = '#4CAF50';
+          callSubmit.style.color = '#fff';
+        }
+        const target = e.currentTarget;
+        const waNum = (target.elements && target.elements.namedItem('call_whatsapp')) ? target.elements.namedItem('call_whatsapp').value : '';
+        const selectedSlot = document.querySelector('.slot-chip.active')?.textContent || 'Tomorrow at 3:00 PM';
+        setTimeout(() => {
+          window.open(`https://wa.me/919319777777?text=${encodeURIComponent(`Hey Dripp Media! I booked a 15-min strategy call for ${selectedSlot}. My WhatsApp is ${waNum}. Looking forward to connecting!`)}`, '_blank');
+          if (typeof window.closeContactModal === 'function') window.closeContactModal();
+        }, 1200);
+      }}>
+        <div className="call-meta-badge">
+          <span>✦</span>
+          <span>15-Min Strategy Call (Google Meet / Zoom)</span>
+        </div>
+        <div className="slot-picker-label">Select Preferred Slot</div>
+        <div className="slot-grid">
+          {['Tomorrow 3:00 PM', 'Tomorrow 5:30 PM', 'Thu 2:00 PM', 'Thu 4:30 PM', 'Fri 11:00 AM', 'Fri 6:00 PM'].map((slot, idx) => (
+            <div 
+              key={slot} 
+              className={`slot-chip ${idx === 0 ? 'active' : ''}`}
+              onClick={(e) => {
+                document.querySelectorAll('.slot-chip').forEach(c => c.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+              }}
+            >
+              {slot}
+            </div>
+          ))}
+        </div>
+        <div className="form-group">
+          <label>Your Name</label>
+          <input type="text" name="call_name" className="form-input" placeholder="Your name" required />
+        </div>
+        <div className="form-group">
+          <label>Work Email</label>
+          <input type="email" name="call_email" className="form-input" placeholder="hello@company.com" required />
+        </div>
+        <div className="form-group">
+          <label>WhatsApp Number</label>
+          <input type="tel" name="call_whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
+        </div>
+        <button type="submit" className="modal-submit" id="call-submit">Confirm Strategy Call</button>
       </form>
     </div>
   </div>

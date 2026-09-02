@@ -502,6 +502,219 @@
             }
         }
 
+        /* --- HERO DUAL CTAS --- */
+        .hero-cta-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 28px;
+            z-index: 5;
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 13px 28px;
+            border-radius: 999px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        /* Primary CTA - Dripp Gold Neon */
+        .hero-btn-primary {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            border: 1px solid var(--brand-yellow);
+            box-shadow: 0 4px 20px rgba(235, 215, 63, 0.35), inset 0 0 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .hero-btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(235, 215, 63, 0.55), inset 0 0 16px rgba(255, 255, 255, 0.5);
+        }
+
+        .hero-btn-primary svg {
+            transition: transform 0.3s ease;
+        }
+
+        .hero-btn-primary:hover svg {
+            transform: translateX(3px);
+        }
+
+        /* Secondary CTA - Frosted Glass Obsidian */
+        .hero-btn-secondary {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--pure-white);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .hero-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px) scale(1.02);
+            color: var(--pure-white);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Pulsing Live Dot inside Secondary Button */
+        .play-pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--brand-yellow);
+            box-shadow: 0 0 8px var(--brand-yellow);
+            animation: liveDotPulse 1.8s infinite ease-in-out;
+            flex-shrink: 0;
+        }
+
+        @keyframes liveDotPulse {
+            0%, 100% {
+                transform: scale(0.9);
+                opacity: 0.7;
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 1;
+                box-shadow: 0 0 12px var(--brand-yellow), 0 0 18px rgba(235, 215, 63, 0.8);
+            }
+        }
+
+        /* --- HERO METRIC TRUST BAR --- */
+        .hero-trust-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 36px;
+            padding: 12px 28px;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 999px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 4;
+            opacity: 0;
+            transition: all 0.35s ease;
+            max-width: 90vw;
+        }
+
+        .hero-trust-bar:hover {
+            border-color: rgba(235, 215, 63, 0.25);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .trust-num {
+            font-family: 'Panchang', sans-serif;
+            font-weight: 800;
+            font-size: 0.82rem;
+            color: var(--brand-yellow);
+            letter-spacing: -0.5px;
+        }
+
+        .trust-label {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.76rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.5px;
+        }
+
+        .trust-divider {
+            color: rgba(235, 215, 63, 0.4);
+            font-size: 0.65rem;
+            user-select: none;
+        }
+
+        /* Light Theme Adaptations */
+        body.light-theme .hero-btn-secondary {
+            background: rgba(0, 0, 0, 0.04);
+            color: var(--deep-black);
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        body.light-theme .hero-btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.3);
+            color: var(--deep-black);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-theme .hero-trust-bar {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-theme .hero-trust-bar:hover {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.18);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-theme .trust-label {
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        body.light-theme .trust-num {
+            color: var(--deep-black);
+        }
+
+        /* Gen-Z Mode Typography */
+        body.genz-mode .hero-btn,
+        body.genz-mode .trust-label {
+            text-transform: lowercase !important;
+        }
+
+        /* Mobile Responsive for Hero CTA & Trust Bar */
+        @media (max-width: 768px) {
+            .hero-cta-group {
+                flex-direction: column;
+                width: 86vw;
+                gap: 12px;
+                margin-top: 24px;
+            }
+            
+            .hero-btn {
+                width: 100%;
+                padding: 12px 20px;
+                font-size: 0.82rem;
+            }
+            
+            .hero-trust-bar {
+                flex-wrap: wrap;
+                gap: 10px 14px;
+                padding: 10px 18px;
+                border-radius: 16px;
+                margin-top: 22px;
+            }
+
+            .trust-divider {
+                display: none;
+            }
+        }
+
         /* --- MODERN CREATIVE CARDS --- */
         section.portfolio {
             height: 100vh;
@@ -903,6 +1116,205 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             backdrop-filter: blur(5px);
+        }
+
+        /* --- CARD MICRO-PREVIEWS & INTERACTIVE PEEKING --- */
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 8px;
+        }
+
+        .card-peek-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(235, 215, 63, 0.08);
+            border: 1px solid rgba(235, 215, 63, 0.25);
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--brand-yellow);
+            text-transform: uppercase;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            user-select: none;
+        }
+
+        .card-peek-pill .peek-icon {
+            font-size: 0.65rem;
+            line-height: 1;
+        }
+
+        .card-wrapper:hover .card-peek-pill {
+            background: rgba(235, 215, 63, 0.18);
+            border-color: var(--brand-yellow);
+            box-shadow: 0 0 12px rgba(235, 215, 63, 0.3);
+            transform: scale(1.04);
+        }
+
+        /* Ambient Video Media Layer in Card 1 */
+        .card-preview-media {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            opacity: 0.15;
+            transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            overflow: hidden;
+            border-radius: inherit;
+        }
+
+        .card-preview-media::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(10, 10, 10, 0.2) 0%, rgba(10, 10, 10, 0.85) 100%);
+        }
+
+        .card-wrapper:hover .card-preview-media {
+            opacity: 0.35;
+            transform: scale(1.05);
+        }
+
+        /* Graphic Multi-Poster Stack in Card 2 */
+        .card-graphic-stack {
+            position: absolute;
+            right: 14px;
+            bottom: 14px;
+            width: 110px;
+            height: 130px;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.25;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .graphic-stack-item {
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .graphic-stack-item.item-1 {
+            transform: rotate(-6deg) translateZ(0);
+        }
+
+        .graphic-stack-item.item-2 {
+            transform: rotate(6deg) translate(8px, -6px);
+        }
+
+        .card-wrapper:hover .card-graphic-stack {
+            opacity: 0.6;
+        }
+
+        .card-wrapper:hover .graphic-stack-item.item-1 {
+            transform: rotate(-10deg) translate(-10px, -4px) scale(1.04);
+        }
+
+        .card-wrapper:hover .graphic-stack-item.item-2 {
+            transform: rotate(10deg) translate(14px, -10px) scale(1.04);
+        }
+
+        /* Micro-Browser Mockup in Card 3 */
+        .card-browser-mockup {
+            position: absolute;
+            right: 14px;
+            bottom: 14px;
+            width: 140px;
+            height: 95px;
+            background: rgba(20, 20, 20, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.3;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .browser-mockup-header {
+            height: 16px;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            gap: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .browser-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .browser-dot.d1 { background: #ff5f56; }
+        .browser-dot.d2 { background: #ffbd2e; }
+        .browser-dot.d3 { background: #27c93f; }
+
+        .browser-mockup-body {
+            height: calc(100% - 16px);
+            background-size: cover;
+            background-position: top center;
+        }
+
+        .card-wrapper:hover .card-browser-mockup {
+            opacity: 0.65;
+            transform: translateY(-4px) scale(1.05);
+            border-color: rgba(235, 215, 63, 0.4);
+        }
+
+        /* Card Back Deliverable Highlights */
+        .card-back-highlights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0 14px;
+        }
+
+        .highlight-chip {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+            white-space: nowrap;
+        }
+
+        /* Light Theme Overrides */
+        body.light-theme .card-peek-pill {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.15);
+            color: var(--deep-black);
+        }
+
+        body.light-theme .highlight-chip {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: var(--deep-black);
+        }
+
+        /* Gen-Z Mode Overrides */
+        body.genz-mode .card-peek-pill,
+        body.genz-mode .highlight-chip {
+            text-transform: lowercase !important;
         }
 
 
@@ -2775,6 +3187,206 @@
             letter-spacing: 0.5px;
         }
 
+        /* --- MODAL TABS & CALL BOOKING --- */
+        .modal-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+            margin-bottom: 24px;
+        }
+
+        .modal-tab-btn {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .modal-tab-btn:hover {
+            color: var(--pure-white);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-tab-btn.active {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            box-shadow: 0 4px 12px rgba(235, 215, 63, 0.25);
+        }
+
+        .call-booking-box {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .call-meta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: rgba(235, 215, 63, 0.08);
+            border: 1px solid rgba(235, 215, 63, 0.25);
+            color: var(--brand-yellow);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .slot-picker-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .slot-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .slot-chip {
+            padding: 10px 8px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.76rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.25s ease;
+        }
+
+        .slot-chip:hover {
+            border-color: rgba(235, 215, 63, 0.4);
+            background: rgba(235, 215, 63, 0.08);
+            color: var(--brand-yellow);
+        }
+
+        .slot-chip.active {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            border-color: var(--brand-yellow);
+            font-weight: 700;
+        }
+
+        /* WhatsApp Direct Action Button */
+        .whatsapp-scope-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            background: rgba(37, 211, 102, 0.1);
+            border: 1px solid rgba(37, 211, 102, 0.3);
+            color: #25D366;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .whatsapp-scope-btn:hover {
+            background: #25D366;
+            color: #000;
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Success screen WhatsApp follow-up */
+        .modal-success-box {
+            text-align: center;
+            padding: 20px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .success-icon-badge {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(235, 215, 63, 0.15);
+            border: 1px solid var(--brand-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--brand-yellow);
+            font-size: 1.6rem;
+            box-shadow: 0 0 25px rgba(235, 215, 63, 0.3);
+        }
+
+        .whatsapp-direct-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border-radius: 10px;
+            background: #25D366;
+            color: #000;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.35);
+        }
+
+        .whatsapp-direct-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(37, 211, 102, 0.55);
+        }
+
+        /* Light Theme Overrides */
+        body.light-theme .modal-tabs {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-theme .modal-tab-btn {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        body.light-theme .slot-chip {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: var(--deep-black);
+        }
+
+        /* Gen-Z Mode Overrides */
+        body.genz-mode .modal-tab-btn,
+        body.genz-mode .whatsapp-scope-btn,
+        body.genz-mode .whatsapp-direct-btn,
+        body.genz-mode .call-meta-badge {
+            text-transform: lowercase !important;
+        }
+
         /* --- DRIPP SIGNATURE FORM VALIDATION TOOLTIP --- */
         .dripp-validation-tooltip {
             position: fixed;
@@ -3717,13 +4329,10 @@
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
-        body.light-theme .nav-links {
-            border-left: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
         @media (max-width: 900px) {
             body.light-theme .nav-links {
                 background: rgba(255, 255, 255, 0.95);
+                border-left: 1px solid rgba(0, 0, 0, 0.08);
             }
         }
 
