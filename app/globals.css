@@ -46,23 +46,48 @@
             overflow-x: hidden;
             width: 100%;
             opacity: 0;
-            transition: opacity 0.5s ease-out, background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.5s ease-out, background-color 0.75s cubic-bezier(0.16, 1, 0.3, 1), color 0.75s cubic-bezier(0.16, 1, 0.3, 1);
             will-change: background-color, color;
         }
 
         /* Unified Smooth Theme Transition Layer for Butter-Smooth Scroll Transitions */
         .navbar,
         .nav-link,
+        .services-section,
+        .services-section .section-title,
+        .services-section .section-label,
+        .service-intro,
+        .builder-container,
+        .builder-left,
+        .builder-right,
+        .f-pill,
+        .custom-chip,
+        .slot-chip,
+        .receipt-header,
+        .receipt-title,
+        .receipt-date,
+        .receipt-item,
+        .empty-receipt,
+        .receipt-footer,
         .founder-sequence-section,
-        .founder-text-block .founder-heading,
-        .founder-text-block .founder-bio,
+        .founder-text-block,
+        .founder-heading,
+        .founder-heading span,
+        .founder-bio,
+        .founder-bio span,
         .founder-bg-text-meta,
         .founder-3d-card,
-        .founder-wrapper {
-            transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                        color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                        border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                        -webkit-text-stroke 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        .founder-badge-pill,
+        .founder-wrapper,
+        .faq-section,
+        .faq-item,
+        .faq-question,
+        .faq-answer {
+            transition: background-color 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+                        color 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+                        border-color 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+                        -webkit-text-stroke 0.75s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         button, input, textarea, select {
@@ -3331,102 +3356,351 @@
             margin-top: 25px;
         }
 
+        /* Custom Quote Button - Signature Capsule Style */
         .custom-quote-btn {
-            display: block;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             width: 100%;
-            text-align: center;
             background: var(--brand-yellow);
             color: var(--deep-black);
             font-family: 'Clash Display', sans-serif;
-            font-size: 1rem;
-            font-weight: 800;
-            letter-spacing: 1.5px;
+            font-size: 0.96rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
             text-transform: uppercase;
             text-decoration: none;
-            padding: 20px 0;
-            border-radius: 14px;
-            transition: all 0.3s ease;
+            padding: 12px 14px 12px 22px;
+            border-radius: 999px;
+            box-shadow: 0 8px 25px rgba(235, 215, 63, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .custom-quote-btn:hover {
-            background: var(--pure-white);
-            box-shadow: 0 10px 30px rgba(235, 215, 63, 0.4);
-            transform: translateY(-3px);
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 0 0 2px rgba(235, 215, 63, 0.6),
+                        0 14px 35px rgba(235, 215, 63, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
 
+        .custom-quote-btn:active {
+            transform: scale(0.98) translateY(0) !important;
+        }
+
+        .quote-btn-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .quote-sparkle {
+            font-size: 0.95rem;
+            color: rgba(0, 0, 0, 0.75);
+            line-height: 1;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .custom-quote-btn:hover .quote-sparkle {
+            transform: rotate(90deg) scale(1.25);
+            color: #000;
+        }
+
+        .quote-btn-text {
+            font-size: 0.94rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+        }
+
+        /* Inset Action Disc Capsule */
+        .quote-action-disc {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--deep-black);
+            color: var(--brand-yellow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .custom-quote-btn:hover .quote-action-disc {
+            background: #000;
+            color: #fff;
+            transform: scale(1.12) rotate(45deg);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        .quote-arrow-icon {
+            transition: transform 0.3s ease;
+        }
+
+        /* Liquid Light Shimmer Sweep */
+        .quote-btn-shimmer {
+            position: absolute;
+            top: -50%;
+            left: -120%;
+            width: 70%;
+            height: 200%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.6),
+                transparent
+            );
+            transform: skewX(-25deg);
+            pointer-events: none;
+            animation: btnShimmerSweep 5s infinite cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .custom-quote-btn:hover .quote-btn-shimmer {
+            animation-duration: 2s;
+        }
+
+        /* --- FOUNDER AUTHORITY BADGES --- */
         /* --- FOUNDER AUTHORITY BADGES --- */
         .founder-badges-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin: 24px 0 28px;
+            gap: 12px;
+            margin: 28px 0 32px;
         }
 
         .founder-badge-pill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            border-radius: 100px;
-            background: rgba(235, 215, 63, 0.08);
-            border: 1px solid rgba(235, 215, 63, 0.25);
-            color: var(--brand-yellow);
+            gap: 9px;
+            padding: 9px 18px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: var(--pure-white);
             font-family: 'Clash Display', sans-serif;
-            font-size: 0.78rem;
+            font-size: 0.82rem;
             font-weight: 600;
-            letter-spacing: 0.5px;
-            backdrop-filter: blur(10px);
+            letter-spacing: 0.4px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            user-select: none;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .founder-direct-btn {
+        .founder-badge-pill:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(235, 215, 63, 0.4);
+            color: var(--pure-white);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35), 0 0 16px rgba(235, 215, 63, 0.15);
+        }
+
+        .founder-pill-icon {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            padding: 14px 28px;
-            border-radius: 100px;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(235, 215, 63, 0.15);
+            color: var(--brand-yellow);
+            flex-shrink: 0;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .founder-badge-pill:hover .founder-pill-icon {
+            transform: scale(1.15) rotate(12deg);
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            box-shadow: 0 0 10px rgba(235, 215, 63, 0.5);
+        }
+
+        .founder-pill-text {
+            line-height: 1;
+        }
+
+        /* --- FOUNDER DIRECT CTA BUTTON (Get Instant Quote Signature Style) --- */
+        .founder-direct-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 12px 14px 12px 22px;
+            border-radius: 999px;
             background: var(--brand-yellow);
             color: var(--deep-black);
             font-family: 'Clash Display', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.94rem;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
             text-decoration: none;
+            overflow: hidden;
+            user-select: none;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(235, 215, 63, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 6px 20px rgba(235, 215, 63, 0.3);
         }
 
         .founder-direct-btn:hover {
-            background: var(--pure-white);
+            background: var(--brand-yellow);
+            color: var(--deep-black);
             transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 10px 30px rgba(235, 215, 63, 0.5);
+            box-shadow: 0 0 0 2px rgba(235, 215, 63, 0.6),
+                        0 14px 35px rgba(235, 215, 63, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
 
-        /* --- CLIENT FAQ ACCORDION --- */
+        .founder-direct-btn:active {
+            transform: scale(0.98) translateY(0) !important;
+        }
+
+        .founder-btn-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .founder-sparkle {
+            font-size: 0.92rem;
+            color: rgba(0, 0, 0, 0.75);
+            line-height: 1;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .founder-direct-btn:hover .founder-sparkle {
+            transform: rotate(90deg) scale(1.25);
+            color: #000;
+        }
+
+        .founder-btn-text {
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Inset Action Disc Capsule */
+        .founder-action-disc {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--deep-black);
+            color: var(--brand-yellow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .founder-direct-btn:hover .founder-action-disc {
+            background: #000;
+            color: #fff;
+            transform: scale(1.12) rotate(45deg);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        .founder-arrow-icon {
+            transition: transform 0.3s ease;
+        }
+
+        /* Liquid Light Shimmer Sweep */
+        .founder-btn-shimmer {
+            position: absolute;
+            top: -50%;
+            left: -120%;
+            width: 70%;
+            height: 200%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.6),
+                transparent
+            );
+            transform: skewX(-25deg);
+            pointer-events: none;
+            animation: btnShimmerSweep 5s infinite cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .founder-direct-btn:hover .founder-btn-shimmer {
+            animation-duration: 2s;
+        }
+
+        /* ============================================
+           FREQUENTLY ASKED QUESTIONS - MODERN STUDIO
+        ============================================ */
         .faq-section {
-            padding: 100px 50px 140px;
+            padding: 120px 5vw 160px;
             position: relative;
             z-index: 5;
-            background: linear-gradient(to bottom, transparent, rgba(5, 5, 5, 0.9) 30%, rgba(5, 5, 5, 0.9) 70%, transparent);
+            background: linear-gradient(to bottom, transparent, rgba(5, 5, 5, 0.95) 20%, rgba(5, 5, 5, 0.95) 80%, transparent);
+            overflow: hidden;
+        }
+
+        .faq-glow-backdrop {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            height: 400px;
+            background: radial-gradient(ellipse at center, rgba(235, 215, 63, 0.08) 0%, rgba(235, 215, 63, 0.02) 45%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(50px);
         }
 
         .faq-container {
-            max-width: 900px;
+            max-width: 960px;
             margin: 0 auto;
+            position: relative;
+            z-index: 2;
         }
 
         .faq-header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .faq-header .section-label {
+            display: inline-block;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--brand-yellow);
+            text-transform: uppercase;
+            margin-bottom: 12px;
         }
 
         .faq-title {
             font-family: 'Panchang', sans-serif;
-            font-size: 2.2rem;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
             font-weight: 800;
             color: var(--pure-white);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 12px 0;
+            letter-spacing: 0.5px;
+            line-height: 1.15;
+            margin: 0 0 16px;
         }
 
         .faq-title span {
@@ -3434,10 +3708,11 @@
         }
 
         .faq-sub {
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.65);
             font-family: 'Clash Display', sans-serif;
-            font-size: 1rem;
-            max-width: 550px;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            max-width: 620px;
             margin: 0 auto;
         }
 
@@ -3448,73 +3723,401 @@
         }
 
         .faq-item {
-            background: rgba(255, 255, 255, 0.03);
+            position: relative;
+            background: rgba(18, 18, 18, 0.65);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 24px 28px;
             cursor: pointer;
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
             overflow: hidden;
-            backdrop-filter: blur(12px);
+            user-select: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .faq-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0;
+            background: var(--brand-yellow);
+            box-shadow: 0 0 12px var(--brand-yellow);
+            transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .faq-item:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(25, 25, 25, 0.85);
             border-color: rgba(235, 215, 63, 0.3);
             transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), 0 0 20px rgba(235, 215, 63, 0.08);
         }
 
         .faq-item.active {
-            background: rgba(235, 215, 63, 0.05);
-            border-color: var(--brand-yellow);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(235, 215, 63, 0.05);
+            background: rgba(22, 22, 22, 0.95);
+            border-color: rgba(235, 215, 63, 0.5);
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45), 0 0 25px rgba(235, 215, 63, 0.1);
         }
 
-        .faq-question {
+        .faq-item.active::before {
+            height: 100%;
+        }
+
+        .faq-question-wrap {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-family: 'Clash Display', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--pure-white);
+            gap: 20px;
+        }
+
+        .faq-question-left {
+            display: flex;
+            align-items: center;
             gap: 16px;
-            user-select: none;
+            flex: 1;
         }
 
-        .faq-item.active .faq-question {
-            color: var(--brand-yellow);
-        }
-
-        .faq-toggle-icon {
-            font-family: 'Clash Display', sans-serif;
-            font-size: 1.4rem;
-            font-weight: 300;
-            color: var(--brand-yellow);
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            line-height: 1;
+        .faq-index-tag {
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.35);
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
             flex-shrink: 0;
         }
 
-        .faq-item.active .faq-toggle-icon {
-            transform: rotate(45deg);
+        .faq-item.active .faq-index-tag {
+            color: var(--brand-yellow);
         }
 
-        .faq-answer {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, margin-top 0.3s ease;
+        .faq-category-badge {
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: rgba(255, 255, 255, 0.7);
-            font-family: 'Clash Display', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.7;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
         }
 
-        .faq-item.active .faq-answer {
-            max-height: 200px;
+        .faq-item.active .faq-category-badge {
+            background: rgba(235, 215, 63, 0.12);
+            border-color: rgba(235, 215, 63, 0.35);
+            color: var(--brand-yellow);
+        }
+
+        .faq-question-text {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1.12rem;
+            font-weight: 600;
+            color: var(--pure-white);
+            letter-spacing: 0.3px;
+            transition: color 0.3s ease;
+            margin: 0;
+        }
+
+        .faq-item:hover .faq-question-text {
+            color: var(--pure-white);
+        }
+
+        .faq-item.active .faq-question-text {
+            color: var(--brand-yellow);
+        }
+
+        /* Interactive Toggle Disc */
+        .faq-action-disc {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.8);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .faq-item:hover .faq-action-disc {
+            border-color: rgba(235, 215, 63, 0.5);
+            color: var(--brand-yellow);
+            transform: scale(1.08);
+        }
+
+        .faq-item.active .faq-action-disc {
+            background: var(--brand-yellow);
+            border-color: var(--brand-yellow);
+            color: var(--deep-black);
+            transform: scale(1.1) rotate(45deg);
+            box-shadow: 0 0 16px rgba(235, 215, 63, 0.45);
+        }
+
+        .faq-icon-cross {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Modern Butter-Smooth Grid Expansion */
+        .faq-answer-grid {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+            opacity: 0;
+        }
+
+        .faq-item.active .faq-answer-grid {
+            grid-template-rows: 1fr;
             opacity: 1;
-            margin-top: 16px;
+        }
+
+        .faq-answer-inner {
+            overflow: hidden;
+        }
+
+        .faq-answer-body {
+            padding-top: 18px;
+            padding-left: 2px;
+            margin-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .faq-answer-text {
+            color: rgba(255, 255, 255, 0.75);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.98rem;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        .faq-metric-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(235, 215, 63, 0.08);
+            border: 1px solid rgba(235, 215, 63, 0.25);
+            color: var(--brand-yellow);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
+
+        /* --- HOTLINE DIRECT CONNECT CARD --- */
+        .faq-hotline-card {
+            position: relative;
+            margin-top: 50px;
+            padding: 32px 36px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(28, 28, 28, 0.7), rgba(12, 12, 12, 0.9));
+            border: 1px solid rgba(235, 215, 63, 0.25);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .faq-hotline-glow {
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(235, 215, 63, 0.12), transparent 70%);
+            pointer-events: none;
+        }
+
+        .faq-hotline-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .faq-hotline-left {
+            max-width: 540px;
+        }
+
+        .faq-hotline-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--brand-yellow);
+            margin-bottom: 10px;
+        }
+
+        .faq-live-ping {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #25D366;
+            box-shadow: 0 0 10px #25D366;
+            animation: beaconPulse 2s infinite ease-in-out;
+        }
+
+        .faq-hotline-title {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--pure-white);
+            margin: 0 0 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .faq-hotline-desc {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.94rem;
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Hotline Button - Get Instant Quote Signature Style */
+        .faq-direct-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 14px 12px 22px;
+            border-radius: 999px;
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.94rem;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-decoration: none;
+            overflow: hidden;
+            user-select: none;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(235, 215, 63, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .faq-direct-btn:hover {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 0 2px rgba(235, 215, 63, 0.6),
+                        0 14px 35px rgba(235, 215, 63, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .faq-direct-btn .faq-btn-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .faq-direct-btn .faq-sparkle {
+            font-size: 0.92rem;
+            color: rgba(0, 0, 0, 0.75);
+            line-height: 1;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .faq-direct-btn:hover .faq-sparkle {
+            transform: rotate(90deg) scale(1.25);
+            color: #000;
+        }
+
+        .faq-direct-btn .faq-action-disc {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--deep-black);
+            color: var(--brand-yellow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .faq-direct-btn:hover .faq-action-disc {
+            background: #000;
+            color: #fff;
+            transform: scale(1.12) rotate(45deg);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        .faq-btn-shimmer {
+            position: absolute;
+            top: -50%;
+            left: -120%;
+            width: 70%;
+            height: 200%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.6),
+                transparent
+            );
+            transform: skewX(-25deg);
+            pointer-events: none;
+            animation: btnShimmerSweep 5s infinite cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .faq-direct-btn:hover .faq-btn-shimmer {
+            animation-duration: 2s;
+        }
+
+        @media (max-width: 768px) {
+            .faq-section {
+                padding: 80px 20px 100px;
+            }
+
+            .faq-question-wrap {
+                align-items: flex-start;
+            }
+
+            .faq-question-left {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .faq-hotline-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .faq-hotline-card {
+                padding: 24px 20px;
+            }
+
+            .faq-direct-btn {
+                width: 100%;
+                justify-content: space-between;
+            }
         }
 
         /* Light Theme Overrides */
@@ -3522,29 +4125,140 @@
             background: rgba(0, 0, 0, 0.04);
             border-color: rgba(0, 0, 0, 0.12);
             color: var(--deep-black);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
         }
 
-        body.light-theme .faq-item {
-            background: rgba(0, 0, 0, 0.02);
-            border-color: rgba(0, 0, 0, 0.08);
+        body.light-theme .founder-badge-pill:hover {
+            background: rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.25);
+            color: var(--deep-black);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
         }
 
-        body.light-theme .faq-item:hover {
-            background: rgba(0, 0, 0, 0.04);
-            border-color: rgba(0, 0, 0, 0.2);
+        body.light-theme .founder-pill-icon {
+            background: rgba(235, 215, 63, 0.4);
+            color: #7a6500;
         }
 
-        body.light-theme .faq-item.active {
-            background: rgba(0, 0, 0, 0.04);
-            border-color: var(--deep-black);
+        body.light-theme .founder-badge-pill:hover .founder-pill-icon {
+            background: var(--deep-black);
+            color: var(--brand-yellow);
         }
 
-        body.light-theme .faq-question {
+        body.light-theme .founder-direct-btn {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            box-shadow: 0 8px 25px rgba(235, 215, 63, 0.35);
+        }
+
+        body.light-theme .founder-direct-btn:hover {
+            background: var(--brand-yellow);
+            box-shadow: 0 12px 30px rgba(235, 215, 63, 0.5);
+        }
+
+        /* --- LIGHT THEME FAQ OVERRIDES --- */
+        body.light-theme .faq-section {
+            background: linear-gradient(to bottom, transparent, rgba(245, 245, 247, 0.8) 20%, rgba(245, 245, 247, 0.8) 80%, transparent);
+        }
+
+        body.light-theme .faq-title {
             color: var(--deep-black);
         }
 
-        body.light-theme .faq-answer {
+        body.light-theme .faq-sub {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        body.light-theme .faq-item {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        body.light-theme .faq-item:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(0, 0, 0, 0.18);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-theme .faq-item.active {
+            background: #ffffff;
+            border-color: rgba(235, 215, 63, 0.7);
+            box-shadow: 0 10px 35px rgba(235, 215, 63, 0.15), 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
+
+        body.light-theme .faq-index-tag {
+            color: rgba(0, 0, 0, 0.3);
+        }
+
+        body.light-theme .faq-item.active .faq-index-tag {
+            color: #8a6e00;
+        }
+
+        body.light-theme .faq-category-badge {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        body.light-theme .faq-item.active .faq-category-badge {
+            background: rgba(235, 215, 63, 0.25);
+            border-color: rgba(235, 215, 63, 0.6);
+            color: #7a6500;
+        }
+
+        body.light-theme .faq-question-text {
+            color: var(--deep-black);
+        }
+
+        body.light-theme .faq-item.active .faq-question-text {
+            color: #8a6e00;
+        }
+
+        body.light-theme .faq-action-disc {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.12);
+            color: var(--deep-black);
+        }
+
+        body.light-theme .faq-item.active .faq-action-disc {
+            background: var(--brand-yellow);
+            border-color: var(--brand-yellow);
+            color: var(--deep-black);
+        }
+
+        body.light-theme .faq-answer-body {
+            border-top-color: rgba(0, 0, 0, 0.06);
+        }
+
+        body.light-theme .faq-answer-text {
             color: rgba(0, 0, 0, 0.7);
+        }
+
+        body.light-theme .faq-metric-tag {
+            background: rgba(235, 215, 63, 0.2);
+            border-color: rgba(235, 215, 63, 0.5);
+            color: #7a6500;
+        }
+
+        body.light-theme .faq-hotline-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(235, 215, 63, 0.4);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+        }
+
+        body.light-theme .faq-hotline-title {
+            color: var(--deep-black);
+        }
+
+        body.light-theme .faq-hotline-desc {
+            color: rgba(0, 0, 0, 0.65);
+        }
+
+        body.light-theme .faq-direct-btn {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            box-shadow: 0 8px 25px rgba(235, 215, 63, 0.35);
         }
 
         /* Gen-Z Mode Overrides */
@@ -3858,36 +4572,36 @@
             font-weight: 700;
         }
 
-        /* WhatsApp Direct Action Button - Luxury White & Green Icon */
+        /* WhatsApp Direct Action Button - Ultra-Modern Luxury Capsule */
         .whatsapp-scope-btn {
             position: relative;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 14px;
-            padding: 12px 20px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 14px 10px 12px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(22, 22, 22, 0.95) 0%, rgba(12, 12, 12, 0.98) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
             color: var(--pure-white);
             font-family: 'Clash Display', sans-serif;
             text-decoration: none;
             cursor: pointer;
             overflow: hidden;
             user-select: none;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.16);
             transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            margin-top: 12px;
+            margin-top: 14px;
             width: 100%;
         }
 
         .whatsapp-scope-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.35);
+            background: linear-gradient(135deg, rgba(28, 28, 28, 0.98) 0%, rgba(16, 16, 16, 1) 100%);
+            border-color: rgba(37, 211, 102, 0.45);
             color: var(--pure-white);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(37, 211, 102, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.7), 0 0 28px rgba(37, 211, 102, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
         }
 
@@ -3895,94 +4609,161 @@
             transform: scale(0.98) translateY(0) !important;
         }
 
-        /* Green Icon Pod */
-        .wa-icon-pod {
+        /* Luminous Emerald Beacon Pod (Left) */
+        .wa-beacon-pod {
             position: relative;
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            background: rgba(37, 211, 102, 0.14);
-            border: 1px solid rgba(37, 211, 102, 0.35);
+            background: radial-gradient(circle at 35% 35%, rgba(37, 211, 102, 0.28) 0%, rgba(10, 24, 15, 0.95) 75%);
+            border: 1.5px solid rgba(37, 211, 102, 0.45);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
             transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .whatsapp-scope-btn:hover .wa-icon-pod {
-            background: rgba(37, 211, 102, 0.25);
+        .whatsapp-scope-btn:hover .wa-beacon-pod {
             border-color: #25D366;
-            transform: scale(1.1) rotate(8deg);
-            box-shadow: 0 0 16px rgba(37, 211, 102, 0.5);
+            transform: scale(1.1) rotate(6deg);
+            box-shadow: 0 0 20px rgba(37, 211, 102, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.5);
         }
 
-        .wa-pulse-radar {
+        .wa-glyph {
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 0 4px rgba(37, 211, 102, 0.6));
+            transition: transform 0.3s ease;
+        }
+
+        .whatsapp-scope-btn:hover .wa-glyph {
+            transform: scale(1.08);
+        }
+
+        /* Live Radar Rings */
+        .wa-radar-ring {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
+            inset: -2px;
             border-radius: 50%;
             border: 1px solid #25D366;
             opacity: 0;
             pointer-events: none;
-            animation: waRadarPulse 2.5s infinite ease-out;
+            animation: waRadarPulse 2.4s infinite cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes waRadarPulse {
             0% {
-                transform: translate(-50%, -50%) scale(0.8);
+                transform: scale(0.9);
                 opacity: 0.8;
             }
-            80% {
-                transform: translate(-50%, -50%) scale(1.6);
+            70% {
+                transform: scale(1.6);
                 opacity: 0;
             }
             100% {
+                transform: scale(1.6);
                 opacity: 0;
             }
         }
 
-        /* Text Group */
-        .wa-text-group {
+        /* Pulsing Live Online Indicator */
+        .wa-live-dot {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #25D366;
+            border: 2px solid #0c0c0c;
+            box-shadow: 0 0 6px #25D366;
+            z-index: 3;
+            animation: waBeaconBlink 1.8s infinite ease-in-out;
+        }
+
+        @keyframes waBeaconBlink {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(0.85);
+            }
+        }
+
+        /* Center Content Stack */
+        .wa-content-stack {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            position: relative;
-            z-index: 2;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
         }
 
         .wa-title {
             color: var(--pure-white);
             font-size: 0.88rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            line-height: 1.2;
             white-space: nowrap;
         }
 
-        .wa-sub-pill {
+        .wa-sub-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
             font-family: 'Panchang', sans-serif;
-            font-size: 0.62rem;
+            font-size: 0.58rem;
             font-weight: 700;
-            color: rgba(255, 255, 255, 0.6);
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 2px 7px;
-            border-radius: 6px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-        }
-
-        .whatsapp-scope-btn:hover .wa-sub-pill {
+            letter-spacing: 0.6px;
             color: #25D366;
-            border-color: rgba(37, 211, 102, 0.4);
-            background: rgba(37, 211, 102, 0.1);
+            text-transform: uppercase;
+            line-height: 1.2;
+            opacity: 0.9;
         }
 
-        /* Shimmer sweep */
+        .wa-sub-ping {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #25D366;
+            box-shadow: 0 0 5px #25D366;
+        }
+
+        /* Signature Action Disc (Right) */
+        .wa-action-disc {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(37, 211, 102, 0.12);
+            border: 1px solid rgba(37, 211, 102, 0.35);
+            color: #25D366;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .whatsapp-scope-btn:hover .wa-action-disc {
+            transform: scale(1.15) rotate(45deg);
+            background: #25D366;
+            color: var(--deep-black);
+            border-color: #25D366;
+            box-shadow: 0 0 14px rgba(37, 211, 102, 0.6);
+        }
+
+        .wa-arrow-glyph {
+            transition: transform 0.3s ease;
+        }
+
+        /* Specular Shimmer Sweep */
         .wa-shimmer-sweep {
             position: absolute;
             top: -50%;
@@ -4006,30 +4787,34 @@
 
         /* Light Theme Overrides */
         body.light-theme .whatsapp-scope-btn {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: rgba(0, 0, 0, 0.15);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        body.light-theme .whatsapp-scope-btn:hover {
             background: #ffffff;
-            border-color: rgba(0, 0, 0, 0.3);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 0 20px rgba(37, 211, 102, 0.2);
-        }
-
-        body.light-theme .wa-title {
+            border-color: rgba(0, 0, 0, 0.12);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
             color: var(--deep-black);
         }
 
-        body.light-theme .wa-sub-pill {
-            color: rgba(0, 0, 0, 0.6);
-            background: rgba(0, 0, 0, 0.05);
-            border-color: rgba(0, 0, 0, 0.1);
+        body.light-theme .whatsapp-scope-btn .wa-title {
+            color: var(--deep-black);
+        }
+
+        body.light-theme .whatsapp-scope-btn:hover {
+            background: #f8faf9;
+            border-color: rgba(37, 211, 102, 0.5);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 0 20px rgba(37, 211, 102, 0.2);
+        }
+
+        body.light-theme .wa-sub-badge {
+            color: #128C7E;
+        }
+
+        body.light-theme .wa-sub-ping {
+            background: #128C7E;
+            box-shadow: 0 0 5px #128C7E;
         }
 
         /* Gen-Z Mode Overrides */
         body.genz-mode .wa-title,
-        body.genz-mode .wa-sub-pill {
+        body.genz-mode .wa-sub-badge {
             text-transform: lowercase !important;
         }
 
@@ -5366,9 +6151,9 @@
         }
 
         body.light-theme .custom-quote-btn:hover {
-            background: var(--deep-black);
-            color: var(--brand-yellow);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            box-shadow: 0 10px 30px rgba(235, 215, 63, 0.4);
         }
 
         /* --- Existing Package Cards (kept for completeness) --- */
