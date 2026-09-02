@@ -816,43 +816,35 @@ export default function Page() {
 
                 if (navigator.vibrate) navigator.vibrate([45, 20, 45]);
 
-                // Smooth physical card-dealing timeline
+                // Complete the ScrollTrigger animation so scrolling down continues forward without resetting
+                const st = stackTl.scrollTrigger;
+                if (st) {
+                    st.scroll(st.end);
+                    stackTl.progress(1);
+                }
+
+                // Smooth physical card-dealing timeline starting from the stacked deck
                 const dealTl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
                 // Card 2 (top ace) does a slight pop-up lift like drawing from the deck
                 dealTl
-                    .to(card2, {
-                        xPercent: -50,
-                        x: 0,
-                        y: -14,
-                        rotation: 0,
-                        scale: 1.04,
-                        filter: "blur(0px) brightness(1)",
-                        duration: 0.35,
-                        ease: "power2.out"
-                    }, 0)
+                    .fromTo(card2,
+                        { xPercent: -50, x: 0, y: 0, rotation: 0, scale: 0.85, filter: "blur(0px) brightness(1)" },
+                        { xPercent: -50, x: 0, y: -14, rotation: 0, scale: 1.04, filter: "blur(0px) brightness(1)", duration: 0.35, ease: "power2.out" },
+                        0
+                    )
                     // Card 1 (left ace) shoots out smoothly with authentic card dealer snap
-                    .to(card1, {
-                        xPercent: -50,
-                        x: -spreadDistance,
-                        y: 0,
-                        rotation: 0,
-                        scale: 1,
-                        filter: "blur(0px) brightness(1)",
-                        duration: 0.75,
-                        ease: "back.out(1.2)"
-                    }, 0.08)
+                    .fromTo(card1,
+                        { xPercent: -50, x: -30, y: 15, rotation: -12, scale: 0.8, filter: "blur(4px) brightness(0.6)" },
+                        { xPercent: -50, x: -spreadDistance, y: 0, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)", duration: 0.75, ease: "back.out(1.2)" },
+                        0.08
+                    )
                     // Card 3 (right ace) shoots out smoothly with matching snap
-                    .to(card3, {
-                        xPercent: -50,
-                        x: spreadDistance,
-                        y: 0,
-                        rotation: 0,
-                        scale: 1,
-                        filter: "blur(0px) brightness(1)",
-                        duration: 0.75,
-                        ease: "back.out(1.2)"
-                    }, 0.12)
+                    .fromTo(card3,
+                        { xPercent: -50, x: 30, y: 15, rotation: 12, scale: 0.9, filter: "blur(4px) brightness(0.6)" },
+                        { xPercent: -50, x: spreadDistance, y: 0, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)", duration: 0.75, ease: "back.out(1.2)" },
+                        0.12
+                    )
                     // Card 2 settles into place
                     .to(card2, {
                         y: 0,
@@ -869,18 +861,39 @@ export default function Page() {
 
                 if (navigator.vibrate) navigator.vibrate([30]);
 
+                const st = stackTl.scrollTrigger;
+                if (st) {
+                    st.scroll(st.start);
+                    stackTl.progress(0);
+                }
+
                 const gatherTl = gsap.timeline({ defaults: { ease: "power3.inOut", duration: 0.65 } });
                 gatherTl
-                    .to(card1, { xPercent: -50, x: -30, y: 15, rotation: -12, scale: 0.8, filter: "blur(4px) brightness(0.6)" }, 0)
-                    .to(card2, { xPercent: -50, x: 0, y: 0, rotation: 0, scale: 0.85, filter: "blur(0px) brightness(1)" }, 0.04)
-                    .to(card3, { xPercent: -50, x: 30, y: 15, rotation: 12, scale: 0.9, filter: "blur(4px) brightness(0.6)" }, 0.08);
+                    .fromTo(card1,
+                        { xPercent: -50, x: -spreadDistance, y: 0, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)" },
+                        { xPercent: -50, x: -30, y: 15, rotation: -12, scale: 0.8, filter: "blur(4px) brightness(0.6)" },
+                        0
+                    )
+                    .fromTo(card2,
+                        { xPercent: -50, x: 0, y: 0, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)" },
+                        { xPercent: -50, x: 0, y: 0, rotation: 0, scale: 0.85, filter: "blur(0px) brightness(1)" },
+                        0.04
+                    )
+                    .fromTo(card3,
+                        { xPercent: -50, x: spreadDistance, y: 0, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)" },
+                        { xPercent: -50, x: 30, y: 15, rotation: 12, scale: 0.9, filter: "blur(4px) brightness(0.6)" },
+                        0.08
+                    );
             };
 
             const handleCardClick = (e) => {
                 // If user clicked an action link/button inside card back, allow standard navigation
                 if (e.target.closest('a, button')) return;
 
-                if (!isScatteredByClick) {
+                const st = stackTl.scrollTrigger;
+                const isAlreadyAtEnd = st && st.progress >= 0.9;
+
+                if (!isScatteredByClick && !isAlreadyAtEnd) {
                     scatterCards();
                 } else {
                     collapseCards();
