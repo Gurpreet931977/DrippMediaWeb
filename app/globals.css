@@ -46,7 +46,23 @@
             overflow-x: hidden;
             width: 100%;
             opacity: 0;
-            transition: opacity 0.5s ease-out, background-color 0.8s ease-in-out, color 0.8s ease-in-out;
+            transition: opacity 0.5s ease-out, background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: background-color, color;
+        }
+
+        /* Unified Smooth Theme Transition Layer for Butter-Smooth Scroll Transitions */
+        .navbar,
+        .nav-link,
+        .founder-sequence-section,
+        .founder-text-block .founder-heading,
+        .founder-text-block .founder-bio,
+        .founder-bg-text-meta,
+        .founder-3d-card,
+        .founder-wrapper {
+            transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                        color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                        border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                        -webkit-text-stroke 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         button, input, textarea, select {
@@ -507,9 +523,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-        .hero-cta-group {
-            display: flex;
-            align-items: center;
             gap: 18px;
             margin-top: 32px;
             z-index: 5;
@@ -767,6 +780,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-wrap: nowrap;
             gap: 24px;
             margin-top: 36px;
             padding: 12px 28px;
@@ -779,6 +793,7 @@
             opacity: 0;
             transition: all 0.35s ease;
             max-width: 90vw;
+            white-space: nowrap;
         }
 
         .hero-trust-bar:hover {
@@ -788,7 +803,7 @@
         }
 
         .trust-item {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
             white-space: nowrap;
@@ -1672,6 +1687,9 @@
             z-index: 12;
             padding: 120px 5vw;
             overflow: hidden;
+            contain: paint layout;
+            transform: translateZ(0);
+            will-change: transform;
         }
 
         .founder-wrapper {

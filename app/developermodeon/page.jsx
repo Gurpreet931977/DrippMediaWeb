@@ -1048,21 +1048,26 @@ export default function Page() {
         });
 
         let lastScroll = 0;
+        let isScrolled = false;
         const navbar = document.getElementById('navbar');
 
         window.addEventListener('scroll', () => {
             const currentScroll = window.pageYOffset;
-            if (currentScroll <= 0) {
-                navbar.style.boxShadow = "none";
-                navbar.style.background = document.body.classList.contains('light-theme') ? "rgba(255, 255, 255, 0.6)" : "rgba(5, 5, 5, 0.4)";
-            } else {
-                navbar.style.boxShadow = "0 4px 30px rgba(0, 0, 0, 0.5)";
-                navbar.style.background = document.body.classList.contains('light-theme') ? "rgba(255, 255, 255, 0.9)" : "rgba(5, 5, 5, 0.85)";
+            const nowScrolled = currentScroll > 10;
+            if (nowScrolled !== isScrolled) {
+                isScrolled = nowScrolled;
+                if (isScrolled) {
+                    navbar.style.boxShadow = "0 4px 30px rgba(0, 0, 0, 0.5)";
+                    navbar.style.background = document.body.classList.contains('light-theme') ? "rgba(255, 255, 255, 0.9)" : "rgba(5, 5, 5, 0.85)";
+                } else {
+                    navbar.style.boxShadow = "none";
+                    navbar.style.background = document.body.classList.contains('light-theme') ? "rgba(255, 255, 255, 0.6)" : "rgba(5, 5, 5, 0.4)";
+                }
             }
             if (currentScroll > lastScroll && currentScroll > 100) navbar.style.transform = "translateY(-100%)";
             else navbar.style.transform = "translateY(0)";
             lastScroll = currentScroll;
-        });
+        }, { passive: true });
 
         // --- THEME TOGGLE LOGIC ---
         // Keep light version by default on mobile
@@ -2101,13 +2106,15 @@ export default function Page() {
         const fWrap = document.getElementById("founder-card-wrap");
 
         if (fCard && fWrap) {
-            // Dynamic Scroll Theming (Light Mode toggle)
+            // Dynamic Scroll Theming (Smooth, responsive Light Mode transition)
             ScrollTrigger.create({
                 trigger: ".founder-sequence-section",
-                start: "top 50%",
-                end: "bottom 50%",
-                onEnter: () => document.body.classList.toggle('light-theme'),
-                onLeaveBack: () => document.body.classList.toggle('light-theme')
+                start: "top 60%",
+                end: "bottom 40%",
+                onEnter: () => document.body.classList.add('light-theme'),
+                onLeave: () => document.body.classList.remove('light-theme'),
+                onEnterBack: () => document.body.classList.add('light-theme'),
+                onLeaveBack: () => document.body.classList.remove('light-theme')
             });
 
             // Kinetic Text Splitting
@@ -2789,7 +2796,7 @@ export default function Page() {
               const text = services.length > 0
                 ? `Hey Dripp Media! I selected these services on your builder: ${services.join(', ')}. Can you share scope and pricing?`
                 : `Hey Dripp Media! I want to discuss a new creative project with your team.`;
-              window.open(`https://wa.me/919319777777?text=${encodeURIComponent(text)}`, '_blank');
+              window.open(`https://wa.me/917300595147?text=${encodeURIComponent(text)}`, '_blank');
             }}>
               <span className="wa-shimmer-sweep" />
               <div className="wa-icon-pod">
@@ -2834,7 +2841,7 @@ export default function Page() {
           <span className="founder-badge-pill">🛡 {isGenz ? '100% standard' : '100% Quality Standard'}</span>
         </div>
         <div>
-          <a href="https://wa.me/919319777777?text=Hey%20Gurpreet!%20I'm%20reaching%20out%20from%20the%20website%20to%20discuss%20a%20flagship%20project." target="_blank" rel="noopener noreferrer" className="founder-direct-btn">
+          <a href="https://wa.me/917300595147?text=Hey%20Gurpreet!%20I'm%20reaching%20out%20from%20the%20website%20to%20discuss%20a%20flagship%20project." target="_blank" rel="noopener noreferrer" className="founder-direct-btn">
             <span>{isGenz ? 'talk to gurpreet on whatsapp ↗' : 'Talk to Gurpreet on WhatsApp ↗'}</span>
           </a>
         </div>
@@ -3148,7 +3155,7 @@ export default function Page() {
         const waNum = (target.elements && target.elements.namedItem('call_whatsapp')) ? target.elements.namedItem('call_whatsapp').value : '';
         const selectedSlot = document.querySelector('.slot-chip.active')?.textContent || 'Tomorrow at 3:00 PM';
         setTimeout(() => {
-          window.open(`https://wa.me/919319777777?text=${encodeURIComponent(`Hey Dripp Media! I booked a 15-min strategy call for ${selectedSlot}. My WhatsApp is ${waNum}. Looking forward to connecting!`)}`, '_blank');
+          window.open(`https://wa.me/917300595147?text=${encodeURIComponent(`Hey Dripp Media! I booked a 15-min strategy call for ${selectedSlot}. My WhatsApp is ${waNum}. Looking forward to connecting!`)}`, '_blank');
           if (typeof window.closeContactModal === 'function') window.closeContactModal();
         }, 1200);
       }}>
