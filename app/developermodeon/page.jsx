@@ -2481,38 +2481,37 @@ export default function Page() {
                 </span>
               </div>
 
-              {/* Interactive 4K Cinema Viewfinder Mockup */}
+              {/* Client-First Cinema Master Mockup */}
               <div className="card-mockup card-mockup-cinema">
                 <div className="cinema-hud-top">
                   <div className="rec-status">
                     <span className="rec-dot-pulse" />
-                    <span className="rec-label">REC [4K 60FPS]</span>
+                    <span className="rec-label">4K MASTER</span>
                   </div>
-                  <span className="rec-timecode">00:14:28:09</span>
+                  <span className="rec-timecode">0:24 / 0:30</span>
                 </div>
-                <div className="cinema-reticle-wrap">
-                  <div className="reticle-corner tl" />
-                  <div className="reticle-corner tr" />
-                  <div className="reticle-corner bl" />
-                  <div className="reticle-corner br" />
-                  <div className="reticle-crosshair">+</div>
-                  <div className="cinema-meta-tag">LOG-C · ISO 400 · f/2.8</div>
-                  <div className="audio-equalizer">
-                    <span className="eq-bar bar-1" />
-                    <span className="eq-bar bar-2" />
-                    <span className="eq-bar bar-3" />
-                    <span className="eq-bar bar-4" />
-                    <span className="eq-bar bar-5" />
+                <div className="cinema-center-preview">
+                  <div className="cinema-play-disc">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="6 3 20 12 6 21 6 3" />
+                    </svg>
+                  </div>
+                  <div className="cinema-retention-pill">
+                    <span className="retention-label">RETENTION RATE</span>
+                    <span className="retention-val">98.4%</span>
                   </div>
                 </div>
-                <div className="cinema-timeline">
-                  <div className="timeline-track track-video">
-                    <span className="track-chip">A1 ProRes 4K</span>
+                <div className="cinema-timeline-clean">
+                  <div className="clean-track">
+                    <div className="clean-fill" />
                   </div>
-                  <div className="timeline-track track-audio">
-                    <span className="track-chip">A2 Master Sound FX</span>
+                  <div className="cinema-funnel-steps">
+                    <span>HOOK</span>
+                    <span className="step-sep">✦</span>
+                    <span>STORY</span>
+                    <span className="step-sep">✦</span>
+                    <span>CONVERT</span>
                   </div>
-                  <div className="timeline-playhead" />
                 </div>
               </div>
 
@@ -2520,9 +2519,9 @@ export default function Page() {
                 <h2>{isGenz ? 'cinematic' : 'Video'}<br /><span>{isGenz ? 'dripp' : 'Production'}</span></h2>
                 <p className="front-desc">{isGenz ? "god-tier edits and raw footage that makes your brand go viral." : "High-end video editing and professional shooting to capture your brand's essence."}</p>
                 <div className="card-trust-row">
-                  <span className="trust-pill">4K Cinema</span>
-                  <span className="trust-pill">98% Retention</span>
-                  <span className="trust-pill">Color Graded</span>
+                  <span className="trust-pill">High Retention</span>
+                  <span className="trust-pill">Viral Ad Hooks</span>
+                  <span className="trust-pill">Cinema 4K</span>
                 </div>
               </div>
             </div>
@@ -2572,37 +2571,28 @@ export default function Page() {
                 </span>
               </div>
 
-              {/* Interactive 3D Poster Stack Mockup */}
+              {/* Client-First Brand Identity Mockup */}
               <div className="card-mockup card-mockup-graphics">
-                <div className="figma-canvas-header">
-                  <span className="canvas-badge">FIGMA // CANVAS</span>
-                  <div className="canvas-swatches">
-                    <span className="swatch sw-gold" />
-                    <span className="swatch sw-dark" />
-                    <span className="swatch sw-white" />
+                <div className="brand-canvas-top">
+                  <span className="brand-suite-label">BRAND IDENTITY</span>
+                  <div className="brand-palette-dots">
+                    <span className="palette-dot dot-gold" />
+                    <span className="palette-dot dot-white" />
+                    <span className="palette-dot dot-dark" />
                   </div>
                 </div>
-                <div className="poster-stack-wrap">
-                  <div className="poster-layer layer-back">
-                    <span className="poster-num">02</span>
-                  </div>
-                  <div className="poster-layer layer-mid">
-                    <div className="poster-micro-grid" />
-                    <span className="poster-title-outline">DRIPP</span>
-                  </div>
-                  <div className="poster-layer layer-front">
-                    <div className="poster-glow-badge">IDENTITY</div>
-                    <div className="poster-main-text">VISUAL DOMINANCE</div>
-                    <div className="poster-bottom-row">
-                      <span className="poster-tag">300 DPI</span>
-                      <span className="poster-sparkle">✦</span>
+                <div className="brand-preview-frame">
+                  <div className="brand-showcase-card">
+                    <div className="showcase-top">
+                      <span className="showcase-badge">SIGNATURE SUITE</span>
+                      <span className="showcase-star">✦</span>
                     </div>
+                    <div className="showcase-title">STAND OUT.</div>
+                    <div className="showcase-sub">BESPOKE · PREMIUM · UNIQUE</div>
                   </div>
-                  <div className="canvas-cursor-tag">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                      <polygon points="3 3 11 22 14 14 22 11 3 3" />
-                    </svg>
-                    <span>Gurpreet</span>
+                  <div className="brand-status-chip">
+                    <span className="chip-dot" />
+                    <span>FEED READY</span>
                   </div>
                 </div>
               </div>
@@ -2612,9 +2602,9 @@ export default function Page() {
                 <p className="front-desc">{isGenz ? 'visual identities that actually slap. bold typography & unreal art.' : 'Visual identities that melt faces. Bold typography & surreal art.'}
                 </p>
                 <div className="card-trust-row">
-                  <span className="trust-pill">Vector Crisp</span>
-                  <span className="trust-pill">Design Systems</span>
-                  <span className="trust-pill">Billboard Ready</span>
+                  <span className="trust-pill">Brand Identity</span>
+                  <span className="trust-pill">Ad Creatives</span>
+                  <span className="trust-pill">Social Media Kits</span>
                 </div>
               </div>
             </div>
@@ -2660,32 +2650,41 @@ export default function Page() {
                 </span>
               </div>
 
-              {/* Interactive macOS Code & 100 Perf Frame Mockup */}
+              {/* Client-First High-Converting Web Mockup */}
               <div className="card-mockup card-mockup-web">
-                <div className="ide-window-header">
-                  <div className="ide-dots">
-                    <span className="ide-dot dot-r" />
-                    <span className="ide-dot dot-y" />
-                    <span className="ide-dot dot-g" />
+                <div className="browser-window-bar">
+                  <div className="browser-dots">
+                    <span className="b-dot b-red" />
+                    <span className="b-dot b-yellow" />
+                    <span className="b-dot b-green" />
                   </div>
-                  <span className="ide-tab">Page.tsx</span>
+                  <div className="browser-url-pill">
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: 4}}>
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <span>yourbrand.com</span>
+                  </div>
                 </div>
-                <div className="ide-code-body">
-                  <div className="code-line"><span className="c-kw">import</span> <span className="c-fn">{`{ gsap }`}</span> <span className="c-kw">from</span> <span className="c-str">'gsap'</span></div>
-                  <div className="code-line"><span className="c-kw">const</span> <span className="c-var">Site</span> = <span className="c-fn">()</span> =&gt; <span className="c-sym">{`{`}</span></div>
-                  <div className="code-line indent"><span className="c-var">fps</span>: <span className="c-num">60</span>, <span className="c-var">cls</span>: <span className="c-num">0</span></div>
-                  <div className="code-line"><span className="c-sym">{`}`}</span></div>
+                <div className="web-preview-canvas">
+                  <div className="web-mini-preview">
+                    <div className="web-hero-stripe" />
+                    <div className="web-cta-pill">
+                      <span>GET STARTED</span>
+                      <span className="cta-arr">→</span>
+                    </div>
+                  </div>
                   <div className="perf-meter-badge">
                     <div className="perf-ring-circle">
-                      <svg width="28" height="28" viewBox="0 0 36 36">
+                      <svg width="26" height="26" viewBox="0 0 36 36">
                         <path className="perf-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(74, 222, 128, 0.2)" strokeWidth="3" />
                         <path className="perf-ring-fill" strokeDasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#4ade80" strokeWidth="3" />
                       </svg>
                       <span className="perf-score">100</span>
                     </div>
                     <div className="perf-labels">
-                      <span className="perf-status">PERFORMANCE</span>
-                      <span className="perf-metric">0.4s LCP · 60 FPS</span>
+                      <span className="perf-status">BLAZING FAST</span>
+                      <span className="perf-metric">0.3s LOAD · 60 FPS</span>
                     </div>
                   </div>
                 </div>
@@ -2696,9 +2695,9 @@ export default function Page() {
                 <p className="front-desc">{isGenz ? 'immersive, high-performance digital worlds optimized for the algorithm.' : 'Immersive, high-performance websites optimized for the algorithm.'}
                 </p>
                 <div className="card-trust-row">
-                  <span className="trust-pill">100 Lighthouse</span>
-                  <span className="trust-pill">Next.js 14</span>
-                  <span className="trust-pill">GSAP 60FPS</span>
+                  <span className="trust-pill">Blazing Fast</span>
+                  <span className="trust-pill">Mobile Responsive</span>
+                  <span className="trust-pill">Built to Convert</span>
                 </div>
               </div>
             </div>
