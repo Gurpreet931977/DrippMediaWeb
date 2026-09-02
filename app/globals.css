@@ -3803,33 +3803,179 @@
             font-weight: 700;
         }
 
-        /* WhatsApp Direct Action Button */
+        /* WhatsApp Direct Action Button - Luxury White & Green Icon */
         .whatsapp-scope-btn {
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            padding: 12px 18px;
-            border-radius: 10px;
-            background: rgba(37, 211, 102, 0.1);
-            border: 1px solid rgba(37, 211, 102, 0.3);
-            color: #25D366;
+            gap: 14px;
+            padding: 12px 20px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: var(--pure-white);
             font-family: 'Clash Display', sans-serif;
-            font-size: 0.82rem;
-            font-weight: 600;
             text-decoration: none;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 8px;
+            overflow: hidden;
+            user-select: none;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-top: 12px;
             width: 100%;
-            text-align: center;
         }
 
         .whatsapp-scope-btn:hover {
-            background: #25D366;
-            color: #000;
-            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.35);
+            color: var(--pure-white);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(37, 211, 102, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.4);
             transform: translateY(-2px);
+        }
+
+        .whatsapp-scope-btn:active {
+            transform: scale(0.98) translateY(0) !important;
+        }
+
+        /* Green Icon Pod */
+        .wa-icon-pod {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(37, 211, 102, 0.14);
+            border: 1px solid rgba(37, 211, 102, 0.35);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .whatsapp-scope-btn:hover .wa-icon-pod {
+            background: rgba(37, 211, 102, 0.25);
+            border-color: #25D366;
+            transform: scale(1.1) rotate(8deg);
+            box-shadow: 0 0 16px rgba(37, 211, 102, 0.5);
+        }
+
+        .wa-pulse-radar {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid #25D366;
+            opacity: 0;
+            pointer-events: none;
+            animation: waRadarPulse 2.5s infinite ease-out;
+        }
+
+        @keyframes waRadarPulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.8;
+            }
+            80% {
+                transform: translate(-50%, -50%) scale(1.6);
+                opacity: 0;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* Text Group */
+        .wa-text-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .wa-title {
+            color: var(--pure-white);
+            font-size: 0.88rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .wa-sub-pill {
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 2px 7px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .whatsapp-scope-btn:hover .wa-sub-pill {
+            color: #25D366;
+            border-color: rgba(37, 211, 102, 0.4);
+            background: rgba(37, 211, 102, 0.1);
+        }
+
+        /* Shimmer sweep */
+        .wa-shimmer-sweep {
+            position: absolute;
+            top: -50%;
+            left: -100%;
+            width: 60%;
+            height: 200%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.25),
+                transparent
+            );
+            transform: skewX(-25deg);
+            pointer-events: none;
+            transition: all 0.7s ease;
+        }
+
+        .whatsapp-scope-btn:hover .wa-shimmer-sweep {
+            left: 160%;
+        }
+
+        /* Light Theme Overrides */
+        body.light-theme .whatsapp-scope-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.15);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        body.light-theme .whatsapp-scope-btn:hover {
+            background: #ffffff;
+            border-color: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 0 20px rgba(37, 211, 102, 0.2);
+        }
+
+        body.light-theme .wa-title {
+            color: var(--deep-black);
+        }
+
+        body.light-theme .wa-sub-pill {
+            color: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Gen-Z Mode Overrides */
+        body.genz-mode .wa-title,
+        body.genz-mode .wa-sub-pill {
+            text-transform: lowercase !important;
         }
 
         /* Success screen WhatsApp follow-up */
