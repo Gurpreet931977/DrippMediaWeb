@@ -3262,15 +3262,18 @@ export default function Page() {
         <div className="faq-hotline-content">
           <div className="faq-hotline-left">
             <span className="faq-hotline-badge">
-              <span className="faq-live-ping" />
-              {isGenz ? 'instant founder line' : 'Instant Founder Line'}
+              <span className="faq-hotline-signal">
+                <span className="hotline-pulse-ring" />
+                <span className="hotline-sparkle-core">✦</span>
+              </span>
+              <span>{isGenz ? 'gurpreet & team · direct line' : 'FOUNDER & TEAM DIRECT LINE'}</span>
             </span>
             <h3 className="faq-hotline-title">{isGenz ? 'still got questions?' : 'Have a custom inquiry or special scope?'}</h3>
-            <p className="faq-hotline-desc">{isGenz ? 'skip the queue and talk straight to gurpreet on whatsapp.' : 'Skip the wait and speak directly with Gurpreet. Real-time scope breakdown in under 5 minutes.'}</p>
+            <p className="faq-hotline-desc">{isGenz ? 'skip the queue and talk straight to gurpreet or the team on whatsapp.' : 'Skip the wait and speak directly with Gurpreet or our core creative team. Real-time scope breakdown in under 5 minutes.'}</p>
           </div>
           <div className="faq-hotline-right">
             <a 
-              href="https://wa.me/917818995147?text=Hey%20Gurpreet!%20I'm%20on%20the%20FAQ%20section%20and%20had%20a%20specific%20question%20about%20a%20project." 
+              href="https://wa.me/917818995147?text=Hey%20Gurpreet%20and%20Team!%20I'm%20on%20the%20FAQ%20section%20and%20had%20a%20specific%20question%20about%20a%20project." 
               target="_blank" 
               rel="noopener noreferrer" 
               className="faq-direct-btn"
@@ -3278,7 +3281,7 @@ export default function Page() {
               <span className="faq-btn-shimmer" />
               <div className="faq-btn-label">
                 <span className="faq-sparkle">✦</span>
-                <span className="faq-btn-text">{isGenz ? 'ask gurpreet on whatsapp' : 'Ask on WhatsApp'}</span>
+                <span className="faq-btn-text">{isGenz ? 'ask gurpreet or team' : 'Ask Gurpreet or Team'}</span>
               </div>
               <div className="faq-action-disc">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
