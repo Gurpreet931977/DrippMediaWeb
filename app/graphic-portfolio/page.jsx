@@ -804,6 +804,9 @@ export default function Page() {
                     const randVal = (Math.sin(seed * 9999) + 1) * 0.5;
                     const randVal2 = (Math.cos(seed * 7777) + 1) * 0.5;
                     const randVal3 = (Math.sin(seed * 3333) + 1) * 0.5;
+                    const randVal4 = (Math.cos(seed * 5555) + 1) * 0.5;
+
+                    el.style.zIndex = `${10 + Math.floor(randVal4 * 20)}`;
 
                     const itemObj = {
                         el: el,
@@ -811,19 +814,29 @@ export default function Page() {
                         index: i,
                         sizeFactor: chosenFactor,
                         isVisible: true,
-                        // Zero Gravity Physical State (Front-facing 2D only)
+                        // Zero Gravity Physical State
                         floatX: 0,
                         floatY: 0,
                         rotZ: 0,
-                        vx: 0,
-                        vy: 0,
-                        vRot: 0,
-                        mass: 1.0 + randVal * 0.5,
-                        wanderSpeed: 0.15 + randVal3 * 0.2,
-                        wanderFreq: 0.00025 + randVal * 0.00025,
-                        targetRotZ: (randVal - 0.5) * 3.5, // Subtle luxury tilt (-1.75 to +1.75 deg)
                         phaseX: randVal * Math.PI * 2,
-                        phaseY: randVal2 * Math.PI * 2
+                        phaseY: randVal2 * Math.PI * 2,
+
+                        // Organic unpatterned scatter properties for TRIPP / Zero-Gravity mode
+                        baseScatterX: (randVal - 0.5) * (this.baseStepX * 0.65),
+                        baseScatterY: (randVal2 - 0.5) * (this.baseStepY * 0.60),
+                        baseScatterRot: (randVal3 - 0.5) * 18, // -9 deg to +9 deg
+                        baseScatterScale: 1.0 + (randVal4 - 0.5) * 0.20, // 0.90 to 1.10 depth
+
+                        // Active animated scatter state
+                        scatterX: 0,
+                        scatterY: 0,
+                        scatterRot: 0,
+                        scatterScale: 1.0,
+
+                        // Dynamic asteroid blast impact impulse
+                        blastX: 0,
+                        blastY: 0,
+                        blastRot: 0
                     };
 
                     // Mobile fast double-tap detection + desktop dblclick fallback
@@ -879,6 +892,11 @@ export default function Page() {
                     if (item.imgEl) {
                         item.imgEl.style.width = `${this.baseItemSizePx * item.sizeFactor}px`;
                     }
+                    const seed = i + 1;
+                    const randVal = (Math.sin(seed * 9999) + 1) * 0.5;
+                    const randVal2 = (Math.cos(seed * 7777) + 1) * 0.5;
+                    item.baseScatterX = (randVal - 0.5) * (this.baseStepX * 0.65);
+                    item.baseScatterY = (randVal2 - 0.5) * (this.baseStepY * 0.60);
                 }
             }
 
@@ -1377,49 +1395,53 @@ export default function Page() {
                     const homeX = (col * stepX) - limitX + (stepX * 0.5);
                     const homeY = (row * stepY) - limitY + (stepY * 0.5) + staggerY;
 
-                    const absoluteX = homeX + this.state.x;
-                    const absoluteY = homeY + this.state.y;
+                    // Active unpatterned scatter offsets
+                    const sX = item.scatterX || 0;
+                    const sY = item.scatterY || 0;
+                    const bX = item.blastX || 0;
+                    const bY = item.blastY || 0;
+
+                    const absoluteX = homeX + this.state.x + sX + bX;
+                    const absoluteY = homeY + this.state.y + sY + bY;
 
                     const wrappedX = this.wrap(absoluteX, -limitX, limitX);
                     const wrappedY = this.wrap(absoluteY, -limitY, limitY);
 
-                    // --- ZERO GRAVITY ORBITAL DRIFT ---
-                    if (isTripp) {
-                        const t = time * 0.0006;
-                        const targetFloatX = Math.sin(t + item.phaseX) * 14;
-                        const targetFloatY = Math.cos(t * 0.85 + item.phaseY) * 16;
-                        const targetRot = Math.sin(t * 0.7 + item.phaseX) * 2.8;
-
-                        item.floatX += (targetFloatX - item.floatX) * 0.045;
-                        item.floatY += (targetFloatY - item.floatY) * 0.045;
-                        item.rotZ += (targetRot - item.rotZ) * 0.045;
-
-                        // Blast impulse decay from asteroid impact
-                        if (item.shockX) {
-                            item.floatX += item.shockX;
-                            item.shockX *= 0.90;
-                            if (Math.abs(item.shockX) < 0.05) item.shockX = 0;
-                        }
-                        if (item.shockY) {
-                            item.floatY += item.shockY;
-                            item.shockY *= 0.90;
-                            if (Math.abs(item.shockY) < 0.05) item.shockY = 0;
-                        }
-                    } else {
-                        // Smoothly ease back to aligned grid on exit
-                        item.floatX += (0 - item.floatX) * 0.09;
-                        item.floatY += (0 - item.floatY) * 0.09;
-                        item.rotZ += (0 - item.rotZ) * 0.09;
-                        item.shockX = 0;
-                        item.shockY = 0;
+                    // Blast impulse exponential damping
+                    if (item.blastX) {
+                        item.blastX *= 0.88;
+                        if (Math.abs(item.blastX) < 0.1) item.blastX = 0;
+                    }
+                    if (item.blastY) {
+                        item.blastY *= 0.88;
+                        if (Math.abs(item.blastY) < 0.1) item.blastY = 0;
+                    }
+                    if (item.blastRot) {
+                        item.blastRot *= 0.88;
+                        if (Math.abs(item.blastRot) < 0.05) item.blastRot = 0;
                     }
 
-                    const finalX = wrappedX + item.floatX;
-                    const finalY = wrappedY + item.floatY;
+                    // --- ZERO GRAVITY ORGANIC HARMONIC DRIFT ---
+                    let floatX = 0;
+                    let floatY = 0;
+                    let rotZ = 0;
 
-                    // Subtle zero-g depth breathing
+                    if (isTripp) {
+                        const t = time * 0.0006;
+                        floatX = Math.sin(t + item.phaseX) * 14;
+                        floatY = Math.cos(t * 0.85 + item.phaseY) * 16;
+                        rotZ = (item.scatterRot || 0) + (item.blastRot || 0) + Math.sin(t * 0.7 + item.phaseX) * 2.2;
+                    } else {
+                        rotZ = (item.scatterRot || 0) + (item.blastRot || 0);
+                    }
+
+                    const finalX = wrappedX + floatX;
+                    const finalY = wrappedY + floatY;
+
+                    // Subtle zero-g depth breathing & variable card depth scale
                     const depthBreathing = isTripp ? (Math.sin(time * 0.00035 + item.phaseX) * 0.012) : 0;
-                    const currentScale = zoom * (1 + depthBreathing);
+                    const cardScale = isTripp ? (item.scatterScale || 1.0) : 1.0;
+                    const currentScale = zoom * cardScale * (1 + depthBreathing);
 
                     // ZERO BLINKING: Elements are NEVER toggled with visibility:hidden
                     // High-performance dirty-check prevents redundant DOM transform writes
@@ -1427,15 +1449,13 @@ export default function Page() {
                         Math.abs(finalX - (item._lx || 0)) > 0.08 ||
                         Math.abs(finalY - (item._ly || 0)) > 0.08 ||
                         Math.abs(currentScale - (item._ls || 0)) > 0.0008 ||
-                        Math.abs(item.rotZ - (item._lr || 0)) > 0.02
+                        Math.abs(rotZ - (item._lr || 0)) > 0.02
                     ) {
-                        item.el.style.transform = (isTripp || Math.abs(item.rotZ) > 0.01 || Math.abs(item.floatX) > 0.1 || Math.abs(item.floatY) > 0.1)
-                            ? `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${currentScale.toFixed(4)}) rotate(${item.rotZ.toFixed(2)}deg)`
-                            : `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)})`;
+                        item.el.style.transform = `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${currentScale.toFixed(4)}) rotate(${rotZ.toFixed(2)}deg)`;
                         item._lx = finalX;
                         item._ly = finalY;
                         item._ls = currentScale;
-                        item._lr = item.rotZ;
+                        item._lr = rotZ;
                     }
                 }
             }
@@ -1825,7 +1845,7 @@ export default function Page() {
                         animateSpace();
                         window.addEventListener('resize', resizeSpace);
 
-                        // 6. Cataclysmic Shockwave Impulse: Cards blast radially outward from real impact coordinates
+                        // 6. Cataclysmic Shockwave Impulse: Shatter cards out of patternized grid into organic zero gravity
                         if (window.canvasEngine && window.canvasEngine.items) {
                             const halfVW = window.innerWidth * 0.5;
                             const halfVH = window.innerHeight * 0.5;
@@ -1854,10 +1874,22 @@ export default function Page() {
                                 const dirX = kx / dist;
                                 const dirY = ky / dist;
 
-                                const blastPower = Math.max(6, 32 - (dist / 35));
-                                item.shockX = dirX * blastPower;
-                                item.shockY = dirY * blastPower;
-                                item.rotZ = (dirX >= 0 ? 1 : -1) * (Math.random() * 2.5 + 1.2);
+                                // 1. Immediate explosive radial blast velocity from impact epicenter
+                                const blastDist = Math.max(60, 220 - (dist / 5));
+                                item.blastX = dirX * blastDist;
+                                item.blastY = dirY * blastDist;
+                                item.blastRot = (dirX >= 0 ? 1 : -1) * (Math.random() * 16 + 8);
+
+                                // 2. Shatter cards out of patternized grid into organic zero-g resting layout
+                                gsap.killTweensOf(item);
+                                gsap.to(item, {
+                                    scatterX: item.baseScatterX,
+                                    scatterY: item.baseScatterY,
+                                    scatterRot: item.baseScatterRot,
+                                    scatterScale: item.baseScatterScale,
+                                    duration: 1.2,
+                                    ease: "power2.out"
+                                });
                             });
                         }
                     }
@@ -1875,23 +1907,26 @@ export default function Page() {
                 // Magnetic snap back sound
                 playTripToggleSound(false);
 
-                // Gentle magnetic return for all cards
+                // Magnetic tractor-beam return: glide all scattered cards back into the aligned grid
                 if (window.canvasEngine && window.canvasEngine.items) {
                     window.canvasEngine.items.forEach((item) => {
-                        item.vx = 0;
-                        item.vy = 0;
+                        item.blastX = 0;
+                        item.blastY = 0;
+                        item.blastRot = 0;
+                        gsap.killTweensOf(item);
                         gsap.to(item, {
-                            floatX: 0,
-                            floatY: 0,
-                            rotZ: 0,
-                            duration: 0.7,
-                            ease: "power2.out"
+                            scatterX: 0,
+                            scatterY: 0,
+                            scatterRot: 0,
+                            scatterScale: 1.0,
+                            duration: 0.85,
+                            ease: "power3.inOut"
                         });
                     });
                 }
                 setTimeout(() => {
                     btn.style.pointerEvents = 'auto';
-                }, 700);
+                }, 850);
             }
         }
 
