@@ -4958,28 +4958,24 @@
         .console-status-pill {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
+            padding: 4px 12px;
             border-radius: 999px;
-            background: rgba(235, 215, 63, 0.06);
-            border: 1px solid rgba(235, 215, 63, 0.22);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.25s ease;
         }
 
-        .status-live-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--brand-yellow);
-            box-shadow: 0 0 8px var(--brand-yellow);
-            animation: beaconPulse 2s ease infinite;
+        .console-status-pill:hover {
+            border-color: rgba(235, 215, 63, 0.22);
+            background: rgba(235, 215, 63, 0.03);
         }
 
         .status-live-text {
             font-family: 'Panchang', sans-serif;
-            font-size: 0.62rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            color: var(--brand-yellow);
+            font-size: 0.58rem;
+            font-weight: 600;
+            letter-spacing: 1.1px;
+            color: rgba(235, 215, 63, 0.85);
             text-transform: uppercase;
         }
 
@@ -4997,9 +4993,9 @@
 
         .console-id-tag {
             font-family: 'Panchang', sans-serif;
-            font-size: 0.7rem;
-            font-weight: 800;
-            letter-spacing: 1.8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 1.4px;
             color: var(--brand-yellow);
         }
 
@@ -5015,20 +5011,21 @@
         }
 
         .console-headline {
-            font-family: 'Panchang', sans-serif;
-            font-size: clamp(1.4rem, 2.8vw, 2.1rem);
-            font-weight: 800;
+            font-family: 'Clash Display', sans-serif;
+            font-size: clamp(1.45rem, 2.8vw, 2.2rem);
+            font-weight: 600;
             color: var(--pure-white);
-            line-height: 1.25;
-            letter-spacing: 0.2px;
+            line-height: 1.35;
+            letter-spacing: -0.01em;
             margin: 0 0 18px;
             position: relative;
         }
 
         .headline-quote-mark {
             color: var(--brand-yellow);
-            margin-right: 4px;
-            font-family: 'Panchang', sans-serif;
+            margin-right: 6px;
+            font-family: 'Clash Display', sans-serif;
+            font-weight: 600;
         }
 
         .console-insight-text {
@@ -5188,11 +5185,15 @@
             color: var(--deep-black);
         }
         body.light-theme .console-status-pill {
-            background: rgba(235, 215, 63, 0.15);
-            border-color: rgba(235, 215, 63, 0.4);
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+        body.light-theme .console-status-pill:hover {
+            background: rgba(235, 215, 63, 0.1);
+            border-color: rgba(235, 215, 63, 0.35);
         }
         body.light-theme .status-live-text {
-            color: #7a6500;
+            color: #857000;
         }
         body.light-theme .console-headline {
             color: var(--deep-black);

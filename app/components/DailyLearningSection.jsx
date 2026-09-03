@@ -131,7 +131,6 @@ export default function DailyLearningSection({ isGenz = false }) {
             </div>
 
             <div className="console-status-pill">
-              <span className="status-live-dot" />
               <span className="status-live-text">
                 {countdownText}
               </span>
