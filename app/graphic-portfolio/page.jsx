@@ -32,13 +32,29 @@ export default function Page() {
     gsap.registerPlugin(ScrollTrigger);
 
     
-        // Custom Cursor Logic
+        // Custom Cursor Logic (Ultra-smooth 120fps RAF loop, zero GSAP allocation)
         const cursor = document.getElementById('cursor');
-        window.addEventListener('mousemove', (e) => {
-            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
-        });
-        window.addEventListener('mousedown', () => cursor.classList.add('active'));
-        window.addEventListener('mouseup', () => cursor.classList.remove('active'));
+        let mouseX = -100, mouseY = -100;
+        let cursorX = -100, cursorY = -100;
+        let cursorRaf = null;
+
+        const onMouseMove = (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        };
+        window.addEventListener('mousemove', onMouseMove, { passive: true });
+        window.addEventListener('mousedown', () => cursor && cursor.classList.add('active'));
+        window.addEventListener('mouseup', () => cursor && cursor.classList.remove('active'));
+
+        const renderCursor = () => {
+            cursorX += (mouseX - cursorX) * 0.4;
+            cursorY += (mouseY - cursorY) * 0.4;
+            if (cursor) {
+                cursor.style.transform = `translate3d(${cursorX.toFixed(1)}px, ${cursorY.toFixed(1)}px, 0) translate(-50%, -50%)`;
+            }
+            cursorRaf = requestAnimationFrame(renderCursor);
+        };
+        cursorRaf = requestAnimationFrame(renderCursor);
 
         // Make variables global so animation loop has access to velocity
         let globalVelX = 0;
@@ -671,8 +687,8 @@ export default function Page() {
                 const w = typeof window !== 'undefined' ? window.innerWidth : 1440;
                 const isMobile = w <= 768;
                 const isTablet = w > 768 && w <= 1024;
-                this.cols = isMobile ? 6 : (isTablet ? 8 : 12);
-                this.rows = isMobile ? 6 : (isTablet ? 6 : 8);
+                this.cols = isMobile ? 6 : (isTablet ? 8 : 10);
+                this.rows = isMobile ? 5 : (isTablet ? 6 : 7);
                 this.totalItems = this.cols * this.rows;
             }
 
@@ -1886,6 +1902,8 @@ export default function Page() {
         document.getElementById('tripp-toggle-btn').addEventListener('click', toggleSpaceMode);
 
     return () => {
+      if (cursorRaf) cancelAnimationFrame(cursorRaf);
+      window.removeEventListener('mousemove', onMouseMove);
       ScrollTrigger.getAll().forEach(t => t.kill());
       if (window.canvasEngine) {
         window.canvasEngine.destroy();
