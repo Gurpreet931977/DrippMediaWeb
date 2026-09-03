@@ -620,11 +620,18 @@ export default function Page() {
 
                 const vhInVw = typeof window !== 'undefined' ? (window.innerHeight / window.innerWidth) * 100 : 56.25;
 
-                // Minimum zoom required so that the grid ALWAYS spans >= 105vw and >= 105vh
-                const minZoomX = 105 / totalGridWidthVw;
-                const minZoomY = (vhInVw * 1.05) / totalGridHeightVw;
+                // Ensure the grid ALWAYS generously covers the viewport plus margins
+                // so that wrapping occurs 100% offscreen and never flickers inside the viewport
+                const cardWidthVw = appliedSize;
+                const cardHeightVw = appliedSize * currentAspectRatio;
+                const neededWidthVw = 100 + (cardWidthVw * 1.6);
+                const neededHeightVw = vhInVw + (cardHeightVw * 1.6);
 
-                return Math.max(minZoomX, minZoomY);
+                const minZoomX = neededWidthVw / totalGridWidthVw;
+                const minZoomY = neededHeightVw / totalGridHeightVw;
+
+                const safeMin = isMobile ? 0.55 : 0.52;
+                return Math.max(safeMin, Math.max(minZoomX, minZoomY));
             }
 
             updateMetrics() {
@@ -828,7 +835,7 @@ export default function Page() {
                         const pts = Array.from(this.activePointers.values());
                         const curDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
                         const factor = curDist / this.initialPinchDistance;
-                        const minZoom = Math.max(0.38, Number(this.getMinZoom().toFixed(2)));
+                        const minZoom = Number(this.getMinZoom().toFixed(2));
                         const maxZoom = 2.80;
                         const targetZ = Math.min(maxZoom, Math.max(minZoom, this.initialPinchZoom * factor));
                         this.state.targetZoom = targetZ;
@@ -1157,15 +1164,15 @@ export default function Page() {
                 const specificView = document.getElementById('specific-view');
                 if (specificView && specificView.classList.contains('active')) return;
 
-                const minZoom = Math.max(0.38, Number(this.getMinZoom().toFixed(2)));
+                const minZoom = Number(this.getMinZoom().toFixed(2));
                 const maxZoom = 2.80;
 
-                // Rich, gapless variable zoom ladder guaranteed to never reveal black screen borders
+                // Rich, gapless variable zoom ladder guaranteed to never reveal black screen borders or wrap on-screen
                 const rawSteps = [
                     minZoom,
-                    Number((minZoom + 0.14).toFixed(2)),
-                    Number((minZoom + 0.30).toFixed(2)),
-                    Number((minZoom + 0.48).toFixed(2)),
+                    Number((minZoom + 0.12).toFixed(2)),
+                    Number((minZoom + 0.25).toFixed(2)),
+                    0.85,
                     1.00,
                     1.28,
                     1.65,
@@ -1227,43 +1234,6 @@ export default function Page() {
                         )
                         .to(blurOverlay, { opacity: 0, duration: duration - 0.18, ease: "power3.out" });
                 }
-
-                // Camera single-container motion blur (cleans up immediately upon deceleration)
-                const canvasEl = this.container;
-                if (canvasEl) {
-                    const blurObj = { blur: 0 };
-                    gsap.killTweensOf(blurObj);
-                    gsap.timeline({
-                        onUpdate: () => {
-                            if (blurObj.blur > 0.05) {
-                                canvasEl.style.filter = `blur(${blurObj.blur.toFixed(1)}px)`;
-                            } else {
-                                canvasEl.style.filter = '';
-                            }
-                        },
-                        onComplete: () => {
-                            canvasEl.style.filter = '';
-                        }
-                    })
-                    .to(blurObj, { blur: maxBlur, duration: 0.18, ease: "power2.in" })
-                    .to(blurObj, { blur: 0, duration: duration - 0.18, ease: "power3.out" });
-                }
-
-                // Subtle hardware-accelerated camera recoil settle on the viewport
-                const showcase = document.getElementById('portfolio-showcase');
-                if (showcase) {
-                    if (isDiveIn) {
-                        gsap.fromTo(showcase, 
-                            { scale: 0.99 },
-                            { scale: 1, duration: 0.45, ease: "power2.out", clearProps: "scale" }
-                        );
-                    } else {
-                        gsap.fromTo(showcase, 
-                            { scale: 1.01 },
-                            { scale: 1, duration: 0.45, ease: "power2.out", clearProps: "scale" }
-                        );
-                    }
-                }
             }
 
             wrap(value, min, max) {
@@ -1307,7 +1277,7 @@ export default function Page() {
 
                 const halfVW = (typeof window !== 'undefined' ? window.innerWidth : 1440) * 0.5;
                 const halfVH = (typeof window !== 'undefined' ? window.innerHeight : 900) * 0.5;
-                const cullingMargin = (this.baseItemSizePx * zoom) + 120;
+                const cullingMargin = (this.baseItemSizePx * zoom) + 260;
 
                 const time = performance.now();
                 const isTripp = typeof spaceModeActive !== 'undefined' && spaceModeActive;
@@ -1378,8 +1348,18 @@ export default function Page() {
                     const finalX = wrappedX + item.floatX;
                     const finalY = wrappedY + item.floatY;
 
-                    // Frustum Culling Check (accounting for floating margin)
-                    const isOffscreen = Math.abs(finalX) > (halfVW + cullingMargin) || Math.abs(finalY) > (halfVH + cullingMargin);
+                    // Frustum Culling Check:
+                    // When zoomed out (zoom <= 1.1), NEVER cull any cards.
+                    // Keeping all cards visible completely eliminates edge blinking, flickering, and layer re-rasterization.
+                    // When zoomed in, cull cards only when well beyond viewport, and ensure transform is updated seamlessly.
+                    const isOffscreen = zoom > 1.1 && (
+                        Math.abs(finalX) > (halfVW + cullingMargin + 100) || 
+                        Math.abs(finalY) > (halfVH + cullingMargin + 100)
+                    );
+
+                    const transformStr = (isTripp || Math.abs(item.rotZ) > 0.02 || Math.abs(item.floatX) > 0.1 || Math.abs(item.floatY) > 0.1)
+                        ? `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)}) rotate(${item.rotZ.toFixed(2)}deg)`
+                        : `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)})`;
 
                     if (isOffscreen) {
                         if (item.isVisible) {
@@ -1388,13 +1368,11 @@ export default function Page() {
                         }
                     } else {
                         if (!item.isVisible) {
+                            item.el.style.transform = transformStr;
                             item.el.style.visibility = 'visible';
                             item.isVisible = true;
-                        }
-                        if (isTripp || Math.abs(item.rotZ) > 0.02 || Math.abs(item.floatX) > 0.1 || Math.abs(item.floatY) > 0.1) {
-                            item.el.style.transform = `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)}) rotate(${item.rotZ.toFixed(2)}deg)`;
                         } else {
-                            item.el.style.transform = `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)})`;
+                            item.el.style.transform = transformStr;
                         }
                     }
                 }
@@ -2867,7 +2845,6 @@ export default function Page() {
             background: radial-gradient(circle at center, transparent 35%, rgba(235, 215, 63, 0.08) 65%, rgba(0, 0, 0, 0.5) 100%);
             mix-blend-mode: screen;
             will-change: opacity, transform;
-            transition: opacity 0.1s ease;
         }
 
         .zoom-motion-blur-overlay::after {
