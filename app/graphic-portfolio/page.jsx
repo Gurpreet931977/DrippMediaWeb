@@ -1383,69 +1383,59 @@ export default function Page() {
                     const wrappedX = this.wrap(absoluteX, -limitX, limitX);
                     const wrappedY = this.wrap(absoluteY, -limitY, limitY);
 
-                    // --- REFINED LUXURY ZERO GRAVITY PHYSICS ---
+                    // --- ZERO GRAVITY ORBITAL DRIFT ---
                     if (isTripp) {
-                        // 1. Serene multi-harmonic orbital drift
-                        const t = time * item.wanderFreq;
-                        const driftX = Math.sin(t + item.phaseX) * 14 + Math.cos(t * 0.55 + item.phaseY) * 7;
-                        const driftY = Math.cos(t + item.phaseY) * 16 + Math.sin(t * 0.45 + item.phaseX) * 8;
-                        
-                        // 2. Fluid drag momentum response (canvas panning gently pushes floating cards)
-                        if (Math.abs(globalVelX) > 0.005 || Math.abs(globalVelY) > 0.005) {
-                            item.vx += (globalVelX * 0.015) / item.mass;
-                            item.vy += (globalVelY * 0.015) / item.mass;
+                        const t = time * 0.0006;
+                        const targetFloatX = Math.sin(t + item.phaseX) * 14;
+                        const targetFloatY = Math.cos(t * 0.85 + item.phaseY) * 16;
+                        const targetRot = Math.sin(t * 0.7 + item.phaseX) * 2.8;
+
+                        item.floatX += (targetFloatX - item.floatX) * 0.045;
+                        item.floatY += (targetFloatY - item.floatY) * 0.045;
+                        item.rotZ += (targetRot - item.rotZ) * 0.045;
+
+                        // Blast impulse decay from asteroid impact
+                        if (item.shockX) {
+                            item.floatX += item.shockX;
+                            item.shockX *= 0.90;
+                            if (Math.abs(item.shockX) < 0.05) item.shockX = 0;
                         }
-
-                        // Smooth viscous damping in zero-g vacuum
-                        item.vx *= 0.94;
-                        item.vy *= 0.94;
-
-                        // Smooth lerp toward organic drift + momentum
-                        item.floatX += ((driftX + item.vx) - item.floatX) * 0.045;
-                        item.floatY += ((driftY + item.vy) - item.floatY) * 0.045;
-
-                        // 3. Subtle, dignified micro-tilt (clamped to luxury range of ±3.5 degrees)
-                        const rotDrift = Math.sin(t * 0.75 + item.phaseX) * 1.4;
-                        const targetRot = item.targetRotZ + rotDrift + (globalVelX * 0.0008);
-                        item.rotZ += (targetRot - item.rotZ) * 0.035;
-                        item.rotZ = Math.max(-3.5, Math.min(3.5, item.rotZ));
+                        if (item.shockY) {
+                            item.floatY += item.shockY;
+                            item.shockY *= 0.90;
+                            if (Math.abs(item.shockY) < 0.05) item.shockY = 0;
+                        }
                     } else {
                         // Smoothly ease back to aligned grid on exit
-                        item.vx *= 0.82;
-                        item.vy *= 0.82;
                         item.floatX += (0 - item.floatX) * 0.09;
                         item.floatY += (0 - item.floatY) * 0.09;
                         item.rotZ += (0 - item.rotZ) * 0.09;
+                        item.shockX = 0;
+                        item.shockY = 0;
                     }
 
                     const finalX = wrappedX + item.floatX;
                     const finalY = wrappedY + item.floatY;
 
-                    // Frustum Culling Check (High performance: skip DOM style updates for offscreen items)
-                    const isOffscreen = (
-                        Math.abs(finalX) > (halfVW + cullingMargin) || 
-                        Math.abs(finalY) > (halfVH + cullingMargin)
-                    );
+                    // Subtle zero-g depth breathing
+                    const depthBreathing = isTripp ? (Math.sin(time * 0.00035 + item.phaseX) * 0.012) : 0;
+                    const currentScale = zoom * (1 + depthBreathing);
 
-                    if (isOffscreen) {
-                        if (item.isVisible) {
-                            item.el.style.visibility = 'hidden';
-                            item.isVisible = false;
-                        }
-                    } else {
-                        // Gentle weightless depth breathing in zero-g
-                        const depthBreathing = isTripp ? (Math.sin(time * 0.00035 + item.phaseX) * 0.014) : 0;
-                        const currentScale = zoom * (1 + depthBreathing);
-
-                        const transformStr = (isTripp || Math.abs(item.rotZ) > 0.01 || Math.abs(item.floatX) > 0.1 || Math.abs(item.floatY) > 0.1)
+                    // ZERO BLINKING: Elements are NEVER toggled with visibility:hidden
+                    // High-performance dirty-check prevents redundant DOM transform writes
+                    if (
+                        Math.abs(finalX - (item._lx || 0)) > 0.08 ||
+                        Math.abs(finalY - (item._ly || 0)) > 0.08 ||
+                        Math.abs(currentScale - (item._ls || 0)) > 0.0008 ||
+                        Math.abs(item.rotZ - (item._lr || 0)) > 0.02
+                    ) {
+                        item.el.style.transform = (isTripp || Math.abs(item.rotZ) > 0.01 || Math.abs(item.floatX) > 0.1 || Math.abs(item.floatY) > 0.1)
                             ? `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${currentScale.toFixed(4)}) rotate(${item.rotZ.toFixed(2)}deg)`
                             : `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)})`;
-
-                        item.el.style.transform = transformStr;
-                        if (!item.isVisible) {
-                            item.el.style.visibility = 'visible';
-                            item.isVisible = true;
-                        }
+                        item._lx = finalX;
+                        item._ly = finalY;
+                        item._ls = currentScale;
+                        item._lr = item.rotZ;
                     }
                 }
             }
@@ -1748,16 +1738,13 @@ export default function Page() {
                         // Play deep sub-bass seismic boom & rumble
                         playAsteroidExplosionSound();
 
-                        // 1. Tactile Screen Shake
-                        const canvasEl = document.getElementById('canvas-container');
-                        if (canvasEl) {
-                            const shakeTl = gsap.timeline();
-                            const amp = 24;
-                            shakeTl.to(canvasEl, { x: -amp, y: amp * 0.7, duration: 0.04, ease: "none" })
-                                   .to(canvasEl, { x: amp * 0.9, y: -amp * 0.6, duration: 0.04, ease: "none" })
-                                   .to(canvasEl, { x: -amp * 0.6, y: amp * 0.4, duration: 0.04, ease: "none" })
-                                   .to(canvasEl, { x: amp * 0.4, y: -amp * 0.2, duration: 0.04, ease: "none" })
-                                   .to(canvasEl, { x: 0, y: 0, duration: 0.08, ease: "power2.out" });
+                        // 1. Tactile Screen Shake (on outer showcase wrapper, cleanly resets with zero residual styles)
+                        const showcaseEl = document.getElementById('portfolio-showcase');
+                        if (showcaseEl) {
+                            gsap.fromTo(showcaseEl, 
+                                { x: -14, y: 10 },
+                                { x: 0, y: 0, duration: 0.35, ease: "elastic.out(1, 0.3)", clearProps: "all" }
+                            );
                         }
 
                         // 2. Cosmic Flash at Epicenter
@@ -1838,14 +1825,28 @@ export default function Page() {
                         animateSpace();
                         window.addEventListener('resize', resizeSpace);
 
-                        // 6. Cataclysmic Shockwave Impulse: Cards blast radially outward from impact!
+                        // 6. Cataclysmic Shockwave Impulse: Cards blast radially outward from real impact coordinates
                         if (window.canvasEngine && window.canvasEngine.items) {
                             const halfVW = window.innerWidth * 0.5;
                             const halfVH = window.innerHeight * 0.5;
+                            const eng = window.canvasEngine;
+                            const z = eng.state.zoom;
+                            const sX = eng.baseStepX * z;
+                            const sY = eng.baseStepY * z;
+                            const limX = eng.cols * sX * 0.5;
+                            const limY = eng.rows * sY * 0.5;
 
-                            window.canvasEngine.items.forEach((item) => {
-                                const cardScreenX = halfVW + (item.floatX || 0);
-                                const cardScreenY = halfVH + (item.floatY || 0);
+                            eng.items.forEach((item, idx) => {
+                                const col = idx % eng.cols;
+                                const row = Math.floor(idx / eng.cols);
+                                const stagY = (col % 2 === 1) ? (sY * 0.5) : 0;
+                                const hX = (col * sX) - limX + (sX * 0.5);
+                                const hY = (row * sY) - limY + (sY * 0.5) + stagY;
+                                const wX = eng.wrap(hX + eng.state.x, -limX, limX);
+                                const wY = eng.wrap(hY + eng.state.y, -limY, limY);
+
+                                const cardScreenX = halfVW + wX;
+                                const cardScreenY = halfVH + wY;
 
                                 const kx = cardScreenX - impactX;
                                 const ky = cardScreenY - impactY;
@@ -1853,14 +1854,10 @@ export default function Page() {
                                 const dirX = kx / dist;
                                 const dirY = ky / dist;
 
-                                // Impact impulse is explosive near epicenter, radiating outwards
-                                const blastImpulse = Math.max(3.5, 16.0 - (dist / 110)) / item.mass;
-                                item.vx = dirX * blastImpulse;
-                                item.vy = dirY * blastImpulse;
-
-                                // Asymmetric rotational kick from blast wave
-                                item.rotZ = (dirX >= 0 ? 1 : -1) * (Math.random() * 4.0 + 2.0);
-                                item.targetRotZ = (Math.random() - 0.5) * 3.5;
+                                const blastPower = Math.max(6, 32 - (dist / 35));
+                                item.shockX = dirX * blastPower;
+                                item.shockY = dirY * blastPower;
+                                item.rotZ = (dirX >= 0 ? 1 : -1) * (Math.random() * 2.5 + 1.2);
                             });
                         }
                     }
