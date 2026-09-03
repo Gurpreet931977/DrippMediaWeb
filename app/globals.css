@@ -385,8 +385,19 @@
             will-change: transform, opacity;
         }
 
+        /* Hero Central Flexbox Column */
+        .hero-center-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            z-index: 5;
+        }
+
         .hero-sub {
-            margin-top: 30px;
+            margin-top: 26px;
             color: var(--brand-yellow);
             font-size: 0.6rem;
             font-weight: 600;
@@ -401,7 +412,10 @@
             transition: all 0.3s ease;
             position: relative;
             z-index: 20;
-            cursor: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         @property --border-angle {
@@ -430,7 +444,7 @@
             left: 50%;
             transform: translateX(-50%) translateY(-8px) scale(0.95);
             width: max-content;
-            max-width: 330px;
+            max-width: min(330px, 85vw);
             background: linear-gradient(120deg, rgba(15, 15, 15, 0.95) 0%, rgba(20, 20, 20, 0.92) 40%, rgba(235, 215, 63, 0.2) 50%, rgba(20, 20, 20, 0.92) 60%, rgba(15, 15, 15, 0.95) 100%);
             background-size: 250% auto;
             backdrop-filter: blur(14px);
@@ -510,6 +524,7 @@
             opacity: 1;
             visibility: visible;
             transform: translateX(-50%) translateY(0) scale(1);
+            pointer-events: auto;
         }
 
         /* Sparkle Effects Details */
@@ -565,7 +580,7 @@
             align-items: center;
             justify-content: center;
             gap: 18px;
-            margin-top: 135px;
+            margin-top: 32px;
             z-index: 5;
             opacity: 0;
             will-change: transform, opacity;
@@ -949,7 +964,7 @@
                 flex-direction: column;
                 width: 86vw;
                 gap: 12px;
-                margin-top: 130px;
+                margin-top: 24px;
             }
             
             .hero-btn {

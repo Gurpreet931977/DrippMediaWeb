@@ -2391,63 +2391,65 @@ export default function Page() {
   </div>
   <canvas id="maze-canvas" />
   <section className="hero" id="home">
-    <h1 className="brand-name">
-      <span className="word" id="word1">DRIPP</span>
-      <span className="word" id="word2">MEDIA</span>
-    </h1>
-    <div className="hero-sub tooltip-container">
-      {isGenz ? 'creative studio & digital agency' : 'We are a creative agency'}
-      <div className="creative-tooltip">
-        <div className="tooltip-sparkle s1" />
-        <div className="tooltip-sparkle s2" />
-        <div className="tooltip-sparkle s3" />
-        {isGenz ? 'a team of designers, developers, and filmmakers crafting unforgettable work for the internet.' : 'Think of us as a team of artists, builders, and storytellers who make cool things for the internet and beyond!'}
+    <div className="hero-center-column">
+      <h1 className="brand-name">
+        <span className="word" id="word1">DRIPP</span>
+        <span className="word" id="word2">MEDIA</span>
+      </h1>
+      <div className="hero-sub tooltip-container">
+        {isGenz ? 'creative studio & digital agency' : 'We are a creative agency'}
+        <div className="creative-tooltip">
+          <div className="tooltip-sparkle s1" />
+          <div className="tooltip-sparkle s2" />
+          <div className="tooltip-sparkle s3" />
+          {isGenz ? 'a team of designers, developers, and filmmakers crafting unforgettable work for the internet.' : 'Think of us as a team of artists, builders, and storytellers who make cool things for the internet and beyond!'}
+        </div>
       </div>
-    </div>
 
-    {/* HERO DUAL CTAs */}
-    <div className="hero-cta-group">
-      <a 
-        href="#services" 
-        className="hero-btn hero-btn-primary" 
-        onClick={(e) => { 
-          e.preventDefault(); 
-          document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); 
-        }}
-      >
-        <span className="btn-shimmer" />
-        <span className="btn-label-group">
-          <span className="btn-sparkle">✦</span>
-          <span className="btn-main-text">{isGenz ? 'scope a project' : 'Get Instant Quote'}</span>
-        </span>
-        <span className="btn-icon-capsule">
-          <svg className="btn-arrow-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M7 17L17 7M17 7H8M17 7V16" />
-          </svg>
-        </span>
-      </a>
-
-      <a 
-        href="#work" 
-        className="hero-btn hero-btn-secondary" 
-        onClick={(e) => { 
-          e.preventDefault(); 
-          document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' }); 
-        }}
-      >
-        <span className="sec-btn-shimmer" />
-        <div className="studio-deck-glyph">
-          <span className="deck-layer l1" />
-          <span className="deck-layer l2" />
-          <span className="deck-layer l3">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
+      {/* HERO DUAL CTAs */}
+      <div className="hero-cta-group">
+        <a 
+          href="#services" 
+          className="hero-btn hero-btn-primary" 
+          onClick={(e) => { 
+            e.preventDefault(); 
+            document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); 
+          }}
+        >
+          <span className="btn-shimmer" />
+          <span className="btn-label-group">
+            <span className="btn-sparkle">✦</span>
+            <span className="btn-main-text">{isGenz ? 'scope a project' : 'Get Instant Quote'}</span>
+          </span>
+          <span className="btn-icon-capsule">
+            <svg className="btn-arrow-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 17L17 7M17 7H8M17 7V16" />
             </svg>
           </span>
-        </div>
-        <span className="btn-main-text">{isGenz ? 'all works' : 'Explore Portfolio'}</span>
-        <span className="btn-disciplines-badge">{isGenz ? 'video · art · web' : 'Video · Art · Web'}</span>
-      </a>
+        </a>
+
+        <a 
+          href="#work" 
+          className="hero-btn hero-btn-secondary" 
+          onClick={(e) => { 
+            e.preventDefault(); 
+            document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' }); 
+          }}
+        >
+          <span className="sec-btn-shimmer" />
+          <div className="studio-deck-glyph">
+            <span className="deck-layer l1" />
+            <span className="deck-layer l2" />
+            <span className="deck-layer l3">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
+              </svg>
+            </span>
+          </div>
+          <span className="btn-main-text">{isGenz ? 'all works' : 'Explore Portfolio'}</span>
+          <span className="btn-disciplines-badge">{isGenz ? 'video · art · web' : 'Video · Art · Web'}</span>
+        </a>
+      </div>
     </div>
 
     {/* METRIC TRUST BAR */}
