@@ -8,6 +8,7 @@ import Link from "next/link";
 import Preloader from "../components/Preloader";
 import ProfileWidget from "../components/ProfileWidget";
 import AuthModal from "../components/AuthModal";
+import DailyLearningSection from "../components/DailyLearningSection";
 import { useGenz } from '../contexts/GenzContext';
 
 export default function Page() {
@@ -711,8 +712,11 @@ export default function Page() {
 
         const resetAllFlips = () => {
             cards.forEach(card => {
+                card._isHovering = false;
                 const inner = card.querySelector('.card-inner');
-                gsap.to(inner, { rotationY: 0, rotationX: 0, z: 0, scale: 1, ease: "power3.inOut", duration: 0.8 });
+                if (inner) {
+                    gsap.to(inner, { rotationY: 0, rotationX: 0, z: 0, scale: 1, ease: "power3.inOut", duration: 0.6, overwrite: "auto" });
+                }
                 card.classList.add('locked');
             });
         };
@@ -806,97 +810,37 @@ export default function Page() {
                 .to(card2, { xPercent: -50, x: 0, rotation: 0, scale: 1, duration: 1 }, 0)
                 .to(card3, { xPercent: -50, x: spreadDistance, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)", duration: 1 }, 0);
 
-            // --- CLICK TO SCATTER / OPEN CARDS (SMOOTH CARD DEAL ANIMATION) ---
-            let isScatteredByClick = false;
-
-            const scatterCards = () => {
-                isScatteredByClick = true;
-                interactionEnabled = true;
-                enableInteraction();
-
-                if (navigator.vibrate) navigator.vibrate([45, 20, 45]);
-
-                // Complete the ScrollTrigger animation so scrolling down continues forward without resetting
-                const st = stackTl.scrollTrigger;
-                if (st) {
-                    st.scroll(st.end);
-                    stackTl.progress(1);
-                }
-
-                // Smooth physical card-dealing timeline starting from the stacked deck
-                const dealTl = gsap.timeline({ defaults: { ease: "power3.out" } });
-
-                // Card 2 (top ace) does a slight pop-up lift like drawing from the deck
-                dealTl
-                    .fromTo(card2,
-                        { xPercent: -50, x: 0, y: 0, rotation: 0, scale: 0.85, filter: "blur(0px) brightness(1)" },
-                        { xPercent: -50, x: 0, y: -14, rotation: 0, scale: 1.04, filter: "blur(0px) brightness(1)", duration: 0.35, ease: "power2.out" },
-                        0
-                    )
-                    // Card 1 (left ace) shoots out smoothly with authentic card dealer snap
-                    .fromTo(card1,
-                        { xPercent: -50, x: -30, y: 15, rotation: -12, scale: 0.8, filter: "blur(4px) brightness(0.6)" },
-                        { xPercent: -50, x: -spreadDistance, y: 0, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)", duration: 0.75, ease: "back.out(1.2)" },
-                        0.08
-                    )
-                    // Card 3 (right ace) shoots out smoothly with matching snap
-                    .fromTo(card3,
-                        { xPercent: -50, x: 30, y: 15, rotation: 12, scale: 0.9, filter: "blur(4px) brightness(0.6)" },
-                        { xPercent: -50, x: spreadDistance, y: 0, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)", duration: 0.75, ease: "back.out(1.2)" },
-                        0.12
-                    )
-                    // Card 2 settles into place
-                    .to(card2, {
-                        y: 0,
-                        scale: 1,
-                        duration: 0.45,
-                        ease: "power2.inOut"
-                    }, 0.35);
-            };
-
-            const collapseCards = () => {
-                isScatteredByClick = false;
-                resetAllFlips();
-                interactionEnabled = false;
-
-                if (navigator.vibrate) navigator.vibrate([30]);
-
-                const st = stackTl.scrollTrigger;
-                if (st) {
-                    st.scroll(st.start);
-                    stackTl.progress(0);
-                }
-
-                const gatherTl = gsap.timeline({ defaults: { ease: "power3.inOut", duration: 0.65 } });
-                gatherTl
-                    .fromTo(card1,
-                        { xPercent: -50, x: -spreadDistance, y: 0, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)" },
-                        { xPercent: -50, x: -30, y: 15, rotation: -12, scale: 0.8, filter: "blur(4px) brightness(0.6)" },
-                        0
-                    )
-                    .fromTo(card2,
-                        { xPercent: -50, x: 0, y: 0, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)" },
-                        { xPercent: -50, x: 0, y: 0, rotation: 0, scale: 0.85, filter: "blur(0px) brightness(1)" },
-                        0.04
-                    )
-                    .fromTo(card3,
-                        { xPercent: -50, x: spreadDistance, y: 0, rotation: 0, scale: 1, filter: "blur(0px) brightness(1)" },
-                        { xPercent: -50, x: 30, y: 15, rotation: 12, scale: 0.9, filter: "blur(4px) brightness(0.6)" },
-                        0.08
-                    );
-            };
-
+            // --- CLICK TO SCATTER / OPEN CARDS (SMOOTH SCATTER SYNCED WITH SCROLLTRIGGER) ---
             const handleCardClick = (e) => {
                 // If user clicked an action link/button inside card back, allow standard navigation
                 if (e.target.closest('a, button')) return;
 
                 const st = stackTl.scrollTrigger;
-                const isAlreadyAtEnd = st && st.progress >= 0.9;
+                if (!st) return;
 
-                if (!isScatteredByClick && !isAlreadyAtEnd) {
-                    scatterCards();
+                if (navigator.vibrate) navigator.vibrate([40]);
+
+                // If cards are currently scattered (progress > 0.35), smoothly collapse back to stacked deck
+                if (st.progress > 0.35) {
+                    resetAllFlips();
+                    if (lenis && typeof lenis.scrollTo === 'function') {
+                        lenis.scrollTo(st.start, {
+                            duration: 0.9,
+                            easing: (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+                        });
+                    } else {
+                        window.scrollTo({ top: st.start, behavior: 'smooth' });
+                    }
                 } else {
-                    collapseCards();
+                    // Otherwise smoothly scatter cards open to full display
+                    if (lenis && typeof lenis.scrollTo === 'function') {
+                        lenis.scrollTo(st.end, {
+                            duration: 0.9,
+                            easing: (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+                        });
+                    } else {
+                        window.scrollTo({ top: st.end, behavior: 'smooth' });
+                    }
                 }
             };
 
@@ -3308,6 +3252,9 @@ export default function Page() {
       </div>
     </div>
   </section>
+
+  {/* --- LEARNING OF THE DAY / DAILY INTEL SECTION --- */}
+  <DailyLearningSection isGenz={isGenz} />
 
   <div className="info-container" id="about">
     {/* JOIN COMMUNITY SECTION */}

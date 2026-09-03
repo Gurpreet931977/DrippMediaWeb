@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const COUNTRY_CODES = [
   { code: '+1', label: 'US/CA' }, { code: '+44', label: 'UK' }, { code: '+91', label: 'IN' },
@@ -41,6 +41,7 @@ const COUNTRY_CODES = [
   { code: '+998', label: 'UZ' }, { code: '+993', label: 'TM' }, { code: '+992', label: 'TJ' },
   { code: '+996', label: 'KG' }
 ];
+
 const SECURITY_QUOTES = [
   "I am the master of my fate",
   "Stay hungry, stay foolish",
@@ -50,28 +51,26 @@ const SECURITY_QUOTES = [
   "Hakuna Matata"
 ];
 
+const PERSONAS = [
+  { id: 'creative', label: 'Creative', badge: 'Creator', icon: '✦' },
+  { id: 'business', label: 'Business', badge: 'Founder', icon: '💼' },
+  { id: 'general', label: 'Arcade', badge: 'Player', icon: '🎮' }
+];
+
 export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab = 'signup' }) {
-  const [activeTab, setActiveTab] = useState(initialTab); // 'signup' or 'login'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'signup' | 'login' | 'forgot_password'
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
-  React.useEffect(() => {
-    if (isOpen) {
-      setActiveTab(initialTab);
-      setErrorMsg("");
-    }
-  }, [isOpen, initialTab]);
 
   // Sign Up States
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
   const [signupCountryCode, setSignupCountryCode] = useState("+91");
-  const [signupNature, setSignupNature] = useState("");
+  const [signupNature, setSignupNature] = useState("creative");
   const [signupPassword, setSignupPassword] = useState("");
-
   const [signupSecurityPhrase, setSignupSecurityPhrase] = useState("");
   
   // Reset Password States
@@ -79,52 +78,74 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
   const [resetSecurityPhrase, setResetSecurityPhrase] = useState("");
   const [resetNewPassword, setResetNewPassword] = useState("");
 
-
   // Log In States
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab);
+      setErrorMsg("");
+      setIsSuccess(false);
+    }
+  }, [isOpen, initialTab]);
+
   if (!isOpen) return null;
+
+  // Password strength helper
+  const getPasswordStrength = (pass) => {
+    if (!pass) return 0;
+    let score = 0;
+    if (pass.length >= 8) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+    return score;
+  };
+  const pwStrength = getPasswordStrength(signupPassword);
+  const strengthLabels = ['Too Short', 'Fair', 'Good', 'Strong', 'Encrypted'];
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-    if (!signupName || !signupEmail || !signupPhone || !signupNature || !signupPassword || !signupSecurityPhrase) return;
+    if (!signupName || !signupEmail || !signupPhone || !signupNature || !signupPassword || !signupSecurityPhrase) {
+      setErrorMsg("Please complete all required fields.");
+      return;
+    }
 
-    // Validation Logic
     const trimmedName = signupName.trim();
     const usernameRegex = /^[a-zA-Z0-9]+$/;
     if (!usernameRegex.test(trimmedName)) {
-       setErrorMsg("Player Name can only contain letters and numbers (no spaces or symbols).");
-       return;
+      setErrorMsg("Player Name can only contain letters and numbers (no spaces).");
+      return;
     }
 
     if (!signupSecurityPhrase.trim()) {
-       setErrorMsg("Please enter a secret recovery phrase.");
-       return;
+      setErrorMsg("Please select a recovery security quote.");
+      return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(signupEmail)) {
-       setErrorMsg("Please enter a valid email address.");
-       return;
+      setErrorMsg("Please enter a valid email address.");
+      return;
     }
     const fakeDomains = ["tempmail.com", "mailinator.com", "10minutemail.com", "guerrillamail.com", "temp-mail.org", "yopmail.com"];
     const domain = signupEmail.split('@')[1]?.toLowerCase();
     if (fakeDomains.includes(domain)) {
-       setErrorMsg("Disposable email addresses are not allowed.");
-       return;
+      setErrorMsg("Disposable email addresses are not allowed.");
+      return;
     }
     const phoneRegex = /^[0-9]{7,15}$/;
-    const rawPhone = signupPhone.replace(/\D/g, ''); // strip non-digits
+    const rawPhone = signupPhone.replace(/\D/g, '');
     if (!phoneRegex.test(rawPhone)) {
-       setErrorMsg("Please enter a valid mobile number.");
-       return;
+      setErrorMsg("Please enter a valid mobile number.");
+      return;
     }
 
     if (signupPassword.length < 8) {
-       setErrorMsg("Password must be at least 8 characters.");
-       return;
+      setErrorMsg("Password must be at least 8 characters.");
+      return;
     }
 
     setIsSubmitting(true);
@@ -148,27 +169,26 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
       const result = await response.json();
 
       if (!response.ok) {
-         setErrorMsg(result.error || "Failed to create account.");
-         setIsSubmitting(false);
+        setErrorMsg(result.error || "Failed to create account.");
+        setIsSubmitting(false);
       } else {
-         if (typeof window !== 'undefined') {
-            // Extract and store the server-issued auth token separately
-            const { _authToken, ...userData } = result;
-            localStorage.setItem('dripp_user', JSON.stringify(userData));
-            if (_authToken) localStorage.setItem('dripp_auth_token', _authToken);
-            if (userData.highscore !== undefined) {
-                localStorage.setItem('dripp_highScore', userData.highscore.toString());
-            } else {
-                localStorage.setItem('dripp_highScore', '0');
-            }
-         }
-         setIsSubmitting(false); // reset before modal closes
-         setIsSuccess(true);
-         setTimeout(() => {
-             setIsSuccess(false);
-             if (onLoginSuccess) onLoginSuccess();
-             onClose();
-         }, 1500);
+        if (typeof window !== 'undefined') {
+          const { _authToken, ...userData } = result;
+          localStorage.setItem('dripp_user', JSON.stringify(userData));
+          if (_authToken) localStorage.setItem('dripp_auth_token', _authToken);
+          if (userData.highscore !== undefined) {
+            localStorage.setItem('dripp_highScore', userData.highscore.toString());
+          } else {
+            localStorage.setItem('dripp_highScore', '0');
+          }
+        }
+        setIsSubmitting(false);
+        setIsSuccess(true);
+        setTimeout(() => {
+          setIsSuccess(false);
+          if (onLoginSuccess) onLoginSuccess();
+          onClose();
+        }, 1500);
       }
     } catch (err) {
       console.error(err);
@@ -177,15 +197,17 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
     }
   };
 
-  
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-    if (!resetEmail || !resetSecurityPhrase || !resetNewPassword) return;
+    if (!resetEmail || !resetSecurityPhrase || !resetNewPassword) {
+      setErrorMsg("Please fill in all recovery fields.");
+      return;
+    }
 
     if (resetNewPassword.length < 8) {
-       setErrorMsg("New password must be at least 8 characters.");
-       return;
+      setErrorMsg("New password must be at least 8 characters.");
+      return;
     }
 
     setIsSubmitting(true);
@@ -203,13 +225,13 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
       const result = await response.json();
 
       if (!response.ok) {
-         setErrorMsg(result.error || "Invalid email or secret recovery phrase.");
+        setErrorMsg(result.error || "Invalid email or secret recovery phrase.");
       } else {
-         setIsSuccess(true);
-         setTimeout(() => {
-             setIsSuccess(false);
-             setActiveTab('login');
-         }, 1500);
+        setIsSuccess(true);
+        setTimeout(() => {
+          setIsSuccess(false);
+          setActiveTab('login');
+        }, 1500);
       }
     } catch (err) {
       console.error(err);
@@ -221,7 +243,10 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-    if (!loginEmail || !loginPassword) return;
+    if (!loginEmail || !loginPassword) {
+      setErrorMsg("Please enter your credentials.");
+      return;
+    }
 
     setIsSubmitting(true);
     
@@ -238,25 +263,24 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
       const result = await response.json();
 
       if (!response.ok) {
-         setErrorMsg(result.error || "Email or Player Tag not found, or not registered.");
-         setIsSubmitting(false);
+        setErrorMsg(result.error || "Email or Player Tag not found, or not registered.");
+        setIsSubmitting(false);
       } else {
-         if (typeof window !== 'undefined') {
-            // Extract and store the server-issued auth token separately
-            const { _authToken, ...userData } = result;
-            localStorage.setItem('dripp_user', JSON.stringify(userData));
-            if (_authToken) localStorage.setItem('dripp_auth_token', _authToken);
-            if (userData.highscore !== undefined) {
-                localStorage.setItem('dripp_highScore', userData.highscore.toString());
-            }
-         }
-         setIsSubmitting(false); // reset before modal closes
-         setIsSuccess(true);
-         setTimeout(() => {
-             setIsSuccess(false);
-             if (onLoginSuccess) onLoginSuccess();
-             onClose();
-         }, 1500);
+        if (typeof window !== 'undefined') {
+          const { _authToken, ...userData } = result;
+          localStorage.setItem('dripp_user', JSON.stringify(userData));
+          if (_authToken) localStorage.setItem('dripp_auth_token', _authToken);
+          if (userData.highscore !== undefined) {
+            localStorage.setItem('dripp_highScore', userData.highscore.toString());
+          }
+        }
+        setIsSubmitting(false);
+        setIsSuccess(true);
+        setTimeout(() => {
+          setIsSuccess(false);
+          if (onLoginSuccess) onLoginSuccess();
+          onClose();
+        }, 1500);
       }
     } catch (err) {
       console.error(err);
@@ -267,41 +291,21 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
 
   return (
     <div 
+      className="dripp-auth-backdrop"
       onClick={(e) => {
-         if (e.target === e.currentTarget) onClose();
-      }}
-      style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999,
-        display: 'flex', justifyContent: 'center', alignItems: 'center',
-        background: 'rgba(5, 5, 5, 0.6)', backdropFilter: 'blur(12px)',
-        animation: 'modalFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        padding: '20px'
+        if (e.target === e.currentTarget) onClose();
       }}
     >
-      <style>{`
-        @media (max-width: 768px) {
-          .auth-modal-content {
-             transform: scale(0.9) translateY(0) !important;
-             transform-origin: center center;
-             padding: 24px 20px !important;
-          }
-        }
-      `}</style>
-      <div className="auth-modal-content" style={{
-        background: 'linear-gradient(160deg, rgba(30,30,30,0.7) 0%, rgba(15,15,15,0.85) 100%)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '24px', padding: '16px 20px', width: '100%', maxWidth: '320px',
-        animation: 'modalScaleUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        boxShadow: '0 30px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
-        textAlign: 'center', position: 'relative', overflow: 'hidden'
-      }}>
-        {/* Top decorative glow */}
-        <div style={{
-           position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)',
-           width: '150px', height: '150px', background: 'var(--brand-yellow)',
-           filter: 'blur(70px)', opacity: 0.15, borderRadius: '50%', pointerEvents: 'none'
-        }} />
+      <div className="dripp-auth-card">
+        {/* Holographic Ambient Glow Aura */}
+        <div className="auth-ambient-glow" />
+        <div className="auth-ambient-glow-bottom" />
+
+        {/* Cyberpunk Grid Corner Accents */}
+        <span className="auth-corner c-tl" />
+        <span className="auth-corner c-tr" />
+        <span className="auth-corner c-bl" />
+        <span className="auth-corner c-br" />
 
         {/* Close Button */}
         <button 
@@ -310,333 +314,1150 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
             e.stopPropagation();
             onClose();
           }}
-          style={{
-            position: 'absolute', top: '16px', right: '16px',
-            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-            color: 'rgba(255,255,255,0.6)', borderRadius: '50%', width: '32px', height: '32px',
-            display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1rem',
-            cursor: 'pointer', zIndex: 10, transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'white'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
-          title="Skip & Continue Playing"
+          className="auth-close-btn"
+          title="Close Modal"
+          aria-label="Close"
         >
-          ✕
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
-        
+
         {isSuccess ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '24px 0', animation: 'modalScaleUp 0.5s ease' }}>
-             <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--brand-yellow)', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 30px rgba(235, 215, 63, 0.4)' }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--deep-black)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                   <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-             </div>
-             <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', color: 'var(--brand-yellow)', letterSpacing: '1px' }}>PROFILE SECURED</h2>
-             <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.7)', fontSize: '1rem' }}>Personalizing your experience...</p>
+          <div className="auth-success-screen">
+            <div className="auth-success-badge">
+              <div className="success-pulse-ring" />
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#050505" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div className="auth-success-tag">PROTOCOL CONFIRMED</div>
+            <h2 className="auth-success-title">DRIPP ID SECURED</h2>
+            <p className="auth-success-sub">Syncing player pass & decrypting high score vault...</p>
+            <div className="auth-success-progress"><div className="auth-progress-fill" /></div>
           </div>
         ) : (
           <>
-            
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '20px' }}>
-                <button 
-                    onClick={() => { setErrorMsg(""); setActiveTab('signup'); }}
-                    style={{
-                        background: 'none', border: 'none', color: activeTab === 'signup' ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.3)',
-                        fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: 'pointer', letterSpacing: '1px',
-                        paddingBottom: '6px', borderBottom: activeTab === 'signup' ? '2px solid var(--brand-yellow)' : '2px solid transparent',
-                        transition: 'all 0.3s ease'
-                    }}
-                >
-                    SIGN UP
-                </button>
-                <button 
-                    onClick={() => { setErrorMsg(""); setActiveTab('login'); }}
-                    style={{
-                        background: 'none', border: 'none', color: (activeTab === 'login' || activeTab === 'forgot_password') ? 'var(--brand-yellow)' : 'rgba(255,255,255,0.3)',
-                        fontFamily: "'Panchang', sans-serif", fontSize: '0.9rem', cursor: 'pointer', letterSpacing: '1px',
-                        paddingBottom: '6px', borderBottom: (activeTab === 'login' || activeTab === 'forgot_password') ? '2px solid var(--brand-yellow)' : '2px solid transparent',
-                        transition: 'all 0.3s ease'
-                    }}
-                >
-                    LOG IN
-                </button>
+            {/* Cyberpunk Segmented Navigation Tabs */}
+            <div className="auth-nav-track">
+              <button 
+                type="button"
+                onClick={() => { setErrorMsg(""); setActiveTab('signup'); }}
+                className={`auth-tab-btn ${activeTab === 'signup' ? 'active' : ''}`}
+              >
+                <span className="tab-sparkle">✦</span>
+                <span>SIGN UP</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => { setErrorMsg(""); setActiveTab('login'); }}
+                className={`auth-tab-btn ${activeTab === 'login' || activeTab === 'forgot_password' ? 'active' : ''}`}
+              >
+                <span>LOG IN</span>
+              </button>
             </div>
 
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
-              <div style={{ 
-                width: '34px', height: '34px', borderRadius: '10px', 
-                background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15), rgba(235, 215, 63, 0.05))', 
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '1px solid rgba(235, 215, 63, 0.3)', boxShadow: '0 4px 15px rgba(235, 215, 63, 0.15)'
-              }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
+            {/* Holographic Passport Header Badge */}
+            <div className="auth-id-header">
+              <div className="auth-id-avatar">
+                <div className="avatar-scanline" />
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
                 </svg>
+                <span className="avatar-chip-dot" />
               </div>
-              <h2 style={{ 
-                fontFamily: "'Panchang', sans-serif", fontSize: '1.6rem', margin: 0,
-                background: 'linear-gradient(135deg, #fff 0%, var(--brand-yellow) 100%)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '1px' 
-              }}>
-                DRIPP ID
-              </h2>
-            </div>
-            <p style={{ fontFamily: "'Clash Display', sans-serif", color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', marginBottom: '12px', lineHeight: 1.3, padding: '0 10px', display: activeTab === 'signup' ? 'none' : 'block' }}>
-              Establish your digital identity to secure your high scores.
-            </p>
-            
-            <form onSubmit={activeTab === 'signup' ? handleSignup : activeTab === 'forgot_password' ? handleResetPassword : handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
-              {errorMsg && (
-                 <div style={{ marginBottom: '12px', background: 'rgba(255, 50, 50, 0.1)', border: '1px solid rgba(255, 50, 50, 0.2)', color: '#ff6b6b', padding: '10px', borderRadius: '8px', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>
-                    {errorMsg}
-                 </div>
-              )}
-              
-              <div style={{
-                  display: 'grid', gridTemplateRows: activeTab === 'signup' ? '1fr' : '0fr',
-                  transition: 'grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease',
-                  opacity: activeTab === 'signup' ? 1 : 0
-              }}>
-                  <div style={{ overflow: 'hidden' }}>
-                    <div style={{ position: 'relative', paddingBottom: activeTab === 'signup' ? '12px' : '0', transition: 'padding 0.4s ease' }}>
-                      <input 
-                        type="text" 
-                        className="modern-input"
-                        placeholder="Player Name" 
-                        value={signupName}
-                        onChange={e => setSignupName(e.target.value)}
-                        required={activeTab === 'signup'}
-                        autoComplete="off"
-                        style={{
-                          width: '100%', padding: '10px 14px', borderRadius: '12px',
-                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                          color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
-                          outline: 'none', boxSizing: 'border-box'
-                        }}
-                      />
-                    </div>
+              <div className="auth-id-meta">
+                <div className="auth-id-row">
+                  <h2 className="auth-id-brand">DRIPP ID</h2>
+                  <div className="auth-secure-lock">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
                   </div>
+                </div>
+                <div className="auth-protocol-badge">
+                  <span className="pulse-beacon" />
+                  <span className="protocol-text">
+                    {activeTab === 'signup' 
+                      ? 'PLAYER PASS // ENROLLMENT' 
+                      : activeTab === 'forgot_password' 
+                        ? 'SECURITY RECOVERY // OVERRIDE' 
+                        : 'ENCRYPTED PORTAL // ACCESS'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Error Message Toast */}
+            {errorMsg && (
+              <div className="auth-error-toast">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            {/* Main Interactive Form */}
+            <form onSubmit={activeTab === 'signup' ? handleSignup : activeTab === 'forgot_password' ? handleResetPassword : handleLogin} className="auth-form-body">
+              
+              {/* SIGNUP: Player Name */}
+              {activeTab === 'signup' && (
+                <div className="auth-input-group">
+                  <div className="auth-field-wrapper">
+                    <span className="auth-field-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="8.5" cy="7" r="4" />
+                        <line x1="20" y1="8" x2="20" y2="14" />
+                        <line x1="23" y1="11" x2="17" y2="11" />
+                      </svg>
+                    </span>
+                    <input 
+                      type="text" 
+                      className="cyber-input"
+                      placeholder="Player Name / Gamer Tag" 
+                      value={signupName}
+                      onChange={e => setSignupName(e.target.value)}
+                      required={activeTab === 'signup'}
+                      autoComplete="off"
+                    />
+                    <span className="input-focus-line" />
+                  </div>
+                </div>
+              )}
+
+              {/* Email Address (All modes) */}
+              <div className="auth-input-group">
+                <div className="auth-field-wrapper">
+                  <span className="auth-field-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                  </span>
+                  <input 
+                    type={activeTab === 'login' ? "text" : "email"} 
+                    className="cyber-input"
+                    placeholder={activeTab === 'login' ? "Email or Player Tag" : "Email Address"} 
+                    value={activeTab === 'signup' ? signupEmail : activeTab === 'forgot_password' ? resetEmail : loginEmail}
+                    onChange={e => activeTab === 'signup' ? setSignupEmail(e.target.value) : activeTab === 'forgot_password' ? setResetEmail(e.target.value) : setLoginEmail(e.target.value)}
+                    required
+                    autoComplete="off"
+                  />
+                  <span className="input-focus-line" />
+                </div>
               </div>
 
-              <div style={{ position: 'relative', paddingBottom: '8px' }}>
-                <input 
-                  type={activeTab === 'login' ? "text" : "email"} 
-                  className="modern-input"
-                  placeholder={activeTab === 'login' ? "Email or Player Tag" : "Email Address"} 
-                  value={activeTab === 'signup' ? signupEmail : activeTab === 'forgot_password' ? resetEmail : loginEmail}
-                  onChange={e => activeTab === 'signup' ? setSignupEmail(e.target.value) : activeTab === 'forgot_password' ? setResetEmail(e.target.value) : setLoginEmail(e.target.value)}
-                  required
-                  autoComplete="off"
-                  style={{
-                    width: '100%', padding: '10px 14px', borderRadius: '12px',
-                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                    color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
-                    outline: 'none', boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              <div style={{ position: 'relative', paddingBottom: '8px' }}>
-                <input 
-                  type={activeTab === 'signup' && showPassword ? 'text' : 'password'} 
-                  className="modern-input"
-                  placeholder={activeTab === 'forgot_password' ? "New Password" : "Password"} 
-                  value={activeTab === 'signup' ? signupPassword : activeTab === 'forgot_password' ? resetNewPassword : loginPassword}
-                  onChange={e => activeTab === 'signup' ? setSignupPassword(e.target.value) : activeTab === 'forgot_password' ? setResetNewPassword(e.target.value) : setLoginPassword(e.target.value)}
-                  required
-                  maxLength={128}
-                  style={{
-                    width: '100%', padding: '10px 14px', borderRadius: '12px',
-                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                    color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
-                    outline: 'none', boxSizing: 'border-box'
-                  }}
-                />
-                {activeTab === 'signup' && (
+              {/* Password Field */}
+              <div className="auth-input-group">
+                <div className="auth-field-wrapper">
+                  <span className="auth-field-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </span>
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    className="cyber-input"
+                    placeholder={activeTab === 'forgot_password' ? "Create New Password" : "Password (8+ chars)"} 
+                    value={activeTab === 'signup' ? signupPassword : activeTab === 'forgot_password' ? resetNewPassword : loginPassword}
+                    onChange={e => activeTab === 'signup' ? setSignupPassword(e.target.value) : activeTab === 'forgot_password' ? setResetNewPassword(e.target.value) : setLoginPassword(e.target.value)}
+                    required
+                    maxLength={128}
+                  />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute', right: '15px', top: '15px',
-                      background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
-                      cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}
+                    className="auth-eye-btn"
+                    title={showPassword ? "Hide Password" : "Show Password"}
                   >
                     {showPassword ? (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
                     ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
                     )}
                   </button>
-                )}
+                  <span className="input-focus-line" />
+                </div>
 
-                {activeTab === 'login' && (
-                  <div style={{ textAlign: 'right', marginTop: '8px' }}>
-                     <button type="button" onClick={() => { setErrorMsg(""); setActiveTab('forgot_password'); }} style={{ background: 'none', border: 'none', color: 'var(--brand-yellow)', fontSize: '0.8rem', fontFamily: "'Clash Display', sans-serif", cursor: 'pointer', opacity: 0.8 }}>Forgot Password?</button>
+                {/* Password Strength Indicator (Signup Mode) */}
+                {activeTab === 'signup' && signupPassword.length > 0 && (
+                  <div className="pw-strength-bar">
+                    <div className="pw-strength-meter">
+                      {[1, 2, 3, 4].map(idx => (
+                        <span 
+                          key={idx} 
+                          className={`pw-segment ${pwStrength >= idx ? 'active active-' + pwStrength : ''}`} 
+                        />
+                      ))}
+                    </div>
+                    <span className="pw-strength-label">{strengthLabels[pwStrength]}</span>
                   </div>
                 )}
-                {activeTab === 'forgot_password' && (
-                  <div style={{ marginTop: '12px' }}>
+
+                {/* Forgot Password Link (Login Mode) */}
+                {activeTab === 'login' && (
+                  <div className="auth-forgot-row">
+                    <button 
+                      type="button" 
+                      onClick={() => { setErrorMsg(""); setActiveTab('forgot_password'); }} 
+                      className="auth-forgot-link"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* SIGNUP: Country Code + Phone Row */}
+              {activeTab === 'signup' && (
+                <div className="auth-phone-row">
+                  <div className="auth-country-select-wrap">
                     <select 
-                      className="modern-input"
-                      value={resetSecurityPhrase}
-                      onChange={e => setResetSecurityPhrase(e.target.value)}
-                      required={activeTab === 'forgot_password'}
-                      style={{
-                        width: '100%', padding: '10px 14px', borderRadius: '12px',
-                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                        color: resetSecurityPhrase ? 'white' : 'rgba(255,255,255,0.4)', 
-                        fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
-                        outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
-                      }}
+                      className="cyber-select cyber-country-select"
+                      value={signupCountryCode}
+                      onChange={e => setSignupCountryCode(e.target.value)}
+                    >
+                      {COUNTRY_CODES.map((c) => (
+                        <option key={c.code+c.label} value={c.code}>
+                          {c.code} ({c.label})
+                        </option>
+                      ))}
+                    </select>
+                    <span className="select-chevron">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </span>
+                  </div>
+                  <div className="auth-field-wrapper" style={{ flex: 1 }}>
+                    <span className="auth-field-icon">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                      </svg>
+                    </span>
+                    <input 
+                      type="tel" 
+                      className="cyber-input"
+                      placeholder="Mobile Number" 
+                      value={signupPhone}
+                      onChange={e => setSignupPhone(e.target.value)}
+                      required={activeTab === 'signup'}
+                      autoComplete="off"
+                    />
+                    <span className="input-focus-line" />
+                  </div>
+                </div>
+              )}
+
+              {/* SIGNUP: Persona Interactive Chips */}
+              {activeTab === 'signup' && (
+                <div className="auth-persona-section">
+                  <span className="persona-section-title">SELECT IDENTITY PERSONA</span>
+                  <div className="persona-chips-grid">
+                    {PERSONAS.map((p) => {
+                      const isSelected = signupNature === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setSignupNature(p.id)}
+                          className={`persona-card-chip ${isSelected ? 'selected' : ''}`}
+                        >
+                          <span className="persona-icon">{p.icon}</span>
+                          <span className="persona-name">{p.label}</span>
+                          <span className="persona-badge">{p.badge}</span>
+                          {isSelected && <span className="persona-indicator" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* SIGNUP or FORGOT PASSWORD: Security Quote Selector */}
+              {(activeTab === 'signup' || activeTab === 'forgot_password') && (
+                <div className="auth-input-group">
+                  <div className="auth-field-wrapper">
+                    <span className="auth-field-icon">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                    </span>
+                    <select 
+                      className="cyber-select"
+                      value={activeTab === 'signup' ? signupSecurityPhrase : resetSecurityPhrase}
+                      onChange={e => activeTab === 'signup' ? setSignupSecurityPhrase(e.target.value) : setResetSecurityPhrase(e.target.value)}
+                      required
                     >
                       <option value="" disabled>Select Security Quote...</option>
                       {SECURITY_QUOTES.map(quote => (
-                        <option key={quote} value={quote} style={{color: 'black'}}>{quote}</option>
+                        <option key={quote} value={quote}>{quote}</option>
                       ))}
                     </select>
-                    <svg style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'rgba(255,255,255,0.5)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
+                    <span className="select-chevron">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </span>
+                    <span className="input-focus-line" />
                   </div>
-                )}
-              </div>
-              
-              <div style={{
+                </div>
+              )}
 
-                  display: 'grid', gridTemplateRows: activeTab === 'signup' ? '1fr' : '0fr',
-                  transition: 'grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease',
-                  opacity: activeTab === 'signup' ? 1 : 0
-              }}>
-                  <div style={{ overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: activeTab === 'signup' ? '12px' : '0', transition: 'padding 0.4s ease' }}>
-                      <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
-                         <div style={{ position: 'relative', flexShrink: 0 }}>
-                           <select 
-                             className="modern-input"
-                             value={signupCountryCode}
-                             onChange={e => setSignupCountryCode(e.target.value)}
-                             style={{
-                               padding: '10px 24px 10px 8px', borderRadius: '12px',
-                               background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                               color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
-                               outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', 
-                               minWidth: '85px', textAlign: 'center', position: 'relative', zIndex: 2
-                             }}
-                           >
-                             {COUNTRY_CODES.map((c) => (
-                                <option key={c.code+c.label} value={c.code} style={{color: 'black'}}>{c.code} ({c.label})</option>
-                             ))}
-                           </select>
-                           <svg style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1, color: 'rgba(255,255,255,0.5)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                             <polyline points="6 9 12 15 18 9"></polyline>
-                           </svg>
-                         </div>
-                         <input 
-                           type="tel" 
-                           className="modern-input"
-                           placeholder="Mobile Number" 
-                           value={signupPhone}
-                           onChange={e => setSignupPhone(e.target.value)}
-                           required={activeTab === 'signup'}
-                           autoComplete="off"
-                           style={{
-                             flex: '1 1 auto', minWidth: 0, width: '100%', padding: '10px 14px', borderRadius: '12px',
-                             background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                             color: 'white', fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
-                             outline: 'none', boxSizing: 'border-box'
-                           }}
-                         />
-                      </div>
-                      <div style={{ position: 'relative' }}>
-                         <select 
-                           className="modern-input"
-                           value={signupNature}
-                           onChange={e => setSignupNature(e.target.value)}
-                           required={activeTab === 'signup'}
-                           style={{
-                             width: '100%', padding: '10px 14px', borderRadius: '12px',
-                             background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                             color: signupNature ? 'white' : 'rgba(255,255,255,0.4)', 
-                             fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
-                             outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
-                           }}
-                         >
-                           <option value="" disabled>Select Persona...</option>
-                           <option value="business" style={{color: 'black'}}>Business Persona</option>
-                           <option value="creative" style={{color: 'black'}}>Creative Explorer</option>
-                           <option value="general" style={{color: 'black'}}>General User</option>
-                         </select>
-                         <svg style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'rgba(255,255,255,0.5)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                           <polyline points="6 9 12 15 18 9"></polyline>
-                         </svg>
-                      </div>
-                      <div style={{ position: 'relative' }}>
-                         <select 
-                           className="modern-input"
-                           value={signupSecurityPhrase}
-                           onChange={e => setSignupSecurityPhrase(e.target.value)}
-                           required={activeTab === 'signup'}
-                           style={{
-                             width: '100%', padding: '10px 14px', borderRadius: '12px',
-                             background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                             color: signupSecurityPhrase ? 'white' : 'rgba(255,255,255,0.4)', 
-                             fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem',
-                             outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', boxSizing: 'border-box',
-                           }}
-                         >
-                           <option value="" disabled>Select Security Quote...</option>
-                           {SECURITY_QUOTES.map(quote => (
-                             <option key={quote} value={quote} style={{color: 'black'}}>{quote}</option>
-                           ))}
-                         </select>
-                         <svg style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'rgba(255,255,255,0.5)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                           <polyline points="6 9 12 15 18 9"></polyline>
-                         </svg>
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginTop: '4px', padding: '0 4px' }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                        </svg>
-                        <p style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', margin: 0, lineHeight: 1.4, textAlign: 'left' }}>
-                          Your data is fully secure. We only collect this to personalize your journey, unlock exclusive features, and verify real players.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+              {/* Security Assurance Capsule */}
+              <div className="auth-security-capsule">
+                <div className="security-capsule-icon">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <p className="security-capsule-text">
+                  <strong>256-Bit Encrypted Pass.</strong> Used exclusively to unlock high scores, verify player tags, and grant access to drops.
+                </p>
               </div>
-              
-              <button type="submit" disabled={isSubmitting} className="modern-btn" style={{
-                marginTop: '10px', width: '100%', padding: '12px', borderRadius: '12px',
-                background: isSubmitting ? 'rgba(255,255,255,0.05)' : 'var(--brand-yellow)', 
-                border: 'none',
-                color: isSubmitting ? 'rgba(255,255,255,0.5)' : 'var(--deep-black)', 
-                fontFamily: "'Panchang', sans-serif", fontSize: '0.85rem', cursor: isSubmitting ? 'wait' : 'pointer',
-                letterSpacing: '1px', transition: 'all 0.3s ease',
-                boxShadow: isSubmitting ? 'none' : '0 10px 25px rgba(235, 215, 63, 0.25)'
-              }}
-              onMouseEnter={e => { if(!isSubmitting) e.currentTarget.style.transform = 'translateY(-2px)' }}
-              onMouseLeave={e => { if(!isSubmitting) e.currentTarget.style.transform = 'translateY(0)' }}
+
+              {/* High-Energy Action Button */}
+              <button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="auth-submit-btn"
               >
-                {isSubmitting ? 'INITIALIZING...' : activeTab === 'forgot_password' ? 'RESET PASSWORD' : (activeTab === 'signup' ? 'SAVE PROFILE' : 'ACCESS PROFILE')}
+                <span className="btn-ambient-shimmer" />
+                <span className="btn-label-stack">
+                  {isSubmitting ? (
+                    <span className="btn-loading-state">
+                      <span className="btn-cyber-spinner" />
+                      <span>ENCRYPTING...</span>
+                    </span>
+                  ) : activeTab === 'forgot_password' ? (
+                    <>
+                      <span>OVERRIDE PASSWORD</span>
+                      <span className="btn-symbol">↗</span>
+                    </>
+                  ) : activeTab === 'signup' ? (
+                    <>
+                      <span className="btn-sparkle-glyph">✦</span>
+                      <span>SAVE PROFILE</span>
+                      <span className="btn-symbol">↗</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="btn-sparkle-glyph">✦</span>
+                      <span>ACCESS PROFILE</span>
+                      <span className="btn-symbol">↗</span>
+                    </>
+                  )}
+                </span>
               </button>
+
+              {/* Return to login option in Forgot Password mode */}
+              {activeTab === 'forgot_password' && (
+                <button
+                  type="button"
+                  onClick={() => { setErrorMsg(""); setActiveTab('login'); }}
+                  className="auth-return-btn"
+                >
+                  ← Return to Login
+                </button>
+              )}
             </form>
           </>
         )}
       </div>
+
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes modalFadeIn { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(12px); } }
-        @keyframes modalScaleUp { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
-        .modern-input { transition: all 0.3s ease; }
-        .modern-input:-webkit-autofill, .modern-input:-webkit-autofill:hover, .modern-input:-webkit-autofill:focus, .modern-input:-webkit-autofill:active {
-            -webkit-box-shadow: 0 0 0 30px #151515 inset !important;
-            -webkit-text-fill-color: white !important;
-            transition: background-color 5000s ease-in-out 0s;
+        /* Modal Backdrop */
+        .dripp-auth-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 99999;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background: rgba(4, 4, 6, 0.72);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          padding: 16px;
+          animation: authFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          box-sizing: border-box;
+          overflow-y: auto;
         }
-        .modern-input:focus { border-color: var(--brand-yellow) !important; box-shadow: 0 0 20px rgba(235, 215, 63, 0.1) !important; background: rgba(255, 255, 255, 0.04) !important; }
+
+        /* Modal Main Card */
+        .dripp-auth-card {
+          position: relative;
+          width: 100%;
+          max-width: 440px;
+          max-height: 90vh;
+          overflow-y: auto;
+          background: radial-gradient(circle at 50% 0%, rgba(235, 215, 63, 0.08) 0%, rgba(13, 13, 16, 0.95) 55%, rgba(8, 8, 10, 0.98) 100%);
+          backdrop-filter: blur(28px);
+          -webkit-backdrop-filter: blur(28px);
+          border: 1px solid rgba(235, 215, 63, 0.22);
+          border-radius: 28px;
+          padding: 24px 26px 28px;
+          box-shadow: 
+            0 24px 60px rgba(0, 0, 0, 0.8),
+            0 0 45px rgba(235, 215, 63, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.12);
+          box-sizing: border-box;
+          animation: authScaleUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Custom Sleek Scrollbar */
+        .dripp-auth-card::-webkit-scrollbar {
+          width: 4px;
+        }
+        .dripp-auth-card::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .dripp-auth-card::-webkit-scrollbar-thumb {
+          background: rgba(235, 215, 63, 0.25);
+          border-radius: 10px;
+        }
+
+        /* Glowing Ambient Accents */
+        .auth-ambient-glow {
+          position: absolute;
+          top: -70px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 220px;
+          height: 140px;
+          background: var(--brand-yellow);
+          filter: blur(80px);
+          opacity: 0.18;
+          border-radius: 50%;
+          pointer-events: none;
+        }
+        .auth-ambient-glow-bottom {
+          position: absolute;
+          bottom: -50px;
+          right: 20%;
+          width: 140px;
+          height: 100px;
+          background: rgba(235, 215, 63, 0.12);
+          filter: blur(60px);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+
+        /* Cyberpunk Corner Accents */
+        .auth-corner {
+          position: absolute;
+          width: 8px;
+          height: 8px;
+          pointer-events: none;
+        }
+        .auth-corner.c-tl { top: 10px; left: 10px; border-top: 2px solid rgba(235, 215, 63, 0.4); border-left: 2px solid rgba(235, 215, 63, 0.4); }
+        .auth-corner.c-tr { top: 10px; right: 10px; border-top: 2px solid rgba(235, 215, 63, 0.4); border-right: 2px solid rgba(235, 215, 63, 0.4); }
+        .auth-corner.c-bl { bottom: 10px; left: 10px; border-bottom: 2px solid rgba(235, 215, 63, 0.4); border-left: 2px solid rgba(235, 215, 63, 0.4); }
+        .auth-corner.c-br { bottom: 10px; right: 10px; border-bottom: 2px solid rgba(235, 215, 63, 0.4); border-right: 2px solid rgba(235, 215, 63, 0.4); }
+
+        /* Close Button */
+        .auth-close-btn {
+          position: absolute;
+          top: 18px;
+          right: 18px;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          z-index: 15;
+        }
+        .auth-close-btn:hover {
+          background: rgba(235, 215, 63, 0.15);
+          border-color: var(--brand-yellow);
+          color: var(--brand-yellow);
+          transform: rotate(90deg) scale(1.08);
+        }
+
+        /* Segmented Nav Tabs */
+        .auth-nav-track {
+          display: flex;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.035);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 999px;
+          padding: 4px;
+          margin-bottom: 20px;
+          width: fit-content;
+        }
+        .auth-tab-btn {
+          background: none;
+          border: none;
+          padding: 8px 18px;
+          border-radius: 999px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 1.2px;
+          color: rgba(255, 255, 255, 0.45);
+          cursor: pointer;
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .auth-tab-btn.active {
+          background: rgba(235, 215, 63, 0.15);
+          color: var(--brand-yellow);
+          box-shadow: 0 0 16px rgba(235, 215, 63, 0.2);
+          border: 1px solid rgba(235, 215, 63, 0.4);
+        }
+        .tab-sparkle {
+          color: var(--brand-yellow);
+          font-size: 0.7rem;
+        }
+
+        /* ID Header Badge */
+        .auth-id-header {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 12px 14px;
+          background: linear-gradient(135deg, rgba(235, 215, 63, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
+          border: 1px solid rgba(235, 215, 63, 0.25);
+          border-radius: 18px;
+          margin-bottom: 18px;
+          position: relative;
+          overflow: hidden;
+        }
+        .auth-id-avatar {
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, rgba(235, 215, 63, 0.2), rgba(15, 15, 18, 0.9));
+          border: 1px solid rgba(235, 215, 63, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          box-shadow: 0 4px 18px rgba(235, 215, 63, 0.25);
+          flex-shrink: 0;
+        }
+        .avatar-scanline {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to bottom, transparent, rgba(235, 215, 63, 0.3), transparent);
+          animation: avatarScan 2.4s linear infinite;
+          pointer-events: none;
+        }
+        .avatar-chip-dot {
+          position: absolute;
+          top: 3px;
+          right: 3px;
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: var(--brand-yellow);
+          box-shadow: 0 0 6px var(--brand-yellow);
+        }
+        .auth-id-meta {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+        .auth-id-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .auth-id-brand {
+          font-family: 'Panchang', sans-serif;
+          font-size: 1.35rem;
+          font-weight: 800;
+          letter-spacing: 1.5px;
+          margin: 0;
+          background: linear-gradient(135deg, #FFFFFF 20%, #EBD73F 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .auth-secure-lock {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 3px 6px;
+          background: rgba(235, 215, 63, 0.15);
+          border: 1px solid rgba(235, 215, 63, 0.35);
+          border-radius: 6px;
+          color: var(--brand-yellow);
+        }
+        .auth-protocol-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .pulse-beacon {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #4ade80;
+          box-shadow: 0 0 8px #4ade80;
+          animation: beaconPulse 1.8s ease infinite;
+        }
+        .protocol-text {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.68rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.55);
+          letter-spacing: 0.8px;
+          text-transform: uppercase;
+        }
+
+        /* Error Toast */
+        .auth-error-toast {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(239, 68, 68, 0.12);
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          color: #fca5a5;
+          padding: 10px 14px;
+          border-radius: 12px;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.8rem;
+          font-weight: 500;
+          margin-bottom: 14px;
+          animation: authShake 0.4s ease;
+        }
+
+        /* Form Body */
+        .auth-form-body {
+          display: flex;
+          flex-direction: column;
+          gap: 11px;
+        }
+        .auth-input-group {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+
+        /* Interactive Field Wrapper */
+        .auth-field-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.025);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 14px;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
+        }
+        .auth-field-wrapper:hover {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(255, 255, 255, 0.15);
+        }
+        .auth-field-wrapper:focus-within {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: var(--brand-yellow);
+          box-shadow: 0 0 20px rgba(235, 215, 63, 0.15);
+        }
+        .auth-field-icon {
+          padding-left: 14px;
+          color: rgba(255, 255, 255, 0.35);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          pointer-events: none;
+          transition: color 0.3s ease;
+        }
+        .auth-field-wrapper:focus-within .auth-field-icon {
+          color: var(--brand-yellow);
+        }
+
+        /* Cyber Inputs & Selects */
+        .cyber-input {
+          flex: 1;
+          width: 100%;
+          padding: 11px 14px 11px 10px;
+          background: transparent;
+          border: none;
+          outline: none;
+          color: #FFFFFF;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.86rem;
+          font-weight: 500;
+          letter-spacing: 0.3px;
+          box-sizing: border-box;
+        }
+        .cyber-input::placeholder {
+          color: rgba(255, 255, 255, 0.28);
+          font-weight: 400;
+        }
+        .cyber-select {
+          flex: 1;
+          width: 100%;
+          padding: 11px 36px 11px 10px;
+          background: transparent;
+          border: none;
+          outline: none;
+          color: #FFFFFF;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.86rem;
+          font-weight: 500;
+          cursor: pointer;
+          appearance: none;
+          -webkit-appearance: none;
+          box-sizing: border-box;
+        }
+        .cyber-select option {
+          background: #111116;
+          color: #FFFFFF;
+          font-family: 'Clash Display', sans-serif;
+          padding: 8px;
+        }
+        .select-chevron {
+          position: absolute;
+          right: 14px;
+          pointer-events: none;
+          color: rgba(255, 255, 255, 0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .auth-eye-btn {
+          position: absolute;
+          right: 12px;
+          background: none;
+          border: none;
+          color: rgba(255, 255, 255, 0.4);
+          cursor: pointer;
+          padding: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.2s ease;
+        }
+        .auth-eye-btn:hover {
+          color: var(--brand-yellow);
+        }
+
+        /* Password Strength Meter */
+        .pw-strength-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 2px 6px;
+          gap: 10px;
+        }
+        .pw-strength-meter {
+          display: flex;
+          gap: 4px;
+          flex: 1;
+        }
+        .pw-segment {
+          height: 3px;
+          flex: 1;
+          border-radius: 4px;
+          background: rgba(255, 255, 255, 0.1);
+          transition: background 0.3s ease;
+        }
+        .pw-segment.active-1 { background: #ef4444; }
+        .pw-segment.active-2 { background: #f97316; }
+        .pw-segment.active-3 { background: #eab308; }
+        .pw-segment.active-4 { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+        .pw-strength-label {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.68rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.45);
+          text-transform: uppercase;
+        }
+
+        /* Phone Row */
+        .auth-phone-row {
+          display: flex;
+          gap: 8px;
+          width: 100%;
+        }
+        .auth-country-select-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.025);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 14px;
+          width: 105px;
+          flex-shrink: 0;
+          transition: all 0.3s ease;
+        }
+        .auth-country-select-wrap:focus-within {
+          border-color: var(--brand-yellow);
+        }
+        .cyber-country-select {
+          padding-left: 14px;
+          padding-right: 28px;
+          font-size: 0.82rem;
+          text-align: left;
+        }
+
+        /* Persona Chips Grid */
+        .auth-persona-section {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 2px;
+        }
+        .persona-section-title {
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.62rem;
+          font-weight: 700;
+          letter-spacing: 1.4px;
+          color: rgba(255, 255, 255, 0.4);
+          padding-left: 4px;
+        }
+        .persona-chips-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+        }
+        .persona-card-chip {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 2px;
+          padding: 8px 4px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          color: rgba(255, 255, 255, 0.6);
+        }
+        .persona-card-chip:hover {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(235, 215, 63, 0.3);
+          color: #FFF;
+          transform: translateY(-1px);
+        }
+        .persona-card-chip.selected {
+          background: rgba(235, 215, 63, 0.1);
+          border-color: var(--brand-yellow);
+          color: var(--brand-yellow);
+          box-shadow: 0 0 14px rgba(235, 215, 63, 0.15);
+        }
+        .persona-icon {
+          font-size: 0.85rem;
+          line-height: 1;
+        }
+        .persona-name {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.74rem;
+          font-weight: 600;
+          line-height: 1.2;
+        }
+        .persona-badge {
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.52rem;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.35);
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+        }
+        .persona-card-chip.selected .persona-badge {
+          color: rgba(235, 215, 63, 0.75);
+        }
+        .persona-indicator {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: var(--brand-yellow);
+          box-shadow: 0 0 6px var(--brand-yellow);
+        }
+
+        /* Forgot Password Row */
+        .auth-forgot-row {
+          text-align: right;
+          padding-top: 2px;
+        }
+        .auth-forgot-link {
+          background: none;
+          border: none;
+          color: var(--brand-yellow);
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.78rem;
+          font-weight: 500;
+          cursor: pointer;
+          opacity: 0.75;
+          transition: opacity 0.2s ease;
+        }
+        .auth-forgot-link:hover {
+          opacity: 1;
+          text-decoration: underline;
+        }
+
+        /* Security Capsule */
+        .auth-security-capsule {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          padding: 8px 12px;
+          background: rgba(235, 215, 63, 0.04);
+          border: 1px solid rgba(235, 215, 63, 0.12);
+          border-radius: 12px;
+          margin-top: 2px;
+        }
+        .security-capsule-icon {
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .security-capsule-text {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.72rem;
+          line-height: 1.35;
+          color: rgba(255, 255, 255, 0.45);
+          margin: 0;
+          text-align: left;
+        }
+        .security-capsule-text strong {
+          color: rgba(255, 255, 255, 0.75);
+          font-weight: 600;
+        }
+
+        /* CTA Button */
+        .auth-submit-btn {
+          position: relative;
+          width: 100%;
+          margin-top: 6px;
+          padding: 13px 20px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #FFF066 0%, #EBD73F 50%, #C8A316 100%);
+          border: none;
+          color: #050505;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.8rem;
+          font-weight: 800;
+          letter-spacing: 1.2px;
+          cursor: pointer;
+          overflow: hidden;
+          box-shadow: 
+            0 10px 30px rgba(235, 215, 63, 0.35),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .auth-submit-btn:hover:not(:disabled) {
+          transform: translateY(-2px) scale(1.01);
+          box-shadow: 
+            0 16px 40px rgba(235, 215, 63, 0.5),
+            0 0 25px rgba(235, 215, 63, 0.3);
+        }
+        .auth-submit-btn:active:not(:disabled) {
+          transform: scale(0.99) translateY(0);
+        }
+        .auth-submit-btn:disabled {
+          opacity: 0.6;
+          cursor: wait;
+        }
+        .btn-ambient-shimmer {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+          transform: translateX(-100%);
+          animation: btnShimmer 3s ease-in-out infinite;
+        }
+        .btn-label-stack {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+        .btn-sparkle-glyph {
+          font-size: 0.9rem;
+        }
+        .btn-symbol {
+          font-size: 0.85rem;
+          transition: transform 0.2s ease;
+        }
+        .auth-submit-btn:hover .btn-symbol {
+          transform: translate(2px, -2px);
+        }
+        .btn-loading-state {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .btn-cyber-spinner {
+          width: 14px;
+          height: 14px;
+          border: 2px solid #050505;
+          border-top-color: transparent;
+          border-radius: 50%;
+          animation: cyberSpin 0.7s linear infinite;
+        }
+        .auth-return-btn {
+          background: none;
+          border: none;
+          color: rgba(255, 255, 255, 0.5);
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.8rem;
+          font-weight: 500;
+          cursor: pointer;
+          margin-top: 4px;
+          transition: color 0.2s ease;
+        }
+        .auth-return-btn:hover {
+          color: var(--brand-yellow);
+        }
+
+        /* Success Screen */
+        .auth-success-screen {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          padding: 30px 10px;
+          animation: authScaleUp 0.5s ease;
+        }
+        .auth-success-badge {
+          position: relative;
+          width: 72px;
+          height: 72px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #FFE853, #EBD73F);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 0 35px rgba(235, 215, 63, 0.5);
+          margin-bottom: 16px;
+        }
+        .success-pulse-ring {
+          position: absolute;
+          inset: -8px;
+          border-radius: 50%;
+          border: 2px solid var(--brand-yellow);
+          animation: ringPulse 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+        }
+        .auth-success-tag {
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.65rem;
+          font-weight: 800;
+          color: var(--brand-yellow);
+          letter-spacing: 2px;
+          margin-bottom: 6px;
+        }
+        .auth-success-title {
+          font-family: 'Panchang', sans-serif;
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: #FFFFFF;
+          letter-spacing: 1px;
+          margin: 0 0 8px;
+        }
+        .auth-success-sub {
+          font-family: 'Clash Display', sans-serif;
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 0.88rem;
+          margin: 0 0 20px;
+        }
+        .auth-success-progress {
+          width: 140px;
+          height: 3px;
+          border-radius: 3px;
+          background: rgba(255, 255, 255, 0.1);
+          overflow: hidden;
+        }
+        .auth-progress-fill {
+          height: 100%;
+          width: 100%;
+          background: var(--brand-yellow);
+          animation: fillProgress 1.4s ease forwards;
+        }
+
+        /* Autofill Overrides */
+        .cyber-input:-webkit-autofill, 
+        .cyber-input:-webkit-autofill:hover, 
+        .cyber-input:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0 30px #121216 inset !important;
+          -webkit-text-fill-color: #FFFFFF !important;
+          transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* Keyframes */
+        @keyframes authFadeIn {
+          from { opacity: 0; backdrop-filter: blur(0px); }
+          to { opacity: 1; backdrop-filter: blur(16px); }
+        }
+        @keyframes authScaleUp {
+          from { opacity: 0; transform: scale(0.92) translateY(12px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes btnShimmer {
+          0% { transform: translateX(-100%); }
+          50%, 100% { transform: translateX(100%); }
+        }
+        @keyframes avatarScan {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(100%); }
+        }
+        @keyframes beaconPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(0.85); }
+        }
+        @keyframes ringPulse {
+          0% { transform: scale(0.95); opacity: 0.8; }
+          100% { transform: scale(1.35); opacity: 0; }
+        }
+        @keyframes fillProgress {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+        @keyframes cyberSpin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes authShake {
+          0%, 100% { transform: translateX(0); }
+          20%, 60% { transform: translateX(-6px); }
+          40%, 80% { transform: translateX(6px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+          .dripp-auth-card {
+            padding: 20px 18px 24px;
+            max-width: 94vw;
+            border-radius: 24px;
+          }
+          .auth-id-brand {
+            font-size: 1.15rem;
+          }
+          .persona-chips-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+          }
+        }
       `}} />
     </div>
   );
