@@ -1,0 +1,103 @@
+{
+  "launchDate": "2026-09-03T00:00:00.000Z",
+  "tips": [
+    {
+      "id": 1,
+      "category": "Sales & Psychology",
+      "title": "Don't sell to people. Make them want to buy.",
+      "explanation": "Nobody wakes up wanting to be pitched. The second someone feels like you're trying to sell them something, their guard immediately goes up. Instead of trying to convince people you're great, just share what you build, show the real process, and be honest about the results. When people understand who you are and what you stand for, they will come to you and choose to buy on their own terms.",
+      "formula": "Stop pitching yourself. Show your work so well that reaching out feels like their own idea."
+    },
+    {
+      "id": 2,
+      "category": "Pricing & Money",
+      "title": "Never charge for your time. Charge for the problem you fix.",
+      "explanation": "When you bill by the hour, getting faster and better at your craft actually loses you money. Clients don't care if a project took you 2 hours or 20 hours—they only care that their headache is gone. If you fix a $10,000 problem in 30 minutes, you earned that money through years of practice, not 30 minutes of sitting in a chair.",
+      "formula": "Set your prices based on how much time, money, or stress you save the client, never on hours clocked."
+    },
+    {
+      "id": 3,
+      "category": "Content & Attention",
+      "title": "If you don't hook them in 3 seconds, your video doesn't exist.",
+      "explanation": "People scroll fast. You could have the most life-changing advice in the world, but if the opening seconds are slow, nobody will ever hear it. Never start with 'Hey guys' or a long logo animation. Jump straight into the action, drop a surprising fact, or show the end result first.",
+      "formula": "Put your most exciting visual or question right at second one. Give them a reason not to swipe away."
+    },
+    {
+      "id": 4,
+      "category": "Business & Growth",
+      "title": "A simple version launched today beats a perfect plan next month.",
+      "explanation": "Sitting in your room planning feels like hard work, but you learn nothing until real people touch what you make. The fastest way to succeed is to launch a simple, working version quickly, see what people actually do with it, and improve it as you go. Speed of learning is the real unfair advantage.",
+      "formula": "Build the simplest version that works, put it out there, and fix it based on real feedback."
+    },
+    {
+      "id": 5,
+      "category": "Life & Focus",
+      "title": "Saying 'no' to average things makes room for great things.",
+      "explanation": "Most people don't fail because they lack talent. They fail because they say yes to too many random meetings, favors, and small tasks that drain their energy. Your time is your only real asset. If an opportunity doesn't genuinely excite you or move your life forward, pass on it politely.",
+      "formula": "If it's not a clear 'yes', treat it as a 'no'. Guard your daily energy for what matters most."
+    },
+    {
+      "id": 6,
+      "category": "Trust & Design",
+      "title": "Clean design makes people trust you before they even read a word.",
+      "explanation": "People judge how trustworthy you are in less than a second. If your website or profile looks messy, people assume your service will be messy too. When your work looks clean, sharp, and intentional, people immediately take you seriously and pay you what you're worth.",
+      "formula": "Keep your visuals simple, consistent, and polished. Good taste creates instant credibility."
+    },
+    {
+      "id": 7,
+      "category": "Client Service",
+      "title": "Keeping an existing client happy is 5x easier than finding a new one.",
+      "explanation": "Too many businesses spend all their money chasing new leads while ignoring the clients who already trusted them. If you over-deliver, send updates before they ask, and hit your deadlines early, clients will stick with you for years and tell everyone about you for free.",
+      "formula": "Treat every current client like your favorite client. Great service is the best marketing you can do."
+    },
+    {
+      "id": 8,
+      "category": "Clear Thinking",
+      "title": "If you can't explain it simply, you don't understand it well enough.",
+      "explanation": "Using big, confusing words doesn't make you look smart—it just makes people lose interest. The best thinkers and leaders speak in plain language. If you can explain your product or idea so simply that a 12-year-old gets it, you will win every single time.",
+      "formula": "Cut out the buzzwords. Say what you mean in plain, everyday language."
+    },
+    {
+      "id": 9,
+      "category": "Daily Habits",
+      "title": "Doing the boring basics every day makes you look like an overnight success.",
+      "explanation": "Everyone wants the big win, but almost nobody wants to do the daily work required to get there. Writing every day, reaching out to clients every week, and refining your craft every month feels slow in the moment. But after a year, it creates a gap nobody can close.",
+      "formula": "Don't look for shortcuts. Show up every day, do the basics well, and let time do the heavy lifting."
+    },
+    {
+      "id": 10,
+      "category": "Personal Growth",
+      "title": "Don't take criticism from someone you wouldn't ask for advice.",
+      "explanation": "The internet is full of people who will criticize your work, even though they have never built anything themselves. When someone gives you their opinion, ask yourself: 'Do I respect their work, and would I trade places with them?' If not, smile and ignore it completely.",
+      "formula": "Filter feedback ruthlessly. Only listen to people who are actually in the arena doing the work."
+    },
+    {
+      "id": 11,
+      "category": "Relationships & Karma",
+      "title": "Help people win without asking for anything in return.",
+      "explanation": "Whenever you meet someone, don't think about what you can take from them. Think about how you can give them a quick win—introduce them to someone useful, share an idea that helps them, or share their work. When you become known as someone who helps people win, good things find you.",
+      "formula": "Give value first. Real influence comes from being genuinely helpful, not transactional."
+    },
+    {
+      "id": 12,
+      "category": "Brand Positioning",
+      "title": "Be the only person who does what you do, not just another option.",
+      "explanation": "If you are just 'another designer' or 'another agency', clients will compare your price to everyone else on Fiverr. But if you combine two different skills—like high-end 3D design plus conversion copywriting—you become unique. There is no price competition when there is only one of you.",
+      "formula": "Mix your unique skills together. When you stand in your own lane, nobody can compete with you."
+    },
+    {
+      "id": 13,
+      "category": "Decisions & Speed",
+      "title": "A good decision made today is better than a perfect decision made too late.",
+      "explanation": "Overthinking is just fear disguised as being thorough. Most decisions in business can be changed if you're wrong, but missed opportunities can never be recovered. When you have 70% of the information you need, make the call and start moving.",
+      "formula": "Stop waiting for 100% certainty. Make the decision, take action, and adjust along the way."
+    },
+    {
+      "id": 14,
+      "category": "Creative Craft",
+      "title": "Steal the structure, never the style.",
+      "explanation": "Copying someone's visual style makes you look like a cheap copycat. But studying why their structure worked—why their hook caught attention, how they paced the story, or how they framed the problem—teaches you the fundamentals. Take the principles, but pour your own taste over them.",
+      "formula": "Study the mechanics of great work, but always speak in your own authentic voice."
+    }
+  ]
+}

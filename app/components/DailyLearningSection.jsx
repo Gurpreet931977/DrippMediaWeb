@@ -2,132 +2,93 @@
 
 import React, { useState, useEffect } from 'react';
 
-const DAILY_LEARNINGS = [
+const FALLBACK_TIPS = [
   {
     id: 1,
-    tag: '01 // VALUE ASYMMETRY',
-    category: 'Business & Pricing Power',
-    title: 'Price on Value Delivered, Never on Hours Logged.',
-    insight: 'When you bill by the hour, you are financially penalized for working quickly and mastering your craft. When you price based on the commercial outcome you unlock, your speed becomes an asset. High-margin organizations monetize asymmetric leverage, not chair time.',
-    actionable: 'Package your services into fixed-scope high-impact drops with clear business outcomes. Eliminate hourly billing from your vocabulary.',
-    tagline: 'LEVERAGE > EFFORT',
-    principle: 'Outcome Monopolization'
+    category: 'Sales & Psychology',
+    title: "Don't sell to people. Make them want to buy.",
+    explanation: "Nobody wakes up wanting to be pitched. The second someone feels like you're trying to sell them something, their guard immediately goes up. Instead of trying to convince people you're great, just share what you build, show the real process, and be honest about the results. When people understand who you are and what you stand for, they will come to you and choose to buy on their own terms.",
+    formula: "Stop pitching yourself. Show your work so well that reaching out feels like their own idea."
   },
   {
     id: 2,
-    tag: '02 // ATTENTION DYNAMICS',
-    category: 'Consumer Psychology & Hooks',
-    title: 'The First 1500 Milliseconds Decide If You Exist.',
-    insight: 'In an infinite feed, nobody owes you their attention. If your opening 3 seconds fail to arrest scroll inertia through extreme visual contrast, motion, or narrative tension, your masterpiece remains completely invisible. Creativity without distribution leverage is silence.',
-    actionable: 'Dedicate 50% of your creative energy to the opening 3 seconds—sound design, typographic punch, and pattern interruption.',
-    tagline: 'HOOK OR PERISH',
-    principle: 'Inertia Interruption'
+    category: 'Pricing & Money',
+    title: 'Never charge for your time. Charge for the problem you fix.',
+    explanation: "When you bill by the hour, getting faster and better at your craft actually loses you money. Clients don't care if a project took you 2 hours or 20 hours—they only care that their headache is gone. If you fix a $10,000 problem in 30 minutes, you earned that money through years of practice, not 30 minutes of sitting in a chair.",
+    formula: "Set your prices based on how much time, money, or stress you save the client, never on hours clocked."
   },
   {
     id: 3,
-    tag: '03 // CLIENT COMPOUNDING',
-    category: 'Agency Scale & Retention',
-    title: 'Acquisition is Loud. Retention is Wealth.',
-    insight: 'Amateur agencies burn cash chasing 10 new clients every month because they allow existing clients to churn in silence. True commercial velocity occurs when lifetime value exceeds customer acquisition costs by 5x. Delivering an unmistakable 10/10 execution is your most lucrative marketing campaign.',
-    actionable: 'Treat existing clients like anchor equity partners. Proactively send progress updates, sprint drops, and value adds before they ever ask.',
-    tagline: 'RETENTION COMPOUNDS',
-    principle: 'Asymmetric LTV'
+    category: 'Content & Attention',
+    title: "If you don't hook them in 3 seconds, your video doesn't exist.",
+    explanation: "People scroll fast. You could have the most life-changing advice in the world, but if the opening seconds are slow, nobody will ever hear it. Never start with 'Hey guys' or a long logo animation. Jump straight into the action, drop a surprising fact, or show the end result first.",
+    formula: "Put your most exciting visual or question right at second one. Give them a reason not to swipe away."
   },
   {
     id: 4,
-    tag: '04 // HIGH AGENCY',
-    category: 'Execution Velocity',
-    title: 'Speed of Iteration Beats Quality of Hypothesis.',
-    insight: 'The market ignores what you theorize in internal pitch decks; it only responds to what is deployed live in production. The builder who deploys five imperfect iterations in a single week will consistently lap the perfectionist who spends half a year polishing one untested concept.',
-    actionable: 'Compress your feedback loops to under 24 hours. Ship the prototype today, gather market signals tomorrow, and deploy adjustments by Friday.',
-    tagline: 'VELOCITY IS THE MOAT',
-    principle: 'Rapid Signal Capture'
-  },
-  {
-    id: 5,
-    tag: '05 // RADICAL FOCUS',
-    category: 'Strategy & Resource Allocation',
-    title: "Saying 'No' to the Good is How You Build the Extraordinary.",
-    insight: 'The biggest threat to building a category-defining brand is not failure—it is the seductive distraction of mediocre, comfortable opportunities. Agreeing to low-leverage requests dilutes creative clarity and consumes the mental bandwidth needed for flagship assets.',
-    actionable: 'Apply the ultimate heuristic: If an opportunity is not an undeniable HELL YES, it is an immediate, respectful NO.',
-    tagline: 'RELENTLESS STANDARDS',
-    principle: 'Cognitive Protection'
-  },
-  {
-    id: 6,
-    tag: '06 // BRAND ENGINEERING',
-    category: 'Perceived Value & Aesthetics',
-    title: 'Aesthetic Standard is the Shortcut to Instant Trust.',
-    insight: 'People perceive technical competence through visual polish long before they read your copy. A brand with mediocre design must burn 3x more energy convincing buyers than a brand that looks undeniably high-tier from the millisecond the page loads.',
-    actionable: 'Set your visual baseline to the global top 1%. Elevate typographic scale, micro-animations, and contrast until your work commands the room.',
-    tagline: 'DESIGN COMMANDS PRICE',
-    principle: 'Visual Authority'
-  },
-  {
-    id: 7,
-    tag: '07 // UNCOPYABLE MOATS',
-    category: 'Differentiation & Positioning',
-    title: "Never Compete on Price. Compete on Being Uncopyable.",
-    insight: 'Competing on price is a race to the bottom where someone else is always willing to lose money faster than you. When you fuse distinct cultural taste, rapid execution speed, and proprietary visual alchemy, you remove yourself from the commodity bucket entirely.',
-    actionable: 'Stack two distinct, rare capabilities—such as cinema-grade storytelling paired with conversion-driven code architecture.',
-    tagline: 'MONOPOLIZE YOUR TASTE',
-    principle: 'Skill Convergence'
+    category: 'Business & Growth',
+    title: 'A simple version launched today beats a perfect plan next month.',
+    explanation: "Sitting in your room planning feels like hard work, but you learn nothing until real people touch what you make. The fastest way to succeed is to launch a simple, working version quickly, see what people actually do with it, and improve it as you go. Speed of learning is the real unfair advantage.",
+    formula: "Build the simplest version that works, put it out there, and fix it based on real feedback."
   }
 ];
 
 export default function DailyLearningSection({ isGenz = false }) {
-  // Deterministic 24-hour cycle based on UTC date
-  const get24HourIndex = () => {
-    if (typeof window === 'undefined') return 0;
-    const now = new Date();
-    // Unique day of year
-    const startOfYear = new Date(now.getFullYear(), 0, 0);
-    const diff = now - startOfYear;
-    const oneDay = 1000 * 60 * 60 * 24;
-    const dayOfYear = Math.floor(diff / oneDay);
-    return dayOfYear % DAILY_LEARNINGS.length;
-  };
-
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentTip, setCurrentTip] = useState(FALLBACK_TIPS[0]);
   const [dayNumber, setDayNumber] = useState(1);
+  const [countdownText, setCountdownText] = useState('NEXT TIP IN 12 HOURS');
   const [copied, setCopied] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Helper to compute local countdown
+  const updateCountdown = () => {
+    const now = new Date();
+    const nextMidnight = new Date(now);
+    nextMidnight.setHours(24, 0, 0, 0);
+    const msUntilNext = Math.max(0, nextMidnight.getTime() - now.getTime());
+    const hoursLeft = Math.floor(msUntilNext / (1000 * 60 * 60));
+    const minutesLeft = Math.floor((msUntilNext % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hoursLeft > 1) {
+      setCountdownText(isGenz ? `next drop in ${hoursLeft} hours` : `NEXT TIP IN ${hoursLeft} HOURS`);
+    } else if (hoursLeft === 1) {
+      setCountdownText(isGenz ? 'next drop in 1 hour' : 'NEXT TIP IN 1 HOUR');
+    } else {
+      const mins = Math.max(1, minutesLeft);
+      setCountdownText(isGenz ? `next drop in ${mins} mins` : `NEXT TIP IN ${mins} MINS`);
+    }
+  };
 
   useEffect(() => {
-    const defaultIdx = get24HourIndex();
-    // Also randomize slightly on page refresh so user sees fresh wisdom immediately
-    const randomOffset = Math.floor(Math.random() * DAILY_LEARNINGS.length);
-    const chosenIdx = (defaultIdx + randomOffset) % DAILY_LEARNINGS.length;
-    setCurrentIndex(chosenIdx);
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 60_000);
 
-    const now = new Date();
-    const startOfYear = new Date(now.getFullYear(), 0, 0);
-    const dayOfYear = Math.floor((now - startOfYear) / (1000 * 60 * 60 * 24));
-    setDayNumber(dayOfYear > 0 ? dayOfYear : 1);
-  }, []);
+    // Fetch live daily tips from API
+    fetch('/api/daily-tips')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.currentTip) {
+          setCurrentTip(data.currentTip);
+          if (data.dayNumber) setDayNumber(data.dayNumber);
+          if (data.hoursLeft !== undefined) {
+            if (data.hoursLeft > 1) {
+              setCountdownText(isGenz ? `next drop in ${data.hoursLeft} hours` : `NEXT TIP IN ${data.hoursLeft} HOURS`);
+            } else if (data.hoursLeft === 1) {
+              setCountdownText(isGenz ? 'next drop in 1 hour' : 'NEXT TIP IN 1 HOUR');
+            } else {
+              setCountdownText(isGenz ? `next drop in ${data.minutesLeft || 30} mins` : `NEXT TIP IN ${data.minutesLeft || 30} MINS`);
+            }
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback already in state
+      });
 
-  const learning = DAILY_LEARNINGS[currentIndex];
-
-  const handleNext = () => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % DAILY_LEARNINGS.length);
-      setIsTransitioning(false);
-    }, 220);
-  };
-
-  const handlePrev = () => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setCurrentIndex((prev) => (prev - 1 + DAILY_LEARNINGS.length) % DAILY_LEARNINGS.length);
-      setIsTransitioning(false);
-    }, 220);
-  };
+    return () => clearInterval(interval);
+  }, [isGenz]);
 
   const handleCopy = () => {
-    const textToCopy = `"${learning.title}"\n\n${learning.insight}\n\n✦ Directive: ${learning.actionable}\n\n— Curated by Meta Gurpreet @ Dripp Media`;
+    const textToCopy = `"${currentTip.title}"\n\n${currentTip.explanation}\n\n✦ The Formula: ${currentTip.formula}\n\n— Daily Tip by Meta Gurpreet @ Dripp Media`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(textToCopy);
       setCopied(true);
@@ -146,122 +107,90 @@ export default function DailyLearningSection({ isGenz = false }) {
           <div className="intel-live-badge">
             <span className="intel-beacon" />
             <span className="intel-badge-text">
-              {isGenz ? '24h drop · day #' + dayNumber : '24-Hour Protocol · Day #' + dayNumber}
+              {countdownText} · DAY #{dayNumber}
             </span>
           </div>
           <h2 className="daily-intel-title">
-            {isGenz ? 'the daily ' : 'Learning of the '}
-            <span>{isGenz ? 'drop.' : 'Day.'}</span>
+            {isGenz ? 'the daily ' : "Today's "}
+            <span>{isGenz ? 'tip.' : 'Tip.'}</span>
           </h2>
           <p className="daily-intel-sub">
             {isGenz 
-              ? 'unfiltered game on business, attention economics, and creative leverage.' 
-              : 'High-signal frameworks, business blueprints, and mental models from the frontlines of digital culture.'}
+              ? 'one practical formula for your business and life. updates every 24 hours.' 
+              : 'One practical formula for your business and life. Updated every 24 hours.'}
           </p>
         </div>
 
-        {/* The Cyber-Editorial Wisdom Console */}
+        {/* The Clean Daily Tip Card (Non-slideable, Single Daily Tip) */}
         <div className="daily-intel-console">
-          {/* Holographic Top Bar */}
+          {/* Top Bar */}
           <div className="console-top-bar">
             <div className="console-category-pill">
               <span className="cat-sparkle">✦</span>
-              <span className="cat-label">{learning.category}</span>
+              <span className="cat-label">{currentTip.category}</span>
             </div>
 
-            <div className="console-controls">
-              <span className="console-tagline">{learning.tagline}</span>
-              <button 
-                type="button" 
-                onClick={handlePrev} 
-                className="console-cycle-btn" 
-                title="Previous Insight"
-                aria-label="Previous Insight"
-              >
-                ←
-              </button>
-              <button 
-                type="button" 
-                onClick={handleNext} 
-                className="console-cycle-btn cycle-primary" 
-                title="Shuffle Next Learning"
-                aria-label="Next Insight"
-              >
-                <span>Cycle Intel</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-                </svg>
-              </button>
+            <div className="console-status-pill">
+              <span className="status-live-dot" />
+              <span className="status-live-text">
+                {countdownText}
+              </span>
             </div>
           </div>
 
-          {/* Animated Main Content Body */}
-          <div className={`console-body ${isTransitioning ? 'transitioning' : ''}`}>
+          {/* Main Tip Body */}
+          <div className="console-body">
             <div className="console-tag-row">
-              <span className="console-id-tag">{learning.tag}</span>
-              <span className="console-principle-badge">{learning.principle}</span>
+              <span className="console-id-tag">
+                {isGenz ? `tip #${currentTip.id} · day #${dayNumber}` : `TIP #${currentTip.id} · DAY #${dayNumber}`}
+              </span>
             </div>
 
             <h3 className="console-headline">
               <span className="headline-quote-mark">“</span>
-              {learning.title}
+              {currentTip.title}
             </h3>
 
             <p className="console-insight-text">
-              {learning.insight}
+              {currentTip.explanation}
             </p>
 
-            {/* Actionable Directive Capsule */}
+            {/* The Formula Capsule */}
             <div className="console-action-capsule">
               <div className="action-capsule-badge">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
                 </svg>
-                <span>ACTIONABLE DIRECTIVE</span>
+                <span>THE FORMULA</span>
               </div>
               <p className="action-capsule-desc">
-                {learning.actionable}
+                {currentTip.formula}
               </p>
             </div>
           </div>
 
-          {/* Console Footer Meta Bar */}
+          {/* Card Footer Bar */}
           <div className="console-footer-bar">
             <div className="console-curator-wrap">
               <div className="curator-avatar-dot">
                 <span className="curator-ping" />
               </div>
               <div className="curator-info">
-                <span className="curator-title">{isGenz ? 'curated by meta' : 'Curated by Meta Gurpreet'}</span>
-                <span className="curator-role">{isGenz ? 'founder · dripp media' : 'Founder & CEO, Dripp Media'}</span>
+                <span className="curator-title">
+                  {isGenz ? 'shared by meta gurpreet' : 'Shared by Meta Gurpreet'}
+                </span>
+                <span className="curator-role">
+                  {isGenz ? 'founder · dripp media' : 'Founder, Dripp Media'}
+                </span>
               </div>
             </div>
 
             <div className="console-footer-actions">
-              <div className="console-dots-track">
-                {DAILY_LEARNINGS.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => {
-                      if (i === currentIndex || isTransitioning) return;
-                      setIsTransitioning(true);
-                      setTimeout(() => {
-                        setCurrentIndex(i);
-                        setIsTransitioning(false);
-                      }, 200);
-                    }}
-                    className={`console-dot ${i === currentIndex ? 'active' : ''}`}
-                    aria-label={`Jump to learning ${i + 1}`}
-                  />
-                ))}
-              </div>
-
               <button 
                 type="button" 
                 onClick={handleCopy} 
                 className="console-copy-btn"
-                title="Copy Insight to Clipboard"
+                title="Copy Tip to Clipboard"
               >
                 {copied ? (
                   <>
@@ -276,7 +205,7 @@ export default function DailyLearningSection({ isGenz = false }) {
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>
-                    <span>COPY INSIGHT</span>
+                    <span>COPY TIP</span>
                   </>
                 )}
               </button>

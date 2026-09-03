@@ -4117,7 +4117,7 @@
            FREQUENTLY ASKED QUESTIONS - MODERN STUDIO
         ============================================ */
         .faq-section {
-            padding: 30px 5vw 140px;
+            padding: 30px 5vw 35px;
             position: relative;
             z-index: 5;
             background: linear-gradient(to bottom, transparent, rgba(5, 5, 5, 0.95) 20%, rgba(5, 5, 5, 0.95) 80%, transparent);
@@ -4808,7 +4808,7 @@
            DAILY INTEL & LEARNING OF THE DAY SECTION
         ============================================ */
         .daily-intel-section {
-            padding: 70px 5vw 90px;
+            padding: 20px 5vw 75px;
             position: relative;
             z-index: 6;
             background: linear-gradient(to bottom, transparent, rgba(6, 6, 8, 0.95) 20%, rgba(6, 6, 8, 0.95) 80%, transparent);
@@ -4955,74 +4955,37 @@
             letter-spacing: 0.4px;
         }
 
-        .console-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .console-tagline {
-            font-family: 'Panchang', sans-serif;
-            font-size: 0.65rem;
-            font-weight: 800;
-            color: rgba(235, 215, 63, 0.8);
-            letter-spacing: 1.5px;
-            padding-right: 6px;
-        }
-
-        .console-cycle-btn {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.7);
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-family: 'Panchang', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 700;
-            cursor: pointer;
+        .console-status-pill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .console-cycle-btn:hover {
-            background: rgba(235, 215, 63, 0.15);
-            border-color: var(--brand-yellow);
-            color: var(--brand-yellow);
-            transform: translateY(-1px);
-        }
-
-        .console-cycle-btn.cycle-primary {
-            background: rgba(235, 215, 63, 0.12);
-            border-color: rgba(235, 215, 63, 0.35);
-            color: var(--brand-yellow);
-            padding: 8px 16px;
+            gap: 8px;
+            padding: 6px 14px;
             border-radius: 999px;
+            background: rgba(235, 215, 63, 0.06);
+            border: 1px solid rgba(235, 215, 63, 0.22);
         }
 
-        .console-cycle-btn.cycle-primary:hover {
+        .status-live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
             background: var(--brand-yellow);
-            color: var(--deep-black);
-            box-shadow: 0 4px 18px rgba(235, 215, 63, 0.35);
+            box-shadow: 0 0 8px var(--brand-yellow);
+            animation: beaconPulse 2s ease infinite;
         }
 
-        .console-cycle-btn.cycle-primary:hover svg {
-            transform: rotate(180deg);
-        }
-
-        .console-cycle-btn svg {
-            transition: transform 0.4s ease;
+        .status-live-text {
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--brand-yellow);
+            text-transform: uppercase;
         }
 
         /* Console Body */
         .console-body {
-            transition: opacity 0.22s ease, transform 0.22s ease;
-        }
-
-        .console-body.transitioning {
-            opacity: 0;
-            transform: translateY(8px);
+            position: relative;
         }
 
         .console-tag-row {
@@ -5175,38 +5138,11 @@
             gap: 16px;
         }
 
-        .console-dots-track {
-            display: flex;
-            gap: 6px;
-        }
-
-        .console-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            padding: 0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .console-dot:hover {
-            background: rgba(235, 215, 63, 0.6);
-        }
-
-        .console-dot.active {
-            width: 20px;
-            border-radius: 999px;
-            background: var(--brand-yellow);
-            box-shadow: 0 0 8px var(--brand-yellow);
-        }
-
         .console-copy-btn {
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            padding: 8px 16px;
+            padding: 8px 18px;
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.12);
@@ -5251,6 +5187,13 @@
         body.light-theme .cat-label {
             color: var(--deep-black);
         }
+        body.light-theme .console-status-pill {
+            background: rgba(235, 215, 63, 0.15);
+            border-color: rgba(235, 215, 63, 0.4);
+        }
+        body.light-theme .status-live-text {
+            color: #7a6500;
+        }
         body.light-theme .console-headline {
             color: var(--deep-black);
         }
@@ -5273,12 +5216,6 @@
         body.light-theme .curator-role {
             color: rgba(0, 0, 0, 0.55);
         }
-        body.light-theme .console-dots-track .console-dot {
-            background: rgba(0, 0, 0, 0.15);
-        }
-        body.light-theme .console-dots-track .console-dot.active {
-            background: var(--brand-yellow);
-        }
         body.light-theme .console-copy-btn {
             background: rgba(0, 0, 0, 0.04);
             border-color: rgba(0, 0, 0, 0.1);
@@ -5287,11 +5224,6 @@
         body.light-theme .console-copy-btn:hover {
             background: rgba(235, 215, 63, 0.2);
             border-color: var(--brand-yellow);
-        }
-        body.light-theme .console-cycle-btn {
-            background: rgba(0, 0, 0, 0.04);
-            border-color: rgba(0, 0, 0, 0.1);
-            color: var(--deep-black);
         }
 
         /* Mobile Responsive */
@@ -5308,10 +5240,6 @@
                 align-items: flex-start;
                 gap: 12px;
             }
-            .console-controls {
-                width: 100%;
-                justify-content: space-between;
-            }
             .console-action-capsule {
                 flex-direction: column;
                 gap: 10px;
@@ -5323,7 +5251,7 @@
             }
             .console-footer-actions {
                 width: 100%;
-                justify-content: space-between;
+                justify-content: flex-end;
             }
         }
 
