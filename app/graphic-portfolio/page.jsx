@@ -229,24 +229,24 @@ export default function Page() {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(160, now);
-                osc.frequency.exponentialRampToValueAtTime(780, now + 0.35);
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.exponentialRampToValueAtTime(980, now + 0.32);
 
                 const filter = ctx.createBiquadFilter();
                 filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(350, now);
-                filter.frequency.exponentialRampToValueAtTime(2600, now + 0.35);
+                filter.frequency.setValueAtTime(300, now);
+                filter.frequency.exponentialRampToValueAtTime(3200, now + 0.32);
 
                 gain.gain.setValueAtTime(0.01, now);
-                gain.gain.linearRampToValueAtTime(0.14, now + 0.28);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+                gain.gain.linearRampToValueAtTime(0.18, now + 0.25);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.33);
 
                 osc.connect(filter);
                 filter.connect(gain);
                 gain.connect(ctx.destination);
 
                 osc.start(now);
-                osc.stop(now + 0.38);
+                osc.stop(now + 0.35);
             } catch (e) {}
         }
 
@@ -256,24 +256,24 @@ export default function Page() {
                 if (!ctx) return;
                 const now = ctx.currentTime;
 
-                // 1. Massive Sub-Bass Seismic Boom
+                // 1. Massive Sub-Bass Seismic Shockwave (drops to 22Hz rumble)
                 const boomOsc = ctx.createOscillator();
                 const boomGain = ctx.createGain();
                 boomOsc.type = 'triangle';
-                boomOsc.frequency.setValueAtTime(180, now);
-                boomOsc.frequency.exponentialRampToValueAtTime(26, now + 0.85);
+                boomOsc.frequency.setValueAtTime(220, now);
+                boomOsc.frequency.exponentialRampToValueAtTime(22, now + 0.95);
 
                 boomGain.gain.setValueAtTime(0.01, now);
-                boomGain.gain.linearRampToValueAtTime(0.36, now + 0.04);
-                boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+                boomGain.gain.linearRampToValueAtTime(0.45, now + 0.035);
+                boomGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
 
                 boomOsc.connect(boomGain);
                 boomGain.connect(ctx.destination);
                 boomOsc.start(now);
-                boomOsc.stop(now + 0.95);
+                boomOsc.stop(now + 1.05);
 
-                // 2. White Noise Blast (Explosion Crash)
-                const bufferSize = ctx.sampleRate * 0.55;
+                // 2. White Noise Shock Blast (Atmospheric Shatter)
+                const bufferSize = ctx.sampleRate * 0.6;
                 const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
                 const data = buffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) {
@@ -285,34 +285,34 @@ export default function Page() {
 
                 const filter = ctx.createBiquadFilter();
                 filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(1400, now);
-                filter.frequency.exponentialRampToValueAtTime(160, now + 0.45);
+                filter.frequency.setValueAtTime(1800, now);
+                filter.frequency.exponentialRampToValueAtTime(120, now + 0.55);
 
                 const noiseGain = ctx.createGain();
-                noiseGain.gain.setValueAtTime(0.24, now);
-                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                noiseGain.gain.setValueAtTime(0.32, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
 
                 noise.connect(filter);
                 filter.connect(noiseGain);
                 noiseGain.connect(ctx.destination);
 
                 noise.start(now);
-                noise.stop(now + 0.55);
+                noise.stop(now + 0.65);
 
-                // 3. High-frequency Cosmic Ring
+                // 3. High-frequency Cosmic Ring & Debris Shatter
                 const ring = ctx.createOscillator();
                 const ringGain = ctx.createGain();
                 ring.type = 'sine';
-                ring.frequency.setValueAtTime(920, now + 0.02);
-                ring.frequency.exponentialRampToValueAtTime(420, now + 0.7);
+                ring.frequency.setValueAtTime(1100, now + 0.02);
+                ring.frequency.exponentialRampToValueAtTime(360, now + 0.8);
 
-                ringGain.gain.setValueAtTime(0.12, now + 0.02);
-                ringGain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+                ringGain.gain.setValueAtTime(0.16, now + 0.02);
+                ringGain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
 
                 ring.connect(ringGain);
                 ringGain.connect(ctx.destination);
                 ring.start(now + 0.02);
-                ring.stop(now + 0.8);
+                ring.stop(now + 0.9);
             } catch (e) {}
         }
 
@@ -654,6 +654,8 @@ export default function Page() {
                     isDragging: false,
                     lastPointer: { x: 0, y: 0 }
                 };
+                this.mouseX = -1000;
+                this.mouseY = -1000;
 
                 // Responsive device grid sizing (Mobile: 6x6=36, Tablet: 8x6=48, Desktop: 12x8=96)
                 this.calcResponsiveGrid();
@@ -814,18 +816,31 @@ export default function Page() {
                         index: i,
                         sizeFactor: chosenFactor,
                         isVisible: true,
-                        // Zero Gravity Physical State
+                        // Zero Gravity Microgravity Kinematics
                         floatX: 0,
                         floatY: 0,
                         rotZ: 0,
+                        vx: 0,
+                        vy: 0,
+                        vRot: 0,
+                        repulseX: 0,
+                        repulseY: 0,
+                        repulseRot: 0,
+                        mass: 0.85 + randVal * 0.75, // Physical inertia
+                        wanderFreqX: 0.00035 + randVal * 0.00030,
+                        wanderFreqY: 0.00028 + randVal2 * 0.00032,
+                        wanderRot: 0.00030 + randVal3 * 0.00028,
+                        orbitRadiusX: 18 + randVal * 16,
+                        orbitRadiusY: 20 + randVal2 * 18,
+                        tiltAmplitude: 4.0 + randVal * 4.5,
                         phaseX: randVal * Math.PI * 2,
                         phaseY: randVal2 * Math.PI * 2,
 
                         // Organic unpatterned scatter properties for TRIPP / Zero-Gravity mode
-                        baseScatterX: (randVal - 0.5) * (this.baseStepX * 0.35),
-                        baseScatterY: (randVal2 - 0.5) * (this.baseStepY * 0.30),
-                        baseScatterRot: (randVal3 - 0.5) * 16, // -8 deg to +8 deg
-                        baseScatterScale: 1.0 + (randVal4 - 0.5) * 0.16, // 0.92 to 1.08 depth
+                        baseScatterX: (randVal - 0.5) * (this.baseStepX * 0.46),
+                        baseScatterY: (randVal2 - 0.5) * (this.baseStepY * 0.40),
+                        baseScatterRot: (randVal3 - 0.5) * 26, // -13 deg to +13 deg
+                        baseScatterScale: 0.88 + randVal4 * 0.26, // 0.88 to 1.14 depth variation
 
                         // Active animated scatter state
                         scatterX: 0,
@@ -895,8 +910,8 @@ export default function Page() {
                     const seed = i + 1;
                     const randVal = (Math.sin(seed * 9999) + 1) * 0.5;
                     const randVal2 = (Math.cos(seed * 7777) + 1) * 0.5;
-                    item.baseScatterX = (randVal - 0.5) * (this.baseStepX * 0.35);
-                    item.baseScatterY = (randVal2 - 0.5) * (this.baseStepY * 0.30);
+                    item.baseScatterX = (randVal - 0.5) * (this.baseStepX * 0.46);
+                    item.baseScatterY = (randVal2 - 0.5) * (this.baseStepY * 0.40);
                 }
             }
 
@@ -931,6 +946,8 @@ export default function Page() {
                 });
 
                 window.addEventListener('pointermove', (e) => {
+                    this.mouseX = e.clientX;
+                    this.mouseY = e.clientY;
                     if (!this.activePointers.has(e.pointerId)) return;
                     this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -1419,16 +1436,49 @@ export default function Page() {
                         if (Math.abs(item.blastRot) < 0.05) item.blastRot = 0;
                     }
 
-                    // --- ZERO GRAVITY ORGANIC HARMONIC DRIFT ---
+                    // --- ZERO GRAVITY ORGANIC HARMONIC DRIFT & FLUID MICROGRAVITY PHYSICS ---
                     let floatX = 0;
                     let floatY = 0;
                     let rotZ = 0;
 
                     if (isTripp) {
-                        const t = time * 0.0006;
-                        floatX = Math.sin(t + item.phaseX) * 14;
-                        floatY = Math.cos(t * 0.85 + item.phaseY) * 16;
-                        rotZ = (item.scatterRot || 0) + (item.blastRot || 0) + Math.sin(t * 0.7 + item.phaseX) * 2.2;
+                        // 1. Kinetic drag momentum transfer (panning canvas imparts fluid inertia to floating cards)
+                        if (Math.abs(this.state.velX) > 0.05 || Math.abs(this.state.velY) > 0.05) {
+                            const mass = item.mass || 1.0;
+                            item.vx += (this.state.velX * 0.038) / mass;
+                            item.vy += (this.state.velY * 0.038) / mass;
+                            item.vRot += (this.state.velX * 0.0016) / mass;
+                        }
+                        // Zero-g vacuum friction damping
+                        item.vx *= 0.95;
+                        item.vy *= 0.95;
+                        item.vRot *= 0.94;
+
+                        // 2. Interactive Cursor Microgravity Repulsion
+                        const cardScreenX = halfVW + wrappedX;
+                        const cardScreenY = halfVH + wrappedY;
+                        const dX = cardScreenX - (this.mouseX || -1000);
+                        const dY = cardScreenY - (this.mouseY || -1000);
+                        const dist = Math.hypot(dX, dY);
+                        if (!this.state.isDragging && dist < 220 && dist > 1) {
+                            const repulseForce = (1 - dist / 220) * 12;
+                            item.repulseX += ((dX / dist) * repulseForce - item.repulseX) * 0.12;
+                            item.repulseY += ((dY / dist) * repulseForce - item.repulseY) * 0.12;
+                            item.repulseRot += ((dX / dist) * 4.0 - item.repulseRot) * 0.08;
+                        } else {
+                            item.repulseX *= 0.88;
+                            item.repulseY *= 0.88;
+                            item.repulseRot *= 0.88;
+                        }
+
+                        // 3. Multi-harmonic orbital Lissajous drift
+                        const wanderX = Math.sin(time * item.wanderFreqX + item.phaseX) * item.orbitRadiusX;
+                        const wanderY = Math.cos(time * item.wanderFreqY + item.phaseY) * item.orbitRadiusY;
+                        const dynamicTilt = Math.sin(time * item.wanderRot + item.phaseX) * item.tiltAmplitude;
+
+                        floatX = wanderX + item.vx + item.repulseX;
+                        floatY = wanderY + item.vy + item.repulseY;
+                        rotZ = (item.scatterRot || 0) + (item.blastRot || 0) + item.vRot + item.repulseRot + dynamicTilt;
                     } else {
                         rotZ = (item.scatterRot || 0) + (item.blastRot || 0);
                     }
@@ -1661,9 +1711,9 @@ export default function Page() {
                 const impactX = window.innerWidth * 0.5;
                 const impactY = window.innerHeight * 0.48;
 
-                // Incoming trajectory: streaks from top-right down to center
-                const startX = window.innerWidth + 240;
-                const startY = -240;
+                // Incoming trajectory: streaks violently from top-right down to center
+                const startX = window.innerWidth + 320;
+                const startY = -320;
                 const deltaX = impactX - startX;
                 const deltaY = impactY - startY;
                 const angleDeg = (Math.atan2(deltaY, deltaX) * 180) / Math.PI;
@@ -1679,6 +1729,18 @@ export default function Page() {
                     overflow: hidden;
                 `;
 
+                // Atmospheric Thermal Vignette Tension
+                const atmosVignette = document.createElement('div');
+                atmosVignette.style.cssText = `
+                    position: fixed;
+                    inset: 0;
+                    background: radial-gradient(circle at 80% 20%, rgba(255, 110, 20, 0.18) 0%, rgba(0,0,0,0.65) 80%);
+                    opacity: 0;
+                    pointer-events: none;
+                    z-index: 161;
+                `;
+                impactOverlay.appendChild(atmosVignette);
+
                 // Create the Asteroid Rig
                 const meteorRig = document.createElement('div');
                 meteorRig.className = 'meteor-rig';
@@ -1686,56 +1748,63 @@ export default function Page() {
                     position: absolute;
                     left: ${startX}px;
                     top: ${startY}px;
-                    width: 140px;
-                    height: 140px;
+                    width: 160px;
+                    height: 160px;
                     transform-origin: center center;
                     transform: translate(-50%, -50%) rotate(${angleDeg}deg);
                     will-change: transform;
                 `;
 
-                // Asteroid with fiery plasma tail and glowing molten rock
+                // Meteorite: High-velocity supersonic plasma tail + molten incandescent core
                 meteorRig.innerHTML = `
+                    <!-- Supersonic Plasma Plume Tail -->
                     <div style="
                         position: absolute;
                         top: 50%;
-                        right: 65%;
-                        width: 440px;
-                        height: 58px;
+                        right: 60%;
+                        width: 560px;
+                        height: 72px;
                         transform: translateY(-50%);
-                        background: linear-gradient(to left, rgba(235, 215, 63, 0.98), rgba(255, 110, 20, 0.85), rgba(255, 30, 0, 0.4), transparent);
-                        border-radius: 58px;
-                        filter: blur(5px);
+                        background: linear-gradient(to left, #FFFFFF 0%, rgba(235, 215, 63, 0.98) 18%, rgba(255, 87, 34, 0.88) 48%, rgba(183, 28, 28, 0.45) 75%, transparent 100%);
+                        border-radius: 72px;
+                        filter: blur(4px);
                     "></div>
+                    <!-- Ambient Ionization Coma -->
                     <div style="
                         position: absolute;
-                        inset: -16px;
+                        inset: -22px;
                         border-radius: 50%;
-                        background: radial-gradient(circle, rgba(255, 255, 220, 0.95) 0%, rgba(235, 215, 63, 0.8) 40%, rgba(255, 80, 10, 0.4) 70%, transparent 100%);
-                        filter: blur(8px);
+                        background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(235, 215, 63, 0.9) 35%, rgba(255, 87, 34, 0.5) 65%, transparent 100%);
+                        filter: blur(10px);
                     "></div>
+                    <!-- Meteorite Core Rock & Thermal Shockwave Front -->
                     <svg viewBox="0 0 100 100" style="
                         position: relative;
                         width: 100%;
                         height: 100%;
-                        filter: drop-shadow(0 0 20px rgba(235, 215, 63, 0.95));
+                        filter: drop-shadow(0 0 28px rgba(235, 215, 63, 1));
                     ">
-                        <!-- Irregular asteroid rock -->
-                        <path d="M 52 8 C 72 10, 88 26, 94 45 C 98 62, 86 82, 70 92 C 52 98, 28 94, 14 80 C 2 68, 0 46, 8 28 C 16 14, 34 6, 52 8 Z" fill="#241e1b" stroke="#EBD73F" stroke-width="2.5" />
-                        <!-- Craters -->
-                        <circle cx="38" cy="38" r="8" fill="#14100e" />
-                        <circle cx="66" cy="58" r="10" fill="#14100e" />
-                        <circle cx="35" cy="70" r="6" fill="#14100e" />
-                        <circle cx="70" cy="32" r="5" fill="#14100e" />
-                        <!-- Glowing Molten Veins -->
-                        <path d="M 32 25 Q 48 42 58 32 Q 74 48 64 68" stroke="#FFE853" stroke-width="2.8" fill="none" stroke-linecap="round" />
-                        <path d="M 44 48 Q 34 62 24 66" stroke="#FF5722" stroke-width="2.2" fill="none" stroke-linecap="round" />
+                        <!-- Leading Edge High-Pressure Plasma Bow Shock -->
+                        <path d="M 85 25 Q 98 50 85 75" stroke="#FFFFFF" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.9" />
+                        <!-- Molten Asteroid Rock Body -->
+                        <path d="M 52 6 C 74 8, 92 24, 96 46 C 100 64, 88 84, 72 94 C 52 100, 26 95, 12 79 C 0 66, -2 44, 7 25 C 16 12, 34 4, 52 6 Z" fill="#1b1614" stroke="#EBD73F" stroke-width="2.6" />
+                        <!-- Deep Craters -->
+                        <circle cx="36" cy="36" r="8.5" fill="#0d0a08" />
+                        <circle cx="68" cy="56" r="10" fill="#0d0a08" />
+                        <circle cx="34" cy="68" r="6.5" fill="#0d0a08" />
+                        <circle cx="72" cy="30" r="5.5" fill="#0d0a08" />
+                        <circle cx="50" cy="78" r="4.5" fill="#0d0a08" />
+                        <!-- Incandescent Glowing Thermal Fissures -->
+                        <path d="M 28 22 Q 48 40 58 30 Q 76 46 64 68" stroke="#FFF066" stroke-width="3.2" fill="none" stroke-linecap="round" />
+                        <path d="M 44 48 Q 32 64 22 68" stroke="#FF5722" stroke-width="2.5" fill="none" stroke-linecap="round" />
+                        <path d="M 62 26 Q 74 38 88 44" stroke="#FFE082" stroke-width="2.2" fill="none" stroke-linecap="round" />
                     </svg>
                 `;
 
                 impactOverlay.appendChild(meteorRig);
                 document.body.appendChild(impactOverlay);
 
-                // Timeline: Blazing supersonic descent -> Cataclysmic asteroid slam
+                // Timeline: Blazing supersonic entry -> Cataclysmic ground zero slam
                 const timeline = gsap.timeline({
                     onComplete: () => {
                         impactOverlay.remove();
@@ -1743,72 +1812,117 @@ export default function Page() {
                     }
                 });
 
-                // 1. Meteor strikes across space in 0.32s
+                // Pre-impact atmospheric tension
+                timeline.to(atmosVignette, { opacity: 1, duration: 0.16, ease: "power2.in" }, 0);
+
+                // 1. Meteor strikes across space in 0.28s (violent acceleration)
                 timeline.to(meteorRig, {
                     left: impactX,
                     top: impactY,
-                    duration: 0.32,
-                    ease: "power3.in",
+                    duration: 0.28,
+                    ease: "power4.in",
                     onComplete: () => {
                         // --- THE ASTEROID IMPACT EXPLOSION ---
                         meteorRig.remove();
+                        atmosVignette.remove();
 
                         // Play deep sub-bass seismic boom & rumble
                         playAsteroidExplosionSound();
 
-                        // 1. Tactile Screen Shake (on outer showcase wrapper, cleanly resets with zero residual styles)
+                        // 1. Tactile 3D Screen Shake (dynamic elastic camera recoil)
                         const showcaseEl = document.getElementById('portfolio-showcase');
                         if (showcaseEl) {
                             gsap.fromTo(showcaseEl, 
-                                { x: -14, y: 10 },
-                                { x: 0, y: 0, duration: 0.35, ease: "elastic.out(1, 0.3)", clearProps: "all" }
+                                { x: -28, y: 20, scale: 0.982, rotate: -0.5 },
+                                { x: 0, y: 0, scale: 1, rotate: 0, duration: 0.55, ease: "elastic.out(1.15, 0.22)", clearProps: "all" }
                             );
                         }
 
-                        // 2. Cosmic Flash at Epicenter
-                        const flash = document.createElement('div');
-                        flash.style.cssText = `
+                        // 2. Optical Flash at Epicenter (Double Flash: blinding white burst + amber thermal core)
+                        const flashWhite = document.createElement('div');
+                        flashWhite.style.cssText = `
                             position: fixed;
                             inset: 0;
-                            background: radial-gradient(circle at ${impactX}px ${impactY}px, rgba(255, 255, 255, 0.98) 0%, rgba(235, 215, 63, 0.85) 30%, rgba(255, 80, 0, 0.35) 65%, transparent 100%);
+                            background: #ffffff;
+                            opacity: 0.95;
                             pointer-events: none;
-                            z-index: 165;
+                            z-index: 168;
                         `;
-                        impactOverlay.appendChild(flash);
-                        gsap.to(flash, { opacity: 0, duration: 0.45, ease: "power2.out", onComplete: () => flash.remove() });
+                        impactOverlay.appendChild(flashWhite);
+                        gsap.to(flashWhite, { opacity: 0, duration: 0.08, ease: "power2.out", onComplete: () => flashWhite.remove() });
 
-                        // 3. Expanding High-Energy Shockwave Ring
-                        const shockwave = document.createElement('div');
-                        const maxRadius = Math.hypot(window.innerWidth, window.innerHeight) * 1.4;
-                        shockwave.style.cssText = `
+                        const flashHeat = document.createElement('div');
+                        flashHeat.style.cssText = `
+                            position: fixed;
+                            inset: 0;
+                            background: radial-gradient(circle at ${impactX}px ${impactY}px, rgba(255, 255, 255, 1) 0%, rgba(235, 215, 63, 0.92) 28%, rgba(255, 87, 34, 0.5) 60%, transparent 100%);
+                            pointer-events: none;
+                            z-index: 167;
+                        `;
+                        impactOverlay.appendChild(flashHeat);
+                        gsap.to(flashHeat, { opacity: 0, duration: 0.5, ease: "power2.out", onComplete: () => flashHeat.remove() });
+
+                        // 3. Dual Shockwave Rings (Fast Ionization Wave + Cosmic Gravitational Ripple)
+                        const maxRadius = Math.hypot(window.innerWidth, window.innerHeight) * 1.5;
+
+                        // Wave 1: Supersonic Plasma Ring
+                        const shockwave1 = document.createElement('div');
+                        shockwave1.style.cssText = `
                             position: fixed;
                             left: ${impactX}px;
                             top: ${impactY}px;
                             width: 0px;
                             height: 0px;
                             border-radius: 50%;
-                            border: 4px solid rgba(235, 215, 63, 0.98);
-                            box-shadow: 0 0 65px rgba(235, 215, 63, 0.95), inset 0 0 35px rgba(235, 215, 63, 0.6);
+                            border: 5px solid rgba(235, 215, 63, 1);
+                            box-shadow: 0 0 80px rgba(235, 215, 63, 1), inset 0 0 40px rgba(255, 110, 20, 0.7);
                             transform: translate(-50%, -50%);
                             pointer-events: none;
-                            z-index: 164;
+                            z-index: 166;
                         `;
-                        impactOverlay.appendChild(shockwave);
-                        gsap.to(shockwave, {
-                            width: maxRadius * 2,
-                            height: maxRadius * 2,
+                        impactOverlay.appendChild(shockwave1);
+                        gsap.to(shockwave1, {
+                            width: maxRadius * 2.4,
+                            height: maxRadius * 2.4,
                             opacity: 0,
-                            duration: 0.85,
+                            duration: 0.6,
                             ease: "power2.out",
-                            onComplete: () => shockwave.remove()
+                            onComplete: () => shockwave1.remove()
                         });
 
-                        // 4. Asteroid Debris & Molten Embers bursting radially
-                        for (let d = 0; d < 24; d++) {
+                        // Wave 2: Gravitational Warp Ripple
+                        const shockwave2 = document.createElement('div');
+                        shockwave2.style.cssText = `
+                            position: fixed;
+                            left: ${impactX}px;
+                            top: ${impactY}px;
+                            width: 0px;
+                            height: 0px;
+                            border-radius: 50%;
+                            border: 2px solid rgba(255, 255, 255, 0.85);
+                            box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
+                            transform: translate(-50%, -50%);
+                            pointer-events: none;
+                            z-index: 165;
+                        `;
+                        impactOverlay.appendChild(shockwave2);
+                        gsap.to(shockwave2, {
+                            width: maxRadius * 1.8,
+                            height: maxRadius * 1.8,
+                            opacity: 0,
+                            duration: 0.8,
+                            delay: 0.06,
+                            ease: "power2.out",
+                            onComplete: () => shockwave2.remove()
+                        });
+
+                        // 4. Asteroid Debris & Molten Kinetic Embers (32 high-speed radial shards)
+                        for (let d = 0; d < 32; d++) {
                             const shard = document.createElement('div');
-                            const shardAngle = Math.random() * Math.PI * 2;
-                            const shardDist = 180 + Math.random() * 480;
-                            const shardSize = 4 + Math.random() * 8;
+                            const shardAngle = (d / 32) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+                            const shardDist = 200 + Math.random() * 520;
+                            const shardSize = 3 + Math.random() * 8;
+                            const isGold = Math.random() > 0.35;
                             shard.style.cssText = `
                                 position: fixed;
                                 left: ${impactX}px;
@@ -1816,19 +1930,19 @@ export default function Page() {
                                 width: ${shardSize}px;
                                 height: ${shardSize}px;
                                 border-radius: 50%;
-                                background: ${Math.random() > 0.4 ? '#EBD73F' : '#FF5722'};
-                                box-shadow: 0 0 16px ${Math.random() > 0.4 ? '#EBD73F' : '#FF5722'};
+                                background: ${isGold ? '#FFE853' : '#FF5722'};
+                                box-shadow: 0 0 18px ${isGold ? '#EBD73F' : '#FF5722'};
                                 transform: translate(-50%, -50%);
                                 pointer-events: none;
-                                z-index: 163;
+                                z-index: 164;
                             `;
                             impactOverlay.appendChild(shard);
                             gsap.to(shard, {
                                 x: Math.cos(shardAngle) * shardDist,
                                 y: Math.sin(shardAngle) * shardDist,
                                 opacity: 0,
-                                scale: 0.2,
-                                duration: 0.65 + Math.random() * 0.4,
+                                scale: 0.1,
+                                duration: 0.55 + Math.random() * 0.4,
                                 ease: "power3.out",
                                 onComplete: () => shard.remove()
                             });
@@ -1843,7 +1957,7 @@ export default function Page() {
                         animateSpace();
                         window.addEventListener('resize', resizeSpace);
 
-                        // 6. Cataclysmic Shockwave Impulse: Shatter cards out of patternized grid into organic zero gravity
+                        // 6. Outward Sonic Propagation: Shatter cards into organic zero-gravity layout
                         if (window.canvasEngine && window.canvasEngine.items) {
                             const halfVW = window.innerWidth * 0.5;
                             const halfVH = window.innerHeight * 0.5;
@@ -1872,20 +1986,26 @@ export default function Page() {
                                 const dirX = kx / dist;
                                 const dirY = ky / dist;
 
-                                // 1. Immediate explosive radial blast velocity from impact epicenter
-                                const blastDist = Math.max(30, 95 - (dist / 12));
-                                item.blastX = dirX * blastDist;
-                                item.blastY = dirY * blastDist;
-                                item.blastRot = (dirX >= 0 ? 1 : -1) * (Math.random() * 10 + 4);
+                                // Sonic wave delay based on radial distance from impact crater
+                                const waveDelay = Math.min(0.18, dist / 2800);
 
-                                // 2. Shatter cards out of patternized grid into organic zero-g resting layout
+                                // Immediate explosive blast velocity
+                                const blastDist = Math.max(35, 110 - (dist / 10));
+                                gsap.delayedCall(waveDelay, () => {
+                                    item.blastX = dirX * blastDist;
+                                    item.blastY = dirY * blastDist;
+                                    item.blastRot = (dirX >= 0 ? 1 : -1) * (Math.random() * 20 + 8);
+                                });
+
+                                // Shatter cards out of patternized grid into organic unpatterned layout
                                 gsap.killTweensOf(item);
                                 gsap.to(item, {
                                     scatterX: item.baseScatterX,
                                     scatterY: item.baseScatterY,
                                     scatterRot: item.baseScatterRot,
                                     scatterScale: item.baseScatterScale,
-                                    duration: 1.2,
+                                    duration: 1.25,
+                                    delay: waveDelay,
                                     ease: "power2.out"
                                 });
                             });
@@ -1911,6 +2031,12 @@ export default function Page() {
                         item.blastX = 0;
                         item.blastY = 0;
                         item.blastRot = 0;
+                        item.vx = 0;
+                        item.vy = 0;
+                        item.vRot = 0;
+                        item.repulseX = 0;
+                        item.repulseY = 0;
+                        item.repulseRot = 0;
                         gsap.killTweensOf(item);
                         gsap.to(item, {
                             scatterX: 0,
