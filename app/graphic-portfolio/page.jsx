@@ -204,6 +204,102 @@ export default function Page() {
             }
         }
 
+        function playAsteroidIncomingSound() {
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.exponentialRampToValueAtTime(780, now + 0.35);
+
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(350, now);
+                filter.frequency.exponentialRampToValueAtTime(2600, now + 0.35);
+
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.linearRampToValueAtTime(0.14, now + 0.28);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.38);
+            } catch (e) {}
+        }
+
+        function playAsteroidExplosionSound() {
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                // 1. Massive Sub-Bass Seismic Boom
+                const boomOsc = ctx.createOscillator();
+                const boomGain = ctx.createGain();
+                boomOsc.type = 'triangle';
+                boomOsc.frequency.setValueAtTime(180, now);
+                boomOsc.frequency.exponentialRampToValueAtTime(26, now + 0.85);
+
+                boomGain.gain.setValueAtTime(0.01, now);
+                boomGain.gain.linearRampToValueAtTime(0.36, now + 0.04);
+                boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+
+                boomOsc.connect(boomGain);
+                boomGain.connect(ctx.destination);
+                boomOsc.start(now);
+                boomOsc.stop(now + 0.95);
+
+                // 2. White Noise Blast (Explosion Crash)
+                const bufferSize = ctx.sampleRate * 0.55;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(1400, now);
+                filter.frequency.exponentialRampToValueAtTime(160, now + 0.45);
+
+                const noiseGain = ctx.createGain();
+                noiseGain.gain.setValueAtTime(0.24, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+                noise.connect(filter);
+                filter.connect(noiseGain);
+                noiseGain.connect(ctx.destination);
+
+                noise.start(now);
+                noise.stop(now + 0.55);
+
+                // 3. High-frequency Cosmic Ring
+                const ring = ctx.createOscillator();
+                const ringGain = ctx.createGain();
+                ring.type = 'sine';
+                ring.frequency.setValueAtTime(920, now + 0.02);
+                ring.frequency.exponentialRampToValueAtTime(420, now + 0.7);
+
+                ringGain.gain.setValueAtTime(0.12, now + 0.02);
+                ringGain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+
+                ring.connect(ringGain);
+                ringGain.connect(ctx.destination);
+                ring.start(now + 0.02);
+                ring.stop(now + 0.8);
+            } catch (e) {}
+        }
+
         function playTripToggleSound(isGoingTripp) {
             try {
                 const ctx = getAudioContext();
@@ -211,49 +307,23 @@ export default function Page() {
                 const now = ctx.currentTime;
 
                 if (isGoingTripp) {
-                    // Shimmering cosmic resonance chime + ascending resonance sweep
-                    const osc = ctx.createOscillator();
-                    const oscGain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(220, now);
-                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.45);
-
-                    oscGain.gain.setValueAtTime(0.01, now);
-                    oscGain.gain.linearRampToValueAtTime(0.18, now + 0.12);
-                    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
-
-                    osc.connect(oscGain);
-                    oscGain.connect(ctx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.7);
-
-                    // Ambient harmonic crystal chime
-                    const chime = ctx.createOscillator();
-                    const chimeGain = ctx.createGain();
-                    chime.type = 'triangle';
-                    chime.frequency.setValueAtTime(1320, now + 0.08);
-                    chimeGain.gain.setValueAtTime(0.08, now + 0.08);
-                    chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-                    chime.connect(chimeGain);
-                    chimeGain.connect(ctx.destination);
-                    chime.start(now + 0.08);
-                    chime.stop(now + 0.6);
+                    playAsteroidIncomingSound();
                 } else {
-                    // Gravitational implosion / settle
+                    // Gravitational implosion / magnetic snap back
                     const osc = ctx.createOscillator();
                     const oscGain = ctx.createGain();
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.4);
+                    osc.frequency.exponentialRampToValueAtTime(90, now + 0.45);
 
                     oscGain.gain.setValueAtTime(0.01, now);
-                    oscGain.gain.linearRampToValueAtTime(0.15, now + 0.08);
-                    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                    oscGain.gain.linearRampToValueAtTime(0.18, now + 0.08);
+                    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
 
                     osc.connect(oscGain);
                     oscGain.connect(ctx.destination);
                     osc.start(now);
-                    osc.stop(now + 0.55);
+                    osc.stop(now + 0.6);
                 }
             } catch (e) {}
         }
@@ -1555,120 +1625,261 @@ export default function Page() {
             const btnText = document.getElementById('tripp-btn-text');
             if (!btn) return;
 
-            const btnRect = btn.getBoundingClientRect();
-            const originX = btnRect.left + btnRect.width / 2;
-            const originY = btnRect.top + btnRect.height / 2;
-
             const isGoingTripp = !spaceModeActive;
-            playTripToggleSound(isGoingTripp);
 
-            // Compute maximum distance to screen corners for 100% solid whole-page coverage
-            const maxDist = Math.hypot(
-                Math.max(originX, window.innerWidth - originX),
-                Math.max(originY, window.innerHeight - originY)
-            ) * 1.5;
+            if (isGoingTripp) {
+                btn.style.pointerEvents = 'none';
 
-            btn.style.pointerEvents = 'none';
+                // Play supersonic incoming asteroid whistle
+                playTripToggleSound(true);
 
-            // Solid Full-Page Cosmic Veil
-            const solidCurtain = document.createElement('div');
-            solidCurtain.className = 'tripp-solid-curtain';
-            solidCurtain.style.cssText = `
-                position: fixed;
-                inset: 0;
-                pointer-events: none;
-                z-index: 120;
-                background: #070709;
-                clip-path: circle(0px at ${originX}px ${originY}px);
-                -webkit-clip-path: circle(0px at ${originX}px ${originY}px);
-            `;
+                // Epicenter of asteroid impact (near viewport center with slight dynamic elevation)
+                const impactX = window.innerWidth * 0.5;
+                const impactY = window.innerHeight * 0.48;
 
-            // Radiant golden shockwave leading edge
-            const shockwave = document.createElement('div');
-            shockwave.className = 'tripp-shockwave-ring';
-            shockwave.style.cssText = `
-                position: fixed;
-                left: ${originX}px;
-                top: ${originY}px;
-                width: 0px;
-                height: 0px;
-                border-radius: 50%;
-                border: 3px solid rgba(235, 215, 63, 0.95);
-                box-shadow: 0 0 50px rgba(235, 215, 63, 0.8), inset 0 0 25px rgba(235, 215, 63, 0.5);
-                transform: translate(-50%, -50%);
-                pointer-events: none;
-                z-index: 125;
-            `;
+                // Incoming trajectory: streaks from top-right down to center
+                const startX = window.innerWidth + 240;
+                const startY = -240;
+                const deltaX = impactX - startX;
+                const deltaY = impactY - startY;
+                const angleDeg = (Math.atan2(deltaY, deltaX) * 180) / Math.PI;
 
-            document.body.appendChild(solidCurtain);
-            document.body.appendChild(shockwave);
+                // Create Asteroid Impact Overlay Container
+                const impactOverlay = document.createElement('div');
+                impactOverlay.className = 'asteroid-impact-overlay';
+                impactOverlay.style.cssText = `
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 160;
+                    overflow: hidden;
+                `;
 
-            const tl = gsap.timeline({
-                onComplete: () => {
-                    solidCurtain.remove();
-                    shockwave.remove();
-                    btn.style.pointerEvents = 'auto';
-                }
-            });
+                // Create the Asteroid Rig
+                const meteorRig = document.createElement('div');
+                meteorRig.className = 'meteor-rig';
+                meteorRig.style.cssText = `
+                    position: absolute;
+                    left: ${startX}px;
+                    top: ${startY}px;
+                    width: 140px;
+                    height: 140px;
+                    transform-origin: center center;
+                    transform: translate(-50%, -50%) rotate(${angleDeg}deg);
+                    will-change: transform;
+                `;
 
-            // 1. Expanding Golden Shockwave
-            tl.to(shockwave, {
-                width: maxDist * 2,
-                height: maxDist * 2,
-                opacity: 0,
-                duration: 0.85,
-                ease: "power2.out"
-            }, 0);
+                // Asteroid with fiery plasma tail and glowing molten rock
+                meteorRig.innerHTML = `
+                    <div style="
+                        position: absolute;
+                        top: 50%;
+                        right: 65%;
+                        width: 440px;
+                        height: 58px;
+                        transform: translateY(-50%);
+                        background: linear-gradient(to left, rgba(235, 215, 63, 0.98), rgba(255, 110, 20, 0.85), rgba(255, 30, 0, 0.4), transparent);
+                        border-radius: 58px;
+                        filter: blur(5px);
+                    "></div>
+                    <div style="
+                        position: absolute;
+                        inset: -16px;
+                        border-radius: 50%;
+                        background: radial-gradient(circle, rgba(255, 255, 220, 0.95) 0%, rgba(235, 215, 63, 0.8) 40%, rgba(255, 80, 10, 0.4) 70%, transparent 100%);
+                        filter: blur(8px);
+                    "></div>
+                    <svg viewBox="0 0 100 100" style="
+                        position: relative;
+                        width: 100%;
+                        height: 100%;
+                        filter: drop-shadow(0 0 20px rgba(235, 215, 63, 0.95));
+                    ">
+                        <!-- Irregular asteroid rock -->
+                        <path d="M 52 8 C 72 10, 88 26, 94 45 C 98 62, 86 82, 70 92 C 52 98, 28 94, 14 80 C 2 68, 0 46, 8 28 C 16 14, 34 6, 52 8 Z" fill="#241e1b" stroke="#EBD73F" stroke-width="2.5" />
+                        <!-- Craters -->
+                        <circle cx="38" cy="38" r="8" fill="#14100e" />
+                        <circle cx="66" cy="58" r="10" fill="#14100e" />
+                        <circle cx="35" cy="70" r="6" fill="#14100e" />
+                        <circle cx="70" cy="32" r="5" fill="#14100e" />
+                        <!-- Glowing Molten Veins -->
+                        <path d="M 32 25 Q 48 42 58 32 Q 74 48 64 68" stroke="#FFE853" stroke-width="2.8" fill="none" stroke-linecap="round" />
+                        <path d="M 44 48 Q 34 62 24 66" stroke="#FF5722" stroke-width="2.2" fill="none" stroke-linecap="round" />
+                    </svg>
+                `;
 
-            // 2. Solid Curtain Sweeps and Engulfs 100% of the entire page
-            const clipPathObj = { r: 0 };
-            tl.to(clipPathObj, {
-                r: maxDist,
-                duration: 0.45,
-                ease: "power2.inOut",
-                onUpdate: () => {
-                    const val = `circle(${clipPathObj.r}px at ${originX}px ${originY}px)`;
-                    solidCurtain.style.clipPath = val;
-                    solidCurtain.style.webkitClipPath = val;
-                }
-            }, 0);
+                impactOverlay.appendChild(meteorRig);
+                document.body.appendChild(impactOverlay);
 
-            // 3. Switch states at full 100% solid coverage (seamless, zero flicker)
-            tl.add(() => {
-                spaceModeActive = !spaceModeActive;
-                document.body.classList.toggle('space-mode-active');
-
-                if (spaceModeActive) {
-                    btn.classList.add('active-tripp');
-                    if (btnText) btnText.innerText = 'TRIPPING';
-                    initSpace();
-                    animateSpace();
-                    window.addEventListener('resize', resizeSpace);
-
-                    // Cosmic Zero-Gravity Gentle Detach
-                    if (window.canvasEngine && window.canvasEngine.items) {
-                        window.canvasEngine.items.forEach((item) => {
-                            const angle = Math.random() * Math.PI * 2;
-                            const speed = 0.25 / item.mass;
-                            item.vx = Math.cos(angle) * speed;
-                            item.vy = Math.sin(angle) * speed;
-                            item.targetRotZ = (Math.random() - 0.5) * 3.5; // Luxury micro-tilt (-1.75 to +1.75 deg)
-                        });
+                // Timeline: Blazing supersonic descent -> Cataclysmic asteroid slam
+                const timeline = gsap.timeline({
+                    onComplete: () => {
+                        impactOverlay.remove();
+                        btn.style.pointerEvents = 'auto';
                     }
-                } else {
-                    btn.classList.remove('active-tripp');
-                    if (btnText) btnText.innerText = 'TRIPP';
-                    cancelAnimationFrame(spaceAnimationId);
-                    window.removeEventListener('resize', resizeSpace);
-                }
-            }, 0.45);
+                });
 
-            // 4. Smooth curtain dissolve revealing the new world across the entire screen
-            tl.to(solidCurtain, {
-                opacity: 0,
-                duration: 0.40,
-                ease: "power2.out"
-            }, 0.45);
+                // 1. Meteor strikes across space in 0.32s
+                timeline.to(meteorRig, {
+                    left: impactX,
+                    top: impactY,
+                    duration: 0.32,
+                    ease: "power3.in",
+                    onComplete: () => {
+                        // --- THE ASTEROID IMPACT EXPLOSION ---
+                        meteorRig.remove();
+
+                        // Play deep sub-bass seismic boom & rumble
+                        playAsteroidExplosionSound();
+
+                        // 1. Tactile Screen Shake
+                        const canvasEl = document.getElementById('canvas-container');
+                        if (canvasEl) {
+                            const shakeTl = gsap.timeline();
+                            const amp = 24;
+                            shakeTl.to(canvasEl, { x: -amp, y: amp * 0.7, duration: 0.04, ease: "none" })
+                                   .to(canvasEl, { x: amp * 0.9, y: -amp * 0.6, duration: 0.04, ease: "none" })
+                                   .to(canvasEl, { x: -amp * 0.6, y: amp * 0.4, duration: 0.04, ease: "none" })
+                                   .to(canvasEl, { x: amp * 0.4, y: -amp * 0.2, duration: 0.04, ease: "none" })
+                                   .to(canvasEl, { x: 0, y: 0, duration: 0.08, ease: "power2.out" });
+                        }
+
+                        // 2. Cosmic Flash at Epicenter
+                        const flash = document.createElement('div');
+                        flash.style.cssText = `
+                            position: fixed;
+                            inset: 0;
+                            background: radial-gradient(circle at ${impactX}px ${impactY}px, rgba(255, 255, 255, 0.98) 0%, rgba(235, 215, 63, 0.85) 30%, rgba(255, 80, 0, 0.35) 65%, transparent 100%);
+                            pointer-events: none;
+                            z-index: 165;
+                        `;
+                        impactOverlay.appendChild(flash);
+                        gsap.to(flash, { opacity: 0, duration: 0.45, ease: "power2.out", onComplete: () => flash.remove() });
+
+                        // 3. Expanding High-Energy Shockwave Ring
+                        const shockwave = document.createElement('div');
+                        const maxRadius = Math.hypot(window.innerWidth, window.innerHeight) * 1.4;
+                        shockwave.style.cssText = `
+                            position: fixed;
+                            left: ${impactX}px;
+                            top: ${impactY}px;
+                            width: 0px;
+                            height: 0px;
+                            border-radius: 50%;
+                            border: 4px solid rgba(235, 215, 63, 0.98);
+                            box-shadow: 0 0 65px rgba(235, 215, 63, 0.95), inset 0 0 35px rgba(235, 215, 63, 0.6);
+                            transform: translate(-50%, -50%);
+                            pointer-events: none;
+                            z-index: 164;
+                        `;
+                        impactOverlay.appendChild(shockwave);
+                        gsap.to(shockwave, {
+                            width: maxRadius * 2,
+                            height: maxRadius * 2,
+                            opacity: 0,
+                            duration: 0.85,
+                            ease: "power2.out",
+                            onComplete: () => shockwave.remove()
+                        });
+
+                        // 4. Asteroid Debris & Molten Embers bursting radially
+                        for (let d = 0; d < 24; d++) {
+                            const shard = document.createElement('div');
+                            const shardAngle = Math.random() * Math.PI * 2;
+                            const shardDist = 180 + Math.random() * 480;
+                            const shardSize = 4 + Math.random() * 8;
+                            shard.style.cssText = `
+                                position: fixed;
+                                left: ${impactX}px;
+                                top: ${impactY}px;
+                                width: ${shardSize}px;
+                                height: ${shardSize}px;
+                                border-radius: 50%;
+                                background: ${Math.random() > 0.4 ? '#EBD73F' : '#FF5722'};
+                                box-shadow: 0 0 16px ${Math.random() > 0.4 ? '#EBD73F' : '#FF5722'};
+                                transform: translate(-50%, -50%);
+                                pointer-events: none;
+                                z-index: 163;
+                            `;
+                            impactOverlay.appendChild(shard);
+                            gsap.to(shard, {
+                                x: Math.cos(shardAngle) * shardDist,
+                                y: Math.sin(shardAngle) * shardDist,
+                                opacity: 0,
+                                scale: 0.2,
+                                duration: 0.65 + Math.random() * 0.4,
+                                ease: "power3.out",
+                                onComplete: () => shard.remove()
+                            });
+                        }
+
+                        // 5. Activate Zero Gravity (Space Mode)
+                        spaceModeActive = true;
+                        document.body.classList.add('space-mode-active');
+                        btn.classList.add('active-tripp');
+                        if (btnText) btnText.innerText = 'TRIPPING';
+                        initSpace();
+                        animateSpace();
+                        window.addEventListener('resize', resizeSpace);
+
+                        // 6. Cataclysmic Shockwave Impulse: Cards blast radially outward from impact!
+                        if (window.canvasEngine && window.canvasEngine.items) {
+                            const halfVW = window.innerWidth * 0.5;
+                            const halfVH = window.innerHeight * 0.5;
+
+                            window.canvasEngine.items.forEach((item) => {
+                                const cardScreenX = halfVW + (item.floatX || 0);
+                                const cardScreenY = halfVH + (item.floatY || 0);
+
+                                const kx = cardScreenX - impactX;
+                                const ky = cardScreenY - impactY;
+                                const dist = Math.hypot(kx, ky) || 1;
+                                const dirX = kx / dist;
+                                const dirY = ky / dist;
+
+                                // Impact impulse is explosive near epicenter, radiating outwards
+                                const blastImpulse = Math.max(3.5, 16.0 - (dist / 110)) / item.mass;
+                                item.vx = dirX * blastImpulse;
+                                item.vy = dirY * blastImpulse;
+
+                                // Asymmetric rotational kick from blast wave
+                                item.rotZ = (dirX >= 0 ? 1 : -1) * (Math.random() * 4.0 + 2.0);
+                                item.targetRotZ = (Math.random() - 0.5) * 3.5;
+                            });
+                        }
+                    }
+                });
+            } else {
+                // Settle back to normal aligned grid
+                btn.style.pointerEvents = 'none';
+                spaceModeActive = false;
+                document.body.classList.remove('space-mode-active');
+                btn.classList.remove('active-tripp');
+                if (btnText) btnText.innerText = 'TRIPP';
+                cancelAnimationFrame(spaceAnimationId);
+                window.removeEventListener('resize', resizeSpace);
+
+                // Magnetic snap back sound
+                playTripToggleSound(false);
+
+                // Gentle magnetic return for all cards
+                if (window.canvasEngine && window.canvasEngine.items) {
+                    window.canvasEngine.items.forEach((item) => {
+                        item.vx = 0;
+                        item.vy = 0;
+                        gsap.to(item, {
+                            floatX: 0,
+                            floatY: 0,
+                            rotZ: 0,
+                            duration: 0.7,
+                            ease: "power2.out"
+                        });
+                    });
+                }
+                setTimeout(() => {
+                    btn.style.pointerEvents = 'auto';
+                }, 700);
+            }
         }
 
         // Bind click to the new UI button
