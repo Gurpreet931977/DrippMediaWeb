@@ -18,6 +18,9 @@ function GlobalGenzToggle() {
   const hasMovedRef = React.useRef(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  const isPointerDownRef = React.useRef(false);
+  const isDragActiveRef = React.useRef(false);
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
@@ -40,160 +43,182 @@ function GlobalGenzToggle() {
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
-    setIsDragging(true);
-    setIsSnapped(false);
-    setSnapCorner(null);
+    isPointerDownRef.current = true;
+    isDragActiveRef.current = false;
     hasMovedRef.current = false;
     dragStartCoords.current = { x: e.clientX, y: e.clientY };
     dragRef.current.startX = e.clientX - position.x;
     dragRef.current.startY = e.clientY - position.y;
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isPointerDownRef.current) return;
+      const dx = moveEvent.clientX - dragStartCoords.current.x;
+      const dy = moveEvent.clientY - dragStartCoords.current.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (!isDragActiveRef.current) {
+        if (dist > 5) {
+          isDragActiveRef.current = true;
+          hasMovedRef.current = true;
+          setIsDragging(true);
+          setIsSnapped(false);
+          setSnapCorner(null);
+        } else {
+          return;
+        }
+      }
+
+      const nextX = moveEvent.clientX - dragRef.current.startX;
+      const nextY = moveEvent.clientY - dragRef.current.startY;
+      setPosition({ x: nextX, y: nextY });
+    };
+
+    const handleMouseUp = (upEvent) => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+
+      if (!isPointerDownRef.current) return;
+      isPointerDownRef.current = false;
+
+      const wasDragging = isDragActiveRef.current;
+      isDragActiveRef.current = false;
+      setIsDragging(false);
+
+      if (wasDragging && typeof window !== 'undefined') {
+        setPosition(prev => {
+          const centerX = window.innerWidth / 2 + prev.x;
+          const centerY = 20 + prev.y;
+          
+          const distLeft = centerX;
+          const distRight = window.innerWidth - centerX;
+          const distTop = centerY;
+          const distBottom = window.innerHeight - centerY;
+
+          const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+
+          let targetX = prev.x;
+          let targetY = prev.y;
+          let edge = '';
+
+          if (minDist === distLeft) {
+            targetX = 3 - window.innerWidth / 2;
+            targetY = Math.max(7, Math.min(prev.y, window.innerHeight - 53));
+            edge = 'left';
+          } else if (minDist === distRight) {
+            targetX = (window.innerWidth - 3) - window.innerWidth / 2;
+            targetY = Math.max(7, Math.min(prev.y, window.innerHeight - 53));
+            edge = 'right';
+          } else if (minDist === distTop) {
+            targetY = -20; 
+            targetX = Math.max(30 - window.innerWidth / 2, Math.min(prev.x, window.innerWidth / 2 - 30));
+            edge = 'top';
+          } else {
+            targetY = window.innerHeight - 26;
+            targetX = Math.max(30 - window.innerWidth / 2, Math.min(prev.x, window.innerWidth / 2 - 30));
+            edge = 'bottom';
+          }
+          
+          setIsSnapped(true);
+          setSnapCorner(edge);
+          return { x: targetX, y: targetY };
+        });
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
   };
 
   const handleTouchStart = (e) => {
     if (e.touches.length !== 1) return;
-    setIsDragging(true);
-    setIsSnapped(false);
-    setSnapCorner(null);
+    isPointerDownRef.current = true;
+    isDragActiveRef.current = false;
     hasMovedRef.current = false;
     const touch = e.touches[0];
     dragStartCoords.current = { x: touch.clientX, y: touch.clientY };
     dragRef.current.startX = touch.clientX - position.x;
     dragRef.current.startY = touch.clientY - position.y;
-  };
 
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!isDragging) return;
-      const nextX = e.clientX - dragRef.current.startX;
-      const nextY = e.clientY - dragRef.current.startY;
-      
-      const dist = Math.hypot(e.clientX - dragStartCoords.current.x, e.clientY - dragStartCoords.current.y);
-      if (dist > 5) {
-        hasMovedRef.current = true;
-      }
-      setPosition({ x: nextX, y: nextY });
-    };
+    const handleTouchMove = (moveEvent) => {
+      if (!isPointerDownRef.current) return;
+      if (moveEvent.touches.length !== 1) return;
+      const t = moveEvent.touches[0];
+      const dx = t.clientX - dragStartCoords.current.x;
+      const dy = t.clientY - dragStartCoords.current.y;
+      const dist = Math.hypot(dx, dy);
 
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      
-      // Snap Logic
-      if (typeof window !== 'undefined') {
-        const centerX = window.innerWidth / 2 + position.x;
-        const centerY = 20 + position.y;
-        
-        const distLeft = centerX;
-        const distRight = window.innerWidth - centerX;
-        const distTop = centerY;
-        const distBottom = window.innerHeight - centerY;
-
-        const minDist = Math.min(distLeft, distRight, distTop, distBottom);
-
-        let targetX = position.x;
-        let targetY = position.y;
-        let edge = '';
-
-        if (minDist === distLeft) {
-            targetX = 3 - window.innerWidth / 2;
-            targetY = Math.max(7, Math.min(position.y, window.innerHeight - 53));
-            edge = 'left';
-        } else if (minDist === distRight) {
-            targetX = (window.innerWidth - 3) - window.innerWidth / 2;
-            targetY = Math.max(7, Math.min(position.y, window.innerHeight - 53));
-            edge = 'right';
-        } else if (minDist === distTop) {
-            targetY = -20; 
-            targetX = Math.max(30 - window.innerWidth / 2, Math.min(position.x, window.innerWidth / 2 - 30));
-            edge = 'top';
+      if (!isDragActiveRef.current) {
+        if (dist > 5) {
+          isDragActiveRef.current = true;
+          hasMovedRef.current = true;
+          setIsDragging(true);
+          setIsSnapped(false);
+          setSnapCorner(null);
         } else {
-            targetY = window.innerHeight - 26;
-            targetX = Math.max(30 - window.innerWidth / 2, Math.min(position.x, window.innerWidth / 2 - 30));
-            edge = 'bottom';
+          return;
         }
-        
-        setPosition({ x: targetX, y: targetY });
-        setIsSnapped(true);
-        setSnapCorner(edge);
       }
-    };
 
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, position.x, position.y]);
-
-  useEffect(() => {
-    const handleTouchMove = (e) => {
-      if (!isDragging) return;
-      if (e.touches.length !== 1) return;
-      const touch = e.touches[0];
-      const nextX = touch.clientX - dragRef.current.startX;
-      const nextY = touch.clientY - dragRef.current.startY;
-      
-      const dist = Math.hypot(touch.clientX - dragStartCoords.current.x, touch.clientY - dragStartCoords.current.y);
-      if (dist > 5) {
-        hasMovedRef.current = true;
-      }
+      const nextX = t.clientX - dragRef.current.startX;
+      const nextY = t.clientY - dragRef.current.startY;
       setPosition({ x: nextX, y: nextY });
     };
 
     const handleTouchEnd = () => {
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+
+      if (!isPointerDownRef.current) return;
+      isPointerDownRef.current = false;
+
+      const wasDragging = isDragActiveRef.current;
+      isDragActiveRef.current = false;
       setIsDragging(false);
-      
-      // Snap Logic
-      if (typeof window !== 'undefined') {
-        const centerX = window.innerWidth / 2 + position.x;
-        const centerY = 20 + position.y;
-        
-        const distLeft = centerX;
-        const distRight = window.innerWidth - centerX;
-        const distTop = centerY;
-        const distBottom = window.innerHeight - centerY;
 
-        const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+      if (wasDragging && typeof window !== 'undefined') {
+        setPosition(prev => {
+          const centerX = window.innerWidth / 2 + prev.x;
+          const centerY = 20 + prev.y;
+          
+          const distLeft = centerX;
+          const distRight = window.innerWidth - centerX;
+          const distTop = centerY;
+          const distBottom = window.innerHeight - centerY;
 
-        let targetX = position.x;
-        let targetY = position.y;
-        let edge = '';
+          const minDist = Math.min(distLeft, distRight, distTop, distBottom);
 
-        if (minDist === distLeft) {
+          let targetX = prev.x;
+          let targetY = prev.y;
+          let edge = '';
+
+          if (minDist === distLeft) {
             targetX = 3 - window.innerWidth / 2;
-            targetY = Math.max(7, Math.min(position.y, window.innerHeight - 53));
+            targetY = Math.max(7, Math.min(prev.y, window.innerHeight - 53));
             edge = 'left';
-        } else if (minDist === distRight) {
+          } else if (minDist === distRight) {
             targetX = (window.innerWidth - 3) - window.innerWidth / 2;
-            targetY = Math.max(7, Math.min(position.y, window.innerHeight - 53));
+            targetY = Math.max(7, Math.min(prev.y, window.innerHeight - 53));
             edge = 'right';
-        } else if (minDist === distTop) {
+          } else if (minDist === distTop) {
             targetY = -20; 
-            targetX = Math.max(30 - window.innerWidth / 2, Math.min(position.x, window.innerWidth / 2 - 30));
+            targetX = Math.max(30 - window.innerWidth / 2, Math.min(prev.x, window.innerWidth / 2 - 30));
             edge = 'top';
-        } else {
+          } else {
             targetY = window.innerHeight - 26;
-            targetX = Math.max(30 - window.innerWidth / 2, Math.min(position.x, window.innerWidth / 2 - 30));
+            targetX = Math.max(30 - window.innerWidth / 2, Math.min(prev.x, window.innerWidth / 2 - 30));
             edge = 'bottom';
-        }
-        
-        setPosition({ x: targetX, y: targetY });
-        setIsSnapped(true);
-        setSnapCorner(edge);
+          }
+          
+          setIsSnapped(true);
+          setSnapCorner(edge);
+          return { x: targetX, y: targetY };
+        });
       }
     };
 
-    if (isDragging) {
-      window.addEventListener('touchmove', handleTouchMove, { passive: false });
-      window.addEventListener('touchend', handleTouchEnd);
-    }
-    return () => {
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [isDragging, position.x, position.y]);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+  };
   
   useEffect(() => {
     const handleResize = () => {
@@ -339,7 +364,11 @@ function GlobalGenzToggle() {
         onMouseDown={isMobile ? undefined : handleMouseDown}
         onTouchStart={isMobile ? undefined : handleTouchStart}
         onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseLeave={() => {
+          if (!isPointerDownRef.current) {
+            setIsHovered(false);
+          }
+        }}
         style={isMobile ? {
           position: 'fixed',
           bottom: '24px',
@@ -370,7 +399,7 @@ function GlobalGenzToggle() {
                 width: 'auto',
                 height: 'auto',
                 fontSize: '0.85rem',
-                fontWeight: 600,
+                fontWeight: 700,
                 cursor: 'pointer',
                 letterSpacing: '1px',
             } : {
@@ -380,8 +409,8 @@ function GlobalGenzToggle() {
                 height: (isSnapped && !isHovered) ? '6px' : '28px',
                 transform: getButtonTransform(),
                 fontSize: '0.65rem',
-                fontWeight: 600,
-                cursor: isDragging ? 'grabbing' : 'grab',
+                fontWeight: 700,
+                cursor: isDragging ? 'grabbing' : 'pointer',
                 transition: isDragging ? 'none' : 'all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1)',
             }}
         >
