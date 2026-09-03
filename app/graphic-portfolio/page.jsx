@@ -732,10 +732,10 @@ export default function Page() {
                         vx: 0,
                         vy: 0,
                         vRot: 0,
-                        mass: 0.75 + randVal * 0.5,
-                        wanderSpeed: 0.25 + randVal3 * 0.45,
-                        wanderFreq: 0.0006 + randVal * 0.0008,
-                        targetRotZ: (randVal - 0.5) * 18, // Unique natural resting tilt (-9 to +9 deg)
+                        mass: 1.0 + randVal * 0.5,
+                        wanderSpeed: 0.15 + randVal3 * 0.2,
+                        wanderFreq: 0.00025 + randVal * 0.00025,
+                        targetRotZ: (randVal - 0.5) * 3.5, // Subtle luxury tilt (-1.75 to +1.75 deg)
                         phaseX: randVal * Math.PI * 2,
                         phaseY: randVal2 * Math.PI * 2
                     };
@@ -1297,69 +1297,49 @@ export default function Page() {
                     const wrappedX = this.wrap(absoluteX, -limitX, limitX);
                     const wrappedY = this.wrap(absoluteY, -limitY, limitY);
 
-                    // --- REAL ZERO GRAVITY 2D FRONT-FACING CARD PHYSICS ---
+                    // --- REFINED LUXURY ZERO GRAVITY PHYSICS ---
                     if (isTripp) {
-                        // 1. Organic multi-frequency harmonic turbulence
+                        // 1. Serene multi-harmonic orbital drift
                         const t = time * item.wanderFreq;
-                        const harmonicForceX = Math.sin(t + item.phaseX) * 0.09 + Math.cos(t * 1.6 + item.phaseY) * 0.045;
-                        const harmonicForceY = Math.cos(t + item.phaseY) * 0.09 + Math.sin(t * 1.4 + item.phaseX) * 0.045;
+                        const driftX = Math.sin(t + item.phaseX) * 14 + Math.cos(t * 0.55 + item.phaseY) * 7;
+                        const driftY = Math.cos(t + item.phaseY) * 16 + Math.sin(t * 0.45 + item.phaseX) * 8;
                         
-                        item.vx += (harmonicForceX * item.wanderSpeed) / item.mass;
-                        item.vy += (harmonicForceY * item.wanderSpeed) / item.mass;
-
-                        // 2. Drag momentum inertia (canvas panning pushes floating cards in 2D space)
-                        if (Math.abs(globalVelX) > 0.01 || Math.abs(globalVelY) > 0.01) {
-                            item.vx += (globalVelX * 0.04) / item.mass;
-                            item.vy += (globalVelY * 0.04) / item.mass;
-                            item.vRot += ((-globalVelX + globalVelY) * 0.007) / item.mass;
+                        // 2. Fluid drag momentum response (canvas panning gently pushes floating cards)
+                        if (Math.abs(globalVelX) > 0.005 || Math.abs(globalVelY) > 0.005) {
+                            item.vx += (globalVelX * 0.015) / item.mass;
+                            item.vy += (globalVelY * 0.015) / item.mass;
                         }
 
-                        // 3. Ultra-soft tether spring to prevent cards drifting off into infinity
-                        const spring = 0.0005;
-                        item.vx -= item.floatX * spring;
-                        item.vy -= item.floatY * spring;
+                        // Smooth viscous damping in zero-g vacuum
+                        item.vx *= 0.94;
+                        item.vy *= 0.94;
 
-                        // 4. Low zero-g space vacuum damping (high momentum retention)
-                        item.vx *= 0.985;
-                        item.vy *= 0.985;
+                        // Smooth lerp toward organic drift + momentum
+                        item.floatX += ((driftX + item.vx) - item.floatX) * 0.045;
+                        item.floatY += ((driftY + item.vy) - item.floatY) * 0.045;
 
-                        item.floatX += item.vx * (zoom * 0.8 + 0.2);
-                        item.floatY += item.vy * (zoom * 0.8 + 0.2);
-
-                        // 5. Pure 2D Angular Momentum (Front-Facing Z-rotation only, no 3D tilt)
-                        const rotSpring = 0.0012;
-                        item.vRot -= (item.rotZ - item.targetRotZ) * rotSpring;
-                        item.vRot += Math.sin(t * 0.9 + item.phaseX) * 0.012; // gentle organic wobble
-                        item.vRot *= 0.98;
-                        item.rotZ += item.vRot;
-
-                        // Max 2D tilt clamp for clean aesthetics
-                        item.rotZ = Math.max(-26, Math.min(26, item.rotZ));
+                        // 3. Subtle, dignified micro-tilt (clamped to luxury range of ±3.5 degrees)
+                        const rotDrift = Math.sin(t * 0.75 + item.phaseX) * 1.4;
+                        const targetRot = item.targetRotZ + rotDrift + (globalVelX * 0.0008);
+                        item.rotZ += (targetRot - item.rotZ) * 0.035;
+                        item.rotZ = Math.max(-3.5, Math.min(3.5, item.rotZ));
                     } else {
-                        // Smoothly lerp back to 0 & damp velocities on exit
-                        item.vx *= 0.85;
-                        item.vy *= 0.85;
-                        item.vRot *= 0.85;
-                        item.floatX += (0 - item.floatX) * 0.12;
-                        item.floatY += (0 - item.floatY) * 0.12;
-                        item.rotZ += (0 - item.rotZ) * 0.12;
+                        // Smoothly ease back to aligned grid on exit
+                        item.vx *= 0.82;
+                        item.vy *= 0.82;
+                        item.floatX += (0 - item.floatX) * 0.09;
+                        item.floatY += (0 - item.floatY) * 0.09;
+                        item.rotZ += (0 - item.rotZ) * 0.09;
                     }
 
                     const finalX = wrappedX + item.floatX;
                     const finalY = wrappedY + item.floatY;
 
-                    // Frustum Culling Check:
-                    // When zoomed out (zoom <= 1.1), NEVER cull any cards.
-                    // Keeping all cards visible completely eliminates edge blinking, flickering, and layer re-rasterization.
-                    // When zoomed in, cull cards only when well beyond viewport, and ensure transform is updated seamlessly.
-                    const isOffscreen = zoom > 1.1 && (
-                        Math.abs(finalX) > (halfVW + cullingMargin + 100) || 
-                        Math.abs(finalY) > (halfVH + cullingMargin + 100)
+                    // Frustum Culling Check (High performance: skip DOM style updates for offscreen items)
+                    const isOffscreen = (
+                        Math.abs(finalX) > (halfVW + cullingMargin) || 
+                        Math.abs(finalY) > (halfVH + cullingMargin)
                     );
-
-                    const transformStr = (isTripp || Math.abs(item.rotZ) > 0.02 || Math.abs(item.floatX) > 0.1 || Math.abs(item.floatY) > 0.1)
-                        ? `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)}) rotate(${item.rotZ.toFixed(2)}deg)`
-                        : `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)})`;
 
                     if (isOffscreen) {
                         if (item.isVisible) {
@@ -1367,12 +1347,18 @@ export default function Page() {
                             item.isVisible = false;
                         }
                     } else {
+                        // Gentle weightless depth breathing in zero-g
+                        const depthBreathing = isTripp ? (Math.sin(time * 0.00035 + item.phaseX) * 0.014) : 0;
+                        const currentScale = zoom * (1 + depthBreathing);
+
+                        const transformStr = (isTripp || Math.abs(item.rotZ) > 0.01 || Math.abs(item.floatX) > 0.1 || Math.abs(item.floatY) > 0.1)
+                            ? `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${currentScale.toFixed(4)}) rotate(${item.rotZ.toFixed(2)}deg)`
+                            : `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${zoom.toFixed(4)})`;
+
+                        item.el.style.transform = transformStr;
                         if (!item.isVisible) {
-                            item.el.style.transform = transformStr;
                             item.el.style.visibility = 'visible';
                             item.isVisible = true;
-                        } else {
-                            item.el.style.transform = transformStr;
                         }
                     }
                 }
@@ -1432,7 +1418,7 @@ export default function Page() {
         const spaceCanvas = document.getElementById('space-canvas');
         const ctx = spaceCanvas.getContext('2d');
         let stars = [];
-        const numStars = window.innerWidth <= 768 ? 250 : 800; // Less particles on mobile
+        const numStars = window.innerWidth <= 768 ? 140 : 260; // Clean, cinematic cosmic starfield
         let spaceAnimationId;
         const warpState = { speed: 0, direction: 'in' };
 
@@ -1453,12 +1439,14 @@ export default function Page() {
             resizeSpace();
             stars = [];
             for (let i = 0; i < numStars; i++) {
+                const tier = i % 3; // 0 = distant faint, 1 = mid ambient, 2 = bright foreground
                 stars.push({
                     x: Math.random() * spaceCanvas.width,
                     y: Math.random() * spaceCanvas.height,
-                    z: Math.random() * spaceCanvas.width, // Depth
-                    size: Math.random() * 1.5,
-                    opacity: Math.random()
+                    z: Math.random() * spaceCanvas.width,
+                    tier: tier,
+                    size: tier === 0 ? 0.9 : (tier === 1 ? 1.3 : 1.9),
+                    opacity: tier === 0 ? 0.28 : (tier === 1 ? 0.58 : 0.88)
                 });
             }
         }
@@ -1466,13 +1454,17 @@ export default function Page() {
         function animateSpace() {
             ctx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
 
-            // Center origin
             const cx = spaceCanvas.width / 2;
             const cy = spaceCanvas.height / 2;
             const currentWarp = warpState.speed;
             const isWarping = currentWarp > 0.1;
 
-            stars.forEach(star => {
+            const t0 = [];
+            const t1 = [];
+            const t2 = [];
+
+            for (let i = 0; i < stars.length; i++) {
+                const star = stars[i];
                 const prevZ = star.z;
                 const prevK = 128.0 / Math.max(1, prevZ);
                 const prevPx = (star.x - cx) * prevK + cx;
@@ -1486,21 +1478,17 @@ export default function Page() {
                         star.y += (currentWarp * 0.5);
                     }
                 } else {
-                    // Move stars towards viewer natively, but dramatically react to user pan velocity 
-                    star.z -= 0.5;
+                    star.z -= 0.45;
                 }
 
-                // Allow stars to pan left/right/up/down based on canvas drag
-                star.x -= globalVelX * 0.2;
-                star.y -= globalVelY * 0.2;
+                star.x -= globalVelX * 0.15;
+                star.y -= globalVelY * 0.15;
 
-                // Wrap horizontal/vertical star space
                 if (star.x < 0) star.x = spaceCanvas.width;
                 if (star.x > spaceCanvas.width) star.x = 0;
                 if (star.y < 0) star.y = spaceCanvas.height;
                 if (star.y > spaceCanvas.height) star.y = 0;
 
-                // Wrap Z depth
                 if (star.z <= 0) {
                     star.z = spaceCanvas.width;
                     star.x = Math.random() * spaceCanvas.width;
@@ -1511,29 +1499,45 @@ export default function Page() {
                     star.y = Math.random() * spaceCanvas.height;
                 }
 
-                // Calculate 3D projection
                 const k = 128.0 / Math.max(1, star.z);
                 const px = (star.x - cx) * k + cx;
                 const py = (star.y - cy) * k + cy;
-                const size = Math.max(0.1, star.size * k);
+                const size = Math.max(0.2, star.size * k);
 
-                // Draw warp trail if in hyperdrive speed
                 if (isWarping && currentWarp > 1.5) {
                     ctx.beginPath();
                     ctx.moveTo(prevPx, prevPy);
                     ctx.lineTo(px, py);
-                    const trailAlpha = Math.min(0.9, star.opacity * (currentWarp / 25));
+                    const trailAlpha = Math.min(0.85, star.opacity * (currentWarp / 25));
                     ctx.strokeStyle = `rgba(235, 215, 63, ${trailAlpha})`;
-                    ctx.lineWidth = Math.min(3.5, size * 1.5);
+                    ctx.lineWidth = Math.min(2.5, size * 1.2);
                     ctx.stroke();
                 }
 
-                // Draw star
-                ctx.beginPath();
-                ctx.arc(px, py, size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
-                ctx.fill();
-            });
+                if (star.tier === 0) t0.push(px, py, size);
+                else if (star.tier === 1) t1.push(px, py, size);
+                else t2.push(px, py, size);
+            }
+
+            // High performance batched draws
+            if (t0.length > 0) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+                for (let i = 0; i < t0.length; i += 3) {
+                    ctx.fillRect(t0[i], t0[i+1], t0[i+2], t0[i+2]);
+                }
+            }
+            if (t1.length > 0) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.58)';
+                for (let i = 0; i < t1.length; i += 3) {
+                    ctx.fillRect(t1[i], t1[i+1], t1[i+2], t1[i+2]);
+                }
+            }
+            if (t2.length > 0) {
+                ctx.fillStyle = 'rgba(235, 215, 63, 0.85)';
+                for (let i = 0; i < t2.length; i += 3) {
+                    ctx.fillRect(t2[i], t2[i+1], t2[i+2], t2[i+2]);
+                }
+            }
 
             if (spaceModeActive) {
                 spaceAnimationId = requestAnimationFrame(animateSpace);
@@ -1641,21 +1645,14 @@ export default function Page() {
                     animateSpace();
                     window.addEventListener('resize', resizeSpace);
 
-                    // Cosmic Zero-Gravity Lift-Off wave with randomized physics impulse
+                    // Cosmic Zero-Gravity Gentle Detach
                     if (window.canvasEngine && window.canvasEngine.items) {
-                        window.canvasEngine.items.forEach((item, idx) => {
+                        window.canvasEngine.items.forEach((item) => {
                             const angle = Math.random() * Math.PI * 2;
-                            const impulse = (0.8 + Math.random() * 1.5) / item.mass;
-                            item.vx = Math.cos(angle) * impulse;
-                            item.vy = Math.sin(angle) * impulse;
-                            item.vRot = ((Math.random() - 0.5) * 0.45) / item.mass;
-                            item.targetRotZ = (Math.random() - 0.5) * 20;
-
-                            const delay = (idx % 8) * 0.02;
-                            gsap.fromTo(item.el, 
-                                { scale: 0.94 },
-                                { scale: 1, duration: 0.75, delay: delay, ease: "back.out(1.4)" }
-                            );
+                            const speed = 0.25 / item.mass;
+                            item.vx = Math.cos(angle) * speed;
+                            item.vy = Math.sin(angle) * speed;
+                            item.targetRotZ = (Math.random() - 0.5) * 3.5; // Luxury micro-tilt (-1.75 to +1.75 deg)
                         });
                     }
                 } else {
@@ -2881,10 +2878,9 @@ export default function Page() {
         }
 
         .space-mode-active .canvas-item {
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 35px rgba(235, 215, 63, 0.14);
-            border: 1px solid rgba(235, 215, 63, 0.2);
-            background-color: rgba(18, 18, 22, 0.9);
-            /* Ethereal glow in space */
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 20px rgba(235, 215, 63, 0.1);
+            border: 1px solid rgba(235, 215, 63, 0.22);
+            background-color: #0b0b0e;
         }
 
         @keyframes ambientFloat1 {
