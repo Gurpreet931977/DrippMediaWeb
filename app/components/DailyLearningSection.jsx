@@ -141,7 +141,7 @@ export default function DailyLearningSection({ isGenz = false }) {
           <div className="console-body">
             <div className="console-tag-row">
               <span className="console-id-tag">
-                {isGenz ? `tip #${currentTip.id} · day #${dayNumber}` : `TIP #${currentTip.id} · DAY #${dayNumber}`}
+                {isGenz ? `day #${dayNumber}` : `DAY #${dayNumber}`}
               </span>
             </div>
 

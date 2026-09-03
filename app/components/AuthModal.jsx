@@ -52,9 +52,41 @@ const SECURITY_QUOTES = [
 ];
 
 const PERSONAS = [
-  { id: 'creative', label: 'Creative', badge: 'Creator', icon: '✦' },
-  { id: 'business', label: 'Business', badge: 'Founder', icon: '💼' },
-  { id: 'general', label: 'Arcade', badge: 'Player', icon: '🎮' }
+  { 
+    id: 'creative', 
+    label: 'Creative', 
+    badge: 'Creator', 
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+      </svg>
+    )
+  },
+  { 
+    id: 'business', 
+    label: 'Business', 
+    badge: 'Founder', 
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+      </svg>
+    )
+  },
+  { 
+    id: 'general', 
+    label: 'Arcade', 
+    badge: 'Player', 
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="6" width="20" height="12" rx="2" />
+        <line x1="6" y1="12" x2="10" y2="12" />
+        <line x1="8" y1="10" x2="8" y2="14" />
+        <line x1="15" y1="13" x2="15.01" y2="13" />
+        <line x1="18" y1="11" x2="18.01" y2="11" />
+      </svg>
+    )
+  }
 ];
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab = 'signup' }) {
@@ -263,7 +295,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
       const result = await response.json();
 
       if (!response.ok) {
-        setErrorMsg(result.error || "Email or Player Tag not found, or not registered.");
+        setErrorMsg(result.error || "Email or Usertag not found, or not registered.");
         setIsSubmitting(false);
       } else {
         if (typeof window !== 'undefined') {
@@ -297,15 +329,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
       }}
     >
       <div className="dripp-auth-card">
-        {/* Holographic Ambient Glow Aura */}
+        {/* Subtle Ambient Glow */}
         <div className="auth-ambient-glow" />
-        <div className="auth-ambient-glow-bottom" />
-
-        {/* Cyberpunk Grid Corner Accents */}
-        <span className="auth-corner c-tl" />
-        <span className="auth-corner c-tr" />
-        <span className="auth-corner c-bl" />
-        <span className="auth-corner c-br" />
 
         {/* Close Button */}
         <button 
@@ -327,67 +352,63 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         {isSuccess ? (
           <div className="auth-success-screen">
             <div className="auth-success-badge">
-              <div className="success-pulse-ring" />
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#050505" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#050505" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </div>
-            <div className="auth-success-tag">PROTOCOL CONFIRMED</div>
+            <div className="auth-success-tag">VERIFIED</div>
             <h2 className="auth-success-title">DRIPP ID SECURED</h2>
-            <p className="auth-success-sub">Syncing player pass & decrypting high score vault...</p>
+            <p className="auth-success-sub">Player pass active. Accessing member vault...</p>
             <div className="auth-success-progress"><div className="auth-progress-fill" /></div>
           </div>
         ) : (
           <>
-            {/* Cyberpunk Segmented Navigation Tabs */}
-            <div className="auth-nav-track">
-              <button 
-                type="button"
-                onClick={() => { setErrorMsg(""); setActiveTab('signup'); }}
-                className={`auth-tab-btn ${activeTab === 'signup' ? 'active' : ''}`}
-              >
-                <span className="tab-sparkle">✦</span>
-                <span>SIGN UP</span>
-              </button>
-              <button 
-                type="button"
-                onClick={() => { setErrorMsg(""); setActiveTab('login'); }}
-                className={`auth-tab-btn ${activeTab === 'login' || activeTab === 'forgot_password' ? 'active' : ''}`}
-              >
-                <span>LOG IN</span>
-              </button>
+            {/* Top Row: Segmented Nav Tabs */}
+            <div className="auth-top-row">
+              <div className="auth-nav-track">
+                <button 
+                  type="button"
+                  onClick={() => { setErrorMsg(""); setActiveTab('signup'); }}
+                  className={`auth-tab-btn ${activeTab === 'signup' ? 'active' : ''}`}
+                >
+                  <span>SIGN UP</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => { setErrorMsg(""); setActiveTab('login'); }}
+                  className={`auth-tab-btn ${activeTab === 'login' || activeTab === 'forgot_password' ? 'active' : ''}`}
+                >
+                  <span>LOG IN</span>
+                </button>
+              </div>
             </div>
 
-            {/* Holographic Passport Header Badge */}
-            <div className="auth-id-header">
-              <div className="auth-id-avatar">
-                <div className="avatar-scanline" />
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {/* Clean, Premium Header */}
+            <div className="auth-header-clean">
+              <div className="auth-header-icon-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                <span className="avatar-chip-dot" />
               </div>
-              <div className="auth-id-meta">
-                <div className="auth-id-row">
+              <div className="auth-header-text">
+                <div className="auth-header-title-row">
                   <h2 className="auth-id-brand">DRIPP ID</h2>
-                  <div className="auth-secure-lock">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="auth-protocol-badge">
-                  <span className="pulse-beacon" />
-                  <span className="protocol-text">
+                  <span className="auth-badge-pill">
                     {activeTab === 'signup' 
-                      ? 'PLAYER PASS // ENROLLMENT' 
+                      ? 'PLAYER PASS' 
                       : activeTab === 'forgot_password' 
-                        ? 'SECURITY RECOVERY // OVERRIDE' 
-                        : 'ENCRYPTED PORTAL // ACCESS'}
+                        ? 'RECOVERY' 
+                        : 'MEMBER ACCESS'}
                   </span>
                 </div>
+                <p className="auth-header-sub">
+                  {activeTab === 'signup' 
+                    ? 'Join the creative collective & unlock exclusive drops.' 
+                    : activeTab === 'forgot_password' 
+                      ? 'Verify your details to reset your password.' 
+                      : 'Enter your credentials to access your pass.'}
+                </p>
               </div>
             </div>
 
@@ -406,7 +427,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
             {/* Main Interactive Form */}
             <form onSubmit={activeTab === 'signup' ? handleSignup : activeTab === 'forgot_password' ? handleResetPassword : handleLogin} className="auth-form-body">
               
-              {/* SIGNUP: Player Name */}
+              {/* SIGNUP: Usertag */}
               {activeTab === 'signup' && (
                 <div className="auth-input-group">
                   <div className="auth-field-wrapper">
@@ -421,7 +442,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                     <input 
                       type="text" 
                       className="cyber-input"
-                      placeholder="Player Name / Gamer Tag" 
+                      placeholder="Usertag" 
                       value={signupName}
                       onChange={e => setSignupName(e.target.value)}
                       required={activeTab === 'signup'}
@@ -444,7 +465,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                   <input 
                     type={activeTab === 'login' ? "text" : "email"} 
                     className="cyber-input"
-                    placeholder={activeTab === 'login' ? "Email or Player Tag" : "Email Address"} 
+                    placeholder={activeTab === 'login' ? "Email or Usertag" : "Email Address"} 
                     value={activeTab === 'signup' ? signupEmail : activeTab === 'forgot_password' ? resetEmail : loginEmail}
                     onChange={e => activeTab === 'signup' ? setSignupEmail(e.target.value) : activeTab === 'forgot_password' ? setResetEmail(e.target.value) : setLoginEmail(e.target.value)}
                     required
@@ -580,7 +601,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
                           <span className="persona-icon">{p.icon}</span>
                           <span className="persona-name">{p.label}</span>
                           <span className="persona-badge">{p.badge}</span>
-                          {isSelected && <span className="persona-indicator" />}
                         </button>
                       );
                     })}
@@ -621,43 +641,40 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
               {/* Security Assurance Capsule */}
               <div className="auth-security-capsule">
                 <div className="security-capsule-icon">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--brand-yellow)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
                 </div>
                 <p className="security-capsule-text">
-                  <strong>256-Bit Encrypted Pass.</strong> Used exclusively to unlock high scores, verify player tags, and grant access to drops.
+                  Your password and data is secured.
                 </p>
               </div>
 
-              {/* High-Energy Action Button */}
+              {/* Action Button */}
               <button 
                 type="submit" 
                 disabled={isSubmitting} 
                 className="auth-submit-btn"
               >
-                <span className="btn-ambient-shimmer" />
                 <span className="btn-label-stack">
                   {isSubmitting ? (
                     <span className="btn-loading-state">
                       <span className="btn-cyber-spinner" />
-                      <span>ENCRYPTING...</span>
+                      <span>PROCESSING...</span>
                     </span>
                   ) : activeTab === 'forgot_password' ? (
                     <>
-                      <span>OVERRIDE PASSWORD</span>
+                      <span>RESET PASSWORD</span>
                       <span className="btn-symbol">↗</span>
                     </>
                   ) : activeTab === 'signup' ? (
                     <>
-                      <span className="btn-sparkle-glyph">✦</span>
                       <span>SAVE PROFILE</span>
                       <span className="btn-symbol">↗</span>
                     </>
                   ) : (
                     <>
-                      <span className="btn-sparkle-glyph">✦</span>
                       <span>ACCESS PROFILE</span>
                       <span className="btn-symbol">↗</span>
                     </>
@@ -689,34 +706,32 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           display: flex;
           justify-content: center;
           align-items: center;
-          background: rgba(4, 4, 6, 0.72);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          background: rgba(3, 3, 5, 0.78);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
           padding: 16px;
-          animation: authFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: authFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           box-sizing: border-box;
           overflow-y: auto;
         }
 
-        /* Modal Main Card */
+        /* Modal Main Card - Luxury Minimal Aesthetic */
         .dripp-auth-card {
           position: relative;
           width: 100%;
-          max-width: 440px;
+          max-width: 420px;
           max-height: 90vh;
           overflow-y: auto;
-          background: radial-gradient(circle at 50% 0%, rgba(235, 215, 63, 0.08) 0%, rgba(13, 13, 16, 0.95) 55%, rgba(8, 8, 10, 0.98) 100%);
-          backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
-          border: 1px solid rgba(235, 215, 63, 0.22);
-          border-radius: 28px;
-          padding: 24px 26px 28px;
+          background: #0d0d10;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          padding: 24px 22px 26px;
           box-shadow: 
-            0 24px 60px rgba(0, 0, 0, 0.8),
-            0 0 45px rgba(235, 215, 63, 0.12),
-            inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            0 30px 70px -15px rgba(0, 0, 0, 0.9),
+            0 0 0 1px rgba(255, 255, 255, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08);
           box-sizing: border-box;
-          animation: authScaleUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: authScaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* Custom Sleek Scrollbar */
@@ -727,205 +742,145 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           background: transparent;
         }
         .dripp-auth-card::-webkit-scrollbar-thumb {
-          background: rgba(235, 215, 63, 0.25);
+          background: rgba(255, 255, 255, 0.15);
           border-radius: 10px;
         }
 
-        /* Glowing Ambient Accents */
+        /* Ambient Glow - Subtle, Not Loud */
         .auth-ambient-glow {
           position: absolute;
-          top: -70px;
+          top: -60px;
           left: 50%;
           transform: translateX(-50%);
-          width: 220px;
-          height: 140px;
-          background: var(--brand-yellow);
-          filter: blur(80px);
-          opacity: 0.18;
-          border-radius: 50%;
-          pointer-events: none;
-        }
-        .auth-ambient-glow-bottom {
-          position: absolute;
-          bottom: -50px;
-          right: 20%;
-          width: 140px;
+          width: 200px;
           height: 100px;
-          background: rgba(235, 215, 63, 0.12);
+          background: rgba(235, 215, 63, 0.08);
           filter: blur(60px);
           border-radius: 50%;
           pointer-events: none;
         }
 
-        /* Cyberpunk Corner Accents */
-        .auth-corner {
-          position: absolute;
-          width: 8px;
-          height: 8px;
-          pointer-events: none;
-        }
-        .auth-corner.c-tl { top: 10px; left: 10px; border-top: 2px solid rgba(235, 215, 63, 0.4); border-left: 2px solid rgba(235, 215, 63, 0.4); }
-        .auth-corner.c-tr { top: 10px; right: 10px; border-top: 2px solid rgba(235, 215, 63, 0.4); border-right: 2px solid rgba(235, 215, 63, 0.4); }
-        .auth-corner.c-bl { bottom: 10px; left: 10px; border-bottom: 2px solid rgba(235, 215, 63, 0.4); border-left: 2px solid rgba(235, 215, 63, 0.4); }
-        .auth-corner.c-br { bottom: 10px; right: 10px; border-bottom: 2px solid rgba(235, 215, 63, 0.4); border-right: 2px solid rgba(235, 215, 63, 0.4); }
-
         /* Close Button */
         .auth-close-btn {
           position: absolute;
-          top: 18px;
-          right: 18px;
-          width: 32px;
-          height: 32px;
+          top: 20px;
+          right: 20px;
+          width: 30px;
+          height: 30px;
           border-radius: 50%;
           background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: rgba(255, 255, 255, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.5);
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: all 0.2s ease;
           z-index: 15;
         }
         .auth-close-btn:hover {
-          background: rgba(235, 215, 63, 0.15);
-          border-color: var(--brand-yellow);
-          color: var(--brand-yellow);
-          transform: rotate(90deg) scale(1.08);
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.2);
+          color: #FFFFFF;
+        }
+
+        /* Top Nav Row */
+        .auth-top-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 16px;
         }
 
         /* Segmented Nav Tabs */
         .auth-nav-track {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          background: rgba(255, 255, 255, 0.035);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 999px;
-          padding: 4px;
-          margin-bottom: 20px;
-          width: fit-content;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          border-radius: 10px;
+          padding: 3px;
+          gap: 2px;
         }
         .auth-tab-btn {
           background: none;
           border: none;
-          padding: 8px 18px;
-          border-radius: 999px;
+          padding: 6px 14px;
+          border-radius: 7px;
           font-family: 'Panchang', sans-serif;
-          font-size: 0.72rem;
+          font-size: 0.68rem;
           font-weight: 700;
-          letter-spacing: 1.2px;
+          letter-spacing: 0.8px;
           color: rgba(255, 255, 255, 0.45);
           cursor: pointer;
-          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
+          transition: all 0.2s ease;
+        }
+        .auth-tab-btn:hover {
+          color: rgba(255, 255, 255, 0.85);
         }
         .auth-tab-btn.active {
-          background: rgba(235, 215, 63, 0.15);
+          background: rgba(235, 215, 63, 0.12);
           color: var(--brand-yellow);
-          box-shadow: 0 0 16px rgba(235, 215, 63, 0.2);
-          border: 1px solid rgba(235, 215, 63, 0.4);
-        }
-        .tab-sparkle {
-          color: var(--brand-yellow);
-          font-size: 0.7rem;
+          border: 1px solid rgba(235, 215, 63, 0.3);
         }
 
-        /* ID Header Badge */
-        .auth-id-header {
+        /* Clean Header */
+        .auth-header-clean {
           display: flex;
-          align-items: center;
-          gap: 14px;
-          padding: 12px 14px;
-          background: linear-gradient(135deg, rgba(235, 215, 63, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
-          border: 1px solid rgba(235, 215, 63, 0.25);
-          border-radius: 18px;
+          align-items: flex-start;
+          gap: 12px;
           margin-bottom: 18px;
-          position: relative;
-          overflow: hidden;
+          padding-bottom: 14px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
-        .auth-id-avatar {
-          width: 44px;
-          height: 44px;
-          border-radius: 12px;
-          background: linear-gradient(135deg, rgba(235, 215, 63, 0.2), rgba(15, 15, 18, 0.9));
-          border: 1px solid rgba(235, 215, 63, 0.5);
+        .auth-header-icon-box {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(235, 215, 63, 0.08);
+          border: 1px solid rgba(235, 215, 63, 0.2);
           display: flex;
           align-items: center;
           justify-content: center;
-          position: relative;
-          box-shadow: 0 4px 18px rgba(235, 215, 63, 0.25);
+          color: var(--brand-yellow);
           flex-shrink: 0;
+          margin-top: 2px;
         }
-        .avatar-scanline {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(to bottom, transparent, rgba(235, 215, 63, 0.3), transparent);
-          animation: avatarScan 2.4s linear infinite;
-          pointer-events: none;
-        }
-        .avatar-chip-dot {
-          position: absolute;
-          top: 3px;
-          right: 3px;
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: var(--brand-yellow);
-          box-shadow: 0 0 6px var(--brand-yellow);
-        }
-        .auth-id-meta {
+        .auth-header-text {
           flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
         }
-        .auth-id-row {
+        .auth-header-title-row {
           display: flex;
           align-items: center;
           gap: 8px;
+          margin-bottom: 4px;
         }
         .auth-id-brand {
           font-family: 'Panchang', sans-serif;
-          font-size: 1.35rem;
+          font-size: 1.15rem;
           font-weight: 800;
-          letter-spacing: 1.5px;
+          letter-spacing: 1px;
+          color: #FFFFFF;
           margin: 0;
-          background: linear-gradient(135deg, #FFFFFF 20%, #EBD73F 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
         }
-        .auth-secure-lock {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 3px 6px;
-          background: rgba(235, 215, 63, 0.15);
-          border: 1px solid rgba(235, 215, 63, 0.35);
-          border-radius: 6px;
+        .auth-badge-pill {
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.52rem;
+          font-weight: 700;
+          letter-spacing: 0.6px;
           color: var(--brand-yellow);
-        }
-        .auth-protocol-badge {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .pulse-beacon {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #4ade80;
-          box-shadow: 0 0 8px #4ade80;
-          animation: beaconPulse 1.8s ease infinite;
-        }
-        .protocol-text {
-          font-family: 'Clash Display', sans-serif;
-          font-size: 0.68rem;
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.55);
-          letter-spacing: 0.8px;
+          background: rgba(235, 215, 63, 0.08);
+          border: 1px solid rgba(235, 215, 63, 0.25);
+          padding: 2px 7px;
+          border-radius: 6px;
           text-transform: uppercase;
+        }
+        .auth-header-sub {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.8rem;
+          color: rgba(255, 255, 255, 0.45);
+          margin: 0;
+          line-height: 1.35;
         }
 
         /* Error Toast */
@@ -933,15 +888,15 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           display: flex;
           align-items: center;
           gap: 8px;
-          background: rgba(239, 68, 68, 0.12);
-          border: 1px solid rgba(239, 68, 68, 0.3);
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.25);
           color: #fca5a5;
-          padding: 10px 14px;
-          border-radius: 12px;
+          padding: 9px 12px;
+          border-radius: 10px;
           font-family: 'Clash Display', sans-serif;
           font-size: 0.8rem;
           font-weight: 500;
-          margin-bottom: 14px;
+          margin-bottom: 12px;
           animation: authShake 0.4s ease;
         }
 
@@ -949,33 +904,33 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         .auth-form-body {
           display: flex;
           flex-direction: column;
-          gap: 11px;
+          gap: 10px;
         }
         .auth-input-group {
           display: flex;
           flex-direction: column;
-          gap: 5px;
+          gap: 4px;
         }
 
-        /* Interactive Field Wrapper */
+        /* Inputs & Wrappers */
         .auth-field-wrapper {
           position: relative;
           display: flex;
           align-items: center;
-          background: rgba(255, 255, 255, 0.025);
+          background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 14px;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          border-radius: 12px;
+          transition: all 0.2s ease;
           overflow: hidden;
         }
         .auth-field-wrapper:hover {
-          background: rgba(255, 255, 255, 0.04);
-          border-color: rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.035);
+          border-color: rgba(255, 255, 255, 0.14);
         }
         .auth-field-wrapper:focus-within {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: var(--brand-yellow);
-          box-shadow: 0 0 20px rgba(235, 215, 63, 0.15);
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(235, 215, 63, 0.5);
+          box-shadow: 0 0 0 1px rgba(235, 215, 63, 0.15);
         }
         .auth-field-icon {
           padding-left: 14px;
@@ -984,41 +939,40 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           align-items: center;
           justify-content: center;
           pointer-events: none;
-          transition: color 0.3s ease;
+          transition: color 0.2s ease;
         }
         .auth-field-wrapper:focus-within .auth-field-icon {
           color: var(--brand-yellow);
         }
 
-        /* Cyber Inputs & Selects */
         .cyber-input {
           flex: 1;
           width: 100%;
-          padding: 11px 14px 11px 10px;
+          padding: 10px 14px 10px 10px;
           background: transparent;
           border: none;
           outline: none;
           color: #FFFFFF;
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.86rem;
+          font-size: 0.85rem;
           font-weight: 500;
-          letter-spacing: 0.3px;
+          letter-spacing: 0.2px;
           box-sizing: border-box;
         }
         .cyber-input::placeholder {
-          color: rgba(255, 255, 255, 0.28);
+          color: rgba(255, 255, 255, 0.25);
           font-weight: 400;
         }
         .cyber-select {
           flex: 1;
           width: 100%;
-          padding: 11px 36px 11px 10px;
+          padding: 10px 34px 10px 10px;
           background: transparent;
           border: none;
           outline: none;
           color: #FFFFFF;
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.86rem;
+          font-size: 0.85rem;
           font-weight: 500;
           cursor: pointer;
           appearance: none;
@@ -1033,9 +987,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         }
         .select-chevron {
           position: absolute;
-          right: 14px;
+          right: 12px;
           pointer-events: none;
-          color: rgba(255, 255, 255, 0.4);
+          color: rgba(255, 255, 255, 0.35);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1045,7 +999,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           right: 12px;
           background: none;
           border: none;
-          color: rgba(255, 255, 255, 0.4);
+          color: rgba(255, 255, 255, 0.35);
           cursor: pointer;
           padding: 4px;
           display: flex;
@@ -1062,30 +1016,30 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 2px 6px;
-          gap: 10px;
+          padding: 2px 4px;
+          gap: 8px;
         }
         .pw-strength-meter {
           display: flex;
-          gap: 4px;
+          gap: 3px;
           flex: 1;
         }
         .pw-segment {
           height: 3px;
           flex: 1;
           border-radius: 4px;
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.08);
           transition: background 0.3s ease;
         }
         .pw-segment.active-1 { background: #ef4444; }
         .pw-segment.active-2 { background: #f97316; }
         .pw-segment.active-3 { background: #eab308; }
-        .pw-segment.active-4 { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+        .pw-segment.active-4 { background: #4ade80; }
         .pw-strength-label {
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.68rem;
+          font-size: 0.65rem;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.45);
+          color: rgba(255, 255, 255, 0.4);
           text-transform: uppercase;
         }
 
@@ -1099,20 +1053,20 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           position: relative;
           display: flex;
           align-items: center;
-          background: rgba(255, 255, 255, 0.025);
+          background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 14px;
-          width: 105px;
+          border-radius: 12px;
+          width: 100px;
           flex-shrink: 0;
-          transition: all 0.3s ease;
+          transition: all 0.2s ease;
         }
         .auth-country-select-wrap:focus-within {
-          border-color: var(--brand-yellow);
+          border-color: rgba(235, 215, 63, 0.5);
         }
         .cyber-country-select {
-          padding-left: 14px;
-          padding-right: 28px;
-          font-size: 0.82rem;
+          padding-left: 12px;
+          padding-right: 24px;
+          font-size: 0.8rem;
           text-align: left;
         }
 
@@ -1125,11 +1079,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         }
         .persona-section-title {
           font-family: 'Panchang', sans-serif;
-          font-size: 0.62rem;
+          font-size: 0.56rem;
           font-weight: 700;
-          letter-spacing: 1.4px;
-          color: rgba(255, 255, 255, 0.4);
-          padding-left: 4px;
+          letter-spacing: 1.2px;
+          color: rgba(255, 255, 255, 0.35);
+          padding-left: 2px;
         }
         .persona-chips-grid {
           display: grid;
@@ -1142,30 +1096,30 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 2px;
-          padding: 8px 4px;
-          border-radius: 12px;
+          gap: 3px;
+          padding: 9px 4px;
+          border-radius: 10px;
           background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.07);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          color: rgba(255, 255, 255, 0.6);
+          transition: all 0.2s ease;
+          color: rgba(255, 255, 255, 0.5);
         }
         .persona-card-chip:hover {
           background: rgba(255, 255, 255, 0.04);
-          border-color: rgba(235, 215, 63, 0.3);
+          border-color: rgba(255, 255, 255, 0.18);
           color: #FFF;
-          transform: translateY(-1px);
         }
         .persona-card-chip.selected {
-          background: rgba(235, 215, 63, 0.1);
-          border-color: var(--brand-yellow);
+          background: rgba(235, 215, 63, 0.08);
+          border-color: rgba(235, 215, 63, 0.45);
           color: var(--brand-yellow);
-          box-shadow: 0 0 14px rgba(235, 215, 63, 0.15);
         }
         .persona-icon {
-          font-size: 0.85rem;
-          line-height: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 18px;
         }
         .persona-name {
           font-family: 'Clash Display', sans-serif;
@@ -1175,37 +1129,26 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         }
         .persona-badge {
           font-family: 'Panchang', sans-serif;
-          font-size: 0.52rem;
+          font-size: 0.5rem;
           font-weight: 700;
-          color: rgba(255, 255, 255, 0.35);
+          color: rgba(255, 255, 255, 0.3);
           letter-spacing: 0.5px;
           text-transform: uppercase;
         }
         .persona-card-chip.selected .persona-badge {
-          color: rgba(235, 215, 63, 0.75);
-        }
-        .persona-indicator {
-          position: absolute;
-          top: 4px;
-          right: 4px;
-          width: 4px;
-          height: 4px;
-          border-radius: 50%;
-          background: var(--brand-yellow);
-          box-shadow: 0 0 6px var(--brand-yellow);
+          color: rgba(235, 215, 63, 0.7);
         }
 
         /* Forgot Password Row */
         .auth-forgot-row {
           text-align: right;
-          padding-top: 2px;
         }
         .auth-forgot-link {
           background: none;
           border: none;
           color: var(--brand-yellow);
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.78rem;
+          font-size: 0.76rem;
           font-weight: 500;
           cursor: pointer;
           opacity: 0.75;
@@ -1220,12 +1163,13 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         .auth-security-capsule {
           display: flex;
           align-items: center;
-          gap: 9px;
-          padding: 8px 12px;
-          background: rgba(235, 215, 63, 0.04);
-          border: 1px solid rgba(235, 215, 63, 0.12);
-          border-radius: 12px;
+          gap: 8px;
+          padding: 8px 11px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 9px;
           margin-top: 2px;
+          color: rgba(255, 255, 255, 0.4);
         }
         .security-capsule-icon {
           flex-shrink: 0;
@@ -1235,68 +1179,48 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         }
         .security-capsule-text {
           font-family: 'Clash Display', sans-serif;
-          font-size: 0.72rem;
+          font-size: 0.74rem;
           line-height: 1.35;
-          color: rgba(255, 255, 255, 0.45);
+          color: rgba(255, 255, 255, 0.5);
           margin: 0;
           text-align: left;
-        }
-        .security-capsule-text strong {
-          color: rgba(255, 255, 255, 0.75);
-          font-weight: 600;
         }
 
         /* CTA Button */
         .auth-submit-btn {
           position: relative;
           width: 100%;
-          margin-top: 6px;
-          padding: 13px 20px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, #FFF066 0%, #EBD73F 50%, #C8A316 100%);
+          margin-top: 4px;
+          padding: 12px 18px;
+          border-radius: 12px;
+          background: var(--brand-yellow);
           border: none;
           color: #050505;
-          font-family: 'Panchang', sans-serif;
-          font-size: 0.8rem;
-          font-weight: 800;
-          letter-spacing: 1.2px;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.88rem;
+          font-weight: 700;
+          letter-spacing: 0.6px;
           cursor: pointer;
           overflow: hidden;
-          box-shadow: 
-            0 10px 30px rgba(235, 215, 63, 0.35),
-            inset 0 1px 0 rgba(255, 255, 255, 0.8);
-          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 18px rgba(235, 215, 63, 0.25);
+          transition: all 0.25s ease;
         }
         .auth-submit-btn:hover:not(:disabled) {
-          transform: translateY(-2px) scale(1.01);
-          box-shadow: 
-            0 16px 40px rgba(235, 215, 63, 0.5),
-            0 0 25px rgba(235, 215, 63, 0.3);
+          transform: translateY(-1px);
+          box-shadow: 0 8px 25px rgba(235, 215, 63, 0.4);
         }
         .auth-submit-btn:active:not(:disabled) {
-          transform: scale(0.99) translateY(0);
+          transform: translateY(0);
         }
         .auth-submit-btn:disabled {
           opacity: 0.6;
           cursor: wait;
         }
-        .btn-ambient-shimmer {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
-          transform: translateX(-100%);
-          animation: btnShimmer 3s ease-in-out infinite;
-        }
         .btn-label-stack {
-          position: relative;
-          z-index: 2;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
-        }
-        .btn-sparkle-glyph {
-          font-size: 0.9rem;
+          gap: 6px;
         }
         .btn-symbol {
           font-size: 0.85rem;
@@ -1311,8 +1235,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           gap: 8px;
         }
         .btn-cyber-spinner {
-          width: 14px;
-          height: 14px;
+          width: 13px;
+          height: 13px;
           border: 2px solid #050505;
           border-top-color: transparent;
           border-radius: 50%;
@@ -1339,52 +1263,44 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           flex-direction: column;
           align-items: center;
           text-align: center;
-          padding: 30px 10px;
-          animation: authScaleUp 0.5s ease;
+          padding: 26px 10px;
+          animation: authScaleUp 0.4s ease;
         }
         .auth-success-badge {
-          position: relative;
-          width: 72px;
-          height: 72px;
+          width: 60px;
+          height: 60px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #FFE853, #EBD73F);
+          background: var(--brand-yellow);
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 0 35px rgba(235, 215, 63, 0.5);
-          margin-bottom: 16px;
-        }
-        .success-pulse-ring {
-          position: absolute;
-          inset: -8px;
-          border-radius: 50%;
-          border: 2px solid var(--brand-yellow);
-          animation: ringPulse 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          box-shadow: 0 0 25px rgba(235, 215, 63, 0.4);
+          margin-bottom: 14px;
         }
         .auth-success-tag {
           font-family: 'Panchang', sans-serif;
-          font-size: 0.65rem;
+          font-size: 0.62rem;
           font-weight: 800;
           color: var(--brand-yellow);
-          letter-spacing: 2px;
+          letter-spacing: 1.5px;
           margin-bottom: 6px;
         }
         .auth-success-title {
           font-family: 'Panchang', sans-serif;
-          font-size: 1.25rem;
+          font-size: 1.15rem;
           font-weight: 800;
           color: #FFFFFF;
-          letter-spacing: 1px;
-          margin: 0 0 8px;
+          letter-spacing: 0.8px;
+          margin: 0 0 6px;
         }
         .auth-success-sub {
           font-family: 'Clash Display', sans-serif;
-          color: rgba(255, 255, 255, 0.6);
-          font-size: 0.88rem;
-          margin: 0 0 20px;
+          color: rgba(255, 255, 255, 0.55);
+          font-size: 0.82rem;
+          margin: 0 0 16px;
         }
         .auth-success-progress {
-          width: 140px;
+          width: 120px;
           height: 3px;
           border-radius: 3px;
           background: rgba(255, 255, 255, 0.1);
@@ -1401,7 +1317,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         .cyber-input:-webkit-autofill, 
         .cyber-input:-webkit-autofill:hover, 
         .cyber-input:-webkit-autofill:focus {
-          -webkit-box-shadow: 0 0 0 30px #121216 inset !important;
+          -webkit-box-shadow: 0 0 0 30px #111115 inset !important;
           -webkit-text-fill-color: #FFFFFF !important;
           transition: background-color 5000s ease-in-out 0s;
         }
@@ -1409,27 +1325,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         /* Keyframes */
         @keyframes authFadeIn {
           from { opacity: 0; backdrop-filter: blur(0px); }
-          to { opacity: 1; backdrop-filter: blur(16px); }
+          to { opacity: 1; backdrop-filter: blur(20px); }
         }
         @keyframes authScaleUp {
-          from { opacity: 0; transform: scale(0.92) translateY(12px); }
+          from { opacity: 0; transform: scale(0.95) translateY(8px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes btnShimmer {
-          0% { transform: translateX(-100%); }
-          50%, 100% { transform: translateX(100%); }
-        }
-        @keyframes avatarScan {
-          0% { transform: translateY(-100%); }
-          100% { transform: translateY(100%); }
-        }
-        @keyframes beaconPulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(0.85); }
-        }
-        @keyframes ringPulse {
-          0% { transform: scale(0.95); opacity: 0.8; }
-          100% { transform: scale(1.35); opacity: 0; }
         }
         @keyframes fillProgress {
           from { width: 0%; }
@@ -1440,22 +1340,19 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
         }
         @keyframes authShake {
           0%, 100% { transform: translateX(0); }
-          20%, 60% { transform: translateX(-6px); }
-          40%, 80% { transform: translateX(6px); }
+          20%, 60% { transform: translateX(-5px); }
+          40%, 80% { transform: translateX(5px); }
         }
 
         /* Responsive */
         @media (max-width: 480px) {
           .dripp-auth-card {
-            padding: 20px 18px 24px;
-            max-width: 94vw;
-            border-radius: 24px;
+            padding: 20px 16px 22px;
+            max-width: 92vw;
+            border-radius: 18px;
           }
           .auth-id-brand {
-            font-size: 1.15rem;
-          }
-          .persona-chips-grid {
-            grid-template-columns: 1fr 1fr 1fr;
+            font-size: 1.05rem;
           }
         }
       `}} />

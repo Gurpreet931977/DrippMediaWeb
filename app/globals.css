@@ -2554,40 +2554,52 @@
             width: 100%;
             text-align: center;
             position: relative;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            /* Thicker basic border */
-            border-top: 2px solid rgba(255, 255, 255, 0.3);
-            /* Bright top reflection */
-            border-left: 2px solid rgba(255, 255, 255, 0.2);
+            /* Liquid Glass Multi-Layer Refractive Substrate */
+            background:
+                radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.02) 60%, transparent 100%),
+                radial-gradient(100% 60% at 50% 100%, rgba(235, 215, 63, 0.07) 0%, transparent 80%),
+                linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.015) 45%, rgba(10, 10, 14, 0.45) 100%);
+            /* Razor-fine Prismatic Liquid Edge */
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.45);
+            border-left: 1.5px solid rgba(255, 255, 255, 0.28);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             padding: 80px 40px;
             border-radius: 40px;
-            /* Rounder for liquid feel */
             overflow: hidden;
-            backdrop-filter: blur(20px);
-            /* Stronger blur for thick glass */
-            -webkit-backdrop-filter: blur(20px);
+            /* High-Refraction Liquid Blur with Saturation Boost */
+            backdrop-filter: blur(30px) saturate(210%) brightness(106%);
+            -webkit-backdrop-filter: blur(30px) saturate(210%) brightness(106%);
+            /* Multi-tier Liquid Specular Bevels & Depth */
             box-shadow:
-                0 30px 60px rgba(0, 0, 0, 0.6),
-                /* Heavy outer drop shadow */
-                inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-                /* Inner rim light */
-                inset 0 20px 40px rgba(255, 255, 255, 0.05),
-                /* Inner top highlight */
-                inset 0 -20px 40px rgba(0, 0, 0, 0.8);
-            /* Inner bottom shadow, volume */
+                0 40px 90px -15px rgba(0, 0, 0, 0.85),
+                0 20px 45px -10px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.6),
+                inset 1.5px 0 2px 0 rgba(255, 255, 255, 0.28),
+                inset 0 25px 50px -10px rgba(255, 255, 255, 0.09),
+                inset 0 -25px 50px -10px rgba(0, 0, 0, 0.75),
+                inset 0 0 35px 0 rgba(255, 255, 255, 0.03);
             transform-style: preserve-3d;
             perspective: 1000px;
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.6s ease;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.5s ease;
         }
 
         .community-wrapper:hover {
-            transform: translateY(-8px) scale(1.01) rotateX(2deg);
+            transform: translateY(-8px) scale(1.012) rotateX(1.8deg);
+            border-top-color: rgba(255, 255, 255, 0.7);
+            border-left-color: rgba(255, 255, 255, 0.45);
             box-shadow:
-                0 40px 80px rgba(0, 0, 0, 0.8),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-                inset 0 30px 60px rgba(255, 255, 255, 0.08),
-                inset 0 -30px 60px rgba(0, 0, 0, 0.9);
+                0 50px 110px -15px rgba(0, 0, 0, 0.95),
+                0 25px 55px -10px rgba(0, 0, 0, 0.65),
+                0 0 45px -10px rgba(235, 215, 63, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 2px 3px 0 rgba(255, 255, 255, 0.8),
+                inset 2px 0 3px 0 rgba(255, 255, 255, 0.45),
+                inset 0 35px 70px -15px rgba(255, 255, 255, 0.14),
+                inset 0 -35px 70px -15px rgba(0, 0, 0, 0.85),
+                inset 0 0 40px 0 rgba(255, 255, 255, 0.06);
         }
 
         .community-wrapper::before {
@@ -2595,33 +2607,41 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 80%;
-            height: 80%;
-            background: var(--brand-glow);
+            width: 85%;
+            height: 85%;
+            background: radial-gradient(circle, rgba(235, 215, 63, 0.18) 0%, rgba(235, 215, 63, 0.05) 45%, transparent 75%);
             transform: translate(-50%, -50%);
-            filter: blur(120px);
+            filter: blur(90px);
             z-index: -1;
             pointer-events: none;
-            opacity: 0.15;
-            /* Constant glow, no hover opacity change */
+            opacity: 0.85;
+            transition: opacity 0.6s ease;
         }
 
-        /* Shimmer Effect */
+        /* Liquid Caustic Shimmer Light Sweep */
         .community-wrapper::after {
             content: '';
             position: absolute;
             top: 0;
             left: -150%;
-            width: 50%;
+            width: 65%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            background: linear-gradient(
+                105deg,
+                transparent 18%,
+                rgba(255, 255, 255, 0.02) 36%,
+                rgba(255, 255, 255, 0.22) 48%,
+                rgba(235, 215, 63, 0.16) 53%,
+                rgba(255, 255, 255, 0.04) 62%,
+                transparent 80%
+            );
             transform: skewX(-20deg);
-            z-index: 0;
+            z-index: 1;
             pointer-events: none;
         }
 
         .community-wrapper.is-shimmering::after {
-            animation: cardShimmer 1.5s ease-in-out forwards;
+            animation: cardShimmer 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
         @keyframes cardShimmer {
@@ -3452,16 +3472,21 @@
 
         .builder-right {
             flex: 1;
+            min-width: 320px;
+            height: 570px;
+            max-height: 570px;
+            box-sizing: border-box;
             background: rgba(10, 10, 10, 0.95);
             border: 1px solid rgba(235, 215, 63, 0.2);
             border-radius: 24px;
-            padding: 40px;
+            padding: 36px 32px;
             position: relative;
             z-index: 2;
             display: flex;
             flex-direction: column;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(235, 215, 63, 0.03);
             backdrop-filter: blur(20px);
+            overflow: hidden;
         }
 
         .builder-title {
@@ -3656,8 +3681,9 @@
             justify-content: space-between;
             align-items: flex-end;
             border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
-            padding-bottom: 20px;
-            margin-bottom: 25px;
+            padding-bottom: 18px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
         .receipt-title {
@@ -3675,20 +3701,57 @@
         }
 
         .receipt-items {
-            flex-grow: 1;
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            min-height: 200px;
+            gap: 14px;
+            padding-right: 8px;
+            margin-right: -4px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(235, 215, 63, 0.3) transparent;
+        }
+
+        .receipt-items::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .receipt-items::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .receipt-items::-webkit-scrollbar-thumb {
+            background: rgba(235, 215, 63, 0.3);
+            border-radius: 4px;
+        }
+
+        .receipt-items::-webkit-scrollbar-thumb:hover {
+            background: var(--brand-yellow);
+        }
+
+        body.light-theme .receipt-items {
+            scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+        }
+
+        body.light-theme .receipt-items::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        body.light-theme .receipt-items::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4);
         }
 
         .receipt-item {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             color: var(--pure-white);
             font-family: 'Clash Display', sans-serif;
             font-size: 0.95rem;
             line-height: 1.5;
+            flex-shrink: 0;
         }
 
         @keyframes typeIn {
@@ -3815,14 +3878,15 @@
             color: rgba(255, 255, 255, 0.3);
             font-style: italic;
             font-family: 'Clash Display', sans-serif;
-            margin-top: 20px;
+            margin: auto;
             text-align: center;
         }
 
         .receipt-footer {
             border-top: 1px dashed rgba(255, 255, 255, 0.2);
-            padding-top: 25px;
-            margin-top: 25px;
+            padding-top: 20px;
+            margin-top: auto;
+            flex-shrink: 0;
         }
 
         /* Custom Quote Button - Signature Capsule Style */
@@ -7466,11 +7530,19 @@
         }
 
         body.light-theme .community-wrapper {
-            background: rgba(5, 5, 5, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-color: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            background:
+                radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.3) 60%, transparent 100%),
+                linear-gradient(145deg, rgba(255, 255, 255, 0.6) 0%, rgba(240, 240, 245, 0.25) 100%);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.95);
+            border-left: 1.5px solid rgba(255, 255, 255, 0.75);
+            box-shadow:
+                0 30px 70px -15px rgba(0, 0, 0, 0.12),
+                0 10px 30px -10px rgba(0, 0, 0, 0.08),
+                inset 0 1.5px 2px 0 rgba(255, 255, 255, 1),
+                inset 0 -20px 40px -15px rgba(0, 0, 0, 0.05);
         }
 
         body.light-theme .info-container {
@@ -7632,10 +7704,14 @@
             .community-wrapper:hover {
                 transform: none;
                 box-shadow:
-                    0 30px 60px rgba(0, 0, 0, 0.6),
-                    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-                    inset 0 20px 40px rgba(255, 255, 255, 0.05),
-                    inset 0 -20px 40px rgba(0, 0, 0, 0.8);
+                    0 40px 90px -15px rgba(0, 0, 0, 0.85),
+                    0 20px 45px -10px rgba(0, 0, 0, 0.5),
+                    0 0 0 1px rgba(255, 255, 255, 0.05),
+                    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.6),
+                    inset 1.5px 0 2px 0 rgba(255, 255, 255, 0.28),
+                    inset 0 25px 50px -10px rgba(255, 255, 255, 0.09),
+                    inset 0 -25px 50px -10px rgba(0, 0, 0, 0.75),
+                    inset 0 0 35px 0 rgba(255, 255, 255, 0.03);
             }
 
             /* Prevent sticky mega button scale */
