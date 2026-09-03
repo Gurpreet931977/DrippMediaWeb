@@ -687,8 +687,8 @@ export default function Page() {
                 const w = typeof window !== 'undefined' ? window.innerWidth : 1440;
                 const isMobile = w <= 768;
                 const isTablet = w > 768 && w <= 1024;
-                this.cols = isMobile ? 6 : (isTablet ? 8 : 10);
-                this.rows = isMobile ? 5 : (isTablet ? 6 : 7);
+                this.cols = isMobile ? 7 : (isTablet ? 9 : 12);
+                this.rows = isMobile ? 6 : (isTablet ? 7 : 8);
                 this.totalItems = this.cols * this.rows;
             }
 
@@ -706,17 +706,17 @@ export default function Page() {
 
                 const vhInVw = typeof window !== 'undefined' ? (window.innerHeight / window.innerWidth) * 100 : 56.25;
 
-                // Ensure the grid ALWAYS generously covers the viewport plus margins
+                // Ensure the grid ALWAYS generously covers the viewport plus wide margins
                 // so that wrapping occurs 100% offscreen and never flickers inside the viewport
                 const cardWidthVw = appliedSize;
                 const cardHeightVw = appliedSize * currentAspectRatio;
-                const neededWidthVw = 100 + (cardWidthVw * 1.6);
-                const neededHeightVw = vhInVw + (cardHeightVw * 1.6);
+                const neededWidthVw = 100 + (cardWidthVw * 2.8);
+                const neededHeightVw = vhInVw + (cardHeightVw * 2.8);
 
                 const minZoomX = neededWidthVw / totalGridWidthVw;
                 const minZoomY = neededHeightVw / totalGridHeightVw;
 
-                const safeMin = isMobile ? 0.55 : 0.52;
+                const safeMin = isMobile ? 0.60 : 0.65;
                 return Math.max(safeMin, Math.max(minZoomX, minZoomY));
             }
 
@@ -822,10 +822,10 @@ export default function Page() {
                         phaseY: randVal2 * Math.PI * 2,
 
                         // Organic unpatterned scatter properties for TRIPP / Zero-Gravity mode
-                        baseScatterX: (randVal - 0.5) * (this.baseStepX * 0.65),
-                        baseScatterY: (randVal2 - 0.5) * (this.baseStepY * 0.60),
-                        baseScatterRot: (randVal3 - 0.5) * 18, // -9 deg to +9 deg
-                        baseScatterScale: 1.0 + (randVal4 - 0.5) * 0.20, // 0.90 to 1.10 depth
+                        baseScatterX: (randVal - 0.5) * (this.baseStepX * 0.35),
+                        baseScatterY: (randVal2 - 0.5) * (this.baseStepY * 0.30),
+                        baseScatterRot: (randVal3 - 0.5) * 16, // -8 deg to +8 deg
+                        baseScatterScale: 1.0 + (randVal4 - 0.5) * 0.16, // 0.92 to 1.08 depth
 
                         // Active animated scatter state
                         scatterX: 0,
@@ -895,8 +895,8 @@ export default function Page() {
                     const seed = i + 1;
                     const randVal = (Math.sin(seed * 9999) + 1) * 0.5;
                     const randVal2 = (Math.cos(seed * 7777) + 1) * 0.5;
-                    item.baseScatterX = (randVal - 0.5) * (this.baseStepX * 0.65);
-                    item.baseScatterY = (randVal2 - 0.5) * (this.baseStepY * 0.60);
+                    item.baseScatterX = (randVal - 0.5) * (this.baseStepX * 0.35);
+                    item.baseScatterY = (randVal2 - 0.5) * (this.baseStepY * 0.30);
                 }
             }
 
@@ -1349,21 +1349,19 @@ export default function Page() {
                 // Return immediately if list view is active to block dragging parallax overlay limits
                 if (this.isListView) return;
 
-                // Apply power3.out style smooth friction easing on release
+                // Apply smooth momentum friction on release, tight tracking while dragging
                 if (!this.state.isDragging) {
-                    this.state.velX *= 0.92;
-                    this.state.velY *= 0.92;
+                    this.state.velX *= 0.93;
+                    this.state.velY *= 0.93;
                     this.state.targetX += this.state.velX;
                     this.state.targetY += this.state.velY;
+                    this.state.x += (this.state.targetX - this.state.x) * 0.25;
+                    this.state.y += (this.state.targetY - this.state.y) * 0.25;
+                } else {
+                    // Direct 1:1 responsive tracking while dragging - eliminates dragging lag
+                    this.state.x += (this.state.targetX - this.state.x) * 0.70;
+                    this.state.y += (this.state.targetY - this.state.y) * 0.70;
                 }
-
-                // Export velocity for space bg interactivity
-                globalVelX = this.state.velX;
-                globalVelY = this.state.velY;
-
-                // Smooth interpolation for dragging tightness
-                this.state.x += (this.state.targetX - this.state.x) * 0.2;
-                this.state.y += (this.state.targetY - this.state.y) * 0.2;
 
                 if (!this.zoomTween || !this.zoomTween.isActive()) {
                     if (Math.abs(this.state.targetZoom - this.state.zoom) > 0.001) {
@@ -1875,10 +1873,10 @@ export default function Page() {
                                 const dirY = ky / dist;
 
                                 // 1. Immediate explosive radial blast velocity from impact epicenter
-                                const blastDist = Math.max(60, 220 - (dist / 5));
+                                const blastDist = Math.max(30, 95 - (dist / 12));
                                 item.blastX = dirX * blastDist;
                                 item.blastY = dirY * blastDist;
-                                item.blastRot = (dirX >= 0 ? 1 : -1) * (Math.random() * 16 + 8);
+                                item.blastRot = (dirX >= 0 ? 1 : -1) * (Math.random() * 10 + 4);
 
                                 // 2. Shatter cards out of patternized grid into organic zero-g resting layout
                                 gsap.killTweensOf(item);
@@ -2036,8 +2034,7 @@ export default function Page() {
             left: 50%;
             width: 100%;
             height: 100%;
-            opacity: 0.9;
-            transition: opacity 0.5s ease;
+            opacity: 1;
             transform-style: flat;
             pointer-events: none;
         }
@@ -2053,15 +2050,15 @@ export default function Page() {
             background-color: #1a1a1a;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             will-change: transform;
-            contain: layout style paint;
+            contain: layout style;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
             transform-origin: center center;
             transform-style: flat;
             pointer-events: auto;
-            transition: box-shadow 0.4s ease, border-color 0.4s ease, background-color 0.4s ease;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
         }
 
         /* Creative Geometric Morphing Loader */
@@ -3139,8 +3136,8 @@ export default function Page() {
         }
 
         .space-mode-active .canvas-item {
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 20px rgba(235, 215, 63, 0.1);
-            border: 1px solid rgba(235, 215, 63, 0.22);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(235, 215, 63, 0.28);
             background-color: #0b0b0e;
         }
 
