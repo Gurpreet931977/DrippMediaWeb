@@ -1378,7 +1378,7 @@ export default function Page() {
             }
 
             function _applyTransform(el, s) {
-                el.style.transform = `translate(calc(-50% + ${s.x}px), calc(-50% + ${s.y}px)) scale(${s.scale})`;
+                el.style.transform = `translate3d(calc(-50% + ${Math.round(s.x)}px), calc(-50% + ${Math.round(s.y)}px), 0) scale(${s.scale})`;
             }
 
             // Mobile: throttle physics to ~30fps
@@ -1386,6 +1386,10 @@ export default function Page() {
             const _isMobilePhysics = window.innerWidth <= 900;
 
             function _physicsTick() {
+                // Viewport culling: only run physics when the cloud is actually on-screen
+                const cRect = cloudContainer.getBoundingClientRect();
+                if (cRect.bottom < -100 || cRect.top > window.innerHeight + 100) return;
+
                 pillState.forEach(s => {
                     if (!s.isActive || s.isDragging) return;
 
@@ -1427,16 +1431,26 @@ export default function Page() {
                     const maxDist = Math.max(distX, distY);
 
                     const fadeStart = 0.8;
+                    let targetOpacity = s.baseOpacity;
+                    let targetPE = 'auto';
+
                     if (maxDist > fadeStart && !s.el.classList.contains('selected')) {
                         const fadeFactor = Math.max(0, 1 - ((maxDist - fadeStart) / (1 - fadeStart)));
-                        s.el.style.opacity = s.baseOpacity * fadeFactor * fadeFactor;
-                        s.el.style.pointerEvents = fadeFactor < 0.1 ? 'none' : 'auto';
+                        targetOpacity = s.baseOpacity * fadeFactor * fadeFactor;
+                        targetPE = fadeFactor < 0.1 ? 'none' : 'auto';
                     } else if (s.el.classList.contains('selected')) {
-                        s.el.style.opacity = 1;
-                        s.el.style.pointerEvents = 'auto';
-                    } else {
-                        s.el.style.opacity = s.baseOpacity;
-                        s.el.style.pointerEvents = 'auto';
+                        targetOpacity = 1;
+                        targetPE = 'auto';
+                    }
+
+                    // Only update DOM styles if values meaningfully changed (eliminates style thrashing)
+                    if (s._curOpacity === undefined || Math.abs(s._curOpacity - targetOpacity) > 0.02) {
+                        s.el.style.opacity = targetOpacity.toFixed(2);
+                        s._curOpacity = targetOpacity;
+                    }
+                    if (s._curPE !== targetPE) {
+                        s.el.style.pointerEvents = targetPE;
+                        s._curPE = targetPE;
                     }
 
                     // Very light damping
@@ -2748,14 +2762,13 @@ export default function Page() {
     <div className="services-container">
       <div className="service-header">
         <div className="service-badge">
-          <span className="service-badge-dot" aria-hidden="true" />
           <span>{isGenz ? '03.5 / the moves' : '03.5 / SERVICES'}</span>
         </div>
         <h2 className="section-title">{isGenz ? 'our meta' : 'What We Do'}</h2>
         <div className="service-intro-wrapper">
           <p className="service-intro">
             <span className="service-action-pill">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="6" y="3" width="12" height="18" rx="6" />
                 <line x1="12" y1="7" x2="12" y2="10" />
               </svg>
@@ -2764,7 +2777,7 @@ export default function Page() {
             <span className="service-intro-text">
               {isGenz 
                 ? 'any service to your loadout below.' 
-                : 'any service that interests you — it’ll be added to your quote below.'}
+                : 'any service that interests you, it’ll be added to your quote below.'}
             </span>
           </p>
         </div>
