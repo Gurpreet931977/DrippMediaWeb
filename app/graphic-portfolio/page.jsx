@@ -16,6 +16,14 @@ export default function Page() {
     // Ensure body is visible
     gsap.set('body', { opacity: 1, y: 0 });
 
+    // Pre-initialize AudioContext during mount so clicks have 0ms CoreAudio latency
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass && !audioContext) {
+            audioContext = new AudioContextClass();
+        }
+    } catch(e) {}
+
     if (!window.__inlineClickBound) {
         window.__inlineClickBound = true;
         window.addEventListener('inline-click', (e) => {
@@ -63,18 +71,32 @@ export default function Page() {
         // --- GTA V CINEMATIC AUDIO SYNTHESIZER (Pure Web Audio API - Zero Asset Latency) ---
         let audioCtx = null;
         let cachedNoiseBuffer = null;
-
+        let audioContext = null;
         function getAudioContext() {
-            if (!audioCtx && typeof window !== 'undefined') {
+            if (typeof window === 'undefined') return null;
+            if (!audioContext) {
                 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
                 if (AudioContextClass) {
-                    audioCtx = new AudioContextClass();
+                    audioContext = new AudioContextClass();
                 }
             }
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume().catch(() => {});
             }
-            return audioCtx;
+            return audioContext;
+        }
+
+        // Pre-warm WebAudio hardware pipeline on first user interaction for zero click latency
+        if (typeof window !== 'undefined') {
+            const prewarmAudio = () => {
+                try { getAudioContext(); } catch(e) {}
+                window.removeEventListener('pointerdown', prewarmAudio);
+                window.removeEventListener('touchstart', prewarmAudio);
+                window.removeEventListener('keydown', prewarmAudio);
+            };
+            window.addEventListener('pointerdown', prewarmAudio, { passive: true });
+            window.addEventListener('touchstart', prewarmAudio, { passive: true });
+            window.addEventListener('keydown', prewarmAudio, { passive: true });
         }
 
         function getNoiseBuffer(ctx) {
@@ -224,6 +246,10 @@ export default function Page() {
             try {
                 const ctx = getAudioContext();
                 if (!ctx) return;
+                if (ctx.state === 'suspended') {
+                    ctx.resume().then(() => playAsteroidIncomingSound()).catch(() => {});
+                    return;
+                }
                 const now = ctx.currentTime;
 
                 const osc = ctx.createOscillator();
@@ -268,6 +294,10 @@ export default function Page() {
             try {
                 const ctx = getAudioContext();
                 if (!ctx) return;
+                if (ctx.state === 'suspended') {
+                    ctx.resume().then(() => playAsteroidExplosionSound()).catch(() => {});
+                    return;
+                }
                 const now = ctx.currentTime;
 
                 // 1. Massive Sub-Bass Seismic Shockwave (drops to 22Hz rumble)
@@ -1715,18 +1745,19 @@ export default function Page() {
             const isGoingTripp = !spaceModeActive;
 
             if (isGoingTripp) {
+                const _clickT0 = performance.now();
                 btn.style.pointerEvents = 'none';
 
-                // Play supersonic incoming asteroid whistle
+                // Play supersonic incoming asteroid whistle without blocking initial visual frame
                 playTripToggleSound(true);
 
                 // Epicenter of asteroid impact (near viewport center with slight dynamic elevation)
                 const impactX = window.innerWidth * 0.5;
                 const impactY = window.innerHeight * 0.48;
 
-                // Incoming trajectory: streaks violently from top-right down to center
-                const startX = window.innerWidth + 320;
-                const startY = -320;
+                // Incoming trajectory: clean hypersonic approach from top-right corner to center
+                const startX = window.innerWidth + 140;
+                const startY = -120;
                 const deltaX = impactX - startX;
                 const deltaY = impactY - startY;
                 const angleDeg = (Math.atan2(deltaY, deltaX) * 180) / Math.PI;
@@ -1754,63 +1785,58 @@ export default function Page() {
                 `;
                 impactOverlay.appendChild(atmosVignette);
 
-                // Create the Asteroid Rig with hardware-accelerated GPU transforms
+                // Create the Asteroid Rig with pure GSAP-controlled 3D GPU transforms
                 const meteorRig = document.createElement('div');
                 meteorRig.className = 'meteor-rig';
-                const startOffsetRelX = startX - impactX;
-                const startOffsetRelY = startY - impactY;
                 meteorRig.style.cssText = `
                     position: fixed;
-                    left: ${impactX}px;
-                    top: ${impactY}px;
-                    width: 150px;
-                    height: 150px;
-                    transform-origin: center center;
-                    transform: translate3d(${startOffsetRelX}px, ${startOffsetRelY}px, 0) translate(-50%, -50%) rotate(${angleDeg}deg);
-                    will-change: transform;
+                    top: 0;
+                    left: 0;
+                    width: 140px;
+                    height: 140px;
                     pointer-events: none;
                     z-index: 163;
+                    will-change: transform;
                 `;
 
-                // Meteorite: High-velocity supersonic plasma tail + molten incandescent core
+                // Meteorite: Supersonic plasma tail + radiant ionization coma + molten core
                 meteorRig.innerHTML = `
                     <!-- Supersonic Plasma Plume Tail -->
                     <div style="
                         position: absolute;
                         top: 50%;
-                        right: 60%;
-                        width: 520px;
-                        height: 64px;
+                        right: 48%;
+                        width: 460px;
+                        height: 52px;
                         transform: translateY(-50%);
-                        background: linear-gradient(to left, #FFFFFF 0%, rgba(235, 215, 63, 0.98) 18%, rgba(255, 87, 34, 0.88) 48%, rgba(183, 28, 28, 0.45) 75%, transparent 100%);
-                        border-radius: 64px;
-                        filter: blur(4px);
+                        background: linear-gradient(to left, #FFFFFF 0%, rgba(255, 235, 70, 0.96) 16%, rgba(255, 90, 20, 0.85) 42%, rgba(210, 25, 10, 0.4) 72%, transparent 100%);
+                        border-radius: 52px;
+                        pointer-events: none;
                     "></div>
-                    <!-- Ambient Ionization Coma -->
+                    <!-- Radiant Ionization Coma -->
                     <div style="
                         position: absolute;
-                        inset: -18px;
+                        inset: -14px;
                         border-radius: 50%;
-                        background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(235, 215, 63, 0.9) 35%, rgba(255, 87, 34, 0.5) 65%, transparent 100%);
-                        filter: blur(10px);
+                        background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(235, 215, 63, 0.85) 30%, rgba(255, 87, 34, 0.42) 60%, transparent 75%);
+                        pointer-events: none;
                     "></div>
                     <!-- Meteorite Core Rock & Thermal Shockwave Front -->
                     <svg viewBox="0 0 100 100" style="
                         position: relative;
                         width: 100%;
                         height: 100%;
-                        filter: drop-shadow(0 0 24px rgba(235, 215, 63, 0.9));
                     ">
                         <!-- Leading Edge High-Pressure Plasma Bow Shock -->
-                        <path d="M 85 25 Q 98 50 85 75" stroke="#FFFFFF" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.9" />
+                        <path d="M 85 24 Q 100 50 85 76" stroke="#FFFFFF" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.95" />
                         <!-- Molten Asteroid Rock Body -->
-                        <path d="M 52 6 C 74 8, 92 24, 96 46 C 100 64, 88 84, 72 94 C 52 100, 26 95, 12 79 C 0 66, -2 44, 7 25 C 16 12, 34 4, 52 6 Z" fill="#1b1614" stroke="#EBD73F" stroke-width="2.6" />
+                        <path d="M 52 6 C 74 8, 92 24, 96 46 C 100 64, 88 84, 72 94 C 52 100, 26 95, 12 79 C 0 66, -2 44, 7 25 C 16 12, 34 4, 52 6 Z" fill="#171210" stroke="#EBD73F" stroke-width="2.6" />
                         <!-- Deep Craters -->
-                        <circle cx="36" cy="36" r="8.5" fill="#0d0a08" />
-                        <circle cx="68" cy="56" r="10" fill="#0d0a08" />
-                        <circle cx="34" cy="68" r="6.5" fill="#0d0a08" />
-                        <circle cx="72" cy="30" r="5.5" fill="#0d0a08" />
-                        <circle cx="50" cy="78" r="4.5" fill="#0d0a08" />
+                        <circle cx="36" cy="36" r="8.5" fill="#0a0806" />
+                        <circle cx="68" cy="56" r="10" fill="#0a0806" />
+                        <circle cx="34" cy="68" r="6.5" fill="#0a0806" />
+                        <circle cx="72" cy="30" r="5.5" fill="#0a0806" />
+                        <circle cx="50" cy="78" r="4.5" fill="#0a0806" />
                         <!-- Incandescent Glowing Thermal Fissures -->
                         <path d="M 28 22 Q 48 40 58 30 Q 76 46 64 68" stroke="#FFF066" stroke-width="3.2" fill="none" stroke-linecap="round" />
                         <path d="M 44 48 Q 32 64 22 68" stroke="#FF5722" stroke-width="2.5" fill="none" stroke-linecap="round" />
@@ -1821,40 +1847,42 @@ export default function Page() {
                 impactOverlay.appendChild(meteorRig);
                 document.body.appendChild(impactOverlay);
 
-                // Timeline: Atmospheric tension -> Supersonic entry -> Impact blast
+                // Set initial transform accurately via GSAP with hardware 3D on connected element
+                gsap.set(meteorRig, {
+                    x: startX,
+                    y: startY,
+                    xPercent: -50,
+                    yPercent: -50,
+                    rotation: angleDeg,
+                    force3D: true
+                });
+
+                // Timeline: Atmospheric tension -> Supersonic entry -> Cataclysmic impact blast
                 const entryTimeline = gsap.timeline();
 
                 // Pre-impact atmospheric tension
-                entryTimeline.to(atmosVignette, { opacity: 1, duration: 0.16, ease: "power2.in" }, 0);
+                entryTimeline.to(atmosVignette, { opacity: 1, duration: 0.2, ease: "power1.in" }, 0);
 
-                // 1. Meteor strikes across space using GPU transforms (zero layout reflow)
-                entryTimeline.fromTo(meteorRig, 
-                    { x: startOffsetRelX, y: startOffsetRelY },
-                    { 
-                        x: 0, 
-                        y: 0, 
-                        duration: 0.3, 
-                        ease: "power3.in",
-                        onComplete: () => {
-                            meteorRig.remove();
-                            atmosVignette.remove();
-                            triggerImpactSequence();
-                        }
-                    },
-                    0
-                );
+                // 1. Meteor strikes across space smoothly and visibly with natural gravitational acceleration
+                entryTimeline.to(meteorRig, {
+                    x: impactX,
+                    y: impactY,
+                    duration: 0.52,
+                    ease: "power2.in",
+                    force3D: true,
+                    onComplete: () => {
+                        meteorRig.remove();
+                        atmosVignette.remove();
+                        triggerImpactSequence();
+                    }
+                }, 0);
 
                 function triggerImpactSequence() {
-                    // Play deep sub-bass seismic boom & rumble
                     playAsteroidExplosionSound();
 
-                    // 1. Tactile Screen Shake (recoil instead of high-frequency DOM thrash)
-                    const showcaseEl = document.getElementById('portfolio-showcase');
-                    if (showcaseEl) {
-                        gsap.fromTo(showcaseEl, 
-                            { x: -16, y: 12, rotate: -0.35 },
-                            { x: 0, y: 0, rotate: 0, duration: 0.42, ease: "power3.out", clearProps: "transform" }
-                        );
+                    if (window.canvasEngine && window.canvasEngine.state) {
+                        window.canvasEngine.state.velX += -14;
+                        window.canvasEngine.state.velY += 10;
                     }
 
                     // 2. Optical Flash (Double Flash: blinding white burst + amber thermal core)
