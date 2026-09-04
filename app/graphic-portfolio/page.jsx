@@ -789,13 +789,13 @@ export default function Page() {
                 // so that wrapping occurs 100% offscreen and never flickers inside the viewport
                 const cardWidthVw = appliedSize;
                 const cardHeightVw = appliedSize * currentAspectRatio;
-                const neededWidthVw = 100 + (cardWidthVw * 2.8);
-                const neededHeightVw = vhInVw + (cardHeightVw * 2.8);
+                const neededWidthVw = 100 + (cardWidthVw * 3.2);
+                const neededHeightVw = vhInVw + (cardHeightVw * 3.2);
 
                 const minZoomX = neededWidthVw / totalGridWidthVw;
                 const minZoomY = neededHeightVw / totalGridHeightVw;
 
-                const safeMin = isMobile ? 0.60 : 0.65;
+                const safeMin = isMobile ? 0.65 : 0.68;
                 return Math.max(safeMin, Math.max(minZoomX, minZoomY));
             }
 
@@ -1143,8 +1143,7 @@ export default function Page() {
                 const specViewEl = document.getElementById('specific-view');
                 if (specViewEl) {
                     specViewEl.addEventListener('click', (e) => {
-                        const isContent = e.target.closest('.specific-view-stage') ||
-                                          e.target.closest('.specific-view-img-container') || 
+                        const isContent = e.target.closest('.specific-view-img-container') || 
                                           e.target.closest('.specific-view-info') || 
                                           e.target.closest('#magnify-slider') ||
                                           e.target.closest('.magnify-slider-container') ||
@@ -1435,10 +1434,10 @@ export default function Page() {
                     gsap.killTweensOf(blurOverlay);
                     gsap.timeline()
                         .fromTo(blurOverlay, 
-                            { opacity: 0, scale: isDiveIn ? 0.96 : 1.04 },
-                            { opacity: isMobile ? 0.55 : 0.85, scale: 1, duration: 0.18, ease: "power2.out" }
+                            { opacity: 0, scale: isDiveIn ? 0.98 : 1.02 },
+                            { opacity: isMobile ? 0.12 : 0.20, scale: 1, duration: 0.15, ease: "power2.out" }
                         )
-                        .to(blurOverlay, { opacity: 0, duration: duration - 0.18, ease: "power3.out" });
+                        .to(blurOverlay, { opacity: 0, duration: duration - 0.15, ease: "power3.out" });
                 }
             }
 
@@ -1578,13 +1577,7 @@ export default function Page() {
                     const currentScale = zoom * cardScale * (1 + depthBreathing);
 
                     // ZERO BLINKING: Elements are NEVER toggled with visibility:hidden
-                    // High-performance dirty-check prevents redundant DOM transform writes
-                    const isOffscreen = (Math.abs(finalX) > halfVW + cullingMarginX) || (Math.abs(finalY) > halfVH + cullingMarginY);
-                    if (isOffscreen && item._wasOffscreen) {
-                        continue;
-                    }
-                    item._wasOffscreen = isOffscreen;
-
+                    // Continuous smooth transforms prevent freezing and teleporting at screen edges
                     const posThreshold = isTripp ? 0.18 : 0.08;
                     const rotThreshold = isTripp ? 0.05 : 0.02;
 
@@ -1835,12 +1828,12 @@ export default function Page() {
                     overflow: hidden;
                 `;
 
-                // Atmospheric Thermal Vignette Tension
+                // Atmospheric Thermal Tension (smooth warm ionization glow, zero dark flash)
                 const atmosVignette = document.createElement('div');
                 atmosVignette.style.cssText = `
                     position: fixed;
                     inset: 0;
-                    background: radial-gradient(circle at 80% 20%, rgba(255, 110, 20, 0.18) 0%, rgba(0,0,0,0.65) 80%);
+                    background: radial-gradient(circle at 80% 20%, rgba(255, 140, 30, 0.15) 0%, rgba(235, 215, 63, 0.06) 50%, transparent 80%);
                     opacity: 0;
                     pointer-events: none;
                     z-index: 161;
@@ -1934,7 +1927,7 @@ export default function Page() {
                     force3D: true,
                     onComplete: () => {
                         meteorRig.remove();
-                        atmosVignette.remove();
+                        gsap.to(atmosVignette, { opacity: 0, duration: 0.35, ease: "power2.out", onComplete: () => atmosVignette.remove() });
                         triggerImpactSequence();
                     }
                 }, 0);
@@ -1947,31 +1940,19 @@ export default function Page() {
                         window.canvasEngine.state.velY += 10;
                     }
 
-                    // 2. Optical Flash (Double Flash: blinding white burst + amber thermal core)
-                    const flashWhite = document.createElement('div');
-                    flashWhite.style.cssText = `
-                        position: fixed;
-                        inset: 0;
-                        background: #ffffff;
-                        opacity: 0.95;
-                        pointer-events: none;
-                        z-index: 168;
-                    `;
-                    impactOverlay.appendChild(flashWhite);
-                    gsap.to(flashWhite, { opacity: 0, duration: 0.09, ease: "power2.out", onComplete: () => flashWhite.remove() });
-
+                    // 2. Optical Flash (Radiant Golden Epicenter Burst - localized, zero screen strobing)
                     const flashHeat = document.createElement('div');
                     flashHeat.style.cssText = `
                         position: fixed;
                         inset: 0;
-                        background: radial-gradient(circle at ${impactX}px ${impactY}px, rgba(255, 255, 255, 1) 0%, rgba(235, 215, 63, 0.9) 25%, rgba(255, 87, 34, 0.45) 55%, transparent 100%);
+                        background: radial-gradient(circle at ${impactX}px ${impactY}px, rgba(255, 255, 255, 0.85) 0%, rgba(235, 215, 63, 0.65) 20%, rgba(255, 87, 34, 0.25) 50%, transparent 75%);
                         pointer-events: none;
                         transform: translateZ(0);
                         will-change: opacity;
                         z-index: 167;
                     `;
                     impactOverlay.appendChild(flashHeat);
-                    gsap.to(flashHeat, { opacity: 0, duration: 0.55, ease: "power2.out", onComplete: () => flashHeat.remove() });
+                    gsap.to(flashHeat, { opacity: 0, duration: 0.45, ease: "power2.out", onComplete: () => flashHeat.remove() });
 
                     // 3. Dual Hardware-Accelerated Shockwaves (uses scale transform, ZERO layout cost!)
                     const maxRadius = Math.hypot(window.innerWidth, window.innerHeight) * 1.4;
@@ -2269,7 +2250,7 @@ export default function Page() {
         #portfolio-showcase {
             width: 100vw;
             height: 100vh;
-            background-color: #0a0a0a;
+            background-color: transparent;
             overflow: hidden;
             position: relative;
         }
@@ -2293,10 +2274,11 @@ export default function Page() {
             position: absolute;
             top: 0;
             left: 0;
-            background-color: #1a1a1a;
+            background-color: #0c0c0f;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(235, 215, 63, 0.22);
             will-change: transform;
             contain: layout style;
             backface-visibility: hidden;
@@ -2304,7 +2286,6 @@ export default function Page() {
             transform-origin: center center;
             transform-style: flat;
             pointer-events: auto;
-            transition: border-color 0.3s ease, background-color 0.3s ease;
         }
 
         /* Creative Geometric Morphing Loader */
@@ -2916,47 +2897,22 @@ export default function Page() {
             max-width: 1400px;
         }
 
-        .specific-view-stage {
+        .specific-view-img-container {
             flex: 2;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            align-self: stretch;
             height: 100%;
-            min-height: 0;
-            min-width: 0;
-            gap: 16px;
-            position: relative;
-        }
-
-        .specific-view-img-container {
-            flex: 1 1 0%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            min-height: 0;
-            position: relative;
-            overflow: hidden;
-            border-radius: 16px;
-            background: #0d0d12;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(235, 215, 63, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            cursor: zoom-in;
-            user-select: none;
         }
 
         .specific-view-img {
             max-width: 100%;
             max-height: 100%;
-            width: auto;
-            height: auto;
             object-fit: contain;
-            border-radius: 14px;
-            display: block;
-            pointer-events: none;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 16px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.95), 0 0 60px rgba(235, 215, 63, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: box-shadow 0.4s ease, border-color 0.4s ease;
         }
 
         .specific-view-overlay:not(.active) .specific-view-img {
@@ -3181,20 +3137,11 @@ export default function Page() {
                 width: 42px;
                 height: 42px;
             }
-            .specific-view-stage {
-                width: 100%;
-                height: auto;
-                max-height: none;
-                flex: none;
-                gap: 14px;
-            }
             .specific-view-img-container {
-                height: 44vh;
-                min-height: 280px;
-                max-height: 52vh;
+                height: auto;
+                max-height: 48vh;
                 width: 100%;
                 flex: none;
-                background: #0d0d12;
             }
             .specific-view-info {
                 max-width: 100%;
@@ -3389,14 +3336,14 @@ export default function Page() {
             }
         }
 
-        /* High-Performance Radial Zoom Motion Blur Overlay */
+        /* High-Performance Radial Zoom Motion Blur Overlay (Warm subtle velocity glow, zero dark flash) */
         .zoom-motion-blur-overlay {
             position: fixed;
             inset: 0;
             pointer-events: none;
             z-index: 85;
             opacity: 0;
-            background: radial-gradient(circle at center, transparent 40%, rgba(235, 215, 63, 0.06) 70%, rgba(0, 0, 0, 0.5) 100%);
+            background: radial-gradient(circle at center, transparent 65%, rgba(235, 215, 63, 0.06) 90%, transparent 100%);
             transform: translateZ(0);
             will-change: opacity, transform;
         }
@@ -3421,18 +3368,6 @@ export default function Page() {
         /* Space Mode active state */
         .space-mode-active #space-canvas {
             opacity: 1;
-        }
-
-        .space-mode-active #portfolio-showcase {
-            background-color: transparent;
-            /* Show space behind */
-        }
-
-        .space-mode-active .canvas-item {
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75);
-            border: 1px solid rgba(235, 215, 63, 0.28);
-            background-color: #0b0b0e;
-            transition: none !important;
         }
 
         @keyframes ambientFloat1 {
@@ -3478,24 +3413,21 @@ export default function Page() {
         }
 
         .magnify-slider-container {
-            position: relative;
-            bottom: auto;
-            left: auto;
-            transform: none;
+            position: absolute;
+            bottom: 0px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 15px;
-            background: rgba(18, 18, 22, 0.92);
-            padding: 9px 24px;
+            background: rgba(15, 15, 15, 0.85);
+            padding: 10px 25px;
             border-radius: 40px;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(235, 215, 63, 0.25);
+            border: 1px solid rgba(235, 215, 63, 0.2);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             z-index: 10;
-            flex-shrink: 0;
-            margin: 0 auto;
         }
 
         @media (max-width: 900px) {
@@ -3514,13 +3446,7 @@ export default function Page() {
                 column-gap: 16px !important;
             }
             .magnify-slider-container {
-                position: relative;
-                bottom: auto;
-                left: auto;
-                transform: none;
-                margin: 12px auto 0 auto;
-                padding: 6px 16px;
-                gap: 10px;
+                display: none !important;
             }
         }
 
@@ -3641,21 +3567,31 @@ export default function Page() {
     </button>
 
     <div className="specific-view-content-wrapper">
-        <div className="specific-view-stage">
+        <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', position: 'relative', paddingBottom: '40px' }}>
           <div 
             className="specific-view-img-container"
+            style={{ 
+              flex: 'none',
+              position: 'relative',
+              overflow: 'hidden', 
+              cursor: 'zoom-in', 
+              borderRadius: '16px', 
+              boxShadow: '0 40px 100px rgba(0, 0, 0, 0.95), 0 0 60px rgba(235, 215, 63, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              display: 'inline-flex',
+              maxWidth: '100%',
+              maxHeight: '100%'
+            }}
             onMouseMove={(e) => {
+                const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+                const x = (e.clientX - left) / width;
+                const y = (e.clientY - top) / height;
                 const img = e.currentTarget.querySelector('img');
+                const slider = document.getElementById('magnify-slider');
+                const zoomLevel = slider ? slider.value : 1.5;
                 if (img) {
-                    const rect = img.getBoundingClientRect();
-                    if (rect.width > 0 && rect.height > 0) {
-                        const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                        const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-                        const slider = document.getElementById('magnify-slider');
-                        const zoomLevel = slider ? parseFloat(slider.value) : 1.5;
-                        img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-                        img.style.transform = `scale(${zoomLevel})`;
-                    }
+                    img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+                    img.style.transform = `scale(${zoomLevel})`;
                 }
             }}
             onMouseLeave={(e) => {
@@ -3675,7 +3611,7 @@ export default function Page() {
               className="specific-view-img" 
               id="specific-img" 
               alt="Specific View" 
-              style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', maxWidth: '100%', maxHeight: '100%', display: 'block', objectFit: 'contain' }}
+              style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', maxWidth: '100%', maxHeight: '100%', display: 'block' }}
               onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
