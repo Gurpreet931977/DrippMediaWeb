@@ -124,7 +124,7 @@ export default function Page() {
                 }
 
                 const isMobileDevice = window.innerWidth < 900;
-                const particleCount = isMobileDevice ? 100 : 150; 
+                const particleCount = isMobileDevice ? 16 : 32; 
                 const container = document.createElement('div');
                 container.className = 'attract-particles-container';
                 btn.appendChild(container);
@@ -139,14 +139,14 @@ export default function Page() {
                     // Spread randomly across the section, but NOT over the button (center)
                     let startX, startY;
                     do {
-                        startX = (Math.random() - 0.5) * window.innerWidth * 0.9;
-                        startY = (Math.random() - 0.5) * 800;
-                        // Button is approx 250px wide, 70px high. Give it a safe buffer zone of 150px X and 70px Y from center
-                    } while (Math.abs(startX) < 150 && Math.abs(startY) < 70);
+                        startX = (Math.random() - 0.5) * Math.min(window.innerWidth * 0.75, 800);
+                        startY = (Math.random() - 0.5) * 450;
+                        // Safe buffer zone around button
+                    } while (Math.abs(startX) < 160 && Math.abs(startY) < 65);
 
                     const delayStart = Math.random() * 2;
-                    const scaleStart = Math.random() * 1.2 + 0.5;
-                    const opacityStart = Math.random() * 0.6 + 0.4;
+                    const scaleStart = Math.random() * 1.1 + 0.6;
+                    const opacityStart = Math.random() * 0.5 + 0.45;
 
                     gsap.set(p, { x: startX, y: startY, opacity: opacityStart, scale: scaleStart });
 
@@ -3298,11 +3298,15 @@ export default function Page() {
             BEYOND ORDINARY &nbsp;&nbsp;&nbsp; NO LIMITS &nbsp;&nbsp;&nbsp; </span>
         </div>
       </div>
+      <div className="community-aura" aria-hidden="true"></div>
       <div className="community-guideline mobile-only">
         <span className="guideline-quote">"Don't touch the <span className="highlight-text">bubbles(people)</span> - they will go away"</span>
       </div>
       <div className="community-wrapper">
-        <span className="section-label">{isGenz ? '05 / the gang' : '05 / THE COLLECTIVE'}</span>
+        <div className="community-badge">
+          <span className="community-badge-dot" aria-hidden="true"></span>
+          <span>{isGenz ? '05 / the gang' : '05 / THE COLLECTIVE'}</span>
+        </div>
         <h2 className="section-title">{isGenz ? 'join the cult' : 'Join the Creative Community'}</h2>
         <p className="section-desc">
           Step into an exclusive realm of top-tier designers, editors, and digital alchemists. Elevate your

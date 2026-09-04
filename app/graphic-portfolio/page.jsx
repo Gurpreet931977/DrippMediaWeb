@@ -250,6 +250,20 @@ export default function Page() {
             } catch (e) {}
         }
 
+        let cachedAsteroidNoiseBuffer = null;
+        function getAsteroidNoiseBuffer(ctx) {
+            if (!cachedAsteroidNoiseBuffer || cachedAsteroidNoiseBuffer.sampleRate !== ctx.sampleRate) {
+                const bufferSize = Math.floor(ctx.sampleRate * 0.5);
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                cachedAsteroidNoiseBuffer = buffer;
+            }
+            return cachedAsteroidNoiseBuffer;
+        }
+
         function playAsteroidExplosionSound() {
             try {
                 const ctx = getAudioContext();
@@ -272,16 +286,9 @@ export default function Page() {
                 boomOsc.start(now);
                 boomOsc.stop(now + 1.05);
 
-                // 2. White Noise Shock Blast (Atmospheric Shatter)
-                const bufferSize = ctx.sampleRate * 0.6;
-                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    data[i] = Math.random() * 2 - 1;
-                }
-
+                // 2. White Noise Shock Blast (Atmospheric Shatter) - uses pre-cached buffer
                 const noise = ctx.createBufferSource();
-                noise.buffer = buffer;
+                noise.buffer = getAsteroidNoiseBuffer(ctx);
 
                 const filter = ctx.createBiquadFilter();
                 filter.type = 'lowpass';
@@ -1493,6 +1500,12 @@ export default function Page() {
 
                     // ZERO BLINKING: Elements are NEVER toggled with visibility:hidden
                     // High-performance dirty-check prevents redundant DOM transform writes
+                    const isOffscreen = (Math.abs(finalX) > halfVW + cullingMargin) || (Math.abs(finalY) > halfVH + cullingMargin);
+                    if (isOffscreen && item._wasOffscreen) {
+                        continue;
+                    }
+                    item._wasOffscreen = isOffscreen;
+
                     if (
                         Math.abs(finalX - (item._lx || 0)) > 0.08 ||
                         Math.abs(finalY - (item._ly || 0)) > 0.08 ||
@@ -1741,18 +1754,22 @@ export default function Page() {
                 `;
                 impactOverlay.appendChild(atmosVignette);
 
-                // Create the Asteroid Rig
+                // Create the Asteroid Rig with hardware-accelerated GPU transforms
                 const meteorRig = document.createElement('div');
                 meteorRig.className = 'meteor-rig';
+                const startOffsetRelX = startX - impactX;
+                const startOffsetRelY = startY - impactY;
                 meteorRig.style.cssText = `
-                    position: absolute;
-                    left: ${startX}px;
-                    top: ${startY}px;
-                    width: 160px;
-                    height: 160px;
+                    position: fixed;
+                    left: ${impactX}px;
+                    top: ${impactY}px;
+                    width: 150px;
+                    height: 150px;
                     transform-origin: center center;
-                    transform: translate(-50%, -50%) rotate(${angleDeg}deg);
+                    transform: translate3d(${startOffsetRelX}px, ${startOffsetRelY}px, 0) translate(-50%, -50%) rotate(${angleDeg}deg);
                     will-change: transform;
+                    pointer-events: none;
+                    z-index: 163;
                 `;
 
                 // Meteorite: High-velocity supersonic plasma tail + molten incandescent core
@@ -1762,17 +1779,17 @@ export default function Page() {
                         position: absolute;
                         top: 50%;
                         right: 60%;
-                        width: 560px;
-                        height: 72px;
+                        width: 520px;
+                        height: 64px;
                         transform: translateY(-50%);
                         background: linear-gradient(to left, #FFFFFF 0%, rgba(235, 215, 63, 0.98) 18%, rgba(255, 87, 34, 0.88) 48%, rgba(183, 28, 28, 0.45) 75%, transparent 100%);
-                        border-radius: 72px;
+                        border-radius: 64px;
                         filter: blur(4px);
                     "></div>
                     <!-- Ambient Ionization Coma -->
                     <div style="
                         position: absolute;
-                        inset: -22px;
+                        inset: -18px;
                         border-radius: 50%;
                         background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(235, 215, 63, 0.9) 35%, rgba(255, 87, 34, 0.5) 65%, transparent 100%);
                         filter: blur(10px);
@@ -1782,7 +1799,7 @@ export default function Page() {
                         position: relative;
                         width: 100%;
                         height: 100%;
-                        filter: drop-shadow(0 0 28px rgba(235, 215, 63, 1));
+                        filter: drop-shadow(0 0 24px rgba(235, 215, 63, 0.9));
                     ">
                         <!-- Leading Edge High-Pressure Plasma Bow Shock -->
                         <path d="M 85 25 Q 98 50 85 75" stroke="#FFFFFF" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.9" />
@@ -1804,214 +1821,222 @@ export default function Page() {
                 impactOverlay.appendChild(meteorRig);
                 document.body.appendChild(impactOverlay);
 
-                // Timeline: Blazing supersonic entry -> Cataclysmic ground zero slam
-                const timeline = gsap.timeline({
-                    onComplete: () => {
-                        impactOverlay.remove();
-                        btn.style.pointerEvents = 'auto';
-                    }
-                });
+                // Timeline: Atmospheric tension -> Supersonic entry -> Impact blast
+                const entryTimeline = gsap.timeline();
 
                 // Pre-impact atmospheric tension
-                timeline.to(atmosVignette, { opacity: 1, duration: 0.16, ease: "power2.in" }, 0);
+                entryTimeline.to(atmosVignette, { opacity: 1, duration: 0.16, ease: "power2.in" }, 0);
 
-                // 1. Meteor strikes across space in 0.28s (violent acceleration)
-                timeline.to(meteorRig, {
-                    left: impactX,
-                    top: impactY,
-                    duration: 0.28,
-                    ease: "power4.in",
-                    onComplete: () => {
-                        // --- THE ASTEROID IMPACT EXPLOSION ---
-                        meteorRig.remove();
-                        atmosVignette.remove();
-
-                        // Play deep sub-bass seismic boom & rumble
-                        playAsteroidExplosionSound();
-
-                        // 1. Tactile 3D Screen Shake (dynamic elastic camera recoil)
-                        const showcaseEl = document.getElementById('portfolio-showcase');
-                        if (showcaseEl) {
-                            gsap.fromTo(showcaseEl, 
-                                { x: -28, y: 20, scale: 0.982, rotate: -0.5 },
-                                { x: 0, y: 0, scale: 1, rotate: 0, duration: 0.55, ease: "elastic.out(1.15, 0.22)", clearProps: "all" }
-                            );
+                // 1. Meteor strikes across space using GPU transforms (zero layout reflow)
+                entryTimeline.fromTo(meteorRig, 
+                    { x: startOffsetRelX, y: startOffsetRelY },
+                    { 
+                        x: 0, 
+                        y: 0, 
+                        duration: 0.3, 
+                        ease: "power3.in",
+                        onComplete: () => {
+                            meteorRig.remove();
+                            atmosVignette.remove();
+                            triggerImpactSequence();
                         }
+                    },
+                    0
+                );
 
-                        // 2. Optical Flash at Epicenter (Double Flash: blinding white burst + amber thermal core)
-                        const flashWhite = document.createElement('div');
-                        flashWhite.style.cssText = `
-                            position: fixed;
-                            inset: 0;
-                            background: #ffffff;
-                            opacity: 0.95;
-                            pointer-events: none;
-                            z-index: 168;
-                        `;
-                        impactOverlay.appendChild(flashWhite);
-                        gsap.to(flashWhite, { opacity: 0, duration: 0.08, ease: "power2.out", onComplete: () => flashWhite.remove() });
+                function triggerImpactSequence() {
+                    // Play deep sub-bass seismic boom & rumble
+                    playAsteroidExplosionSound();
 
-                        const flashHeat = document.createElement('div');
-                        flashHeat.style.cssText = `
-                            position: fixed;
-                            inset: 0;
-                            background: radial-gradient(circle at ${impactX}px ${impactY}px, rgba(255, 255, 255, 1) 0%, rgba(235, 215, 63, 0.92) 28%, rgba(255, 87, 34, 0.5) 60%, transparent 100%);
-                            pointer-events: none;
-                            z-index: 167;
-                        `;
-                        impactOverlay.appendChild(flashHeat);
-                        gsap.to(flashHeat, { opacity: 0, duration: 0.5, ease: "power2.out", onComplete: () => flashHeat.remove() });
-
-                        // 3. Dual Shockwave Rings (Fast Ionization Wave + Cosmic Gravitational Ripple)
-                        const maxRadius = Math.hypot(window.innerWidth, window.innerHeight) * 1.5;
-
-                        // Wave 1: Supersonic Plasma Ring
-                        const shockwave1 = document.createElement('div');
-                        shockwave1.style.cssText = `
-                            position: fixed;
-                            left: ${impactX}px;
-                            top: ${impactY}px;
-                            width: 0px;
-                            height: 0px;
-                            border-radius: 50%;
-                            border: 5px solid rgba(235, 215, 63, 1);
-                            box-shadow: 0 0 80px rgba(235, 215, 63, 1), inset 0 0 40px rgba(255, 110, 20, 0.7);
-                            transform: translate(-50%, -50%);
-                            pointer-events: none;
-                            z-index: 166;
-                        `;
-                        impactOverlay.appendChild(shockwave1);
-                        gsap.to(shockwave1, {
-                            width: maxRadius * 2.4,
-                            height: maxRadius * 2.4,
-                            opacity: 0,
-                            duration: 0.6,
-                            ease: "power2.out",
-                            onComplete: () => shockwave1.remove()
-                        });
-
-                        // Wave 2: Gravitational Warp Ripple
-                        const shockwave2 = document.createElement('div');
-                        shockwave2.style.cssText = `
-                            position: fixed;
-                            left: ${impactX}px;
-                            top: ${impactY}px;
-                            width: 0px;
-                            height: 0px;
-                            border-radius: 50%;
-                            border: 2px solid rgba(255, 255, 255, 0.85);
-                            box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
-                            transform: translate(-50%, -50%);
-                            pointer-events: none;
-                            z-index: 165;
-                        `;
-                        impactOverlay.appendChild(shockwave2);
-                        gsap.to(shockwave2, {
-                            width: maxRadius * 1.8,
-                            height: maxRadius * 1.8,
-                            opacity: 0,
-                            duration: 0.8,
-                            delay: 0.06,
-                            ease: "power2.out",
-                            onComplete: () => shockwave2.remove()
-                        });
-
-                        // 4. Asteroid Debris & Molten Kinetic Embers (32 high-speed radial shards)
-                        for (let d = 0; d < 32; d++) {
-                            const shard = document.createElement('div');
-                            const shardAngle = (d / 32) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
-                            const shardDist = 200 + Math.random() * 520;
-                            const shardSize = 3 + Math.random() * 8;
-                            const isGold = Math.random() > 0.35;
-                            shard.style.cssText = `
-                                position: fixed;
-                                left: ${impactX}px;
-                                top: ${impactY}px;
-                                width: ${shardSize}px;
-                                height: ${shardSize}px;
-                                border-radius: 50%;
-                                background: ${isGold ? '#FFE853' : '#FF5722'};
-                                box-shadow: 0 0 18px ${isGold ? '#EBD73F' : '#FF5722'};
-                                transform: translate(-50%, -50%);
-                                pointer-events: none;
-                                z-index: 164;
-                            `;
-                            impactOverlay.appendChild(shard);
-                            gsap.to(shard, {
-                                x: Math.cos(shardAngle) * shardDist,
-                                y: Math.sin(shardAngle) * shardDist,
-                                opacity: 0,
-                                scale: 0.1,
-                                duration: 0.55 + Math.random() * 0.4,
-                                ease: "power3.out",
-                                onComplete: () => shard.remove()
-                            });
-                        }
-
-                        // 5. Activate Zero Gravity (Space Mode)
-                        spaceModeActive = true;
-                        document.body.classList.add('space-mode-active');
-                        btn.classList.add('active-tripp');
-                        if (btnText) btnText.innerText = 'TRIPPING';
-                        initSpace();
-                        animateSpace();
-                        window.addEventListener('resize', resizeSpace);
-
-                        // 6. Outward Sonic Propagation: Shatter cards into organic zero-gravity layout
-                        if (window.canvasEngine && window.canvasEngine.items) {
-                            const halfVW = window.innerWidth * 0.5;
-                            const halfVH = window.innerHeight * 0.5;
-                            const eng = window.canvasEngine;
-                            const z = eng.state.zoom;
-                            const sX = eng.baseStepX * z;
-                            const sY = eng.baseStepY * z;
-                            const limX = eng.cols * sX * 0.5;
-                            const limY = eng.rows * sY * 0.5;
-
-                            eng.items.forEach((item, idx) => {
-                                const col = idx % eng.cols;
-                                const row = Math.floor(idx / eng.cols);
-                                const stagY = (col % 2 === 1) ? (sY * 0.5) : 0;
-                                const hX = (col * sX) - limX + (sX * 0.5);
-                                const hY = (row * sY) - limY + (sY * 0.5) + stagY;
-                                const wX = eng.wrap(hX + eng.state.x, -limX, limX);
-                                const wY = eng.wrap(hY + eng.state.y, -limY, limY);
-
-                                const cardScreenX = halfVW + wX;
-                                const cardScreenY = halfVH + wY;
-
-                                const kx = cardScreenX - impactX;
-                                const ky = cardScreenY - impactY;
-                                const dist = Math.hypot(kx, ky) || 1;
-                                const dirX = kx / dist;
-                                const dirY = ky / dist;
-
-                                // Sonic wave delay based on radial distance from impact crater
-                                const waveDelay = Math.min(0.18, dist / 2800);
-
-                                // Immediate explosive blast velocity
-                                const blastDist = Math.max(35, 110 - (dist / 10));
-                                gsap.delayedCall(waveDelay, () => {
-                                    item.blastX = dirX * blastDist;
-                                    item.blastY = dirY * blastDist;
-                                    item.blastRot = (dirX >= 0 ? 1 : -1) * (Math.random() * 20 + 8);
-                                });
-
-                                // Shatter cards out of patternized grid into organic unpatterned layout
-                                gsap.killTweensOf(item);
-                                gsap.to(item, {
-                                    scatterX: item.baseScatterX,
-                                    scatterY: item.baseScatterY,
-                                    scatterRot: item.baseScatterRot,
-                                    scatterScale: item.baseScatterScale,
-                                    duration: 1.25,
-                                    delay: waveDelay,
-                                    ease: "power2.out"
-                                });
-                            });
-                        }
+                    // 1. Tactile Screen Shake (recoil instead of high-frequency DOM thrash)
+                    const showcaseEl = document.getElementById('portfolio-showcase');
+                    if (showcaseEl) {
+                        gsap.fromTo(showcaseEl, 
+                            { x: -16, y: 12, rotate: -0.35 },
+                            { x: 0, y: 0, rotate: 0, duration: 0.42, ease: "power3.out", clearProps: "transform" }
+                        );
                     }
-                });
+
+                    // 2. Optical Flash (Double Flash: blinding white burst + amber thermal core)
+                    const flashWhite = document.createElement('div');
+                    flashWhite.style.cssText = `
+                        position: fixed;
+                        inset: 0;
+                        background: #ffffff;
+                        opacity: 0.95;
+                        pointer-events: none;
+                        z-index: 168;
+                    `;
+                    impactOverlay.appendChild(flashWhite);
+                    gsap.to(flashWhite, { opacity: 0, duration: 0.09, ease: "power2.out", onComplete: () => flashWhite.remove() });
+
+                    const flashHeat = document.createElement('div');
+                    flashHeat.style.cssText = `
+                        position: fixed;
+                        inset: 0;
+                        background: radial-gradient(circle at ${impactX}px ${impactY}px, rgba(255, 255, 255, 1) 0%, rgba(235, 215, 63, 0.9) 25%, rgba(255, 87, 34, 0.45) 55%, transparent 100%);
+                        pointer-events: none;
+                        z-index: 167;
+                    `;
+                    impactOverlay.appendChild(flashHeat);
+                    gsap.to(flashHeat, { opacity: 0, duration: 0.55, ease: "power2.out", onComplete: () => flashHeat.remove() });
+
+                    // 3. Dual Hardware-Accelerated Shockwaves (uses scale transform, ZERO layout cost!)
+                    const maxRadius = Math.hypot(window.innerWidth, window.innerHeight) * 1.4;
+                    const baseSize = 120;
+
+                    // Wave 1: Supersonic Plasma Ring
+                    const shockwave1 = document.createElement('div');
+                    shockwave1.style.cssText = `
+                        position: fixed;
+                        left: ${impactX}px;
+                        top: ${impactY}px;
+                        width: ${baseSize}px;
+                        height: ${baseSize}px;
+                        border-radius: 50%;
+                        border: 3.5px solid rgba(235, 215, 63, 0.95);
+                        box-shadow: 0 0 35px rgba(235, 215, 63, 0.8), inset 0 0 20px rgba(255, 110, 20, 0.6);
+                        transform: translate(-50%, -50%) scale(0.08);
+                        will-change: transform, opacity;
+                        pointer-events: none;
+                        z-index: 166;
+                    `;
+                    impactOverlay.appendChild(shockwave1);
+                    gsap.to(shockwave1, {
+                        scale: (maxRadius * 2.2) / baseSize,
+                        opacity: 0,
+                        duration: 0.65,
+                        ease: "power2.out",
+                        onComplete: () => shockwave1.remove()
+                    });
+
+                    // Wave 2: Gravitational Warp Ripple
+                    const shockwave2 = document.createElement('div');
+                    shockwave2.style.cssText = `
+                        position: fixed;
+                        left: ${impactX}px;
+                        top: ${impactY}px;
+                        width: ${baseSize}px;
+                        height: ${baseSize}px;
+                        border-radius: 50%;
+                        border: 2px solid rgba(255, 255, 255, 0.85);
+                        box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+                        transform: translate(-50%, -50%) scale(0.08);
+                        will-change: transform, opacity;
+                        pointer-events: none;
+                        z-index: 165;
+                    `;
+                    impactOverlay.appendChild(shockwave2);
+                    gsap.to(shockwave2, {
+                        scale: (maxRadius * 1.6) / baseSize,
+                        opacity: 0,
+                        duration: 0.75,
+                        delay: 0.04,
+                        ease: "power2.out",
+                        onComplete: () => shockwave2.remove()
+                    });
+
+                    // 4. Asteroid Debris & Molten Kinetic Embers (18 streamlined glowing shards)
+                    for (let d = 0; d < 18; d++) {
+                        const shard = document.createElement('div');
+                        const shardAngle = (d / 18) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+                        const shardDist = 180 + Math.random() * 450;
+                        const shardSize = 4 + Math.random() * 6;
+                        const isGold = Math.random() > 0.35;
+                        shard.style.cssText = `
+                            position: fixed;
+                            left: ${impactX}px;
+                            top: ${impactY}px;
+                            width: ${shardSize}px;
+                            height: ${shardSize}px;
+                            border-radius: 50%;
+                            background: ${isGold ? '#FFE853' : '#FF5722'};
+                            box-shadow: 0 0 12px ${isGold ? '#EBD73F' : '#FF5722'};
+                            transform: translate(-50%, -50%);
+                            will-change: transform, opacity;
+                            pointer-events: none;
+                            z-index: 164;
+                        `;
+                        impactOverlay.appendChild(shard);
+                        gsap.to(shard, {
+                            x: Math.cos(shardAngle) * shardDist,
+                            y: Math.sin(shardAngle) * shardDist,
+                            opacity: 0,
+                            scale: 0.2,
+                            duration: 0.55 + Math.random() * 0.35,
+                            ease: "power3.out",
+                            onComplete: () => shard.remove()
+                        });
+                    }
+
+                    // 5. Activate Zero Gravity (Space Mode)
+                    spaceModeActive = true;
+                    document.body.classList.add('space-mode-active');
+                    btn.classList.add('active-tripp');
+                    if (btnText) btnText.innerText = 'TRIPPING';
+                    initSpace();
+                    animateSpace();
+                    window.addEventListener('resize', resizeSpace);
+
+                    // 6. Outward Sonic Propagation: Shatter cards into organic zero-gravity layout
+                    if (window.canvasEngine && window.canvasEngine.items) {
+                        const halfVW = window.innerWidth * 0.5;
+                        const halfVH = window.innerHeight * 0.5;
+                        const eng = window.canvasEngine;
+                        const z = eng.state.zoom;
+                        const sX = eng.baseStepX * z;
+                        const sY = eng.baseStepY * z;
+                        const limX = eng.cols * sX * 0.5;
+                        const limY = eng.rows * sY * 0.5;
+
+                        eng.items.forEach((item, idx) => {
+                            const col = idx % eng.cols;
+                            const row = Math.floor(idx / eng.cols);
+                            const stagY = (col % 2 === 1) ? (sY * 0.5) : 0;
+                            const hX = (col * sX) - limX + (sX * 0.5);
+                            const hY = (row * sY) - limY + (sY * 0.5) + stagY;
+                            const wX = eng.wrap(hX + eng.state.x, -limX, limX);
+                            const wY = eng.wrap(hY + eng.state.y, -limY, limY);
+
+                            const cardScreenX = halfVW + wX;
+                            const cardScreenY = halfVH + wY;
+
+                            const kx = cardScreenX - impactX;
+                            const ky = cardScreenY - impactY;
+                            const dist = Math.hypot(kx, ky) || 1;
+                            const dirX = kx / dist;
+                            const dirY = ky / dist;
+
+                            // Sonic wave delay based on radial distance from impact crater
+                            const waveDelay = Math.min(0.15, dist / 3200);
+
+                            // Immediate explosive blast velocity
+                            const blastDist = Math.max(30, 95 - (dist / 12));
+                            item.blastX = dirX * blastDist;
+                            item.blastY = dirY * blastDist;
+                            item.blastRot = (dirX >= 0 ? 1 : -1) * (Math.random() * 16 + 6);
+
+                            // Shatter cards out of patternized grid into organic unpatterned layout
+                            gsap.killTweensOf(item);
+                            gsap.to(item, {
+                                scatterX: item.baseScatterX,
+                                scatterY: item.baseScatterY,
+                                scatterRot: item.baseScatterRot,
+                                scatterScale: item.baseScatterScale,
+                                duration: 1.15,
+                                delay: waveDelay,
+                                ease: "power2.out"
+                            });
+                        });
+                    }
+
+                    // Keep impactOverlay active for the entire duration of the blast waves (0.85s)
+                    // and then gracefully clean up without popping or aborting mid-animation
+                    gsap.delayedCall(0.85, () => {
+                        impactOverlay.remove();
+                        btn.style.pointerEvents = 'auto';
+                    });
+                }
             } else {
                 // Settle back to normal aligned grid
                 btn.style.pointerEvents = 'none';
