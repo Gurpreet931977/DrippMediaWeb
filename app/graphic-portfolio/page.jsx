@@ -374,21 +374,46 @@ export default function Page() {
                 if (isGoingTripp) {
                     playAsteroidIncomingSound();
                 } else {
-                    // Gravitational implosion / magnetic snap back
+                    // Modern Quantum Gravitational Collapse & Magnetic Lock Synthesizer
+                    // 1. Quantum frequency downsweep
                     const osc = ctx.createOscillator();
                     const oscGain = ctx.createGain();
+                    const filter = ctx.createBiquadFilter();
+                    
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(1400, now);
+                    filter.frequency.exponentialRampToValueAtTime(110, now + 0.42);
+
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.exponentialRampToValueAtTime(90, now + 0.45);
+                    osc.frequency.setValueAtTime(540, now);
+                    osc.frequency.exponentialRampToValueAtTime(65, now + 0.42);
 
-                    oscGain.gain.setValueAtTime(0.01, now);
-                    oscGain.gain.linearRampToValueAtTime(0.18, now + 0.08);
-                    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+                    oscGain.gain.setValueAtTime(0.001, now);
+                    oscGain.gain.linearRampToValueAtTime(0.22, now + 0.04);
+                    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
 
-                    osc.connect(oscGain);
+                    osc.connect(filter);
+                    filter.connect(oscGain);
                     oscGain.connect(ctx.destination);
                     osc.start(now);
-                    osc.stop(now + 0.6);
+                    osc.stop(now + 0.5);
+
+                    // 2. High-tech magnetic lock confirmation chirp
+                    const chirp = ctx.createOscillator();
+                    const chirpGain = ctx.createGain();
+                    chirp.type = 'triangle';
+                    chirp.frequency.setValueAtTime(260, now + 0.28);
+                    chirp.frequency.exponentialRampToValueAtTime(740, now + 0.38);
+
+                    chirpGain.gain.setValueAtTime(0.0001, now);
+                    chirpGain.gain.setValueAtTime(0.0001, now + 0.28);
+                    chirpGain.gain.linearRampToValueAtTime(0.12, now + 0.32);
+                    chirpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+
+                    chirp.connect(chirpGain);
+                    chirpGain.connect(ctx.destination);
+                    chirp.start(now + 0.28);
+                    chirp.stop(now + 0.5);
                 }
             } catch (e) {}
         }
@@ -733,6 +758,7 @@ export default function Page() {
                 };
                 this.mouseX = -1000;
                 this.mouseY = -1000;
+                this.trippBlend = 0;
 
                 // Responsive device grid sizing (Mobile: 6x6=36, Tablet: 8x6=48, Desktop: 12x8=96)
                 this.calcResponsiveGrid();
@@ -1522,11 +1548,14 @@ export default function Page() {
                     }
 
                     // --- ZERO GRAVITY ORGANIC HARMONIC DRIFT & FLUID MICROGRAVITY PHYSICS ---
+                    const trippBlend = (this.trippBlend !== undefined) ? this.trippBlend : (isTripp ? 1.0 : 0.0);
+                    const isActivelyTripping = isTripp || trippBlend > 0.001;
+
                     let floatX = 0;
                     let floatY = 0;
                     let rotZ = 0;
 
-                    if (isTripp) {
+                    if (isActivelyTripping) {
                         // 1. Kinetic drag momentum transfer (panning canvas imparts fluid inertia to floating cards)
                         if (Math.abs(this.state.velX) > 0.05 || Math.abs(this.state.velY) > 0.05) {
                             const mass = item.mass || 1.0;
@@ -1545,7 +1574,7 @@ export default function Page() {
                         const dX = cardScreenX - (this.mouseX || -1000);
                         const dY = cardScreenY - (this.mouseY || -1000);
                         const dist = Math.hypot(dX, dY);
-                        if (!this.state.isDragging && dist < 220 && dist > 1) {
+                        if (!this.state.isDragging && dist < 220 && dist > 1 && isTripp) {
                             const repulseForce = (1 - dist / 220) * 12 * zoom;
                             item.repulseX += ((dX / dist) * repulseForce - item.repulseX) * 0.12;
                             item.repulseY += ((dY / dist) * repulseForce - item.repulseY) * 0.12;
@@ -1561,9 +1590,10 @@ export default function Page() {
                         const wanderY = Math.cos(time * item.wanderFreqY + item.phaseY) * (item.orbitRadiusY * zoom);
                         const dynamicTilt = Math.sin(time * item.wanderRot + item.phaseX) * item.tiltAmplitude;
 
-                        floatX = wanderX + (item.vx * zoom) + item.repulseX;
-                        floatY = wanderY + (item.vy * zoom) + item.repulseY;
-                        rotZ = (item.scatterRot || 0) + (item.blastRot || 0) + item.vRot + item.repulseRot + dynamicTilt;
+                        // Continuous mathematical drift blending: eliminates 1-frame position snaps during exit!
+                        floatX = (wanderX + (item.vx * zoom) + item.repulseX) * trippBlend;
+                        floatY = (wanderY + (item.vy * zoom) + item.repulseY) * trippBlend;
+                        rotZ = (item.scatterRot || 0) + (item.blastRot || 0) + ((item.vRot + item.repulseRot + dynamicTilt) * trippBlend);
                     } else {
                         rotZ = (item.scatterRot || 0) + (item.blastRot || 0);
                     }
@@ -1572,8 +1602,8 @@ export default function Page() {
                     const finalY = wrappedY + sY + bY + floatY;
 
                     // Subtle zero-g depth breathing & variable card depth scale
-                    const depthBreathing = isTripp ? (Math.sin(time * 0.00035 + item.phaseX) * 0.012) : 0;
-                    const cardScale = isTripp ? (item.scatterScale || 1.0) : 1.0;
+                    const depthBreathing = (Math.sin(time * 0.00035 + item.phaseX) * 0.012) * trippBlend;
+                    const cardScale = item.scatterScale ? (1.0 + (item.scatterScale - 1.0) * trippBlend) : 1.0;
                     const currentScale = zoom * cardScale * (1 + depthBreathing);
 
                     // ZERO BLINKING: Elements are NEVER toggled with visibility:hidden
@@ -2046,6 +2076,9 @@ export default function Page() {
 
                     // 5. Activate Zero Gravity (Space Mode)
                     spaceModeActive = true;
+                    if (window.canvasEngine) {
+                        gsap.to(window.canvasEngine, { trippBlend: 1.0, duration: 0.5, ease: "power2.out" });
+                    }
                     document.body.classList.add('space-mode-active');
                     btn.classList.add('active-tripp');
                     if (btnText) btnText.innerText = 'TRIPPING';
@@ -2114,44 +2147,218 @@ export default function Page() {
                     });
                 }
             } else {
-                // Settle back to normal aligned grid
+                // --- MODERN QUANTUM GRAVITATIONAL RE-CONVERGENCE & WAVE ALIGNMENT ---
                 btn.style.pointerEvents = 'none';
-                spaceModeActive = false;
-                document.body.classList.remove('space-mode-active');
                 btn.classList.remove('active-tripp');
                 if (btnText) btnText.innerText = 'TRIPP';
-                cancelAnimationFrame(spaceAnimationId);
-                window.removeEventListener('resize', resizeSpace);
+                gsap.fromTo(btn, { scale: 0.93 }, { scale: 1, duration: 0.45, ease: "back.out(2)" });
 
-                // Magnetic snap back sound
+                // Play high-tech quantum collapse & magnetic lock audio
                 playTripToggleSound(false);
 
-                // Magnetic tractor-beam return: glide all scattered cards back into the aligned grid
+                // Convergence Singularity Center
+                const cx = window.innerWidth * 0.5;
+                const cy = window.innerHeight * 0.5;
+
+                // Create Modern Quantum Reconvergence FX Overlay
+                const reconvergenceOverlay = document.createElement('div');
+                reconvergenceOverlay.className = 'reconvergence-overlay';
+                reconvergenceOverlay.style.cssText = `
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 165;
+                    overflow: hidden;
+                `;
+
+                // 1. Quantum Singularity Implosion Ring (contracts inward to singularity core)
+                const implosionRing = document.createElement('div');
+                implosionRing.style.cssText = `
+                    position: fixed;
+                    left: ${cx}px;
+                    top: ${cy}px;
+                    width: 280px;
+                    height: 280px;
+                    border-radius: 50%;
+                    border: 2px solid #FFFFFF;
+                    background: radial-gradient(circle, rgba(235, 215, 63, 0.35) 0%, rgba(255, 87, 34, 0.12) 45%, transparent 70%);
+                    box-shadow: 0 0 35px rgba(235, 215, 63, 0.75), inset 0 0 25px rgba(255, 255, 255, 0.5);
+                    transform: translate(-50%, -50%) scale(1.8);
+                    will-change: transform, opacity;
+                    pointer-events: none;
+                    z-index: 168;
+                `;
+                reconvergenceOverlay.appendChild(implosionRing);
+                gsap.to(implosionRing, {
+                    scale: 0.04,
+                    opacity: 0,
+                    duration: 0.35,
+                    ease: "power3.in",
+                    onComplete: () => implosionRing.remove()
+                });
+
+                // 2. Gravitational Alignment Tractor Shockwave (sweeps outward across entire viewport)
+                const tractorWave = document.createElement('div');
+                const baseWaveSize = 100;
+                tractorWave.style.cssText = `
+                    position: fixed;
+                    left: ${cx}px;
+                    top: ${cy}px;
+                    width: ${baseWaveSize}px;
+                    height: ${baseWaveSize}px;
+                    border-radius: 50%;
+                    border: 2px solid rgba(235, 215, 63, 0.95);
+                    box-shadow: 0 0 28px rgba(235, 215, 63, 0.7), inset 0 0 16px rgba(255, 255, 255, 0.5);
+                    transform: translate(-50%, -50%) scale(0.08);
+                    will-change: transform, opacity;
+                    pointer-events: none;
+                    z-index: 167;
+                `;
+                reconvergenceOverlay.appendChild(tractorWave);
+                const maxRadius = Math.hypot(window.innerWidth, window.innerHeight) * 1.5;
+                gsap.to(tractorWave, {
+                    scale: (maxRadius * 2) / baseWaveSize,
+                    opacity: 0,
+                    duration: 0.85,
+                    delay: 0.14,
+                    ease: "power2.out",
+                    force3D: true,
+                    onComplete: () => tractorWave.remove()
+                });
+
+                // 3. Grid Calibration Laser Crosshairs
+                const hBeam = document.createElement('div');
+                hBeam.style.cssText = `
+                    position: fixed;
+                    left: 0;
+                    top: ${cy}px;
+                    width: 100%;
+                    height: 1.5px;
+                    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.7) 50%, transparent 100%);
+                    box-shadow: 0 0 10px rgba(235, 215, 63, 0.8);
+                    transform: translateY(-50%) scaleX(0);
+                    transform-origin: center;
+                    pointer-events: none;
+                    z-index: 166;
+                `;
+                const vBeam = document.createElement('div');
+                vBeam.style.cssText = `
+                    position: fixed;
+                    left: ${cx}px;
+                    top: 0;
+                    width: 1.5px;
+                    height: 100%;
+                    background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.7) 50%, transparent 100%);
+                    box-shadow: 0 0 10px rgba(235, 215, 63, 0.8);
+                    transform: translateX(-50%) scaleY(0);
+                    transform-origin: center;
+                    pointer-events: none;
+                    z-index: 166;
+                `;
+                reconvergenceOverlay.appendChild(hBeam);
+                reconvergenceOverlay.appendChild(vBeam);
+                gsap.to([hBeam, vBeam], {
+                    scaleX: 1,
+                    scaleY: 1,
+                    duration: 0.22,
+                    delay: 0.12,
+                    ease: "power2.out",
+                    onComplete: () => {
+                        gsap.to([hBeam, vBeam], {
+                            opacity: 0,
+                            duration: 0.25,
+                            ease: "power2.in",
+                            onComplete: () => { hBeam.remove(); vBeam.remove(); }
+                        });
+                    }
+                });
+
+                document.body.appendChild(reconvergenceOverlay);
+
+                // 4. Smooth continuous drift dampening (ZERO 1-frame position snap!)
+                if (window.canvasEngine) {
+                    gsap.killTweensOf(window.canvasEngine);
+                    gsap.to(window.canvasEngine, {
+                        trippBlend: 0,
+                        duration: 0.82,
+                        ease: "power2.inOut"
+                    });
+                }
+
+                // 5. Radial Wave Return: Cards smoothly caught by the expanding tractor wave
                 if (window.canvasEngine && window.canvasEngine.items) {
-                    window.canvasEngine.items.forEach((item) => {
-                        item.blastX = 0;
-                        item.blastY = 0;
-                        item.blastRot = 0;
-                        item.vx = 0;
-                        item.vy = 0;
-                        item.vRot = 0;
-                        item.repulseX = 0;
-                        item.repulseY = 0;
-                        item.repulseRot = 0;
+                    const eng = window.canvasEngine;
+                    const halfVW = window.innerWidth * 0.5;
+                    const halfVH = window.innerHeight * 0.5;
+                    const z = eng.state.zoom;
+                    const sX = eng.baseStepX * z;
+                    const sY = eng.baseStepY * z;
+                    const limX = eng.cols * sX * 0.5;
+                    const limY = eng.rows * sY * 0.5;
+
+                    eng.items.forEach((item, idx) => {
+                        const col = idx % eng.cols;
+                        const row = Math.floor(idx / eng.cols);
+                        const stagY = (col % 2 === 1) ? (sY * 0.5) : 0;
+                        const hX = (col * sX) - limX + (sX * 0.5);
+                        const hY = (row * sY) - limY + (sY * 0.5) + stagY;
+                        const wX = eng.wrap(hX + eng.state.x, -limX, limX);
+                        const wY = eng.wrap(hY + eng.state.y, -limY, limY);
+                        const cardScreenX = halfVW + wX;
+                        const cardScreenY = halfVH + wY;
+
+                        const dist = Math.hypot(cardScreenX - cx, cardScreenY - cy) || 1;
+                        const waveDelay = 0.08 + Math.min(0.18, dist / 3200);
+
                         gsap.killTweensOf(item);
                         gsap.to(item, {
                             scatterX: 0,
                             scatterY: 0,
                             scatterRot: 0,
                             scatterScale: 1.0,
-                            duration: 0.85,
-                            ease: "power3.inOut"
+                            duration: 0.65,
+                            delay: waveDelay,
+                            ease: "power3.out",
+                            onComplete: () => {
+                                item.blastX = 0;
+                                item.blastY = 0;
+                                item.blastRot = 0;
+                                item.vx = 0;
+                                item.vy = 0;
+                                item.vRot = 0;
+                                item.repulseX = 0;
+                                item.repulseY = 0;
+                                item.repulseRot = 0;
+
+                                // Modern Magnetic Lock Glint
+                                if (item.el) {
+                                    item.el.classList.add('grid-lock-snap');
+                                    setTimeout(() => {
+                                        if (item.el) item.el.classList.remove('grid-lock-snap');
+                                    }, 350);
+                                }
+                            }
                         });
                     });
                 }
-                setTimeout(() => {
+
+                // 6. Smooth Starfield Warp Deceleration & Dissolve (no frozen freeze-frame!)
+                gsap.to(warpState, { speed: 0, duration: 0.5, ease: "power2.out" });
+                gsap.to(spaceCanvas, {
+                    opacity: 0,
+                    duration: 0.75,
+                    ease: "power2.out"
+                });
+
+                // Clean finish when all card tweens and drift blend conclude
+                gsap.delayedCall(0.92, () => {
+                    spaceModeActive = false;
+                    document.body.classList.remove('space-mode-active');
+                    if (spaceAnimationId) cancelAnimationFrame(spaceAnimationId);
+                    window.removeEventListener('resize', resizeSpace);
+                    if (reconvergenceOverlay.parentNode) reconvergenceOverlay.remove();
                     btn.style.pointerEvents = 'auto';
-                }, 850);
+                });
             }
         }
 
@@ -2286,6 +2493,12 @@ export default function Page() {
             transform-origin: center center;
             transform-style: flat;
             pointer-events: auto;
+            transition: box-shadow 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), border-color 0.35s ease;
+        }
+
+        .canvas-item.grid-lock-snap {
+            box-shadow: 0 0 0 1.5px rgba(235, 215, 63, 0.85), 0 0 25px rgba(235, 215, 63, 0.45), 0 10px 30px rgba(0, 0, 0, 0.8);
+            border-color: rgba(235, 215, 63, 0.85);
         }
 
         /* Creative Geometric Morphing Loader */

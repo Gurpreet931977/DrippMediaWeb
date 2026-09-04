@@ -93,244 +93,259 @@ export default function Page() {
                 });
             });
 
-            // --- COMMUNITY CARD SHIMMER LOGIC ---
-            const communityWrapper = document.querySelector('.community-wrapper');
-            if (communityWrapper) {
-                communityWrapper.addEventListener('mouseenter', () => {
-                    // Only shimmer randomly (50% chance) and when not currently shimmering
-                    if (!communityWrapper.classList.contains('is-shimmering') && Math.random() > 0.5) {
-                        communityWrapper.classList.add('is-shimmering');
-                    }
-                });
-
-                // Remove the class when the animation finishes so it can trigger again on future hovers
-                communityWrapper.addEventListener('animationend', (e) => {
-                    if (e.animationName === 'cardShimmer') {
-                        communityWrapper.classList.remove('is-shimmering');
-                    }
-                });
-            }
-
-            // --- ATTRACT BUTTON LOGIC ---
+            // --- COMMUNITY CANVAS PARTICLE SYSTEM & ATTRACT LOGIC ---
+            const communitySection = document.querySelector('.join-community-section');
+            const communityCanvas = document.getElementById('community-particles-canvas');
             const attractBtns = document.querySelectorAll('.attract-btn');
-            attractBtns.forEach(btn => {
-                // --- MORPH WIDTH INIT ---
-                const morphWord = btn.querySelector('.morph-word');
-                const morphFront = btn.querySelector('.morph-front');
-                const morphBack = btn.querySelector('.morph-back');
 
-                if (morphWord && morphFront) {
-                    morphWord.style.width = morphFront.offsetWidth + 'px';
-                }
-
-                const isMobileDevice = window.innerWidth < 900;
-                const particleCount = isMobileDevice ? 8 : 16; 
-                const container = document.createElement('div');
-                container.className = 'attract-particles-container';
-                btn.appendChild(container);
-
-                const particles = [];
+            if (communityCanvas && communitySection) {
+                const ctx = communityCanvas.getContext('2d');
+                let width = 0;
+                let height = 0;
+                let dpr = 1;
+                let rafId = null;
+                let isSectionVisible = true;
                 let isAttracting = false;
+                let mouseX = -9999;
+                let mouseY = -9999;
+                let mouseIn = false;
+                let btnCenterX = 0;
+                let btnCenterY = 0;
 
+                const isMobile = window.innerWidth < 900;
+                const particleCount = isMobile ? 38 : 85;
+                const particles = [];
+
+                const updateCanvasDimensions = () => {
+                    if (!communitySection || !communityCanvas) return;
+                    const rect = communitySection.getBoundingClientRect();
+                    width = rect.width;
+                    height = rect.height;
+                    dpr = Math.min(window.devicePixelRatio || 1, 2);
+                    communityCanvas.width = Math.floor(width * dpr);
+                    communityCanvas.height = Math.floor(height * dpr);
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                    // Update button center coordinates relative to section
+                    const activeBtn = document.querySelector('.attract-btn');
+                    if (activeBtn) {
+                        const bRect = activeBtn.getBoundingClientRect();
+                        btnCenterX = (bRect.left + bRect.width / 2) - rect.left;
+                        btnCenterY = (bRect.top + bRect.height / 2) - rect.top;
+                    }
+                };
+
+                updateCanvasDimensions();
+
+                // Generate rich, organic particles
                 for (let i = 0; i < particleCount; i++) {
-                    const p = document.createElement('div');
-                    p.className = 'attract-particle';
-
-                    // Spread randomly across the section, but NOT over the button (center)
-                    let startX, startY;
-                    do {
-                        startX = (Math.random() - 0.5) * Math.min(window.innerWidth * 0.75, 800);
-                        startY = (Math.random() - 0.5) * 450;
-                        // Safe buffer zone around button
-                    } while (Math.abs(startX) < 160 && Math.abs(startY) < 65);
-
-                    const delayStart = Math.random() * 2;
-                    const scaleStart = Math.random() * 1.1 + 0.6;
-                    const opacityStart = Math.random() * 0.5 + 0.45;
-
-                    gsap.set(p, { x: startX, y: startY, opacity: opacityStart, scale: scaleStart, force3D: true });
-
-                    // Idle drift animation (people moving around)
-                    gsap.to(p, {
-                        x: startX + (Math.random() - 0.5) * 50,
-                        y: startY + (Math.random() - 0.5) * 50,
-                        duration: 4 + Math.random() * 3,
-                        repeat: -1,
-                        yoyo: true,
-                        ease: "sine.inOut",
-                        delay: delayStart
-                    });
-
-                    container.appendChild(p);
+                    const x = Math.random() * (width || 800);
+                    const y = Math.random() * (height || 500);
+                    const isHero = Math.random() < 0.18;
                     particles.push({
-                        element: p,
-                        startX: startX,
-                        startY: startY,
-                        opacityStart: opacityStart,
-                        scaleStart: scaleStart,
-                        currentX: startX,
-                        currentY: startY
+                        x: x,
+                        y: y,
+                        baseX: x,
+                        baseY: y,
+                        vx: 0,
+                        vy: 0,
+                        radius: isHero ? (Math.random() * 1.5 + 2.8) : (Math.random() * 1.2 + 1.2),
+                        alpha: Math.random() * 0.45 + 0.45,
+                        pulseSpeed: Math.random() * 0.03 + 0.015,
+                        pulsePhase: Math.random() * Math.PI * 2,
+                        wanderAngle: Math.random() * Math.PI * 2,
+                        wanderSpeed: (Math.random() - 0.5) * 0.018,
+                        wanderRadius: Math.random() * 45 + 20,
+                        scale: 1,
+                        targetScale: 1
                     });
                 }
 
-                // Interactive Repulsion Logic when mouse is over the section
-                const section = btn.closest('.join-community-section');
-                let lastInteractionTime = 0;
-                let cachedBtnRect = null;
-                const updateBtnRect = () => {
-                    cachedBtnRect = btn.getBoundingClientRect();
-                };
-                
-                if (section) {
-                    const handleRepulsion = (clientX, clientY) => {
-                        if (isAttracting) return; // Don't repel while they are actively being sucked into the button
-                        
-                        const now = performance.now();
-                        if (now - lastInteractionTime < 80) return; // Throttle to maintain 60fps
-                        lastInteractionTime = now;
+                let frame = 0;
+                const render = () => {
+                    if (!isSectionVisible) {
+                        rafId = null;
+                        return;
+                    }
 
-                        if (!cachedBtnRect) updateBtnRect();
-                        const interactX = clientX - (cachedBtnRect.left + cachedBtnRect.width / 2);
-                        const interactY = clientY - (cachedBtnRect.top + cachedBtnRect.height / 2);
+                    frame++;
+                    ctx.clearRect(0, 0, width, height);
 
-                        const repelRadius = 140;
-                        const repelRadiusSq = repelRadius * repelRadius;
+                    const repelRadius = 140;
+                    const repelRadiusSq = repelRadius * repelRadius;
 
-                        for (let i = 0; i < particles.length; i++) {
-                            const p = particles[i];
-                            const dx = p.currentX - interactX;
-                            const dy = p.currentY - interactY;
-                            const distSq = dx * dx + dy * dy;
+                    for (let i = 0; i < particles.length; i++) {
+                        const p = particles[i];
 
-                            if (distSq < repelRadiusSq) {
-                                const distance = Math.sqrt(distSq) || 1;
-                                const force = (repelRadius - distance) / repelRadius;
-                                const pushX = (dx / distance) * force * 45;
-                                const pushY = (dy / distance) * force * 45;
+                        if (isAttracting) {
+                            // Smoothly gather into the button
+                            const dx = btnCenterX - p.x;
+                            const dy = btnCenterY - p.y;
+                            const dist = Math.hypot(dx, dy) || 1;
+                            const pull = Math.min(10, Math.max(2, dist * 0.09));
+                            p.vx += (dx / dist) * pull;
+                            p.vy += (dy / dist) * pull;
+                            p.x += (btnCenterX - p.x) * 0.08 + p.vx;
+                            p.y += (btnCenterY - p.y) * 0.08 + p.vy;
+                            p.vx *= 0.82;
+                            p.vy *= 0.82;
+                            p.targetScale = 0.6;
+                        } else {
+                            // Natural organic drift wandering around anchor
+                            p.wanderAngle += p.wanderSpeed;
+                            const targetX = p.baseX + Math.cos(p.wanderAngle) * p.wanderRadius;
+                            const targetY = p.baseY + Math.sin(p.wanderAngle) * p.wanderRadius;
 
-                                p.currentX = p.startX + pushX;
-                                p.currentY = p.startY + pushY;
+                            // Spring to target wander orbit
+                            p.vx += (targetX - p.x) * 0.02;
+                            p.vy += (targetY - p.y) * 0.02;
 
-                                gsap.to(p.element, {
-                                    x: p.currentX,
-                                    y: p.currentY,
-                                    duration: 0.35,
-                                    ease: "power2.out",
-                                    overwrite: "auto",
-                                    onComplete: () => {
-                                        if (!isAttracting) {
-                                            p.currentX = p.startX;
-                                            p.currentY = p.startY;
-                                            gsap.to(p.element, {
-                                                x: p.startX + (Math.random() - 0.5) * 50,
-                                                y: p.startY + (Math.random() - 0.5) * 50,
-                                                duration: 4 + Math.random() * 3,
-                                                repeat: -1,
-                                                yoyo: true,
-                                                ease: "sine.inOut"
-                                            });
-                                        }
-                                    }
-                                });
+                            // Interactive cursor repulsion (smooth non-allocating math)
+                            if (mouseIn) {
+                                const dx = p.x - mouseX;
+                                const dy = p.y - mouseY;
+                                const distSq = dx * dx + dy * dy;
+                                if (distSq < repelRadiusSq && distSq > 0.001) {
+                                    const dist = Math.sqrt(distSq);
+                                    const force = (repelRadius - dist) / repelRadius;
+                                    const push = force * force * 3.8;
+                                    p.vx += (dx / dist) * push;
+                                    p.vy += (dy / dist) * push;
+                                }
                             }
+
+                            p.x += p.vx;
+                            p.y += p.vy;
+                            p.vx *= 0.88;
+                            p.vy *= 0.88;
+                            p.targetScale = 1;
+                        }
+
+                        p.scale += (p.targetScale - p.scale) * 0.15;
+
+                        // Twinkling pulse
+                        const pulse = Math.sin(frame * p.pulseSpeed + p.pulsePhase);
+                        const currentAlpha = Math.max(0.12, Math.min(1, (p.alpha + pulse * 0.22) * p.scale));
+                        const currentRadius = p.radius * p.scale;
+
+                        if (currentRadius > 0.3 && currentAlpha > 0.02) {
+                            // Soft radial golden glow
+                            const glowRadius = currentRadius * 3.4;
+                            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowRadius);
+                            grad.addColorStop(0, `rgba(255, 255, 255, ${currentAlpha})`);
+                            grad.addColorStop(0.35, `rgba(235, 215, 63, ${currentAlpha * 0.85})`);
+                            grad.addColorStop(1, `rgba(235, 215, 63, 0)`);
+
+                            ctx.fillStyle = grad;
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, glowRadius, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            // Bright specular core
+                            ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, currentAlpha * 1.3)})`;
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, Math.max(0.8, currentRadius * 0.55), 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+
+                    rafId = requestAnimationFrame(render);
+                };
+
+                rafId = requestAnimationFrame(render);
+
+                // Mouse interaction handlers on section (covers glass card and full area)
+                const onMouseMove = (e) => {
+                    const rect = communitySection.getBoundingClientRect();
+                    mouseX = e.clientX - rect.left;
+                    mouseY = e.clientY - rect.top;
+                    mouseIn = true;
+                };
+
+                const onMouseLeave = () => {
+                    mouseIn = false;
+                    mouseX = -9999;
+                    mouseY = -9999;
+                };
+
+                communitySection.addEventListener('mousemove', onMouseMove, { passive: true });
+                communitySection.addEventListener('mouseleave', onMouseLeave, { passive: true });
+
+                // Touch support for mobile tap/drag
+                communitySection.addEventListener('touchmove', (e) => {
+                    if (e.touches.length > 0) {
+                        const rect = communitySection.getBoundingClientRect();
+                        mouseX = e.touches[0].clientX - rect.left;
+                        mouseY = e.touches[0].clientY - rect.top;
+                        mouseIn = true;
+                    }
+                }, { passive: true });
+
+                communitySection.addEventListener('touchend', () => {
+                    mouseIn = false;
+                }, { passive: true });
+
+                window.addEventListener('resize', updateCanvasDimensions, { passive: true });
+
+                // IntersectionObserver to sleep when off-screen
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        isSectionVisible = entry.isIntersecting;
+                        if (isSectionVisible && !rafId) {
+                            rafId = requestAnimationFrame(render);
+                        }
+                    });
+                }, { threshold: 0.05 });
+                observer.observe(communitySection);
+
+                // --- ATTRACT BUTTON INTERACTION ---
+                attractBtns.forEach(btn => {
+                    // MORPH WIDTH INIT
+                    const morphWord = btn.querySelector('.morph-word');
+                    const morphFront = btn.querySelector('.morph-front');
+                    const morphBack = btn.querySelector('.morph-back');
+
+                    if (morphWord && morphFront) {
+                        morphWord.style.width = morphFront.offsetWidth + 'px';
+                    }
+
+                    const attractIn = () => {
+                        isAttracting = true;
+                        updateCanvasDimensions();
+                        const curBack = btn.querySelector('.morph-back');
+                        if (morphWord && curBack) {
+                            morphWord.style.width = curBack.offsetWidth + 'px';
+                        }
+                        btn.classList.add('is-powered');
+                        gsap.to(btn, { scale: 1.04, duration: 0.25, ease: "power2.out" });
+                    };
+
+                    const attractOut = () => {
+                        const curFront = btn.querySelector('.morph-front');
+                        if (morphWord && curFront) {
+                            morphWord.style.width = curFront.offsetWidth + 'px';
+                        }
+                        btn.classList.remove('is-powered');
+                        gsap.to(btn, { scale: 1, duration: 0.35, ease: "power2.out" });
+
+                        if (isAttracting) {
+                            isAttracting = false;
+                            // Explode particles outward radially from button center
+                            particles.forEach(p => {
+                                const angle = Math.atan2(p.y - btnCenterY, p.x - btnCenterX) + (Math.random() - 0.5) * 0.7;
+                                const speed = 8 + Math.random() * 10;
+                                p.vx = Math.cos(angle) * speed;
+                                p.vy = Math.sin(angle) * speed;
+                            });
                         }
                     };
 
-                    section.addEventListener('mouseenter', updateBtnRect, { passive: true });
-                    window.addEventListener('resize', updateBtnRect, { passive: true });
-                    window.addEventListener('scroll', updateBtnRect, { passive: true });
-
-                    // Desktop tracking
-                    section.addEventListener('mousemove', (e) => {
-                        if (isMobileDevice) return; 
-                        handleRepulsion(e.clientX, e.clientY);
-                    }, { passive: true });
-
-                    // Mobile tracking (Tap and drag to scatter!)
-                    section.addEventListener('touchstart', (e) => {
-                        if (e.touches.length > 0) handleRepulsion(e.touches[0].clientX, e.touches[0].clientY);
-                    }, { passive: true });
-                    
-                    section.addEventListener('touchmove', (e) => {
-                        if (e.touches.length > 0) handleRepulsion(e.touches[0].clientX, e.touches[0].clientY);
-                    }, { passive: true });
-                }
-
-                const attractIn = () => {
-                    isAttracting = true;
-                    const curBack = btn.querySelector('.morph-back');
-                    if (morphWord && curBack) {
-                        morphWord.style.width = curBack.offsetWidth + 'px';
-                    }
-                    btn.classList.add('is-powered');
-                    gsap.to(btn, {
-                        scale: 1.05,
-                        duration: 0.25,
-                        ease: "power2.out"
-                    });
-
-                    particles.forEach((p) => {
-                        gsap.killTweensOf(p.element);
-                        // People gather into the button and merge FASTER
-                        gsap.to(p.element, {
-                            x: 0,
-                            y: 0,
-                            scale: 1.4,
-                            opacity: 0,
-                            duration: 0.28 + Math.random() * 0.15,
-                            ease: "power3.in",
-                            delay: Math.random() * 0.04
-                        });
-                    });
-                };
-
-                const attractOut = () => {
-                    const curFront = btn.querySelector('.morph-front');
-                    if (morphWord && curFront) {
-                        morphWord.style.width = curFront.offsetWidth + 'px';
-                    }
-                    btn.classList.remove('is-powered');
-                    gsap.to(btn, {
-                        scale: 1,
-                        duration: 0.35,
-                        ease: "power2.out"
-                    });
-
-                    particles.forEach((p) => {
-                        gsap.killTweensOf(p.element);
-                        p.currentX = p.startX;
-                        p.currentY = p.startY;
-
-                        // People explode back out to the community
-                        gsap.to(p.element, {
-                            x: p.startX,
-                            y: p.startY,
-                            scale: p.scaleStart,
-                            opacity: p.opacityStart,
-                            duration: 0.5 + Math.random() * 0.25,
-                            ease: "expo.out",
-                            delay: Math.random() * 0.04,
-                            onComplete: () => {
-                                isAttracting = false;
-                                // Resume drift
-                                gsap.to(p.element, {
-                                    x: p.startX + (Math.random() - 0.5) * 50,
-                                    y: p.startY + (Math.random() - 0.5) * 50,
-                                    duration: 4 + Math.random() * 3,
-                                    repeat: -1,
-                                    yoyo: true,
-                                    ease: "sine.inOut"
-                                });
-                            }
-                        });
-                    });
-                };
-
-                btn.addEventListener('mouseenter', attractIn);
-                btn.addEventListener('mouseleave', attractOut);
-                btn.addEventListener('touchstart', attractIn, { passive: true });
-                btn.addEventListener('touchend', attractOut, { passive: true });
-            });
+                    btn.addEventListener('mouseenter', attractIn);
+                    btn.addEventListener('mouseleave', attractOut);
+                    btn.addEventListener('touchstart', attractIn, { passive: true });
+                    btn.addEventListener('touchend', attractOut, { passive: true });
+                });
+            }
 
             // --- PRELOADER ANIMATION ---
             const tlPreloader = gsap.timeline();
@@ -962,6 +977,8 @@ export default function Page() {
 
         window.addEventListener('mousemove', (e) => {
             if (!titleElement || isMobile) return;
+            const tRect = titleElement.getBoundingClientRect();
+            if (tRect.bottom < 0 || tRect.top > window.innerHeight) return;
 
             // Calculate x and y percentage based on window space
             const xPct = (e.clientX / window.innerWidth - 0.5);
@@ -3324,6 +3341,7 @@ export default function Page() {
         </div>
       </div>
       <div className="community-aura" aria-hidden="true"></div>
+      <canvas className="community-particles-canvas" id="community-particles-canvas" aria-hidden="true"></canvas>
       <div className="community-guideline mobile-only">
         <span className="guideline-quote">"Don't touch the <span className="highlight-text">bubbles(people)</span> - they will go away"</span>
       </div>

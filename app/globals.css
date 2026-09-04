@@ -2554,7 +2554,7 @@
             justify-content: center;
             align-items: center;
             gap: 2.2vw;
-            opacity: 0.42;
+            opacity: 0.85;
             transform: rotate(10deg) translateZ(0);
             will-change: transform;
             backface-visibility: hidden;
@@ -2588,11 +2588,22 @@
             left: 50%;
             width: min(900px, 90vw);
             height: min(520px, 60vh);
-            background: radial-gradient(ellipse at center, rgba(235, 215, 63, 0.15) 0%, rgba(235, 215, 63, 0.08) 35%, rgba(235, 215, 63, 0.02) 55%, transparent 72%);
+            background: radial-gradient(ellipse at center, rgba(235, 215, 63, 0.18) 0%, rgba(235, 215, 63, 0.09) 35%, rgba(235, 215, 63, 0.02) 55%, transparent 72%);
             transform: translate(-50%, -50%) translateZ(0);
             pointer-events: none;
             z-index: 1;
-            opacity: 0.9;
+            opacity: 0.95;
+        }
+
+        /* Canvas Particle Layer - Hardware accelerated 60fps floating dots */
+        .community-particles-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
         }
 
         .community-wrapper {
@@ -2601,39 +2612,45 @@
             text-align: center;
             position: relative;
             z-index: 2;
-            /* Liquid Frosted Glass Multi-Layer Refractive Substrate */
+            /* Liquid Frosted Glass Multi-Layer Refractive Substrate - Darker Obsidian Tone */
             background:
-                radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 65%, transparent 100%),
-                radial-gradient(90% 50% at 50% 100%, rgba(235, 215, 63, 0.06) 0%, transparent 80%),
-                linear-gradient(145deg, rgba(20, 20, 26, 0.72) 0%, rgba(13, 13, 17, 0.82) 45%, rgba(8, 8, 10, 0.9) 100%);
+                radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 65%, transparent 100%),
+                radial-gradient(90% 50% at 50% 100%, rgba(235, 215, 63, 0.03) 0%, transparent 80%),
+                linear-gradient(145deg, rgba(9, 9, 13, 0.92) 0%, rgba(6, 6, 9, 0.95) 50%, rgba(3, 3, 5, 0.98) 100%);
             /* Razor-fine Directional Prismatic Glass Edge */
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-top: 1.5px solid rgba(255, 255, 255, 0.45);
-            border-left: 1.5px solid rgba(255, 255, 255, 0.25);
-            border-right: 1px solid rgba(255, 255, 255, 0.09);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-left: 1.5px solid rgba(255, 255, 255, 0.22);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             padding: 85px 48px;
             border-radius: 40px;
             overflow: hidden;
-            /* Authentic Deep Frosted Glass Blur */
-            backdrop-filter: blur(28px) saturate(190%) brightness(105%);
-            -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(105%);
+            /* Authentic Deep Frosted Glass Blur (Optimized for 60fps) */
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
             /* Layered Specular Bevels & Cinematic Ambient Depth */
             box-shadow:
-                0 35px 80px -15px rgba(0, 0, 0, 0.85),
-                0 15px 35px -5px rgba(0, 0, 0, 0.5),
-                0 0 0 1px rgba(255, 255, 255, 0.07),
-                inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
-                inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.6),
-                inset 0 20px 40px -15px rgba(255, 255, 255, 0.06);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
-            will-change: transform;
+                0 35px 80px -15px rgba(0, 0, 0, 0.9),
+                0 15px 35px -5px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.35),
+                inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.7),
+                inset 0 20px 40px -15px rgba(255, 255, 255, 0.03);
+            /* Prevent transform jitter on hover to eliminate backdrop-filter re-rasterization */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         .community-wrapper:hover {
-            transform: translateY(-5px) translateZ(0);
             border-top-color: rgba(255, 255, 255, 0.65);
-            border-left-color: rgba(255, 255, 255, 0.38);
+            border-left-color: rgba(255, 255, 255, 0.35);
+            border-color: rgba(235, 215, 63, 0.32);
+            box-shadow:
+                0 40px 90px -15px rgba(0, 0, 0, 0.95),
+                0 20px 45px -5px rgba(0, 0, 0, 0.7),
+                0 0 35px rgba(235, 215, 63, 0.08),
+                inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
+                inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.7);
         }
 
         /* Top Specular Razor Glint */
@@ -2649,40 +2666,8 @@
             z-index: 1;
         }
 
-        /* Liquid Caustic Shimmer Light Sweep */
         .community-wrapper::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 65%;
-            height: 100%;
-            background: linear-gradient(
-                105deg,
-                transparent 18%,
-                rgba(255, 255, 255, 0.02) 36%,
-                rgba(255, 255, 255, 0.22) 48%,
-                rgba(235, 215, 63, 0.16) 53%,
-                rgba(255, 255, 255, 0.04) 62%,
-                transparent 80%
-            );
-            transform: translateX(-180%) skewX(-20deg);
-            will-change: transform;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .community-wrapper.is-shimmering::after {
-            animation: cardShimmer 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
-
-        @keyframes cardShimmer {
-            0% {
-                transform: translateX(-180%) skewX(-20deg);
-            }
-            100% {
-                transform: translateX(280%) skewX(-20deg);
-            }
+            display: none;
         }
 
         .community-wrapper>* {
