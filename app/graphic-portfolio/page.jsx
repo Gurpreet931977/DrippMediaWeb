@@ -535,7 +535,21 @@ export default function Page() {
 
             renderSpecificModalContent(currentSpecificList[currentSpecificIndex]);
             const modal = document.getElementById('specific-view');
-            if (modal) modal.classList.add('active');
+            if (modal) {
+                modal.classList.add('active');
+                document.body.classList.add('specific-modal-active');
+            }
+        }
+
+        function closeSpecificModal() {
+            const modal = document.getElementById('specific-view');
+            if (modal) modal.classList.remove('active');
+            document.body.classList.remove('specific-modal-active');
+            const imgEl = document.getElementById('specific-img');
+            if (imgEl) {
+                imgEl.style.transform = 'scale(1)';
+                imgEl.style.transformOrigin = 'center center';
+            }
         }
 
         function navigateSpecificModal(direction, withTransition = true) {
@@ -600,6 +614,14 @@ export default function Page() {
                 const nextSrc = targetItem.image_url || targetItem.img_src || targetItem.imgSrc || targetItem.url || (targetItem.imgEl ? targetItem.imgEl.src : '') || '';
 
                 if (container && currImg) {
+                    // Lock current image position for seamless dual-layer slide
+                    currImg.style.position = 'absolute';
+                    currImg.style.top = '0';
+                    currImg.style.left = '0';
+                    currImg.style.width = '100%';
+                    currImg.style.height = '100%';
+                    currImg.style.objectFit = 'contain';
+
                     // Create new incoming image element for true dual-layer sliding stage
                     const nextImg = document.createElement('img');
                     nextImg.src = nextSrc;
@@ -637,6 +659,11 @@ export default function Page() {
                             }
                             nextImg.id = 'specific-img';
                             nextImg.style.position = 'relative';
+                            nextImg.style.width = 'auto';
+                            nextImg.style.height = 'auto';
+                            nextImg.style.maxWidth = '100%';
+                            nextImg.style.maxHeight = '100%';
+                            nextImg.style.objectFit = 'contain';
                             nextImg.style.filter = '';
                             nextImg.style.transform = 'scale(1)';
                             nextImg.style.transformOrigin = 'center center';
@@ -674,6 +701,7 @@ export default function Page() {
 
         // Expose to window for global access from React components
         window.openSpecificModal = openSpecificModal;
+        window.closeSpecificModal = closeSpecificModal;
         window.navigateSpecificModal = navigateSpecificModal;
 
         // --- INFINITE CANVAS ENGINE (GPU-Accelerated Composite Architecture) ---
@@ -1104,21 +1132,29 @@ export default function Page() {
                 }
 
                 // Click to close via "X" button
-                document.getElementById('close-specific').addEventListener('click', () => {
-                    document.getElementById('specific-view').classList.remove('active');
-                });
+                const closeBtn = document.getElementById('close-specific');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => {
+                        closeSpecificModal();
+                    });
+                }
 
                 // Click to close via clicking anywhere on the blank background overlay
-                document.getElementById('specific-view').addEventListener('click', (e) => {
-                    const isContent = e.target.closest('.specific-view-img-container') || 
-                                      e.target.closest('.specific-view-info') || 
-                                      e.target.closest('#magnify-slider') ||
-                                      e.target.closest('.specific-nav-btn') ||
-                                      e.target.closest('.close-specific-view');
-                    if (!isContent) {
-                        document.getElementById('specific-view').classList.remove('active');
-                    }
-                });
+                const specViewEl = document.getElementById('specific-view');
+                if (specViewEl) {
+                    specViewEl.addEventListener('click', (e) => {
+                        const isContent = e.target.closest('.specific-view-stage') ||
+                                          e.target.closest('.specific-view-img-container') || 
+                                          e.target.closest('.specific-view-info') || 
+                                          e.target.closest('#magnify-slider') ||
+                                          e.target.closest('.magnify-slider-container') ||
+                                          e.target.closest('.specific-nav-btn') ||
+                                          e.target.closest('.close-specific-view');
+                        if (!isContent) {
+                            closeSpecificModal();
+                        }
+                    });
+                }
 
                 // Touch swipe gestures inside specific view modal
                 let touchStartX = 0;
@@ -1181,7 +1217,7 @@ export default function Page() {
                     if (e.code === 'Escape') {
                         const sv = document.getElementById('specific-view');
                         if (sv && sv.classList.contains('active')) {
-                            sv.classList.remove('active');
+                            closeSpecificModal();
                         }
                     }
 
@@ -2375,6 +2411,19 @@ export default function Page() {
         }
 
         body:has(#specific-view.active) .features-list,
+        body:has(#specific-view.active) #portfolio-showcase,
+        body:has(#specific-view.active) #space-canvas,
+        body:has(#specific-view.active) #drag-msg,
+        body:has(#specific-view.active) #infinite-zoom-controls,
+        body:has(#specific-view.active) .infinite-helper-bar,
+        body:has(#specific-view.active) .sp-wrapper,
+        body.specific-modal-active .features-list,
+        body.specific-modal-active #portfolio-showcase,
+        body.specific-modal-active #space-canvas,
+        body.specific-modal-active #drag-msg,
+        body.specific-modal-active #infinite-zoom-controls,
+        body.specific-modal-active .infinite-helper-bar,
+        body.specific-modal-active .sp-wrapper,
         body:has(#portfolio-showcase.list-view-mode) .features-list,
         .features-list.hidden {
             opacity: 0 !important;
@@ -2837,21 +2886,24 @@ export default function Page() {
         .specific-view-overlay {
             position: fixed;
             inset: 0;
-            background: radial-gradient(circle at center, rgba(10, 10, 10, 0.6) 0%, rgba(0, 0, 0, 0.95) 100%);
+            background: rgba(6, 6, 8, 0.96);
             z-index: 9000;
             display: flex;
             justify-content: center;
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            backdrop-filter: blur(25px);
+            visibility: hidden;
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s ease;
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
             cursor: zoom-out;
         }
 
         .specific-view-overlay.active {
             opacity: 1;
             pointer-events: auto;
+            visibility: visible;
         }
         
         .specific-view-content-wrapper {
@@ -2864,22 +2916,47 @@ export default function Page() {
             max-width: 1400px;
         }
 
-        .specific-view-img-container {
+        .specific-view-stage {
             flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            align-self: stretch;
+            height: 100%;
+            min-height: 0;
+            min-width: 0;
+            gap: 16px;
+            position: relative;
+        }
+
+        .specific-view-img-container {
+            flex: 1 1 0%;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100%;
+            width: 100%;
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            background: #0d0d12;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(235, 215, 63, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: zoom-in;
+            user-select: none;
         }
 
         .specific-view-img {
             max-width: 100%;
             max-height: 100%;
+            width: auto;
+            height: auto;
             object-fit: contain;
-            border-radius: 16px;
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.95), 0 0 60px rgba(235, 215, 63, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: box-shadow 0.4s ease, border-color 0.4s ease;
+            border-radius: 14px;
+            display: block;
+            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .specific-view-overlay:not(.active) .specific-view-img {
@@ -3083,16 +3160,19 @@ export default function Page() {
         
         @media (max-width: 900px) {
             .specific-view-overlay {
+                align-items: flex-start;
                 padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)) 16px;
                 cursor: default;
             }
             .specific-view-content-wrapper {
                 flex-direction: column;
+                justify-content: flex-start;
+                align-items: center;
                 width: 100%;
                 height: 100%;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
-                padding: 55px 0 30px 0;
+                padding: 60px 0 40px 0;
                 gap: 20px;
             }
             .close-specific-view {
@@ -3101,11 +3181,20 @@ export default function Page() {
                 width: 42px;
                 height: 42px;
             }
-            .specific-view-img-container {
+            .specific-view-stage {
+                width: 100%;
                 height: auto;
-                max-height: 48vh;
+                max-height: none;
+                flex: none;
+                gap: 14px;
+            }
+            .specific-view-img-container {
+                height: 44vh;
+                min-height: 280px;
+                max-height: 52vh;
                 width: 100%;
                 flex: none;
+                background: #0d0d12;
             }
             .specific-view-info {
                 max-width: 100%;
@@ -3389,21 +3478,24 @@ export default function Page() {
         }
 
         .magnify-slider-container {
-            position: absolute;
-            bottom: 0px;
-            left: 50%;
-            transform: translateX(-50%);
+            position: relative;
+            bottom: auto;
+            left: auto;
+            transform: none;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 15px;
-            background: rgba(15,15,15,0.85);
-            padding: 10px 25px;
+            background: rgba(18, 18, 22, 0.92);
+            padding: 9px 24px;
             border-radius: 40px;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(235, 215, 63, 0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            border: 1px solid rgba(235, 215, 63, 0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             z-index: 10;
+            flex-shrink: 0;
+            margin: 0 auto;
         }
 
         @media (max-width: 900px) {
@@ -3549,38 +3641,29 @@ export default function Page() {
     </button>
 
     <div className="specific-view-content-wrapper">
-        <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', position: 'relative' }}>
+        <div className="specific-view-stage">
           <div 
             className="specific-view-img-container"
-            style={{ 
-              flex: 'none',
-              position: 'relative',
-              overflow: 'hidden', 
-              cursor: 'zoom-in', 
-              borderRadius: '16px', 
-              boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
-              display: 'inline-flex',
-              maxWidth: '100%',
-              maxHeight: '100%'
-            }}
             onMouseMove={(e) => {
-                const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-                const x = (e.clientX - left) / width;
-                const y = (e.clientY - top) / height;
                 const img = e.currentTarget.querySelector('img');
-                const slider = document.getElementById('magnify-slider');
-                const zoomLevel = slider ? slider.value : 1.5;
-                if(img) {
-                    img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-                    img.style.transform = `scale(${zoomLevel})`;
+                if (img) {
+                    const rect = img.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                        const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+                        const slider = document.getElementById('magnify-slider');
+                        const zoomLevel = slider ? parseFloat(slider.value) : 1.5;
+                        img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+                        img.style.transform = `scale(${zoomLevel})`;
+                    }
                 }
             }}
             onMouseLeave={(e) => {
                 const img = e.currentTarget.querySelector('img');
-                if(img) {
+                if (img) {
                     img.style.transform = 'scale(1)';
                     setTimeout(() => {
-                        if (img.style.transform === 'scale(1)') {
+                        if (img && img.style.transform === 'scale(1)') {
                             img.style.transformOrigin = 'center center';
                         }
                     }, 400);
@@ -3592,7 +3675,7 @@ export default function Page() {
               className="specific-view-img" 
               id="specific-img" 
               alt="Specific View" 
-              style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', maxWidth: '100%', maxHeight: '100%', display: 'block' }}
+              style={{ transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)', maxWidth: '100%', maxHeight: '100%', display: 'block', objectFit: 'contain' }}
               onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Crect width='800' height='800' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Clash Display' font-size='40' fill='%23ebd73f'%3EImage Not Found%3C/text%3E%3C/svg%3E`;
