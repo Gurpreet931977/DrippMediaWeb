@@ -124,7 +124,7 @@ export default function Page() {
                 }
 
                 const isMobileDevice = window.innerWidth < 900;
-                const particleCount = isMobileDevice ? 16 : 32; 
+                const particleCount = isMobileDevice ? 8 : 16; 
                 const container = document.createElement('div');
                 container.className = 'attract-particles-container';
                 btn.appendChild(container);
@@ -148,12 +148,12 @@ export default function Page() {
                     const scaleStart = Math.random() * 1.1 + 0.6;
                     const opacityStart = Math.random() * 0.5 + 0.45;
 
-                    gsap.set(p, { x: startX, y: startY, opacity: opacityStart, scale: scaleStart });
+                    gsap.set(p, { x: startX, y: startY, opacity: opacityStart, scale: scaleStart, force3D: true });
 
                     // Idle drift animation (people moving around)
                     gsap.to(p, {
-                        x: startX + (Math.random() - 0.5) * 60,
-                        y: startY + (Math.random() - 0.5) * 60,
+                        x: startX + (Math.random() - 0.5) * 50,
+                        y: startY + (Math.random() - 0.5) * 50,
                         duration: 4 + Math.random() * 3,
                         repeat: -1,
                         yoyo: true,
@@ -176,50 +176,54 @@ export default function Page() {
                 // Interactive Repulsion Logic when mouse is over the section
                 const section = btn.closest('.join-community-section');
                 let lastInteractionTime = 0;
+                let cachedBtnRect = null;
+                const updateBtnRect = () => {
+                    cachedBtnRect = btn.getBoundingClientRect();
+                };
                 
                 if (section) {
                     const handleRepulsion = (clientX, clientY) => {
                         if (isAttracting) return; // Don't repel while they are actively being sucked into the button
                         
-                        const now = Date.now();
-                        if (now - lastInteractionTime < 100) return; // Throttle to 10fps for ultimate low-end performance
+                        const now = performance.now();
+                        if (now - lastInteractionTime < 80) return; // Throttle to maintain 60fps
                         lastInteractionTime = now;
 
-                        // Calculate interaction position relative to the center of the button
-                        const rect = btn.getBoundingClientRect();
-                        const interactX = clientX - (rect.left + rect.width / 2);
-                        const interactY = clientY - (rect.top + rect.height / 2);
+                        if (!cachedBtnRect) updateBtnRect();
+                        const interactX = clientX - (cachedBtnRect.left + cachedBtnRect.width / 2);
+                        const interactY = clientY - (cachedBtnRect.top + cachedBtnRect.height / 2);
 
-                        particles.forEach(p => {
-                            // Get particle's current animated position via GSAP's internal cache
-                            const px = gsap.getProperty(p.element, "x");
-                            const py = gsap.getProperty(p.element, "y");
+                        const repelRadius = 140;
+                        const repelRadiusSq = repelRadius * repelRadius;
 
-                            const dx = px - interactX;
-                            const dy = py - interactY;
-                            const distance = Math.sqrt(dx * dx + dy * dy);
+                        for (let i = 0; i < particles.length; i++) {
+                            const p = particles[i];
+                            const dx = p.currentX - interactX;
+                            const dy = p.currentY - interactY;
+                            const distSq = dx * dx + dy * dy;
 
-                            const repelRadius = 150;
-
-                            if (distance < repelRadius) {
-                                // Push apart proportionately
+                            if (distSq < repelRadiusSq) {
+                                const distance = Math.sqrt(distSq) || 1;
                                 const force = (repelRadius - distance) / repelRadius;
-                                const pushX = (dx / distance) * force * 50;
-                                const pushY = (dy / distance) * force * 50;
+                                const pushX = (dx / distance) * force * 45;
+                                const pushY = (dy / distance) * force * 45;
 
-                                // We use a relative tween so we don't break the absolute idle drift tween immediately
+                                p.currentX = p.startX + pushX;
+                                p.currentY = p.startY + pushY;
+
                                 gsap.to(p.element, {
-                                    x: px + pushX,
-                                    y: py + pushY,
-                                    duration: 0.3,
+                                    x: p.currentX,
+                                    y: p.currentY,
+                                    duration: 0.35,
                                     ease: "power2.out",
                                     overwrite: "auto",
                                     onComplete: () => {
                                         if (!isAttracting) {
-                                            // Resume drift from new position
+                                            p.currentX = p.startX;
+                                            p.currentY = p.startY;
                                             gsap.to(p.element, {
-                                                x: p.startX + (Math.random() - 0.5) * 60,
-                                                y: p.startY + (Math.random() - 0.5) * 60,
+                                                x: p.startX + (Math.random() - 0.5) * 50,
+                                                y: p.startY + (Math.random() - 0.5) * 50,
                                                 duration: 4 + Math.random() * 3,
                                                 repeat: -1,
                                                 yoyo: true,
@@ -229,14 +233,18 @@ export default function Page() {
                                     }
                                 });
                             }
-                        });
+                        }
                     };
+
+                    section.addEventListener('mouseenter', updateBtnRect, { passive: true });
+                    window.addEventListener('resize', updateBtnRect, { passive: true });
+                    window.addEventListener('scroll', updateBtnRect, { passive: true });
 
                     // Desktop tracking
                     section.addEventListener('mousemove', (e) => {
                         if (isMobileDevice) return; 
                         handleRepulsion(e.clientX, e.clientY);
-                    });
+                    }, { passive: true });
 
                     // Mobile tracking (Tap and drag to scatter!)
                     section.addEventListener('touchstart', (e) => {
@@ -254,26 +262,24 @@ export default function Page() {
                     if (morphWord && curBack) {
                         morphWord.style.width = curBack.offsetWidth + 'px';
                     }
-                    // Button Power-up Glow
+                    btn.classList.add('is-powered');
                     gsap.to(btn, {
-                        boxShadow: "inset 0 0 40px rgba(235, 215, 63, 0.6), 0 0 100px rgba(235, 215, 63, 0.8)",
                         scale: 1.05,
-                        duration: 0.3,
+                        duration: 0.25,
                         ease: "power2.out"
                     });
 
-                    particles.forEach((p, index) => {
+                    particles.forEach((p) => {
                         gsap.killTweensOf(p.element);
-
                         // People gather into the button and merge FASTER
                         gsap.to(p.element, {
                             x: 0,
                             y: 0,
-                            scale: 1.5,
+                            scale: 1.4,
                             opacity: 0,
-                            duration: 0.3 + Math.random() * 0.2, // Faster
+                            duration: 0.28 + Math.random() * 0.15,
                             ease: "power3.in",
-                            delay: Math.random() * 0.05 // Faster
+                            delay: Math.random() * 0.04
                         });
                     });
                 };
@@ -283,16 +289,17 @@ export default function Page() {
                     if (morphWord && curFront) {
                         morphWord.style.width = curFront.offsetWidth + 'px';
                     }
-                    // Remove power-up glow
+                    btn.classList.remove('is-powered');
                     gsap.to(btn, {
-                        boxShadow: "inset 0 0 10px rgba(235, 215, 63, 0.1), 0 0 20px rgba(235, 215, 63, 0.1)",
                         scale: 1,
-                        duration: 0.5,
+                        duration: 0.35,
                         ease: "power2.out"
                     });
 
-                    particles.forEach((p, index) => {
+                    particles.forEach((p) => {
                         gsap.killTweensOf(p.element);
+                        p.currentX = p.startX;
+                        p.currentY = p.startY;
 
                         // People explode back out to the community
                         gsap.to(p.element, {
@@ -300,15 +307,15 @@ export default function Page() {
                             y: p.startY,
                             scale: p.scaleStart,
                             opacity: p.opacityStart,
-                            duration: 0.6 + Math.random() * 0.3, // Faster
+                            duration: 0.5 + Math.random() * 0.25,
                             ease: "expo.out",
-                            delay: Math.random() * 0.05, // Faster
+                            delay: Math.random() * 0.04,
                             onComplete: () => {
                                 isAttracting = false;
                                 // Resume drift
                                 gsap.to(p.element, {
-                                    x: p.startX + (Math.random() - 0.5) * 60,
-                                    y: p.startY + (Math.random() - 0.5) * 60,
+                                    x: p.startX + (Math.random() - 0.5) * 50,
+                                    y: p.startY + (Math.random() - 0.5) * 50,
                                     duration: 4 + Math.random() * 3,
                                     repeat: -1,
                                     yoyo: true,
@@ -2723,9 +2730,27 @@ export default function Page() {
   <section id="services" className="services-section">
     <div className="services-container">
       <div className="service-header">
-        <span className="section-label">{isGenz ? '03.5 / the moves' : '03.5 / SERVICES'}</span>
+        <div className="service-badge">
+          <span className="service-badge-dot" aria-hidden="true" />
+          <span>{isGenz ? '03.5 / the moves' : '03.5 / SERVICES'}</span>
+        </div>
         <h2 className="section-title">{isGenz ? 'our meta' : 'What We Do'}</h2>
-        <p className="service-intro">Click any service that interests you - it'll be added to your quote below.</p>
+        <div className="service-intro-wrapper">
+          <p className="service-intro">
+            <span className="service-action-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="6" y="3" width="12" height="18" rx="6" />
+                <line x1="12" y1="7" x2="12" y2="10" />
+              </svg>
+              Double-Click to Add
+            </span>
+            <span className="service-intro-text">
+              {isGenz 
+                ? 'any service to your loadout below.' 
+                : 'any service that interests you — it’ll be added to your quote below.'}
+            </span>
+          </p>
+        </div>
       </div>
       {/* Floating Services Cloud */}
       <div className="floating-services-cloud" id="floating-cloud">
@@ -2816,7 +2841,7 @@ export default function Page() {
         <span className="f-pill">Community Management</span>
         <span className="f-pill">Influencer Outreach</span>
       </div>
-      <p className="cloud-hint">↑ Drag to play &amp; sort. Double-tap to add.</p>
+      <p className="cloud-hint"><span style={{ color: 'var(--brand-yellow)' }}>✦</span> Drag to explore &amp; float • Double-click to add</p>
       {/* Custom Package Builder (Receipt Builder) */}
       <div className="builder-container" id="custom-builder">
         <div className="builder-left">

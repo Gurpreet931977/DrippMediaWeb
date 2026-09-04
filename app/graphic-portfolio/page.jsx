@@ -111,11 +111,23 @@ export default function Page() {
             return cachedNoiseBuffer;
         }
 
+        let activeZoomMasterGain = null;
+
         function playGTAZoomSound(direction) {
             try {
                 const ctx = getAudioContext();
                 if (!ctx) return;
                 const now = ctx.currentTime;
+
+                if (activeZoomMasterGain) {
+                    try {
+                        activeZoomMasterGain.gain.cancelScheduledValues(now);
+                        activeZoomMasterGain.gain.setValueAtTime(0.001, now);
+                    } catch (e) {}
+                }
+                const masterGain = ctx.createGain();
+                activeZoomMasterGain = masterGain;
+                masterGain.connect(ctx.destination);
 
                 if (direction === 'in') {
                     // Dive-bomb sound: rushing descending wind + Doppler tone + tactical lock-on blip + sub-bass landing thud
@@ -137,7 +149,7 @@ export default function Page() {
 
                     whiteNoise.connect(filter);
                     filter.connect(noiseGain);
-                    noiseGain.connect(ctx.destination);
+                    noiseGain.connect(masterGain);
                     whiteNoise.start(now);
                     whiteNoise.stop(now + 0.8);
 
@@ -153,7 +165,7 @@ export default function Page() {
                     oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
 
                     osc.connect(oscGain);
-                    oscGain.connect(ctx.destination);
+                    oscGain.connect(masterGain);
                     osc.start(now);
                     osc.stop(now + 0.7);
 
@@ -169,7 +181,7 @@ export default function Page() {
                     subGain.exponentialRampToValueAtTime(0.001, now + 0.95);
 
                     subOsc.connect(subGain);
-                    subGain.connect(ctx.destination);
+                    subGain.connect(masterGain);
                     subOsc.start(now + 0.58);
                     subOsc.stop(now + 1.0);
 
@@ -181,7 +193,7 @@ export default function Page() {
                     chirpGain.gain.setValueAtTime(0.08, now + 0.55);
                     chirpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
                     chirp.connect(chirpGain);
-                    chirpGain.connect(ctx.destination);
+                    chirpGain.connect(masterGain);
                     chirp.start(now + 0.55);
                     chirp.stop(now + 0.68);
 
@@ -205,7 +217,7 @@ export default function Page() {
 
                     whiteNoise.connect(filter);
                     filter.connect(noiseGain);
-                    noiseGain.connect(ctx.destination);
+                    noiseGain.connect(masterGain);
                     whiteNoise.start(now);
                     whiteNoise.stop(now + 0.85);
 
@@ -221,7 +233,7 @@ export default function Page() {
                     oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
 
                     osc.connect(oscGain);
-                    oscGain.connect(ctx.destination);
+                    oscGain.connect(masterGain);
                     osc.start(now);
                     osc.stop(now + 0.8);
 
@@ -233,7 +245,7 @@ export default function Page() {
                     blipGain.gain.setValueAtTime(0.07, now + 0.05);
                     blipGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
                     blip.connect(blipGain);
-                    blipGain.connect(ctx.destination);
+                    blipGain.connect(masterGain);
                     blip.start(now + 0.05);
                     blip.stop(now + 0.22);
                 }
@@ -1433,7 +1445,8 @@ export default function Page() {
 
                 const halfVW = (typeof window !== 'undefined' ? window.innerWidth : 1440) * 0.5;
                 const halfVH = (typeof window !== 'undefined' ? window.innerHeight : 900) * 0.5;
-                const cullingMargin = (this.baseItemSizePx * zoom) + 260;
+                const cullingMarginX = (this.baseItemSizePx * zoom * 0.5) + 60;
+                const cullingMarginY = (this.baseItemSizePx * (this.maxAspectRatio || 1.45) * zoom * 0.5) + 60;
 
                 const time = performance.now();
                 const isTripp = typeof spaceModeActive !== 'undefined' && spaceModeActive;
@@ -1447,17 +1460,17 @@ export default function Page() {
                     const homeX = (col * stepX) - limitX + (stepX * 0.5);
                     const homeY = (row * stepY) - limitY + (stepY * 0.5) + staggerY;
 
-                    // Active unpatterned scatter offsets
-                    const sX = item.scatterX || 0;
-                    const sY = item.scatterY || 0;
-                    const bX = item.blastX || 0;
-                    const bY = item.blastY || 0;
+                    // Active unpatterned scatter offsets (scaled gracefully with zoom for visual harmony)
+                    const sX = (item.scatterX || 0) * zoom;
+                    const sY = (item.scatterY || 0) * zoom;
+                    const bX = (item.blastX || 0) * zoom;
+                    const bY = (item.blastY || 0) * zoom;
 
-                    const absoluteX = homeX + this.state.x + sX + bX;
-                    const absoluteY = homeY + this.state.y + sY + bY;
-
-                    const wrappedX = this.wrap(absoluteX, -limitX, limitX);
-                    const wrappedY = this.wrap(absoluteY, -limitY, limitY);
+                    // Toroidal wrap applies ONLY to the continuous panning canvas grid coordinates.
+                    // By keeping local offsets (blast, scatter, float) outside wrap(), cards NEVER
+                    // cross boundary thresholds or teleport across the screen when zoomed out.
+                    const wrappedX = this.wrap(homeX + this.state.x, -limitX, limitX);
+                    const wrappedY = this.wrap(homeY + this.state.y, -limitY, limitY);
 
                     // Blast impulse exponential damping
                     if (item.blastX) {
@@ -1498,7 +1511,7 @@ export default function Page() {
                         const dY = cardScreenY - (this.mouseY || -1000);
                         const dist = Math.hypot(dX, dY);
                         if (!this.state.isDragging && dist < 220 && dist > 1) {
-                            const repulseForce = (1 - dist / 220) * 12;
+                            const repulseForce = (1 - dist / 220) * 12 * zoom;
                             item.repulseX += ((dX / dist) * repulseForce - item.repulseX) * 0.12;
                             item.repulseY += ((dY / dist) * repulseForce - item.repulseY) * 0.12;
                             item.repulseRot += ((dX / dist) * 4.0 - item.repulseRot) * 0.08;
@@ -1508,20 +1521,20 @@ export default function Page() {
                             item.repulseRot *= 0.88;
                         }
 
-                        // 3. Multi-harmonic orbital Lissajous drift
-                        const wanderX = Math.sin(time * item.wanderFreqX + item.phaseX) * item.orbitRadiusX;
-                        const wanderY = Math.cos(time * item.wanderFreqY + item.phaseY) * item.orbitRadiusY;
+                        // 3. Multi-harmonic orbital Lissajous drift (scaled with zoom for visual harmony)
+                        const wanderX = Math.sin(time * item.wanderFreqX + item.phaseX) * (item.orbitRadiusX * zoom);
+                        const wanderY = Math.cos(time * item.wanderFreqY + item.phaseY) * (item.orbitRadiusY * zoom);
                         const dynamicTilt = Math.sin(time * item.wanderRot + item.phaseX) * item.tiltAmplitude;
 
-                        floatX = wanderX + item.vx + item.repulseX;
-                        floatY = wanderY + item.vy + item.repulseY;
+                        floatX = wanderX + (item.vx * zoom) + item.repulseX;
+                        floatY = wanderY + (item.vy * zoom) + item.repulseY;
                         rotZ = (item.scatterRot || 0) + (item.blastRot || 0) + item.vRot + item.repulseRot + dynamicTilt;
                     } else {
                         rotZ = (item.scatterRot || 0) + (item.blastRot || 0);
                     }
 
-                    const finalX = wrappedX + floatX;
-                    const finalY = wrappedY + floatY;
+                    const finalX = wrappedX + sX + bX + floatX;
+                    const finalY = wrappedY + sY + bY + floatY;
 
                     // Subtle zero-g depth breathing & variable card depth scale
                     const depthBreathing = isTripp ? (Math.sin(time * 0.00035 + item.phaseX) * 0.012) : 0;
@@ -1530,17 +1543,20 @@ export default function Page() {
 
                     // ZERO BLINKING: Elements are NEVER toggled with visibility:hidden
                     // High-performance dirty-check prevents redundant DOM transform writes
-                    const isOffscreen = (Math.abs(finalX) > halfVW + cullingMargin) || (Math.abs(finalY) > halfVH + cullingMargin);
+                    const isOffscreen = (Math.abs(finalX) > halfVW + cullingMarginX) || (Math.abs(finalY) > halfVH + cullingMarginY);
                     if (isOffscreen && item._wasOffscreen) {
                         continue;
                     }
                     item._wasOffscreen = isOffscreen;
 
+                    const posThreshold = isTripp ? 0.18 : 0.08;
+                    const rotThreshold = isTripp ? 0.05 : 0.02;
+
                     if (
-                        Math.abs(finalX - (item._lx || 0)) > 0.08 ||
-                        Math.abs(finalY - (item._ly || 0)) > 0.08 ||
-                        Math.abs(currentScale - (item._ls || 0)) > 0.0008 ||
-                        Math.abs(rotZ - (item._lr || 0)) > 0.02
+                        Math.abs(finalX - (item._lx || 0)) > posThreshold ||
+                        Math.abs(finalY - (item._ly || 0)) > posThreshold ||
+                        Math.abs(currentScale - (item._ls || 0)) > 0.001 ||
+                        Math.abs(rotZ - (item._lr || 0)) > rotThreshold
                     ) {
                         item.el.style.transform = `translate3d(${finalX.toFixed(1)}px, ${finalY.toFixed(1)}px, 0) translate(-50%, -50%) scale(${currentScale.toFixed(4)}) rotate(${rotZ.toFixed(2)}deg)`;
                         item._lx = finalX;
@@ -1605,7 +1621,7 @@ export default function Page() {
         const spaceCanvas = document.getElementById('space-canvas');
         const ctx = spaceCanvas.getContext('2d');
         let stars = [];
-        const numStars = window.innerWidth <= 768 ? 140 : 260; // Clean, cinematic cosmic starfield
+        const numStars = typeof window !== 'undefined' && window.innerWidth <= 768 ? 90 : 160; // Clean, cinematic cosmic starfield
         let spaceAnimationId;
         const warpState = { speed: 0, direction: 'in' };
 
@@ -1618,27 +1634,37 @@ export default function Page() {
         };
 
         function resizeSpace() {
-            spaceCanvas.width = window.innerWidth;
-            spaceCanvas.height = window.innerHeight;
+            if (!spaceCanvas) return;
+            if (spaceCanvas.width !== window.innerWidth || spaceCanvas.height !== window.innerHeight) {
+                spaceCanvas.width = window.innerWidth;
+                spaceCanvas.height = window.innerHeight;
+            }
         }
 
         function initSpace() {
             resizeSpace();
-            stars = [];
-            for (let i = 0; i < numStars; i++) {
-                const tier = i % 3; // 0 = distant faint, 1 = mid ambient, 2 = bright foreground
-                stars.push({
-                    x: Math.random() * spaceCanvas.width,
-                    y: Math.random() * spaceCanvas.height,
-                    z: Math.random() * spaceCanvas.width,
-                    tier: tier,
-                    size: tier === 0 ? 0.9 : (tier === 1 ? 1.3 : 1.9),
-                    opacity: tier === 0 ? 0.28 : (tier === 1 ? 0.58 : 0.88)
-                });
+            if (stars.length === 0 && spaceCanvas) {
+                for (let i = 0; i < numStars; i++) {
+                    const tier = i % 3; // 0 = distant faint, 1 = mid ambient, 2 = bright foreground
+                    stars.push({
+                        x: Math.random() * (spaceCanvas.width || window.innerWidth),
+                        y: Math.random() * (spaceCanvas.height || window.innerHeight),
+                        z: Math.random() * (spaceCanvas.width || window.innerWidth),
+                        tier: tier,
+                        size: tier === 0 ? 0.9 : (tier === 1 ? 1.3 : 1.9),
+                        opacity: tier === 0 ? 0.28 : (tier === 1 ? 0.58 : 0.88)
+                    });
+                }
             }
         }
 
+        // Pre-allocate canvas texture and star positions to eliminate impact allocation stalls
+        resizeSpace();
+        initSpace();
+
         function animateSpace() {
+            if (spaceAnimationId) cancelAnimationFrame(spaceAnimationId);
+            if (!spaceModeActive || !ctx || !spaceCanvas) return;
             ctx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
 
             const cx = spaceCanvas.width / 2;
@@ -1904,6 +1930,8 @@ export default function Page() {
                         inset: 0;
                         background: radial-gradient(circle at ${impactX}px ${impactY}px, rgba(255, 255, 255, 1) 0%, rgba(235, 215, 63, 0.9) 25%, rgba(255, 87, 34, 0.45) 55%, transparent 100%);
                         pointer-events: none;
+                        transform: translateZ(0);
+                        will-change: opacity;
                         z-index: 167;
                     `;
                     impactOverlay.appendChild(flashHeat);
@@ -1922,9 +1950,9 @@ export default function Page() {
                         width: ${baseSize}px;
                         height: ${baseSize}px;
                         border-radius: 50%;
-                        border: 3.5px solid rgba(235, 215, 63, 0.95);
-                        box-shadow: 0 0 35px rgba(235, 215, 63, 0.8), inset 0 0 20px rgba(255, 110, 20, 0.6);
-                        transform: translate(-50%, -50%) scale(0.08);
+                        border: 3px solid rgba(235, 215, 63, 0.95);
+                        box-shadow: 0 0 16px rgba(235, 215, 63, 0.8);
+                        transform: translate3d(-50%, -50%, 0) scale(0.08);
                         will-change: transform, opacity;
                         pointer-events: none;
                         z-index: 166;
@@ -1935,6 +1963,7 @@ export default function Page() {
                         opacity: 0,
                         duration: 0.65,
                         ease: "power2.out",
+                        force3D: true,
                         onComplete: () => shockwave1.remove()
                     });
 
@@ -1948,8 +1977,8 @@ export default function Page() {
                         height: ${baseSize}px;
                         border-radius: 50%;
                         border: 2px solid rgba(255, 255, 255, 0.85);
-                        box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
-                        transform: translate(-50%, -50%) scale(0.08);
+                        box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+                        transform: translate3d(-50%, -50%, 0) scale(0.08);
                         will-change: transform, opacity;
                         pointer-events: none;
                         z-index: 165;
@@ -1961,6 +1990,7 @@ export default function Page() {
                         duration: 0.75,
                         delay: 0.04,
                         ease: "power2.out",
+                        force3D: true,
                         onComplete: () => shockwave2.remove()
                     });
 
@@ -2038,11 +2068,12 @@ export default function Page() {
                             // Sonic wave delay based on radial distance from impact crater
                             const waveDelay = Math.min(0.15, dist / 3200);
 
-                            // Immediate explosive blast velocity
-                            const blastDist = Math.max(30, 95 - (dist / 12));
+                            // Immediate explosive blast velocity scaled gracefully with zoom
+                            const zoomFactor = Math.min(1.0, Math.max(0.45, z));
+                            const blastDist = Math.max(20, 95 - (dist / 12)) * zoomFactor;
                             item.blastX = dirX * blastDist;
                             item.blastY = dirY * blastDist;
-                            item.blastRot = (dirX >= 0 ? 1 : -1) * (Math.random() * 16 + 6);
+                            item.blastRot = (dirX >= 0 ? 1 : -1) * (Math.random() * 14 + 5);
 
                             // Shatter cards out of patternized grid into organic unpatterned layout
                             gsap.killTweensOf(item);
@@ -2229,7 +2260,7 @@ export default function Page() {
             background-color: #1a1a1a;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65);
             will-change: transform;
             contain: layout style;
             backface-visibility: hidden;
@@ -3276,19 +3307,13 @@ export default function Page() {
             pointer-events: none;
             z-index: 85;
             opacity: 0;
-            background: radial-gradient(circle at center, transparent 35%, rgba(235, 215, 63, 0.08) 65%, rgba(0, 0, 0, 0.5) 100%);
-            mix-blend-mode: screen;
+            background: radial-gradient(circle at center, transparent 40%, rgba(235, 215, 63, 0.06) 70%, rgba(0, 0, 0, 0.5) 100%);
+            transform: translateZ(0);
             will-change: opacity, transform;
         }
 
         .zoom-motion-blur-overlay::after {
-            content: '';
-            position: absolute;
-            inset: -10%;
-            background: repeating-radial-gradient(circle at center, transparent 0, transparent 8px, rgba(235, 215, 63, 0.06) 9px, transparent 10px);
-            mask-image: radial-gradient(circle at center, transparent 20%, black 75%);
-            -webkit-mask-image: radial-gradient(circle at center, transparent 20%, black 75%);
-            pointer-events: none;
+            display: none;
         }
 
         /* Space Background Canvas */
@@ -3315,9 +3340,10 @@ export default function Page() {
         }
 
         .space-mode-active .canvas-item {
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.85);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75);
             border: 1px solid rgba(235, 215, 63, 0.28);
             background-color: #0b0b0e;
+            transition: none !important;
         }
 
         @keyframes ambientFloat1 {
