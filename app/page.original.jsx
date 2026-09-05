@@ -2293,6 +2293,8 @@ export default function Page() {
 
         window.closeContactModal = function () {
             contactModal.classList.remove('active');
+            const dropdownWrap = document.getElementById('scope-dropdown-wrap');
+            if (dropdownWrap) dropdownWrap.classList.remove('open');
             // reset form out of view
             setTimeout(() => contactForm.reset(), 400);
         }
@@ -2312,6 +2314,16 @@ export default function Page() {
             if (e.key === 'Escape') {
                 closeContactModal();
                 closeCommunityModal();
+                const dropdownWrap = document.getElementById('scope-dropdown-wrap');
+                if (dropdownWrap) dropdownWrap.classList.remove('open');
+            }
+        });
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', (e) => {
+            const dropdownWrap = document.getElementById('scope-dropdown-wrap');
+            if (dropdownWrap && !dropdownWrap.contains(e.target)) {
+                dropdownWrap.classList.remove('open');
             }
         });
 
@@ -2374,9 +2386,11 @@ export default function Page() {
 
             if (!email) return;
 
-            communitySubmit.innerText = 'Routing to WhatsApp...';
-            communitySubmit.style.background = '#4CAF50';
-            communitySubmit.style.color = '#fff';
+            const btnText = communitySubmit.querySelector('.modal-btn-text');
+            const sparkle = communitySubmit.querySelector('.modal-sparkle');
+            if (btnText) btnText.innerText = 'Securing Your Invite...';
+            if (sparkle) sparkle.style.display = 'none';
+            communitySubmit.style.background = 'linear-gradient(135deg, #ebd73f 0%, #d4af37 100%)';
             communitySubmit.disabled = true;
 
             try {
@@ -2388,10 +2402,21 @@ export default function Page() {
                 }).catch(() => {});
             } catch (err) {}
 
+            if (btnText) btnText.innerText = 'Invite Confirmed ✓';
+            communitySubmit.style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
+            communitySubmit.style.color = '#fff';
+
             setTimeout(() => {
                 closeCommunityModal();
+                setTimeout(() => {
+                    if (btnText) btnText.innerText = 'Request Access & Join';
+                    if (sparkle) sparkle.style.display = '';
+                    communitySubmit.style.background = '';
+                    communitySubmit.style.color = '';
+                    communitySubmit.disabled = false;
+                }, 500);
                 window.location.href = 'https://chat.whatsapp.com/CEyxprdFx99E8eNrFoIIxP';
-            }, 1000);
+            }, 900);
         });
         // --- FOUNDER SEQUENCE CANVAS LOGIC ---
         // --- FOUNDER SEQUENCE LOGIC ---
@@ -3620,95 +3645,391 @@ export default function Page() {
         </svg>
       </button>
 
+      <div className="contact-modal-grid">
+        {/* Left Sidebar: Studio Context, Navigation Tabs & Trust Guarantees */}
+        <div className="contact-modal-sidebar">
+          <div className="modal-header-block">
+            <div className="modal-live-badge">
+              <span className="live-status-ping" />
+              <span>DIRECT STUDIO INTAKE · FAST 24H RESPONSE</span>
+            </div>
+            <h3 className="modal-title">Let's Talk.</h3>
+            <p className="modal-desc">Tell us about your project scope or book a 15-minute discovery call directly.</p>
+          </div>
+          
+          {/* Stacked Interactive Mode Tabs */}
+          <div className="modal-tabs contact-tabs-stacked">
+            <button 
+              type="button"
+              className="modal-tab-btn active" 
+              id="tab-btn-brief"
+              onClick={() => {
+                document.getElementById('tab-btn-brief')?.classList.add('active');
+                document.getElementById('tab-btn-call')?.classList.remove('active');
+                const fBrief = document.getElementById('contact-form');
+                const fCall = document.getElementById('contact-form-call');
+                if (fBrief) fBrief.style.display = 'flex';
+                if (fCall) fCall.style.display = 'none';
+              }}
+            >
+              <div className="tab-icon-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </div>
+              <div className="tab-text-group">
+                <span className="tab-title">Project Brief</span>
+                <span className="tab-sub">Scope, timeline & goals</span>
+              </div>
+            </button>
+            <button 
+              type="button"
+              className="modal-tab-btn" 
+              id="tab-btn-call"
+              onClick={() => {
+                document.getElementById('tab-btn-call')?.classList.add('active');
+                document.getElementById('tab-btn-brief')?.classList.remove('active');
+                const fBrief = document.getElementById('contact-form');
+                const fCall = document.getElementById('contact-form-call');
+                if (fBrief) fBrief.style.display = 'none';
+                if (fCall) fCall.style.display = 'flex';
+              }}
+            >
+              <div className="tab-icon-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
+              <div className="tab-text-group">
+                <span className="tab-title">Book Strategy Call</span>
+                <span className="tab-sub">15-min video discovery</span>
+              </div>
+            </button>
+          </div>
+
+          {/* Studio Guarantees */}
+          <div className="contact-sidebar-guarantees">
+            <div className="sidebar-guarantee-item">
+              <span className="guarantee-sparkle">✦</span>
+              <span>24h Initial Response</span>
+            </div>
+            <div className="sidebar-guarantee-item">
+              <span className="guarantee-sparkle">✦</span>
+              <span>Direct Senior Creative Lead</span>
+            </div>
+            <div className="sidebar-guarantee-item">
+              <span className="guarantee-sparkle">✦</span>
+              <span>Strict NDA & Privacy Protected</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Main Form Area */}
+        <div className="contact-modal-main">
+          {/* BRIEF FORM */}
+          <form className="modal-form" id="contact-form" style={{ display: 'flex' }}>
+            <input type="hidden" name="services" defaultValue="{}" />
+            <div id="contact-services-list" />
+
+            {/* Multi-Select Project Scope Dropdown Menu */}
+            <div className="form-group">
+              <div className="field-label-row">
+                <label>Project Scope</label>
+                <span className="field-label-hint">Select all that apply</span>
+              </div>
+              
+              <div className="scope-dropdown-wrap" id="scope-dropdown-wrap">
+                <button
+                  type="button"
+                  className="scope-dropdown-trigger"
+                  id="scope-dropdown-trigger"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const wrap = document.getElementById('scope-dropdown-wrap');
+                    wrap?.classList.toggle('open');
+                  }}
+                  aria-haspopup="listbox"
+                >
+                  <div className="scope-trigger-text" id="scope-trigger-text">
+                    Select project scopes...
+                  </div>
+                  <svg className="scope-dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+
+                <div className="scope-dropdown-menu" id="scope-dropdown-menu" role="listbox">
+                  {[
+                    { id: 'video', label: 'Video & Motion Editing' },
+                    { id: 'cinema', label: 'Cinematography / Videography / Photography' },
+                    { id: 'web', label: 'Website Development' },
+                    { id: 'app', label: 'App Development' },
+                    { id: 'smm', label: 'Social Media Management' },
+                    { id: 'graphics', label: 'Graphic Design & Identity' },
+                    { id: '3d', label: '3D Animation & VFX' },
+                    { id: 'retainer', label: 'Full Creative Retainer' }
+                  ].map((option) => (
+                    <div
+                      key={option.id}
+                      className="scope-dropdown-item"
+                      data-scope-id={option.id}
+                      data-scope-label={option.label}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const item = e.currentTarget;
+                        item.classList.toggle('selected');
+                        
+                        const selectedItems = Array.from(document.querySelectorAll('#scope-dropdown-menu .scope-dropdown-item.selected'))
+                          .map(el => el.getAttribute('data-scope-label') || el.textContent.trim());
+                        
+                        // Update trigger label
+                        const triggerText = document.getElementById('scope-trigger-text');
+                        const tagsRow = document.getElementById('scope-selected-tags-row');
+                        
+                        if (selectedItems.length === 0) {
+                          if (triggerText) {
+                            triggerText.innerHTML = 'Select project scopes...';
+                            triggerText.classList.remove('has-value');
+                          }
+                          if (tagsRow) tagsRow.innerHTML = '';
+                        } else {
+                          if (triggerText) {
+                            triggerText.innerHTML = `<span class="scope-trigger-badge">${selectedItems.length}</span>${selectedItems.join(', ')}`;
+                            triggerText.classList.add('has-value');
+                          }
+                          if (tagsRow) {
+                            tagsRow.innerHTML = selectedItems.map(lbl => `
+                              <span class="scope-selected-tag">
+                                <span>${lbl}</span>
+                                <span class="scope-tag-remove" data-remove-label="${lbl}">&times;</span>
+                              </span>
+                            `).join('');
+                            // Attach remove click listener
+                            tagsRow.querySelectorAll('.scope-tag-remove').forEach(rm => {
+                              rm.addEventListener('click', (ev) => {
+                                ev.stopPropagation();
+                                const toRm = rm.getAttribute('data-remove-label');
+                                const targetItem = Array.from(document.querySelectorAll('#scope-dropdown-menu .scope-dropdown-item')).find(i => i.getAttribute('data-scope-label') === toRm);
+                                if (targetItem) targetItem.click();
+                              });
+                            });
+                          }
+                        }
+                        
+                        // Sync into message field
+                        const msgBox = document.querySelector('#contact-form textarea[name="message"]');
+                        if (msgBox) {
+                          const currentVal = msgBox.value.replace(/^Scope: .*\n\n?/, '').trim();
+                          if (selectedItems.length > 0) {
+                            msgBox.value = `Scope: ${selectedItems.join(' · ')}\n\n${currentVal}`;
+                          } else {
+                            msgBox.value = currentVal;
+                          }
+                        }
+                      }}
+                    >
+                      <div className="scope-item-left">
+                        <span className="scope-item-sparkle">✦</span>
+                        <span>{option.label}</span>
+                      </div>
+                      <div className="scope-item-check">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Removable Tag Badges */}
+              <div className="scope-selected-tags-row" id="scope-selected-tags-row" />
+            </div>
+
+            {/* 2-Column Responsive Name & Email */}
+            <div className="form-row-dual">
+              <div className="form-group">
+                <label>Your Name</label>
+                <input type="text" name="name" className="form-input" placeholder="e.g. Alex Morgan" required />
+              </div>
+              <div className="form-group">
+                <label>Work Email</label>
+                <input type="email" name="email" className="form-input" placeholder="hello@company.com" required />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>WhatsApp Number</label>
+              <input type="tel" name="whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
+            </div>
+
+            <div className="form-group">
+              <label>Project Scope / Message</label>
+              <textarea name="message" className="form-input" placeholder="Tell us what you're building, your target launch date, or reference links..." defaultValue={""} rows={2} />
+            </div>
+
+            {/* 3D Capsule Action Button */}
+            <button type="submit" className="modal-submit-capsule" id="contact-submit">
+              <span className="modal-btn-shimmer" />
+              <div className="modal-btn-label">
+                <span className="modal-sparkle">✦</span>
+                <span className="modal-btn-text">Send Project Brief</span>
+              </div>
+              <div className="modal-action-disc">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 17L17 7M17 7H8M17 7V16" />
+                </svg>
+              </div>
+            </button>
+          </form>
+
+          {/* STRATEGY CALL FORM */}
+          <form className="modal-form" id="contact-form-call" style={{ display: 'none' }} onSubmit={(e) => {
+            e.preventDefault();
+            const callSubmit = document.getElementById('call-submit');
+            if (callSubmit) {
+              callSubmit.querySelector('.modal-btn-text').innerText = 'Call Confirmed';
+              callSubmit.style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
+              callSubmit.style.color = '#fff';
+            }
+            const target = e.currentTarget;
+            const waNum = (target.elements && target.elements.namedItem('call_whatsapp')) ? target.elements.namedItem('call_whatsapp').value : '';
+            const selectedSlot = document.querySelector('.slot-chip.active')?.textContent || 'Tomorrow at 3:00 PM';
+            setTimeout(() => {
+              window.open(`https://wa.me/917300595147?text=${encodeURIComponent(`Hey Dripp Media! I booked a 15-min strategy call for ${selectedSlot}. My WhatsApp is ${waNum}. Looking forward to connecting!`)}`, '_blank');
+              if (typeof window.closeContactModal === 'function') window.closeContactModal();
+            }, 1200);
+          }}>
+            <div className="call-meta-badge">
+              <span className="live-status-ping" />
+              <span>15-Min Strategy Session · Google Meet / Zoom</span>
+            </div>
+            <div className="slot-picker-label">Select Preferred Slot</div>
+            <div className="slot-grid">
+              {['Tomorrow 3:00 PM', 'Tomorrow 5:30 PM', 'Thu 2:00 PM', 'Thu 4:30 PM', 'Fri 11:00 AM', 'Fri 6:00 PM'].map((slot, idx) => (
+                <div 
+                  key={slot} 
+                  className={`slot-chip ${idx === 0 ? 'active' : ''}`}
+                  onClick={(e) => {
+                    document.querySelectorAll('.slot-chip').forEach(c => c.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                  }}
+                >
+                  {slot}
+                </div>
+              ))}
+            </div>
+            <div className="form-row-dual">
+              <div className="form-group">
+                <label>Your Name</label>
+                <input type="text" name="call_name" className="form-input" placeholder="Your name" required />
+              </div>
+              <div className="form-group">
+                <label>Work Email</label>
+                <input type="email" name="call_email" className="form-input" placeholder="hello@company.com" required />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>WhatsApp Number</label>
+              <input type="tel" name="call_whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
+            </div>
+            <button type="submit" className="modal-submit-capsule" id="call-submit">
+              <span className="modal-btn-shimmer" />
+              <div className="modal-btn-label">
+                <span className="modal-sparkle">✦</span>
+                <span className="modal-btn-text">Confirm Strategy Call</span>
+              </div>
+              <div className="modal-action-disc">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 17L17 7M17 7H8M17 7V16" />
+                </svg>
+              </div>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div className="modal-overlay" id="community-modal">
+    <div className="modal-container contact-modal-box community-modal-box">
+      <button 
+        className="modal-close-disc" 
+        onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `closeCommunityModal()`, target: event.currentTarget, originalEvent: event } }))} 
+        aria-label="Close modal"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+
       <div className="modal-header-block">
         <div className="modal-live-badge">
           <span className="live-status-ping" />
-          <span>DIRECT STUDIO INTAKE · FAST 24H RESPONSE</span>
+          <span>CREATOR NETWORK · PRIVATE ACCESS</span>
         </div>
-        <h3 className="modal-title">Let's Talk.</h3>
-        <p className="modal-desc">Tell us about your project scope or book a 15-minute discovery call directly.</p>
-      </div>
-      
-      {/* MODAL TABS (Clean Vector Icons, Zero Emojis) */}
-      <div className="modal-tabs">
-        <button 
-          type="button"
-          className="modal-tab-btn active" 
-          id="tab-btn-brief"
-          onClick={() => {
-            document.getElementById('tab-btn-brief')?.classList.add('active');
-            document.getElementById('tab-btn-call')?.classList.remove('active');
-            const fBrief = document.getElementById('contact-form');
-            const fCall = document.getElementById('contact-form-call');
-            if (fBrief) fBrief.style.display = 'flex';
-            if (fCall) fCall.style.display = 'none';
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-          </svg>
-          <span>Project Brief</span>
-        </button>
-        <button 
-          type="button"
-          className="modal-tab-btn" 
-          id="tab-btn-call"
-          onClick={() => {
-            document.getElementById('tab-btn-call')?.classList.add('active');
-            document.getElementById('tab-btn-brief')?.classList.remove('active');
-            const fBrief = document.getElementById('contact-form');
-            const fCall = document.getElementById('contact-form-call');
-            if (fBrief) fBrief.style.display = 'none';
-            if (fCall) fCall.style.display = 'flex';
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
-          <span>Book Strategy Call</span>
-        </button>
+        <h3 className="modal-title">The Collective</h3>
+        <p className="modal-desc">Join our private network of creators, designers, and engineers. Zero spam, high-signal drops.</p>
       </div>
 
-      {/* BRIEF FORM */}
-      <form className="modal-form" id="contact-form" style={{ display: 'flex' }}>
-        <input type="hidden" name="services" defaultValue="{}" />
-        <div id="contact-services-list" />
+      <form className="modal-form" id="community-form">
+        <div className="form-group">
+          <label>Email Address</label>
+          <div className="community-input-wrap">
+            <svg className="community-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+            <input type="email" name="email" className="form-input community-glass-input" placeholder="Enter your best email" required />
+          </div>
+        </div>
 
-        {/* Quick Scope Selector Chips */}
         <div className="form-group">
           <div className="field-label-row">
-            <label>Project Scope (Tap to Select)</label>
-            <span className="field-label-hint">Multiple allowed</span>
+            <label>WhatsApp Number</label>
+            <span className="field-label-hint">For War Room invite</span>
           </div>
-          <div className="scope-chip-grid">
+          <div className="community-input-wrap">
+            <svg className="community-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            <input type="tel" name="whatsapp" className="form-input community-glass-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
+          </div>
+        </div>
+
+        <div className="form-group">
+          <div className="field-label-row">
+            <label>Your Expertise</label>
+            <span className="field-label-hint">Tap to select or type</span>
+          </div>
+          
+          <div className="scope-chip-grid community-chips-grid">
             {[
-              { id: 'video', label: 'Video & Motion Editing' },
-              { id: 'graphics', label: 'Graphic Design & Identity' },
-              { id: 'web', label: 'Website Development' },
-              { id: 'retainer', label: 'Full Creative Retainer' }
+              { id: 'video', label: 'Video Editing' },
+              { id: 'web', label: 'Web & Fullstack' },
+              { id: 'graphics', label: 'Graphic & Branding' },
+              { id: '3d', label: '3D & Motion' },
+              { id: 'director', label: 'Creative Director' },
+              { id: 'content', label: 'Copy & Script' }
             ].map((chip) => (
               <button
                 key={chip.id}
                 type="button"
-                className="scope-chip"
+                className="scope-chip community-chip"
                 onClick={(e) => {
                   const btn = e.currentTarget;
                   btn.classList.toggle('active');
-                  const activeChips = Array.from(document.querySelectorAll('.scope-chip.active')).map(c => c.querySelector('.chip-text')?.textContent || c.textContent.trim());
-                  const msgBox = document.querySelector('#contact-form textarea[name="message"]');
-                  if (msgBox) {
-                    const currentVal = msgBox.value.replace(/^Scope: .*\n\n?/, '').trim();
-                    if (activeChips.length > 0) {
-                      msgBox.value = `Scope: ${activeChips.join(' · ')}\n\n${currentVal}`;
-                    } else {
-                      msgBox.value = currentVal;
-                    }
+                  const activeChips = Array.from(document.querySelectorAll('.community-chip.active'))
+                    .map(c => c.querySelector('.chip-text')?.textContent || c.textContent.replace('✦', '').trim());
+                  const input = document.getElementById('community-expertise-input');
+                  if (input) {
+                    input.value = activeChips.join(', ');
                   }
                 }}
               >
@@ -3717,36 +4038,27 @@ export default function Page() {
               </button>
             ))}
           </div>
-        </div>
 
-        {/* 2-Column Responsive Name & Email */}
-        <div className="form-row-dual">
-          <div className="form-group">
-            <label>Your Name</label>
-            <input type="text" name="name" className="form-input" placeholder="e.g. Alex Morgan" required />
+          <div className="community-input-wrap" style={{ marginTop: '8px' }}>
+            <svg className="community-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <input 
+              type="text" 
+              name="expertise" 
+              id="community-expertise-input" 
+              className="form-input community-glass-input" 
+              placeholder="e.g. Designer, Editor, 3D Artist, Developer" 
+              required 
+            />
           </div>
-          <div className="form-group">
-            <label>Work Email</label>
-            <input type="email" name="email" className="form-input" placeholder="hello@company.com" required />
-          </div>
         </div>
 
-        <div className="form-group">
-          <label>WhatsApp Number</label>
-          <input type="tel" name="whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
-        </div>
-
-        <div className="form-group">
-          <label>Project Scope / Message</label>
-          <textarea name="message" className="form-input" placeholder="Tell us what you're building, your target launch date, or reference links..." defaultValue={""} rows={3} />
-        </div>
-
-        {/* 3D Capsule Action Button */}
-        <button type="submit" className="modal-submit-capsule" id="contact-submit">
+        <button type="submit" className="modal-submit-capsule" id="community-submit">
           <span className="modal-btn-shimmer" />
           <div className="modal-btn-label">
             <span className="modal-sparkle">✦</span>
-            <span className="modal-btn-text">Send Project Brief</span>
+            <span className="modal-btn-text">Request Access & Join</span>
           </div>
           <div className="modal-action-disc">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
@@ -3754,92 +4066,18 @@ export default function Page() {
             </svg>
           </div>
         </button>
-      </form>
 
-      {/* STRATEGY CALL FORM */}
-      <form className="modal-form" id="contact-form-call" style={{ display: 'none' }} onSubmit={(e) => {
-        e.preventDefault();
-        const callSubmit = document.getElementById('call-submit');
-        if (callSubmit) {
-          callSubmit.querySelector('.modal-btn-text').innerText = 'Call Confirmed';
-          callSubmit.style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
-          callSubmit.style.color = '#fff';
-        }
-        const target = e.currentTarget;
-        const waNum = (target.elements && target.elements.namedItem('call_whatsapp')) ? target.elements.namedItem('call_whatsapp').value : '';
-        const selectedSlot = document.querySelector('.slot-chip.active')?.textContent || 'Tomorrow at 3:00 PM';
-        setTimeout(() => {
-          window.open(`https://wa.me/917300595147?text=${encodeURIComponent(`Hey Dripp Media! I booked a 15-min strategy call for ${selectedSlot}. My WhatsApp is ${waNum}. Looking forward to connecting!`)}`, '_blank');
-          if (typeof window.closeContactModal === 'function') window.closeContactModal();
-        }, 1200);
-      }}>
-        <div className="call-meta-badge">
-          <span className="live-status-ping" />
-          <span>15-Min Strategy Session · Google Meet / Zoom</span>
+        <div className="community-perks-row">
+          <span className="community-perk-item">
+            <span className="perk-bullet">✦</span> Instant WhatsApp War Room
+          </span>
+          <span className="community-perk-item">
+            <span className="perk-bullet">✦</span> Zero Spam Guarantee
+          </span>
+          <span className="community-perk-item">
+            <span className="perk-bullet">✦</span> Direct Collabs
+          </span>
         </div>
-        <div className="slot-picker-label">Select Preferred Slot</div>
-        <div className="slot-grid">
-          {['Tomorrow 3:00 PM', 'Tomorrow 5:30 PM', 'Thu 2:00 PM', 'Thu 4:30 PM', 'Fri 11:00 AM', 'Fri 6:00 PM'].map((slot, idx) => (
-            <div 
-              key={slot} 
-              className={`slot-chip ${idx === 0 ? 'active' : ''}`}
-              onClick={(e) => {
-                document.querySelectorAll('.slot-chip').forEach(c => c.classList.remove('active'));
-                e.currentTarget.classList.add('active');
-              }}
-            >
-              {slot}
-            </div>
-          ))}
-        </div>
-        <div className="form-row-dual">
-          <div className="form-group">
-            <label>Your Name</label>
-            <input type="text" name="call_name" className="form-input" placeholder="Your name" required />
-          </div>
-          <div className="form-group">
-            <label>Work Email</label>
-            <input type="email" name="call_email" className="form-input" placeholder="hello@company.com" required />
-          </div>
-        </div>
-        <div className="form-group">
-          <label>WhatsApp Number</label>
-          <input type="tel" name="call_whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
-        </div>
-        <button type="submit" className="modal-submit-capsule" id="call-submit">
-          <span className="modal-btn-shimmer" />
-          <div className="modal-btn-label">
-            <span className="modal-sparkle">✦</span>
-            <span className="modal-btn-text">Confirm Strategy Call</span>
-          </div>
-          <div className="modal-action-disc">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7 17L17 7M17 7H8M17 7V16" />
-            </svg>
-          </div>
-        </button>
-      </form>
-    </div>
-  </div>
-  <div className="modal-overlay" id="community-modal">
-    <div className="modal-container">
-      <button className="modal-close" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `closeCommunityModal()`, target: event.currentTarget, originalEvent: event } }))}>×</button>
-      <h3 className="modal-title">The Collective</h3>
-      <p className="modal-desc">Join our private network of creators. No spam, just pure signal.</p>
-      <form className="modal-form" id="community-form">
-        <div className="form-group">
-          <label>Email Address</label>
-          <input type="email" name="email" className="form-input" placeholder="Enter your best email" required />
-        </div>
-        <div className="form-group">
-          <label>WhatsApp Number</label>
-          <input type="tel" name="whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
-        </div>
-        <div className="form-group">
-          <label>Your Expertise</label>
-          <input type="text" name="expertise" className="form-input" placeholder="e.g. Designer, Editor, Developer" required />
-        </div>
-        <button type="submit" className="modal-submit" id="community-submit">Join Now</button>
       </form>
     </div>
   </div>

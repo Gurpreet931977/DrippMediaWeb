@@ -5850,15 +5850,460 @@
         }
 
         .contact-modal-box {
-            max-width: 580px;
+            width: 92%;
+            max-width: 920px;
+            max-height: calc(100vh - 64px);
+            overflow-y: auto;
+            background: radial-gradient(ellipse at 25% 10%, rgba(235, 215, 63, 0.08) 0%, rgba(13, 13, 16, 0.98) 70%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 28px;
+            padding: 30px 34px;
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.85), 0 0 60px rgba(235, 215, 63, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(235, 215, 63, 0.3) transparent;
+        }
+
+        .community-modal-box {
+            width: 92%;
+            max-width: 520px;
+            max-height: calc(100vh - 64px);
+            overflow-y: auto;
             background: radial-gradient(ellipse at 50% 0%, rgba(235, 215, 63, 0.09) 0%, rgba(13, 13, 16, 0.98) 70%);
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-top: 1px solid rgba(255, 255, 255, 0.28);
             border-radius: 28px;
-            padding: 38px 36px;
+            padding: 32px 32px;
             backdrop-filter: blur(28px);
             -webkit-backdrop-filter: blur(28px);
             box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), 0 0 60px rgba(235, 215, 63, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(235, 215, 63, 0.3) transparent;
+        }
+
+        .contact-modal-box::-webkit-scrollbar,
+        .community-modal-box::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .contact-modal-box::-webkit-scrollbar-thumb,
+        .community-modal-box::-webkit-scrollbar-thumb {
+            background: rgba(235, 215, 63, 0.3);
+            border-radius: 999px;
+        }
+
+        /* 2-Column Balanced Architecture for Contact Modal */
+        .contact-modal-grid {
+            display: grid;
+            grid-template-columns: 310px 1fr;
+            gap: 34px;
+            align-items: start;
+        }
+
+        .contact-modal-sidebar {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .contact-modal-sidebar .modal-header-block {
+            margin-bottom: 18px;
+        }
+
+        .contact-modal-sidebar .modal-title {
+            font-size: 1.8rem;
+            line-height: 1.15;
+            margin-bottom: 8px;
+        }
+
+        .contact-modal-sidebar .modal-desc {
+            font-size: 0.86rem;
+            line-height: 1.45;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .contact-tabs-stacked {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+
+        .contact-tabs-stacked .modal-tab-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.7);
+            text-align: left;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .contact-tabs-stacked .modal-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(235, 215, 63, 0.25);
+            color: var(--pure-white);
+            transform: translateX(2px);
+        }
+
+        .contact-tabs-stacked .modal-tab-btn.active {
+            background: rgba(235, 215, 63, 0.12);
+            border: 1px solid var(--brand-yellow);
+            color: var(--brand-yellow);
+            box-shadow: 0 4px 20px rgba(235, 215, 63, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .contact-tabs-stacked .tab-icon-wrap {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+        }
+
+        .contact-tabs-stacked .modal-tab-btn.active .tab-icon-wrap {
+            background: var(--brand-yellow);
+            color: #000000;
+        }
+
+        .contact-tabs-stacked .tab-text-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .contact-tabs-stacked .tab-title {
+            font-family: 'Clash Display', sans-serif;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.3px;
+        }
+
+        .contact-tabs-stacked .tab-sub {
+            font-family: 'Clash Display', sans-serif;
+            font-weight: 500;
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .contact-tabs-stacked .modal-tab-btn.active .tab-sub {
+            color: rgba(235, 215, 63, 0.85);
+        }
+
+        .contact-sidebar-guarantees {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-guarantee-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 0.3px;
+        }
+
+        .sidebar-guarantee-item .guarantee-sparkle {
+            color: var(--brand-yellow);
+            font-size: 0.65rem;
+        }
+
+        .contact-modal-main {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .contact-modal-main .modal-form {
+            gap: 11px;
+        }
+
+        .contact-modal-main .form-group {
+            gap: 4px;
+        }
+
+        .contact-modal-main .form-group label {
+            font-size: 0.73rem;
+            letter-spacing: 0.6px;
+        }
+
+        .contact-modal-main .form-input {
+            padding: 9px 13px;
+            font-size: 0.84rem;
+            border-radius: 10px;
+        }
+
+        .contact-modal-main textarea.form-input {
+            min-height: 52px;
+            max-height: 75px;
+            resize: none;
+            line-height: 1.35;
+        }
+
+        .contact-modal-main .scope-chip-grid {
+            gap: 6px;
+        }
+
+        .contact-modal-main .scope-chip {
+            padding: 7px 10px;
+            font-size: 0.74rem;
+            border-radius: 8px;
+        }
+
+        .contact-modal-main .modal-submit-capsule {
+            margin-top: 3px;
+            padding: 8px 12px 8px 20px;
+            font-size: 0.88rem;
+        }
+
+        /* --- MULTI-SELECT SCOPE DROPDOWN --- */
+        .scope-dropdown-wrap {
+            position: relative;
+            width: 100%;
+        }
+
+        .scope-dropdown-trigger {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 9px 14px;
+            color: var(--pure-white);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.84rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .scope-dropdown-trigger:hover,
+        .scope-dropdown-wrap.open .scope-dropdown-trigger {
+            border-color: rgba(235, 215, 63, 0.4);
+            background: rgba(235, 215, 63, 0.04);
+            box-shadow: 0 0 0 3px rgba(235, 215, 63, 0.1);
+        }
+
+        .scope-trigger-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: rgba(255, 255, 255, 0.45);
+            font-weight: 500;
+        }
+
+        .scope-trigger-text.has-value {
+            color: var(--pure-white);
+            font-weight: 600;
+        }
+
+        .scope-trigger-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: rgba(235, 215, 63, 0.15);
+            border: 1px solid rgba(235, 215, 63, 0.35);
+            color: var(--brand-yellow);
+            font-size: 0.68rem;
+            font-weight: 700;
+            font-family: 'Panchang', sans-serif;
+            margin-right: 6px;
+        }
+
+        .scope-dropdown-chevron {
+            color: rgba(255, 255, 255, 0.45);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .scope-dropdown-wrap.open .scope-dropdown-chevron {
+            transform: rotate(180deg);
+            color: var(--brand-yellow);
+        }
+
+        .scope-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            width: 100%;
+            max-height: 220px;
+            overflow-y: auto;
+            background: rgba(14, 14, 18, 0.98);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 6px;
+            z-index: 99;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 30px rgba(235, 215, 63, 0.08);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px) scale(0.98);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(235, 215, 63, 0.3) transparent;
+        }
+
+        .scope-dropdown-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .scope-dropdown-menu::-webkit-scrollbar-thumb {
+            background: rgba(235, 215, 63, 0.3);
+            border-radius: 999px;
+        }
+
+        .scope-dropdown-wrap.open .scope-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .scope-dropdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.75);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .scope-dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--pure-white);
+        }
+
+        .scope-dropdown-item.selected {
+            background: rgba(235, 215, 63, 0.12);
+            color: var(--brand-yellow);
+        }
+
+        .scope-item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scope-item-sparkle {
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.4);
+            transition: color 0.2s ease;
+        }
+
+        .scope-dropdown-item.selected .scope-item-sparkle {
+            color: var(--brand-yellow);
+        }
+
+        .scope-item-check {
+            width: 17px;
+            height: 17px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .scope-dropdown-item.selected .scope-item-check {
+            background: var(--brand-yellow);
+            border-color: var(--brand-yellow);
+            color: #000000;
+        }
+
+        .scope-selected-tags-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .scope-selected-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(235, 215, 63, 0.12);
+            border: 1px solid rgba(235, 215, 63, 0.3);
+            color: var(--brand-yellow);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .scope-tag-remove {
+            cursor: pointer;
+            opacity: 0.65;
+            transition: opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .scope-tag-remove:hover {
+            opacity: 1;
+        }
+
+        /* Breakpoints for Responsive Modal */
+        @media (max-width: 860px) {
+            .contact-modal-box {
+                max-width: 520px;
+                padding: 24px 20px;
+                border-radius: 22px;
+            }
+            .contact-modal-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .contact-tabs-stacked {
+                flex-direction: row;
+                margin-bottom: 12px;
+                gap: 6px;
+            }
+            .contact-tabs-stacked .modal-tab-btn {
+                flex: 1;
+                padding: 9px 10px;
+                justify-content: center;
+            }
+            .contact-tabs-stacked .tab-sub {
+                display: none;
+            }
+            .contact-sidebar-guarantees {
+                display: none;
+            }
         }
 
         .modal-overlay.active .modal-container {
@@ -6023,7 +6468,8 @@
         }
 
         @media (max-width: 580px) {
-            .contact-modal-box {
+            .contact-modal-box,
+            .community-modal-box {
                 padding: 26px 18px;
                 border-radius: 20px;
                 width: calc(100vw - 24px) !important;
@@ -6212,6 +6658,102 @@
             to {
                 transform: translate(-50%, -50%) rotate(360deg);
             }
+        }
+
+        /* --- COMMUNITY MODAL CUSTOM FORM STYLES --- */
+        .community-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .community-input-icon {
+            position: absolute;
+            left: 16px;
+            color: rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+            transition: color 0.25s ease, transform 0.25s ease;
+            z-index: 2;
+        }
+
+        .community-input-wrap:focus-within .community-input-icon {
+            color: var(--brand-yellow);
+            transform: scale(1.1);
+        }
+
+        .community-glass-input {
+            padding-left: 44px !important;
+            width: 100%;
+        }
+
+        .community-chips-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+            margin-bottom: 2px;
+        }
+
+        @media (max-width: 580px) {
+            .community-chips-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .community-chip {
+            padding: 8px 10px;
+            font-size: 0.74rem;
+            justify-content: flex-start;
+        }
+
+        .community-perks-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .community-perk-item {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.74rem;
+            color: rgba(255, 255, 255, 0.55);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            letter-spacing: 0.2px;
+        }
+
+        .community-perk-item .perk-bullet {
+            color: var(--brand-yellow);
+            font-size: 0.7rem;
+        }
+
+        body.light-theme .community-modal-box {
+            background: radial-gradient(ellipse at 50% 0%, rgba(235, 215, 63, 0.12) 0%, rgba(255, 255, 255, 0.98) 70%);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-top: 1px solid rgba(0, 0, 0, 0.2);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.12);
+        }
+
+        body.light-theme .community-input-icon {
+            color: rgba(0, 0, 0, 0.4);
+        }
+
+        body.light-theme .community-input-wrap:focus-within .community-input-icon {
+            color: #b8860b;
+        }
+
+        body.light-theme .community-perks-row {
+            border-top-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-theme .community-perk-item {
+            color: rgba(0, 0, 0, 0.65);
         }
 
         #contact-services-list {
@@ -6630,6 +7172,92 @@
         }
 
         /* Light Theme Overrides */
+        body.light-theme .contact-modal-box {
+            background: radial-gradient(ellipse at 25% 10%, rgba(235, 215, 63, 0.12) 0%, rgba(255, 255, 255, 0.98) 70%);
+            border-color: rgba(0, 0, 0, 0.12);
+            border-top-color: rgba(0, 0, 0, 0.2);
+            box-shadow: 0 35px 90px rgba(0, 0, 0, 0.15), 0 0 60px rgba(235, 215, 63, 0.08);
+        }
+
+        body.light-theme .contact-modal-sidebar .modal-desc {
+            color: rgba(0, 0, 0, 0.65);
+        }
+
+        body.light-theme .contact-tabs-stacked .modal-tab-btn {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        body.light-theme .contact-tabs-stacked .modal-tab-btn:hover {
+            background: rgba(0, 0, 0, 0.06);
+            border-color: rgba(235, 215, 63, 0.4);
+            color: #000;
+        }
+
+        body.light-theme .contact-tabs-stacked .modal-tab-btn.active {
+            background: rgba(235, 215, 63, 0.18);
+            border-color: #c9a900;
+            color: #7a6600;
+        }
+
+        body.light-theme .contact-tabs-stacked .modal-tab-btn.active .tab-icon-wrap {
+            background: #e6c800;
+            color: #000;
+        }
+
+        body.light-theme .contact-sidebar-guarantees {
+            border-top-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-theme .sidebar-guarantee-item {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        body.light-theme .scope-dropdown-trigger {
+            background: rgba(0, 0, 0, 0.035);
+            border-color: rgba(0, 0, 0, 0.12);
+            color: var(--deep-black);
+        }
+
+        body.light-theme .scope-trigger-text {
+            color: rgba(0, 0, 0, 0.45);
+        }
+
+        body.light-theme .scope-trigger-text.has-value {
+            color: var(--deep-black);
+        }
+
+        body.light-theme .scope-dropdown-menu {
+            background: rgba(255, 255, 255, 0.98);
+            border-color: rgba(0, 0, 0, 0.12);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15), 0 0 30px rgba(235, 215, 63, 0.06);
+        }
+
+        body.light-theme .scope-dropdown-item {
+            color: rgba(0, 0, 0, 0.75);
+        }
+
+        body.light-theme .scope-dropdown-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #000;
+        }
+
+        body.light-theme .scope-dropdown-item.selected {
+            background: rgba(235, 215, 63, 0.18);
+            color: #7a6600;
+        }
+
+        body.light-theme .scope-item-check {
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        body.light-theme .scope-dropdown-item.selected .scope-item-check {
+            background: #e6c800;
+            border-color: #c9a900;
+            color: #000;
+        }
+
         body.light-theme .modal-tabs {
             background: rgba(0, 0, 0, 0.04);
             border-color: rgba(0, 0, 0, 0.08);
