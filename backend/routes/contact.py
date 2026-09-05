@@ -4,13 +4,21 @@ Handles enquiry form submissions: saves lead + fires emails.
 """
 
 from flask import Blueprint, request, jsonify
-import sys, os
+import sys, os, re
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from db import save_lead
 from emailer import send_agency_notification, send_client_autoreply
 
 contact_bp = Blueprint("contact", __name__)
+
+INAPPROPRIATE_SERVICE_REGEX = re.compile(
+    r"\b(fuck|fck|shit|bitch|asshole|bastard|cunt|dick|pussy|cock|porn|xxx|sex|nude|"
+    r"chutiya|bhosdike|bsdk|madarchod|bhenchod|gand|lund|randi|"
+    r"deez nuts|your mom|yo mama|ur mom|ligma|sugma|skibidi|hawk tuah|"
+    r"prank|fake service|poop|pee pee|fart)\b",
+    re.IGNORECASE
+)
 
 
 def _validate(data: dict):
@@ -22,6 +30,22 @@ def _validate(data: dict):
         errors.append("A valid email is required.")
     if not data.get("message", "").strip() and not data.get("services"):
         errors.append("Please include a message or select at least one service.")
+
+    # Validate services for inappropriate or prank entries
+    raw_services = data.get("services")
+    service_names = []
+    if isinstance(raw_services, dict):
+        service_names = list(raw_services.keys())
+    elif isinstance(raw_services, list):
+        service_names = [s if isinstance(s, str) else str(s) for s in raw_services]
+    elif isinstance(raw_services, str):
+        service_names = [s.strip() for s in raw_services.split(",") if s.strip()]
+
+    for s_name in service_names:
+        if INAPPROPRIATE_SERVICE_REGEX.search(s_name):
+            errors.append("Inappropriate or joke service requests are not accepted.")
+            break
+
     return errors
 
 

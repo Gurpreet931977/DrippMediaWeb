@@ -8,6 +8,7 @@ import Link from "next/link";
 import Preloader from "./components/Preloader";
 import DailyLearningSection from "./components/DailyLearningSection";
 import { DEFAULT_SERVICES_CATEGORIES } from './lib/servicesData';
+import { validateCustomService } from './utils/serviceValidator';
 
 export default function Page() {
   const [servicesCategories, setServicesCategories] = useState(DEFAULT_SERVICES_CATEGORIES);
@@ -1819,17 +1820,48 @@ export default function Page() {
         // --- CUSTOM SERVICE CREATOR (USER WRITE-IN) ---
         const customServiceInput = document.getElementById('custom-service-input');
         const customServiceAddBtn = document.getElementById('custom-service-add-btn');
+        const customServiceError = document.getElementById('custom-service-error');
+        const customServiceErrorText = document.getElementById('custom-service-error-text');
+        let customServiceErrorTimeout = null;
+
+        function showCustomServiceError(msg) {
+            if (!customServiceInput) return;
+            customServiceInput.classList.add('shake-warning');
+            setTimeout(() => customServiceInput.classList.remove('shake-warning'), 500);
+
+            if (customServiceError && customServiceErrorText) {
+                customServiceErrorText.textContent = msg;
+                customServiceError.style.display = 'inline-flex';
+                clearTimeout(customServiceErrorTimeout);
+                customServiceErrorTimeout = setTimeout(() => {
+                    hideCustomServiceError();
+                }, 4000);
+            }
+            customServiceInput.focus();
+        }
+
+        function hideCustomServiceError() {
+            if (customServiceError) {
+                customServiceError.style.display = 'none';
+            }
+        }
 
         function handleAddCustomService(e) {
             if (!customServiceInput) return;
             const val = customServiceInput.value.trim();
 
             if (!val) {
-                customServiceInput.classList.add('shake-warning');
-                setTimeout(() => customServiceInput.classList.remove('shake-warning'), 500);
-                customServiceInput.focus();
+                showCustomServiceError('masti mat karo yaar.');
                 return;
             }
+
+            const validation = validateCustomService(val);
+            if (!validation.isValid) {
+                showCustomServiceError(validation.error || 'masti mat karo yaar.');
+                return;
+            }
+
+            hideCustomServiceError();
 
             const cleanName = val.length > 1 ? val.charAt(0).toUpperCase() + val.slice(1) : val.toUpperCase();
 
@@ -1864,6 +1896,9 @@ export default function Page() {
                     e.preventDefault();
                     handleAddCustomService(e);
                 }
+            });
+            customServiceInput.addEventListener('input', () => {
+                hideCustomServiceError();
             });
         }
 
@@ -3044,6 +3079,28 @@ export default function Page() {
               >
                 <span>+ Add to Cart</span>
               </button>
+            </div>
+            <div 
+              id="custom-service-error" 
+              className="custom-service-error" 
+              style={{ display: 'none' }}
+            >
+              <span className="custom-service-creative-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="drip-mascot-svg">
+                  <defs>
+                    <linearGradient id="dripErrorGradOrig" x1="5" y1="2" x2="19" y2="23" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#ff3366" />
+                      <stop offset="100%" stopColor="#ff6b8b" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M12 2.5C12 2.5 5.5 10.5 5.5 15.5C5.5 19.366 8.41 22.5 12 22.5C15.59 22.5 18.5 19.366 18.5 15.5C18.5 10.5 12 2.5 12 2.5Z" fill="url(#dripErrorGradOrig)" />
+                  <path d="M8.2 12.5C8.2 10.2 9.6 8.2 10.8 7.2" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" />
+                  <circle cx="9.6" cy="14.8" r="1.1" fill="#FFFFFF" />
+                  <path d="M13.2 15C13.8 14.1 15.2 14.1 15.8 15" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" fill="none" className="drip-wink-eye" />
+                  <path d="M11 17.6C11.8 18.4 13.2 18.4 14 17.6" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+                </svg>
+              </span>
+              <span id="custom-service-error-text" className="custom-service-error-text" style={{ fontFamily: "'Clash Display', sans-serif" }}>masti mat karo yaar.</span>
             </div>
             <div id="custom-services-added-list" className="custom-services-added-list" style={{ display: 'none' }}></div>
           </div>
