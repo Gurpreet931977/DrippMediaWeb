@@ -3545,13 +3545,13 @@
         /* --- Split Custom Package Builder (Receipt Builder) --- */
         .builder-container {
             display: flex;
-            gap: 40px;
-            margin-top: 60px;
+            gap: 32px;
+            margin-top: 0;
             align-items: stretch;
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 32px;
-            padding: 50px;
+            border-radius: 28px;
+            padding: 36px 40px;
             overflow: hidden;
             position: relative;
         }
@@ -3570,7 +3570,7 @@
         @media (max-width: 950px) {
             .builder-container {
                 flex-direction: column;
-                padding: 36px 20px;
+                padding: 32px 20px;
                 width: 100%;
                 max-width: 100%;
                 overflow: hidden;
@@ -3581,7 +3581,7 @@
                 width: 100% !important;
                 height: auto !important;
                 max-height: none !important;
-                padding: 28px 20px !important;
+                padding: 24px 18px !important;
             }
 
             .receipt-items {
@@ -3595,20 +3595,19 @@
             flex: 1.6;
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 20px;
             z-index: 2;
         }
 
         .builder-right {
             flex: 1;
             min-width: 320px;
-            height: 570px;
-            max-height: 570px;
+            min-height: 490px;
             box-sizing: border-box;
             background: rgba(10, 10, 10, 0.95);
             border: 1px solid rgba(235, 215, 63, 0.2);
-            border-radius: 24px;
-            padding: 36px 32px;
+            border-radius: 20px;
+            padding: 28px 24px;
             position: relative;
             z-index: 2;
             display: flex;
@@ -3616,21 +3615,22 @@
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(235, 215, 63, 0.03);
             backdrop-filter: blur(20px);
             overflow: hidden;
+            align-self: stretch;
         }
 
         .builder-title {
             font-family: 'Panchang', sans-serif;
-            font-size: 2.2rem;
+            font-size: 1.65rem;
             color: var(--pure-white);
-            margin: 10px 0;
-            line-height: 1.2;
+            margin: 4px 0 8px 0;
+            line-height: 1.25;
         }
 
         .builder-sub {
             color: rgba(255, 255, 255, 0.5);
-            font-size: 1.05rem;
-            line-height: 1.6;
-            max-width: 500px;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            max-width: 480px;
             margin: 0;
         }
 
@@ -3638,7 +3638,7 @@
         .builder-tabs {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             position: relative;
             z-index: 1;
         }
@@ -3648,7 +3648,7 @@
             background: var(--brand-yellow);
             border-radius: 100px;
             z-index: 1;
-            transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: 0.35s cubic-bezier(0.25, 1, 0.5, 1);
             pointer-events: none;
             top: 0;
             left: 0;
@@ -3657,13 +3657,14 @@
         }
 
         .builder-tab {
-            padding: 9px 20px;
+            padding: 7px 16px;
             border-radius: 100px;
             border: 1px solid rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.45);
-            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.74rem;
             font-weight: 600;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             text-transform: uppercase;
             cursor: pointer;
             transition: all 0.25s ease;
@@ -3675,14 +3676,14 @@
 
         .builder-tab:hover {
             border-color: rgba(235, 215, 63, 0.4);
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.85);
         }
 
         .builder-tab.active {
             background: transparent !important;
             border-color: transparent !important;
             color: var(--deep-black);
-            font-weight: 800;
+            font-weight: 700;
         }
 
         /* Chip panels */
@@ -3693,14 +3694,14 @@
 
         /* Scroll wrapper - this is the only element that scrolls */
         .chip-scroll {
-            max-height: 320px;
+            max-height: 260px;
             overflow-y: auto;
             overflow-x: hidden;
             scrollbar-width: thin;
             scrollbar-color: rgba(235, 215, 63, 0.2) transparent;
             /* Expand viewport clipping box to fit massive glows without losing layout alignment */
-            margin: -20px -10px -25px -20px;
-            padding: 20px 10px 25px 20px;
+            margin: -15px -10px -20px -15px;
+            padding: 15px 10px 20px 15px;
         }
 
         .chip-scroll::-webkit-scrollbar {
@@ -3720,7 +3721,7 @@
         .chip-panel {
             display: none;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             padding: 0;
             overflow: visible;
         }
@@ -3730,14 +3731,15 @@
         }
 
         .custom-chip {
-            padding: 10px 18px 10px 22px;
+            padding: 8px 16px 8px 18px;
             display: inline-flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             border-radius: 100px;
             border: 1px solid rgba(255, 255, 255, 0.15);
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.75);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.82rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -3751,12 +3753,12 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 800;
             transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
@@ -3802,6 +3804,254 @@
             background: var(--deep-black);
             color: var(--brand-yellow);
             transform: rotate(360deg);
+        }
+
+        /* Custom Chip Action ("Write Custom Service") */
+        .custom-chip.custom-chip-action {
+            border: 1px dashed rgba(235, 215, 63, 0.45);
+            background: rgba(235, 215, 63, 0.05);
+            color: var(--brand-yellow);
+            font-weight: 600;
+        }
+
+        .custom-chip.custom-chip-action:hover {
+            border-color: var(--brand-yellow);
+            background: rgba(235, 215, 63, 0.12);
+            color: #FFFFFF;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(235, 215, 63, 0.2);
+        }
+
+        .custom-chip.custom-chip-action::after {
+            content: '✦';
+            background: rgba(235, 215, 63, 0.2);
+            color: var(--brand-yellow);
+            font-size: 11px;
+        }
+
+        /* Custom Service Creator Box */
+        .custom-service-creator {
+            background: linear-gradient(180deg, rgba(16, 16, 22, 0.9) 0%, rgba(10, 10, 14, 0.98) 100%);
+            border: 1px solid rgba(235, 215, 63, 0.22);
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .custom-service-creator-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .custom-service-sparkle {
+            color: var(--brand-yellow);
+            font-size: 0.9rem;
+            text-shadow: 0 0 10px rgba(235, 215, 63, 0.5);
+        }
+
+        .custom-service-creator-label {
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #FFFFFF;
+        }
+
+        .custom-service-creator-hint {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.45);
+            margin-left: auto;
+        }
+
+        .custom-service-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .custom-service-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .custom-service-input {
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 100px;
+            padding: 11px 20px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.85rem;
+            color: #FFFFFF;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .custom-service-input:focus,
+        .custom-service-input.pulse-glow {
+            border-color: var(--brand-yellow);
+            box-shadow: 0 0 16px rgba(235, 215, 63, 0.35);
+            background: rgba(0, 0, 0, 0.75);
+        }
+
+        .custom-service-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            font-family: 'Clash Display', sans-serif;
+        }
+
+        .custom-service-input.shake-warning {
+            animation: inputShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+            border-color: #ff4d4d;
+        }
+
+        @keyframes inputShake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .custom-service-add-btn {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            border: none;
+            border-radius: 100px;
+            padding: 11px 22px;
+            font-family: 'Panchang', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(235, 215, 63, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .custom-service-add-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 25px rgba(235, 215, 63, 0.45);
+            background: #ffe347;
+        }
+
+        .custom-service-add-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Added custom chips list */
+        .custom-services-added-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .custom-user-chip {
+            padding: 6px 12px 6px 12px !important;
+            font-size: 0.78rem !important;
+            gap: 8px !important;
+            border-radius: 100px !important;
+            border: 1px solid rgba(235, 215, 63, 0.4) !important;
+            background: rgba(235, 215, 63, 0.1) !important;
+            color: #FFFFFF !important;
+            display: inline-flex !important;
+            align-items: center !important;
+        }
+
+        .custom-user-chip::after {
+            display: none !important;
+        }
+
+        .custom-user-badge {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            font-family: 'Panchang', sans-serif;
+            font-size: 8.5px;
+            font-weight: 800;
+            padding: 2px 5px;
+            border-radius: 3px;
+            letter-spacing: 0.5px;
+        }
+
+        .custom-user-title {
+            font-family: 'Clash Display', sans-serif;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        .custom-user-qty {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.72rem;
+            color: var(--brand-yellow);
+            font-weight: 600;
+        }
+
+        .custom-user-del {
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            border-radius: 50%;
+            width: 17px;
+            height: 17px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            cursor: pointer;
+            line-height: 1;
+            transition: all 0.2s ease;
+            margin-left: 2px;
+        }
+
+        .custom-user-del:hover {
+            background: #ff4d4d;
+            color: #FFFFFF;
+        }
+
+        .receipt-custom-tag {
+            background: rgba(235, 215, 63, 0.14);
+            color: #EBD73F;
+            border: 1px solid rgba(235, 215, 63, 0.35);
+            font-size: 8.5px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-family: 'Panchang', sans-serif;
+            letter-spacing: 0.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 600px) {
+            .custom-service-input-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .custom-service-add-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .custom-service-creator-hint {
+                margin-left: 0;
+                width: 100%;
+            }
         }
 
         /* Receipt Terminal */

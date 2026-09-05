@@ -191,6 +191,10 @@ export default function Page() {
 
                     const scaleStart = Math.random() * 0.8 + 0.6; // Crisp 0.6 to 1.4 scale
                     const opacityStart = Math.random() * 0.5 + 0.45; // 0.45 to 0.95 opacity
+                    const attractAngle = (i / particleCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+                    const attractDistX = 145 + Math.random() * 85;
+                    const attractDistY = 44 + Math.random() * 55;
+                    const attractSpeed = (Math.random() * 0.01 + 0.005) * (i % 2 === 0 ? 1 : -1);
 
                     gsap.set(p, { x: startX, y: startY, opacity: opacityStart, scale: scaleStart, force3D: true });
 
@@ -211,6 +215,12 @@ export default function Page() {
                         wanderRadius: Math.random() * 35 + 15,
                         scaleStart: scaleStart,
                         opacityStart: opacityStart,
+                        attractAngle: attractAngle,
+                        attractDistX: attractDistX,
+                        attractDistY: attractDistY,
+                        attractSpeed: attractSpeed,
+                        attractScale: Math.min(1.8, scaleStart * 1.15),
+                        attractOpacity: Math.min(1, opacityStart + 0.25),
                         setX: gsap.quickSetter(p, "x", "px"),
                         setY: gsap.quickSetter(p, "y", "px"),
                         setScale: gsap.quickSetter(p, "scale"),
@@ -285,18 +295,26 @@ export default function Page() {
                         const p = particles[i];
 
                         if (isAttracting) {
-                            // Gather smoothly into button center
-                            p.currentX += (0 - p.currentX) * 0.16;
-                            p.currentY += (0 - p.currentY) * 0.16;
+                            // Orbit / gather smoothly around the glowing button capsule - never disappear!
+                            p.attractAngle += p.attractSpeed;
+                            const targetX = Math.cos(p.attractAngle) * p.attractDistX;
+                            const targetY = Math.sin(p.attractAngle) * p.attractDistY;
+
+                            p.currentX += (targetX - p.currentX) * 0.12;
+                            p.currentY += (targetY - p.currentY) * 0.12;
                             p.setX(p.currentX.toFixed(1));
                             p.setY(p.currentY.toFixed(1));
-                            p.setScale(0.4);
-                            p.setOpacity(0);
+                            p.setScale(p.attractScale);
+                            p.setOpacity(p.attractOpacity);
                         } else {
                             // Gentle organic wander
                             p.wanderAngle += p.wanderSpeed;
                             const idleX = p.startX + Math.cos(p.wanderAngle) * p.wanderRadius;
                             const idleY = p.startY + Math.sin(p.wanderAngle) * p.wanderRadius;
+
+                            // Smooth damping back of release or repel impulse
+                            p.repelX *= 0.90;
+                            p.repelY *= 0.90;
 
                             // Gentle cursor repulsion without tween thrashing
                             if (isMouseOver) {
@@ -312,15 +330,11 @@ export default function Page() {
                                 }
                             }
 
-                            // Smooth damping back to idle position
-                            p.repelX *= 0.88;
-                            p.repelY *= 0.88;
-
                             p.targetX = idleX + p.repelX;
                             p.targetY = idleY + p.repelY;
 
-                            p.currentX += (p.targetX - p.currentX) * 0.09;
-                            p.currentY += (p.targetY - p.currentY) * 0.09;
+                            p.currentX += (p.targetX - p.currentX) * 0.08;
+                            p.currentY += (p.targetY - p.currentY) * 0.08;
 
                             p.setX(p.currentX.toFixed(1));
                             p.setY(p.currentY.toFixed(1));
@@ -353,12 +367,11 @@ export default function Page() {
 
                     if (isAttracting) {
                         isAttracting = false;
-                        // Explosive burst back out to their spread locations
+                        // Smooth radial outward release burst back into the community
                         particles.forEach(p => {
-                            p.currentX = (Math.random() - 0.5) * 40;
-                            p.currentY = (Math.random() - 0.5) * 40;
-                            p.repelX = (p.startX - 0) * 0.3;
-                            p.repelY = (p.startY - 0) * 0.3;
+                            const dist = Math.hypot(p.currentX, p.currentY) || 1;
+                            p.repelX = (p.currentX / dist) * 28;
+                            p.repelY = (p.currentY / dist) * 28;
                         });
                     }
                 };
@@ -1317,8 +1330,10 @@ export default function Page() {
 
         // --- CUSTOM PACKAGE BUILDER (RECEIPT LOGIC) STATE ---
         const selectedServices = new Map();
+        const customServicesSet = new Set();
         if (typeof window !== 'undefined') {
             window.__selectedServices = selectedServices;
+            window.__customServicesSet = customServicesSet;
         }
 
         // --- FLOATING SERVICES CLOUD ---
@@ -1349,13 +1364,6 @@ export default function Page() {
                 const currentPills = document.querySelectorAll('.f-pill');
                 if (!currentPills || currentPills.length === 0) return;
 
-                // Scatter pills across the container on init using a jittered grid to avoid initial stacking
-                const totalPills = currentPills.length;
-                const cols = Math.max(6, Math.floor(Math.sqrt(totalPills * 1.8)));
-                const rows = Math.ceil(totalPills / cols);
-                const cellW = (containerW * 0.84) / cols;
-                const cellH = (containerH * 0.78) / rows;
-
                 currentPills.forEach((pill, i) => {
                     // Reset any GSAP inline transforms
                     gsap.set(pill, { clearProps: 'all' });
@@ -1366,32 +1374,31 @@ export default function Page() {
                     pill.style.cursor = 'grab';
                     pill.style.userSelect = 'none';
 
-                    // --- Depth: layer between 0.6 and 1.1 ---
-                    const depth = 0.6 + Math.random() * 0.5;
-                    const pillScale = 0.72 + depth * 0.42; // 0.97 to 1.18
-                    const pillOpacity = 0.38 + depth * 0.54; // 0.70 to 0.97
+                    // --- Depth: random layer between 0.55 and 1.1 ---
+                    const depth = 0.55 + Math.random() * 0.55;
+                    const pillScale = 0.70 + depth * 0.45; // 0.95 to 1.20
+                    const pillOpacity = 0.35 + depth * 0.55; // 0.65 to 0.95
                     const pillZIndex = Math.floor(depth * 10);
 
                     pill.style.opacity = Math.min(pillOpacity, 1);
                     pill.style.zIndex = pillZIndex;
                     pill.style.fontSize = `${(0.78 + depth * 0.22).toFixed(2)}rem`;
 
-                    // Position distributed across grid with gentle random jitter
-                    const col = i % cols;
-                    const row = Math.floor(i / cols);
-                    const px = -containerW * 0.42 + (col + 0.5) * cellW + (Math.random() - 0.5) * cellW * 0.6;
-                    const py = -containerH * 0.39 + (row + 0.5) * cellH + (Math.random() - 0.5) * cellH * 0.6;
+                    // Expansive scatter across the container to prevent any central clumping
+                    const px = (Math.random() - 0.5) * containerW * 0.88;
+                    const py = (Math.random() - 0.5) * containerH * 0.82;
 
-                    // Smooth organic cruising speed (calm, elegant zero-gravity floating)
-                    const baseSpeed = 0.28 + Math.random() * 0.38;
-                    const wanderAngle = Math.random() * Math.PI * 2;
-                    const wanderSpeed = (0.003 + Math.random() * 0.005) * (Math.random() < 0.5 ? 1 : -1);
+                    // Randomized natural velocity per pill
+                    const baseSpeed = 0.3 + Math.random() * 0.5; // gentle, elegant cruising speed
+                    const angle = Math.random() * Math.PI * 2;
 
-                    // Per-pill physics properties
-                    const pillMaxSpeed = 1.0 + Math.random() * 0.6;
-                    const hw = Math.max(pill.offsetWidth / 2, 54);
-                    const hh = Math.max(pill.offsetHeight / 2, 18);
-                    const collisionRadius = Math.max(hw, hh) * 0.88;
+                    // Per-pill physics personality
+                    const pillMaxSpeed = 1.1 + Math.random() * 0.9;     // 1.1 – 2.0 (normal cruise ceiling)
+                    const pillNudgeChance = 0.015 + Math.random() * 0.035; // gentle zero-g tumbles
+                    const pillNudgeForce = 0.08 + Math.random() * 0.12;
+
+                    const hw = pill.offsetWidth ? pill.offsetWidth / 2 : 60;
+                    const hh = pill.offsetHeight ? pill.offsetHeight / 2 : 20;
 
                     const shouldHide = (window.innerWidth <= 900) && ((i % 3) !== 0);
                     pill.style.display = shouldHide ? 'none' : 'inline-flex';
@@ -1399,29 +1406,30 @@ export default function Page() {
                     pillState.push({
                         el: pill,
                         isActive: !shouldHide,
-                        x: px, y: py,
-                        vx: Math.cos(wanderAngle) * baseSpeed,
-                        vy: Math.sin(wanderAngle) * baseSpeed,
+                        x: px,
+                        y: py,
+                        vx: Math.cos(angle) * baseSpeed,
+                        vy: Math.sin(angle) * baseSpeed,
                         baseSpeed: baseSpeed,
-                        wanderAngle: wanderAngle,
-                        wanderSpeed: wanderSpeed,
-                        phaseX: Math.random() * 10,
-                        phaseY: Math.random() * 10,
-                        freqX: 0.0006 + Math.random() * 0.0007,
-                        freqY: 0.0006 + Math.random() * 0.0007,
+                        minSpeed: 0.25,
                         scale: pillScale,
                         baseOpacity: pillOpacity,
                         baseZIndex: pillZIndex,
                         maxSpeed: pillMaxSpeed,
+                        nudgeChance: pillNudgeChance,
+                        nudgeForce: pillNudgeForce,
                         hw: hw,
                         hh: hh,
-                        collisionRadius: collisionRadius,
                         isDragging: false,
                         lastClickTime: 0,
-                        startPX: 0, startPY: 0,
-                        startEX: 0, startEY: 0,
-                        prevPX: 0, prevPY: 0,
-                        dragVX: 0, dragVY: 0
+                        startPX: 0,
+                        startPY: 0,
+                        startEX: 0,
+                        startEY: 0,
+                        prevPX: 0,
+                        prevPY: 0,
+                        dragVX: 0,
+                        dragVY: 0
                     });
 
                     const st = pillState[i];
@@ -1434,36 +1442,6 @@ export default function Page() {
                         pill.classList.add('selected');
                         pill.style.zIndex = 100;
                     }
-                });
-
-                // Initial relaxation passes to resolve any overlap cleanly
-                for (let pass = 0; pass < 12; pass++) {
-                    for (let a = 0; a < pillState.length; a++) {
-                        const p1 = pillState[a];
-                        if (!p1.isActive) continue;
-                        for (let b = a + 1; b < pillState.length; b++) {
-                            const p2 = pillState[b];
-                            if (!p2.isActive) continue;
-                            let dx = p2.x - p1.x;
-                            let dy = p2.y - p1.y;
-                            let dist = Math.hypot(dx, dy);
-                            const minDist = (p1.collisionRadius + p2.collisionRadius) * 0.72;
-                            if (dist < minDist) {
-                                if (dist === 0) { dx = (Math.random() - 0.5) || 1; dy = (Math.random() - 0.5) || 1; dist = Math.hypot(dx, dy); }
-                                const push = (minDist - dist) * 0.38;
-                                const nx = dx / dist;
-                                const ny = dy / dist;
-                                p1.x -= nx * push;
-                                p1.y -= ny * push;
-                                p2.x += nx * push;
-                                p2.y += ny * push;
-                            }
-                        }
-                    }
-                }
-
-                pillState.forEach(s => {
-                    _applyTransform(s.el, s);
                 });
 
                 // Start the physics loop via GSAP ticker for maximum stability
@@ -1484,99 +1462,48 @@ export default function Page() {
                 if (!isCloudInView) return;
 
                 // Delta time normalization: 16.667ms = 1.0 (60fps reference)
-                // Clamped to [0.2, 2.0] to prevent huge jumps when switching tabs
                 const rawDt = (deltaTime || 16.667) / 16.667;
                 const dt = Math.min(Math.max(rawDt, 0.2), 2.0);
 
-                const activePills = [];
-                const boundsX = containerW * 0.44;
-                const boundsY = containerH * 0.42;
-                const wrapLimitX = containerW / 2 + 100;
-                const wrapLimitY = containerH / 2 + 80;
-                const nowMs = time * 1000;
-
-                // Pass 1: Smooth continuous harmonic wandering & velocity steering
                 for (let i = 0; i < pillState.length; i++) {
                     const s = pillState[i];
-                    if (!s.isActive) continue;
-                    activePills.push(s);
-                    if (s.isDragging) continue;
+                    if (!s.isActive || s.isDragging) continue;
 
-                    // Smooth angular drift
-                    s.wanderAngle += s.wanderSpeed * dt;
+                    const curSpeed = Math.hypot(s.vx, s.vy);
 
-                    // Harmonic wave oscillations for lifelike breathing movement
-                    const waveX = Math.sin(nowMs * s.freqX + s.phaseX) * 0.1;
-                    const waveY = Math.cos(nowMs * s.freqY + s.phaseY) * 0.1;
-
-                    const targetVx = Math.cos(s.wanderAngle) * s.baseSpeed + waveX;
-                    const targetVy = Math.sin(s.wanderAngle) * s.baseSpeed + waveY;
-
-                    // Smooth exponential blending towards target drift velocity
-                    const steer = 1 - Math.pow(0.965, dt);
-                    s.vx += (targetVx - s.vx) * steer;
-                    s.vy += (targetVy - s.vy) * steer;
-
-                    // Soft elastic restorative cushion near outer edges
-                    const excessX = Math.abs(s.x) - boundsX;
-                    if (excessX > 0) {
-                        s.vx -= Math.sign(s.x) * (excessX / 65) * 0.14 * dt;
-                    }
-                    const excessY = Math.abs(s.y) - boundsY;
-                    if (excessY > 0) {
-                        s.vy -= Math.sign(s.y) * (excessY / 48) * 0.14 * dt;
-                    }
-                }
-
-                // Pass 2: Pairwise soft bubble separation (prevents bubbles stacking/overlapping)
-                const numActive = activePills.length;
-                for (let i = 0; i < numActive; i++) {
-                    const p1 = activePills[i];
-                    for (let j = i + 1; j < numActive; j++) {
-                        const p2 = activePills[j];
-                        const dx = p2.x - p1.x;
-                        const dy = p2.y - p1.y;
-                        const distSq = dx * dx + dy * dy;
-                        const minDist = (p1.collisionRadius + p2.collisionRadius) * 0.70;
-                        const minDistSq = minDist * minDist;
-
-                        if (distSq < minDistSq && distSq > 0.001) {
-                            const dist = Math.sqrt(distSq);
-                            const overlap = (minDist - dist) / minDist;
-                            const push = overlap * overlap * 0.28 * dt;
-                            const nx = dx / dist;
-                            const ny = dy / dist;
-
-                            if (!p1.isDragging) {
-                                p1.vx -= nx * push;
-                                p1.vy -= ny * push;
-                            }
-                            if (!p2.isDragging) {
-                                p2.vx += nx * push;
-                                p2.vy += ny * push;
-                            }
+                    if (curSpeed > s.maxSpeed) {
+                        // When thrown or pushed: smoothly glide in the flow, gradually coasting down
+                        const throwDamping = Math.pow(0.986, dt);
+                        s.vx *= throwDamping;
+                        s.vy *= throwDamping;
+                    } else {
+                        // Gentle zero-gravity cosmic drift & tumbles
+                        if (Math.random() < s.nudgeChance * dt) {
+                            s.vx += (Math.random() - 0.5) * s.nudgeForce;
+                            s.vy += (Math.random() - 0.5) * s.nudgeForce;
                         }
-                    }
-                }
 
-                // Pass 3: Integration, boundary wrap safety, edge fade & subpixel DOM transform
-                for (let i = 0; i < numActive; i++) {
-                    const s = activePills[i];
-                    if (s.isDragging) continue;
+                        // Gentle cruising damping
+                        const cruiseDamping = Math.pow(0.998, dt);
+                        s.vx *= cruiseDamping;
+                        s.vy *= cruiseDamping;
 
-                    // Smooth speed cap
-                    const speedSq = s.vx * s.vx + s.vy * s.vy;
-                    if (speedSq > s.maxSpeed * s.maxSpeed) {
-                        const speed = Math.sqrt(speedSq);
-                        s.vx = (s.vx / speed) * s.maxSpeed;
-                        s.vy = (s.vy / speed) * s.maxSpeed;
+                        // Ensure pills maintain a gentle baseline drift and never stall
+                        if (curSpeed < s.minSpeed && curSpeed > 0.0001) {
+                            const boost = s.minSpeed / curSpeed;
+                            s.vx *= boost;
+                            s.vy *= boost;
+                        }
                     }
 
                     // Delta-time scaled position integration
                     s.x += s.vx * dt;
                     s.y += s.vy * dt;
 
-                    // Safety boundary wrap if thrown or pushed beyond outer limits
+                    // Boundary: Seamless infinite loop wrap across full outer limits
+                    const wrapLimitX = containerW / 2 + s.hw + 30;
+                    const wrapLimitY = containerH / 2 + s.hh + 30;
+
                     if (s.x > wrapLimitX) s.x = -wrapLimitX;
                     else if (s.x < -wrapLimitX) s.x = wrapLimitX;
 
@@ -1588,7 +1515,7 @@ export default function Page() {
                     const distY = Math.abs(s.y) / (containerH / 2);
                     const maxDist = Math.max(distX, distY);
 
-                    const fadeStart = 0.82;
+                    const fadeStart = 0.80;
                     let targetOpacity = s.baseOpacity;
                     let targetPE = 'auto';
 
@@ -1611,10 +1538,6 @@ export default function Page() {
                         s._curPE = targetPE;
                     }
 
-                    // Gentle damping
-                    s.vx *= Math.pow(0.996, dt);
-                    s.vy *= Math.pow(0.996, dt);
-
                     _applyTransform(s.el, s);
                 }
             }
@@ -1633,9 +1556,8 @@ export default function Page() {
                     s.prevPY = e.clientY;
                     s.dragVX = 0;
                     s.dragVY = 0;
-                    pill.setPointerCapture(e.pointerId);
+                    try { pill.setPointerCapture(e.pointerId); } catch (_) {}
                     pill.style.cursor = 'grabbing';
-                    // Bring to absolute front during drag
                     pill.style.zIndex = 2000;
                 });
 
@@ -1643,9 +1565,11 @@ export default function Page() {
                     if (!s.isDragging) return;
                     const dx = e.clientX - s.startPX;
                     const dy = e.clientY - s.startPY;
-                    // Exponential filter on drag velocity for smooth throw
-                    s.dragVX = (e.clientX - s.prevPX) * 0.7 + s.dragVX * 0.3;
-                    s.dragVY = (e.clientY - s.prevPY) * 0.7 + s.dragVY * 0.3;
+                    // Responsive velocity tracking with smooth moving average
+                    const instVX = e.clientX - s.prevPX;
+                    const instVY = e.clientY - s.prevPY;
+                    s.dragVX = instVX * 0.7 + s.dragVX * 0.3;
+                    s.dragVY = instVY * 0.7 + s.dragVY * 0.3;
                     s.prevPX = e.clientX;
                     s.prevPY = e.clientY;
                     s.x = s.startEX + dx;
@@ -1653,10 +1577,10 @@ export default function Page() {
                     _applyTransform(pill, s);
                 });
 
-                pill.addEventListener('pointerup', (e) => {
+                const onPointerRelease = (e) => {
                     if (!s.isDragging) return;
                     s.isDragging = false;
-                    pill.releasePointerCapture(e.pointerId);
+                    try { pill.releasePointerCapture(e.pointerId); } catch (_) {}
                     pill.style.cursor = 'grab';
 
                     // Restore z-index logic: if selected, keep at 100, else return to baseZIndex
@@ -1666,19 +1590,19 @@ export default function Page() {
                         pill.style.zIndex = 100;
                     }
 
-                    // Throw with drag velocity - smooth and clamped
-                    s.vx = Math.max(-s.maxSpeed * 2.2, Math.min(s.maxSpeed * 2.2, s.dragVX * 0.35));
-                    s.vy = Math.max(-s.maxSpeed * 2.2, Math.min(s.maxSpeed * 2.2, s.dragVY * 0.35));
-
-                    // Seamlessly align wander trajectory to throw direction
-                    if (Math.abs(s.vx) > 0.1 || Math.abs(s.vy) > 0.1) {
-                        s.wanderAngle = Math.atan2(s.vy, s.vx);
+                    // Throw with drag velocity - flows immediately in the direction pushed!
+                    const flingSpeed = Math.hypot(s.dragVX, s.dragVY);
+                    if (flingSpeed > 0.4) {
+                        // Allow generous throw speed (up to 9.0 px/frame) so flicks feel lively and flow smoothly
+                        const factor = 0.45;
+                        const throwSpeed = flingSpeed * factor;
+                        const maxThrow = 9.0;
+                        const scale = throwSpeed > maxThrow ? maxThrow / throwSpeed : 1.0;
+                        s.vx = s.dragVX * factor * scale;
+                        s.vy = s.dragVY * factor * scale;
                     }
 
-                    const totalMoved = Math.sqrt(
-                        Math.pow(e.clientX - s.startPX, 2) +
-                        Math.pow(e.clientY - s.startPY, 2)
-                    );
+                    const totalMoved = Math.hypot(e.clientX - s.startPX, e.clientY - s.startPY);
 
                     // Tap logic: single tap unselects, double tap selects
                     if (totalMoved < 10) {
@@ -1701,11 +1625,13 @@ export default function Page() {
                             }
                         }
                     }
-                });
+                };
+
+                pill.addEventListener('pointerup', onPointerRelease);
+                pill.addEventListener('pointercancel', onPointerRelease);
             }
 
-            // Instead of rigid setTimeout that can capture height=0 before fonts/layout are ready, 
-            // use a ResizeObserver to explicitly wait for true valid dimensions to initialize physics.
+            // Explicitly observe layout dimensions to handle responsive resizes cleanly
             const ro = new ResizeObserver(entries => {
                 for (let entry of entries) {
                     if (entry.target === cloudContainer) {
@@ -1720,15 +1646,14 @@ export default function Page() {
                             if (!physicsInitialized) {
                                 initPhysics();
                             } else {
-                                // Safely handle responsive window resizing without destroying pill x/y
+                                // Safely handle responsive window resizing without destroying pill positions
                                 document.querySelectorAll('.f-pill').forEach((pill, i) => {
                                     const shouldHide = (window.innerWidth <= 900) && ((i % 3) !== 0);
                                     if (pillState[i]) {
                                         pillState[i].isActive = !shouldHide;
                                         pill.style.display = shouldHide ? 'none' : 'inline-flex';
-                                        pillState[i].hw = Math.max(pill.offsetWidth / 2, 54);
-                                        pillState[i].hh = Math.max(pill.offsetHeight / 2, 18);
-                                        pillState[i].collisionRadius = Math.max(pillState[i].hw, pillState[i].hh) * 0.88;
+                                        pillState[i].hw = pill.offsetWidth ? pill.offsetWidth / 2 : 60;
+                                        pillState[i].hh = pill.offsetHeight ? pill.offsetHeight / 2 : 20;
                                     }
                                 });
                             }
@@ -1751,6 +1676,8 @@ export default function Page() {
         window.clearCart = function() {
             if (selectedServices.size > 0) {
                 selectedServices.clear();
+                customServicesSet.clear();
+                renderCustomChips();
                 
                 // Deselect all floating pills
                 document.querySelectorAll('.f-pill').forEach(pill => {
@@ -1758,13 +1685,52 @@ export default function Page() {
                 });
                 
                 // Deselect all custom chips
-                document.querySelectorAll('.custom-chip').forEach(chip => {
+                document.querySelectorAll('.custom-chip:not(.custom-chip-action)').forEach(chip => {
                     chip.classList.remove('selected');
                 });
                 
                 updateReceipt();
             }
         };
+
+        function renderCustomChips() {
+            const container = document.getElementById('custom-services-added-list');
+            if (!container) return;
+
+            const activeCustom = Array.from(customServicesSet).filter(svc => selectedServices.has(svc));
+            if (activeCustom.length === 0) {
+                container.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+
+            container.style.display = 'flex';
+            container.innerHTML = '';
+            activeCustom.forEach(svc => {
+                const qty = selectedServices.get(svc) || 1;
+                const chip = document.createElement('div');
+                chip.className = 'custom-user-chip';
+                chip.dataset.service = svc;
+                chip.innerHTML = `
+                    <span class="custom-user-badge">CUSTOM</span>
+                    <span class="custom-user-title">${svc}</span>
+                    <span class="custom-user-qty">x${qty}</span>
+                    <button type="button" class="custom-user-del" data-service="${svc}" title="Remove Service">×</button>
+                `;
+                container.appendChild(chip);
+            });
+
+            container.querySelectorAll('.custom-user-del').forEach(btn => {
+                btn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const svc = btn.dataset.service;
+                    selectedServices.delete(svc);
+                    customServicesSet.delete(svc);
+                    renderCustomChips();
+                    updateReceipt();
+                });
+            });
+        }
 
         function updateReceipt() {
             if (!receiptItemsContainer) return;
@@ -1775,6 +1741,7 @@ export default function Page() {
                 if (customQuoteBtn) customQuoteBtn.href = 'mailto:hello@dripmedia.com';
                 const clearBtn = document.getElementById('clear-cart-btn');
                 if (clearBtn) clearBtn.style.display = 'none';
+                renderCustomChips();
                 return;
             } else {
                 const clearBtn = document.getElementById('clear-cart-btn');
@@ -1784,12 +1751,16 @@ export default function Page() {
             let list = [];
             let i = 1;
             selectedServices.forEach((qty, svc) => {
+                const isCustom = customServicesSet.has(svc);
                 const item = document.createElement('div');
                 item.className = 'receipt-item';
                 item.style.animationDelay = `${(i - 1) * 0.05}s`;
                 item.innerHTML = `
-                    <span>[${String(i).padStart(2, '0')}] ${svc}</span> 
-                    <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
+                        <span class="item-name" style="font-family:'Clash Display', sans-serif;">[${String(i).padStart(2, '0')}] ${svc}</span> 
+                        ${isCustom ? '<span class="receipt-custom-tag">CUSTOM</span>' : ''}
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
                         <div class="qty-controls">
                             <button class="qty-btn minus-btn" data-service="${svc}" style="${qty <= 1 ? 'opacity: 0.3; cursor: not-allowed; pointer-events: none;' : ''}">-</button>
                             <span class="qty-val">${qty}</span>
@@ -1799,7 +1770,7 @@ export default function Page() {
                     </div>
                 `;
                 receiptItemsContainer.appendChild(item);
-                list.push(`${qty}x ${svc}`);
+                list.push(`${qty}x ${svc}${isCustom ? ' (Custom)' : ''}`);
                 i++;
             });
 
@@ -1810,6 +1781,10 @@ export default function Page() {
                     const svc = btn.dataset.service;
                     if (selectedServices.has(svc)) {
                         selectedServices.delete(svc);
+                        if (customServicesSet.has(svc)) {
+                            customServicesSet.delete(svc);
+                            renderCustomChips();
+                        }
 
                         // Deselect corresponding floating pill
                         document.querySelectorAll('.f-pill').forEach(pill => {
@@ -1838,6 +1813,7 @@ export default function Page() {
                     const qty = selectedServices.get(svc);
                     if (qty > 1) {
                         selectedServices.set(svc, qty - 1);
+                        renderCustomChips();
                         updateReceipt();
                     }
                 });
@@ -1850,6 +1826,7 @@ export default function Page() {
                     const qty = selectedServices.get(svc);
                     if (qty < 99) {
                         selectedServices.set(svc, qty + 1);
+                        renderCustomChips();
                         updateReceipt();
                     }
                 });
@@ -1861,6 +1838,59 @@ export default function Page() {
                 customQuoteBtn.href = `mailto:hello@dripmedia.com?subject=${subj}&body=${body}`;
             }
         }
+
+        // --- CUSTOM SERVICE CREATOR (USER WRITE-IN) ---
+        const customServiceInput = document.getElementById('custom-service-input');
+        const customServiceAddBtn = document.getElementById('custom-service-add-btn');
+
+        function handleAddCustomService(e) {
+            if (!customServiceInput) return;
+            const val = customServiceInput.value.trim();
+
+            if (!val) {
+                customServiceInput.classList.add('shake-warning');
+                setTimeout(() => customServiceInput.classList.remove('shake-warning'), 500);
+                customServiceInput.focus();
+                return;
+            }
+
+            const cleanName = val.length > 1 ? val.charAt(0).toUpperCase() + val.slice(1) : val.toUpperCase();
+
+            customServicesSet.add(cleanName);
+            const currentQty = selectedServices.get(cleanName) || 0;
+            selectedServices.set(cleanName, Math.min(99, currentQty + 1));
+
+            if (customServiceAddBtn) {
+                createSparkles(e || { clientX: 0, clientY: 0 }, customServiceAddBtn);
+            }
+
+            customServiceInput.value = '';
+            customServiceInput.focus();
+
+            renderCustomChips();
+            updateReceipt();
+
+            setTimeout(() => {
+                if (receiptItemsContainer) {
+                    receiptItemsContainer.scrollTop = receiptItemsContainer.scrollHeight;
+                }
+            }, 50);
+        }
+
+        if (customServiceAddBtn) {
+            customServiceAddBtn.addEventListener('click', handleAddCustomService);
+        }
+
+        if (customServiceInput) {
+            customServiceInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCustomService(e);
+                }
+            });
+        }
+
+        renderCustomChips();
 
         // Tab switching mechanics (glider and morph)
         function updateGlider(tab) {
@@ -2092,6 +2122,7 @@ export default function Page() {
         const chipPanelsContainer = document.querySelector('.chip-panels');
         if (chipPanelsContainer) {
             chipPanelsContainer.addEventListener('click', (e) => {
+                if (e.target.closest('.custom-chip-action')) return;
                 const chip = e.target.closest('.custom-chip');
                 if (!chip) return;
                 const svc = chip.dataset.service;
@@ -2239,9 +2270,10 @@ export default function Page() {
                 contactForm.services.value = JSON.stringify(servicesObj);
 
                 selectedServices.forEach((qty, name) => {
+                    const isCustom = customServicesSet.has(name);
                     const badge = document.createElement('div');
                     badge.className = 'selected-svc-badge';
-                    badge.innerText = `${name} (x${qty})`;
+                    badge.innerText = `${name}${isCustom ? ' [Custom]' : ''} (x${qty})`;
                     contactServicesList.appendChild(badge);
                 });
             }
@@ -2984,7 +3016,7 @@ export default function Page() {
                 key={cat.id} 
                 className={`builder-tab ${idx === 0 ? 'active' : ''}`} 
                 data-tab={cat.id}
-                style={{ fontFamily: "'Panchang', sans-serif" }}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 {cat.name}
               </button>
@@ -3013,10 +3045,56 @@ export default function Page() {
                       </div>
                     );
                   })}
+                  <div 
+                    className="custom-chip custom-chip-action" 
+                    data-action="write-custom"
+                    style={{ fontFamily: "'Clash Display', sans-serif" }}
+                    onClick={() => {
+                      const input = document.getElementById('custom-service-input');
+                      if (input) {
+                        input.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        input.focus();
+                        input.classList.add('pulse-glow');
+                        setTimeout(() => input.classList.remove('pulse-glow'), 1200);
+                      }
+                    }}
+                  >
+                    ✦ Write Custom Service
+                  </div>
                 </div>
               ))}
             </div>{/* /chip-panels */}
           </div>{/* /chip-scroll */}
+          {/* Custom Service Creator */}
+          <div className="custom-service-creator">
+            <div className="custom-service-creator-top">
+              <span className="custom-service-sparkle">✦</span>
+              <span className="custom-service-creator-label">{isGenz ? 'need something off-menu?' : "Can't find your service?"}</span>
+              <span className="custom-service-creator-hint">{isGenz ? 'type it here & add to loadout' : 'Write any custom service & add to cart'}</span>
+            </div>
+            <div className="custom-service-input-row">
+              <div className="custom-service-input-wrap">
+                <input 
+                  type="text" 
+                  id="custom-service-input" 
+                  className="custom-service-input" 
+                  placeholder={isGenz ? "e.g. drone shoot, 3d billboard, custom drops..." : "e.g. Drone Cinematography, 3D Billboard, Multilingual Subtitles..."} 
+                  maxLength={70}
+                  autoComplete="off"
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                />
+              </div>
+              <button 
+                type="button" 
+                id="custom-service-add-btn" 
+                className="custom-service-add-btn"
+                style={{ fontFamily: "'Panchang', sans-serif" }}
+              >
+                <span>+ Add to Cart</span>
+              </button>
+            </div>
+            <div id="custom-services-added-list" className="custom-services-added-list" style={{ display: 'none' }}></div>
+          </div>
         </div>
         <div className="builder-right">
           <div className="receipt-header">
@@ -3044,7 +3122,10 @@ export default function Page() {
             </a>
             <a href="#" className="whatsapp-scope-btn" id="whatsapp-scope-btn" onClick={(e) => {
               e.preventDefault();
-              const services = Array.from(document.querySelectorAll('.receipt-item .item-name')).map(el => el.textContent.trim()).filter(Boolean);
+              const services = Array.from(window.__selectedServices ? window.__selectedServices.entries() : []).map(([name, qty]) => {
+                const isCustom = window.__customServicesSet && window.__customServicesSet.has(name);
+                return `${name}${isCustom ? ' (Custom)' : ''}${qty > 1 ? ` (x${qty})` : ''}`;
+              });
               const text = services.length > 0
                 ? `Hey Dripp Media! I selected these services on your builder: ${services.join(', ')}. Can you share scope and pricing?`
                 : `Hey Dripp Media! I want to discuss a new creative project with your team.`;
