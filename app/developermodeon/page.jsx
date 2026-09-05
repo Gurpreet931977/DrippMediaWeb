@@ -656,7 +656,7 @@ export default function Page() {
                 // Smoothly lerp the theme value between 0 (dark) and 1 (light)
                 this.themeVal = this.themeVal || 0;
                 const targetTheme = document.body.classList.contains('light-theme') ? 1 : 0;
-                this.themeVal += (targetTheme - this.themeVal) * 0.05; // 0.05 speed for a smooth ~0.8s transition at 60fps
+                this.themeVal += (targetTheme - this.themeVal) * 0.15; // 0.15 speed for a snappy ~0.3s transition at 60fps
 
                 // Interpolate Background
                 const bgVal = Math.round(5 + this.themeVal * 250);
@@ -1166,7 +1166,7 @@ export default function Page() {
             lastScroll = currentScroll;
         }, { passive: true });
 
-        // --- THEME TOGGLE LOGIC ---
+        // --- THEME TOGGLE LOGIC (OPTIMIZED 60FPS) ---
         // Keep light version by default on mobile
         const themeBtn = document.getElementById('theme-switch');
 
@@ -1174,6 +1174,12 @@ export default function Page() {
             themeBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (navigator.vibrate) navigator.vibrate(40);
+
+                // Temporarily hide custom cursor so it does not freeze as a ghost ring in the transition snapshot
+                if (cursor) {
+                    cursor.classList.remove('active');
+                    cursor.style.opacity = '0';
+                }
 
                 const toggleTheme = () => {
                     const isLight = document.body.classList.toggle('light-theme');
@@ -1190,6 +1196,7 @@ export default function Page() {
 
                 if (!document.startViewTransition) {
                     toggleTheme();
+                    if (cursor) cursor.style.opacity = '1';
                     return;
                 }
 
@@ -1198,14 +1205,19 @@ export default function Page() {
                 const x = rect.left + rect.width / 2;
                 const y = rect.top + rect.height / 2;
 
-                const transition = document.startViewTransition(toggleTheme);
+                // Disable conflicting CSS transitions while capturing snapshot for instant 60fps calculation
+                document.documentElement.classList.add('theme-transitioning');
+
+                const transition = document.startViewTransition(() => {
+                    toggleTheme();
+                });
 
                 transition.ready.then(() => {
                     const right = window.innerWidth - x;
                     const bottom = window.innerHeight - y;
                     const maxRadius = Math.hypot(Math.max(x, right), Math.max(y, bottom));
 
-                    document.documentElement.animate(
+                    const anim = document.documentElement.animate(
                         {
                             clipPath: [
                                 `circle(0px at ${x}px ${y}px)`,
@@ -1213,11 +1225,19 @@ export default function Page() {
                             ]
                         },
                         {
-                            duration: 1000,
-                            easing: "cubic-bezier(0.4, 0.0, 0.2, 1)",
+                            duration: 380,
+                            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
                             pseudoElement: "::view-transition-new(root)",
                         }
                     );
+
+                    anim.finished.finally(() => {
+                        document.documentElement.classList.remove('theme-transitioning');
+                        if (cursor) cursor.style.opacity = '1';
+                    });
+                }).catch(() => {
+                    document.documentElement.classList.remove('theme-transitioning');
+                    if (cursor) cursor.style.opacity = '1';
                 });
             });
             themeBtn.addEventListener('mouseenter', () => cursor.classList.add('active'));
@@ -2295,6 +2315,7 @@ export default function Page() {
         window.openContactModal = function (e, fromCart = false) {
             if (e) e.preventDefault();
             contactModal.classList.add('active');
+            if (lenis && typeof lenis.stop === 'function') lenis.stop();
 
             // Populate services from cart if applicable
             contactServicesList.innerHTML = '';
@@ -2316,6 +2337,7 @@ export default function Page() {
 
         window.closeContactModal = function () {
             contactModal.classList.remove('active');
+            if (lenis && typeof lenis.start === 'function') lenis.start();
             const dropdownWrap = document.getElementById('scope-dropdown-wrap');
             if (dropdownWrap) dropdownWrap.classList.remove('open');
             // reset form out of view
@@ -2325,11 +2347,21 @@ export default function Page() {
         window.openCommunityModal = function (e) {
             if (e) e.preventDefault();
             communityModal.classList.add('active');
+            if (lenis && typeof lenis.stop === 'function') lenis.stop();
         }
 
         window.closeCommunityModal = function () {
             communityModal.classList.remove('active');
+            if (lenis && typeof lenis.start === 'function') lenis.start();
             setTimeout(() => communityForm.reset(), 400);
+        }
+
+        // Dropdown scroll handler to prevent Lenis/modal scroll hijacking
+        const scopeMenu = document.getElementById('scope-dropdown-menu');
+        if (scopeMenu) {
+            scopeMenu.addEventListener('wheel', (e) => {
+                e.stopPropagation();
+            }, { passive: true });
         }
 
         // Close on escape or outside click
@@ -3684,7 +3716,7 @@ export default function Page() {
   <div className="spacer" style={{height: '0vh'}} />
   {/* --- MODALS --- */}
   <div className="modal-overlay" id="contact-modal">
-    <div className="modal-container contact-modal-box">
+    <div className="modal-container contact-modal-box" data-lenis-prevent="true">
       <button className="modal-close-disc" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `closeContactModal()`, target: event.currentTarget, originalEvent: event } }))} aria-label="Close modal">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -3811,7 +3843,7 @@ export default function Page() {
                   </svg>
                 </button>
 
-                <div className="scope-dropdown-menu" id="scope-dropdown-menu" role="listbox">
+                <div className="scope-dropdown-menu" id="scope-dropdown-menu" role="listbox" data-lenis-prevent="true">
                   {[
                     { id: 'video', label: isGenz ? 'video & reels' : 'Video & Motion Editing' },
                     { id: 'cinema', label: isGenz ? 'cinema & photo shoots' : 'Cinematography / Videography / Photography' },
@@ -3937,21 +3969,65 @@ export default function Page() {
           </form>
 
           {/* STRATEGY CALL FORM */}
-          <form className="modal-form" id="contact-form-call" style={{ display: 'none' }} onSubmit={(e) => {
+          <form className="modal-form" id="contact-form-call" style={{ display: 'none' }} onSubmit={async (e) => {
             e.preventDefault();
             const callSubmit = document.getElementById('call-submit');
+            const target = e.currentTarget;
+            const name = (target.elements && target.elements.namedItem('call_name')) ? target.elements.namedItem('call_name').value.trim() : '';
+            const email = (target.elements && target.elements.namedItem('call_email')) ? target.elements.namedItem('call_email').value.trim() : '';
+            const waNum = (target.elements && target.elements.namedItem('call_whatsapp')) ? target.elements.namedItem('call_whatsapp').value.trim() : '';
+            const selectedSlot = document.querySelector('.slot-chip.active')?.textContent || 'Tomorrow at 3:00 PM';
+
             if (callSubmit) {
-              callSubmit.querySelector('.modal-btn-text').innerText = 'Call Confirmed';
+              callSubmit.disabled = true;
+              callSubmit.classList.add('loading');
+              const btnText = callSubmit.querySelector('.modal-btn-text');
+              if (btnText) btnText.innerText = isGenz ? 'securing slot...' : 'Securing Slot...';
+            }
+
+            // 1. Asynchronously persist lead to backend (Supabase + Local Disk + Notion + WhatsApp Ping)
+            try {
+              await fetch('/api/book-call', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name,
+                  email,
+                  whatsapp: waNum,
+                  slot: selectedSlot
+                })
+              });
+            } catch (err) {
+              console.warn('[BOOKING] API dispatch notice:', err);
+            }
+
+            // 2. Immediate visual confirmation
+            if (callSubmit) {
+              callSubmit.classList.remove('loading');
+              const btnText = callSubmit.querySelector('.modal-btn-text');
+              if (btnText) btnText.innerText = isGenz ? 'slot locked!' : 'Call Confirmed';
               callSubmit.style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
               callSubmit.style.color = '#fff';
             }
-            const target = e.currentTarget;
-            const waNum = (target.elements && target.elements.namedItem('call_whatsapp')) ? target.elements.namedItem('call_whatsapp').value : '';
-            const selectedSlot = document.querySelector('.slot-chip.active')?.textContent || 'Tomorrow at 3:00 PM';
+
+            // 3. Open WhatsApp prefilled message
+            const intro = name ? `Hey Dripp Media! I'm ${name}.` : `Hey Dripp Media!`;
+            const details = email ? ` My Email is ${email} and WhatsApp is ${waNum || 'N/A'}.` : (waNum ? ` My WhatsApp is ${waNum}.` : '');
+            const msg = `${intro} I booked a 15-min strategy call for ${selectedSlot}.${details} Looking forward to connecting!`;
+
             setTimeout(() => {
-              window.open(`https://wa.me/917300595147?text=${encodeURIComponent(`Hey Dripp Media! I booked a 15-min strategy call for ${selectedSlot}. My WhatsApp is ${waNum}. Looking forward to connecting!`)}`, '_blank');
+              window.open(`https://wa.me/917300595147?text=${encodeURIComponent(msg)}`, '_blank');
               if (typeof window.closeContactModal === 'function') window.closeContactModal();
-            }, 1200);
+              setTimeout(() => {
+                if (callSubmit) {
+                  callSubmit.disabled = false;
+                  callSubmit.style.background = '';
+                  callSubmit.style.color = '';
+                  const btnText = callSubmit.querySelector('.modal-btn-text');
+                  if (btnText) btnText.innerText = isGenz ? 'confirm call slot' : 'Confirm Strategy Call';
+                }
+              }, 600);
+            }, 1000);
           }}>
             <div className="call-meta-badge">
               <span className="live-status-ping" />
@@ -4004,7 +4080,7 @@ export default function Page() {
     </div>
   </div>
   <div className="modal-overlay" id="community-modal">
-    <div className="modal-container contact-modal-box community-modal-box">
+    <div className="modal-container contact-modal-box community-modal-box" data-lenis-prevent="true">
       <button 
         className="modal-close-disc" 
         onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `closeCommunityModal()`, target: event.currentTarget, originalEvent: event } }))} 
