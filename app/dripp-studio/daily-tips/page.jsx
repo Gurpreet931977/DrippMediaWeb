@@ -21,6 +21,18 @@ const CATEGORIES = [
   'Creative Craft'
 ];
 
+const cleanEmDashes = (str) => {
+  if (!str || typeof str !== 'string') return str || '';
+  return str
+    .replace(/:\s*[—–]/g, ': ')
+    .replace(/\s*[—–]\s*/g, ', ')
+    .replace(/\s*--\s*/g, ', ')
+    .replace(/[—–]/g, ', ')
+    .replace(/,\s*,/g, ', ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 export default function DailyTipsManager() {
   const [loading, setLoading] = useState(true);
   const [tips, setTips] = useState([]);
@@ -104,9 +116,9 @@ export default function DailyTipsManager() {
         action,
         id: editingTip ? editingTip.id : undefined,
         category: formCategory,
-        title: formTitle,
-        explanation: formExplanation,
-        formula: formFormula
+        title: cleanEmDashes(formTitle),
+        explanation: cleanEmDashes(formExplanation),
+        formula: cleanEmDashes(formFormula)
       };
       const res = await fetch('/api/daily-tips', {
         method: 'POST',
@@ -558,163 +570,164 @@ export default function DailyTipsManager() {
         })}
       </div>
 
-      {/* Add / Edit Modal */}
+      {/* Add / Edit Modal - Rock Solid Modal Chassis */}
       {showModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.85)',
-          backdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: '#121216',
-            border: '1px solid rgba(235, 215, 63, 0.3)',
-            borderRadius: '24px',
-            maxWidth: '600px',
-            width: '100%',
-            padding: '32px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
-            position: 'relative'
-          }}>
-            <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                background: 'none',
-                border: 'none',
-                color: '#888',
-                cursor: 'pointer'
-              }}
-            >
-              <X size={20} />
-            </button>
-
-            <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.4rem', fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>
-              {editingTip ? 'EDIT DAILY TIP' : 'WRITE & PUBLISH NEW TIP'}
-            </h2>
-            <p style={{ fontFamily: "'Clash Display', sans-serif", color: '#888', fontSize: '0.85rem', margin: '0 0 24px' }}>
-              Write clear, practical formulas in plain, easy language.
-            </p>
-
-            <form onSubmit={handleSaveTip} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div 
+          className={styles.modalOverlay}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}
+        >
+          <div className={styles.modalCard} style={{ maxWidth: '640px' }} onClick={e => e.stopPropagation()}>
+            {/* Pinned Modal Header */}
+            <div className={styles.modalHeader}>
               <div>
-                <label style={{ display: 'block', color: '#aaa', fontSize: '0.75rem', fontFamily: "'Panchang', sans-serif", fontWeight: 700, marginBottom: '6px' }}>
-                  CATEGORY
-                </label>
-                <select
-                  value={formCategory}
-                  onChange={e => setFormCategory(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 14px',
-                    borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#fff',
-                    fontFamily: "'Clash Display', sans-serif",
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat} style={{ background: '#18181e', color: '#fff' }}>{cat}</option>
-                  ))}
-                </select>
+                <h2 className={styles.modalTitle}>
+                  {editingTip ? 'EDIT DAILY TIP' : 'WRITE & PUBLISH NEW TIP'}
+                </h2>
+                <p className={styles.modalSubtitle}>
+                  Write clear, practical formulas in plain, easy language.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setShowModal(false)}
+                title="Close Modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleSaveTip} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <div className={styles.modalBody}>
+                <div>
+                  <label style={{ display: 'block', color: '#aaa', fontSize: '0.72rem', fontFamily: "'Panchang', sans-serif", fontWeight: 700, letterSpacing: '0.5px', marginBottom: '8px' }}>
+                    CATEGORY
+                  </label>
+                  <select
+                    value={formCategory}
+                    onChange={e => setFormCategory(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#fff',
+                      fontFamily: "'Clash Display', sans-serif",
+                      fontSize: '0.92rem',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {CATEGORIES.map(cat => (
+                      <option key={cat} value={cat} style={{ background: '#18181e', color: '#fff' }}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', color: '#aaa', fontSize: '0.72rem', fontFamily: "'Panchang', sans-serif", fontWeight: 700, letterSpacing: '0.5px', marginBottom: '8px' }}>
+                    TIP HEADLINE
+                  </label>
+                  <input
+                    type="text"
+                    value={formTitle}
+                    onChange={e => setFormTitle(e.target.value)}
+                    placeholder="e.g. Don't sell to people. Make them want to buy."
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#fff',
+                      fontFamily: "'Clash Display', sans-serif",
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', color: '#aaa', fontSize: '0.72rem', fontFamily: "'Panchang', sans-serif", fontWeight: 700, letterSpacing: '0.5px', marginBottom: '8px' }}>
+                    THE REALITY / EXPLANATION (EASY WORDS, 2-3 SENTENCES)
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formExplanation}
+                    onChange={e => setFormExplanation(e.target.value)}
+                    placeholder="Explain why this happens in real life, speaking casually and clearly..."
+                    required
+                    style={{
+                      width: '100%',
+                      minHeight: '105px',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#fff',
+                      fontFamily: "'Clash Display', sans-serif",
+                      fontSize: '0.92rem',
+                      lineHeight: '1.6',
+                      outline: 'none',
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', color: '#ebd73f', fontSize: '0.72rem', fontFamily: "'Panchang', sans-serif", fontWeight: 700, letterSpacing: '0.5px', marginBottom: '8px' }}>
+                    ✦ THE FORMULA (THE 1-SENTENCE ACTIONABLE RULE)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formFormula}
+                    onChange={e => setFormFormula(e.target.value)}
+                    placeholder="e.g. Stop pitching yourself. Show your work so well that reaching out feels like their own idea."
+                    required
+                    style={{
+                      width: '100%',
+                      minHeight: '68px',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      background: 'rgba(235, 215, 63, 0.04)',
+                      border: '1px solid rgba(235, 215, 63, 0.35)',
+                      color: '#ebd73f',
+                      fontFamily: "'Clash Display', sans-serif",
+                      fontSize: '0.92rem',
+                      fontWeight: 600,
+                      lineHeight: '1.5',
+                      outline: 'none',
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={{ display: 'block', color: '#aaa', fontSize: '0.75rem', fontFamily: "'Panchang', sans-serif", fontWeight: 700, marginBottom: '6px' }}>
-                  TIP HEADLINE
-                </label>
-                <input
-                  type="text"
-                  value={formTitle}
-                  onChange={e => setFormTitle(e.target.value)}
-                  placeholder="e.g. Don't sell to people. Make them want to buy."
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 14px',
-                    borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#fff',
-                    fontFamily: "'Clash Display', sans-serif",
-                    fontSize: '0.95rem'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#aaa', fontSize: '0.75rem', fontFamily: "'Panchang', sans-serif", fontWeight: 700, marginBottom: '6px' }}>
-                  THE REALITY / EXPLANATION (EASY WORDS, 2-3 SENTENCES)
-                </label>
-                <textarea
-                  rows={4}
-                  value={formExplanation}
-                  onChange={e => setFormExplanation(e.target.value)}
-                  placeholder="Explain why this happens in real life, speaking casually and clearly..."
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 14px',
-                    borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#fff',
-                    fontFamily: "'Clash Display', sans-serif",
-                    fontSize: '0.9rem',
-                    lineHeight: '1.5'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#aaa', fontSize: '0.75rem', fontFamily: "'Panchang', sans-serif", fontWeight: 700, marginBottom: '6px' }}>
-                  ✦ THE FORMULA (THE 1-SENTENCE ACTIONABLE RULE)
-                </label>
-                <input
-                  type="text"
-                  value={formFormula}
-                  onChange={e => setFormFormula(e.target.value)}
-                  placeholder="e.g. Stop pitching yourself. Show your work so well that reaching out feels like their own idea."
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 14px',
-                    borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(235, 215, 63, 0.3)',
-                    color: '#ebd73f',
-                    fontFamily: "'Clash Display', sans-serif",
-                    fontSize: '0.9rem',
-                    fontWeight: 600
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+              {/* Pinned Modal Footer */}
+              <div className={styles.modalFooter}>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
                   style={{
-                    padding: '10px 18px',
+                    padding: '10px 20px',
                     borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: 'none',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                     color: '#aaa',
                     fontFamily: "'Clash Display', sans-serif",
-                    fontSize: '0.85rem',
+                    fontSize: '0.88rem',
                     fontWeight: 600,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
                   }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; }}
                 >
                   Cancel
                 </button>
@@ -723,7 +736,7 @@ export default function DailyTipsManager() {
                   type="submit"
                   disabled={submitting}
                   style={{
-                    padding: '10px 22px',
+                    padding: '11px 26px',
                     borderRadius: '10px',
                     background: '#ebd73f',
                     border: 'none',
@@ -731,8 +744,12 @@ export default function DailyTipsManager() {
                     fontFamily: "'Panchang', sans-serif",
                     fontSize: '0.78rem',
                     fontWeight: 800,
-                    cursor: 'pointer'
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 18px rgba(235, 215, 63, 0.3)',
+                    transition: 'transform 0.2s, box-shadow 0.2s'
                   }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 22px rgba(235, 215, 63, 0.45)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(235, 215, 63, 0.3)'; }}
                 >
                   {submitting ? 'SAVING...' : editingTip ? 'UPDATE TIP' : 'PUBLISH TIP'}
                 </button>
@@ -742,89 +759,76 @@ export default function DailyTipsManager() {
         </div>
       )}
 
-      {/* Launch Day Reset Confirmation Modal */}
+      {/* Launch Day Reset Confirmation Modal - Rock Solid Chassis */}
       {showResetModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.85)',
-          backdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: '#141418',
-            border: '1px solid rgba(235, 215, 63, 0.4)',
-            borderRadius: '24px',
-            maxWidth: '520px',
-            width: '100%',
-            padding: '32px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.9)',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '50%',
-              background: 'rgba(235, 215, 63, 0.15)',
-              color: '#ebd73f',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 18px'
-            }}>
-              <Rocket size={28} />
-            </div>
+        <div 
+          className={styles.modalOverlay}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowResetModal(false); }}
+        >
+          <div className={styles.modalCard} style={{ maxWidth: '520px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalBody} style={{ padding: '36px 32px' }}>
+              <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'rgba(235, 215, 63, 0.15)',
+                color: '#ebd73f',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 18px',
+                boxShadow: '0 0 25px rgba(235, 215, 63, 0.2)'
+              }}>
+                <Rocket size={30} />
+              </div>
 
-            <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.3rem', fontWeight: 800, color: '#fff', margin: '0 0 12px' }}>
-              RESTART DAY COUNTER TO DAY #1?
-            </h2>
+              <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.25rem', fontWeight: 800, color: '#fff', margin: '0 0 12px' }}>
+                RESTART DAY COUNTER TO DAY #1?
+              </h2>
 
-            <p style={{ fontFamily: "'Clash Display', sans-serif", color: '#aaa', fontSize: '0.92rem', lineHeight: '1.6', margin: '0 0 24px' }}>
-              This will set today as the official <strong>Launch Day</strong>. The day counter on the website will restart from <strong>Day #1</strong>, and today will show <strong>Tip #1</strong> from your presets queue.
-            </p>
+              <p style={{ fontFamily: "'Clash Display', sans-serif", color: '#aaa', fontSize: '0.92rem', lineHeight: '1.6', margin: '0 0 26px' }}>
+                This will set today as the official <strong>Launch Day</strong>. The day counter on the website will restart from <strong>Day #1</strong>, and today will show <strong>Tip #1</strong> from your presets queue.
+              </p>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-              <button
-                type="button"
-                onClick={() => setShowResetModal(false)}
-                style={{
-                  padding: '12px 20px',
-                  borderRadius: '10px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#ccc',
-                  fontFamily: "'Clash Display', sans-serif",
-                  fontSize: '0.88rem',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowResetModal(false)}
+                  style={{
+                    padding: '12px 22px',
+                    borderRadius: '10px',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#ccc',
+                    fontFamily: "'Clash Display', sans-serif",
+                    fontSize: '0.88rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
 
-              <button
-                type="button"
-                onClick={handleResetLaunch}
-                disabled={resetting}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '10px',
-                  background: '#ebd73f',
-                  border: 'none',
-                  color: '#000',
-                  fontFamily: "'Panchang', sans-serif",
-                  fontSize: '0.78rem',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 20px rgba(235, 215, 63, 0.3)'
-                }}
-              >
-                {resetting ? 'RESTARTING...' : 'YES, START FROM DAY #1'}
-              </button>
+                <button
+                  type="button"
+                  onClick={handleResetLaunch}
+                  disabled={resetting}
+                  style={{
+                    padding: '12px 26px',
+                    borderRadius: '10px',
+                    background: '#ebd73f',
+                    border: 'none',
+                    color: '#000',
+                    fontFamily: "'Panchang', sans-serif",
+                    fontSize: '0.78rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 20px rgba(235, 215, 63, 0.35)'
+                  }}
+                >
+                  {resetting ? 'RESTARTING...' : 'CONFIRM RESET'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

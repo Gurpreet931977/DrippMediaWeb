@@ -1981,23 +1981,25 @@ export default function WebPortfolioManager() {
           WebkitBackdropFilter: 'blur(20px)',
           zIndex: 9999,
           display: 'flex',
-          alignItems: 'center',
           justifyContent: 'center',
-          padding: '24px 16px',
-          overflowY: 'auto'
+          padding: '28px 16px',
+          overflowY: 'auto',
+          boxSizing: 'border-box'
         }}>
           <div style={{
+            margin: 'auto',
             background: '#0a0a0f',
             border: '1px solid rgba(255, 255, 255, 0.14)',
+            borderTop: '1px solid rgba(235, 215, 63, 0.4)',
             borderRadius: '24px',
             width: '100%',
             maxWidth: '880px',
-            height: '88vh',
-            maxHeight: '820px',
+            maxHeight: 'calc(100vh - 56px)',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 50px rgba(235, 215, 63, 0.08)'
+            boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 50px rgba(235, 215, 63, 0.08)',
+            boxSizing: 'border-box'
           }}>
             {/* Fixed Modal Header */}
             <div style={{

@@ -493,230 +493,203 @@ export default function SOPPage() {
         </div>
       )}
 
-      {/* Interactive Full SOP Inspection Modal */}
+      {/* Interactive Full SOP Inspection Modal - Rock Solid Modal Chassis */}
       {activeModalSOP && (
         <div 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 100050,
-            background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            animation: 'fadeIn 0.2s ease-out'
-          }}
-          onClick={() => setActiveModalSOP(null)}
+          className={styles.modalOverlay}
+          onClick={(e) => { if (e.target === e.currentTarget) setActiveModalSOP(null); }}
         >
           <div 
+            className={styles.modalCard}
+            style={{ maxWidth: '860px', maxHeight: 'calc(100vh - 64px)' }}
             onClick={(e) => e.stopPropagation()}
-            style={{
-              background: 'linear-gradient(145deg, rgba(22, 22, 28, 0.98) 0%, rgba(12, 12, 16, 0.99) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderTop: '1px solid rgba(255, 255, 255, 0.4)',
-              borderRadius: '24px',
-              maxWidth: '820px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              padding: '36px',
-              boxShadow: '0 30px 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(235, 215, 63, 0.12)',
-              position: 'relative',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '24px',
-              fontFamily: "'Clash Display', sans-serif"
-            }}
           >
-            {/* Modal Close Button */}
-            <button
-              onClick={() => setActiveModalSOP(null)}
-              style={{
-                position: 'absolute',
-                top: '24px',
-                right: '24px',
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#aaa',
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseOver={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
-              onMouseOut={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-            >
-              <X size={18} />
-            </button>
+            {/* Pinned Modal Header */}
+            <div className={styles.modalHeader} style={{ flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '6px', background: 'rgba(235, 215, 63, 0.15)', color: '#ebd73f', border: '1px solid rgba(235, 215, 63, 0.35)', textTransform: 'uppercase' }}>
+                    {activeModalSOP.categoryLabel}
+                  </span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '6px', background: 'rgba(255, 255, 255, 0.06)', color: '#bbb' }}>
+                    SLA: {activeModalSOP.sla}
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: '#777' }}>
+                    Lead: {activeModalSOP.responsibleRole}
+                  </span>
+                </div>
 
-            {/* Modal Header */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '6px', background: 'rgba(235, 215, 63, 0.15)', color: '#ebd73f', border: '1px solid rgba(235, 215, 63, 0.35)', textTransform: 'uppercase' }}>
-                  {activeModalSOP.categoryLabel}
-                </span>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '6px', background: 'rgba(255, 255, 255, 0.06)', color: '#bbb' }}>
-                  SLA: {activeModalSOP.sla}
-                </span>
-                <span style={{ fontSize: '0.72rem', color: '#777' }}>
-                  Lead: {activeModalSOP.responsibleRole}
-                </span>
+                <button
+                  type="button"
+                  className={styles.modalCloseBtn}
+                  onClick={() => setActiveModalSOP(null)}
+                  title="Close SOP"
+                >
+                  <X size={18} />
+                </button>
               </div>
-              <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.8rem', fontWeight: 800, margin: '0 0 8px 0', letterSpacing: '-0.02em', color: '#fff' }}>
-                {activeModalSOP.title}
-              </h2>
-              <p style={{ color: '#ccc', fontSize: '0.94rem', lineHeight: '1.6', margin: 0 }}>
-                {activeModalSOP.description}
-              </p>
-            </div>
 
-            {/* Step-by-Step Production Roadmap */}
-            <div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Layers size={14} /> Production Phases & Milestones
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                {activeModalSOP.phases.map((phase, i) => (
-                  <div 
-                    key={i} 
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.06)',
-                      borderRadius: '14px',
-                      padding: '16px 20px',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '16px'
-                    }}
-                  >
-                    <div style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '8px',
-                      background: 'rgba(235, 215, 63, 0.15)',
-                      border: '1px solid rgba(235, 215, 63, 0.3)',
-                      color: '#ebd73f',
-                      fontWeight: 800,
-                      fontSize: '0.82rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0
-                    }}>
-                      {i + 1}
-                    </div>
-                    <div>
-                      <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
-                        {phase.title}
-                      </h4>
-                      <p style={{ margin: 0, color: '#aaa', fontSize: '0.84rem', lineHeight: '1.5' }}>
-                        {phase.desc}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <h2 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.4rem', fontWeight: 800, margin: '0 0 6px 0', letterSpacing: '-0.02em', color: '#fff' }}>
+                  {activeModalSOP.title}
+                </h2>
+                <p style={{ color: '#aaa', fontSize: '0.88rem', lineHeight: '1.5', margin: 0 }}>
+                  {activeModalSOP.description}
+                </p>
               </div>
             </div>
 
-            {/* Interactive Quality Checklist */}
-            <div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <ShieldCheck size={14} /> Studio Quality Gate Checklist
-              </div>
-              <div style={{ background: 'rgba(0, 0, 0, 0.35)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {activeModalSOP.checklist.map((item, idx) => {
-                  const itemKey = `${activeModalSOP.id}-${idx}`;
-                  const isChecked = !!checkedItems[itemKey];
-                  return (
+            {/* Scrollable Modal Content Body */}
+            <div className={styles.modalBody} style={{ gap: '22px' }}>
+              {/* Step-by-Step Production Roadmap */}
+              <div>
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Layers size={14} /> Production Phases & Milestones
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                  {activeModalSOP.phases.map((phase, i) => (
                     <div 
-                      key={idx}
-                      onClick={() => toggleCheckItem(activeModalSOP.id, idx)}
+                      key={i} 
                       style={{
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        borderRadius: '14px',
+                        padding: '16px 20px',
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        padding: '6px 0'
+                        alignItems: 'flex-start',
+                        gap: '16px'
                       }}
                     >
                       <div style={{
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: '6px',
-                        background: isChecked ? '#ebd73f' : 'rgba(255, 255, 255, 0.08)',
-                        border: isChecked ? '1px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.2)',
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '8px',
+                        background: 'rgba(235, 215, 63, 0.15)',
+                        border: '1px solid rgba(235, 215, 63, 0.3)',
+                        color: '#ebd73f',
+                        fontWeight: 800,
+                        fontSize: '0.82rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        transition: 'all 0.2s',
                         flexShrink: 0
                       }}>
-                        {isChecked && <Check size={13} color="#000" strokeWidth={3} />}
+                        {i + 1}
                       </div>
-                      <span style={{ fontSize: '0.86rem', color: isChecked ? '#888' : '#ddd', textDecoration: isChecked ? 'line-through' : 'none', transition: 'all 0.2s' }}>
-                        {item}
-                      </span>
+                      <div>
+                        <h4 style={{ margin: '0 0 4px 0', fontSize: '0.96rem', fontWeight: 700, color: '#fff' }}>
+                          {phase.title}
+                        </h4>
+                        <p style={{ margin: 0, color: '#aaa', fontSize: '0.84rem', lineHeight: '1.5' }}>
+                          {phase.desc}
+                        </p>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Copyable Client Message Template */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Send size={14} /> Ready Client Message Template
+                  ))}
                 </div>
-                <button
-                  onClick={() => handleCopyTemplate(activeModalSOP)}
-                  style={{
-                    background: copiedId === activeModalSOP.id ? 'rgba(74, 222, 128, 0.15)' : 'rgba(235, 215, 63, 0.15)',
-                    border: copiedId === activeModalSOP.id ? '1px solid #4ade80' : '1px solid rgba(235, 215, 63, 0.35)',
-                    color: copiedId === activeModalSOP.id ? '#4ade80' : '#ebd73f',
-                    padding: '6px 14px',
-                    borderRadius: '8px',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {copiedId === activeModalSOP.id ? <Check size={13} /> : <Copy size={13} />}
-                  <span>{copiedId === activeModalSOP.id ? 'Copied to Clipboard!' : 'Copy Template'}</span>
-                </button>
               </div>
-              <pre style={{
-                background: 'rgba(0, 0, 0, 0.5)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                padding: '16px',
-                fontSize: '0.82rem',
-                color: '#a3f08c',
-                lineHeight: '1.5',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                fontFamily: "'Clash Display', sans-serif",
-                margin: 0
-              }}>
-                {activeModalSOP.clientTemplate}
-              </pre>
+
+              {/* Interactive Quality Checklist */}
+              <div>
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShieldCheck size={14} /> Studio Quality Gate Checklist
+                </div>
+                <div style={{ background: 'rgba(0, 0, 0, 0.35)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {activeModalSOP.checklist.map((item, idx) => {
+                    const itemKey = `${activeModalSOP.id}-${idx}`;
+                    const isChecked = !!checkedItems[itemKey];
+                    return (
+                      <div 
+                        key={idx}
+                        onClick={() => toggleCheckItem(activeModalSOP.id, idx)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          cursor: 'pointer',
+                          padding: '6px 0',
+                          userSelect: 'none'
+                        }}
+                      >
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '6px',
+                          border: isChecked ? '1px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.2)',
+                          background: isChecked ? '#ebd73f' : 'rgba(255, 255, 255, 0.04)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#000',
+                          flexShrink: 0,
+                          transition: 'all 0.15s'
+                        }}>
+                          {isChecked && <Check size={13} strokeWidth={3} />}
+                        </div>
+                        <span style={{
+                          fontSize: '0.88rem',
+                          color: isChecked ? '#888' : '#ddd',
+                          textDecoration: isChecked ? 'line-through' : 'none',
+                          transition: 'all 0.15s'
+                        }}>
+                          {item}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Client Handoff Template */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Client Communication Template
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyTemplate(activeModalSOP)}
+                    style={{
+                      background: copiedId === activeModalSOP.id ? 'rgba(74, 222, 128, 0.15)' : 'rgba(235, 215, 63, 0.15)',
+                      border: copiedId === activeModalSOP.id ? '1px solid #4ade80' : '1px solid rgba(235, 215, 63, 0.35)',
+                      color: copiedId === activeModalSOP.id ? '#4ade80' : '#ebd73f',
+                      padding: '6px 14px',
+                      borderRadius: '8px',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {copiedId === activeModalSOP.id ? <Check size={13} /> : <Copy size={13} />}
+                    <span>{copiedId === activeModalSOP.id ? 'Copied to Clipboard!' : 'Copy Template'}</span>
+                  </button>
+                </div>
+                <pre style={{
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  fontSize: '0.82rem',
+                  color: '#a3f08c',
+                  lineHeight: '1.5',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  fontFamily: "'Clash Display', sans-serif",
+                  margin: 0
+                }}>
+                  {activeModalSOP.clientTemplate}
+                </pre>
+              </div>
             </div>
 
-            {/* Modal Actions Footer */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            {/* Pinned Modal Actions Footer */}
+            <div className={styles.modalFooter}>
               <button
+                type="button"
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent('ORLO_QUICK_ACTION', {
                     detail: {
@@ -742,6 +715,7 @@ export default function SOPPage() {
                 <Sparkles size={14} /> Ask Orlo to adapt this SOP
               </button>
               <button
+                type="button"
                 onClick={() => setActiveModalSOP(null)}
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',

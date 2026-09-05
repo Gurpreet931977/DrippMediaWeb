@@ -282,7 +282,7 @@ export default function ImageEditorModal({ isOpen, onClose, imageUrl, onSave }) 
     );
 
     return (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 10000, display: 'flex', justifyContent: 'center', overflowY: 'auto', padding: '24px 16px', backdropFilter: 'blur(16px)', boxSizing: 'border-box' }}>
             <style dangerouslySetInnerHTML={{__html: `
                 .ReactCrop__crop-selection {
                     transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
@@ -294,7 +294,7 @@ export default function ImageEditorModal({ isOpen, onClose, imageUrl, onSave }) 
                     transform: scale(0.92);
                 }
             `}} />
-            <div style={{ background: '#111', width: '95%', maxWidth: '1200px', height: '90vh', borderRadius: '24px', display: 'flex', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
+            <div style={{ margin: 'auto', background: '#111', width: '96%', maxWidth: '1200px', height: '90vh', maxHeight: '860px', borderRadius: '24px', display: 'flex', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
                 
                 {/* Left: Workspace */}
                 <div style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column', background: '#050505', position: 'relative' }}>

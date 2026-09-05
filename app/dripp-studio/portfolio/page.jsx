@@ -1706,29 +1706,38 @@ export default function PortfolioManager() {
         }
         .replace-modal-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
+            inset: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: flex;
-            align-items: center;
             justify-content: center;
+            padding: 32px 16px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
             z-index: 10000;
             animation: fadeIn 0.3s ease;
+            box-sizing: border-box;
         }
         .replace-modal {
-            background: linear-gradient(145deg, rgba(25, 25, 25, 0.9) 0%, rgba(8, 8, 8, 0.98) 100%);
+            margin: auto;
+            background: linear-gradient(145deg, rgba(25, 25, 25, 0.96) 0%, rgba(8, 8, 8, 0.99) 100%);
             backdrop-filter: blur(50px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-top: 1px solid rgba(235, 215, 63, 0.4);
-            padding: 40px;
-            border-radius: 30px;
-            max-width: 540px;
-            width: 90%;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.9), 0 0 60px rgba(235, 215, 63, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid rgba(235, 215, 63, 0.45);
+            padding: 34px 32px;
+            border-radius: 26px;
+            max-width: 560px;
+            max-height: calc(100vh - 64px);
+            overflow-y: auto;
+            width: 100%;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.95), 0 0 60px rgba(235, 215, 63, 0.1);
             font-family: 'Clash Display', sans-serif;
             position: relative;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-sizing: border-box;
         }
 
         @media (max-width: 1024px) {

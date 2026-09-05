@@ -889,67 +889,61 @@ export default function ServicesManager() {
         </div>
       )}
 
-      {/* Confirm Action Modal */}
+      {/* Confirm Action Modal - Rock Solid Modal Chassis */}
       {confirmDialog.isOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.7)',
-          backdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 3000,
-          padding: 20
-        }}>
-          <div style={{
-            background: '#121218',
-            border: '1px solid rgba(255,255,255,0.12)',
-            borderRadius: 20,
-            padding: '26px 28px',
-            maxWidth: 420,
-            width: '100%',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
-          }}>
-            <h3 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1rem', fontWeight: 800, color: '#fff', margin: '0 0 10px' }}>
-              {confirmDialog.title}
-            </h3>
-            <p style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.85rem', color: '#999', margin: '0 0 22px', lineHeight: 1.5 }}>
-              {confirmDialog.message}
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <button
-                onClick={() => setConfirmDialog({ isOpen: false })}
-                style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#ccc',
-                  padding: '8px 16px',
-                  borderRadius: 10,
-                  fontFamily: "'Clash Display', sans-serif",
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDialog.onConfirm}
-                style={{
-                  background: '#ef4444',
-                  border: 'none',
-                  color: '#fff',
-                  padding: '8px 18px',
-                  borderRadius: 10,
-                  fontFamily: "'Panchang', sans-serif",
-                  fontSize: '0.72rem',
-                  fontWeight: 800,
-                  cursor: 'pointer'
-                }}
-              >
-                Confirm Delete
-              </button>
+        <div 
+          className={styles.modalOverlay}
+          onClick={(e) => { if (e.target === e.currentTarget) setConfirmDialog({ isOpen: false }); }}
+        >
+          <div 
+            className={styles.modalCard}
+            style={{ maxWidth: 440 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalBody} style={{ padding: '28px 30px' }}>
+              <h3 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '1.05rem', fontWeight: 800, color: '#fff', margin: '0 0 10px' }}>
+                {confirmDialog.title}
+              </h3>
+              <p style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.88rem', color: '#999', margin: '0 0 24px', lineHeight: 1.5 }}>
+                {confirmDialog.message}
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDialog({ isOpen: false })}
+                  style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#ccc',
+                    padding: '9px 18px',
+                    borderRadius: 10,
+                    fontFamily: "'Clash Display', sans-serif",
+                    fontSize: '0.84rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDialog.onConfirm}
+                  style={{
+                    background: '#ef4444',
+                    border: 'none',
+                    color: '#fff',
+                    padding: '9px 20px',
+                    borderRadius: 10,
+                    fontFamily: "'Panchang', sans-serif",
+                    fontSize: '0.74rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
+                  }}
+                >
+                  Confirm Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -1292,7 +1292,11 @@ export default function Page() {
             // );
         }
 
-        // gsap.to(".hero-sub", { opacity: 1, duration: 2, delay: 0.5 }); // Handled in preloader timeline
+        // --- CUSTOM PACKAGE BUILDER (RECEIPT LOGIC) STATE ---
+        const selectedServices = new Map();
+        if (typeof window !== 'undefined') {
+            window.__selectedServices = selectedServices;
+        }
 
         // --- FLOATING SERVICES CLOUD ---
         const cloudContainer = document.getElementById('floating-cloud');
@@ -1403,7 +1407,7 @@ export default function Page() {
 
                     // Re-apply selected class if already in cart
                     const svc = pill.textContent.replace(' ✓', '').trim();
-                    if (typeof selectedServices !== 'undefined' && selectedServices.has(svc)) {
+                    if (typeof window !== 'undefined' && window.__selectedServices && window.__selectedServices.has(svc)) {
                         pill.classList.add('selected');
                         pill.style.zIndex = 100;
                     }
@@ -1715,8 +1719,6 @@ export default function Page() {
         }
 
         // --- CUSTOM PACKAGE BUILDER (RECEIPT LOGIC) ---
-        const selectedServices = new Map();
-        window.__selectedServices = selectedServices;
         window.__updateGlider = updateGlider;
         window.__switchTabTo = switchTabTo;
         let hasAutoScrolledToCart = false; // Tracks if we've shown the auto-scroll tour

@@ -14,7 +14,7 @@ const FALLBACK_TIPS = [
     id: 2,
     category: 'Pricing & Money',
     title: 'Never charge for your time. Charge for the problem you fix.',
-    explanation: "When you bill by the hour, getting faster and better at your craft actually loses you money. Clients don't care if a project took you 2 hours or 20 hours—they only care that their headache is gone. If you fix a $10,000 problem in 30 minutes, you earned that money through years of practice, not 30 minutes of sitting in a chair.",
+    explanation: "When you bill by the hour, getting faster and better at your craft actually loses you money. Clients don't care if a project took you 2 hours or 20 hours, they only care that their headache is gone. If you fix a $10,000 problem in 30 minutes, you earned that money through years of practice, not 30 minutes of sitting in a chair.",
     formula: "Set your prices based on how much time, money, or stress you save the client, never on hours clocked."
   },
   {
@@ -88,7 +88,7 @@ export default function DailyLearningSection({ isGenz = false }) {
   }, [isGenz]);
 
   const handleCopy = () => {
-    const textToCopy = `"${currentTip.title}"\n\n${currentTip.explanation}\n\n✦ The Formula: ${currentTip.formula}\n\n— Daily Tip by Meta Gurpreet @ Dripp Media`;
+    const textToCopy = `"${currentTip.title}"\n\n${currentTip.explanation}\n\n✦ The Formula: ${currentTip.formula}\n\n• Daily Tip by Meta Gurpreet @ Dripp Media`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(textToCopy);
       setCopied(true);

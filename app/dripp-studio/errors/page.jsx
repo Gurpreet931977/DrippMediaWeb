@@ -16,6 +16,27 @@ export default function ErrorLogsPage() {
   const [copiedId, setCopiedId] = useState(null);
   const [copiedAll, setCopiedAll] = useState(false);
 
+  // Auto-refresh error logs every 8 seconds while page is open
+  useEffect(() => {
+    refreshLogs();
+    const timer = setInterval(() => {
+      refreshLogs();
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [refreshLogs]);
+
+  const handleTestError = () => {
+    if (typeof window !== 'undefined' && typeof window.__dripp_report_error === 'function') {
+      window.__dripp_report_error({
+        level: 'error',
+        message: 'Manual Test Error: System Health Check',
+        source: window.location.href,
+        details: 'Diagnostic test incident triggered from Admin Panel to verify interception, storage, and server synchronization.'
+      });
+      setTimeout(() => refreshLogs(), 300);
+    }
+  };
+
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
       const matchLevel = filterLevel === 'all' || log.level === filterLevel;
@@ -188,12 +209,22 @@ export default function ErrorLogsPage() {
           </div>
           
           <button 
-            onClick={() => clearLogs()}
+            onClick={() => refreshLogs()}
             className={styles.btn} 
             style={{ color: '#ebd73f', borderColor: 'rgba(235, 215, 63, 0.2)' }}
+            title="Refresh logs from server"
           >
             <RefreshCw size={16} />
             Refresh
+          </button>
+          
+          <button
+            onClick={handleTestError}
+            className={styles.btn}
+            style={{ color: '#aaa', borderColor: 'rgba(255, 255, 255, 0.1)', fontSize: '0.85rem' }}
+            title="Send a test error to verify capture"
+          >
+            + Test Log
           </button>
           
           {logs.length > 0 && (
@@ -320,7 +351,7 @@ export default function ErrorLogsPage() {
                       whiteSpace: 'pre-wrap', 
                       wordBreak: 'break-word',
                       border: '1px solid rgba(255,255,255,0.05)',
-                      fontFamily: 'monospace',
+                      fontFamily: 'Clash Display, sans-serif',
                       maxHeight: '400px',
                       overflowY: 'auto',
                       margin: 0

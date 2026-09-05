@@ -175,21 +175,25 @@ export default function ImageCropperModal({
       WebkitBackdropFilter: 'blur(20px)',
       zIndex: 99999,
       display: 'flex',
-      alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px'
+      padding: '28px 16px',
+      overflowY: 'auto',
+      boxSizing: 'border-box'
     }}>
       <div style={{
+        margin: 'auto',
         background: '#0d0d12',
         border: '1px solid rgba(255, 255, 255, 0.14)',
+        borderTop: '1px solid rgba(235, 215, 63, 0.4)',
         borderRadius: '24px',
         width: '100%',
         maxWidth: '1000px',
-        maxHeight: '92vh',
+        maxHeight: 'calc(100vh - 56px)',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 0 1px rgba(235, 215, 63, 0.15)'
+        boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 0 1px rgba(235, 215, 63, 0.15)',
+        boxSizing: 'border-box'
       }}>
         {/* Modal Header */}
         <div style={{

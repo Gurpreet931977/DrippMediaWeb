@@ -12,7 +12,7 @@
       "id": 2,
       "category": "Pricing & Money",
       "title": "Never charge for your time. Charge for the problem you fix.",
-      "explanation": "When you bill by the hour, getting faster and better at your craft actually loses you money. Clients don't care if a project took you 2 hours or 20 hours—they only care that their headache is gone. If you fix a $10,000 problem in 30 minutes, you earned that money through years of practice, not 30 minutes of sitting in a chair.",
+      "explanation": "When you bill by the hour, getting faster and better at your craft actually loses you money. Clients don't care if a project took you 2 hours or 20 hours, they only care that their headache is gone. If you fix a $10,000 problem in 30 minutes, you earned that money through years of practice, not 30 minutes of sitting in a chair.",
       "formula": "Set your prices based on how much time, money, or stress you save the client, never on hours clocked."
     },
     {
@@ -54,7 +54,7 @@
       "id": 8,
       "category": "Clear Thinking",
       "title": "If you can't explain it simply, you don't understand it well enough.",
-      "explanation": "Using big, confusing words doesn't make you look smart—it just makes people lose interest. The best thinkers and leaders speak in plain language. If you can explain your product or idea so simply that a 12-year-old gets it, you will win every single time.",
+      "explanation": "Using big, confusing words doesn't make you look smart, it just makes people lose interest. The best thinkers and leaders speak in plain language. If you can explain your product or idea so simply that a 12-year-old gets it, you will win every single time.",
       "formula": "Cut out the buzzwords. Say what you mean in plain, everyday language."
     },
     {
@@ -75,14 +75,14 @@
       "id": 11,
       "category": "Relationships & Karma",
       "title": "Help people win without asking for anything in return.",
-      "explanation": "Whenever you meet someone, don't think about what you can take from them. Think about how you can give them a quick win—introduce them to someone useful, share an idea that helps them, or share their work. When you become known as someone who helps people win, good things find you.",
+      "explanation": "Whenever you meet someone, don't think about what you can take from them. Think about how you can give them a quick win: introduce them to someone useful, share an idea that helps them, or share their work. When you become known as someone who helps people win, good things find you.",
       "formula": "Give value first. Real influence comes from being genuinely helpful, not transactional."
     },
     {
       "id": 12,
       "category": "Brand Positioning",
       "title": "Be the only person who does what you do, not just another option.",
-      "explanation": "If you are just 'another designer' or 'another agency', clients will compare your price to everyone else on Fiverr. But if you combine two different skills—like high-end 3D design plus conversion copywriting—you become unique. There is no price competition when there is only one of you.",
+      "explanation": "If you are just 'another designer' or 'another agency', clients will compare your price to everyone else on Fiverr. But if you combine two different skills, like high-end 3D design plus conversion copywriting, you become unique. There is no price competition when there is only one of you.",
       "formula": "Mix your unique skills together. When you stand in your own lane, nobody can compete with you."
     },
     {
@@ -96,8 +96,120 @@
       "id": 14,
       "category": "Creative Craft",
       "title": "Steal the structure, never the style.",
-      "explanation": "Copying someone's visual style makes you look like a cheap copycat. But studying why their structure worked—why their hook caught attention, how they paced the story, or how they framed the problem—teaches you the fundamentals. Take the principles, but pour your own taste over them.",
+      "explanation": "Copying someone's visual style makes you look like a cheap copycat. But studying why their structure worked (why their hook caught attention, how they paced the story, or how they framed the problem) teaches you the fundamentals. Take the principles, but pour your own taste over them.",
       "formula": "Study the mechanics of great work, but always speak in your own authentic voice."
+    },
+    {
+      "id": 15,
+      "category": "Sales & Psychology",
+      "title": "The person who cares least about the deal holds the most power.",
+      "explanation": "Desperation has a scent, and clients can smell it instantly. When you need the money, you accept bad terms, endless revisions, and disrespectful deadlines. Build a financial runway and keep your pipeline full so you can calmly walk away from projects that do not value your craft.",
+      "formula": "Always negotiate from a position of abundance. Willingness to walk away is your ultimate superpower."
+    },
+    {
+      "id": 16,
+      "category": "Content & Attention",
+      "title": "Attention is earned in seconds, but retained through rhythm.",
+      "explanation": "Getting someone to click is easy; keeping them watching for two minutes requires pacing. Change visual angles every 3 to 5 seconds, cut out dead air ruthlessly, and use sound effects to emphasize punchlines. A viewer should never be able to predict what appears on screen next.",
+      "formula": "Vary your pacing constantly. Contrast between fast cuts and intentional pauses keeps eyes glued to the screen."
+    },
+    {
+      "id": 17,
+      "category": "Pricing & Money",
+      "title": "Double your price and half your problems will disappear.",
+      "explanation": "Low-budget clients are almost always the most demanding. They question every invoice, micromanage every design file, and text you on weekends. High-ticket clients pay promptly, trust your expertise, and treat you as a strategic partner because they have real skin in the game.",
+      "formula": "Charge premium rates to filter out nightmare clients. High prices attract clients who value outcome over hours."
+    },
+    {
+      "id": 18,
+      "category": "Life & Focus",
+      "title": "Protect your mornings like your career depends on it, because it does.",
+      "explanation": "Checking email or social media the second you wake up puts you in reactive defense mode all day. Your sharpest creative energy occurs in the first three hours of your morning. Spend that golden window on high-leverage deep work before opening Slack, emails, or notifications.",
+      "formula": "Create before you consume. Dedicate your first 90 minutes solely to building your highest-value asset."
+    },
+    {
+      "id": 19,
+      "category": "Trust & Design",
+      "title": "Proof beats promises every single time.",
+      "explanation": "Anyone can write fancy buzzwords on a pitch deck claiming to be a premier creative agency. Show video testimonials, break down before-and-after conversion metrics, and publish documented case studies. When the evidence is indisputable, you never have to convince anyone.",
+      "formula": "Let your case studies do the talking. Real numbers and client testimonials convert 10x faster than sales claims."
+    },
+    {
+      "id": 20,
+      "category": "Creative Craft",
+      "title": "Constraints force creativity; endless options breed mediocrity.",
+      "explanation": "Give a creator unlimited budget, time, and scope, and they will overcomplicate the project into oblivion. Give them a strict 48-hour deadline, one camera, and two colors, and they will produce pure gold. Artificial limitations eliminate decision fatigue and force you to solve the core problem.",
+      "formula": "Embrace tight constraints. Limitation is not a roadblock, it is the filter that reveals brilliance."
+    },
+    {
+      "id": 21,
+      "category": "Client Service",
+      "title": "Send updates before they ask, and you will never lose a client.",
+      "explanation": "Anxiety in business happens in the silence between milestones. When a client has to message you asking 'Hey, any update on this?', you have already failed communication. Send proactive 60-second video walkthroughs or bullet-point progress notes before they ever have to wonder.",
+      "formula": "Over-communicate progress. Predictable transparency turns first-time clients into lifelong retainers."
+    },
+    {
+      "id": 22,
+      "category": "Sales & Psychology",
+      "title": "People do not buy products. They buy better versions of themselves.",
+      "explanation": "Nobody buys a camera because they want glass and metal; they buy it because they want to feel like an acclaimed filmmaker. Do not describe the technical specs of your editing setup or camera rig. Describe the status, freedom, and emotional victory your client experiences after you finish the work.",
+      "formula": "Sell the destination, not the plane. Frame every deliverable around the new identity your customer achieves."
+    },
+    {
+      "id": 23,
+      "category": "Brand Positioning",
+      "title": "Consistency is your brand. Everything else is just graphics.",
+      "explanation": "A logo and a slick color palette do not make a brand. A brand is the emotional promise kept consistently over hundreds of interactions. If your content looks cinematic one day and amateur the next, people will not trust you. Consistent quality and reliable tone build unstoppable brand equity.",
+      "formula": "Show up with the same high standard every single week. Relentless consistency creates an iconic reputation."
+    },
+    {
+      "id": 24,
+      "category": "Business & Growth",
+      "title": "Systems run the business, and people run the systems.",
+      "explanation": "If your business stops making money or delivering projects the moment you take a two-day vacation, you do not own a business; you own a stressful job. Document your standard operating procedures, automate repetitive handoffs, and create reusable templates for every repetitive task.",
+      "formula": "Build SOPs for every recurring workflow. Turn your daily expertise into predictable systems that scale without you."
+    },
+    {
+      "id": 25,
+      "category": "Life & Focus",
+      "title": "Do not confuse movement with progress.",
+      "explanation": "Being busy is the easiest way to avoid doing the hard things that actually matter. Reorganizing your desktop, tweaking your logo color for the tenth time, and answering non-urgent emails feels productive, but it moves the needle zero percent. Focus exclusively on revenue, craft, and audience.",
+      "formula": "Ask yourself every afternoon: Did what I just do bring revenue, improve my craft, or grow my audience?"
+    },
+    {
+      "id": 26,
+      "category": "Decisions & Speed",
+      "title": "Fail fast, fail cheap, and steal the lesson.",
+      "explanation": "The only real failure in business is spending six months and ten thousand dollars on an idea before finding out nobody wanted it. Test new offerings with a single social post, a private DM, or a simple landing page. If it flops, you lost 24 hours; if it wins, you found your next major revenue stream.",
+      "formula": "Validate demand before building supply. Low-cost experiments beat prolonged theoretical debate."
+    },
+    {
+      "id": 27,
+      "category": "Content & Attention",
+      "title": "The headline is 80 cents of your dollar.",
+      "explanation": "David Ogilvy famously wrote that when you have written your headline, you have spent 80 cents out of your dollar. If your thumbnail and title do not evoke curiosity or high emotional resonance, 99 percent of your production effort is flushed down the drain. Spend as much time crafting the packaging as you do on the content itself.",
+      "formula": "Draft at least 10 title and hook variations for every major project before hitting publish."
+    },
+    {
+      "id": 28,
+      "category": "Relationships & Karma",
+      "title": "Your reputation arrives in the room an hour before you do.",
+      "explanation": "The creative and entrepreneurial world is shockingly small. How you treat the junior assistant on set or how you handle a contract disagreement will circulate faster than your best work. Guard your integrity with your life. Deliver what you promise, pay your collaborators promptly, and act with honor.",
+      "formula": "Play long-term games with long-term people. Your word is your single greatest commercial asset."
+    },
+    {
+      "id": 29,
+      "category": "Pricing & Money",
+      "title": "Always charge enough to deliver an experience that blows minds.",
+      "explanation": "When you undercharge, you have to take on too many projects to survive. You end up rushed, exhausted, and delivering mediocre work that disappoints everyone. Charging high rates gives you the breathing room to obsess over every micro-detail, over-deliver, and create masterpieces that earn referrals.",
+      "formula": "Price for perfection. High margins give you the budget and energy to make every project legendary."
+    },
+    {
+      "id": 30,
+      "category": "Personal Growth",
+      "title": "Comparison is the thief of joy and the killer of originality.",
+      "explanation": "Watching competitors flaunt their revenue milestones or follower counts on social media only creates anxiety and copycat thinking. You do not know their profit margins, their debt, or their mental health behind closed doors. Run your own race, measure against your past self, and play the ten-year game.",
+      "formula": "Mute your competitors. Focus 100 percent of your mental horsepower on outperforming who you were yesterday."
     }
   ]
 }

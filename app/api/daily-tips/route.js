@@ -37,6 +37,28 @@ const saveLocalData = (data) => {
   }
 };
 
+const sanitizeNoEmDash = (str) => {
+  if (!str || typeof str !== 'string') return str || '';
+  return str
+    .replace(/:\s*[—–]/g, ': ')
+    .replace(/\s*[—–]\s*/g, ', ')
+    .replace(/\s*--\s*/g, ', ')
+    .replace(/[—–]/g, ', ')
+    .replace(/,\s*,/g, ', ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const cleanTipObj = (t) => {
+  if (!t) return t;
+  return {
+    ...t,
+    title: sanitizeNoEmDash(t.title),
+    explanation: sanitizeNoEmDash(t.explanation),
+    formula: sanitizeNoEmDash(t.formula)
+  };
+};
+
 export async function GET(request) {
   try {
     let config = null;
@@ -82,8 +104,9 @@ export async function GET(request) {
     const minutesLeft = Math.floor((msUntilNext % (1000 * 60 * 60)) / (1000 * 60));
 
     // Active tip for today
-    const tipIndex = daysPassed % config.tips.length;
-    const currentTip = config.tips[tipIndex];
+    const sanitizedTips = config.tips.map(cleanTipObj);
+    const tipIndex = daysPassed % sanitizedTips.length;
+    const currentTip = sanitizedTips[tipIndex];
 
     return Response.json({
       success: true,
@@ -92,8 +115,8 @@ export async function GET(request) {
       hoursLeft,
       minutesLeft,
       currentTip,
-      tips: config.tips,
-      totalTips: config.tips.length
+      tips: sanitizedTips,
+      totalTips: sanitizedTips.length
     });
   } catch (error) {
     console.error('[daily-tips] GET error:', error);
@@ -123,9 +146,9 @@ export async function POST(request) {
       const newTip = {
         id: newId,
         category: category || 'General Wisdom',
-        title: title.trim(),
-        explanation: explanation.trim(),
-        formula: formula.trim()
+        title: sanitizeNoEmDash(title),
+        explanation: sanitizeNoEmDash(explanation),
+        formula: sanitizeNoEmDash(formula)
       };
       config.tips.push(newTip);
     } else if (action === 'update_tip') {
@@ -137,9 +160,9 @@ export async function POST(request) {
       config.tips[index] = {
         ...config.tips[index],
         category: category || config.tips[index].category,
-        title: title?.trim() || config.tips[index].title,
-        explanation: explanation?.trim() || config.tips[index].explanation,
-        formula: formula?.trim() || config.tips[index].formula
+        title: title !== undefined ? sanitizeNoEmDash(title) : config.tips[index].title,
+        explanation: explanation !== undefined ? sanitizeNoEmDash(explanation) : config.tips[index].explanation,
+        formula: formula !== undefined ? sanitizeNoEmDash(formula) : config.tips[index].formula
       };
     } else if (action === 'delete_tip') {
       const { id } = body;
@@ -152,13 +175,16 @@ export async function POST(request) {
       if (!Array.isArray(tips) || tips.length === 0) {
         return Response.json({ error: 'Invalid tips array' }, { status: 400 });
       }
-      config.tips = tips;
+      config.tips = tips.map(cleanTipObj);
     } else if (action === 'save_all') {
       if (body.launchDate) config.launchDate = body.launchDate;
-      if (Array.isArray(body.tips)) config.tips = body.tips;
+      if (Array.isArray(body.tips)) config.tips = body.tips.map(cleanTipObj);
     } else {
       return Response.json({ error: 'Unknown action' }, { status: 400 });
     }
+
+    // Always sanitize all tips in config before saving
+    config.tips = config.tips.map(cleanTipObj);
 
     // Save locally
     saveLocalData(config);

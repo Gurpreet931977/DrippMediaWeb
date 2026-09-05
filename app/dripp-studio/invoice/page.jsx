@@ -988,143 +988,177 @@ export default function InvoiceMaker() {
 
       <div style={{ color: 'white', maxWidth: '1400px', margin: '0 auto' }}>
 
-      {/* CUSTOM DIALOG (ALERT / CONFIRM) */}
+      {/* CUSTOM DIALOG (ALERT / CONFIRM) - Rock Solid Modal Chassis */}
       {customDialog.isOpen && createPortal(
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100000 }}>
-          <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-            <h3 style={{ fontSize: '24px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>{customDialog.title}</h3>
-            <p style={{ fontSize: '16px', color: '#ccc', marginBottom: '30px', lineHeight: '1.5' }}>{customDialog.message}</p>
+        <div 
+          className={styles.modalOverlay}
+          onClick={(e) => { if (e.target === e.currentTarget) closeDialog(); }}
+        >
+          <div 
+            className={styles.modalCard}
+            style={{ maxWidth: '440px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalBody} style={{ padding: '36px 32px', textAlign: 'center' }}>
+              <h3 style={{ fontSize: '1.25rem', color: '#ebd73f', margin: '0 0 16px 0', fontFamily: "'Panchang', sans-serif", fontWeight: 800 }}>
+                {customDialog.title}
+              </h3>
+              <p style={{ fontSize: '0.92rem', color: '#ccc', marginBottom: '26px', lineHeight: '1.6', fontFamily: "'Clash Display', sans-serif" }}>
+                {customDialog.message}
+              </p>
 
-            {/* 3-button duplicate resolution dialog */}
-            {customDialog.type === 'duplicate' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <button
-                  onClick={() => { customDialog.onOverwrite?.(); closeDialog(); }}
-                  style={{ width: '100%', padding: '13px 20px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#f87171', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', textAlign: 'left' }}
-                >
-                  ✏️ Overwrite existing entry
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: '#888', fontWeight: '400', marginTop: '3px' }}>Replace the old row with the latest data</span>
-                </button>
-                <button
-                  onClick={() => { customDialog.onSkip?.(); closeDialog(); }}
-                  style={{ width: '100%', padding: '13px 20px', background: 'rgba(156, 163, 175, 0.08)', border: '1px solid rgba(156, 163, 175, 0.2)', color: '#9ca3af', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', textAlign: 'left' }}
-                >
-                  ⏭ Skip - don\'t log again
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', fontWeight: '400', marginTop: '3px' }}>Keep the existing entry, do nothing</span>
-                </button>
-                <button
-                  onClick={() => { customDialog.onAddNew?.(); closeDialog(); }}
-                  style={{ width: '100%', padding: '13px 20px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', color: '#4ade80', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem', textAlign: 'left' }}
-                >
-                  ➕ Add as a new entry
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: '#888', fontWeight: '400', marginTop: '3px' }}>Keep both rows - useful for re-invoicing</span>
-                </button>
-              </div>
-            )}
-
-            {/* Standard alert / confirm buttons */}
-            {customDialog.type !== 'duplicate' && (
-              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                {customDialog.type === 'confirm' && (
+              {/* 3-button duplicate resolution dialog */}
+              {customDialog.type === 'duplicate' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <button
-                    onClick={() => { if (customDialog.onCancel) customDialog.onCancel(); closeDialog(); }}
-                    style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #444', color: '#888', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                    onClick={() => { customDialog.onOverwrite?.(); closeDialog(); }}
+                    style={{ width: '100%', padding: '13px 20px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#f87171', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.92rem', textAlign: 'left', fontFamily: "'Clash Display', sans-serif" }}
                   >
-                    Cancel
+                    ✏️ Overwrite existing entry
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: '#888', fontWeight: '400', marginTop: '3px' }}>Replace the old row with the latest data</span>
                   </button>
-                )}
-                <button
-                  onClick={() => {
-                    if (customDialog.type === 'confirm' && customDialog.onConfirm) customDialog.onConfirm();
-                    closeDialog();
-                  }}
-                  style={{ flex: 1, padding: '12px', background: '#ebd73f', border: 'none', color: '#111', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  {customDialog.type === 'confirm' ? 'Confirm' : 'OK'}
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={() => { customDialog.onSkip?.(); closeDialog(); }}
+                    style={{ width: '100%', padding: '13px 20px', background: 'rgba(156, 163, 175, 0.08)', border: '1px solid rgba(156, 163, 175, 0.2)', color: '#9ca3af', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.92rem', textAlign: 'left', fontFamily: "'Clash Display', sans-serif" }}
+                  >
+                    ⏭ Skip - don't log again
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', fontWeight: '400', marginTop: '3px' }}>Keep the existing entry, do nothing</span>
+                  </button>
+                  <button
+                    onClick={() => { customDialog.onAddNew?.(); closeDialog(); }}
+                    style={{ width: '100%', padding: '13px 20px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', color: '#4ade80', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.92rem', textAlign: 'left', fontFamily: "'Clash Display', sans-serif" }}
+                  >
+                    ➕ Add as a new entry
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: '#888', fontWeight: '400', marginTop: '3px' }}>Keep both rows - useful for re-invoicing</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Standard alert / confirm buttons */}
+              {customDialog.type !== 'duplicate' && (
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  {customDialog.type === 'confirm' && (
+                    <button
+                      onClick={() => { if (customDialog.onCancel) customDialog.onCancel(); closeDialog(); }}
+                      style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#aaa', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontFamily: "'Clash Display', sans-serif" }}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (customDialog.type === 'confirm' && customDialog.onConfirm) customDialog.onConfirm();
+                      closeDialog();
+                    }}
+                    style={{ flex: 1, padding: '12px', background: '#ebd73f', border: 'none', color: '#111', borderRadius: '12px', cursor: 'pointer', fontWeight: '800', fontFamily: "'Panchang', sans-serif", fontSize: '0.78rem' }}
+                  >
+                    {customDialog.type === 'confirm' ? 'Confirm' : 'OK'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       , document.body)}
 
-      {/* CONFLICT RESOLUTION MODAL */}
+      {/* CONFLICT RESOLUTION MODAL - Rock Solid Modal Chassis */}
       {showConflictModal && conflicts[currentConflictIdx] && createPortal(
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(5, 5, 5, 0.8)', backdropFilter: 'blur(10px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#111', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '24px', padding: '40px', maxWidth: '500px', width: '90%', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-            <h3 style={{ color: '#ebd73f', marginBottom: '20px' }}>Resolve Auto-Fill Conflict</h3>
-            
-            <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                <strong style={{ display: 'block', marginBottom: '10px', color: '#fff' }}>{conflicts[currentConflictIdx].label}</strong>
+        <div 
+          className={styles.modalOverlay}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowConflictModal(false); }}
+        >
+          <div 
+            className={styles.modalCard}
+            style={{ maxWidth: '540px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={styles.modalHeader}>
+              <div>
+                <h3 className={styles.modalTitle} style={{ color: '#ebd73f' }}>
+                  Resolve Auto-Fill Conflict
+                </h3>
+                <p className={styles.modalSubtitle}>
+                  Choose how to handle conflicting pasted values
+                </p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className={styles.modalBody}>
+              <div style={{ padding: '16px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <strong style={{ display: 'block', marginBottom: '10px', color: '#fff', fontSize: '0.95rem' }}>{conflicts[currentConflictIdx].label}</strong>
                 
                 {conflicts[currentConflictIdx].type === 'scalar_multiple' && (
-                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                        Multiple values found in pasted text: <br/>
-                        {conflicts[currentConflictIdx].values.map((v, i) => <div key={i}>- {v}</div>)}
-                    </div>
+                  <div style={{ fontSize: '0.88rem', color: '#ccc', lineHeight: '1.6' }}>
+                    Multiple values found in pasted text: <br/>
+                    {conflicts[currentConflictIdx].values.map((v, i) => <div key={i} style={{ color: '#ebd73f' }}>• {v}</div>)}
+                  </div>
                 )}
                 {conflicts[currentConflictIdx].type === 'scalar_exists' && (
-                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                        Current form has: <strong>{conflicts[currentConflictIdx].currentValue}</strong><br/>
-                        Pasted text has: <strong>{conflicts[currentConflictIdx].value}</strong>
-                    </div>
+                  <div style={{ fontSize: '0.88rem', color: '#ccc', lineHeight: '1.6' }}>
+                    Current form has: <strong style={{ color: '#fff' }}>{conflicts[currentConflictIdx].currentValue}</strong><br/>
+                    Pasted text has: <strong style={{ color: '#ebd73f' }}>{conflicts[currentConflictIdx].value}</strong>
+                  </div>
                 )}
                 {conflicts[currentConflictIdx].type === 'item_match_rate' && (
-                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                        Item already exists with the same rate ({invoiceDetails.currency}{conflicts[currentConflictIdx].item.rate}).
-                    </div>
+                  <div style={{ fontSize: '0.88rem', color: '#ccc', lineHeight: '1.6' }}>
+                    Item already exists with the same rate ({invoiceDetails.currency}{conflicts[currentConflictIdx].item.rate}).
+                  </div>
                 )}
                 {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
-                    <div style={{ fontSize: '0.9rem', color: '#ccc' }}>
-                        Existing Item Rate: {invoiceDetails.currency}{conflicts[currentConflictIdx].existingItem.rate}<br/>
-                        Pasted Item Rate: {invoiceDetails.currency}{conflicts[currentConflictIdx].item.rate}
-                    </div>
+                  <div style={{ fontSize: '0.88rem', color: '#ccc', lineHeight: '1.6' }}>
+                    Existing Item Rate: <strong style={{ color: '#fff' }}>{invoiceDetails.currency}{conflicts[currentConflictIdx].existingItem.rate}</strong><br/>
+                    Pasted Item Rate: <strong style={{ color: '#ebd73f' }}>{invoiceDetails.currency}{conflicts[currentConflictIdx].item.rate}</strong>
+                  </div>
                 )}
-            </div>
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {conflicts[currentConflictIdx].type.startsWith('scalar') && (
-                    <>
-                        <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className={styles.addServiceBtn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
-                            Overwrite Current Value
-                        </button>
-                        <button onClick={() => handleConflictResolution('append')} className={styles.addServiceBtn}>
-                            Append / Keep Both
-                        </button>
-                    </>
+                  <>
+                    <button onClick={() => handleConflictResolution('overwrite', conflicts[currentConflictIdx].values ? conflicts[currentConflictIdx].values[0] : null)} className={styles.addServiceBtn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                      Overwrite Current Value
+                    </button>
+                    <button onClick={() => handleConflictResolution('append')} className={styles.addServiceBtn}>
+                      Append / Keep Both
+                    </button>
+                  </>
                 )}
                 
                 {conflicts[currentConflictIdx].type === 'item_match_rate' && (
-                    <>
-                        <button onClick={() => handleConflictResolution('merge')} className={styles.addServiceBtn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
-                            Merge (Add +{conflicts[currentConflictIdx].item.qty} Quantity)
-                        </button>
-                        <button onClick={() => handleConflictResolution('add_new')} className={styles.addServiceBtn}>
-                            Add as Separate Line Item
-                        </button>
-                    </>
+                  <>
+                    <button onClick={() => handleConflictResolution('merge')} className={styles.addServiceBtn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                      Merge (Add +{conflicts[currentConflictIdx].item.qty} Quantity)
+                    </button>
+                    <button onClick={() => handleConflictResolution('add_new')} className={styles.addServiceBtn}>
+                      Add as Separate Line Item
+                    </button>
+                  </>
                 )}
                 
                 {conflicts[currentConflictIdx].type === 'item_diff_rate' && (
-                    <>
-                        <button onClick={() => handleConflictResolution('merge', 'new')} className={styles.addServiceBtn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
-                            Update Rate & Add Quantity
-                        </button>
-                        <button onClick={() => handleConflictResolution('merge', 'old')} className={styles.addServiceBtn}>
-                            Keep Old Rate & Add Quantity
-                        </button>
-                        <button onClick={() => handleConflictResolution('add_new')} className={styles.addServiceBtn}>
-                            Add as Separate Line Item
-                        </button>
-                    </>
+                  <>
+                    <button onClick={() => handleConflictResolution('merge', 'new')} className={styles.addServiceBtn} style={{ borderColor: '#ebd73f', color: '#ebd73f' }}>
+                      Update Rate & Add Quantity
+                    </button>
+                    <button onClick={() => handleConflictResolution('merge', 'old')} className={styles.addServiceBtn}>
+                      Keep Old Rate & Add Quantity
+                    </button>
+                    <button onClick={() => handleConflictResolution('add_new')} className={styles.addServiceBtn}>
+                      Add as Separate Line Item
+                    </button>
+                  </>
                 )}
 
-                <button onClick={() => handleConflictResolution('skip')} className={styles.addServiceBtn} style={{ marginTop: '10px', borderColor: '#ff4d4d', color: '#ff4d4d' }}>
-                    Skip / Ignore Pasted Value
+                <button onClick={() => handleConflictResolution('skip')} className={styles.addServiceBtn} style={{ marginTop: '8px', borderColor: '#ff4d4d', color: '#ff4d4d' }}>
+                  Skip / Ignore Pasted Value
                 </button>
-            </div>
-            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>
+              </div>
+
+              <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>
                 Conflict {currentConflictIdx + 1} of {conflicts.length}
+              </div>
             </div>
           </div>
         </div>

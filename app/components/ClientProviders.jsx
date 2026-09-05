@@ -441,15 +441,19 @@ function GlobalGenzToggle() {
 
 import { ErrorLogProvider } from '../contexts/ErrorLogContext';
 import CustomValidationHandler from './CustomValidationHandler';
+import ErrorBoundary from './ErrorBoundary';
 
 export default function ClientProviders({ children }) {
   return (
     <ErrorLogProvider>
-      <GenzProvider>
-        {children}
-        <GlobalGenzToggle />
-        <CustomValidationHandler />
-      </GenzProvider>
+      <ErrorBoundary>
+        <GenzProvider>
+          {children}
+          <GlobalGenzToggle />
+          <CustomValidationHandler />
+        </GenzProvider>
+      </ErrorBoundary>
     </ErrorLogProvider>
   );
 }
+

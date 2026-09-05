@@ -551,6 +551,90 @@ export default function RootLayout({ children }) {
         {/* ── Unicons ───────────────────────────────────────────────────── */}
         <link rel="preconnect" href="https://unicons.iconscout.com" />
         <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css" />
+        {/* ── Global Early Error Interceptor (Pre-Hydration) ──────────── */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window === 'undefined') return;
+                window.__dripp_report_error = function(err) {
+                  try {
+                    if (!err || !err.message) return;
+                    var obj = {
+                      id: Date.now().toString(36) + Math.random().toString(36).substring(2, 7),
+                      timestamp: new Date().toISOString(),
+                      level: err.level || 'error',
+                      message: String(err.message).trim(),
+                      source: err.source || window.location.href,
+                      details: err.details || null,
+                      userAgent: navigator.userAgent
+                    };
+                    var raw = localStorage.getItem('dripp_error_logs');
+                    var list = raw ? JSON.parse(raw) : [];
+                    if (list.length > 0 && list[0].message === obj.message && (Date.now() - new Date(list[0].timestamp).getTime() < 3000)) {
+                      return;
+                    }
+                    list.unshift(obj);
+                    if (list.length > 500) list = list.slice(0, 500);
+                    localStorage.setItem('dripp_error_logs', JSON.stringify(list));
+                    
+                    var payload = JSON.stringify(obj);
+                    if (navigator.sendBeacon) {
+                      navigator.sendBeacon('/api/admin/errors', payload);
+                    } else {
+                      fetch('/api/admin/errors', {
+                        method: 'POST',
+                        body: payload,
+                        headers: { 'Content-Type': 'application/json' },
+                        keepalive: true
+                      }).catch(function(){});
+                    }
+                  } catch(e) {}
+                };
+
+                window.addEventListener('error', function(event) {
+                  if (event.target && (event.target.tagName === 'IMG' || event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK')) {
+                    window.__dripp_report_error({
+                      level: 'error',
+                      message: 'Resource Failed to Load: <' + event.target.tagName.toLowerCase() + '>',
+                      source: event.target.src || event.target.href || window.location.href,
+                      details: 'A requested resource failed to load from the network.'
+                    });
+                    return;
+                  }
+                  var msg = event.message || (event.error && event.error.message) || 'Uncaught Exception';
+                  var stack = (event.error && event.error.stack) || '';
+                  window.__dripp_report_error({
+                    level: 'fatal',
+                    message: msg,
+                    source: event.filename || window.location.href,
+                    details: 'Line: ' + event.lineno + ', Col: ' + event.colno + (stack ? '\\n\\nStack Trace:\\n' + stack : '')
+                  });
+                }, true);
+
+                window.addEventListener('unhandledrejection', function(event) {
+                  var reason = event.reason;
+                  var msg = 'Unhandled Promise Rejection';
+                  var stack = '';
+                  if (reason instanceof Error) {
+                    msg = reason.message || msg;
+                    stack = reason.stack || '';
+                  } else if (typeof reason === 'string') {
+                    msg = reason;
+                  } else if (reason && typeof reason === 'object') {
+                    msg = reason.message || JSON.stringify(reason);
+                  }
+                  window.__dripp_report_error({
+                    level: 'error',
+                    message: msg,
+                    source: window.location.href,
+                    details: stack ? 'Stack Trace:\\n' + stack : 'Reason: ' + String(reason)
+                  });
+                });
+              })();
+            `
+          }}
+        />
       </head>
       <body suppressHydrationWarning>
         <ClientProviders>
