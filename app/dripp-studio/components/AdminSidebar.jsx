@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video, AlertTriangle, BookOpen, ChevronLeft, Menu, X, Sparkles, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video, AlertTriangle, BookOpen, ChevronLeft, Menu, X, Sparkles, ClipboardList, Layers } from 'lucide-react';
 import styles from '../admin.module.css';
 import { useGenz } from '../../contexts/GenzContext';
 import { useState, useEffect } from 'react';
@@ -31,6 +31,7 @@ export default function AdminSidebar() {
 
   const navItems = [
     { name: isGenz ? 'main base' : 'Dashboard', path: '/dripp-studio', icon: LayoutDashboard },
+    { name: isGenz ? 'the menu' : 'Services & Cloud', path: '/dripp-studio/services', icon: Layers },
     { name: isGenz ? 'brain dump' : 'Notes & Planning', path: '/dripp-studio/notes-and-planning', icon: BookOpen },
     { name: isGenz ? 'the manual' : 'SOPs & Rules', path: '/dripp-studio/sop', icon: ClipboardList },
     { name: isGenz ? 'get paid' : 'Invoice Maker', path: '/dripp-studio/invoice', icon: FileText },

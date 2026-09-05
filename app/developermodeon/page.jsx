@@ -10,10 +10,67 @@ import ProfileWidget from "../components/ProfileWidget";
 import AuthModal from "../components/AuthModal";
 import DailyLearningSection from "../components/DailyLearningSection";
 import { useGenz } from '../contexts/GenzContext';
+import { DEFAULT_SERVICES_CATEGORIES } from '../lib/servicesData';
 
 export default function Page() {
   const { isGenz } = useGenz() || { isGenz: false };
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [servicesCategories, setServicesCategories] = useState(DEFAULT_SERVICES_CATEGORIES);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const res = await fetch('/api/services');
+        if (res.ok) {
+          const data = await res.json();
+          const list = data?.data || data?.categories || (Array.isArray(data) ? data : null);
+          if (list && Array.isArray(list) && list.length > 0) {
+            setServicesCategories(list);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading services:', err);
+      }
+    };
+
+    fetchServices();
+
+    let bc;
+    try {
+      bc = new BroadcastChannel('dripp_services_channel');
+      bc.onmessage = (e) => {
+        if (e.data?.type === 'SERVICES_UPDATED') {
+          fetchServices();
+        }
+      };
+    } catch (err) {}
+
+    const handleStorage = (e) => {
+      if (e.key === 'dripp_services_updated') {
+        fetchServices();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      if (bc) bc.close();
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Re-synchronize cloud physics and tab glider when services update dynamically
+    const timer = setTimeout(() => {
+      if (typeof window.__initCloudPhysics === 'function') {
+        window.__initCloudPhysics();
+      }
+      const activeTab = document.querySelector('.builder-tab.active') || document.querySelector('.builder-tab');
+      if (activeTab && typeof window.__updateGlider === 'function') {
+        window.__updateGlider(activeTab);
+      }
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [servicesCategories]);
   
   useEffect(() => {
     // Dynamic recalculation of morph word width on GenZ mode change
@@ -93,259 +150,224 @@ export default function Page() {
                 });
             });
 
-            // --- COMMUNITY CANVAS PARTICLE SYSTEM & ATTRACT LOGIC ---
-            const communitySection = document.querySelector('.join-community-section');
-            const communityCanvas = document.getElementById('community-particles-canvas');
+            // --- ATTRACT BUTTON & COMMUNITY PARTICLES (ORIGINAL STYLE, ZERO-LAG) ---
             const attractBtns = document.querySelectorAll('.attract-btn');
+            attractBtns.forEach(btn => {
+                // --- MORPH WIDTH INIT ---
+                const morphWord = btn.querySelector('.morph-word');
+                const morphFront = btn.querySelector('.morph-front');
+                const morphBack = btn.querySelector('.morph-back');
 
-            if (communityCanvas && communitySection) {
-                const ctx = communityCanvas.getContext('2d');
-                let width = 0;
-                let height = 0;
-                let dpr = 1;
-                let rafId = null;
-                let isSectionVisible = true;
-                let isAttracting = false;
-                let mouseX = -9999;
-                let mouseY = -9999;
-                let mouseIn = false;
-                let btnCenterX = 0;
-                let btnCenterY = 0;
+                if (morphWord && morphFront) {
+                    morphWord.style.width = morphFront.offsetWidth + 'px';
+                }
 
-                const isMobile = window.innerWidth < 900;
-                const particleCount = isMobile ? 38 : 85;
+                const isMobileDevice = window.innerWidth < 900;
+                // Original dot count: crisp, elegant distribution around the card
+                const particleCount = isMobileDevice ? 35 : 75;
+                const existingContainer = btn.querySelector('.attract-particles-container');
+                if (existingContainer) existingContainer.remove();
+                if (btn._particleTick) {
+                    gsap.ticker.remove(btn._particleTick);
+                    btn._particleTick = null;
+                }
+                const container = document.createElement('div');
+                container.className = 'attract-particles-container';
+                btn.appendChild(container);
+
                 const particles = [];
+                let isAttracting = false;
 
-                const updateCanvasDimensions = () => {
-                    if (!communitySection || !communityCanvas) return;
-                    const rect = communitySection.getBoundingClientRect();
-                    width = rect.width;
-                    height = rect.height;
-                    dpr = Math.min(window.devicePixelRatio || 1, 2);
-                    communityCanvas.width = Math.floor(width * dpr);
-                    communityCanvas.height = Math.floor(height * dpr);
-                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-                    // Update button center coordinates relative to section
-                    const activeBtn = document.querySelector('.attract-btn');
-                    if (activeBtn) {
-                        const bRect = activeBtn.getBoundingClientRect();
-                        btnCenterX = (bRect.left + bRect.width / 2) - rect.left;
-                        btnCenterY = (bRect.top + bRect.height / 2) - rect.top;
-                    }
-                };
-
-                updateCanvasDimensions();
-
-                // Generate rich, organic particles
                 for (let i = 0; i < particleCount; i++) {
-                    const x = Math.random() * (width || 800);
-                    const y = Math.random() * (height || 500);
-                    const isHero = Math.random() < 0.18;
+                    const p = document.createElement('div');
+                    p.className = 'attract-particle';
+
+                    // Spread randomly across the section around the card, but not directly covering the button
+                    let startX, startY;
+                    do {
+                        startX = (Math.random() - 0.5) * Math.min(window.innerWidth * 0.9, 1100);
+                        startY = (Math.random() - 0.5) * 600;
+                    } while (Math.abs(startX) < 160 && Math.abs(startY) < 65);
+
+                    const scaleStart = Math.random() * 0.8 + 0.6; // Crisp 0.6 to 1.4 scale
+                    const opacityStart = Math.random() * 0.5 + 0.45; // 0.45 to 0.95 opacity
+
+                    gsap.set(p, { x: startX, y: startY, opacity: opacityStart, scale: scaleStart, force3D: true });
+
+                    container.appendChild(p);
+
                     particles.push({
-                        x: x,
-                        y: y,
-                        baseX: x,
-                        baseY: y,
-                        vx: 0,
-                        vy: 0,
-                        radius: isHero ? (Math.random() * 1.5 + 2.8) : (Math.random() * 1.2 + 1.2),
-                        alpha: Math.random() * 0.45 + 0.45,
-                        pulseSpeed: Math.random() * 0.03 + 0.015,
-                        pulsePhase: Math.random() * Math.PI * 2,
+                        element: p,
+                        startX: startX,
+                        startY: startY,
+                        currentX: startX,
+                        currentY: startY,
+                        targetX: startX,
+                        targetY: startY,
+                        repelX: 0,
+                        repelY: 0,
                         wanderAngle: Math.random() * Math.PI * 2,
-                        wanderSpeed: (Math.random() - 0.5) * 0.018,
-                        wanderRadius: Math.random() * 45 + 20,
-                        scale: 1,
-                        targetScale: 1
+                        wanderSpeed: (Math.random() - 0.5) * 0.012,
+                        wanderRadius: Math.random() * 35 + 15,
+                        scaleStart: scaleStart,
+                        opacityStart: opacityStart,
+                        setX: gsap.quickSetter(p, "x", "px"),
+                        setY: gsap.quickSetter(p, "y", "px"),
+                        setScale: gsap.quickSetter(p, "scale"),
+                        setOpacity: gsap.quickSetter(p, "opacity")
                     });
                 }
 
-                let frame = 0;
-                const render = () => {
-                    if (!isSectionVisible) {
-                        rafId = null;
-                        return;
-                    }
+                // Zero-lag mouse tracking: cache button position and only record coordinates on mousemove
+                const section = btn.closest('.join-community-section');
+                let mouseX = -9999;
+                let mouseY = -9999;
+                let isMouseOver = false;
+                let cachedBtnRect = null;
 
-                    frame++;
-                    ctx.clearRect(0, 0, width, height);
+                const updateBtnRect = () => {
+                    cachedBtnRect = btn.getBoundingClientRect();
+                };
 
-                    const repelRadius = 140;
-                    const repelRadiusSq = repelRadius * repelRadius;
+                if (section) {
+                    section.addEventListener('mouseenter', updateBtnRect, { passive: true });
+                    window.addEventListener('resize', updateBtnRect, { passive: true });
+                    window.addEventListener('scroll', updateBtnRect, { passive: true });
 
-                    for (let i = 0; i < particles.length; i++) {
+                    section.addEventListener('mousemove', (e) => {
+                        if (!cachedBtnRect) updateBtnRect();
+                        mouseX = e.clientX - (cachedBtnRect.left + cachedBtnRect.width / 2);
+                        mouseY = e.clientY - (cachedBtnRect.top + cachedBtnRect.height / 2);
+                        isMouseOver = true;
+                    }, { passive: true });
+
+                    section.addEventListener('mouseleave', () => {
+                        isMouseOver = false;
+                        mouseX = -9999;
+                        mouseY = -9999;
+                    }, { passive: true });
+
+                    section.addEventListener('touchmove', (e) => {
+                        if (e.touches.length > 0) {
+                            if (!cachedBtnRect) updateBtnRect();
+                            mouseX = e.touches[0].clientX - (cachedBtnRect.left + cachedBtnRect.width / 2);
+                            mouseY = e.touches[0].clientY - (cachedBtnRect.top + cachedBtnRect.height / 2);
+                            isMouseOver = true;
+                        }
+                    }, { passive: true });
+
+                    section.addEventListener('touchend', () => {
+                        isMouseOver = false;
+                        mouseX = -9999;
+                        mouseY = -9999;
+                    }, { passive: true });
+                }
+
+                // High-performance RAF animation ticker (zero allocations, 60fps/120fps smooth)
+                const repelRadius = 140;
+                const repelRadiusSq = repelRadius * repelRadius;
+                let isSectionInView = true;
+
+                if (typeof IntersectionObserver !== 'undefined' && section) {
+                    const secObs = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            isSectionInView = entry.isIntersecting;
+                        });
+                    }, { threshold: 0.05 });
+                    secObs.observe(section);
+                }
+
+                const tick = () => {
+                    if (!isSectionInView) return;
+
+                    const numP = particles.length;
+                    for (let i = 0; i < numP; i++) {
                         const p = particles[i];
 
                         if (isAttracting) {
-                            // Smoothly gather into the button
-                            const dx = btnCenterX - p.x;
-                            const dy = btnCenterY - p.y;
-                            const dist = Math.hypot(dx, dy) || 1;
-                            const pull = Math.min(10, Math.max(2, dist * 0.09));
-                            p.vx += (dx / dist) * pull;
-                            p.vy += (dy / dist) * pull;
-                            p.x += (btnCenterX - p.x) * 0.08 + p.vx;
-                            p.y += (btnCenterY - p.y) * 0.08 + p.vy;
-                            p.vx *= 0.82;
-                            p.vy *= 0.82;
-                            p.targetScale = 0.6;
+                            // Gather smoothly into button center
+                            p.currentX += (0 - p.currentX) * 0.16;
+                            p.currentY += (0 - p.currentY) * 0.16;
+                            p.setX(p.currentX.toFixed(1));
+                            p.setY(p.currentY.toFixed(1));
+                            p.setScale(0.4);
+                            p.setOpacity(0);
                         } else {
-                            // Natural organic drift wandering around anchor
+                            // Gentle organic wander
                             p.wanderAngle += p.wanderSpeed;
-                            const targetX = p.baseX + Math.cos(p.wanderAngle) * p.wanderRadius;
-                            const targetY = p.baseY + Math.sin(p.wanderAngle) * p.wanderRadius;
+                            const idleX = p.startX + Math.cos(p.wanderAngle) * p.wanderRadius;
+                            const idleY = p.startY + Math.sin(p.wanderAngle) * p.wanderRadius;
 
-                            // Spring to target wander orbit
-                            p.vx += (targetX - p.x) * 0.02;
-                            p.vy += (targetY - p.y) * 0.02;
-
-                            // Interactive cursor repulsion (smooth non-allocating math)
-                            if (mouseIn) {
-                                const dx = p.x - mouseX;
-                                const dy = p.y - mouseY;
+                            // Gentle cursor repulsion without tween thrashing
+                            if (isMouseOver) {
+                                const dx = p.currentX - mouseX;
+                                const dy = p.currentY - mouseY;
                                 const distSq = dx * dx + dy * dy;
-                                if (distSq < repelRadiusSq && distSq > 0.001) {
+
+                                if (distSq < repelRadiusSq && distSq > 0.01) {
                                     const dist = Math.sqrt(distSq);
                                     const force = (repelRadius - dist) / repelRadius;
-                                    const push = force * force * 3.8;
-                                    p.vx += (dx / dist) * push;
-                                    p.vy += (dy / dist) * push;
+                                    p.repelX += (dx / dist) * force * 3.8;
+                                    p.repelY += (dy / dist) * force * 3.8;
                                 }
                             }
 
-                            p.x += p.vx;
-                            p.y += p.vy;
-                            p.vx *= 0.88;
-                            p.vy *= 0.88;
-                            p.targetScale = 1;
-                        }
+                            // Smooth damping back to idle position
+                            p.repelX *= 0.88;
+                            p.repelY *= 0.88;
 
-                        p.scale += (p.targetScale - p.scale) * 0.15;
+                            p.targetX = idleX + p.repelX;
+                            p.targetY = idleY + p.repelY;
 
-                        // Twinkling pulse
-                        const pulse = Math.sin(frame * p.pulseSpeed + p.pulsePhase);
-                        const currentAlpha = Math.max(0.12, Math.min(1, (p.alpha + pulse * 0.22) * p.scale));
-                        const currentRadius = p.radius * p.scale;
+                            p.currentX += (p.targetX - p.currentX) * 0.09;
+                            p.currentY += (p.targetY - p.currentY) * 0.09;
 
-                        if (currentRadius > 0.3 && currentAlpha > 0.02) {
-                            // Soft radial golden glow
-                            const glowRadius = currentRadius * 3.4;
-                            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowRadius);
-                            grad.addColorStop(0, `rgba(255, 255, 255, ${currentAlpha})`);
-                            grad.addColorStop(0.35, `rgba(235, 215, 63, ${currentAlpha * 0.85})`);
-                            grad.addColorStop(1, `rgba(235, 215, 63, 0)`);
-
-                            ctx.fillStyle = grad;
-                            ctx.beginPath();
-                            ctx.arc(p.x, p.y, glowRadius, 0, Math.PI * 2);
-                            ctx.fill();
-
-                            // Bright specular core
-                            ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, currentAlpha * 1.3)})`;
-                            ctx.beginPath();
-                            ctx.arc(p.x, p.y, Math.max(0.8, currentRadius * 0.55), 0, Math.PI * 2);
-                            ctx.fill();
+                            p.setX(p.currentX.toFixed(1));
+                            p.setY(p.currentY.toFixed(1));
+                            p.setScale(p.scaleStart);
+                            p.setOpacity(p.opacityStart);
                         }
                     }
-
-                    rafId = requestAnimationFrame(render);
                 };
 
-                rafId = requestAnimationFrame(render);
+                btn._particleTick = tick;
+                gsap.ticker.add(tick);
 
-                // Mouse interaction handlers on section (covers glass card and full area)
-                const onMouseMove = (e) => {
-                    const rect = communitySection.getBoundingClientRect();
-                    mouseX = e.clientX - rect.left;
-                    mouseY = e.clientY - rect.top;
-                    mouseIn = true;
-                };
-
-                const onMouseLeave = () => {
-                    mouseIn = false;
-                    mouseX = -9999;
-                    mouseY = -9999;
-                };
-
-                communitySection.addEventListener('mousemove', onMouseMove, { passive: true });
-                communitySection.addEventListener('mouseleave', onMouseLeave, { passive: true });
-
-                // Touch support for mobile tap/drag
-                communitySection.addEventListener('touchmove', (e) => {
-                    if (e.touches.length > 0) {
-                        const rect = communitySection.getBoundingClientRect();
-                        mouseX = e.touches[0].clientX - rect.left;
-                        mouseY = e.touches[0].clientY - rect.top;
-                        mouseIn = true;
+                const attractIn = () => {
+                    isAttracting = true;
+                    const curBack = btn.querySelector('.morph-back');
+                    if (morphWord && curBack) {
+                        morphWord.style.width = curBack.offsetWidth + 'px';
                     }
-                }, { passive: true });
+                    btn.classList.add('is-powered');
+                    gsap.to(btn, { scale: 1.04, duration: 0.25, ease: "power2.out" });
+                };
 
-                communitySection.addEventListener('touchend', () => {
-                    mouseIn = false;
-                }, { passive: true });
-
-                window.addEventListener('resize', updateCanvasDimensions, { passive: true });
-
-                // IntersectionObserver to sleep when off-screen
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        isSectionVisible = entry.isIntersecting;
-                        if (isSectionVisible && !rafId) {
-                            rafId = requestAnimationFrame(render);
-                        }
-                    });
-                }, { threshold: 0.05 });
-                observer.observe(communitySection);
-
-                // --- ATTRACT BUTTON INTERACTION ---
-                attractBtns.forEach(btn => {
-                    // MORPH WIDTH INIT
-                    const morphWord = btn.querySelector('.morph-word');
-                    const morphFront = btn.querySelector('.morph-front');
-                    const morphBack = btn.querySelector('.morph-back');
-
-                    if (morphWord && morphFront) {
-                        morphWord.style.width = morphFront.offsetWidth + 'px';
+                const attractOut = () => {
+                    const curFront = btn.querySelector('.morph-front');
+                    if (morphWord && curFront) {
+                        morphWord.style.width = curFront.offsetWidth + 'px';
                     }
+                    btn.classList.remove('is-powered');
+                    gsap.to(btn, { scale: 1, duration: 0.35, ease: "power2.out" });
 
-                    const attractIn = () => {
-                        isAttracting = true;
-                        updateCanvasDimensions();
-                        const curBack = btn.querySelector('.morph-back');
-                        if (morphWord && curBack) {
-                            morphWord.style.width = curBack.offsetWidth + 'px';
-                        }
-                        btn.classList.add('is-powered');
-                        gsap.to(btn, { scale: 1.04, duration: 0.25, ease: "power2.out" });
-                    };
+                    if (isAttracting) {
+                        isAttracting = false;
+                        // Explosive burst back out to their spread locations
+                        particles.forEach(p => {
+                            p.currentX = (Math.random() - 0.5) * 40;
+                            p.currentY = (Math.random() - 0.5) * 40;
+                            p.repelX = (p.startX - 0) * 0.3;
+                            p.repelY = (p.startY - 0) * 0.3;
+                        });
+                    }
+                };
 
-                    const attractOut = () => {
-                        const curFront = btn.querySelector('.morph-front');
-                        if (morphWord && curFront) {
-                            morphWord.style.width = curFront.offsetWidth + 'px';
-                        }
-                        btn.classList.remove('is-powered');
-                        gsap.to(btn, { scale: 1, duration: 0.35, ease: "power2.out" });
-
-                        if (isAttracting) {
-                            isAttracting = false;
-                            // Explode particles outward radially from button center
-                            particles.forEach(p => {
-                                const angle = Math.atan2(p.y - btnCenterY, p.x - btnCenterX) + (Math.random() - 0.5) * 0.7;
-                                const speed = 8 + Math.random() * 10;
-                                p.vx = Math.cos(angle) * speed;
-                                p.vy = Math.sin(angle) * speed;
-                            });
-                        }
-                    };
-
-                    btn.addEventListener('mouseenter', attractIn);
-                    btn.addEventListener('mouseleave', attractOut);
-                    btn.addEventListener('touchstart', attractIn, { passive: true });
-                    btn.addEventListener('touchend', attractOut, { passive: true });
-                });
-            }
+                btn.addEventListener('mouseenter', attractIn);
+                btn.addEventListener('mouseleave', attractOut);
+                btn.addEventListener('touchstart', attractIn, { passive: true });
+                btn.addEventListener('touchend', attractOut, { passive: true });
+            });
 
             // --- PRELOADER ANIMATION ---
             const tlPreloader = gsap.timeline();
@@ -1296,20 +1318,41 @@ export default function Page() {
         // gsap.to(".hero-sub", { opacity: 1, duration: 2, delay: 0.5 }); // Handled in preloader timeline
 
         // --- FLOATING SERVICES CLOUD ---
-        const fPills = document.querySelectorAll('.f-pill');
         const cloudContainer = document.getElementById('floating-cloud');
 
-        if (fPills.length > 0 && cloudContainer) {
+        if (cloudContainer) {
 
             // --- Zero-Gravity Physics State ---
             const pillState = [];
             let physicsInitialized = false;
             let containerW = cloudContainer.offsetWidth || window.innerWidth;
             let containerH = cloudContainer.offsetHeight || 550;
+            let isCloudInView = true;
+            let visibilityObserver = null;
+
+            // Use IntersectionObserver to cull physics when offscreen without layout thrashing
+            if (typeof IntersectionObserver !== 'undefined') {
+                visibilityObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        isCloudInView = entry.isIntersecting;
+                    });
+                }, { threshold: 0.01, rootMargin: '150px 0px' });
+                visibilityObserver.observe(cloudContainer);
+            }
 
             function initPhysics() {
-                // Scatter pills across the container on init
-                fPills.forEach((pill, i) => {
+                pillState.length = 0;
+                const currentPills = document.querySelectorAll('.f-pill');
+                if (!currentPills || currentPills.length === 0) return;
+
+                // Scatter pills across the container on init using a jittered grid to avoid initial stacking
+                const totalPills = currentPills.length;
+                const cols = Math.max(6, Math.floor(Math.sqrt(totalPills * 1.8)));
+                const rows = Math.ceil(totalPills / cols);
+                const cellW = (containerW * 0.84) / cols;
+                const cellH = (containerH * 0.78) / rows;
+
+                currentPills.forEach((pill, i) => {
                     // Reset any GSAP inline transforms
                     gsap.set(pill, { clearProps: 'all' });
                     pill.style.position = 'absolute';
@@ -1319,28 +1362,32 @@ export default function Page() {
                     pill.style.cursor = 'grab';
                     pill.style.userSelect = 'none';
 
-                    // --- Depth: random layer between 0.55 and 1.1 ---
-                    const depth = 0.55 + Math.random() * 0.55;
-                    const pillScale = 0.7 + depth * 0.45; // 0.95 to 1.2
-                    const pillOpacity = 0.35 + depth * 0.55; // 0.65 to 0.96
+                    // --- Depth: layer between 0.6 and 1.1 ---
+                    const depth = 0.6 + Math.random() * 0.5;
+                    const pillScale = 0.72 + depth * 0.42; // 0.97 to 1.18
+                    const pillOpacity = 0.38 + depth * 0.54; // 0.70 to 0.97
                     const pillZIndex = Math.floor(depth * 10);
 
                     pill.style.opacity = Math.min(pillOpacity, 1);
                     pill.style.zIndex = pillZIndex;
                     pill.style.fontSize = `${(0.78 + depth * 0.22).toFixed(2)}rem`;
 
-                    // Scatter pills across the container on init
-                    const px = (Math.random() - 0.5) * containerW * 0.85;
-                    const py = (Math.random() - 0.5) * containerH * 0.80;
+                    // Position distributed across grid with gentle random jitter
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+                    const px = -containerW * 0.42 + (col + 0.5) * cellW + (Math.random() - 0.5) * cellW * 0.6;
+                    const py = -containerH * 0.39 + (row + 0.5) * cellH + (Math.random() - 0.5) * cellH * 0.6;
 
-                    // Randomized velocity per pill
-                    const baseSpeed = 0.4 + Math.random() * 1.0; // Slightly faster base
-                    const angle = Math.random() * Math.PI * 2;
+                    // Smooth organic cruising speed (calm, elegant zero-gravity floating)
+                    const baseSpeed = 0.28 + Math.random() * 0.38;
+                    const wanderAngle = Math.random() * Math.PI * 2;
+                    const wanderSpeed = (0.003 + Math.random() * 0.005) * (Math.random() < 0.5 ? 1 : -1);
 
-                    // Per-pill physics personality
-                    const pillMaxSpeed = 1.2 + Math.random() * 1.8;
-                    const pillNudgeChance = 0.03 + Math.random() * 0.07; // 3% – 10%
-                    const pillNudgeForce = 0.12 + Math.random() * 0.18;
+                    // Per-pill physics properties
+                    const pillMaxSpeed = 1.0 + Math.random() * 0.6;
+                    const hw = Math.max(pill.offsetWidth / 2, 54);
+                    const hh = Math.max(pill.offsetHeight / 2, 18);
+                    const collisionRadius = Math.max(hw, hh) * 0.88;
 
                     const shouldHide = (window.innerWidth <= 900) && ((i % 3) !== 0);
                     pill.style.display = shouldHide ? 'none' : 'inline-flex';
@@ -1349,76 +1396,183 @@ export default function Page() {
                         el: pill,
                         isActive: !shouldHide,
                         x: px, y: py,
-                        vx: Math.cos(angle) * baseSpeed,
-                        vy: Math.sin(angle) * baseSpeed,
+                        vx: Math.cos(wanderAngle) * baseSpeed,
+                        vy: Math.sin(wanderAngle) * baseSpeed,
+                        baseSpeed: baseSpeed,
+                        wanderAngle: wanderAngle,
+                        wanderSpeed: wanderSpeed,
+                        phaseX: Math.random() * 10,
+                        phaseY: Math.random() * 10,
+                        freqX: 0.0006 + Math.random() * 0.0007,
+                        freqY: 0.0006 + Math.random() * 0.0007,
                         scale: pillScale,
                         baseOpacity: pillOpacity,
                         baseZIndex: pillZIndex,
                         maxSpeed: pillMaxSpeed,
-                        nudgeChance: pillNudgeChance,
-                        nudgeForce: pillNudgeForce,
+                        hw: hw,
+                        hh: hh,
+                        collisionRadius: collisionRadius,
                         isDragging: false,
                         lastClickTime: 0,
                         startPX: 0, startPY: 0,
                         startEX: 0, startEY: 0,
                         prevPX: 0, prevPY: 0,
-                        dragVX: 0, dragVY: 0,
-                        hw: pill.offsetWidth / 2 || 60,
-                        hh: pill.offsetHeight / 2 || 20
+                        dragVX: 0, dragVY: 0
                     });
 
                     const st = pillState[i];
                     _applyTransform(pill, st);
                     _attachDragListeners(pill, st);
+
+                    // Re-apply selected class if already in cart
+                    const svc = pill.textContent.replace(' ✓', '').trim();
+                    if (typeof selectedServices !== 'undefined' && selectedServices.has(svc)) {
+                        pill.classList.add('selected');
+                        pill.style.zIndex = 100;
+                    }
+                });
+
+                // Initial relaxation passes to resolve any overlap cleanly
+                for (let pass = 0; pass < 12; pass++) {
+                    for (let a = 0; a < pillState.length; a++) {
+                        const p1 = pillState[a];
+                        if (!p1.isActive) continue;
+                        for (let b = a + 1; b < pillState.length; b++) {
+                            const p2 = pillState[b];
+                            if (!p2.isActive) continue;
+                            let dx = p2.x - p1.x;
+                            let dy = p2.y - p1.y;
+                            let dist = Math.hypot(dx, dy);
+                            const minDist = (p1.collisionRadius + p2.collisionRadius) * 0.72;
+                            if (dist < minDist) {
+                                if (dist === 0) { dx = (Math.random() - 0.5) || 1; dy = (Math.random() - 0.5) || 1; dist = Math.hypot(dx, dy); }
+                                const push = (minDist - dist) * 0.38;
+                                const nx = dx / dist;
+                                const ny = dy / dist;
+                                p1.x -= nx * push;
+                                p1.y -= ny * push;
+                                p2.x += nx * push;
+                                p2.y += ny * push;
+                            }
+                        }
+                    }
+                }
+
+                pillState.forEach(s => {
+                    _applyTransform(s.el, s);
                 });
 
                 // Start the physics loop via GSAP ticker for maximum stability
-                gsap.ticker.add(_physicsTick);
-                physicsInitialized = true;
+                if (!physicsInitialized) {
+                    gsap.ticker.add(_physicsTick);
+                    physicsInitialized = true;
+                }
             }
+            window.__initCloudPhysics = initPhysics;
 
+            // High-precision sub-pixel translation for ultra-smooth GPU composition
             function _applyTransform(el, s) {
-                el.style.transform = `translate3d(calc(-50% + ${Math.round(s.x)}px), calc(-50% + ${Math.round(s.y)}px), 0) scale(${s.scale})`;
+                el.style.transform = `translate3d(calc(-50% + ${s.x.toFixed(2)}px), calc(-50% + ${s.y.toFixed(2)}px), 0) scale(${s.scale})`;
             }
 
-            // Mobile: throttle physics to ~30fps
-            let _physicsFrameCount = 0;
-            const _isMobilePhysics = window.innerWidth <= 900;
+            function _physicsTick(time, deltaTime) {
+                // Viewport culling without layout thrashing
+                if (!isCloudInView) return;
 
-            function _physicsTick() {
-                // Viewport culling: only run physics when the cloud is actually on-screen
-                const cRect = cloudContainer.getBoundingClientRect();
-                if (cRect.bottom < -100 || cRect.top > window.innerHeight + 100) return;
+                // Delta time normalization: 16.667ms = 1.0 (60fps reference)
+                // Clamped to [0.2, 2.0] to prevent huge jumps when switching tabs
+                const rawDt = (deltaTime || 16.667) / 16.667;
+                const dt = Math.min(Math.max(rawDt, 0.2), 2.0);
 
-                pillState.forEach(s => {
-                    if (!s.isActive || s.isDragging) return;
+                const activePills = [];
+                const boundsX = containerW * 0.44;
+                const boundsY = containerH * 0.42;
+                const wrapLimitX = containerW / 2 + 100;
+                const wrapLimitY = containerH / 2 + 80;
+                const nowMs = time * 1000;
 
-                    // Per-pill random nudge (zero-gravity tumble)
-                    if (Math.random() < s.nudgeChance) {
-                        s.vx += (Math.random() - 0.5) * s.nudgeForce;
-                        s.vy += (Math.random() - 0.5) * s.nudgeForce;
+                // Pass 1: Smooth continuous harmonic wandering & velocity steering
+                for (let i = 0; i < pillState.length; i++) {
+                    const s = pillState[i];
+                    if (!s.isActive) continue;
+                    activePills.push(s);
+                    if (s.isDragging) continue;
+
+                    // Smooth angular drift
+                    s.wanderAngle += s.wanderSpeed * dt;
+
+                    // Harmonic wave oscillations for lifelike breathing movement
+                    const waveX = Math.sin(nowMs * s.freqX + s.phaseX) * 0.1;
+                    const waveY = Math.cos(nowMs * s.freqY + s.phaseY) * 0.1;
+
+                    const targetVx = Math.cos(s.wanderAngle) * s.baseSpeed + waveX;
+                    const targetVy = Math.sin(s.wanderAngle) * s.baseSpeed + waveY;
+
+                    // Smooth exponential blending towards target drift velocity
+                    const steer = 1 - Math.pow(0.965, dt);
+                    s.vx += (targetVx - s.vx) * steer;
+                    s.vy += (targetVy - s.vy) * steer;
+
+                    // Soft elastic restorative cushion near outer edges
+                    const excessX = Math.abs(s.x) - boundsX;
+                    if (excessX > 0) {
+                        s.vx -= Math.sign(s.x) * (excessX / 65) * 0.14 * dt;
                     }
+                    const excessY = Math.abs(s.y) - boundsY;
+                    if (excessY > 0) {
+                        s.vy -= Math.sign(s.y) * (excessY / 48) * 0.14 * dt;
+                    }
+                }
 
-                    // Ambient persistent drift - ensures they NEVER stop fully
-                    s.vx += (Math.random() - 0.5) * 0.01;
-                    s.vy += (Math.random() - 0.5) * 0.01;
+                // Pass 2: Pairwise soft bubble separation (prevents bubbles stacking/overlapping)
+                const numActive = activePills.length;
+                for (let i = 0; i < numActive; i++) {
+                    const p1 = activePills[i];
+                    for (let j = i + 1; j < numActive; j++) {
+                        const p2 = activePills[j];
+                        const dx = p2.x - p1.x;
+                        const dy = p2.y - p1.y;
+                        const distSq = dx * dx + dy * dy;
+                        const minDist = (p1.collisionRadius + p2.collisionRadius) * 0.70;
+                        const minDistSq = minDist * minDist;
 
-                    // Per-pill speed cap
-                    const speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
-                    if (speed > s.maxSpeed) {
+                        if (distSq < minDistSq && distSq > 0.001) {
+                            const dist = Math.sqrt(distSq);
+                            const overlap = (minDist - dist) / minDist;
+                            const push = overlap * overlap * 0.28 * dt;
+                            const nx = dx / dist;
+                            const ny = dy / dist;
+
+                            if (!p1.isDragging) {
+                                p1.vx -= nx * push;
+                                p1.vy -= ny * push;
+                            }
+                            if (!p2.isDragging) {
+                                p2.vx += nx * push;
+                                p2.vy += ny * push;
+                            }
+                        }
+                    }
+                }
+
+                // Pass 3: Integration, boundary wrap safety, edge fade & subpixel DOM transform
+                for (let i = 0; i < numActive; i++) {
+                    const s = activePills[i];
+                    if (s.isDragging) continue;
+
+                    // Smooth speed cap
+                    const speedSq = s.vx * s.vx + s.vy * s.vy;
+                    if (speedSq > s.maxSpeed * s.maxSpeed) {
+                        const speed = Math.sqrt(speedSq);
                         s.vx = (s.vx / speed) * s.maxSpeed;
                         s.vy = (s.vy / speed) * s.maxSpeed;
                     }
 
-                    s.x += s.vx;
-                    s.y += s.vy;
+                    // Delta-time scaled position integration
+                    s.x += s.vx * dt;
+                    s.y += s.vy * dt;
 
-                    // Boundary: Infinite loop teleportation with edge fade
-                    const hw = s.hw;
-                    const hh = s.hh;
-                    const wrapLimitX = containerW / 2 + hw + 20;
-                    const wrapLimitY = containerH / 2 + hh + 20;
-
+                    // Safety boundary wrap if thrown or pushed beyond outer limits
                     if (s.x > wrapLimitX) s.x = -wrapLimitX;
                     else if (s.x < -wrapLimitX) s.x = wrapLimitX;
 
@@ -1430,20 +1584,20 @@ export default function Page() {
                     const distY = Math.abs(s.y) / (containerH / 2);
                     const maxDist = Math.max(distX, distY);
 
-                    const fadeStart = 0.8;
+                    const fadeStart = 0.82;
                     let targetOpacity = s.baseOpacity;
                     let targetPE = 'auto';
 
                     if (maxDist > fadeStart && !s.el.classList.contains('selected')) {
                         const fadeFactor = Math.max(0, 1 - ((maxDist - fadeStart) / (1 - fadeStart)));
                         targetOpacity = s.baseOpacity * fadeFactor * fadeFactor;
-                        targetPE = fadeFactor < 0.1 ? 'none' : 'auto';
+                        targetPE = fadeFactor < 0.08 ? 'none' : 'auto';
                     } else if (s.el.classList.contains('selected')) {
                         targetOpacity = 1;
                         targetPE = 'auto';
                     }
 
-                    // Only update DOM styles if values meaningfully changed (eliminates style thrashing)
+                    // Only update DOM styles if values meaningfully changed to eliminate layout thrashing
                     if (s._curOpacity === undefined || Math.abs(s._curOpacity - targetOpacity) > 0.02) {
                         s.el.style.opacity = targetOpacity.toFixed(2);
                         s._curOpacity = targetOpacity;
@@ -1453,12 +1607,12 @@ export default function Page() {
                         s._curPE = targetPE;
                     }
 
-                    // Very light damping
-                    s.vx *= 0.998;
-                    s.vy *= 0.998;
+                    // Gentle damping
+                    s.vx *= Math.pow(0.996, dt);
+                    s.vy *= Math.pow(0.996, dt);
 
                     _applyTransform(s.el, s);
-                });
+                }
             }
 
             function _attachDragListeners(pill, s) {
@@ -1485,8 +1639,9 @@ export default function Page() {
                     if (!s.isDragging) return;
                     const dx = e.clientX - s.startPX;
                     const dy = e.clientY - s.startPY;
-                    s.dragVX = e.clientX - s.prevPX;
-                    s.dragVY = e.clientY - s.prevPY;
+                    // Exponential filter on drag velocity for smooth throw
+                    s.dragVX = (e.clientX - s.prevPX) * 0.7 + s.dragVX * 0.3;
+                    s.dragVY = (e.clientY - s.prevPY) * 0.7 + s.dragVY * 0.3;
                     s.prevPX = e.clientX;
                     s.prevPY = e.clientY;
                     s.x = s.startEX + dx;
@@ -1507,9 +1662,14 @@ export default function Page() {
                         pill.style.zIndex = 100;
                     }
 
-                    // Throw with drag velocity
-                    s.vx = s.dragVX * 0.4;
-                    s.vy = s.dragVY * 0.4;
+                    // Throw with drag velocity - smooth and clamped
+                    s.vx = Math.max(-s.maxSpeed * 2.2, Math.min(s.maxSpeed * 2.2, s.dragVX * 0.35));
+                    s.vy = Math.max(-s.maxSpeed * 2.2, Math.min(s.maxSpeed * 2.2, s.dragVY * 0.35));
+
+                    // Seamlessly align wander trajectory to throw direction
+                    if (Math.abs(s.vx) > 0.1 || Math.abs(s.vy) > 0.1) {
+                        s.wanderAngle = Math.atan2(s.vy, s.vx);
+                    }
 
                     const totalMoved = Math.sqrt(
                         Math.pow(e.clientX - s.startPX, 2) +
@@ -1556,17 +1716,15 @@ export default function Page() {
                             if (!physicsInitialized) {
                                 initPhysics();
                             } else {
-                                // Update dimensions for wrapping
-                                containerW = newW;
-                                containerH = newH;
                                 // Safely handle responsive window resizing without destroying pill x/y
-                                fPills.forEach((pill, i) => {
+                                document.querySelectorAll('.f-pill').forEach((pill, i) => {
                                     const shouldHide = (window.innerWidth <= 900) && ((i % 3) !== 0);
                                     if (pillState[i]) {
                                         pillState[i].isActive = !shouldHide;
                                         pill.style.display = shouldHide ? 'none' : 'inline-flex';
-                                        pillState[i].hw = pill.offsetWidth / 2 || 60;
-                                        pillState[i].hh = pill.offsetHeight / 2 || 20;
+                                        pillState[i].hw = Math.max(pill.offsetWidth / 2, 54);
+                                        pillState[i].hh = Math.max(pill.offsetHeight / 2, 18);
+                                        pillState[i].collisionRadius = Math.max(pillState[i].hw, pillState[i].hh) * 0.88;
                                     }
                                 });
                             }
@@ -1581,6 +1739,9 @@ export default function Page() {
 
         // --- CUSTOM PACKAGE BUILDER (RECEIPT LOGIC) ---
         const selectedServices = new Map();
+        window.__selectedServices = selectedServices;
+        window.__updateGlider = updateGlider;
+        window.__switchTabTo = switchTabTo;
         let hasAutoScrolledToCart = false; // Tracks if we've shown the auto-scroll tour
         const customQuoteBtn = document.getElementById('custom-quote-btn');
         const receiptItemsContainer = document.getElementById('receipt-items');
@@ -1794,11 +1955,15 @@ export default function Page() {
             });
         }
 
-        document.querySelectorAll('.builder-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                switchTabTo(tab.dataset.tab);
+        const builderTabsContainer = document.getElementById('builder-tabs');
+        if (builderTabsContainer) {
+            builderTabsContainer.addEventListener('click', (e) => {
+                const tab = e.target.closest('.builder-tab');
+                if (tab && tab.dataset.tab) {
+                    switchTabTo(tab.dataset.tab);
+                }
             });
-        });
+        }
 
         // Initialize glider pos, waits briefly for fonts/layout
         setTimeout(() => {
@@ -1922,9 +2087,13 @@ export default function Page() {
             }
         }
 
-        document.querySelectorAll('.custom-chip').forEach(chip => {
-            chip.addEventListener('click', (e) => {
+        const chipPanelsContainer = document.querySelector('.chip-panels');
+        if (chipPanelsContainer) {
+            chipPanelsContainer.addEventListener('click', (e) => {
+                const chip = e.target.closest('.custom-chip');
+                if (!chip) return;
                 const svc = chip.dataset.service;
+                if (!svc) return;
 
                 if (selectedServices.has(svc)) {
                     // --- DE-SELECT: Smooth Jelly Shake-off ---
@@ -1965,7 +2134,7 @@ export default function Page() {
                 }
                 updateReceipt();
             });
-        });
+        }
 
         // Wire floating pills directly using global dual action handler
         window.handlePillAction = function (e, pill) {
@@ -2784,92 +2953,17 @@ export default function Page() {
       </div>
       {/* Floating Services Cloud */}
       <div className="floating-services-cloud" id="floating-cloud">
-        {/* Video Production */}
-        <span className="f-pill">Podcast Editing</span>
-        <span className="f-pill">Documentary Editing</span>
-        <span className="f-pill">School Videography</span>
-        <span className="f-pill">Drone Footage</span>
-        <span className="f-pill">Music Videos</span>
-        <span className="f-pill">Corporate Videos</span>
-        <span className="f-pill">Commercial Videos</span>
-        <span className="f-pill">Testimonial Videos</span>
-        <span className="f-pill">Real Estate Videography</span>
-        <span className="f-pill">Event Coverage</span>
-        <span className="f-pill">YouTube Videos</span>
-        <span className="f-pill">Instagram Reels</span>
-        <span className="f-pill">TikTok Videos</span>
-        <span className="f-pill">YouTube Shorts</span>
-        <span className="f-pill">Explainer Videos</span>
-        <span className="f-pill">Product Videos</span>
-        <span className="f-pill">Training Videos</span>
-        <span className="f-pill">Live Stream Setup</span>
-        <span className="f-pill">Sports Videography</span>
-        <span className="f-pill">Fashion Videos</span>
-        <span className="f-pill">Short Film Production</span>
-        {/* Photography */}
-        <span className="f-pill">Concert Photography</span>
-        <span className="f-pill">Corporate Headshots</span>
-        <span className="f-pill">Product Photography</span>
-        <span className="f-pill">Event Photography</span>
-        <span className="f-pill">Behind the Scenes</span>
-        <span className="f-pill">Real Estate Photography</span>
-        <span className="f-pill">Fashion Photography</span>
-        <span className="f-pill">Food Photography</span>
-        <span className="f-pill">Sports Photography</span>
-        {/* Post-Production */}
-        <span className="f-pill">Video Color Grading</span>
-        <span className="f-pill">Subtitles &amp; Captions</span>
-        <span className="f-pill">Motion Graphics</span>
-        <span className="f-pill">VFX &amp; Green Screen</span>
-        <span className="f-pill">Sound Mixing</span>
-        <span className="f-pill">Thumbnail Design</span>
-        <span className="f-pill">Video Ads</span>
-        <span className="f-pill">YouTube Chapters</span>
-        <span className="f-pill">Podcast Chapters</span>
-        {/* Graphic & Brand Design */}
-        <span className="f-pill">Logo Design</span>
-        <span className="f-pill">Brand Identity</span>
-        <span className="f-pill">Poster Design</span>
-        <span className="f-pill">T-Shirt &amp; Merch Design</span>
-        <span className="f-pill">Social Media Graphics</span>
-        <span className="f-pill">Album Artwork</span>
-        <span className="f-pill">Flyer Design</span>
-        <span className="f-pill">Business Cards</span>
-        <span className="f-pill">Banner &amp; Signage</span>
-        <span className="f-pill">Pitch Deck Design</span>
-        <span className="f-pill">Presentation Design</span>
-        <span className="f-pill">Mascot Design</span>
-        <span className="f-pill">Packaging Design</span>
-        <span className="f-pill">Menu Design</span>
-        <span className="f-pill">Event Branding</span>
-        <span className="f-pill">Streetwear Lookbooks</span>
-        {/* Web & Digital */}
-        <span className="f-pill">Website Design</span>
-        <span className="f-pill">3D Website Design</span>
-        <span className="f-pill">eCommerce Website</span>
-        <span className="f-pill">Shopify Store</span>
-        <span className="f-pill">UI/UX Design</span>
-        <span className="f-pill">Landing Pages</span>
-        <span className="f-pill">SEO Optimization</span>
-        <span className="f-pill">App UI Design</span>
-        <span className="f-pill">Social Media Strategy</span>
-        {/* Animation & 3D */}
-        <span className="f-pill">2D Animation</span>
-        <span className="f-pill">3D Animation</span>
-        <span className="f-pill">3D Product Renders</span>
-        <span className="f-pill">Animated Logo</span>
-        <span className="f-pill">Whiteboard Animation</span>
-        <span className="f-pill">Virtual Reality (VR)</span>
-        <span className="f-pill">Augmented Reality (AR)</span>
-        {/* Social Media */}
-        <span className="f-pill">Meta Management</span>
-        <span className="f-pill">YouTube Management</span>
-        <span className="f-pill">Ads Management</span>
-        <span className="f-pill">Google Business Profile</span>
-        <span className="f-pill">Social Media Strategy</span>
-        <span className="f-pill">Content Scheduling</span>
-        <span className="f-pill">Community Management</span>
-        <span className="f-pill">Influencer Outreach</span>
+        {servicesCategories.flatMap(cat =>
+          (cat.services || []).map(svc => {
+            const name = typeof svc === 'string' ? svc : svc.name;
+            const key = (typeof svc === 'object' && svc.id) ? svc.id : `${cat.id}-${name}`;
+            return (
+              <span key={key} className="f-pill" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                {name}
+              </span>
+            );
+          })
+        )}
       </div>
       <p className="cloud-hint"><span style={{ color: 'var(--brand-yellow)' }}>✦</span> Drag to explore &amp; float • Double-click to add</p>
       {/* Custom Package Builder (Receipt Builder) */}
@@ -2883,131 +2977,42 @@ export default function Page() {
           {/* Category Tabs */}
           <div className="builder-tabs" id="builder-tabs">
             <div className="tab-glider" id="tab-glider" />
-            <button className="builder-tab active" data-tab="video">Video</button>
-            <button className="builder-tab" data-tab="photo">Photography</button>
-            <button className="builder-tab" data-tab="post">Post-Production</button>
-            <button className="builder-tab" data-tab="design">Design</button>
-            <button className="builder-tab" data-tab="web">Web &amp; Digital</button>
-            <button className="builder-tab" data-tab="animation">Animation &amp; 3D</button>
-            <button className="builder-tab" data-tab="social">Social Media</button>
+            {servicesCategories.map((cat, idx) => (
+              <button 
+                key={cat.id} 
+                className={`builder-tab ${idx === 0 ? 'active' : ''}`} 
+                data-tab={cat.id}
+                style={{ fontFamily: "'Panchang', sans-serif" }}
+              >
+                {cat.name}
+              </button>
+            ))}
           </div>
           {/* Chip Panels */}
           <div className="chip-scroll">
             <div className="chip-panels">
-              <div className="chip-panel active" data-panel="video">
-                {/* Only on-location / production services */}
-                <div className="custom-chip" data-service="Music Video Shoot">Music Video Shoot</div>
-                <div className="custom-chip" data-service="Corporate Video Shoot">Corporate Video Shoot
+              {servicesCategories.map((cat, idx) => (
+                <div 
+                  key={cat.id} 
+                  className={`chip-panel ${idx === 0 ? 'active' : ''}`} 
+                  data-panel={cat.id}
+                >
+                  {(cat.services || []).map(svc => {
+                    const name = typeof svc === 'string' ? svc : svc.name;
+                    const key = (typeof svc === 'object' && svc.id) ? svc.id : `${cat.id}-${name}`;
+                    return (
+                      <div 
+                        key={key} 
+                        className="custom-chip" 
+                        data-service={name}
+                        style={{ fontFamily: "'Clash Display', sans-serif" }}
+                      >
+                        {name}
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="custom-chip" data-service="Commercial Shoot">Commercial Shoot</div>
-                <div className="custom-chip" data-service="Event Coverage">Event Coverage</div>
-                <div className="custom-chip" data-service="School Videography">School Videography</div>
-                <div className="custom-chip" data-service="Drone Footage">Drone Footage</div>
-                <div className="custom-chip" data-service="Real Estate Videography">Real Estate Videography
-                </div>
-                <div className="custom-chip" data-service="Sports Videography">Sports Videography</div>
-                <div className="custom-chip" data-service="Fashion Video Shoot">Fashion Video Shoot</div>
-                <div className="custom-chip" data-service="Short Film Production">Short Film Production
-                </div>
-                <div className="custom-chip" data-service="Testimonial Shoot">Testimonial Shoot</div>
-                <div className="custom-chip" data-service="Live Stream Setup">Live Stream Setup</div>
-                <div className="custom-chip" data-service="Behind the Scenes">Behind the Scenes</div>
-              </div>
-              <div className="chip-panel" data-panel="photo">
-                <div className="custom-chip" data-service="Concert Photography">Concert Photography</div>
-                <div className="custom-chip" data-service="Corporate Headshots">Corporate Headshots</div>
-                <div className="custom-chip" data-service="Product Photography">Product Photography</div>
-                <div className="custom-chip" data-service="Event Photography">Event Photography</div>
-                <div className="custom-chip" data-service="Real Estate Photography">Real Estate Photography
-                </div>
-                <div className="custom-chip" data-service="Fashion Photography">Fashion Photography</div>
-                <div className="custom-chip" data-service="Food Photography">Food Photography</div>
-                <div className="custom-chip" data-service="Sports Photography">Sports Photography</div>
-              </div>
-              <div className="chip-panel" data-panel="post">
-                {/* All editing, delivery-format, mixing, and post services */}
-                <div className="custom-chip" data-service="Podcast Editing">Podcast Editing</div>
-                <div className="custom-chip" data-service="Documentary Editing">Documentary Editing</div>
-                <div className="custom-chip" data-service="YouTube Video Editing">YouTube Video Editing
-                </div>
-                <div className="custom-chip" data-service="Instagram Reels Editing">Instagram Reels Editing
-                </div>
-                <div className="custom-chip" data-service="TikTok Video Editing">TikTok Video Editing</div>
-                <div className="custom-chip" data-service="YouTube Shorts Editing">YouTube Shorts Editing
-                </div>
-                <div className="custom-chip" data-service="Explainer Video Editing">Explainer Video Editing
-                </div>
-                <div className="custom-chip" data-service="Product Video Editing">Product Video Editing
-                </div>
-                <div className="custom-chip" data-service="Training Video Editing">Training Video Editing
-                </div>
-                <div className="custom-chip" data-service="Video Color Grading">Video Color Grading</div>
-                <div className="custom-chip" data-service="Subtitles & Captions">Subtitles &amp; Captions</div>
-                <div className="custom-chip" data-service="Motion Graphics">Motion Graphics</div>
-                <div className="custom-chip" data-service="VFX & Green Screen">VFX &amp; Green Screen</div>
-                <div className="custom-chip" data-service="Sound Mixing">Sound Mixing</div>
-                <div className="custom-chip" data-service="Thumbnail Design">Thumbnail Design</div>
-                <div className="custom-chip" data-service="Video Ads">Video Ads</div>
-                <div className="custom-chip" data-service="YouTube Chapters">YouTube Chapters</div>
-                <div className="custom-chip" data-service="Podcast Chapters">Podcast Chapters</div>
-              </div>
-              <div className="chip-panel" data-panel="design">
-                <div className="custom-chip" data-service="Logo Design">Logo Design</div>
-                <div className="custom-chip" data-service="Brand Identity">Brand Identity</div>
-                <div className="custom-chip" data-service="Poster Design">Poster Design</div>
-                <div className="custom-chip" data-service="T-Shirt & Merch Design">T-Shirt &amp; Merch Design
-                </div>
-                <div className="custom-chip" data-service="Social Media Graphics">Social Media Graphics
-                </div>
-                <div className="custom-chip" data-service="Album Artwork">Album Artwork</div>
-                <div className="custom-chip" data-service="Flyer Design">Flyer Design</div>
-                <div className="custom-chip" data-service="Business Cards">Business Cards</div>
-                <div className="custom-chip" data-service="Banner & Signage">Banner &amp; Signage</div>
-                <div className="custom-chip" data-service="Pitch Deck Design">Pitch Deck Design</div>
-                <div className="custom-chip" data-service="Presentation Design">Presentation Design</div>
-                <div className="custom-chip" data-service="Mascot Design">Mascot Design</div>
-                <div className="custom-chip" data-service="Packaging Design">Packaging Design</div>
-                <div className="custom-chip" data-service="Menu Design">Menu Design</div>
-                <div className="custom-chip" data-service="Event Branding">Event Branding</div>
-                <div className="custom-chip" data-service="Streetwear Lookbooks">Streetwear Lookbooks</div>
-              </div>
-              <div className="chip-panel" data-panel="web">
-                <div className="custom-chip" data-service="Website Design">Website Design</div>
-                <div className="custom-chip" data-service="3D Website Design">3D Website Design</div>
-                <div className="custom-chip" data-service="eCommerce Website">eCommerce Website</div>
-                <div className="custom-chip" data-service="Shopify Store">Shopify Store</div>
-                <div className="custom-chip" data-service="UI/UX Design">UI/UX Design</div>
-                <div className="custom-chip" data-service="Landing Pages">Landing Pages</div>
-                <div className="custom-chip" data-service="SEO Optimization">SEO Optimization</div>
-                <div className="custom-chip" data-service="App UI Design">App UI Design</div>
-                <div className="custom-chip" data-service="Social Media Strategy">Social Media Strategy
-                </div>
-                <div className="custom-chip" data-service="App Development">App Development</div>
-                <div className="custom-chip" data-service="UX Research">UX Research</div>
-                <div className="custom-chip" data-service="B2B Proposals">B2B Proposals</div>
-              </div>
-              <div className="chip-panel" data-panel="animation">
-                <div className="custom-chip" data-service="2D Animation">2D Animation</div>
-                <div className="custom-chip" data-service="3D Animation">3D Animation</div>
-                <div className="custom-chip" data-service="3D Product Renders">3D Product Renders</div>
-                <div className="custom-chip" data-service="Animated Logo">Animated Logo</div>
-                <div className="custom-chip" data-service="Whiteboard Animation">Whiteboard Animation</div>
-                <div className="custom-chip" data-service="Virtual Reality (VR)">Virtual Reality (VR)</div>
-                <div className="custom-chip" data-service="Augmented Reality (AR)">Augmented Reality (AR)
-                </div>
-              </div>
-              <div className="chip-panel" data-panel="social">
-                <div className="custom-chip" data-service="Meta Management">Meta Management</div>
-                <div className="custom-chip" data-service="YouTube Management">YouTube Management</div>
-                <div className="custom-chip" data-service="Ads Management">Ads Management</div>
-                <div className="custom-chip" data-service="Google Business Profile">Google Business Profile
-                </div>
-                <div className="custom-chip" data-service="Social Media Strategy">Social Media Strategy
-                </div>
-                <div className="custom-chip" data-service="Content Scheduling">Content Scheduling</div>
-                <div className="custom-chip" data-service="Community Management">Community Management</div>
-                <div className="custom-chip" data-service="Influencer Outreach">Influencer Outreach</div>
-              </div>
+              ))}
             </div>{/* /chip-panels */}
           </div>{/* /chip-scroll */}
         </div>
@@ -3353,8 +3358,6 @@ export default function Page() {
             BEYOND ORDINARY &nbsp;&nbsp;&nbsp; NO LIMITS &nbsp;&nbsp;&nbsp; </span>
         </div>
       </div>
-      <div className="community-aura" aria-hidden="true"></div>
-      <canvas className="community-particles-canvas" id="community-particles-canvas" aria-hidden="true"></canvas>
       <div className="community-guideline mobile-only">
         <span className="guideline-quote">"Don't touch the <span className="highlight-text">bubbles(people)</span> - they will go away"</span>
       </div>

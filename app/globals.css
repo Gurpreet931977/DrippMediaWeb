@@ -2064,21 +2064,25 @@
 
         .attract-particles-container {
             position: absolute;
-            inset: 0;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
             pointer-events: none;
-            z-index: -1;
+            z-index: 1;
         }
 
         .attract-particle {
             position: absolute;
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
-            background: radial-gradient(circle, #FFFFFF 25%, var(--brand-yellow) 70%, rgba(235, 215, 63, 0) 100%);
+            background-color: var(--brand-yellow);
             opacity: 0;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) translateZ(0);
+            box-shadow: 0 0 10px var(--brand-yellow), 0 0 20px rgba(235, 215, 63, 0.5);
             will-change: transform, opacity;
             pointer-events: none;
         }
@@ -2581,30 +2585,7 @@
             -webkit-text-stroke: 1.5px var(--brand-yellow);
         }
 
-        /* Ambient Golden Halo Behind Card */
-        .community-aura {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: min(900px, 90vw);
-            height: min(520px, 60vh);
-            background: radial-gradient(ellipse at center, rgba(235, 215, 63, 0.18) 0%, rgba(235, 215, 63, 0.09) 35%, rgba(235, 215, 63, 0.02) 55%, transparent 72%);
-            transform: translate(-50%, -50%) translateZ(0);
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0.95;
-        }
 
-        /* Canvas Particle Layer - Hardware accelerated 60fps floating dots */
-        .community-particles-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 3;
-        }
 
         .community-wrapper {
             max-width: 1020px;
@@ -7794,9 +7775,6 @@
             color: rgba(20, 20, 25, 0.75);
         }
 
-        body.light-theme .community-aura {
-            background: radial-gradient(circle at center, rgba(235, 215, 63, 0.24) 0%, rgba(235, 215, 63, 0.08) 45%, transparent 75%);
-        }
 
         body.light-theme .info-container {
             background: linear-gradient(to bottom, transparent 0%, rgba(235, 215, 63, 0.05) 15%, rgba(235, 215, 63, 0.05) 80%, transparent 100%);

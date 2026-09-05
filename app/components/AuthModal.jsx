@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const COUNTRY_CODES = [
   { code: '+1', label: 'US/CA' }, { code: '+44', label: 'UK' }, { code: '+91', label: 'IN' },
@@ -88,6 +88,265 @@ const PERSONAS = [
     )
   }
 ];
+
+/* --- BESPOKE CUSTOM SECURITY QUOTE DROPDOWN --- */
+function CustomSecurityQuoteSelect({ value, onChange, options, placeholder = "Select Security Quote..." }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [openUpwards, setOpenUpwards] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('touchstart', handleOutsideClick, { passive: true });
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const handleToggle = () => {
+    if (!isOpen && containerRef.current) {
+      const card = containerRef.current.closest('.dripp-auth-card') || document.body;
+      const cardRect = card.getBoundingClientRect();
+      const triggerRect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = cardRect.bottom - triggerRect.bottom;
+      const spaceAbove = triggerRect.top - cardRect.top;
+      if (spaceBelow < 230 && spaceAbove > spaceBelow) {
+        setOpenUpwards(true);
+      } else {
+        setOpenUpwards(false);
+      }
+      const currentIndex = options.indexOf(value);
+      setFocusedIndex(currentIndex >= 0 ? currentIndex : 0);
+    }
+    setIsOpen(prev => !prev);
+  };
+
+  const handleSelect = (option) => {
+    onChange(option);
+    setIsOpen(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setIsOpen(false);
+      return;
+    }
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (!isOpen) {
+        handleToggle();
+      } else if (focusedIndex >= 0 && focusedIndex < options.length) {
+        handleSelect(options[focusedIndex]);
+      }
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!isOpen) {
+        handleToggle();
+      } else {
+        setFocusedIndex(prev => (prev + 1) % options.length);
+      }
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) {
+        handleToggle();
+      } else {
+        setFocusedIndex(prev => (prev - 1 + options.length) % options.length);
+      }
+      return;
+    }
+  };
+
+  return (
+    <div className="cyber-dropdown-root" ref={containerRef}>
+      <button
+        type="button"
+        className={`cyber-dropdown-trigger ${isOpen ? 'open' : ''} ${value ? 'has-value' : ''}`}
+        onClick={handleToggle}
+        onKeyDown={handleKeyDown}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+      >
+        <span className="cyber-dropdown-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </span>
+        <span className={`cyber-dropdown-label ${!value ? 'placeholder' : ''}`}>
+          {value || placeholder}
+        </span>
+        <span className={`cyber-dropdown-chevron ${isOpen ? 'rotated' : ''}`}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className={`cyber-dropdown-menu ${openUpwards ? 'upwards' : 'downwards'}`} role="listbox">
+          <div className="cyber-dropdown-header">
+            <span className="cyber-dropdown-header-dot" />
+            <span>SECURITY RECOVERY QUOTE</span>
+          </div>
+          <div className="cyber-dropdown-items-scroll">
+            {options.map((quote, idx) => {
+              const isSelected = value === quote;
+              const isHighlighted = focusedIndex === idx;
+              return (
+                <div
+                  key={quote}
+                  className={`cyber-dropdown-item ${isSelected ? 'selected' : ''} ${isHighlighted ? 'highlighted' : ''}`}
+                  onClick={() => handleSelect(quote)}
+                  onMouseEnter={() => setFocusedIndex(idx)}
+                  role="option"
+                  aria-selected={isSelected}
+                >
+                  <span className="quote-text">{quote}</span>
+                  {isSelected && (
+                    <span className="quote-check">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* --- BESPOKE CUSTOM COUNTRY CODE DROPDOWN --- */
+function CustomCountrySelect({ value, onChange, options }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [openUpwards, setOpenUpwards] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const containerRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('touchstart', handleOutsideClick, { passive: true });
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const handleToggle = () => {
+    if (!isOpen && containerRef.current) {
+      const card = containerRef.current.closest('.dripp-auth-card') || document.body;
+      const cardRect = card.getBoundingClientRect();
+      const triggerRect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = cardRect.bottom - triggerRect.bottom;
+      const spaceAbove = triggerRect.top - cardRect.top;
+      if (spaceBelow < 230 && spaceAbove > spaceBelow) {
+        setOpenUpwards(true);
+      } else {
+        setOpenUpwards(false);
+      }
+      setSearchQuery("");
+      setTimeout(() => {
+        if (searchInputRef.current) searchInputRef.current.focus();
+      }, 50);
+    }
+    setIsOpen(prev => !prev);
+  };
+
+  const selectedItem = options.find(c => c.code === value) || { code: value, label: '' };
+
+  const filteredOptions = options.filter(c => 
+    c.code.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    c.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="cyber-country-dropdown-root" ref={containerRef}>
+      <button
+        type="button"
+        className={`cyber-country-trigger ${isOpen ? 'open' : ''}`}
+        onClick={handleToggle}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+      >
+        <span className="country-code-text">{selectedItem.code} ({selectedItem.label})</span>
+        <span className={`country-chevron ${isOpen ? 'rotated' : ''}`}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className={`cyber-country-menu ${openUpwards ? 'upwards' : 'downwards'}`} role="listbox">
+          <div className="country-search-wrap">
+            <input
+              ref={searchInputRef}
+              type="text"
+              className="country-search-input"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+          <div className="country-items-scroll">
+            {filteredOptions.map((c) => {
+              const isSelected = c.code === value;
+              return (
+                <div
+                  key={c.code + c.label}
+                  className={`cyber-country-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => {
+                    onChange(c.code);
+                    setIsOpen(false);
+                  }}
+                  role="option"
+                  aria-selected={isSelected}
+                >
+                  <span className="c-code">{c.code}</span>
+                  <span className="c-label">{c.label}</span>
+                  {isSelected && (
+                    <span className="c-check">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+            {filteredOptions.length === 0 && (
+              <div className="country-empty">No results</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab = 'signup' }) {
   const [activeTab, setActiveTab] = useState(initialTab); // 'signup' | 'login' | 'forgot_password'
@@ -546,24 +805,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
               {/* SIGNUP: Country Code + Phone Row */}
               {activeTab === 'signup' && (
                 <div className="auth-phone-row">
-                  <div className="auth-country-select-wrap">
-                    <select 
-                      className="cyber-select cyber-country-select"
-                      value={signupCountryCode}
-                      onChange={e => setSignupCountryCode(e.target.value)}
-                    >
-                      {COUNTRY_CODES.map((c) => (
-                        <option key={c.code+c.label} value={c.code}>
-                          {c.code} ({c.label})
-                        </option>
-                      ))}
-                    </select>
-                    <span className="select-chevron">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </span>
-                  </div>
+                  <CustomCountrySelect 
+                    value={signupCountryCode}
+                    onChange={val => setSignupCountryCode(val)}
+                    options={COUNTRY_CODES}
+                  />
                   <div className="auth-field-wrapper" style={{ flex: 1 }}>
                     <span className="auth-field-icon">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -611,30 +857,12 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
               {/* SIGNUP or FORGOT PASSWORD: Security Quote Selector */}
               {(activeTab === 'signup' || activeTab === 'forgot_password') && (
                 <div className="auth-input-group">
-                  <div className="auth-field-wrapper">
-                    <span className="auth-field-icon">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                      </svg>
-                    </span>
-                    <select 
-                      className="cyber-select"
-                      value={activeTab === 'signup' ? signupSecurityPhrase : resetSecurityPhrase}
-                      onChange={e => activeTab === 'signup' ? setSignupSecurityPhrase(e.target.value) : setResetSecurityPhrase(e.target.value)}
-                      required
-                    >
-                      <option value="" disabled>Select Security Quote...</option>
-                      {SECURITY_QUOTES.map(quote => (
-                        <option key={quote} value={quote}>{quote}</option>
-                      ))}
-                    </select>
-                    <span className="select-chevron">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </span>
-                    <span className="input-focus-line" />
-                  </div>
+                  <CustomSecurityQuoteSelect
+                    value={activeTab === 'signup' ? signupSecurityPhrase : resetSecurityPhrase}
+                    onChange={val => activeTab === 'signup' ? setSignupSecurityPhrase(val) : setResetSecurityPhrase(val)}
+                    options={SECURITY_QUOTES}
+                    placeholder="Select Security Quote..."
+                  />
                 </div>
               )}
 
@@ -993,6 +1221,403 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialTab 
           display: flex;
           align-items: center;
           justify-content: center;
+        }
+
+        /* --- BESPOKE CYBER DROPDOWN STYLES --- */
+        .cyber-dropdown-root {
+          position: relative;
+          width: 100%;
+          user-select: none;
+        }
+
+        .cyber-dropdown-trigger {
+          position: relative;
+          display: flex;
+          align-items: center;
+          width: 100%;
+          min-height: 44px;
+          padding: 0 12px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 12px;
+          cursor: pointer;
+          outline: none;
+          text-align: left;
+          transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          box-sizing: border-box;
+        }
+
+        .cyber-dropdown-trigger:hover {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .cyber-dropdown-trigger.open,
+        .cyber-dropdown-trigger:focus-visible {
+          background: rgba(255, 255, 255, 0.045);
+          border-color: rgba(235, 215, 63, 0.6);
+          box-shadow: 0 0 0 1px rgba(235, 215, 63, 0.25), 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .cyber-dropdown-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 12px;
+          color: rgba(255, 255, 255, 0.35);
+          transition: color 0.2s ease;
+          flex-shrink: 0;
+        }
+
+        .cyber-dropdown-trigger.open .cyber-dropdown-icon,
+        .cyber-dropdown-trigger.has-value .cyber-dropdown-icon {
+          color: var(--brand-yellow);
+        }
+
+        .cyber-dropdown-label {
+          flex: 1;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.86rem;
+          font-weight: 500;
+          color: #FFFFFF;
+          letter-spacing: 0.2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .cyber-dropdown-label.placeholder {
+          color: rgba(255, 255, 255, 0.35);
+          font-weight: 400;
+        }
+
+        .cyber-dropdown-chevron {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.4);
+          margin-left: 10px;
+          transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+          flex-shrink: 0;
+        }
+
+        .cyber-dropdown-chevron.rotated {
+          transform: rotate(180deg);
+          color: var(--brand-yellow);
+        }
+
+        /* Floating Cyber Dropdown Menu */
+        .cyber-dropdown-menu {
+          position: absolute;
+          left: 0;
+          right: 0;
+          z-index: 200;
+          background: #0d0d12;
+          background: linear-gradient(180deg, rgba(18, 18, 23, 0.98) 0%, rgba(11, 11, 15, 0.99) 100%);
+          border: 1px solid rgba(235, 215, 63, 0.28);
+          border-radius: 14px;
+          padding: 8px 6px;
+          box-shadow: 
+            0 24px 50px -10px rgba(0, 0, 0, 0.9),
+            0 0 25px rgba(235, 215, 63, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          box-sizing: border-box;
+        }
+
+        .cyber-dropdown-menu.downwards {
+          top: calc(100% + 6px);
+          animation: cyberDropIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .cyber-dropdown-menu.upwards {
+          bottom: calc(100% + 6px);
+          animation: cyberDropInUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cyberDropIn {
+          from {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.98);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes cyberDropInUp {
+          from {
+            opacity: 0;
+            transform: translateY(8px) scale(0.98);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .cyber-dropdown-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px 8px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.62rem;
+          font-weight: 700;
+          color: rgba(235, 215, 63, 0.8);
+          letter-spacing: 1.6px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          margin-bottom: 4px;
+          text-transform: uppercase;
+        }
+
+        .cyber-dropdown-header-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: var(--brand-yellow);
+          box-shadow: 0 0 6px var(--brand-yellow);
+        }
+
+        .cyber-dropdown-items-scroll {
+          max-height: 220px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          padding-right: 2px;
+        }
+
+        .cyber-dropdown-items-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .cyber-dropdown-items-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .cyber-dropdown-items-scroll::-webkit-scrollbar-thumb {
+          background: rgba(235, 215, 63, 0.25);
+          border-radius: 6px;
+        }
+
+        .cyber-dropdown-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 9px 12px;
+          border-radius: 9px;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.84rem;
+          font-weight: 500;
+          color: rgba(255, 255, 255, 0.78);
+          cursor: pointer;
+          transition: all 0.16s ease;
+          letter-spacing: 0.2px;
+        }
+
+        .cyber-dropdown-item:hover,
+        .cyber-dropdown-item.highlighted {
+          background: rgba(235, 215, 63, 0.1);
+          color: var(--brand-yellow);
+          transform: translateX(4px);
+        }
+
+        .cyber-dropdown-item.selected {
+          background: rgba(235, 215, 63, 0.16);
+          color: var(--brand-yellow);
+          font-weight: 600;
+        }
+
+        .quote-check {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--brand-yellow);
+          filter: drop-shadow(0 0 6px rgba(235, 215, 63, 0.6));
+        }
+
+        /* --- COUNTRY CODE DROPDOWN STYLES --- */
+        .cyber-country-dropdown-root {
+          position: relative;
+          width: 104px;
+          flex-shrink: 0;
+          user-select: none;
+        }
+
+        .cyber-country-trigger {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          min-height: 44px;
+          padding: 0 10px 0 12px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 12px;
+          cursor: pointer;
+          outline: none;
+          transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          box-sizing: border-box;
+        }
+
+        .cyber-country-trigger:hover {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .cyber-country-trigger.open,
+        .cyber-country-trigger:focus-visible {
+          background: rgba(255, 255, 255, 0.045);
+          border-color: rgba(235, 215, 63, 0.6);
+          box-shadow: 0 0 0 1px rgba(235, 215, 63, 0.25);
+        }
+
+        .country-code-text {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #FFFFFF;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .country-chevron {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.4);
+          transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+          margin-left: 4px;
+          flex-shrink: 0;
+        }
+
+        .country-chevron.rotated {
+          transform: rotate(180deg);
+          color: var(--brand-yellow);
+        }
+
+        .cyber-country-menu {
+          position: absolute;
+          left: 0;
+          width: 170px;
+          z-index: 210;
+          background: #0d0d12;
+          background: linear-gradient(180deg, rgba(18, 18, 23, 0.98) 0%, rgba(11, 11, 15, 0.99) 100%);
+          border: 1px solid rgba(235, 215, 63, 0.28);
+          border-radius: 14px;
+          padding: 8px 6px;
+          box-shadow: 
+            0 24px 50px -10px rgba(0, 0, 0, 0.9),
+            0 0 25px rgba(235, 215, 63, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          box-sizing: border-box;
+        }
+
+        .cyber-country-menu.downwards {
+          top: calc(100% + 6px);
+          animation: cyberDropIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .cyber-country-menu.upwards {
+          bottom: calc(100% + 6px);
+          animation: cyberDropInUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .country-search-wrap {
+          padding: 2px 4px 6px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          margin-bottom: 4px;
+        }
+
+        .country-search-input {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          padding: 5px 8px;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.76rem;
+          color: #FFFFFF;
+          outline: none;
+          box-sizing: border-box;
+        }
+        .country-search-input:focus {
+          border-color: rgba(235, 215, 63, 0.5);
+        }
+        .country-search-input::placeholder {
+          color: rgba(255, 255, 255, 0.3);
+        }
+
+        .country-items-scroll {
+          max-height: 180px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .country-items-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .country-items-scroll::-webkit-scrollbar-thumb {
+          background: rgba(235, 215, 63, 0.25);
+          border-radius: 6px;
+        }
+
+        .cyber-country-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 7px 10px;
+          border-radius: 8px;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.8rem;
+          color: rgba(255, 255, 255, 0.78);
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .cyber-country-item:hover {
+          background: rgba(235, 215, 63, 0.1);
+          color: var(--brand-yellow);
+        }
+
+        .cyber-country-item.selected {
+          background: rgba(235, 215, 63, 0.16);
+          color: var(--brand-yellow);
+          font-weight: 600;
+        }
+
+        .c-code {
+          font-weight: 600;
+        }
+        .c-label {
+          font-size: 0.72rem;
+          color: rgba(255, 255, 255, 0.45);
+          margin-left: 6px;
+        }
+        .cyber-country-item:hover .c-label,
+        .cyber-country-item.selected .c-label {
+          color: rgba(235, 215, 63, 0.75);
+        }
+
+        .c-check {
+          color: var(--brand-yellow);
+          display: flex;
+          align-items: center;
+        }
+
+        .country-empty {
+          padding: 10px;
+          text-align: center;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.75rem;
+          color: rgba(255, 255, 255, 0.35);
         }
         .auth-eye-btn {
           position: absolute;

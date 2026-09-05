@@ -1,0 +1,356 @@
+[
+  {
+    "id": "video",
+    "name": "Video",
+    "services": [
+      {
+        "id": "svc_v1",
+        "name": "Music Video Shoot"
+      },
+      {
+        "id": "svc_v2",
+        "name": "Corporate Video Shoot"
+      },
+      {
+        "id": "svc_v3",
+        "name": "Commercial Shoot"
+      },
+      {
+        "id": "svc_v4",
+        "name": "Event Coverage"
+      },
+      {
+        "id": "svc_v5",
+        "name": "School Videography"
+      },
+      {
+        "id": "svc_v6",
+        "name": "Drone Footage"
+      },
+      {
+        "id": "svc_v7",
+        "name": "Real Estate Videography"
+      },
+      {
+        "id": "svc_v8",
+        "name": "Sports Videography"
+      },
+      {
+        "id": "svc_v9",
+        "name": "Fashion Video Shoot"
+      },
+      {
+        "id": "svc_v10",
+        "name": "Short Film Production"
+      },
+      {
+        "id": "svc_v11",
+        "name": "Testimonial Shoot"
+      },
+      {
+        "id": "svc_v12",
+        "name": "Live Stream Setup"
+      },
+      {
+        "id": "svc_v13",
+        "name": "Behind the Scenes"
+      }
+    ]
+  },
+  {
+    "id": "photo",
+    "name": "Photography",
+    "services": [
+      {
+        "id": "svc_p1",
+        "name": "Concert Photography"
+      },
+      {
+        "id": "svc_p2",
+        "name": "Corporate Headshots"
+      },
+      {
+        "id": "svc_p3",
+        "name": "Product Photography"
+      },
+      {
+        "id": "svc_p4",
+        "name": "Event Photography"
+      },
+      {
+        "id": "svc_p5",
+        "name": "Real Estate Photography"
+      },
+      {
+        "id": "svc_p6",
+        "name": "Fashion Photography"
+      },
+      {
+        "id": "svc_p7",
+        "name": "Food Photography"
+      },
+      {
+        "id": "svc_p8",
+        "name": "Sports Photography"
+      }
+    ]
+  },
+  {
+    "id": "post",
+    "name": "Post-Production",
+    "services": [
+      {
+        "id": "svc_post1",
+        "name": "Podcast Editing"
+      },
+      {
+        "id": "svc_post2",
+        "name": "Documentary Editing"
+      },
+      {
+        "id": "svc_post3",
+        "name": "YouTube Video Editing"
+      },
+      {
+        "id": "svc_post4",
+        "name": "Instagram Reels Editing"
+      },
+      {
+        "id": "svc_post5",
+        "name": "TikTok Video Editing"
+      },
+      {
+        "id": "svc_post6",
+        "name": "YouTube Shorts Editing"
+      },
+      {
+        "id": "svc_post7",
+        "name": "Explainer Video Editing"
+      },
+      {
+        "id": "svc_post8",
+        "name": "Product Video Editing"
+      },
+      {
+        "id": "svc_post9",
+        "name": "Training Video Editing"
+      },
+      {
+        "id": "svc_post10",
+        "name": "Video Color Grading"
+      },
+      {
+        "id": "svc_post11",
+        "name": "Subtitles & Captions"
+      },
+      {
+        "id": "svc_post12",
+        "name": "Motion Graphics"
+      },
+      {
+        "id": "svc_post13",
+        "name": "VFX & Green Screen"
+      },
+      {
+        "id": "svc_post14",
+        "name": "Sound Mixing"
+      },
+      {
+        "id": "svc_post15",
+        "name": "Thumbnail Design"
+      },
+      {
+        "id": "svc_post16",
+        "name": "Video Ads"
+      },
+      {
+        "id": "svc_post17",
+        "name": "YouTube Chapters"
+      },
+      {
+        "id": "svc_post18",
+        "name": "Podcast Chapters"
+      }
+    ]
+  },
+  {
+    "id": "design",
+    "name": "Design",
+    "services": [
+      {
+        "id": "svc_d1",
+        "name": "Logo Design"
+      },
+      {
+        "id": "svc_d2",
+        "name": "Brand Identity"
+      },
+      {
+        "id": "svc_d3",
+        "name": "Poster Design"
+      },
+      {
+        "id": "svc_d4",
+        "name": "T-Shirt & Merch Design"
+      },
+      {
+        "id": "svc_d5",
+        "name": "Social Media Graphics"
+      },
+      {
+        "id": "svc_d6",
+        "name": "Album Artwork"
+      },
+      {
+        "id": "svc_d7",
+        "name": "Flyer Design"
+      },
+      {
+        "id": "svc_d8",
+        "name": "Business Cards"
+      },
+      {
+        "id": "svc_d9",
+        "name": "Banner & Signage"
+      },
+      {
+        "id": "svc_d10",
+        "name": "Pitch Deck Design"
+      },
+      {
+        "id": "svc_d11",
+        "name": "Presentation Design"
+      },
+      {
+        "id": "svc_d12",
+        "name": "Mascot Design"
+      },
+      {
+        "id": "svc_d13",
+        "name": "Packaging Design"
+      },
+      {
+        "id": "svc_d14",
+        "name": "Menu Design"
+      },
+      {
+        "id": "svc_d15",
+        "name": "Event Branding"
+      },
+      {
+        "id": "svc_d16",
+        "name": "Streetwear Lookbooks"
+      }
+    ]
+  },
+  {
+    "id": "web",
+    "name": "Web & Digital",
+    "services": [
+      {
+        "id": "svc_w1",
+        "name": "Website Design"
+      },
+      {
+        "id": "svc_w2",
+        "name": "3D Website Design"
+      },
+      {
+        "id": "svc_w3",
+        "name": "eCommerce Website"
+      },
+      {
+        "id": "svc_w4",
+        "name": "Shopify Store"
+      },
+      {
+        "id": "svc_w5",
+        "name": "UI/UX Design"
+      },
+      {
+        "id": "svc_w6",
+        "name": "Landing Pages"
+      },
+      {
+        "id": "svc_w7",
+        "name": "SEO Optimization"
+      },
+      {
+        "id": "svc_w8",
+        "name": "App UI Design"
+      }
+    ]
+  },
+  {
+    "id": "animation",
+    "name": "Animation & 3D",
+    "services": [
+      {
+        "id": "svc_a1",
+        "name": "2D Animation"
+      },
+      {
+        "id": "svc_a2",
+        "name": "3D Animation"
+      },
+      {
+        "id": "svc_a3",
+        "name": "3D Product Renders"
+      },
+      {
+        "id": "svc_a4",
+        "name": "Animated Logo"
+      },
+      {
+        "id": "svc_a5",
+        "name": "Whiteboard Animation"
+      },
+      {
+        "id": "svc_a6",
+        "name": "Virtual Reality (VR)"
+      },
+      {
+        "id": "svc_a7",
+        "name": "Augmented Reality (AR)"
+      }
+    ]
+  },
+  {
+    "id": "social",
+    "name": "Social Media",
+    "services": [
+      {
+        "id": "svc_s1",
+        "name": "Meta Management"
+      },
+      {
+        "id": "svc_s2",
+        "name": "YouTube Management"
+      },
+      {
+        "id": "svc_s3",
+        "name": "Ads Management"
+      },
+      {
+        "id": "svc_s4",
+        "name": "Google Business Profile"
+      },
+      {
+        "id": "svc_s5",
+        "name": "Social Media Strategy"
+      },
+      {
+        "id": "svc_s6",
+        "name": "Content Scheduling"
+      },
+      {
+        "id": "svc_s7",
+        "name": "Community Management"
+      },
+      {
+        "id": "svc_s8",
+        "name": "Influencer Outreach"
+      }
+    ]
+  }
+]
