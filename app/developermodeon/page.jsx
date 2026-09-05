@@ -1148,24 +1148,21 @@ export default function Page() {
         });
 
         let lastScroll = 0;
-        let isScrolled = false;
         const navbar = document.getElementById('navbar');
+
+        if (navbar) {
+            navbar.style.background = '';
+            navbar.style.boxShadow = '';
+            navbar.classList.toggle('scrolled', window.pageYOffset > 10);
+        }
 
         window.addEventListener('scroll', () => {
             const currentScroll = window.pageYOffset;
-            const nowScrolled = currentScroll > 10;
-            if (nowScrolled !== isScrolled) {
-                isScrolled = nowScrolled;
-                if (isScrolled) {
-                    navbar.style.boxShadow = "0 4px 30px rgba(0, 0, 0, 0.5)";
-                    navbar.style.background = document.body.classList.contains('light-theme') ? "rgba(255, 255, 255, 0.9)" : "rgba(5, 5, 5, 0.85)";
-                } else {
-                    navbar.style.boxShadow = "none";
-                    navbar.style.background = document.body.classList.contains('light-theme') ? "rgba(255, 255, 255, 0.6)" : "rgba(5, 5, 5, 0.4)";
-                }
+            if (navbar) {
+                navbar.classList.toggle('scrolled', currentScroll > 10);
+                if (currentScroll > lastScroll && currentScroll > 100) navbar.style.transform = "translateY(-100%)";
+                else navbar.style.transform = "translateY(0)";
             }
-            if (currentScroll > lastScroll && currentScroll > 100) navbar.style.transform = "translateY(-100%)";
-            else navbar.style.transform = "translateY(0)";
             lastScroll = currentScroll;
         }, { passive: true });
 
@@ -1179,12 +1176,15 @@ export default function Page() {
                 if (navigator.vibrate) navigator.vibrate(40);
 
                 const toggleTheme = () => {
-                    document.body.classList.toggle('light-theme');
-                    const currentScroll = window.pageYOffset;
-                    if (currentScroll <= 0) {
-                        navbar.style.background = document.body.classList.contains('light-theme') ? "rgba(255, 255, 255, 0.6)" : "rgba(5, 5, 5, 0.4)";
+                    const isLight = document.body.classList.toggle('light-theme');
+                    if (isLight) {
+                        document.body.dataset.manualTheme = 'light';
                     } else {
-                        navbar.style.background = document.body.classList.contains('light-theme') ? "rgba(255, 255, 255, 0.9)" : "rgba(5, 5, 5, 0.85)";
+                        delete document.body.dataset.manualTheme;
+                    }
+                    if (navbar) {
+                        navbar.style.background = '';
+                        navbar.style.boxShadow = '';
                     }
                 };
 
@@ -2427,10 +2427,38 @@ export default function Page() {
                 trigger: ".founder-sequence-section",
                 start: "top 50%",
                 end: "bottom 50%",
-                onEnter: () => document.body.classList.add('light-theme'),
-                onLeave: () => document.body.classList.remove('light-theme'),
-                onEnterBack: () => document.body.classList.add('light-theme'),
-                onLeaveBack: () => document.body.classList.remove('light-theme')
+                onEnter: () => {
+                    document.body.classList.add('light-theme');
+                    if (navbar) {
+                        navbar.style.background = '';
+                        navbar.style.boxShadow = '';
+                    }
+                },
+                onLeave: () => {
+                    if (document.body.dataset.manualTheme !== 'light') {
+                        document.body.classList.remove('light-theme');
+                    }
+                    if (navbar) {
+                        navbar.style.background = '';
+                        navbar.style.boxShadow = '';
+                    }
+                },
+                onEnterBack: () => {
+                    document.body.classList.add('light-theme');
+                    if (navbar) {
+                        navbar.style.background = '';
+                        navbar.style.boxShadow = '';
+                    }
+                },
+                onLeaveBack: () => {
+                    if (document.body.dataset.manualTheme !== 'light') {
+                        document.body.classList.remove('light-theme');
+                    }
+                    if (navbar) {
+                        navbar.style.background = '';
+                        navbar.style.boxShadow = '';
+                    }
+                }
             });
 
             // Kinetic Text Splitting
