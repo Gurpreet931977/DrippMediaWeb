@@ -9562,14 +9562,28 @@
         }
 
         body.light-theme .cursor {
-            border-color: var(--deep-black);
-            mix-blend-mode: normal;
+            border-color: #0b0c10 !important;
+            background: transparent !important;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.3) !important;
+            mix-blend-mode: normal !important;
+            opacity: 1 !important;
         }
 
         body.light-theme .cursor.active {
-            background-color: var(--deep-black);
-            mix-blend-mode: normal;
-            opacity: 0.15;
+            background-color: rgba(235, 215, 63, 0.22) !important;
+            border-color: #0b0c10 !important;
+            box-shadow: 0 0 20px rgba(235, 215, 63, 0.5), 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.4) !important;
+            backdrop-filter: blur(2px) !important;
+            -webkit-backdrop-filter: blur(2px) !important;
+            mix-blend-mode: normal !important;
+            opacity: 1 !important;
+        }
+
+        body.light-theme .cursor.eating {
+            background-color: var(--brand-yellow) !important;
+            border-color: #0b0c10 !important;
+            opacity: 0.95 !important;
+            box-shadow: 0 0 20px rgba(235, 215, 63, 0.7) !important;
         }
 
         body.light-theme .velocity-gauge {

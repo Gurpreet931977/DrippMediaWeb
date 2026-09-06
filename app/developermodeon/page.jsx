@@ -1197,7 +1197,7 @@ export default function Page() {
 
                 if (!document.startViewTransition) {
                     toggleTheme();
-                    if (cursor) cursor.style.opacity = '1';
+                    if (cursor) cursor.style.opacity = '';
                     return;
                 }
 
@@ -1234,11 +1234,11 @@ export default function Page() {
 
                     anim.finished.finally(() => {
                         document.documentElement.classList.remove('theme-transitioning');
-                        if (cursor) cursor.style.opacity = '1';
+                        if (cursor) cursor.style.opacity = '';
                     });
                 }).catch(() => {
                     document.documentElement.classList.remove('theme-transitioning');
-                    if (cursor) cursor.style.opacity = '1';
+                    if (cursor) cursor.style.opacity = '';
                 });
             });
             themeBtn.addEventListener('mouseenter', () => cursor.classList.add('active'));
