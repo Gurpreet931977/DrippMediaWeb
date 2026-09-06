@@ -1,7 +1,7 @@
-// Server Component — exports metadata for /video-portfolio
+// Server Component - exports metadata for /video-portfolio
 export const metadata = {
   title: 'Video Editing & Production Portfolio | Dripp Media',
-  description: 'Watch Dripp Media\'s video editing and production portfolio — YouTube long-form, Instagram reels, brand films, commercial ads, cinematic videography, and social media content for global brands.',
+  description: 'Watch Dripp Media\'s video editing and production portfolio - YouTube long-form, Instagram reels, brand films, commercial ads, cinematic videography, and social media content for global brands.',
   keywords: [
     'video editing portfolio', 'video production portfolio', 'video editing agency portfolio',
     'YouTube video editing examples', 'Instagram reel editing portfolio',
@@ -18,7 +18,7 @@ export const metadata = {
   },
   openGraph: {
     title: 'Video Editing & Production Portfolio | Dripp Media',
-    description: 'Explore Dripp Media\'s video work — reels, brand films, YouTube content, commercials, and cinematic productions for brands worldwide.',
+    description: 'Explore Dripp Media\'s video work - reels, brand films, YouTube content, commercials, and cinematic productions for brands worldwide.',
     url: 'https://www.drippmedia.com/video-portfolio',
     siteName: 'Dripp Media',
     type: 'website',
@@ -34,7 +34,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Video Editing & Production Portfolio | Dripp Media',
-    description: 'Reels, brand films, YouTube content, commercials — professional video editing by Dripp Media.',
+    description: 'Reels, brand films, YouTube content, commercials - professional video editing by Dripp Media.',
     images: ['https://www.drippmedia.com/twitter-image.png'],
   },
 };
@@ -62,7 +62,7 @@ const videoCollectionSchema = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   "@id": "https://www.drippmedia.com/video-portfolio",
-  "name": "Video Editing & Production Portfolio — Dripp Media",
+  "name": "Video Editing & Production Portfolio - Dripp Media",
   "description": "Portfolio of video editing, production, reels, and commercial video work by Dripp Media.",
   "url": "https://www.drippmedia.com/video-portfolio",
   "inLanguage": "en-US",

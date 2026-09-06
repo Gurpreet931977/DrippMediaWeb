@@ -1,7 +1,7 @@
 export default function sitemap() {
   const baseUrl = 'https://www.drippmedia.com';
 
-  // Use a static recent date for cache stability — update when content changes
+  // Use a static recent date for cache stability - update when content changes
   const lastModified = new Date('2026-07-16');
 
   return [

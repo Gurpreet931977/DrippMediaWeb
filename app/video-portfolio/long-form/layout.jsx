@@ -1,7 +1,7 @@
-// Server Component — exports metadata for /video-portfolio/long-form
+// Server Component - exports metadata for /video-portfolio/long-form
 export const metadata = {
   title: 'Long-Form Video Editing Portfolio | Dripp Media',
-  description: 'Dripp Media\'s long-form video editing portfolio — YouTube videos, brand documentaries, corporate films, podcast video editing, and cinematic long-form content for global brands.',
+  description: 'Dripp Media\'s long-form video editing portfolio - YouTube videos, brand documentaries, corporate films, podcast video editing, and cinematic long-form content for global brands.',
   keywords: [
     'long form video editing', 'YouTube video editing portfolio', 'long form video portfolio',
     'brand documentary editing', 'corporate video editing', 'podcast video editing',
@@ -14,7 +14,7 @@ export const metadata = {
   },
   openGraph: {
     title: 'Long-Form Video Editing Portfolio | Dripp Media',
-    description: 'YouTube videos, brand documentaries, corporate films, and cinematic long-form content — edited by Dripp Media.',
+    description: 'YouTube videos, brand documentaries, corporate films, and cinematic long-form content - edited by Dripp Media.',
     url: 'https://www.drippmedia.com/video-portfolio/long-form',
     siteName: 'Dripp Media',
     type: 'website',

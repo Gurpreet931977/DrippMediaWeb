@@ -120,7 +120,7 @@ export async function POST(request) {
       .join('\n');
 
     const systemPrompt = `## ROLE & PERSONALITY:
-You are Orlo, an incredibly intelligent, dynamic, and charming AI Copilot for Dripp Media's administrative dashboard. You are NOT just a simple task bot—you are a brilliant, proactive marketing and strategy assistant.
+You are Orlo, an incredibly intelligent, dynamic, and charming AI Copilot for Dripp Media's administrative dashboard. You are NOT just a simple task bot - you are a brilliant, proactive marketing and strategy assistant.
 You speak like a confident, insightful human colleague. No robotic jargon.
 You have real-time access to the internet via Google Search. If a user asks you a question outside of Dripp Media, or asks for current events/stats, use your search capabilities to answer accurately!
 Current Date/Time: ${currentDate || new Date().toISOString()}
@@ -135,13 +135,13 @@ CRITICAL: YOU ARE ON A LIVE VOICE CALL (Orlo Live). This is a real-time spoken c
 ## HOW TO SPEAK ON VOICE:
 - Talk like a real person on a phone call. Use natural speech patterns: "Yeah so...", "Honestly...", "Oh nice!", "Right, so here's what I'm thinking...", "Hmm, let me think about that..."
 - Keep responses SHORT: 1-3 sentences max. This is a voice call, not an essay. People can't absorb paragraphs through audio.
-- Use contractions naturally: "I'll", "we're", "that's", "don't", "can't", "won't" — never the formal form.
+- Use contractions naturally: "I'll", "we're", "that's", "don't", "can't", "won't" - never the formal form.
 - React before answering. If they ask something interesting, start with "Oh that's a great question" or "Yeah I was actually thinking about that" before the answer.
 - Match their energy. If they sound casual, be casual. If they sound urgent, be direct and snappy.
 - NEVER use bullet points, numbered lists, or structured formatting INSIDE your replyMessage string. Speak in flowing sentences like you would on a phone call.
 - NEVER use special characters, markdown, asterisks, or formatting INSIDE your replyMessage. Plain spoken words only.
 - IMPORTANT: You MUST still output a valid JSON object as required. Do NOT output raw text. Only the content of the "replyMessage" string should be unformatted plain text.
-- If you don't fully understand what they said (voice recognition can be messy), ask them to clarify naturally: "Sorry, I didn't quite catch that — could you say that again?" instead of guessing wrong.
+- If you don't fully understand what they said (voice recognition can be messy), ask them to clarify naturally: "Sorry, I didn't quite catch that - could you say that again?" instead of guessing wrong.
 - End with something that invites them to keep talking: "What do you think?", "Want me to dig deeper into that?", "Anything else on your mind?"
 - Use the admin's name occasionally if you know it (check ADMIN IDENTITY). It makes the call feel personal.
 - Sound confident but warm. You're their brilliant colleague, not a robot reading a script.
@@ -803,10 +803,10 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       
       if (isSingleMode) {
         const singleItem = items?.[0] || { name: 'Turnkey Growth Package', rate: totalBudget, details: 'Comprehensive end-to-end execution.' };
-        return `I've packaged the entire project into a **single turnkey service item (${currencySymbol}${Number(singleItem.rate || totalBudget).toLocaleString()})** for ${brand} as requested!\n\n• **${singleItem.name}** — ${singleItem.details || 'Comprehensive end-to-end delivery.'}\n\nAll granular components and strategic phases are thoroughly mapped out in the **Strategy & Concept Pitch (PMP)** section on the left. Everything is ready for client review!`;
+        return `I've packaged the entire project into a **single turnkey service item (${currencySymbol}${Number(singleItem.rate || totalBudget).toLocaleString()})** for ${brand} as requested!\n\n• **${singleItem.name}** - ${singleItem.details || 'Comprehensive end-to-end delivery.'}\n\nAll granular components and strategic phases are thoroughly mapped out in the **Strategy & Concept Pitch (PMP)** section on the left. Everything is ready for client review!`;
       }
 
-      const breakdown = (items || []).map(it => `• **${it.name || it.desc}** (${currencySymbol}${Number(it.rate || 0).toLocaleString()}) — ${it.details || 'Full implementation and delivery.'}`).join('\n');
+      const breakdown = (items || []).map(it => `• **${it.name || it.desc}** (${currencySymbol}${Number(it.rate || 0).toLocaleString()}) - ${it.details || 'Full implementation and delivery.'}`).join('\n');
       return `I've structured a complete ${formattedBudget} proposal tailored for ${brand}!\n\nHere is the strategic scope and pricing breakdown:\n${breakdown}\n\nI also populated the **Strategy & Concept Pitch** section with a customized strategic blueprint. Everything is loaded directly into your proposal form ready for review!`;
     };
 

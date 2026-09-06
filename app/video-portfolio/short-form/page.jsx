@@ -448,7 +448,7 @@ export default function Page() {
             { title: "Your story matters", text: "People connect with real stories. We can help you tell yours in a way that feels natural and looks amazing.", button: "Get in touch" },
             { title: "Need a fresh look?", text: "If your brand's visuals are feeling a bit tired, we'd love to help you give them a serious upgrade.", button: "Drop us a line" },
             { title: "Let's get creative", text: "We're always looking for fun, new challenges. Have something cool in mind? Let's brainstorm together.", button: "Start a conversation" },
-            { title: "Ready to grow?", text: "Good videos don't just look pretty—they help your business grow. We can show you how.", button: "Contact us" },
+            { title: "Ready to grow?", text: "Good videos don't just look pretty - they help your business grow. We can show you how.", button: "Contact us" },
             { title: "Stand out online", text: "It's hard to get noticed these days. We make content that stops the scroll and gets people watching.", button: "Reach out" },
             { title: "Behind the camera", text: "We're just a small team of creatives who love making cool stuff for good people. Want to be next?", button: "Message us" },
             { title: "Let's make some magic", text: "From the first idea to the final edit, we handle it all. You just sit back and watch it come together.", button: "Let's connect" },
@@ -457,7 +457,7 @@ export default function Page() {
 
         const CREATIVE_QUOTES = [
             "Cinematography is infinite in its possibilities... much more so than music or language.",
-            "A film is – or should be – more like music than like fiction. It should be a progression of moods and feelings.",
+            "A film is - or should be - more like music than like fiction. It should be a progression of moods and feelings.",
             "There are no rules in filmmaking. Only sins. And the cardinal sin is dullness.",
             "Photography is truth. The cinema is truth twenty-four times per second.",
             "The eye should learn to listen before it looks.",
@@ -577,7 +577,7 @@ export default function Page() {
                             <div class="creative-vision-text-pc">
                                 <div class="quote-icon-bg">"</div>
                                 <p class="quote-text">"${randomQuote}"</p>
-                                <div class="quote-author">— The Dripp Vision</div>
+                                <div class="quote-author">- The Dripp Vision</div>
                             </div>
                         </div>
                     </div>

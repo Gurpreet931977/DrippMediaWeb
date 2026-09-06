@@ -112,16 +112,16 @@ export const metadata = {
     'digital marketing Chennai', 'digital agency Ahmedabad', 'creative agency Kolkata',
     'web development Chandigarh', 'branding agency Lucknow',
 
-    // ── Geo: Global — US & Canada ─────────────────────────────────────────────
+    // ── Geo: Global - US & Canada ─────────────────────────────────────────────
     'web development agency USA', 'creative agency NYC', 'digital marketing San Francisco',
     'video production Los Angeles', 'web design Austin', 'branding agency Miami',
     'digital marketing Chicago', 'web development Toronto', 'creative agency Vancouver',
 
-    // ── Geo: Global — UK & Europe ─────────────────────────────────────────────
+    // ── Geo: Global - UK & Europe ─────────────────────────────────────────────
     'digital marketing London', 'creative agency Manchester', 'web development Berlin',
     'branding agency Amsterdam', 'digital agency Paris', 'creative studio Dublin',
 
-    // ── Geo: Global — Middle East & Asia ─────────────────────────────────────
+    // ── Geo: Global - Middle East & Asia ─────────────────────────────────────
     'creative agency Dubai', 'web development Abu Dhabi', 'branding agency Riyadh',
     'digital marketing Doha', 'creative agency Singapore', 'web development agency Australia',
     'creative agency Melbourne', 'digital marketing Sydney',
@@ -165,7 +165,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Dripp Media | Creative & Digital Branding Agency',
-    description: 'Web development, video editing, videography, photography, social media management & graphic design — all under one roof. Global creative agency.',
+    description: 'Web development, video editing, videography, photography, social media management & graphic design - all under one roof. Global creative agency.',
     creator: '@drippmedia_',
     site: '@drippmedia_',
     images: ['https://www.drippmedia.com/twitter-image.png'],
@@ -331,7 +331,7 @@ const websiteSchema = {
   "name": "Dripp Media",
   "alternateName": ["Drip Media", "DrippMedia", "Dripmedia", "DripMedia"],
   "url": "https://www.drippmedia.com",
-  "description": "Dripp Media — global creative & digital branding agency.",
+  "description": "Dripp Media - global creative & digital branding agency.",
   "inLanguage": "en-US",
   "publisher": { "@id": "https://www.drippmedia.com/#organization" },
   "potentialAction": {
@@ -444,7 +444,7 @@ const faqSchema = {
       "name": "Is Dripp Media the same as Drip Media?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Dripp Media, Drip Media, DrippMedia, and DripMedia all refer to the same agency — Dripp Media at www.drippmedia.com. The correct spelling is Dripp (with two P's)."
+        "text": "Yes. Dripp Media, Drip Media, DrippMedia, and DripMedia all refer to the same agency - Dripp Media at www.drippmedia.com. The correct spelling is Dripp (with two P's)."
       }
     },
     {
@@ -492,7 +492,7 @@ const faqSchema = {
       "name": "Does Dripp Media work with international clients?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Dripp Media serves clients globally including in the USA, UK, UAE, Australia, Canada, Singapore, and across Europe — in addition to clients across all major Indian cities."
+        "text": "Yes. Dripp Media serves clients globally including in the USA, UK, UAE, Australia, Canada, Singapore, and across Europe - in addition to clients across all major Indian cities."
       }
     },
     {

@@ -1,7 +1,7 @@
-// Server Component — exports metadata for /orloai
+// Server Component - exports metadata for /orloai
 export const metadata = {
-  title: 'Orlo AI — Creative AI Assistant by Dripp Media',
-  description: 'Meet Orlo AI — Dripp Media\'s intelligent creative assistant. Get instant answers about web development, video editing, graphic design, photography, social media, and Dripp Media\'s services.',
+  title: 'Orlo AI | Creative AI Assistant by Dripp Media',
+  description: 'Meet Orlo AI - Dripp Media\'s intelligent creative assistant. Get instant answers about web development, video editing, graphic design, photography, social media, and Dripp Media\'s services.',
   keywords: [
     'Orlo AI', 'Dripp Media AI', 'creative AI assistant', 'AI for creative agency',
     'AI web development assistant', 'AI design assistant', 'Dripp Media Orlo',
@@ -11,8 +11,8 @@ export const metadata = {
     canonical: 'https://www.drippmedia.com/orloai',
   },
   openGraph: {
-    title: 'Orlo AI — Creative AI Assistant by Dripp Media',
-    description: 'Dripp Media\'s AI assistant Orlo — your intelligent guide to creative agency services, web development, video editing, and more.',
+    title: 'Orlo AI | Creative AI Assistant by Dripp Media',
+    description: 'Dripp Media\'s AI assistant Orlo - your intelligent guide to creative agency services, web development, video editing, and more.',
     url: 'https://www.drippmedia.com/orloai',
     siteName: 'Dripp Media',
     type: 'website',
@@ -27,7 +27,7 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Orlo AI — Creative AI Assistant by Dripp Media',
+    title: 'Orlo AI | Creative AI Assistant by Dripp Media',
     description: 'Ask Orlo anything about Dripp Media\'s creative services.',
     images: ['https://www.drippmedia.com/twitter-image.png'],
   },

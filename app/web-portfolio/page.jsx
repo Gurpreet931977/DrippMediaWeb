@@ -2519,7 +2519,7 @@ export default function Page() {
               </div>
               <div className="hub-perk-item">
                 <span className="perk-bullet">✦</span>
-                <span>{isGenz ? 'done & launched for you in 2–3 weeks' : 'Done & Launched For You in 2–3 Weeks'}</span>
+                <span>{isGenz ? 'done & launched for you in 2-3 weeks' : 'Done & Launched For You in 2-3 Weeks'}</span>
               </div>
             </div>
 

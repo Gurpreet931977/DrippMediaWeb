@@ -1,7 +1,7 @@
-// Server Component — exports metadata for /graphic-portfolio
+// Server Component - exports metadata for /graphic-portfolio
 export const metadata = {
   title: 'Graphic Design & Branding Portfolio | Dripp Media',
-  description: 'Browse Dripp Media\'s graphic design portfolio — logo design, brand identity, motion graphics, UI/UX design, poster design, packaging, and complete visual branding for global clients.',
+  description: 'Browse Dripp Media\'s graphic design portfolio - logo design, brand identity, motion graphics, UI/UX design, poster design, packaging, and complete visual branding for global clients.',
   keywords: [
     'graphic design portfolio', 'logo design portfolio', 'brand identity portfolio',
     'branding portfolio', 'motion graphics portfolio', 'UI UX design portfolio',
@@ -19,7 +19,7 @@ export const metadata = {
   },
   openGraph: {
     title: 'Graphic Design & Branding Portfolio | Dripp Media',
-    description: 'See Dripp Media\'s creative work — logos, brand identities, motion graphics, UI/UX, photography, and more for brands worldwide.',
+    description: 'See Dripp Media\'s creative work - logos, brand identities, motion graphics, UI/UX, photography, and more for brands worldwide.',
     url: 'https://www.drippmedia.com/graphic-portfolio',
     siteName: 'Dripp Media',
     type: 'website',
@@ -35,7 +35,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Graphic Design & Branding Portfolio | Dripp Media',
-    description: 'Logos, brand identities, motion graphics, UI/UX design, photography — creative work by Dripp Media.',
+    description: 'Logos, brand identities, motion graphics, UI/UX design, photography - creative work by Dripp Media.',
     images: ['https://www.drippmedia.com/twitter-image.png'],
   },
 };
@@ -63,7 +63,7 @@ const graphicCollectionSchema = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   "@id": "https://www.drippmedia.com/graphic-portfolio",
-  "name": "Graphic Design & Branding Portfolio — Dripp Media",
+  "name": "Graphic Design & Branding Portfolio - Dripp Media",
   "description": "Portfolio of logo design, brand identity, motion graphics, UI/UX design, photography, and creative visual work by Dripp Media.",
   "url": "https://www.drippmedia.com/graphic-portfolio",
   "inLanguage": "en-US",

@@ -1,7 +1,7 @@
-// Server Component — exports metadata for /web-portfolio
+// Server Component - exports metadata for /web-portfolio
 export const metadata = {
   title: 'Web Development Portfolio | Dripp Media',
-  description: 'Explore Dripp Media\'s web development portfolio — custom websites, e-commerce stores, SaaS platforms, Next.js apps, and interactive digital experiences built for global brands.',
+  description: 'Explore Dripp Media\'s web development portfolio - custom websites, e-commerce stores, SaaS platforms, Next.js apps, and interactive digital experiences built for global brands.',
   keywords: [
     'web development portfolio', 'website portfolio', 'web design portfolio',
     'custom website development', 'Next.js portfolio', 'React JS projects',
@@ -17,7 +17,7 @@ export const metadata = {
   },
   openGraph: {
     title: 'Web Development Portfolio | Dripp Media',
-    description: 'See the websites and web applications Dripp Media has built — from sleek startup sites to complex e-commerce and SaaS platforms.',
+    description: 'See the websites and web applications Dripp Media has built - from sleek startup sites to complex e-commerce and SaaS platforms.',
     url: 'https://www.drippmedia.com/web-portfolio',
     siteName: 'Dripp Media',
     type: 'website',
@@ -62,7 +62,7 @@ const webServiceSchema = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   "@id": "https://www.drippmedia.com/web-portfolio",
-  "name": "Web Development Portfolio — Dripp Media",
+  "name": "Web Development Portfolio - Dripp Media",
   "description": "Portfolio of custom websites, web applications, e-commerce stores, and SaaS platforms built by Dripp Media.",
   "url": "https://www.drippmedia.com/web-portfolio",
   "breadcrumb": { "@id": "https://www.drippmedia.com/web-portfolio#breadcrumb" },

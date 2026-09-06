@@ -73,7 +73,7 @@ const limiter = rateLimit({ limit: 10, windowMs: 60_000 });
 
 // ── Score plausibility constants ───────────────────────────────────────────────
 // Dripp Drop: ~80% normal (+1), ~15% red (+5), ~5% white (+69).
-// Peak catch rate ~8–12 drops/sec at high intensity; generous server cap = 25 pts/sec.
+// Peak catch rate ~8-12 drops/sec at high intensity; generous server cap = 25 pts/sec.
 // This cap means legitimate players scoring at peak intensity are never blocked,
 // while an attacker must wait session_score / 25 seconds before committing -
 // and even then they only get ONE commit per session (registry check below).

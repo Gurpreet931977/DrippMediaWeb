@@ -347,7 +347,7 @@ function DeliveryDocMaker() {
 
   const handleGenerate = () => {
     const pwdText = password ? `\nPassword/PIN: ${password}` : '';
-    const msg = `Hey ${clientName}! 🎉\n\nGreat news—your final assets for the ${projectName} (${serviceType}) are ready for download!\n\nYou can grab everything from this folder:\n🔗 Link: ${driveLink || '[Insert Link Here]'}${pwdText}\n\n${nextSteps}\n\nIt was a pleasure working on this. Let us know when you're ready for the next one!`;
+    const msg = `Hey ${clientName}! 🎉\n\nGreat news - your final assets for the ${projectName} (${serviceType}) are ready for download!\n\nYou can grab everything from this folder:\n🔗 Link: ${driveLink || '[Insert Link Here]'}${pwdText}\n\n${nextSteps}\n\nIt was a pleasure working on this. Let us know when you're ready for the next one!`;
     setGeneratedMsg(msg);
   };
 

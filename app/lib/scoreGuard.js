@@ -3,23 +3,23 @@
  * Anti-cheat score integrity system for the Dripp Drop game.
  *
  * CLIENT-SIDE strategy (first line of defence):
- *  1. Shadow checksum  – two independent shadow refs XOR'd with a salt
- *  2. Rate-gate        – max one score event per 50 ms (human-impossible to beat legitimately)
- *  3. Delta validation – each increment must be exactly 1, 5 or 69 (legal values only)
- *  4. Monotonic guard  – score may never decrease (drops only go up)
- *  5. Tampering flag   – any violation sets a permanent "cheated" flag that poisons
+ *  1. Shadow checksum  - two independent shadow refs XOR'd with a salt
+ *  2. Rate-gate        - max one score event per 50 ms (human-impossible to beat legitimately)
+ *  3. Delta validation - each increment must be exactly 1, 5 or 69 (legal values only)
+ *  4. Monotonic guard  - score may never decrease (drops only go up)
+ *  5. Tampering flag   - any violation sets a permanent "cheated" flag that poisons
  *                        the display and blocks the share flow
  *
  * SERVER-SIDE strategy (second line of defence via /api/submit-score):
- *  6. HMAC session token – a token is generated at session start using
+ *  6. HMAC session token - a token is generated at session start using
  *     the user's email + sessionStart timestamp; the server verifies it
  *     so no one can submit a score without having started a genuine session.
- *  7. Physics caps & hit-count plausibility – enforced on the server
+ *  7. Physics caps & hit-count plausibility - enforced on the server
  */
 
 const LEGAL_DELTAS = new Set([1, 5, 69]);
 const MIN_MS_BETWEEN_HITS = 50; // ~20 catches/sec absolute max for any human
-const XOR_SALT = 0x44727070; // "Drpp" in hex – obfuscates shadow values in memory
+const XOR_SALT = 0x44727070; // "Drpp" in hex - obfuscates shadow values in memory
 
 export function createScoreGuard() {
   let _primary   = 0;             // primary running total
@@ -28,12 +28,12 @@ export function createScoreGuard() {
   let _cheated   = false;         // permanent cheat flag
   let _hitCount  = 0;             // total accepted hits
 
-  // Session token fields – set once per game session by calling initSession()
+  // Session token fields - set once per game session by calling initSession()
   let _sessionStart = 0;
   let _sessionToken = null;
   let _scoreCommit  = null; // score-commit HMAC fetched just before submission
 
-  /** Internal checksum – both refs must agree at all times */
+  /** Internal checksum - both refs must agree at all times */
   function _checkIntegrity() {
     const recovered = _shadow ^ XOR_SALT;
     if (recovered !== _primary) {
@@ -72,7 +72,7 @@ export function createScoreGuard() {
         _sessionToken = data.token || null;
       }
     } catch (e) {
-      // If the request fails, the server will reject any submission – acceptable
+      // If the request fails, the server will reject any submission - acceptable
       _sessionToken = null;
     }
   }
@@ -83,7 +83,7 @@ export function createScoreGuard() {
    * Returns : { ok: boolean, score: number, cheated: boolean }
    */
   function tryAddScore(delta) {
-    // Already flagged – refuse everything
+    // Already flagged - refuse everything
     if (_cheated) return { ok: false, score: _primary, cheated: true };
 
     // Integrity check before mutating
@@ -98,7 +98,7 @@ export function createScoreGuard() {
     // Rate-gate
     const now = performance.now();
     if (now - _lastHitTs < MIN_MS_BETWEEN_HITS) {
-      // Too fast – silent drop, not a cheat flag (lag / multi-hit frame)
+      // Too fast - silent drop, not a cheat flag (lag / multi-hit frame)
       return { ok: false, score: _primary, cheated: false };
     }
     _lastHitTs = now;

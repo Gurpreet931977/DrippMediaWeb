@@ -301,7 +301,7 @@ export default function OrloChat() {
           const prefix = originalInputRef.current ? originalInputRef.current.trim() + ' ' : '';
           let fullText = prefix + currentSegment;
           
-          // Fix common mishearings of "Orlo" — word-level
+          // Fix common mishearings of "Orlo" - word-level
           fullText = fullText.replace(/\b(arlo|or low|are low|orlo|or lo|or no|oral|ore low|ore lo|or lol|oreo|aura low|hora lo|oh low|au lo|o\.r\.l\.o|oar low|all low|aarlo|hello orlo|oru|or u|arrow|ar|arun|orlon|hollow|ollo|olro|url|urlo|orla|orly|olow|allow|aloe|halo|harlow|arloe|orlew|orleau|orloe|orlou|aero|erlo|earl|earlo|our low|hour low|are no|our no|or roll|or hole|auto|otto|polo|rollo|solo|yolo)\b/gi, "Orlo");
           // Phrase-level corrections (multi-word mishearings)
           fullText = fullText.replace(/\bhi or lo\b/gi, "hi Orlo");
@@ -866,7 +866,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
     setEmotion('thinking');
     autoRelistenRef.current = true;
 
-    // Instant responses for common greetings — no API round-trip needed
+    // Instant responses for common greetings - no API round-trip needed
     const lowerText = userText.toLowerCase().replace(/[^a-z\s]/g, '').trim();
     const greetings = ['hi orlo', 'hey orlo', 'hello orlo', 'hi', 'hey', 'hello', 'yo', 'sup', 'whats up', 'wassup', 'yo orlo', 'good morning', 'good evening', 'good afternoon', 'morning', 'evening', 'hi oru', 'hey oru', 'hi arrow', 'hey arrow', 'hi ar', 'hey ar', 'hi arun', 'hey arun'];
     if (greetings.includes(lowerText)) {
@@ -1063,7 +1063,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
 
       const nextMessages = [];
       if (data.isNewTopic) {
-        nextMessages.push({ role: 'divider', text: '— New Topic —' });
+        nextMessages.push({ role: 'divider', text: '--- New Topic ---' });
       }
 
       if (data.intent === 'clear_chat') {

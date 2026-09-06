@@ -5,12 +5,12 @@
  * Security layers:
  *  1. CORS restriction - only drippmedia.com may call this endpoint
  *  2. Rate limiting - max 5 submissions per minute per IP
- *  3. HMAC-SHA256 session token verification – score and server secret are used
+ *  3. HMAC-SHA256 session token verification - score and server secret are used
  *     to generate a token at session start; that same token must arrive with submission
  *  4. Session age check - token must be fresh (max 2 hours)
- *  5. Server-side sanity caps – score checked against a hard physics maximum
- *  6. Hit-count plausibility – score checked against number of reported catches
- *  7. All Supabase writes happen here (server) – anon key cannot write scores directly
+ *  5. Server-side sanity caps - score checked against a hard physics maximum
+ *  6. Hit-count plausibility - score checked against number of reported catches
+ *  7. All Supabase writes happen here (server) - anon key cannot write scores directly
  */
 
 import { createClient } from '@supabase/supabase-js';

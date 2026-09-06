@@ -240,7 +240,7 @@ export default function OrloWikiPage() {
                         <h2 className="wiki-section-title" id="overview">Overview</h2>
                         <p>
                             Deployed exclusively within the Dripp ecosystem, Orlo acts as the central intelligence node for administrators. 
-                            Unlike traditional, sanitized corporate AI, Orlo was built with a &quot;Dripp-oriented&quot; persona—bold, 
+                            Unlike traditional, sanitized corporate AI, Orlo was built with a &quot;Dripp-oriented&quot; persona - bold, 
                             expressive, and deeply integrated into the user interface. He resides as a floating orb in the bottom right corner of the dashboard, constantly observing user actions and providing emotional reactions based on the context of the workflow.
                         </p>
 
@@ -286,7 +286,7 @@ export default function OrloWikiPage() {
 
                         <h2 className="wiki-section-title" id="trivia">Trivia</h2>
                         <ul>
-                            <li>Orlo is strictly prohibited from using em-dashes (&quot;—&quot;) in his generated copy, a hardcoded constraint to maintain a specific typographic flow.</li>
+                            <li>Orlo is strictly prohibited from using em-dashes in his generated copy, a hardcoded constraint to maintain a specific typographic flow.</li>
                             <li>His internal coordinate system requires exactly a 512x512 SVG canvas, with a mask origin carefully anchored at &apos;256px 392px&apos; to prevent jaw dislocation during speech.</li>
                             <li>Clicking Orlo&apos;s profile picture opens a premium, Instagram-inspired bio modal.</li>
                         </ul>

@@ -813,7 +813,7 @@ export default function WebPortfolioManager() {
               </button>
             </div>
             <div style={{ marginTop: '8px', fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'Clash Display, sans-serif' }}>
-              ✦ All synthesized details will be populated in the form below — you can review, edit, or adjust anything before publishing.
+              ✦ All synthesized details will be populated in the form below - you can review, edit, or adjust anything before publishing.
             </div>
           </div>
 
@@ -1263,7 +1263,7 @@ export default function WebPortfolioManager() {
                     Upload Screen Recording Video (Optional)
                   </div>
                   <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem', marginTop: '2px' }}>
-                    Supports .mp4, .webm, .mov — automatically turns the portfolio card into a looping cinematic demo
+                    Supports .mp4, .webm, .mov - automatically turns the portfolio card into a looping cinematic demo
                   </div>
                 </div>
               )}

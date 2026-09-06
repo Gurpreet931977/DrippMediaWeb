@@ -153,7 +153,7 @@ export default function ComingSoon() {
       });
     }
 
-    // High Score tracking – route through secure server API (no direct DB writes)
+    // High Score tracking - route through secure server API (no direct DB writes)
     if (gameState === 'failed' && activeGame === 'dripp') {
        if (score > highScoreRef.current) {
           highScoreRef.current = score;
@@ -170,7 +170,7 @@ export default function ComingSoon() {
                      // so the server can reject any forged or replayed score values.
                      const committed = await scoreGuardRef.current.commitScore(userObj.email);
                      if (!committed) {
-                        console.warn('Score guard: could not obtain score-commit – not submitting.');
+                        console.warn('Score guard: could not obtain score-commit - not submitting.');
                         return;
                      }
 
@@ -191,7 +191,7 @@ export default function ComingSoon() {
                           else console.warn('Score rejected by server:', data.error);
                         }).catch(e => console.error('Score submit error:', e));
                      } else {
-                        console.warn('Score guard flagged cheated session – not submitting.');
+                        console.warn('Score guard flagged cheated session - not submitting.');
                      }
                   }
                } catch (e) {

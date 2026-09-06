@@ -1,7 +1,7 @@
-// Server Component — exports metadata for /video-portfolio/short-form
+// Server Component - exports metadata for /video-portfolio/short-form
 export const metadata = {
   title: 'Short-Form & Reel Editing Portfolio | Dripp Media',
-  description: 'Dripp Media\'s short-form video editing portfolio — Instagram reels, YouTube Shorts, TikTok videos, viral social media content, and promotional clips for brands worldwide.',
+  description: 'Dripp Media\'s short-form video editing portfolio - Instagram reels, YouTube Shorts, TikTok videos, viral social media content, and promotional clips for brands worldwide.',
   keywords: [
     'short form video editing', 'Instagram reel editing portfolio', 'reel editor portfolio',
     'YouTube Shorts editing', 'TikTok video editing', 'viral reel editing agency',
@@ -14,7 +14,7 @@ export const metadata = {
   },
   openGraph: {
     title: 'Short-Form & Reel Editing Portfolio | Dripp Media',
-    description: 'Instagram reels, YouTube Shorts, TikTok videos, and viral social media content — short-form video editing by Dripp Media.',
+    description: 'Instagram reels, YouTube Shorts, TikTok videos, and viral social media content - short-form video editing by Dripp Media.',
     url: 'https://www.drippmedia.com/video-portfolio/short-form',
     siteName: 'Dripp Media',
     type: 'website',

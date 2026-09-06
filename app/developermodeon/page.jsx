@@ -16,6 +16,7 @@ import { validateCustomService } from '../utils/serviceValidator';
 export default function Page() {
   const { isGenz } = useGenz() || { isGenz: false };
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalInitialTab, setAuthModalInitialTab] = useState('signup');
   const [servicesCategories, setServicesCategories] = useState(DEFAULT_SERVICES_CATEGORIES);
 
   useEffect(() => {
@@ -1414,7 +1415,7 @@ export default function Page() {
                     const angle = Math.random() * Math.PI * 2;
 
                     // Per-pill physics personality
-                    const pillMaxSpeed = 1.1 + Math.random() * 0.9;     // 1.1 – 2.0 (normal cruise ceiling)
+                    const pillMaxSpeed = 1.1 + Math.random() * 0.9;     // 1.1 - 2.0 (normal cruise ceiling)
                     const pillNudgeChance = 0.015 + Math.random() * 0.035; // gentle zero-g tumbles
                     const pillNudgeForce = 0.08 + Math.random() * 0.12;
 
@@ -1961,6 +1962,23 @@ export default function Page() {
             const tab = document.querySelector(`.builder-tab[data-tab="${panelId}"]`);
             if (!tab || tab.classList.contains('active')) return;
 
+            const searchInput = document.getElementById('builder-service-search');
+            if (searchInput && searchInput.value) {
+                searchInput.value = '';
+                const searchClearBtn = document.getElementById('search-clear-btn');
+                const searchMatchCount = document.getElementById('search-match-count');
+                const searchResultsPanel = document.getElementById('search-results-panel');
+                if (searchClearBtn) {
+                    searchClearBtn.style.opacity = '0';
+                    searchClearBtn.style.pointerEvents = 'none';
+                }
+                if (searchMatchCount) searchMatchCount.textContent = '';
+                if (searchResultsPanel) {
+                    searchResultsPanel.classList.remove('active');
+                    searchResultsPanel.style.display = 'none';
+                }
+            }
+
             const targetPanel = document.querySelector(`.chip-panel[data-panel="${panelId}"]`);
             const currentPanel = document.querySelector('.chip-panel.active') || document.querySelector('.chip-panel[style*="display: flex"]');
             const panelsContainer = document.querySelector('.chip-panels');
@@ -2063,6 +2081,131 @@ export default function Page() {
             const activeTab = document.querySelector('.builder-tab.active');
             if (activeTab) updateGlider(activeTab);
         });
+
+        // --- CREATIVE SERVICE SEARCH ENGINE ---
+        const bSearchInput = document.getElementById('builder-service-search');
+        const bSearchClearBtn = document.getElementById('search-clear-btn');
+        const bSearchMatchCount = document.getElementById('search-match-count');
+        const bSearchResultsPanel = document.getElementById('search-results-panel');
+        const bSearchResultsChips = document.getElementById('search-results-chips');
+        const bSearchEmptyState = document.getElementById('search-empty-state');
+
+        let lastActiveTabId = 'video';
+        let allServicesIndex = [];
+
+        function buildServicesIndex() {
+            allServicesIndex = [];
+            document.querySelectorAll('.chip-panel:not(.search-results-panel)').forEach(panel => {
+                const catId = panel.dataset.panel;
+                const catTab = document.querySelector(`.builder-tab[data-tab="${catId}"]`);
+                const catName = catTab ? catTab.textContent.trim() : catId;
+                panel.querySelectorAll('.custom-chip:not(.custom-chip-action)').forEach(chip => {
+                    const name = chip.dataset.service;
+                    if (name && !allServicesIndex.some(item => item.name === name)) {
+                        allServicesIndex.push({ name, catId, catName });
+                    }
+                });
+            });
+        }
+
+        setTimeout(buildServicesIndex, 250);
+
+        if (bSearchInput) {
+            bSearchInput.addEventListener('input', () => {
+                const query = bSearchInput.value.trim().toLowerCase();
+                if (allServicesIndex.length === 0) buildServicesIndex();
+
+                if (!query) {
+                    if (bSearchClearBtn) {
+                        bSearchClearBtn.style.opacity = '0';
+                        bSearchClearBtn.style.pointerEvents = 'none';
+                    }
+                    if (bSearchMatchCount) bSearchMatchCount.textContent = '';
+                    if (bSearchResultsPanel) {
+                        bSearchResultsPanel.classList.remove('active');
+                        bSearchResultsPanel.style.display = 'none';
+                    }
+                    const activeTab = document.querySelector('.builder-tab.active') || document.querySelector(`.builder-tab[data-tab="${lastActiveTabId}"]`);
+                    const targetId = activeTab ? activeTab.dataset.tab : lastActiveTabId;
+                    const targetPanel = document.querySelector(`.chip-panel[data-panel="${targetId}"]`);
+                    if (targetPanel) {
+                        targetPanel.classList.add('active');
+                        targetPanel.style.display = 'flex';
+                        targetPanel.style.position = '';
+                        targetPanel.style.opacity = '1';
+                    }
+                    if (activeTab) updateGlider(activeTab);
+                    return;
+                }
+
+                if (bSearchClearBtn) {
+                    bSearchClearBtn.style.opacity = '1';
+                    bSearchClearBtn.style.pointerEvents = 'auto';
+                }
+
+                const currentActiveTab = document.querySelector('.builder-tab.active');
+                if (currentActiveTab && currentActiveTab.dataset.tab !== 'search') {
+                    lastActiveTabId = currentActiveTab.dataset.tab;
+                }
+
+                document.querySelectorAll('.chip-panel:not(.search-results-panel)').forEach(p => {
+                    p.classList.remove('active');
+                    p.style.display = 'none';
+                });
+
+                const matches = allServicesIndex.filter(item => 
+                    item.name.toLowerCase().includes(query) || 
+                    item.catName.toLowerCase().includes(query)
+                );
+
+                if (bSearchMatchCount) {
+                    bSearchMatchCount.textContent = matches.length === 1 ? '1 found' : `${matches.length} found`;
+                }
+
+                if (bSearchResultsPanel) {
+                    bSearchResultsPanel.classList.add('active');
+                    bSearchResultsPanel.style.display = 'flex';
+                }
+
+                if (matches.length > 0) {
+                    if (bSearchEmptyState) bSearchEmptyState.style.display = 'none';
+                    if (bSearchResultsChips) {
+                        bSearchResultsChips.style.display = 'flex';
+                        bSearchResultsChips.innerHTML = matches.map(m => {
+                            const isSelected = selectedServices.has(m.name);
+                            return `<div class="custom-chip ${isSelected ? 'selected' : ''}" data-service="${m.name.replace(/"/g, '&quot;')}" style="font-family: 'Clash Display', sans-serif;"><span class="chip-cat-tag">${m.catName}</span><span>${m.name}</span></div>`;
+                        }).join('');
+                    }
+                } else {
+                    if (bSearchResultsChips) {
+                        bSearchResultsChips.style.display = 'none';
+                        bSearchResultsChips.innerHTML = '';
+                    }
+                    if (bSearchEmptyState) bSearchEmptyState.style.display = 'flex';
+                }
+            });
+
+            if (bSearchClearBtn) {
+                bSearchClearBtn.addEventListener('click', () => {
+                    bSearchInput.value = '';
+                    bSearchInput.dispatchEvent(new Event('input'));
+                    bSearchInput.focus();
+                });
+            }
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+                    e.preventDefault();
+                    const builder = document.getElementById('custom-builder');
+                    if (builder) builder.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => bSearchInput.focus(), 250);
+                } else if (e.key === 'Escape' && document.activeElement === bSearchInput) {
+                    bSearchInput.value = '';
+                    bSearchInput.dispatchEvent(new Event('input'));
+                    bSearchInput.blur();
+                }
+            });
+        }
 
         function createSparkles(e, chip) {
             const rect = chip.getBoundingClientRect();
@@ -2664,7 +2807,13 @@ export default function Page() {
         </div>
         
         <div>
-          <ProfileWidget onLoginClick={() => setShowAuthModal(true)} hideShareScore={true} />
+          <ProfileWidget 
+            onLoginClick={(tab = 'signup') => {
+              setAuthModalInitialTab(tab);
+              setShowAuthModal(true);
+            }} 
+            hideShareScore={true} 
+          />
         </div>
       </li>
     </ul>
@@ -2677,6 +2826,7 @@ export default function Page() {
 
   <AuthModal 
       isOpen={showAuthModal} 
+      initialTab={authModalInitialTab}
       onClose={() => setShowAuthModal(false)}
       onLoginSuccess={() => {
         if (typeof window !== 'undefined') {
@@ -3128,6 +3278,37 @@ export default function Page() {
             <h3 className="builder-title">{isGenz ? 'build your loadout' : 'Customise Your Package'}</h3>
             <p className="builder-sub">{isGenz ? 'pick your perks and secure the bag. your quote builds automatically.' : 'Browse by category and select the exact services you need. Your quote builds automatically.'}</p>
           </div>
+
+          {/* Creative Service Search Command Bar */}
+          <div className="builder-search-wrap">
+            <div className="builder-search-box">
+              <span className="builder-search-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </span>
+              <input 
+                type="text" 
+                id="builder-service-search"
+                className="builder-search-input"
+                placeholder={isGenz ? "search 40+ creative drops (e.g. reels, 3d, web)..." : "Search 40+ creative services (e.g. 3D, reels, brand, web)..."}
+                autoComplete="off"
+                spellCheck="false"
+              />
+              <div className="builder-search-meta">
+                <span className="search-match-count" id="search-match-count" />
+                <button type="button" className="search-clear-btn" id="search-clear-btn" aria-label="Clear search">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+                <span className="search-kbd-chip" title="Press / to search">/</span>
+              </div>
+            </div>
+          </div>
+
           {/* Category Tabs */}
           <div className="builder-tabs" id="builder-tabs">
             <div className="tab-glider" id="tab-glider" />
@@ -3183,6 +3364,31 @@ export default function Page() {
                   </div>
                 </div>
               ))}
+
+              {/* Dynamic Search Results Panel */}
+              <div className="chip-panel search-results-panel" id="search-results-panel" data-panel="search" style={{ display: 'none' }}>
+                <div className="search-results-chips" id="search-results-chips" />
+                <div className="search-empty-state" id="search-empty-state" style={{ display: 'none' }}>
+                  <div className="search-empty-sparkle">✦</div>
+                  <p className="search-empty-title">{isGenz ? 'no exact match found' : 'No matching service found'}</p>
+                  <p className="search-empty-desc">{isGenz ? 'want custom chaos? write a bespoke scope below.' : 'Looking for custom deliverables? Submit your bespoke scope.'}</p>
+                  <button 
+                    type="button" 
+                    className="search-custom-btn"
+                    onClick={() => {
+                      const input = document.getElementById('custom-service-input');
+                      if (input) {
+                        input.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        input.focus();
+                        input.classList.add('pulse-glow');
+                        setTimeout(() => input.classList.remove('pulse-glow'), 1200);
+                      }
+                    }}
+                  >
+                    + Write Custom Scope
+                  </button>
+                </div>
+              </div>
             </div>{/* /chip-panels */}
           </div>{/* /chip-scroll */}
           {/* Custom Service Creator */}
@@ -3395,14 +3601,14 @@ export default function Page() {
             id: '01',
             tag: isGenz ? 'drop speed' : 'Delivery Timelines',
             q: isGenz ? 'how fast do you drop projects?' : 'How fast is your turnaround time?',
-            a: isGenz ? 'custom web platforms drop in 2–3 weeks. video edits & graphics take 24–72 hours per sprint with live staging previews.' : 'Full custom web platforms are typically delivered within 2–3 weeks. Video editing sprints and graphic design packages range from 24 to 72 hours per asset with live staging previews.',
+            a: isGenz ? 'custom web platforms drop in 2-3 weeks. video edits & graphics take 24-72 hours per sprint with live staging previews.' : 'Full custom web platforms are typically delivered within 2-3 weeks. Video editing sprints and graphic design packages range from 24 to 72 hours per asset with live staging previews.',
             icon: (
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
             ),
-            metric: isGenz ? '24h - 72h sprint cycle · 2-3 wk web drop' : '24–72h Sprints · 2–3 Wk Flagship Drops'
+            metric: isGenz ? '24h - 72h sprint cycle · 2-3 wk web drop' : '24-72h Sprints · 2-3 Wk Flagship Drops'
           },
           {
             id: '02',
@@ -3432,7 +3638,7 @@ export default function Page() {
             id: '04',
             tag: isGenz ? 'full pipeline' : 'End-To-End Execution',
             q: isGenz ? 'do you handle everything end-to-end?' : 'Do you handle end-to-end production?',
-            a: isGenz ? 'yes. from raw scripts, 3d motion, and sound design to full-stack next.js builds—all under one roof.' : 'Yes. From initial storyboarding, scripting, 3D rendering, and 4K cinema color-grading to full-stack Next.js web deployment and performance optimization—everything is crafted under one roof.',
+            a: isGenz ? 'yes. from raw scripts, 3d motion, and sound design to full-stack next.js builds - all under one roof.' : 'Yes. From initial storyboarding, scripting, 3D rendering, and 4K cinema color-grading to full-stack Next.js web deployment and performance optimization - everything is crafted under one roof.',
             icon: (
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="2" ry="2" />
