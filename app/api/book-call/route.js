@@ -189,6 +189,44 @@ async function pingCallMeBot(record) {
   }
 }
 
+async function notifyNtfy(record) {
+  try {
+    const topic = process.env.NTFY_TOPIC || 'dripp-leads-7300595147';
+    const cleanPhone = (record.whatsapp || '').replace(/[^0-9]/g, '');
+    const cleanNumber = cleanPhone.startsWith('91') || cleanPhone.length > 10 ? cleanPhone : `91${cleanPhone}`;
+
+    const bodyMessage = 
+      `Client: ${record.name}\n` +
+      `Slot: ${record.slot}\n` +
+      `Channel: ${record.call_channel || 'Direct Phone Call'}\n` +
+      `Phone: ${record.whatsapp}\n` +
+      `Email: ${record.email}\n` +
+      `Scope: ${record.scope || 'General'}` +
+      (record.notes ? `\n\nBrief:\n${record.notes}` : '');
+
+    const headers = {
+      'Title': `New Booking · ${record.name}`,
+      'Priority': 'urgent'
+    };
+
+    if (cleanPhone) {
+      headers['Click'] = `https://wa.me/${cleanNumber}`;
+      headers['Actions'] = `view, WhatsApp Client, https://wa.me/${cleanNumber}; view, Direct Call, tel:${cleanNumber}`;
+    }
+
+    const res = await fetch(`https://ntfy.sh/${topic}`, {
+      method: 'POST',
+      headers,
+      body: bodyMessage
+    });
+
+    return { success: res.ok, status: res.status };
+  } catch (err) {
+    console.warn('[BOOK-CALL API] ntfy notice:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
 // --- ROUTE HANDLERS ---
 
 export async function OPTIONS(request) {
@@ -250,17 +288,19 @@ export async function POST(request) {
     // 1. GUARANTEED DISK BACKUP (Zero leads lost)
     const backupSaved = saveLocalBackup(payload);
 
-    // 2. PARALLEL DISPATCH (Supabase + Notion + Email + WhatsApp Ping)
-    const [supabaseResult, notionResult, emailResult, waPingResult] = await Promise.allSettled([
+    // 2. PARALLEL DISPATCH (Supabase + Notion + Email + ntfy Push + WhatsApp Ping)
+    const [supabaseResult, notionResult, emailResult, ntfyResult, waPingResult] = await Promise.allSettled([
       saveToSupabase(payload),
       notifyNotion(payload),
       notifyEmail(payload),
+      notifyNtfy(payload),
       pingCallMeBot(payload),
     ]);
 
     const supabaseStatus = supabaseResult.status === 'fulfilled' ? supabaseResult.value : { success: false };
     const notionStatus = notionResult.status === 'fulfilled' ? notionResult.value : { success: false };
     const emailStatus = emailResult.status === 'fulfilled' ? emailResult.value : { success: false };
+    const ntfyStatus = ntfyResult.status === 'fulfilled' ? ntfyResult.value : { success: false };
     const waStatus = waPingResult.status === 'fulfilled' ? waPingResult.value : { success: false };
 
     return withCors(
@@ -272,6 +312,7 @@ export async function POST(request) {
         supabase: supabaseStatus,
         notion: notionStatus,
         email: emailStatus,
+        ntfyPush: ntfyStatus,
         whatsappPing: waStatus,
       }),
       request
