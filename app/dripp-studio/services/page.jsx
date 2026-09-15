@@ -799,69 +799,72 @@ export default function ServicesManager() {
         </div>
       )}
 
-      {/* Floating Save Prompt Bar (When unsaved changes exist) */}
-      {hasUnsavedChanges && (
-        <div style={{
-          position: 'fixed',
-          bottom: 24,
-          right: 36,
-          left: 320,
-          background: 'rgba(20, 20, 26, 0.95)',
-          border: '1px solid rgba(235, 215, 63, 0.4)',
-          borderRadius: 16,
-          padding: '14px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(235, 215, 63, 0.2)',
-          backdropFilter: 'blur(20px)',
-          zIndex: 1000
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ebd73f', boxShadow: '0 0 8px #ebd73f' }} />
-            <span style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.88rem', color: '#fff', fontWeight: 500 }}>
-              You have unsaved changes to services &amp; categories.
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              onClick={loadServices}
-              style={{
-                background: 'transparent',
-                border: '1px solid rgba(255,255,255,0.15)',
-                color: '#aaa',
-                padding: '8px 16px',
-                borderRadius: 10,
-                fontFamily: "'Clash Display', sans-serif",
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              Discard
-            </button>
-            <button
-              onClick={handleSaveAll}
-              disabled={saving}
-              style={{
-                background: '#ebd73f',
-                color: '#000',
-                border: 'none',
-                padding: '8px 20px',
-                borderRadius: 10,
-                fontFamily: "'Panchang', sans-serif",
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                cursor: saving ? 'not-allowed' : 'pointer',
-                boxShadow: '0 0 20px rgba(235, 215, 63, 0.4)'
-              }}
-            >
-              {saving ? 'SAVING...' : 'SAVE & PUBLISH LIVE'}
-            </button>
-          </div>
+      {/* Floating Save Prompt Bar (Smooth non-abrupt slide-up entrance) */}
+      <div style={{
+        position: 'fixed',
+        bottom: 24,
+        right: 36,
+        left: 320,
+        background: 'rgba(20, 20, 26, 0.96)',
+        border: '1px solid rgba(235, 215, 63, 0.4)',
+        borderRadius: 16,
+        padding: '14px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(235, 215, 63, 0.2)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        zIndex: 1000,
+        opacity: hasUnsavedChanges ? 1 : 0,
+        transform: hasUnsavedChanges ? 'translateY(0)' : 'translateY(24px)',
+        pointerEvents: hasUnsavedChanges ? 'auto' : 'none',
+        transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ebd73f', boxShadow: '0 0 8px #ebd73f' }} />
+          <span style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.88rem', color: '#fff', fontWeight: 500 }}>
+            You have unsaved changes to services &amp; categories.
+          </span>
         </div>
-      )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={loadServices}
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(255,255,255,0.15)',
+              color: '#aaa',
+              padding: '8px 16px',
+              borderRadius: 10,
+              fontFamily: "'Clash Display', sans-serif",
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Discard
+          </button>
+          <button
+            onClick={handleSaveAll}
+            disabled={saving}
+            style={{
+              background: '#ebd73f',
+              color: '#000',
+              border: 'none',
+              padding: '8px 20px',
+              borderRadius: 10,
+              fontFamily: "'Panchang', sans-serif",
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              cursor: saving ? 'not-allowed' : 'pointer',
+              boxShadow: '0 0 20px rgba(235, 215, 63, 0.4)'
+            }}
+          >
+            {saving ? 'SAVING...' : 'SAVE & PUBLISH LIVE'}
+          </button>
+        </div>
+      </div>
 
       {/* Notification Toast */}
       {notification && (

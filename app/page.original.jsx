@@ -461,15 +461,40 @@ export default function Page() {
             globalMouseY = e.clientY;
         });
 
-        // Global delegation for interactive hover states
+        // Global delegation for interactive hover states & high-contrast yellow element adaptation
         window.addEventListener('mouseover', (e) => {
-            if (e.target && e.target.closest && e.target.closest('button, a, .btn, .modal-close, .modal-submit, .service-card, .selected-svc-badge, .social-link, .nav-link, [role="button"], input[type="submit"]')) {
+            const target = e.target;
+            if (!target || !target.closest) return;
+
+            if (target.closest('button, a, .btn, .modal-close, .modal-submit, .service-card, .selected-svc-badge, .social-link, .nav-link, [role="button"], input[type="submit"], .custom-chip, .f-pill, .call-channel-btn, .slot-chip, .scope-dropdown-item')) {
                 cursor?.classList.add('active');
             }
+
+            const isOverYellow = target.closest('.client-connection-section, .custom-service-add-btn, .custom-chip.selected, .modal-submit-capsule, .active[data-channel="Direct Phone Call"], .slot-chip.active');
+            if (isOverYellow) {
+                if (target.closest('.mega-project-btn')) {
+                    cursor?.classList.remove('cursor-dark');
+                    cursor?.classList.add('cursor-over-dark');
+                } else {
+                    cursor?.classList.add('cursor-dark');
+                    cursor?.classList.remove('cursor-over-dark');
+                }
+            } else {
+                cursor?.classList.remove('cursor-dark', 'cursor-over-dark');
+            }
         });
+
         window.addEventListener('mouseout', (e) => {
-            if (e.target && e.target.closest && e.target.closest('button, a, .btn, .modal-close, .modal-submit, .service-card, .selected-svc-badge, .social-link, .nav-link, [role="button"], input[type="submit"]')) {
+            const target = e.target;
+            if (!target || !target.closest) return;
+
+            if (target.closest('button, a, .btn, .modal-close, .modal-submit, .service-card, .selected-svc-badge, .social-link, .nav-link, [role="button"], input[type="submit"], .custom-chip, .f-pill, .call-channel-btn, .slot-chip, .scope-dropdown-item')) {
                 cursor?.classList.remove('active');
+            }
+
+            const isOverYellow = target.closest('.client-connection-section, .custom-service-add-btn, .custom-chip.selected, .modal-submit-capsule, .active[data-channel="Direct Phone Call"], .slot-chip.active');
+            if (isOverYellow && !e.relatedTarget?.closest?.('.client-connection-section, .custom-service-add-btn, .custom-chip.selected, .modal-submit-capsule, .active[data-channel="Direct Phone Call"], .slot-chip.active')) {
+                cursor?.classList.remove('cursor-dark', 'cursor-over-dark');
             }
         });
 
@@ -522,7 +547,13 @@ export default function Page() {
                     this.ctx.lineCap = 'round';
                     this.ctx.lineWidth = 1.5;
 
-                    if (document.body.classList.contains('light-theme')) {
+                    const isOverYellow = cursor?.classList.contains('cursor-dark');
+                    if (isOverYellow) {
+                        // High contrast black trail on yellow section
+                        this.ctx.strokeStyle = '#050505';
+                        this.ctx.shadowBlur = 6;
+                        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+                    } else if (document.body.classList.contains('light-theme')) {
                         // Darker amber for contrast against white background
                         this.ctx.strokeStyle = '#d4ac0d';
                         this.ctx.shadowBlur = 8; // Less blurry shadow
@@ -2514,45 +2545,66 @@ export default function Page() {
             });
         });
 
-        // Submit Logic
+        // Submit Logic (Unified Strategy Call & Intake)
         contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             contactSubmit.classList.add('loading');
+            contactSubmit.disabled = true;
+
+            const btnText = contactSubmit.querySelector('.modal-btn-text');
+            if (btnText) btnText.innerText = 'Securing Strategy Call...';
+
+            const name = contactForm.name?.value?.trim() || '';
+            const email = contactForm.email?.value?.trim() || '';
+            const whatsapp = contactForm.whatsapp?.value?.trim() || '';
+            const message = contactForm.message?.value?.trim() || '';
+            const channel = document.querySelector('.call-channel-btn.active')?.getAttribute('data-channel') || 'Direct Phone Call';
+            const slot = document.querySelector('#contact-form .slot-chip.active')?.textContent?.trim() || '⚡ Today (ASAP)';
+
+            // Collect selected scopes
+            const selectedScopes = Array.from(document.querySelectorAll('#scope-dropdown-menu .scope-dropdown-item.selected'))
+                .map(el => el.getAttribute('data-scope-label') || el.textContent.trim());
+            const scopeStr = selectedScopes.join(', ');
 
             const payload = {
-                name: contactForm.name.value,
-                email: contactForm.email.value,
-                message: contactForm.message.value,
-                services: JSON.parse(contactForm.services.value || '{}')
+                name,
+                email,
+                whatsapp,
+                slot,
+                scope: scopeStr,
+                call_channel: channel,
+                notes: message
             };
 
             try {
-                const res = await fetch(`${API_URL}/contact`, {
+                await fetch('/api/book-call', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
-                if (res.ok) {
-                    contactSubmit.innerText = 'Sent ✓';
-                    contactSubmit.style.background = '#4CAF50';
-                    contactSubmit.style.color = '#fff';
-                    setTimeout(() => {
-                        closeContactModal();
-                        setTimeout(() => {
-                            contactSubmit.innerText = 'Send Message';
-                            contactSubmit.style = '';
-                            contactSubmit.classList.remove('loading');
-                        }, 500);
-                    }, 1500);
-                } else {
-                    customAlert("Something went wrong. Please try again.");
-                    contactSubmit.classList.remove('loading');
-                }
             } catch (err) {
-                customAlert("Failed to connect to the server.");
-                contactSubmit.classList.remove('loading');
+                console.warn('[BOOKING] API dispatch notice:', err);
             }
+
+            if (btnText) btnText.innerText = 'Call Confirmed ✓';
+            contactSubmit.style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
+            contactSubmit.style.color = '#fff';
+
+            // Prefilled WhatsApp message to studio line (+91 73005 95147)
+            const intro = name ? `Hey Dripp Media! I'm ${name}.` : `Hey Dripp Media!`;
+            const waText = `${intro} I requested a Strategy Call via ${channel} for ${slot}.${scopeStr ? `\nScope: ${scopeStr}` : ''}${message ? `\nBrief: ${message}` : ''}\nEmail: ${email} | Line: ${whatsapp}\nLooking forward to speaking!`;
+
+            setTimeout(() => {
+                window.open(`https://wa.me/917300595147?text=${encodeURIComponent(waText)}`, '_blank');
+                closeContactModal();
+                setTimeout(() => {
+                    contactSubmit.disabled = false;
+                    contactSubmit.classList.remove('loading');
+                    contactSubmit.style.background = '';
+                    contactSubmit.style.color = '';
+                    if (btnText) btnText.innerText = 'Request Strategy Call & Scope Review';
+                }, 600);
+            }, 900);
         });
 
         communityForm.addEventListener('submit', async (e) => {
@@ -3897,78 +3949,49 @@ export default function Page() {
       </button>
 
       <div className="contact-modal-grid">
-        {/* Left Sidebar: Studio Context, Navigation Tabs & Trust Guarantees */}
+        {/* Left Sidebar: Studio Context, Strategic Value & Trust Guarantees */}
         <div className="contact-modal-sidebar">
           <div className="modal-header-block">
             <div className="modal-live-badge">
               <span className="live-status-ping" />
-              <span>DIRECT STUDIO INTAKE · FAST 24H RESPONSE</span>
+              <span>DIRECT STUDIO INTAKE · STRATEGY CALL</span>
             </div>
             <h3 className="modal-title">Let's Talk.</h3>
-            <p className="modal-desc">Tell us about your project scope or book a 15-minute discovery call directly.</p>
+            <p className="modal-desc">Share your project scope and schedule a direct strategy call to map out creative direction, timeline, and execution.</p>
           </div>
           
-          {/* Stacked Interactive Mode Tabs */}
-          <div className="modal-tabs contact-tabs-stacked">
-            <button 
-              type="button"
-              className="modal-tab-btn active" 
-              id="tab-btn-brief"
-              onClick={() => {
-                document.getElementById('tab-btn-brief')?.classList.add('active');
-                document.getElementById('tab-btn-call')?.classList.remove('active');
-                const fBrief = document.getElementById('contact-form');
-                const fCall = document.getElementById('contact-form-call');
-                if (fBrief) fBrief.style.display = 'flex';
-                if (fCall) fCall.style.display = 'none';
-              }}
-            >
-              <div className="tab-icon-wrap">
+          {/* Strategy Value Highlights */}
+          <div className="strategy-value-card">
+            <div className="strategy-value-item">
+              <div className="strategy-value-icon">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
               </div>
-              <div className="tab-text-group">
-                <span className="tab-title">Project Brief</span>
-                <span className="tab-sub">Scope, timeline & goals</span>
+              <div className="strategy-value-text">
+                <span className="strategy-value-title">Direct Audio Call</span>
+                <span className="strategy-value-sub">Direct Phone or WhatsApp Audio</span>
               </div>
-            </button>
-            <button 
-              type="button"
-              className="modal-tab-btn" 
-              id="tab-btn-call"
-              onClick={() => {
-                document.getElementById('tab-btn-call')?.classList.add('active');
-                document.getElementById('tab-btn-brief')?.classList.remove('active');
-                const fBrief = document.getElementById('contact-form');
-                const fCall = document.getElementById('contact-form-call');
-                if (fBrief) fBrief.style.display = 'none';
-                if (fCall) fCall.style.display = 'flex';
-              }}
-            >
-              <div className="tab-icon-wrap">
+            </div>
+
+            <div className="strategy-value-item">
+              <div className="strategy-value-icon">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
               </div>
-              <div className="tab-text-group">
-                <span className="tab-title">Book Strategy Call</span>
-                <span className="tab-sub">15-min video discovery</span>
+              <div className="strategy-value-text">
+                <span className="strategy-value-title">Creative & Scope Roadmap</span>
+                <span className="strategy-value-sub">Vision, budget & execution plan</span>
               </div>
-            </button>
+            </div>
           </div>
 
           {/* Studio Guarantees */}
           <div className="contact-sidebar-guarantees">
             <div className="sidebar-guarantee-item">
               <span className="guarantee-sparkle">✦</span>
-              <span>24h Initial Response</span>
+              <span>Call on Your Decided Time & Line</span>
             </div>
             <div className="sidebar-guarantee-item">
               <span className="guarantee-sparkle">✦</span>
@@ -3976,16 +3999,17 @@ export default function Page() {
             </div>
             <div className="sidebar-guarantee-item">
               <span className="guarantee-sparkle">✦</span>
-              <span>Strict NDA & Privacy Protected</span>
+              <span>Strict NDA & Zero Spam Guarantee</span>
             </div>
           </div>
         </div>
 
         {/* Right Main Form Area */}
         <div className="contact-modal-main">
-          {/* BRIEF FORM */}
           <form className="modal-form" id="contact-form" style={{ display: 'flex' }}>
             <input type="hidden" name="services" defaultValue="{}" />
+            <input type="hidden" name="call_channel" id="contact-call-channel" defaultValue="Direct Phone Call" />
+            <input type="hidden" name="slot" id="contact-selected-slot" defaultValue="⚡ Today (ASAP)" />
             <div id="contact-services-list" />
 
             {/* Multi-Select Project Scope Dropdown Menu */}
@@ -4061,7 +4085,6 @@ export default function Page() {
                                 <span class="scope-tag-remove" data-remove-label="${lbl}">&times;</span>
                               </span>
                             `).join('');
-                            // Attach remove click listener
                             tagsRow.querySelectorAll('.scope-tag-remove').forEach(rm => {
                               rm.addEventListener('click', (ev) => {
                                 ev.stopPropagation();
@@ -4070,17 +4093,6 @@ export default function Page() {
                                 if (targetItem) targetItem.click();
                               });
                             });
-                          }
-                        }
-                        
-                        // Sync into message field
-                        const msgBox = document.querySelector('#contact-form textarea[name="message"]');
-                        if (msgBox) {
-                          const currentVal = msgBox.value.replace(/^Scope: .*\n\n?/, '').trim();
-                          if (selectedItems.length > 0) {
-                            msgBox.value = `Scope: ${selectedItems.join(' · ')}\n\n${currentVal}`;
-                          } else {
-                            msgBox.value = currentVal;
                           }
                         }
                       }}
@@ -4115,14 +4127,99 @@ export default function Page() {
               </div>
             </div>
 
+            {/* Call Channel Preference (Primary & Default) */}
             <div className="form-group">
-              <label>WhatsApp Number</label>
+              <div className="field-label-row">
+                <label>Call Channel Preference</label>
+                <span className="field-label-hint">Audio call only (no video)</span>
+              </div>
+              <div className="call-channel-grid">
+                <button 
+                  type="button" 
+                  className="call-channel-btn active" 
+                  data-channel="Direct Phone Call"
+                  onClick={(e) => {
+                    document.querySelectorAll('.call-channel-btn').forEach(b => b.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    const hidden = document.getElementById('contact-call-channel');
+                    if (hidden) hidden.value = 'Direct Phone Call';
+                    const numLabel = document.getElementById('contact-phone-hint');
+                    if (numLabel) numLabel.innerText = 'For direct phone call';
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  <span>Direct Phone Call</span>
+                  <span className="channel-badge">Primary</span>
+                </button>
+                <button 
+                  type="button" 
+                  className="call-channel-btn" 
+                  data-channel="WhatsApp Call"
+                  onClick={(e) => {
+                    document.querySelectorAll('.call-channel-btn').forEach(b => b.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    const hidden = document.getElementById('contact-call-channel');
+                    if (hidden) hidden.value = 'WhatsApp Call';
+                    const numLabel = document.getElementById('contact-phone-hint');
+                    if (numLabel) numLabel.innerText = 'For WhatsApp audio call';
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                  </svg>
+                  <span>WhatsApp Call</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Phone / WhatsApp Line */}
+            <div className="form-group">
+              <div className="field-label-row">
+                <label>Phone / WhatsApp Number</label>
+                <span className="field-label-hint" id="contact-phone-hint">For direct phone call</span>
+              </div>
               <input type="tel" name="whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
             </div>
 
+            {/* Preferred Call Time (Value-Centric Slots) */}
             <div className="form-group">
-              <label>Project Scope / Message</label>
-              <textarea name="message" className="form-input" placeholder="Tell us what you're building, your target launch date, or reference links..." defaultValue={""} rows={2} />
+              <div className="field-label-row">
+                <label>Preferred Call Time</label>
+                <span className="field-label-hint">We will call you at this time</span>
+              </div>
+              <div className="slot-grid">
+                {['⚡ Today (ASAP)', 'Tomorrow 11:00 AM', 'Tomorrow 3:00 PM', 'Tomorrow 6:00 PM', 'Thu 2:00 PM', 'Custom / Flexible'].map((slot, idx) => (
+                  <div 
+                    key={slot} 
+                    className={`slot-chip ${idx === 0 ? 'active' : ''}`}
+                    onClick={(e) => {
+                      document.querySelectorAll('#contact-form .slot-chip').forEach(c => c.classList.remove('active'));
+                      e.currentTarget.classList.add('active');
+                      const slotInput = document.getElementById('contact-selected-slot');
+                      if (slotInput) slotInput.value = slot;
+                    }}
+                  >
+                    {slot}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Project Goals / Details */}
+            <div className="form-group">
+              <div className="field-label-row">
+                <label>Project Scope / Brief (Optional)</label>
+                <span className="field-label-hint">Context for our strategy discussion</span>
+              </div>
+              <textarea name="message" className="form-input" placeholder="Tell us what you're building, target launch date, or reference links..." defaultValue={""} rows={2} />
+            </div>
+
+            {/* Reassurance Footnote */}
+            <div className="contact-brief-footnote">
+              <span className="footnote-bullet">✦</span>
+              <span>We will call you directly at your selected time on your chosen line with zero spam.</span>
             </div>
 
             {/* 3D Capsule Action Button */}
@@ -4130,115 +4227,7 @@ export default function Page() {
               <span className="modal-btn-shimmer" />
               <div className="modal-btn-label">
                 <span className="modal-sparkle">✦</span>
-                <span className="modal-btn-text">Send Project Brief</span>
-              </div>
-              <div className="modal-action-disc">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M7 17L17 7M17 7H8M17 7V16" />
-                </svg>
-              </div>
-            </button>
-          </form>
-
-          {/* STRATEGY CALL FORM */}
-          <form className="modal-form" id="contact-form-call" style={{ display: 'none' }} onSubmit={async (e) => {
-            e.preventDefault();
-            const callSubmit = document.getElementById('call-submit');
-            const target = e.currentTarget;
-            const name = (target.elements && target.elements.namedItem('call_name')) ? target.elements.namedItem('call_name').value.trim() : '';
-            const email = (target.elements && target.elements.namedItem('call_email')) ? target.elements.namedItem('call_email').value.trim() : '';
-            const waNum = (target.elements && target.elements.namedItem('call_whatsapp')) ? target.elements.namedItem('call_whatsapp').value.trim() : '';
-            const selectedSlot = document.querySelector('.slot-chip.active')?.textContent || 'Tomorrow at 3:00 PM';
-
-            if (callSubmit) {
-              callSubmit.disabled = true;
-              callSubmit.classList.add('loading');
-              const btnText = callSubmit.querySelector('.modal-btn-text');
-              if (btnText) btnText.innerText = 'Securing Slot...';
-            }
-
-            // 1. Asynchronously persist lead to backend (Supabase + Local Disk + Notion + WhatsApp Ping)
-            try {
-              await fetch('/api/book-call', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  name,
-                  email,
-                  whatsapp: waNum,
-                  slot: selectedSlot
-                })
-              });
-            } catch (err) {
-              console.warn('[BOOKING] API dispatch notice:', err);
-            }
-
-            // 2. Immediate visual confirmation
-            if (callSubmit) {
-              callSubmit.classList.remove('loading');
-              const btnText = callSubmit.querySelector('.modal-btn-text');
-              if (btnText) btnText.innerText = 'Call Confirmed';
-              callSubmit.style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
-              callSubmit.style.color = '#fff';
-            }
-
-            // 3. Open WhatsApp prefilled message
-            const intro = name ? `Hey Dripp Media! I'm ${name}.` : `Hey Dripp Media!`;
-            const details = email ? ` My Email is ${email} and WhatsApp is ${waNum || 'N/A'}.` : (waNum ? ` My WhatsApp is ${waNum}.` : '');
-            const msg = `${intro} I booked a 15-min strategy call for ${selectedSlot}.${details} Looking forward to connecting!`;
-
-            setTimeout(() => {
-              window.open(`https://wa.me/917300595147?text=${encodeURIComponent(msg)}`, '_blank');
-              if (typeof window.closeContactModal === 'function') window.closeContactModal();
-              setTimeout(() => {
-                if (callSubmit) {
-                  callSubmit.disabled = false;
-                  callSubmit.style.background = '';
-                  callSubmit.style.color = '';
-                  const btnText = callSubmit.querySelector('.modal-btn-text');
-                  if (btnText) btnText.innerText = 'Confirm Strategy Call';
-                }
-              }, 600);
-            }, 1000);
-          }}>
-            <div className="call-meta-badge">
-              <span className="live-status-ping" />
-              <span>15-Min Strategy Session · Google Meet / Zoom</span>
-            </div>
-            <div className="slot-picker-label">Select Preferred Slot</div>
-            <div className="slot-grid">
-              {['Tomorrow 3:00 PM', 'Tomorrow 5:30 PM', 'Thu 2:00 PM', 'Thu 4:30 PM', 'Fri 11:00 AM', 'Fri 6:00 PM'].map((slot, idx) => (
-                <div 
-                  key={slot} 
-                  className={`slot-chip ${idx === 0 ? 'active' : ''}`}
-                  onClick={(e) => {
-                    document.querySelectorAll('.slot-chip').forEach(c => c.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
-                  }}
-                >
-                  {slot}
-                </div>
-              ))}
-            </div>
-            <div className="form-row-dual">
-              <div className="form-group">
-                <label>Your Name</label>
-                <input type="text" name="call_name" className="form-input" placeholder="Your name" required />
-              </div>
-              <div className="form-group">
-                <label>Work Email</label>
-                <input type="email" name="call_email" className="form-input" placeholder="hello@company.com" required />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>WhatsApp Number</label>
-              <input type="tel" name="call_whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
-            </div>
-            <button type="submit" className="modal-submit-capsule" id="call-submit">
-              <span className="modal-btn-shimmer" />
-              <div className="modal-btn-label">
-                <span className="modal-sparkle">✦</span>
-                <span className="modal-btn-text">Confirm Strategy Call</span>
+                <span className="modal-btn-text">Request Strategy Call & Scope Review</span>
               </div>
               <div className="modal-action-disc">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
@@ -4251,6 +4240,7 @@ export default function Page() {
       </div>
     </div>
   </div>
+
   <div className="modal-overlay" id="community-modal">
     <div className="modal-container contact-modal-box community-modal-box" data-lenis-prevent="true">
       <button 

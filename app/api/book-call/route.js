@@ -46,7 +46,28 @@ async function saveToSupabase(record) {
     const supabase = getSupabase();
     if (!supabase) return { success: false, error: 'Supabase credentials missing' };
 
-    const { data, error } = await supabase.from('strategy_calls').insert([record]).select();
+    // Standard columns for strategy_calls table
+    let dbPayload = {
+      name: record.name,
+      email: record.email,
+      whatsapp: record.whatsapp,
+      slot: record.slot,
+      call_channel: record.call_channel || 'Direct Phone Call',
+      scope: record.scope || '',
+      notes: record.notes,
+      source: record.source || 'website_modal',
+      status: record.status || 'pending',
+    };
+
+    let { data, error } = await supabase.from('strategy_calls').insert([dbPayload]).select();
+    if (error && error.message && error.message.includes('column')) {
+      // Graceful fallback for older table schemas without call_channel/scope columns
+      delete dbPayload.call_channel;
+      delete dbPayload.scope;
+      const fallbackResult = await supabase.from('strategy_calls').insert([dbPayload]).select();
+      data = fallbackResult.data;
+      error = fallbackResult.error;
+    }
     if (error) {
       console.warn('[BOOK-CALL API] Supabase warning (verify RLS/table):', error.message);
       return { success: false, error: error.message };
@@ -66,6 +87,9 @@ async function notifyNotion(record) {
     const targetPageId = process.env.NOTION_CALLS_PAGE_ID || '7fe6c247-ead5-4a73-8a43-bab3f2ee4b8c';
     const notion = new NotionClient({ auth: apiKey });
 
+    const channel = record.call_channel || 'Direct Phone Call';
+    const scope = record.scope || 'General';
+
     const response = await notion.blocks.children.append({
       block_id: targetPageId,
       children: [
@@ -77,14 +101,14 @@ async function notifyNotion(record) {
               {
                 type: 'text',
                 text: {
-                  content: `[STRATEGY CALL] ${record.name} - Slot: ${record.slot}`,
+                  content: `[STRATEGY CALL] ${record.name} - Slot: ${record.slot} (${channel})`,
                 },
                 annotations: { bold: true },
               },
               {
                 type: 'text',
                 text: {
-                  content: ` | Email: ${record.email} | WhatsApp: ${record.whatsapp} | ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+                  content: ` | Scope: ${scope} | Email: ${record.email} | Phone/WA: ${record.whatsapp} | ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
                 },
               },
             ],
@@ -113,14 +137,17 @@ async function notifyEmail(record) {
       to: toEmail,
       subject: `New Strategy Call Booked: ${record.name} (${record.slot})`,
       html: `
-        <div style="background-color: #0d0d10; color: #ffffff; padding: 24px; font-family: sans-serif; border-radius: 12px;">
-          <h2 style="color: #ebd73f; margin-top: 0;">New Strategy Call Reserved</h2>
-          <p style="font-size: 15px; line-height: 1.6;">A new client has reserved a discovery session:</p>
-          <ul style="line-height: 1.8; font-size: 14px;">
+        <div style="background-color: #0d0d10; color: #ffffff; padding: 24px; font-family: sans-serif; border-radius: 12px; border: 1px solid rgba(235, 215, 63, 0.2);">
+          <h2 style="color: #ebd73f; margin-top: 0;">New Strategy Call & Project Brief</h2>
+          <p style="font-size: 15px; line-height: 1.6; color: #d0d0d0;">A client has submitted their project scope and requested a strategy call:</p>
+          <ul style="line-height: 1.9; font-size: 14px;">
             <li><strong>Client Name:</strong> ${record.name}</li>
+            <li><strong>Call Channel:</strong> <span style="background: #ebd73f; color: #000; padding: 2px 8px; border-radius: 4px; font-weight: bold;">${record.call_channel || 'Direct Phone Call'}</span></li>
             <li><strong>Preferred Slot:</strong> ${record.slot}</li>
+            <li><strong>Project Scope:</strong> ${record.scope || 'Not specified'}</li>
             <li><strong>Email:</strong> <a href="mailto:${record.email}" style="color: #ebd73f;">${record.email}</a></li>
-            <li><strong>WhatsApp:</strong> <a href="https://wa.me/${record.whatsapp.replace(/[^0-9]/g, '')}" style="color: #ebd73f;">${record.whatsapp}</a></li>
+            <li><strong>Phone / WhatsApp:</strong> <a href="https://wa.me/${record.whatsapp.replace(/[^0-9]/g, '')}" style="color: #ebd73f;">${record.whatsapp}</a></li>
+            ${record.notes ? `<li><strong>Brief & Notes:</strong><br/><pre style="background: #18191f; padding: 12px; border-radius: 8px; color: #e2e8f0; white-space: pre-wrap; font-family: sans-serif; margin-top: 6px;">${record.notes}</pre></li>` : ''}
             <li><strong>Timestamp:</strong> ${record.created_at}</li>
           </ul>
         </div>
@@ -142,11 +169,13 @@ async function pingCallMeBot(record) {
     const phone = process.env.CALLMEBOT_PHONE || '917300595147';
     const cleanPhone = phone.replace(/[^0-9]/g, '');
 
-    const message = `*NEW STRATEGY CALL BOOKED!*\n` +
+    const message = `*NEW STRATEGY CALL & BRIEF!*\n` +
       `*Name:* ${record.name}\n` +
+      `*Channel:* ${record.call_channel || 'Direct Phone'}\n` +
       `*Slot:* ${record.slot}\n` +
+      `*Scope:* ${record.scope || 'General'}\n` +
+      `*Number:* ${record.whatsapp}\n` +
       `*Email:* ${record.email}\n` +
-      `*WhatsApp:* ${record.whatsapp}\n` +
       `*Time:* ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
 
     const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apiKey)}`;
@@ -173,7 +202,9 @@ export async function POST(request) {
     const email = (body.email || '').trim();
     const whatsapp = (body.whatsapp || '').trim();
     const slot = (body.slot || 'Tomorrow at 3:00 PM').trim();
-    const notes = (body.notes || '').trim();
+    const notes = (body.notes || body.message || '').trim();
+    const scope = (body.scope || '').trim();
+    const call_channel = (body.call_channel || 'Direct Phone Call').trim();
 
     if (!name) {
       return withCors(
@@ -191,10 +222,16 @@ export async function POST(request) {
 
     if (!whatsapp) {
       return withCors(
-        NextResponse.json({ success: false, error: 'WhatsApp number is required' }, { status: 400 }),
+        NextResponse.json({ success: false, error: 'Phone or WhatsApp number is required' }, { status: 400 }),
         request
       );
     }
+
+    const formattedNotes = [
+      `[Preferred Call Channel]: ${call_channel}`,
+      scope ? `[Project Scope]: ${scope}` : '',
+      notes ? `[Project Brief]:\n${notes}` : '',
+    ].filter(Boolean).join('\n\n');
 
     const payload = {
       id: `call_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
@@ -202,7 +239,9 @@ export async function POST(request) {
       email,
       whatsapp,
       slot,
-      notes,
+      call_channel,
+      scope,
+      notes: formattedNotes,
       source: 'strategy_modal',
       created_at: new Date().toISOString(),
       status: 'pending',

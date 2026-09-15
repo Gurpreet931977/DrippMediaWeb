@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AlertTriangle, Info, AlertCircle, XCircle, Trash2, Clock, MapPin, Search, CheckCircle2, Copy, Check, RefreshCw } from 'lucide-react';
 import styles from '../admin.module.css';
 import { useGenz } from '../../contexts/GenzContext';

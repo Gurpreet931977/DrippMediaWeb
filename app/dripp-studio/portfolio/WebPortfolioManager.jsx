@@ -20,7 +20,8 @@ const DEFAULT_WEB_CATEGORIES = [
   'Web3 & Digital Culture',
   'Portfolio & Creative Studio',
   'Fintech & Payment Systems',
-  'Hospitality & Real Estate'
+  'Hospitality & Real Estate',
+  'B2B Industrial & Global Trade'
 ];
 
 const POPULAR_TECH_STACKS = [
@@ -271,7 +272,7 @@ export default function WebPortfolioManager() {
           body: JSON.stringify({
             url: rawUrl,
             title: targetFormData.title,
-            category: targetFormData.category,
+            category: targetFormData.category === 'Enterprise Digital Platform' ? '' : targetFormData.category,
             notes: targetFormData.orlo_notes
           })
         }).then(r => r.json())
@@ -331,7 +332,7 @@ export default function WebPortfolioManager() {
         body: JSON.stringify({
           title: targetFormData.title,
           url: rawUrl,
-          category: targetFormData.category,
+          category: targetFormData.category === 'Enterprise Digital Platform' ? '' : targetFormData.category,
           notes: targetFormData.orlo_notes
         })
       });
@@ -710,55 +711,34 @@ export default function WebPortfolioManager() {
           background: 'rgba(15, 15, 20, 0.85)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '20px',
-          padding: '35px',
+          padding: '28px',
           backdropFilter: 'blur(20px)'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-            <h2 style={{ fontSize: '1.4rem', display: 'flex', alignItems: 'center', gap: '12px', color: '#fff', margin: 0, fontFamily: 'Panchang, sans-serif' }}>
-              <Globe size={24} color="#ebd73f" /> Add New Web Build
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', margin: 0, fontFamily: 'Panchang, sans-serif', letterSpacing: '0.3px' }}>
+              <Globe size={20} color="#ebd73f" /> Add New Web Build
             </h2>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: 'rgba(235, 215, 63, 0.12)',
-              border: '1px solid rgba(235, 215, 63, 0.3)',
-              borderRadius: '20px',
-              padding: '6px 16px',
-              color: '#ebd73f',
-              fontSize: '0.75rem',
-              fontFamily: 'Panchang, sans-serif',
-              fontWeight: 700
-            }}>
-              <Sparkles size={14} /> ORLO AI CASE STUDY INTEGRATED
-            </div>
           </div>
 
           {/* 1-Click Magic AI Autopilot Banner */}
           <div style={{
-            background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.12) 0%, rgba(20, 20, 30, 0.95) 100%)',
-            border: '1px solid rgba(235, 215, 63, 0.35)',
-            borderRadius: '16px',
-            padding: '20px 24px',
-            marginBottom: '26px',
-            boxShadow: '0 8px 30px rgba(235, 215, 63, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+            background: 'rgba(235, 215, 63, 0.04)',
+            border: '1px solid rgba(235, 215, 63, 0.25)',
+            borderRadius: '14px',
+            padding: '16px 20px',
+            marginBottom: '24px'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={18} color="#ebd73f" />
-                <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.85rem', fontWeight: 800, color: '#ebd73f', letterSpacing: '0.4px' }}>
-                  1-CLICK MAGIC AI AUTOPILOT
-                </span>
-              </div>
-              <span style={{ fontSize: '0.74rem', fontFamily: 'Clash Display, sans-serif', color: 'rgba(255,255,255,0.7)' }}>
-                Enter website URL → AI captures screenshot, detects tech stack & synthesizes full case study
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <Sparkles size={16} color="#ebd73f" />
+              <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.8rem', fontWeight: 800, color: '#ebd73f', letterSpacing: '0.4px' }}>
+                1-CLICK AI AUTOPILOT
               </span>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
               <input 
-                type="text"
-                placeholder="Enter Live Website URL (e.g. www.thestallionmetallist.com or https://...)"
+                type="text" 
+                placeholder="Enter live website URL (e.g. thestallionmetallist.com or https://...)"
                 value={formData.url}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -777,12 +757,12 @@ export default function WebPortfolioManager() {
                 style={{
                   flex: 1,
                   minWidth: '260px',
-                  background: 'rgba(0,0,0,0.6)',
-                  border: '1px solid rgba(235, 215, 63, 0.35)',
-                  borderRadius: '12px',
-                  padding: '12px 18px',
+                  background: 'rgba(0,0,0,0.5)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '10px',
+                  padding: '11px 16px',
                   color: '#fff',
-                  fontSize: '0.88rem',
+                  fontSize: '0.86rem',
                   fontFamily: 'Clash Display, sans-serif'
                 }}
               />
@@ -794,26 +774,22 @@ export default function WebPortfolioManager() {
                   background: 'var(--brand-yellow, #ebd73f)',
                   color: '#050505',
                   border: 'none',
-                  borderRadius: '12px',
-                  padding: '12px 22px',
+                  borderRadius: '10px',
+                  padding: '11px 20px',
                   fontFamily: 'Panchang, sans-serif',
-                  fontSize: '0.76rem',
+                  fontSize: '0.74rem',
                   fontWeight: 800,
                   cursor: (isGeneratingAI || isCapturingScreenshot) ? 'wait' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 20px rgba(235, 215, 63, 0.4)',
                   transition: 'all 0.2s ease',
                   whiteSpace: 'nowrap'
                 }}
               >
-                <Sparkles size={15} />
-                {(isGeneratingAI || isCapturingScreenshot) ? '✦ AI Autopilot Working...' : '✦ Auto-Build with AI (1-Click)'}
+                <Sparkles size={14} />
+                {(isGeneratingAI || isCapturingScreenshot) ? 'Building...' : 'Auto-Build'}
               </button>
-            </div>
-            <div style={{ marginTop: '8px', fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'Clash Display, sans-serif' }}>
-              ✦ All synthesized details will be populated in the form below - you can review, edit, or adjust anything before publishing.
             </div>
           </div>
 
@@ -1084,13 +1060,9 @@ export default function WebPortfolioManager() {
                         padding: '10px 14px',
                         color: '#fff',
                         fontSize: '0.82rem',
-                        fontFamily: 'inherit',
-                        marginBottom: '6px'
+                        fontFamily: 'Clash Display, sans-serif'
                       }}
                     />
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>
-                      Tip: You can also paste an image link or local path directly.
-                    </div>
                   </div>
                 </div>
               ) : (
@@ -1570,58 +1542,59 @@ export default function WebPortfolioManager() {
       </div>
 
       {/* Web Projects List */}
-      <div style={{ marginTop: '40px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
-          <h3 style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.25rem', fontWeight: 800, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '12px', letterSpacing: '0.4px' }}>
-            <Layers size={22} color="#ebd73f" /> 
-            <span>Live Web Builds</span>
+      <div style={{ marginTop: '36px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h3 style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.15rem', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '0.3px' }}>
+              Live Web Builds
+            </h3>
             <span style={{ 
-              background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.2) 0%, rgba(235, 215, 63, 0.08) 100%)', 
-              border: '1px solid rgba(235, 215, 63, 0.45)', 
+              background: 'rgba(235, 215, 63, 0.1)', 
+              border: '1px solid rgba(235, 215, 63, 0.25)', 
               color: '#ebd73f', 
-              padding: '3px 12px', 
-              borderRadius: '20px', 
-              fontSize: '0.78rem',
-              fontFamily: 'Panchang, sans-serif',
-              fontWeight: 800,
-              boxShadow: '0 0 14px rgba(235, 215, 63, 0.15)'
+              padding: '2px 9px', 
+              borderRadius: '12px', 
+              fontSize: '0.72rem',
+              fontFamily: 'Clash Display, sans-serif',
+              fontWeight: 700
             }}>
               {items.length}
             </span>
-          </h3>
+          </div>
           <button 
             onClick={fetchWebItems}
             style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
-              border: '1px solid rgba(255,255,255,0.18)',
-              borderRadius: '12px',
-              padding: '8px 18px',
-              color: '#ffffff',
+              background: 'transparent',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '8px',
+              padding: '6px 14px',
+              color: 'rgba(255, 255, 255, 0.7)',
               fontFamily: 'Clash Display, sans-serif',
-              fontSize: '0.82rem',
-              fontWeight: 600,
+              fontSize: '0.78rem',
+              fontWeight: 500,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.35)',
+              gap: '6px',
               transition: 'all 0.2s ease'
             }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
           >
-            <RefreshCw size={14} color="#ebd73f" /> Refresh List
+            <RefreshCw size={12} /> Refresh
           </button>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '48px', color: 'rgba(255,255,255,0.6)', fontFamily: 'Clash Display, sans-serif', fontSize: '0.95rem' }}>
-            Loading web portfolio items...
+          <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.5)', fontFamily: 'Clash Display, sans-serif', fontSize: '0.88rem' }}>
+            Loading web builds...
           </div>
         ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '50px', background: 'rgba(15,15,22,0.6)', borderRadius: '18px', border: '1px dashed rgba(235,215,63,0.3)', color: 'rgba(255,255,255,0.7)', fontFamily: 'Clash Display, sans-serif' }}>
-            No web portfolio items yet. Add your first build above!
+          <div style={{ textAlign: 'center', padding: '40px', background: 'rgba(15,15,22,0.4)', borderRadius: '14px', border: '1px dashed rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Clash Display, sans-serif', fontSize: '0.85rem' }}>
+            No web builds yet. Add your first build above.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {items.map((item, index) => {
               const isVisible = item.is_visible !== false;
               const techList = Array.isArray(item.tech_stack) 
@@ -1632,49 +1605,46 @@ export default function WebPortfolioManager() {
                 <div 
                   key={item.id || index}
                   style={{
-                    background: isVisible 
-                      ? 'linear-gradient(145deg, rgba(22, 22, 30, 0.9) 0%, rgba(13, 13, 18, 0.95) 100%)' 
-                      : 'linear-gradient(145deg, rgba(18, 18, 22, 0.65) 0%, rgba(10, 10, 14, 0.75) 100%)',
-                    border: isVisible ? '1px solid rgba(255, 255, 255, 0.1)' : '1px dashed rgba(239, 68, 68, 0.4)',
-                    borderRadius: '18px',
-                    padding: '18px 24px',
+                    background: '#0d0d12',
+                    border: '1px solid rgba(255, 255, 255, 0.07)',
+                    borderRadius: '14px',
+                    padding: '14px 18px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '20px',
-                    transition: 'all 0.25s ease',
-                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
-                    backdropFilter: 'blur(16px)',
-                    opacity: isVisible ? 1 : 0.68,
-                    position: 'relative'
+                    gap: '16px',
+                    transition: 'border-color 0.2s ease',
+                    opacity: isVisible ? 1 : 0.65
                   }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.16)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.07)'; }}
                 >
-                  {/* Reorder & Index Badge Column */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                  {/* Subtle Reorder Column */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', flexShrink: 0, width: '24px' }}>
                     <button 
                       onClick={() => moveItem(index, 'up')}
                       disabled={index === 0}
                       style={{ 
-                        background: index === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(235, 215, 63, 0.12)', 
-                        border: `1px solid ${index === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(235, 215, 63, 0.35)'}`, 
-                        color: index === 0 ? 'rgba(255,255,255,0.18)' : '#ebd73f', 
+                        background: 'transparent', 
+                        border: 'none', 
+                        color: index === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.4)', 
                         cursor: index === 0 ? 'not-allowed' : 'pointer', 
-                        padding: '5px',
-                        borderRadius: '8px',
+                        padding: '2px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        transition: 'all 0.15s ease'
+                        transition: 'color 0.15s ease'
                       }}
+                      onMouseEnter={e => { if (index !== 0) e.currentTarget.style.color = '#ebd73f'; }}
+                      onMouseLeave={e => { if (index !== 0) e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
                       title="Move Up"
                     >
-                      <ArrowUp size={14} />
+                      <ArrowUp size={12} />
                     </button>
                     <span style={{ 
-                      fontFamily: 'Panchang, sans-serif', 
-                      fontSize: '0.65rem', 
-                      fontWeight: 800, 
-                      color: isVisible ? '#ebd73f' : 'rgba(255,255,255,0.4)',
-                      padding: '2px 0'
+                      fontFamily: 'Clash Display, sans-serif', 
+                      fontSize: '0.74rem', 
+                      fontWeight: 600, 
+                      color: isVisible ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.2)'
                     }}>
                       {String(index + 1).padStart(2, '0')}
                     </span>
@@ -1682,34 +1652,34 @@ export default function WebPortfolioManager() {
                       onClick={() => moveItem(index, 'down')}
                       disabled={index === items.length - 1}
                       style={{ 
-                        background: index === items.length - 1 ? 'rgba(255,255,255,0.02)' : 'rgba(235, 215, 63, 0.12)', 
-                        border: `1px solid ${index === items.length - 1 ? 'rgba(255,255,255,0.05)' : 'rgba(235, 215, 63, 0.35)'}`, 
-                        color: index === items.length - 1 ? 'rgba(255,255,255,0.18)' : '#ebd73f', 
+                        background: 'transparent', 
+                        border: 'none', 
+                        color: index === items.length - 1 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.4)', 
                         cursor: index === items.length - 1 ? 'not-allowed' : 'pointer', 
-                        padding: '5px',
-                        borderRadius: '8px',
+                        padding: '2px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        transition: 'all 0.15s ease'
+                        transition: 'color 0.15s ease'
                       }}
+                      onMouseEnter={e => { if (index !== items.length - 1) e.currentTarget.style.color = '#ebd73f'; }}
+                      onMouseLeave={e => { if (index !== items.length - 1) e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
                       title="Move Down"
                     >
-                      <ArrowDown size={14} />
+                      <ArrowDown size={12} />
                     </button>
                   </div>
 
-                  {/* Screenshot / Media Thumbnail Chassis */}
+                  {/* Clean 16:10 Thumbnail */}
                   <div style={{
-                    width: '130px',
-                    height: '81px',
-                    borderRadius: '12px',
+                    width: '120px',
+                    height: '75px',
+                    borderRadius: '8px',
                     overflow: 'hidden',
-                    border: '1px solid rgba(235, 215, 63, 0.25)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     background: '#08080c',
                     flexShrink: 0,
-                    position: 'relative',
-                    boxShadow: '0 6px 18px rgba(0,0,0,0.6)'
+                    position: 'relative'
                   }}>
                     <img 
                       src={item.image_url || item.image || '/images/web-portfolio/bharatup.jpg'} 
@@ -1719,86 +1689,62 @@ export default function WebPortfolioManager() {
                     {(item.video_url || item.video) && (
                       <div style={{
                         position: 'absolute',
-                        top: '5px',
-                        left: '5px',
-                        background: 'rgba(0,0,0,0.8)',
-                        border: '1px solid rgba(235, 215, 63, 0.45)',
-                        borderRadius: '5px',
-                        padding: '2px 5px',
+                        top: '4px',
+                        left: '4px',
+                        background: 'rgba(0,0,0,0.75)',
+                        borderRadius: '4px',
+                        padding: '2px 4px',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '3px',
+                        gap: '2px',
                         color: '#ebd73f',
-                        fontSize: '0.55rem',
-                        fontFamily: 'Panchang, sans-serif',
-                        fontWeight: 800
+                        fontSize: '0.52rem',
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontWeight: 700
                       }}>
-                        <Video size={10} color="#ebd73f" /> VIDEO
+                        <Video size={9} color="#ebd73f" /> VIDEO
                       </div>
                     )}
                   </div>
 
-                  {/* Project Information */}
+                  {/* Clean Minimal Project Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px', flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.15rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.3px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px', flexWrap: 'wrap' }}>
+                      <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '1.02rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.2px' }}>
                         {item.title}
                       </span>
                       <span style={{
-                        background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.16) 0%, rgba(235, 215, 63, 0.06) 100%)',
-                        color: '#ebd73f',
-                        border: '1px solid rgba(235, 215, 63, 0.4)',
-                        borderRadius: '20px',
-                        padding: '3px 10px',
-                        fontSize: '0.68rem',
-                        fontFamily: 'Panchang, sans-serif',
-                        fontWeight: 700,
-                        letterSpacing: '0.4px',
-                        textTransform: 'uppercase',
-                        boxShadow: '0 0 12px rgba(235, 215, 63, 0.1)'
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        color: 'rgba(255, 255, 255, 0.45)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '5px',
+                        padding: '2px 7px',
+                        fontSize: '0.66rem',
+                        fontFamily: 'Clash Display, sans-serif',
+                        fontWeight: 600,
+                        letterSpacing: '0.3px',
+                        textTransform: 'uppercase'
                       }}>
                         {item.category}
                       </span>
-                      {item.case_study_challenge && (
-                        <span style={{ 
-                          fontSize: '0.72rem', 
-                          fontFamily: 'Clash Display, sans-serif',
-                          fontWeight: 600,
-                          color: '#34d399', 
-                          background: 'rgba(16, 185, 129, 0.14)',
-                          border: '1px solid rgba(52, 211, 153, 0.4)',
-                          borderRadius: '20px',
-                          padding: '3px 10px',
-                          display: 'inline-flex', 
-                          alignItems: 'center', 
-                          gap: '5px',
-                          boxShadow: '0 0 12px rgba(16, 185, 129, 0.18)'
-                        }}>
-                          <CheckCircle2 size={13} color="#34d399" /> Case Study Ready
-                        </span>
-                      )}
                       {!isVisible && (
                         <span style={{
-                          fontSize: '0.68rem',
-                          fontFamily: 'Panchang, sans-serif',
-                          fontWeight: 700,
-                          color: '#f87171',
-                          background: 'rgba(239, 68, 68, 0.14)',
-                          border: '1px solid rgba(239, 68, 68, 0.4)',
-                          borderRadius: '20px',
-                          padding: '2px 9px'
+                          fontSize: '0.66rem',
+                          fontFamily: 'Clash Display, sans-serif',
+                          fontWeight: 600,
+                          color: '#f87171'
                         }}>
-                          HIDDEN
+                          • Hidden
                         </span>
                       )}
                     </div>
 
                     <div style={{ 
-                      fontSize: '0.88rem', 
-                      color: 'rgba(255, 255, 255, 0.88)', 
+                      fontSize: '0.82rem', 
+                      color: 'rgba(255, 255, 255, 0.65)', 
                       fontFamily: 'Clash Display, sans-serif',
-                      fontWeight: 500,
-                      marginBottom: '8px', 
+                      fontWeight: 400,
+                      marginBottom: '6px', 
                       whiteSpace: 'nowrap', 
                       overflow: 'hidden', 
                       textOverflow: 'ellipsis' 
@@ -1806,7 +1752,7 @@ export default function WebPortfolioManager() {
                       {item.tagline || item.url}
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '0.76rem', fontFamily: 'Clash Display, sans-serif' }}>
                       <a 
                         href={item.url} 
                         target="_blank" 
@@ -1814,56 +1760,32 @@ export default function WebPortfolioManager() {
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '6px',
-                          background: 'rgba(235, 215, 63, 0.08)',
-                          border: '1px solid rgba(235, 215, 63, 0.3)',
-                          borderRadius: '8px',
-                          padding: '3px 10px',
+                          gap: '4px',
                           color: '#ebd73f',
-                          fontSize: '0.78rem',
-                          fontFamily: 'Clash Display, sans-serif',
                           fontWeight: 600,
-                          textDecoration: 'none',
-                          transition: 'all 0.2s ease'
+                          textDecoration: 'none'
                         }}
                       >
                         <span>{item.display_url || (item.url ? item.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : '')}</span>
-                        <ExternalLink size={12} />
+                        <ExternalLink size={10} />
                       </a>
 
-                      <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                        {techList.slice(0, 5).map((tech, tIdx) => (
-                          <span 
-                            key={tIdx} 
-                            style={{
-                              background: 'rgba(255, 255, 255, 0.08)',
-                              border: '1px solid rgba(255, 255, 255, 0.16)',
-                              borderRadius: '6px',
-                              padding: '2px 8px',
-                              fontSize: '0.72rem',
-                              fontFamily: 'Clash Display, sans-serif',
-                              fontWeight: 600,
-                              color: '#f8fafc',
-                              letterSpacing: '0.2px'
-                            }}
-                          >
-                            {tech}
+                      {techList.length > 0 && (
+                        <>
+                          <span style={{ color: 'rgba(255, 255, 255, 0.2)' }}>·</span>
+                          <span style={{ color: 'rgba(255, 255, 255, 0.38)', fontWeight: 500 }}>
+                            {techList.slice(0, 4).join(' · ')}
                           </span>
-                        ))}
-                      </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  {/* Actions Hub (Edit, Visibility, Delete) */}
+                  {/* Refined Minimal Actions Toolbar */}
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: '8px',
-                    background: 'rgba(0, 0, 0, 0.35)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    padding: '6px 8px',
-                    borderRadius: '14px',
-                    backdropFilter: 'blur(10px)',
+                    gap: '6px',
                     flexShrink: 0
                   }}>
                     {/* Edit Project Button */}
@@ -1892,24 +1814,25 @@ export default function WebPortfolioManager() {
                         });
                       }}
                       style={{
-                        background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.16) 0%, rgba(235, 215, 63, 0.04) 100%)',
-                        border: '1px solid rgba(235, 215, 63, 0.4)',
-                        borderRadius: '10px',
-                        color: '#ebd73f',
-                        padding: '8px 12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        padding: '6px 12px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
                         fontFamily: 'Clash Display, sans-serif',
-                        fontSize: '0.78rem',
+                        fontSize: '0.76rem',
                         fontWeight: 600,
-                        boxShadow: '0 2px 10px rgba(235, 215, 63, 0.12)',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.15s ease'
                       }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(235, 215, 63, 0.12)'; e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.35)'; e.currentTarget.style.color = '#ebd73f'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#ffffff'; }}
                       title="Edit Web Build"
                     >
-                      <Edit2 size={14} color="#ebd73f" />
+                      <Edit2 size={12} />
                       <span>Edit</span>
                     </button>
 
@@ -1917,26 +1840,23 @@ export default function WebPortfolioManager() {
                     <button
                       onClick={() => toggleVisibility(item.id, isVisible)}
                       style={{
-                        background: isVisible 
-                          ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(16, 185, 129, 0.05) 100%)' 
-                          : 'linear-gradient(135deg, rgba(148, 163, 184, 0.12) 0%, rgba(100, 116, 139, 0.04) 100%)',
-                        border: `1px solid ${isVisible ? 'rgba(52, 211, 153, 0.45)' : 'rgba(148, 163, 184, 0.35)'}`,
-                        borderRadius: '10px',
-                        color: isVisible ? '#34d399' : '#cbd5e1',
-                        padding: '8px 12px',
+                        background: isVisible ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                        border: `1px solid ${isVisible ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.08)'}`,
+                        borderRadius: '8px',
+                        color: isVisible ? '#34d399' : 'rgba(255, 255, 255, 0.4)',
+                        padding: '6px 12px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
                         fontFamily: 'Clash Display, sans-serif',
-                        fontSize: '0.78rem',
+                        fontSize: '0.76rem',
                         fontWeight: 600,
-                        boxShadow: isVisible ? '0 2px 10px rgba(16, 185, 129, 0.15)' : 'none',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.15s ease'
                       }}
-                      title={isVisible ? 'Live on Public Portfolio (Click to Hide)' : 'Hidden from Public (Click to Make Live)'}
+                      title={isVisible ? 'Visible on Public Portfolio (Click to Hide)' : 'Hidden (Click to Make Live)'}
                     >
-                      {isVisible ? <Eye size={14} color="#34d399" /> : <EyeOff size={14} color="#94a3b8" />}
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isVisible ? '#34d399' : 'rgba(255,255,255,0.3)', boxShadow: isVisible ? '0 0 6px rgba(52, 211, 153, 0.5)' : 'none' }}></span>
                       <span>{isVisible ? 'Live' : 'Hidden'}</span>
                     </button>
 
@@ -1944,24 +1864,22 @@ export default function WebPortfolioManager() {
                     <button
                       onClick={() => deleteItem(item.id)}
                       style={{
-                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(220, 38, 38, 0.04) 100%)',
-                        border: '1px solid rgba(239, 68, 68, 0.4)',
-                        borderRadius: '10px',
-                        color: '#f87171',
-                        padding: '8px 11px',
+                        background: 'transparent',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '8px',
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        padding: '6px 8px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontFamily: 'Clash Display, sans-serif',
-                        fontSize: '0.78rem',
-                        fontWeight: 600,
-                        boxShadow: '0 2px 10px rgba(239, 68, 68, 0.12)',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.15s ease'
                       }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)'; e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)'; e.currentTarget.style.color = '#f87171'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'; e.currentTarget.style.color = 'rgba(255, 255, 255, 0.4)'; }}
                       title="Delete Project"
                     >
-                      <Trash2 size={14} color="#f87171" />
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 </div>
@@ -1973,34 +1891,45 @@ export default function WebPortfolioManager() {
 
       {/* Edit Web Project Modal (Full Capabilities - Fixed Header/Footer Chassis) */}
       {editItemModal.show && editItemModal.item && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(4, 4, 8, 0.88)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          zIndex: 9999,
-          display: 'flex',
-          justifyContent: 'center',
-          padding: '28px 16px',
-          overflowY: 'auto',
-          boxSizing: 'border-box'
-        }}>
-          <div style={{
-            margin: 'auto',
-            background: '#0a0a0f',
-            border: '1px solid rgba(255, 255, 255, 0.14)',
-            borderTop: '1px solid rgba(235, 215, 63, 0.4)',
-            borderRadius: '24px',
-            width: '100%',
-            maxWidth: '880px',
-            maxHeight: 'calc(100vh - 56px)',
+        <div 
+          onClick={() => setEditItemModal({ show: false, item: null })}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(4, 4, 8, 0.88)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            zIndex: 99999,
             display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 50px rgba(235, 215, 63, 0.08)',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px 16px',
             boxSizing: 'border-box'
-          }}>
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#0a0a0f',
+              border: '1px solid rgba(255, 255, 255, 0.14)',
+              borderTop: '1px solid rgba(235, 215, 63, 0.4)',
+              borderRadius: '24px',
+              width: '100%',
+              maxWidth: '880px',
+              maxHeight: 'min(90vh, 880px)',
+              height: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 50px rgba(235, 215, 63, 0.08)',
+              boxSizing: 'border-box'
+            }}
+          >
             {/* Fixed Modal Header */}
             <div style={{
               padding: '18px 28px',

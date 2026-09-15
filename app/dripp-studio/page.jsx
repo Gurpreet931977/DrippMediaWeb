@@ -248,26 +248,604 @@ export default function AdminDashboard() {
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       <style jsx>{`
-        .dashboard-header {
+        .dashboard-hero-wrap {
           display: flex;
           flex-wrap: wrap;
-          gap: 1rem;
+          gap: 1.5rem;
           justify-content: space-between;
           align-items: flex-end;
-          border-bottom: 1px solid rgba(255,255,255,0.08);
-          padding-bottom: 2rem;
+          padding-bottom: 2.25rem;
+          margin-bottom: 2.25rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          position: relative;
         }
+
+        .dashboard-hero-left {
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+          max-width: 780px;
+        }
+
+        .dashboard-eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          align-self: flex-start;
+          padding: 4px 12px;
+          background: rgba(235, 215, 63, 0.08);
+          border: 1px solid rgba(235, 215, 63, 0.22);
+          border-radius: 100px;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.7rem;
+          font-weight: 700;
+          letter-spacing: 1.2px;
+          color: #ebd73f;
+          text-transform: uppercase;
+        }
+
+        .eyebrow-sparkle {
+          font-size: 0.75rem;
+          color: #ebd73f;
+          animation: pulseGlow 2.5s infinite;
+        }
+
+        .dashboard-hero-title {
+          font-family: 'Panchang', sans-serif;
+          font-size: clamp(1.85rem, 4.5vw, 2.75rem);
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          margin: 0.3rem 0 0.25rem;
+          background: linear-gradient(135deg, #FFFFFF 20%, rgba(255, 255, 255, 0.75) 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          line-height: 1.15;
+        }
+
+        .dashboard-hero-sub {
+          font-family: 'Clash Display', sans-serif;
+          font-size: clamp(0.92rem, 2vw, 1.08rem);
+          color: rgba(255, 255, 255, 0.55);
+          margin: 0;
+          line-height: 1.5;
+        }
+
+        .dashboard-hero-badges {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .telemetry-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 7px 14px;
+          background: rgba(34, 197, 94, 0.08);
+          border: 1px solid rgba(34, 197, 94, 0.25);
+          border-radius: 100px;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.74rem;
+          font-weight: 700;
+          letter-spacing: 1px;
+          color: #4ade80;
+          text-transform: uppercase;
+        }
+
+        .telemetry-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #22c55e;
+          box-shadow: 0 0 10px #22c55e;
+          animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        .admin-level-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 7px 16px;
+          background: rgba(235, 215, 63, 0.1);
+          border: 1px solid rgba(235, 215, 63, 0.35);
+          border-radius: 100px;
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.72rem;
+          font-weight: 800;
+          letter-spacing: 1.2px;
+          color: #ebd73f;
+          text-transform: uppercase;
+          box-shadow: 0 4px 16px rgba(235, 215, 63, 0.12);
+        }
+
+        .level-sparkle {
+          font-size: 0.75rem;
+          color: #ebd73f;
+        }
+
+        /* --- STATS GRID --- */
         .stats-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 1.5rem;
-          margin-bottom: 3rem;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1.25rem;
+          margin-bottom: 2.75rem;
         }
+
+        .stat-glass-tile {
+          background: linear-gradient(145deg, rgba(20, 20, 28, 0.7) 0%, rgba(12, 12, 16, 0.88) 100%);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 18px;
+          padding: 1.25rem 1.35rem;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+          display: flex;
+          align-items: center;
+          gap: 1.15rem;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          text-decoration: none;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .stat-glass-tile:hover {
+          transform: translateY(-3px);
+          border-color: rgba(255, 255, 255, 0.18);
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-glass-tile.interactive-tile {
+          border-color: rgba(235, 215, 63, 0.32);
+          background: linear-gradient(145deg, rgba(235, 215, 63, 0.08) 0%, rgba(18, 18, 24, 0.88) 100%);
+          cursor: pointer;
+        }
+
+        .stat-glass-tile.interactive-tile:hover {
+          border-color: rgba(235, 215, 63, 0.6);
+          background: linear-gradient(145deg, rgba(235, 215, 63, 0.14) 0%, rgba(22, 22, 30, 0.95) 100%);
+          box-shadow: 0 16px 40px rgba(235, 215, 63, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .stat-tile-icon-box {
+          width: 46px;
+          height: 46px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          transition: all 0.3s ease;
+        }
+
+        .stat-tile-icon-box.security {
+          background: rgba(34, 197, 94, 0.12);
+          border: 1px solid rgba(34, 197, 94, 0.28);
+          color: #22c55e;
+        }
+
+        .stat-tile-icon-box.storage {
+          background: rgba(235, 215, 63, 0.12);
+          border: 1px solid rgba(235, 215, 63, 0.28);
+          color: #ebd73f;
+        }
+
+        .stat-tile-icon-box.ai {
+          background: rgba(56, 189, 248, 0.12);
+          border: 1px solid rgba(56, 189, 248, 0.28);
+          color: #38bdf8;
+        }
+
+        .stat-tile-icon-box.tasks {
+          background: rgba(235, 215, 63, 0.16);
+          border: 1px solid rgba(235, 215, 63, 0.42);
+          color: #ebd73f;
+        }
+
+        .stat-glass-tile:hover .stat-tile-icon-box {
+          transform: scale(1.05);
+        }
+
+        .stat-tile-content {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          flex: 1;
+        }
+
+        .stat-tile-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 3px;
+        }
+
+        .stat-tile-label {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.5);
+        }
+
+        .stat-tile-label.highlight {
+          color: #ebd73f;
+        }
+
+        .tile-arrow-icon {
+          font-family: 'Panchang', sans-serif;
+          font-size: 0.8rem;
+          color: #ebd73f;
+          opacity: 0.7;
+          transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .stat-glass-tile.interactive-tile:hover .tile-arrow-icon {
+          transform: translate(2px, -2px);
+          opacity: 1;
+        }
+
+        .stat-status-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+        }
+
+        .stat-status-dot.security {
+          background: #22c55e;
+          box-shadow: 0 0 6px #22c55e;
+        }
+
+        .stat-status-dot.storage {
+          background: #ebd73f;
+          box-shadow: 0 0 6px #ebd73f;
+        }
+
+        .stat-status-dot.ai {
+          background: #38bdf8;
+          box-shadow: 0 0 6px #38bdf8;
+        }
+
+        .stat-tile-value {
+          font-family: 'Panchang', sans-serif;
+          font-size: 1.22rem;
+          font-weight: 800;
+          color: #FFFFFF;
+          letter-spacing: -0.3px;
+          margin: 0;
+          line-height: 1.25;
+        }
+
+        .stat-tile-value.highlight {
+          color: #FFFFFF;
+        }
+
+        .stat-tile-meta {
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.72rem;
+          color: rgba(255, 255, 255, 0.45);
+          margin-top: 3px;
+        }
+
+        .stat-tile-meta.highlight {
+          color: rgba(235, 215, 63, 0.8);
+        }
+
+        /* --- PENDING TASKS HUB --- */
+        .tasks-hub-card {
+          margin-bottom: 3.5rem;
+          padding: 2rem 2.25rem;
+          background: linear-gradient(180deg, rgba(18, 18, 24, 0.88) 0%, rgba(10, 10, 14, 0.98) 100%);
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          border-radius: 22px;
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .tasks-hub-glow {
+          position: absolute;
+          top: -80px;
+          left: -80px;
+          width: 320px;
+          height: 320px;
+          background: radial-gradient(circle, rgba(235, 215, 63, 0.07) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .tasks-hub-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 1.75rem;
+          padding-bottom: 1.25rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+          flex-wrap: wrap;
+          gap: 14px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .tasks-hub-title-block {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          flex-wrap: wrap;
+        }
+
+        .tasks-status-capsule {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 14px;
+          background: rgba(235, 215, 63, 0.12);
+          border: 1px solid rgba(235, 215, 63, 0.4);
+          border-radius: 30px;
+          color: #ebd73f;
+          font-size: 0.74rem;
+          font-weight: 800;
+          font-family: 'Panchang', sans-serif;
+          letter-spacing: 1px;
+        }
+
+        .tasks-live-ping {
+          position: relative;
+          display: flex;
+          height: 7px;
+          width: 7px;
+        }
+
+        .tasks-ping-ring {
+          animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+          position: absolute;
+          display: inline-flex;
+          height: 100%;
+          width: 100%;
+          border-radius: 50%;
+          background: #ebd73f;
+          opacity: 0.75;
+        }
+
+        .tasks-ping-core {
+          position: relative;
+          display: inline-flex;
+          border-radius: 50%;
+          height: 7px;
+          width: 7px;
+          background: #ebd73f;
+          box-shadow: 0 0 8px #ebd73f;
+        }
+
+        .tasks-hub-heading {
+          margin: 0;
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: #FFFFFF;
+          font-family: 'Panchang', sans-serif;
+          letter-spacing: -0.2px;
+        }
+
+        .tasks-workspace-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 8px 18px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 12px;
+          color: #ebd73f;
+          font-size: 0.8rem;
+          font-weight: 600;
+          text-decoration: none;
+          font-family: 'Clash Display', sans-serif;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .tasks-workspace-btn:hover {
+          background: rgba(235, 215, 63, 0.12);
+          border-color: rgba(235, 215, 63, 0.4);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 16px rgba(235, 215, 63, 0.15);
+        }
+
+        .workspace-chevron {
+          transition: transform 0.2s ease;
+        }
+
+        .tasks-workspace-btn:hover .workspace-chevron {
+          transform: translateX(3px);
+        }
+
+        .tasks-empty-state {
+          padding: 2.5rem 1rem;
+          text-align: center;
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 16px;
+          border: 1px dashed rgba(255, 255, 255, 0.08);
+        }
+
+        .empty-sparkle {
+          font-size: 1.8rem;
+          color: #ebd73f;
+          margin-bottom: 8px;
+        }
+
+        .empty-title {
+          margin: 0 0 4px 0;
+          color: #FFFFFF;
+          font-size: 1.05rem;
+          font-family: 'Panchang', sans-serif;
+          font-weight: 700;
+        }
+
+        .empty-desc {
+          margin: 0;
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 0.85rem;
+          font-family: 'Clash Display', sans-serif;
+        }
+
+        .tasks-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          gap: 1.25rem;
+          position: relative;
+          z-index: 1;
+        }
+
+        .task-card-modern {
+          padding: 1.35rem 1.4rem;
+          background: rgba(255, 255, 255, 0.025);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          border-radius: 16px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          gap: 16px;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+          position: relative;
+        }
+
+        .task-card-modern:hover {
+          background: rgba(255, 255, 255, 0.045);
+          border-color: rgba(235, 215, 63, 0.35);
+          transform: translateY(-3px);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 20px rgba(235, 215, 63, 0.06);
+        }
+
+        .task-card-modern.completing {
+          background: rgba(34, 197, 94, 0.08);
+          border-color: rgba(34, 197, 94, 0.4);
+          transform: scale(0.98);
+          opacity: 0.7;
+        }
+
+        .task-card-main {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+        }
+
+        .task-checkbox-btn {
+          width: 22px;
+          height: 22px;
+          border-radius: 7px;
+          border: 2px solid rgba(235, 215, 63, 0.6);
+          background: rgba(235, 215, 63, 0.08);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          flex-shrink: 0;
+          margin-top: 2px;
+          padding: 0;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          outline: none;
+        }
+
+        .task-checkbox-btn:hover {
+          border-color: #ebd73f;
+          background: rgba(235, 215, 63, 0.2);
+          transform: scale(1.1);
+          box-shadow: 0 0 10px rgba(235, 215, 63, 0.35);
+        }
+
+        .task-checkbox-btn.checked {
+          background: #22c55e;
+          border-color: #22c55e;
+        }
+
+        .checkbox-inner-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #ebd73f;
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+
+        .task-checkbox-btn:hover .checkbox-inner-dot {
+          opacity: 0.8;
+        }
+
+        .task-text-content {
+          margin: 0;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.94rem;
+          font-weight: 600;
+          line-height: 1.55;
+          color: #FFFFFF;
+          transition: all 0.25s ease;
+        }
+
+        .task-text-content.strikethrough {
+          color: rgba(255, 255, 255, 0.35);
+          text-decoration: line-through;
+        }
+
+        .task-card-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: 12px;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          gap: 8px;
+        }
+
+        .task-doc-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 10px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.72rem;
+          color: rgba(255, 255, 255, 0.6);
+          max-width: 180px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .doc-icon {
+          font-size: 0.75rem;
+        }
+
+        .doc-name {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .task-jump-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          color: #ebd73f;
+          font-family: 'Clash Display', sans-serif;
+          font-size: 0.76rem;
+          font-weight: 700;
+          letter-spacing: 0.4px;
+          text-decoration: none;
+          transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .task-jump-link:hover {
+          color: #fff;
+          transform: translateX(2px);
+        }
+
         .core-tools-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
           gap: 2rem;
         }
+
         .capabilities-card {
           margin-top: 4rem;
           padding: 3.5rem;
@@ -277,17 +855,21 @@ export default function AdminDashboard() {
           position: relative;
           overflow: hidden;
         }
+
+        @media (max-width: 1200px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
         @media (max-width: 1024px) {
-          .dashboard-header {
+          .dashboard-hero-wrap {
             flex-direction: column;
             align-items: flex-start;
-            padding-bottom: 1.25rem;
-            gap: 0.75rem;
+            gap: 1.25rem;
           }
-          .stats-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-            margin-bottom: 2rem;
+          .tasks-hub-card {
+            padding: 1.5rem;
           }
           .core-tools-grid {
             grid-template-columns: 1fr;
@@ -299,251 +881,189 @@ export default function AdminDashboard() {
             border-radius: 16px;
           }
         }
+
+        @media (max-width: 640px) {
+          .stats-grid {
+            grid-template-columns: 1fr;
+          }
+          .tasks-grid {
+            grid-template-columns: 1fr;
+          }
+        }
       `}</style>
+
       {/* Hero Header */}
-      <div className="dashboard-header">
-        <div>
-          <h1 className={styles.title} style={{ fontSize: 'clamp(1.75rem, 5vw, 3rem)', marginBottom: '0.5rem', fontFamily: "'Panchang', sans-serif" }}>{isGenz ? 'main character energy' : 'Dashboard Overview'}</h1>
-          <p className={styles.subtitle} style={{ fontSize: 'clamp(0.9rem, 3vw, 1.15rem)', fontFamily: "'Clash Display', sans-serif" }}>{isGenz ? `welcome back, boss. today is ${currentDate}.` : `Welcome to the Admin Hub. Today is ${currentDate}.`}</p>
+      <div className="dashboard-hero-wrap">
+        <div className="dashboard-hero-left">
+          <div className="dashboard-eyebrow">
+            <span className="eyebrow-sparkle">✦</span>
+            <span>{isGenz ? 'DRIPP STUDIO OS · COMMAND SUITE' : 'DRIPP STUDIO OS · CENTRAL COMMAND'}</span>
+          </div>
+          <h1 className="dashboard-hero-title">
+            {isGenz ? 'main character energy' : 'Dashboard Overview'}
+          </h1>
+          <p className="dashboard-hero-sub">
+            {isGenz 
+              ? `welcome back, boss. today is ${currentDate}.` 
+              : `Welcome to the Admin Hub. Today is ${currentDate}.`}
+          </p>
         </div>
-        <div style={{ padding: '0.65rem 1.1rem', background: 'rgba(235, 215, 63, 0.1)', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', fontSize: '0.8rem', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'Panchang', sans-serif" }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ebd73f', boxShadow: '0 0 10px #ebd73f' }}></div>
-          {isGenz ? 'vibe check: passed' : 'Admin Level: Super'}
+
+        <div className="dashboard-hero-badges">
+          <div className="telemetry-pill">
+            <span className="telemetry-dot" />
+            <span>LIVE SYNC</span>
+          </div>
+          <div className="admin-level-badge">
+            <span className="level-sparkle">✦</span>
+            <span>{isGenz ? 'VIBE: PEAK' : 'ADMIN: SUPER'}</span>
+          </div>
         </div>
       </div>
 
       {/* Quick Stats Row */}
       <div className="stats-grid">
-        
-        <div className={styles.card} style={{ margin: 0, padding: '1.75rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '1.25rem', borderRadius: '50%' }}>
-            <ShieldCheck size={32} color="#22c55e" />
+        {/* Security Tile */}
+        <div className="stat-glass-tile">
+          <div className="stat-tile-icon-box security">
+            <ShieldCheck size={22} color="#22c55e" strokeWidth={2.2} />
           </div>
-          <div>
-            <h3 style={{ fontSize: '1rem', color: '#888', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Security</h3>
-            <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#fff', fontFamily: 'Panchang, sans-serif' }}>Secured</p>
-          </div>
-        </div>
-
-        <div className={styles.card} style={{ margin: 0, padding: '1.75rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ background: 'rgba(235, 215, 63, 0.1)', padding: '1.25rem', borderRadius: '50%' }}>
-            <HardDrive size={32} color="#ebd73f" />
-          </div>
-          <div>
-            <h3 style={{ fontSize: '1rem', color: '#888', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Storage</h3>
-            <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#fff', fontFamily: 'Panchang, sans-serif' }}>Active</p>
-          </div>
-        </div>
-
-        <div className={styles.card} style={{ margin: 0, padding: '1.75rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1.25rem', borderRadius: '50%' }}>
-            <Activity size={32} color="#3b82f6" />
-          </div>
-          <div>
-            <h3 style={{ fontSize: '1rem', color: '#888', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Orlo AI</h3>
-            <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#fff', fontFamily: 'Panchang, sans-serif' }}>Online</p>
-          </div>
-        </div>
-
-        <Link href={pendingTasksDocId ? `/dripp-studio/notes-and-planning?docId=${pendingTasksDocId}` : '/dripp-studio/notes-and-planning'} style={{ textDecoration: 'none' }}>
-          <div className={styles.card} style={{ 
-            margin: 0, 
-            padding: '1.75rem', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '1.5rem', 
-            cursor: 'pointer', 
-            border: '1px solid rgba(235, 215, 63, 0.35)', 
-            background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.12) 0%, rgba(20, 20, 26, 0.85) 100%)',
-            boxShadow: '0 8px 30px rgba(235, 215, 63, 0.08)'
-          }}>
-            <div style={{ background: 'rgba(235, 215, 63, 0.18)', padding: '1.25rem', borderRadius: '50%', border: '1px solid rgba(235, 215, 63, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CheckSquare size={30} color="#ebd73f" />
+          <div className="stat-tile-content">
+            <div className="stat-tile-top">
+              <span className="stat-tile-label">SECURITY</span>
+              <span className="stat-status-dot security" title="256-Bit Encrypted" />
             </div>
-            <div>
-              <h3 style={{ fontSize: '0.85rem', color: '#ebd73f', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: '700', fontFamily: "'Clash Display', sans-serif" }}>Pending Tasks</h3>
-              <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>{pendingCount === null ? 'Syncing...' : `${pendingCount} Tasks`}</p>
+            <p className="stat-tile-value">Secured</p>
+            <span className="stat-tile-meta">Encrypted &amp; Active</span>
+          </div>
+        </div>
+
+        {/* Storage Tile */}
+        <div className="stat-glass-tile">
+          <div className="stat-tile-icon-box storage">
+            <HardDrive size={22} color="#ebd73f" strokeWidth={2.2} />
+          </div>
+          <div className="stat-tile-content">
+            <div className="stat-tile-top">
+              <span className="stat-tile-label">STORAGE</span>
+              <span className="stat-status-dot storage" title="Cloud Synced" />
             </div>
+            <p className="stat-tile-value">Active</p>
+            <span className="stat-tile-meta">S3 &amp; Supabase Linked</span>
+          </div>
+        </div>
+
+        {/* Orlo AI Tile */}
+        <div className="stat-glass-tile">
+          <div className="stat-tile-icon-box ai">
+            <Activity size={22} color="#38bdf8" strokeWidth={2.2} />
+          </div>
+          <div className="stat-tile-content">
+            <div className="stat-tile-top">
+              <span className="stat-tile-label">ORLO AI</span>
+              <span className="stat-status-dot ai" title="Model Online" />
+            </div>
+            <p className="stat-tile-value">Online</p>
+            <span className="stat-tile-meta">v2.4 Inference Ready</span>
+          </div>
+        </div>
+
+        {/* Pending Tasks Tile (Interactive) */}
+        <Link 
+          href={pendingTasksDocId ? `/dripp-studio/notes-and-planning?docId=${pendingTasksDocId}` : '/dripp-studio/notes-and-planning'} 
+          className="stat-glass-tile interactive-tile"
+        >
+          <div className="stat-tile-icon-box tasks">
+            <CheckSquare size={22} color="#ebd73f" strokeWidth={2.2} />
+          </div>
+          <div className="stat-tile-content">
+            <div className="stat-tile-top">
+              <span className="stat-tile-label highlight">ACTION QUEUE</span>
+              <span className="tile-arrow-icon">↗</span>
+            </div>
+            <p className="stat-tile-value highlight">
+              {pendingCount === null ? 'Syncing...' : `${pendingCount} Tasks`}
+            </p>
+            <span className="stat-tile-meta highlight">Review in Workspace</span>
           </div>
         </Link>
-
       </div>
 
       {/* Pending Tasks Interactive Section */}
-      <div style={{ 
-        marginBottom: '3rem', 
-        padding: '2rem 2.25rem', 
-        background: 'linear-gradient(180deg, rgba(24, 24, 30, 0.85) 0%, rgba(12, 12, 16, 0.95) 100%)', 
-        borderRadius: '24px', 
-        border: '1px solid rgba(235, 215, 63, 0.25)', 
-        boxShadow: '0 20px 45px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1.25rem', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              padding: '6px 14px', 
-              background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.18) 0%, rgba(235, 215, 63, 0.06) 100%)', 
-              border: '1px solid rgba(235, 215, 63, 0.45)', 
-              borderRadius: '30px', 
-              color: '#ebd73f', 
-              fontSize: '0.78rem', 
-              fontWeight: 700, 
-              fontFamily: "'Clash Display', sans-serif", 
-              letterSpacing: '1px' 
-            }}>
-              <span style={{ position: 'relative', display: 'flex', height: '8px', width: '8px' }}>
-                <span style={{ animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite', position: 'absolute', display: 'inline-flex', height: '100%', width: '100%', borderRadius: '50%', background: '#ebd73f', opacity: 0.75 }}></span>
-                <span style={{ position: 'relative', display: 'inline-flex', borderRadius: '50%', height: '8px', width: '8px', background: '#ebd73f', boxShadow: '0 0 8px #ebd73f' }}></span>
+      <div className="tasks-hub-card">
+        {/* Subtle Ambient Glow */}
+        <div className="tasks-hub-glow" />
+
+        {/* Section Header */}
+        <div className="tasks-hub-header">
+          <div className="tasks-hub-title-block">
+            <div className="tasks-status-capsule">
+              <span className="tasks-live-ping">
+                <span className="tasks-ping-ring" />
+                <span className="tasks-ping-core" />
               </span>
-              {pendingCount === null ? 'SYNCING...' : `${pendingCount} PENDING`}
+              <span>{pendingCount === null ? 'SYNCING' : `${pendingCount} PENDING`}</span>
             </div>
-            <h2 style={{ margin: 0, fontSize: '1.45rem', fontWeight: 800, color: '#fff', fontFamily: "'Clash Display', sans-serif", letterSpacing: '-0.02em' }}>
-              {isGenz ? 'action items to crush' : 'Pending Tasks'}
+            <h2 className="tasks-hub-heading">
+              {isGenz ? 'Action Items To Crush' : 'Pending Tasks'}
             </h2>
           </div>
+
           <Link 
             href={pendingTasksDocId ? `/dripp-studio/notes-and-planning?docId=${pendingTasksDocId}` : '/dripp-studio/notes-and-planning'} 
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '6px', 
-              padding: '8px 16px', 
-              background: 'rgba(235, 215, 63, 0.08)', 
-              border: '1px solid rgba(235, 215, 63, 0.25)', 
-              borderRadius: '10px', 
-              color: '#ebd73f', 
-              fontSize: '0.82rem', 
-              fontWeight: 600, 
-              textDecoration: 'none', 
-              fontFamily: "'Clash Display', sans-serif", 
-              transition: 'all 0.2s ease' 
-            }}
-            onMouseOver={e => {
-              e.currentTarget.style.background = 'rgba(235, 215, 63, 0.16)';
-              e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.5)';
-            }}
-            onMouseOut={e => {
-              e.currentTarget.style.background = 'rgba(235, 215, 63, 0.08)';
-              e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.25)';
-            }}
+            className="tasks-workspace-btn"
           >
             <span>Open in Workspace</span>
-            <ChevronRight size={15} />
+            <ChevronRight size={14} className="workspace-chevron" />
           </Link>
         </div>
 
         {pendingTasks.length === 0 ? (
-          <div style={{ padding: '2rem 1rem', textAlign: 'center', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '16px', border: '1px dashed rgba(255, 255, 255, 0.08)' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🎉</div>
-            <h4 style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '1.1rem', fontFamily: "'Clash Display', sans-serif", fontWeight: 700 }}>All Caught Up!</h4>
-            <p style={{ margin: 0, color: '#888', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>No pending to-do items found across your studio documents.</p>
+          <div className="tasks-empty-state">
+            <div className="empty-sparkle">✦</div>
+            <h4 className="empty-title">All Caught Up!</h4>
+            <p className="empty-desc">No pending to-do items found across your studio documents.</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
+          <div className="tasks-grid">
             {pendingTasks.map((task) => {
               const isDone = completingIds.includes(task.id);
               return (
                 <div 
                   key={task.id} 
-                  style={{ 
-                    padding: '1.25rem', 
-                    background: isDone ? 'rgba(39, 201, 63, 0.08)' : 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(20, 20, 26, 0.7) 100%)', 
-                    border: `1px solid ${isDone ? 'rgba(39, 201, 63, 0.4)' : 'rgba(255, 255, 255, 0.08)'}`, 
-                    borderRadius: '16px', 
-                    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)', 
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: '14px',
-                    position: 'relative',
-                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)'
-                  }}
-                  onMouseOver={e => {
-                    if (!isDone) {
-                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(25, 25, 32, 0.85) 100%)';
-                      e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.4)';
-                      e.currentTarget.style.transform = 'translateY(-3px)';
-                      e.currentTarget.style.boxShadow = '0 12px 30px rgba(235, 215, 63, 0.12)';
-                    }
-                  }}
-                  onMouseOut={e => {
-                    if (!isDone) {
-                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(20, 20, 26, 0.7) 100%)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
-                    }
-                  }}
+                  className={`task-card-modern ${isDone ? 'completing' : ''}`}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <div className="task-card-main">
                     <button
                       type="button"
                       onClick={(e) => handleToggleTask(e, task)}
-                      title="Mark as completed"
-                      style={{
-                        width: '22px',
-                        height: '22px',
-                        borderRadius: '6px',
-                        border: `2px solid ${isDone ? '#27c93f' : '#ebd73f'}`,
-                        background: isDone ? '#27c93f' : 'rgba(235, 215, 63, 0.12)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                        marginTop: '2px',
-                        padding: 0,
-                        transition: 'all 0.2s ease',
-                        outline: 'none'
-                      }}
+                      className={`task-checkbox-btn ${isDone ? 'checked' : ''}`}
+                      title={isDone ? 'Completed' : 'Mark as completed'}
                     >
-                      {isDone && <Check size={14} color="#000" strokeWidth={3} />}
+                      {isDone ? (
+                        <Check size={13} color="#000" strokeWidth={3} />
+                      ) : (
+                        <span className="checkbox-inner-dot" />
+                      )}
                     </button>
-                    <span style={{ 
-                      fontSize: '0.96rem', 
-                      color: isDone ? '#777' : '#fff', 
-                      fontWeight: 600, 
-                      lineHeight: 1.5, 
-                      fontFamily: "'Clash Display', sans-serif",
-                      textDecoration: isDone ? 'line-through' : 'none',
-                      transition: 'all 0.2s'
-                    }}>
+                    
+                    <p className={`task-text-content ${isDone ? 'strikethrough' : ''}`}>
                       {task.text}
-                    </span>
+                    </p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                    <span style={{ 
-                      fontSize: '0.75rem', 
-                      color: '#999', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '4px',
-                      fontFamily: "'Clash Display', sans-serif",
-                      background: 'rgba(255,255,255,0.04)',
-                      padding: '3px 8px',
-                      borderRadius: '6px'
-                    }}>
-                      📄 {task.docTitle}
+
+                  <div className="task-card-footer">
+                    <span className="task-doc-pill" title={`Source: ${task.docTitle}`}>
+                      <span className="doc-icon">📄</span>
+                      <span className="doc-name">{task.docTitle}</span>
                     </span>
+
                     <Link 
                       href={`/dripp-studio/notes-and-planning?docId=${task.docId}&blockId=${task.id}`}
-                      style={{ 
-                        fontSize: '0.75rem', 
-                        color: '#ebd73f', 
-                        fontWeight: 700, 
-                        letterSpacing: '0.5px',
-                        textDecoration: 'none',
-                        fontFamily: "'Clash Display', sans-serif",
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
+                      className="task-jump-link"
                     >
                       <span>Jump to Doc</span>
-                      <ChevronRight size={13} />
+                      <ChevronRight size={12} />
                     </Link>
                   </div>
                 </div>

@@ -13,8 +13,9 @@ export async function POST(request) {
 
     let cleanDomain = targetUrl ? targetUrl.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0] : '';
     let scrapedData = { title: '', ogTitle: '', description: '', bodySnippet: '' };
+    let detectedStack = [];
 
-    // 1. Scrape live website metadata if URL is provided
+    // 1. Scrape live website metadata and detect tech stack if URL is provided
     if (targetUrl) {
       try {
         const res = await fetch(targetUrl, {
@@ -22,10 +23,14 @@ export async function POST(request) {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
           },
-          signal: AbortSignal.timeout(6000)
+          redirect: 'follow',
+          signal: AbortSignal.timeout(6500)
         });
 
         if (res.ok) {
+          if (res.url) {
+            cleanDomain = res.url.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0];
+          }
           const html = await res.text();
           
           const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
@@ -45,9 +50,22 @@ export async function POST(request) {
             .replace(/<[^>]+>/g, ' ')
             .replace(/\s+/g, ' ')
             .trim()
-            .slice(0, 1500);
+            .slice(0, 2000);
 
           scrapedData.bodySnippet = bodyClean;
+
+          // Detect live architectural stack from HTML tokens & scripts
+          if (html.includes('_next/static') || html.includes('__NEXT_DATA__')) detectedStack.push('Next.js 15');
+          else if (html.includes('react')) detectedStack.push('React 18');
+          
+          if (html.includes('clashdisplay') || html.includes('ClashDisplay')) detectedStack.push('Clash Display Typography');
+          if (html.includes('satoshi') || html.includes('Satoshi')) detectedStack.push('Satoshi Font System');
+          if (html.includes('tailwind') || /class=["'][^"']*p-\d/i.test(html)) detectedStack.push('Tailwind CSS');
+          if (html.includes('framer') || html.includes('motion')) detectedStack.push('Framer Motion');
+          if (html.includes('gsap') || html.includes('ScrollTrigger')) detectedStack.push('GSAP Motion');
+          if (html.includes('three') || html.includes('webgl')) detectedStack.push('WebGL / Three.js');
+          if (html.includes('supabase')) detectedStack.push('Supabase Edge');
+          if (html.includes('cloudflare')) detectedStack.push('Cloudflare CDN');
         }
       } catch (scrapeErr) {
         console.warn('Live site scrape attempt timed out / skipped:', scrapeErr.message);
@@ -87,7 +105,7 @@ Return ONLY a valid JSON object matching this exact schema (no markdown, no back
 {
   "title": "${derivedTitle}",
   "tagline": "Punchy, elite one-sentence value proposition hook (under 10 words)",
-  "category": "Pick best match: Enterprise Digital Platform | Healthcare & Clinical Web | Luxury Fragrance & Commerce | AI Companion & Product Web | SaaS & B2B Web App | E-Learning & EdTech Platform | Web3 & Digital Culture | Portfolio & Creative Studio | Fintech & Payment Systems | Hospitality & Real Estate",
+  "category": "Pick best match: Enterprise Digital Platform | Healthcare & Clinical Web | Luxury Fragrance & Commerce | AI Companion & Product Web | SaaS & B2B Web App | E-Learning & EdTech Platform | Web3 & Digital Culture | Portfolio & Creative Studio | Fintech & Payment Systems | Hospitality & Real Estate | B2B Industrial & Global Trade",
   "displayUrl": "${cleanDomain || 'example.com'}",
   "challenge": "2-3 sentences explaining the client problem, legacy blockers, or industry challenges",
   "solution": "2-3 sentences explaining the bespoke architecture, kinetic motion design, and performance optimizations delivered",
@@ -126,7 +144,10 @@ Return ONLY a valid JSON object matching this exact schema (no markdown, no back
               return Response.json({
                 ...parsed,
                 title: parsed.title || derivedTitle,
-                displayUrl: parsed.displayUrl || cleanDomain
+                displayUrl: parsed.displayUrl || cleanDomain,
+                techStack: Array.isArray(parsed.techStack) && parsed.techStack.length > 0 
+                  ? parsed.techStack 
+                  : (detectedStack.length >= 2 ? detectedStack : ['Next.js 15', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Cloudflare Edge'])
               });
             }
           }
@@ -137,25 +158,29 @@ Return ONLY a valid JSON object matching this exact schema (no markdown, no back
     // 3. Smart Heuristic / NLP Synthesizer (Zero API Key Fallback)
     const textCorpus = `${scrapedData.title} ${scrapedData.ogTitle} ${scrapedData.description} ${scrapedData.bodySnippet} ${derivedTitle}`.toLowerCase();
 
-    // Determine category
+    // Determine category with intelligent priority & boundary checks
     let category = inputCategory || 'Enterprise Digital Platform';
     if (!inputCategory || inputCategory === 'Enterprise Digital Platform') {
-      if (/\b(clinic|health|doctor|skin|medical|laser|dermatolog|dental|hospital|care)\b/i.test(textCorpus)) {
+      if (/\b(metal|metals|metallurg|metallist|scrap|steel|aluminium|aluminum|copper|brass|bronze|zinc|lead|nickel|alloy|alloys|furnace|furnaces|foundry|foundries|industrial|manufactur|commodity|commodities|logistics|freight|shipping|cargo|import|export|trade\s*house|raw\s*material|circular\s*economy|recycle\s*cans?|smelting)\b/i.test(textCorpus)) {
+        category = 'B2B Industrial & Global Trade';
+      } else if (/\b(clinic|health|doctor|skin|medical|laser|dermatolog|dental|hospital|patient|wellness\s*clinic)\b/i.test(textCorpus)) {
         category = 'Healthcare & Clinical Web';
-      } else if (/\b(fragrance|perfume|luxury|apparel|fashion|shop|store|cart|e-commerce|scent|decant)\b/i.test(textCorpus)) {
+      } else if (/\b(fragrance|perfume|cologne|scent|decant|luxury\s*apparel|luxury\s*fashion|couture)\b/i.test(textCorpus)) {
         category = 'Luxury Fragrance & Commerce';
-      } else if (/\b(ai|llm|gpt|bot|model|neural|generative|companion)\b/i.test(textCorpus)) {
+      } else if (/\b(ai\s*companion|generative\s*ai|llm|chatgpt|neural\s*network|machine\s*learning\s*model)\b/i.test(textCorpus)) {
         category = 'AI Companion & Product Web';
-      } else if (/\b(saas|software|dashboard|workflow|crm|erp|b2b app|platform app)\b/i.test(textCorpus)) {
+      } else if (/\b(saas|cloud\s*software|dashboard|workflow|crm|erp|b2b\s*app|platform\s*app)\b/i.test(textCorpus)) {
         category = 'SaaS & B2B Web App';
-      } else if (/\b(learn|course|edtech|education|academy|school|student|teach)\b/i.test(textCorpus)) {
+      } else if (/\b(edtech|e-learning|curriculum|academy|students?|syllabus|courses?|tuition|bootcamp|pedagogy|tutoring|university|school)\b/i.test(textCorpus) && !/\b(terms|learn\s*more|footer)\b/i.test(textCorpus)) {
         category = 'E-Learning & EdTech Platform';
-      } else if (/\b(finance|payment|crypto|trading|fintech|bank|invest|wallet|invoice)\b/i.test(textCorpus)) {
+      } else if (/\b(fintech|payment|neobank|banking|investing|hedge\s*fund|defi|crypto|token|wallet|invoice|billing|credit\s*card|checkout)\b/i.test(textCorpus)) {
         category = 'Fintech & Payment Systems';
-      } else if (/\b(hotel|resort|real estate|property|villa|stay|travel|architect|interior)\b/i.test(textCorpus)) {
+      } else if (/\b(hotel|resort|real\s*estate|property|villa|stay|travel|architect|interior)\b/i.test(textCorpus)) {
         category = 'Hospitality & Real Estate';
-      } else if (/\b(studio|creative|agency|designer|artist|portfolio|photograph)\b/i.test(textCorpus)) {
+      } else if (/\b(studio|creative\s*agency|branding\s*agency|motion\s*design|portfolio)\b/i.test(textCorpus)) {
         category = 'Portfolio & Creative Studio';
+      } else if (/\b(web3|nft|blockchain|dao|metaverse)\b/i.test(textCorpus)) {
+        category = 'Web3 & Digital Culture';
       }
     }
 
@@ -173,11 +198,60 @@ Return ONLY a valid JSON object matching this exact schema (no markdown, no back
       tagline = `High-Performance Digital Architecture for ${derivedTitle}`;
     }
 
-    const challenge = scrapedData.description
-      ? `Delivering a credible, high-trust digital platform for ${derivedTitle} that communicates market leadership while eliminating high bounce rates, clunky mobile checkout, and latency bottlenecks.`
-      : `Legacy digital solutions often struggle with slow page loading, unoptimized mobile interfaces, and fragmented customer journeys that hurt conversions and brand authority.`;
+    let challenge = '';
+    let solution = '';
+    let pillars = [
+      { title: '01 / SUB-SECOND TTFB', desc: 'Edge-rendered architecture ensuring instant page delivery across global nodes.' },
+      { title: '02 / KINETIC MOTION', desc: '60 FPS physics-based micro-interactions tailored for high conversion and brand prestige.' },
+      { title: '03 / SCALABLE EDGE', desc: 'Zero cold-start compute with automated cloud cache invalidation and maximum uptime.' }
+    ];
+    let stats = [
+      { label: 'Page Load Time', value: '0.34s' },
+      { label: 'SEO Score', value: '100%' },
+      { label: 'Conversion Growth', value: '+280%' }
+    ];
 
-    const solution = `We engineered a bespoke Next.js architecture for ${derivedTitle} featuring sub-second global edge delivery, 60 FPS micro-animations, responsive layout systems, and conversion-optimized CTAs.`;
+    if (category === 'B2B Industrial & Global Trade') {
+      challenge = scrapedData.description
+        ? `Global scrap, metals, and industrial commodity trading relies on rock-solid trust, transparent material specifications, and cross-border logistics across multiple continents. Traditional static websites fail to convey metallurgical standards, causing friction in direct procurement inquiries.`
+        : `Legacy trade platforms suffer from slow load times, unverified specifications, and fragmented buyer inquiry workflows that reduce high-value deal conversion.`;
+      solution = `We architected an elite, high-velocity Next.js trading platform for ${derivedTitle} featuring real-time grade manifests, sub-second global edge caching, kinetic trade route visualizers, and streamlined RFQ / direct inquiry desks.`;
+      pillars = [
+        { title: '01 / SUB-SECOND TTFB', desc: 'Global edge delivery ensuring immediate page loads across international trading desks.' },
+        { title: '02 / METALLURGICAL SPECS', desc: 'Interactive non-ferrous grade indexing for rapid material and composition verification.' },
+        { title: '03 / HIGH-CONVERSION RFQ', desc: 'Frictionless procurement inquiry workflows connecting suppliers directly to furnaces and foundries.' }
+      ];
+      stats = [
+        { label: 'Page Load Time', value: '0.32s' },
+        { label: 'SEO Score', value: '100%' },
+        { label: 'Direct Trade Inquiries', value: '+260%' }
+      ];
+    } else if (category === 'Healthcare & Clinical Web') {
+      challenge = `Patients expect instant, comforting digital experiences with transparent treatment details. Outdated clinical portals with complex navigation create anxiety and cause high appointment drop-off rates.`;
+      solution = `Engineered a serene, high-trust digital clinical portal for ${derivedTitle} featuring sub-second treatment discovery, verified doctor credentials, and a frictionless 2-tap online appointment flow.`;
+      stats = [
+        { label: 'Page Load Time', value: '0.28s' },
+        { label: 'SEO Score', value: '100%' },
+        { label: 'Patient Bookings', value: '+340%' }
+      ];
+    } else if (category === 'Luxury Fragrance & Commerce') {
+      challenge = `Luxury fragrance commerce demands exquisite visual storytelling and tactile pacing. Clunky templates and slow product catalog transitions detract from brand prestige and depress mobile cart conversions.`;
+      solution = `Crafted a bespoke editorial e-commerce experience for ${derivedTitle} with cinematic typography, instant olfactory note filtering, and an ultra-smooth single-pane mobile checkout pipeline.`;
+      stats = [
+        { label: 'Page Load Time', value: '0.35s' },
+        { label: 'SEO Score', value: '100%' },
+        { label: 'Checkout Conversion', value: '+320%' }
+      ];
+    } else {
+      challenge = scrapedData.description
+        ? `Delivering a credible, high-trust digital platform for ${derivedTitle} that communicates market leadership while eliminating high bounce rates, unoptimized mobile layouts, and latency bottlenecks.`
+        : `Legacy digital solutions often struggle with slow page loading, unoptimized mobile interfaces, and fragmented customer journeys that hurt conversions and brand authority.`;
+      solution = `We engineered a bespoke Next.js architecture for ${derivedTitle} featuring sub-second global edge delivery, 60 FPS micro-animations, responsive layout systems, and conversion-optimized CTAs.`;
+    }
+
+    const finalTechStack = detectedStack.length >= 2 
+      ? Array.from(new Set([...detectedStack, 'TypeScript', 'Cloudflare Edge']))
+      : ['Next.js 15', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Cloudflare Edge'];
 
     return Response.json({
       title: derivedTitle,
@@ -186,17 +260,9 @@ Return ONLY a valid JSON object matching this exact schema (no markdown, no back
       displayUrl: cleanDomain,
       challenge,
       solution,
-      techStack: ['Next.js 15', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Cloudflare Edge', 'Supabase'],
-      pillars: [
-        { title: '01 / SUB-SECOND TTFB', desc: 'Edge-rendered architecture ensuring instant page delivery across global nodes.' },
-        { title: '02 / KINETIC MOTION', desc: '60 FPS physics-based micro-interactions tailored for high conversion and brand prestige.' },
-        { title: '03 / SCALABLE EDGE', desc: 'Zero cold-start compute with automated cloud cache invalidation and maximum uptime.' }
-      ],
-      stats: [
-        { label: 'Page Load Time', value: '0.38s' },
-        { label: 'SEO Score', value: '100%' },
-        { label: 'Conversion Growth', value: '+300%' }
-      ]
+      pillars,
+      stats,
+      techStack: finalTechStack
     });
 
   } catch (err) {

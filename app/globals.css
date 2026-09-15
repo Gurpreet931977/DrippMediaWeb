@@ -209,6 +209,44 @@
             box-shadow: 0 0 25px var(--brand-glow);
         }
 
+        /* --- High contrast cursor over yellow client connection footer, yellow buttons & selected chips --- */
+        body:has(.client-connection-section:hover) .cursor:not(.cursor-over-dark),
+        body:has(.custom-service-add-btn:hover) .cursor,
+        body:has(.custom-chip.selected:hover) .cursor,
+        body:has(.modal-submit-capsule:hover) .cursor,
+        .cursor.cursor-dark {
+            border-color: #050505 !important;
+            background-color: transparent !important;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.5), 0 0 0 1.5px rgba(255, 255, 255, 0.85) !important;
+        }
+
+        body:has(.client-connection-section:hover) .cursor.active:not(.cursor-over-dark),
+        body:has(.custom-service-add-btn:hover) .cursor.active,
+        body:has(.custom-chip.selected:hover) .cursor.active,
+        body:has(.modal-submit-capsule:hover) .cursor.active,
+        .cursor.cursor-dark.active {
+            background-color: rgba(5, 5, 5, 0.18) !important;
+            border-color: #050505 !important;
+            box-shadow: 0 0 22px rgba(0, 0, 0, 0.45), 0 0 0 1.8px rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }
+
+        /* When hovering dark elements inside yellow sections (e.g. LET'S TALK pill) */
+        body:has(.mega-project-btn:hover) .cursor,
+        .cursor.cursor-over-dark {
+            border-color: var(--brand-yellow) !important;
+            box-shadow: 0 0 18px rgba(235, 215, 63, 0.75) !important;
+        }
+
+        body:has(.mega-project-btn:hover) .cursor.active,
+        .cursor.cursor-over-dark.active {
+            background-color: rgba(235, 215, 63, 0.25) !important;
+            border-color: var(--brand-yellow) !important;
+            box-shadow: 0 0 25px rgba(235, 215, 63, 0.8) !important;
+        }
+
+
         #trail-canvas {
             position: fixed;
             top: 0;
@@ -3926,14 +3964,16 @@
 
         /* Scroll wrapper - this is the only element that scrolls */
         .chip-scroll {
-            max-height: 260px;
+            max-height: 295px;
             overflow-y: auto;
             overflow-x: hidden;
             scrollbar-width: thin;
             scrollbar-color: rgba(235, 215, 63, 0.2) transparent;
-            /* Expand viewport clipping box to fit massive glows without losing layout alignment */
-            margin: -15px -10px -20px -15px;
-            padding: 15px 10px 20px 15px;
+            /* Expand horizontal clipping box for chip glows without causing vertical sibling collision */
+            margin: -6px -8px 0 -8px;
+            padding: 6px 8px 18px 8px;
+            position: relative;
+            z-index: 1;
         }
 
         .chip-scroll::-webkit-scrollbar {
@@ -3954,7 +3994,7 @@
             display: none;
             flex-wrap: wrap;
             gap: 10px;
-            padding: 0;
+            padding: 0 0 12px 0;
             overflow: visible;
         }
 
@@ -4063,7 +4103,7 @@
 
         /* Custom Service Creator Box */
         .custom-service-creator {
-            background: linear-gradient(180deg, rgba(16, 16, 22, 0.9) 0%, rgba(10, 10, 14, 0.98) 100%);
+            background: linear-gradient(180deg, rgba(16, 16, 22, 0.94) 0%, rgba(10, 10, 14, 0.98) 100%);
             border: 1px solid rgba(235, 215, 63, 0.22);
             border-radius: 16px;
             padding: 16px 20px;
@@ -4073,7 +4113,8 @@
             flex-direction: column;
             gap: 12px;
             position: relative;
-            z-index: 2;
+            z-index: 1;
+            margin-top: 14px;
         }
 
         .custom-service-creator-top {
@@ -6193,6 +6234,74 @@
             color: rgba(255, 255, 255, 0.65);
         }
 
+        /* --- Unified Strategy Value Card (Sidebar) --- */
+        .strategy-value-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+        }
+
+        .strategy-value-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .strategy-value-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(235, 215, 63, 0.12);
+            color: var(--brand-yellow);
+            border: 1px solid rgba(235, 215, 63, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .strategy-value-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .strategy-value-title {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--pure-white);
+            letter-spacing: 0.3px;
+        }
+
+        .strategy-value-sub {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.3;
+        }
+
+        body.light-theme .strategy-value-card {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+        body.light-theme .strategy-value-title {
+            color: #0b0c10;
+        }
+        body.light-theme .strategy-value-sub {
+            color: rgba(0, 0, 0, 0.55);
+        }
+        body.light-theme .strategy-value-icon {
+            background: rgba(0, 0, 0, 0.06);
+            color: #0b0c10;
+            border-color: rgba(0, 0, 0, 0.12);
+        }
+
         .contact-tabs-stacked {
             display: flex;
             flex-direction: column;
@@ -7109,6 +7218,65 @@
             max-width: 100%;
         }
 
+        /* Call Channel Preference Selector */
+        .call-channel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 4px;
+            margin-bottom: 8px;
+        }
+
+        .call-channel-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            user-select: none;
+        }
+
+        .call-channel-btn:hover {
+            border-color: rgba(235, 215, 63, 0.4);
+            background: rgba(235, 215, 63, 0.08);
+            color: var(--brand-yellow);
+            transform: translateY(-1px);
+        }
+
+        .call-channel-btn.active {
+            background: var(--brand-yellow);
+            color: var(--deep-black);
+            border-color: var(--brand-yellow);
+            font-weight: 700;
+            box-shadow: 0 4px 16px rgba(235, 215, 63, 0.35);
+        }
+
+        .call-channel-btn .channel-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.15);
+            color: currentColor;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .call-channel-btn:not(.active) .channel-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
         .slot-picker-label {
             font-family: 'Clash Display', sans-serif;
             font-size: 0.78rem;
@@ -7153,6 +7321,45 @@
             border-color: var(--brand-yellow);
             font-weight: 700;
             box-shadow: 0 4px 14px rgba(235, 215, 63, 0.35);
+        }
+
+        .contact-brief-footnote {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.73rem;
+            color: rgba(255, 255, 255, 0.65);
+            padding: 8px 12px;
+            background: rgba(235, 215, 63, 0.05);
+            border: 1px solid rgba(235, 215, 63, 0.15);
+            border-radius: 8px;
+            margin-top: 2px;
+            line-height: 1.4;
+        }
+
+        .contact-brief-footnote .footnote-bullet {
+            color: var(--brand-yellow);
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        body.light-theme .contact-brief-footnote {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        body.light-theme .call-channel-btn {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: #1a1a1a;
+        }
+
+        body.light-theme .call-channel-btn.active {
+            background: var(--deep-black);
+            color: var(--brand-yellow);
+            border-color: var(--deep-black);
         }
 
         /* WhatsApp Direct Action Button - Ultra-Modern Luxury Capsule */

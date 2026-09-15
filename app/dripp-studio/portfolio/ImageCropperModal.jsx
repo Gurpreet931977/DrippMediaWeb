@@ -167,34 +167,45 @@ export default function ImageCropperModal({
   if (!isOpen || !imageSrc) return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(4, 4, 8, 0.88)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      zIndex: 99999,
-      display: 'flex',
-      justifyContent: 'center',
-      padding: '28px 16px',
-      overflowY: 'auto',
-      boxSizing: 'border-box'
-    }}>
-      <div style={{
-        margin: 'auto',
-        background: '#0d0d12',
-        border: '1px solid rgba(255, 255, 255, 0.14)',
-        borderTop: '1px solid rgba(235, 215, 63, 0.4)',
-        borderRadius: '24px',
-        width: '100%',
-        maxWidth: '1000px',
-        maxHeight: 'calc(100vh - 56px)',
-        overflow: 'hidden',
+    <div 
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(4, 4, 8, 0.88)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        zIndex: 99999,
         display: 'flex',
-        flexDirection: 'column',
-        boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 0 1px rgba(235, 215, 63, 0.15)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px 16px',
         boxSizing: 'border-box'
-      }}>
+      }}
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: '#0d0d12',
+          border: '1px solid rgba(255, 255, 255, 0.14)',
+          borderTop: '1px solid rgba(235, 215, 63, 0.4)',
+          borderRadius: '24px',
+          width: '100%',
+          maxWidth: '1000px',
+          maxHeight: 'min(92vh, 900px)',
+          height: 'auto',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 0 1px rgba(235, 215, 63, 0.15)',
+          boxSizing: 'border-box'
+        }}
+      >
         {/* Modal Header */}
         <div style={{
           padding: '20px 28px',
