@@ -6671,6 +6671,123 @@
             opacity: 1;
         }
 
+        /* Minimalist Channel Segmented Toggle */
+        .channel-toggle-segmented {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .channel-toggle-segmented .call-channel-btn {
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.55);
+            padding: 3px 10px;
+            font-size: 0.68rem;
+            font-family: 'Clash Display', sans-serif;
+            font-weight: 600;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: none;
+            margin: 0;
+            user-select: none;
+        }
+
+        .channel-toggle-segmented .call-channel-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+            transform: none;
+        }
+
+        .channel-toggle-segmented .call-channel-btn.active {
+            background: var(--brand-yellow, #ebd73f);
+            color: #050505;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(235, 215, 63, 0.25);
+        }
+
+        /* Minimalist Scope Chip Cloud */
+        .scope-chip-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .scope-chip-cloud .scope-chip {
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 6px 11px;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.74rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .scope-chip-cloud .scope-chip:hover {
+            border-color: rgba(235, 215, 63, 0.35);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .scope-chip-cloud .scope-chip.selected {
+            background: rgba(235, 215, 63, 0.12);
+            border-color: var(--brand-yellow, #ebd73f);
+            color: var(--brand-yellow, #ebd73f);
+            font-weight: 700;
+        }
+
+        /* Minimalist 4-Slot Grid */
+        .slot-grid-clean {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .slot-grid-clean .slot-chip {
+            padding: 7px 4px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: none;
+        }
+
+        .slot-grid-clean .slot-chip:hover {
+            border-color: rgba(235, 215, 63, 0.35);
+            color: #ffffff;
+        }
+
+        .slot-grid-clean .slot-chip.active {
+            background: var(--brand-yellow, #ebd73f);
+            color: #050505;
+            border-color: var(--brand-yellow, #ebd73f);
+            font-weight: 700;
+        }
+
+        @media (max-width: 500px) {
+            .slot-grid-clean {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         /* Breakpoints for Responsive Modal */
         @media (max-width: 860px) {
             .contact-modal-box {

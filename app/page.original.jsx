@@ -2562,7 +2562,7 @@ export default function Page() {
             const slot = document.querySelector('#contact-form .slot-chip.active')?.textContent?.trim() || '⚡ Today (ASAP)';
 
             // Collect selected scopes
-            const selectedScopes = Array.from(document.querySelectorAll('#scope-dropdown-menu .scope-dropdown-item.selected'))
+            const selectedScopes = Array.from(document.querySelectorAll('#contact-form .scope-chip.selected, #scope-dropdown-menu .scope-dropdown-item.selected'))
                 .map(el => el.getAttribute('data-scope-label') || el.textContent.trim());
             const scopeStr = selectedScopes.join(', ');
 
@@ -3949,248 +3949,123 @@ export default function Page() {
       </button>
 
       <div className="contact-modal-grid">
-        {/* Left Sidebar: Studio Context, Strategic Value & Trust Guarantees */}
+        {/* Left Sidebar: Minimal, High-Impact Studio Header */}
         <div className="contact-modal-sidebar">
           <div className="modal-header-block">
             <div className="modal-live-badge">
               <span className="live-status-ping" />
-              <span>DIRECT STUDIO INTAKE · STRATEGY CALL</span>
+              <span>STRATEGY CALL</span>
             </div>
             <h3 className="modal-title">Let's Talk.</h3>
-            <p className="modal-desc">Share your project scope and schedule a direct strategy call to map out creative direction, timeline, and execution.</p>
-          </div>
-          
-          {/* Strategy Value Highlights */}
-          <div className="strategy-value-card">
-            <div className="strategy-value-item">
-              <div className="strategy-value-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                </svg>
-              </div>
-              <div className="strategy-value-text">
-                <span className="strategy-value-title">Direct Audio Call</span>
-                <span className="strategy-value-sub">Direct Phone or WhatsApp Audio</span>
-              </div>
-            </div>
-
-            <div className="strategy-value-item">
-              <div className="strategy-value-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-              </div>
-              <div className="strategy-value-text">
-                <span className="strategy-value-title">Creative & Scope Roadmap</span>
-                <span className="strategy-value-sub">Vision, budget & execution plan</span>
-              </div>
-            </div>
+            <p className="modal-desc">
+              15-minute 1-on-1 audio call with our lead team to map out scope, budget, and timeline.
+            </p>
           </div>
 
-          {/* Studio Guarantees */}
-          <div className="contact-sidebar-guarantees">
+          <div className="contact-sidebar-guarantees" style={{ borderTop: 'none', paddingTop: 0 }}>
             <div className="sidebar-guarantee-item">
-              <span className="guarantee-sparkle">✦</span>
-              <span>Call on Your Decided Time & Line</span>
+              <span className="guarantee-sparkle">•</span>
+              <span>Direct Phone or WhatsApp Audio</span>
             </div>
             <div className="sidebar-guarantee-item">
-              <span className="guarantee-sparkle">✦</span>
-              <span>Direct Senior Creative Lead</span>
+              <span className="guarantee-sparkle">•</span>
+              <span>Immediate Scope & Cost Estimate</span>
             </div>
             <div className="sidebar-guarantee-item">
-              <span className="guarantee-sparkle">✦</span>
-              <span>Strict NDA & Zero Spam Guarantee</span>
+              <span className="guarantee-sparkle">•</span>
+              <span>Strict NDA & Zero Spam</span>
             </div>
           </div>
         </div>
 
-        {/* Right Main Form Area */}
+        {/* Right Main Form Area: Streamlined & Clutter-Free */}
         <div className="contact-modal-main">
-          <form className="modal-form" id="contact-form" style={{ display: 'flex' }}>
+          <form className="modal-form" id="contact-form" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <input type="hidden" name="services" defaultValue="{}" />
             <input type="hidden" name="call_channel" id="contact-call-channel" defaultValue="Direct Phone Call" />
             <input type="hidden" name="slot" id="contact-selected-slot" defaultValue="⚡ Today (ASAP)" />
             <div id="contact-services-list" />
 
-            {/* Multi-Select Project Scope Dropdown Menu */}
-            <div className="form-group">
-              <div className="field-label-row">
-                <label>Project Scope</label>
-                <span className="field-label-hint">Select all that apply</span>
-              </div>
-              
-              <div className="scope-dropdown-wrap" id="scope-dropdown-wrap">
-                <button
-                  type="button"
-                  className="scope-dropdown-trigger"
-                  id="scope-dropdown-trigger"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const wrap = document.getElementById('scope-dropdown-wrap');
-                    wrap?.classList.toggle('open');
-                  }}
-                  aria-haspopup="listbox"
-                >
-                  <div className="scope-trigger-text" id="scope-trigger-text">
-                    Select project scopes...
-                  </div>
-                  <svg className="scope-dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-
-                <div className="scope-dropdown-menu" id="scope-dropdown-menu" role="listbox" data-lenis-prevent="true">
-                  {[
-                    { id: 'video', label: 'Video & Motion Editing' },
-                    { id: 'cinema', label: 'Cinematography / Videography / Photography' },
-                    { id: 'web', label: 'Website Development' },
-                    { id: 'app', label: 'App Development' },
-                    { id: 'smm', label: 'Social Media Management' },
-                    { id: 'graphics', label: 'Graphic Design & Identity' },
-                    { id: '3d', label: '3D Animation & VFX' },
-                    { id: 'retainer', label: 'Full Creative Retainer' }
-                  ].map((option) => (
-                    <div
-                      key={option.id}
-                      className="scope-dropdown-item"
-                      data-scope-id={option.id}
-                      data-scope-label={option.label}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const item = e.currentTarget;
-                        item.classList.toggle('selected');
-                        
-                        const selectedItems = Array.from(document.querySelectorAll('#scope-dropdown-menu .scope-dropdown-item.selected'))
-                          .map(el => el.getAttribute('data-scope-label') || el.textContent.trim());
-                        
-                        // Update trigger label
-                        const triggerText = document.getElementById('scope-trigger-text');
-                        const tagsRow = document.getElementById('scope-selected-tags-row');
-                        
-                        if (selectedItems.length === 0) {
-                          if (triggerText) {
-                            triggerText.innerHTML = 'Select project scopes...';
-                            triggerText.classList.remove('has-value');
-                          }
-                          if (tagsRow) tagsRow.innerHTML = '';
-                        } else {
-                          if (triggerText) {
-                            triggerText.innerHTML = `<span class="scope-trigger-badge">${selectedItems.length}</span>${selectedItems.join(', ')}`;
-                            triggerText.classList.add('has-value');
-                          }
-                          if (tagsRow) {
-                            tagsRow.innerHTML = selectedItems.map(lbl => `
-                              <span class="scope-selected-tag">
-                                <span>${lbl}</span>
-                                <span class="scope-tag-remove" data-remove-label="${lbl}">&times;</span>
-                              </span>
-                            `).join('');
-                            tagsRow.querySelectorAll('.scope-tag-remove').forEach(rm => {
-                              rm.addEventListener('click', (ev) => {
-                                ev.stopPropagation();
-                                const toRm = rm.getAttribute('data-remove-label');
-                                const targetItem = Array.from(document.querySelectorAll('#scope-dropdown-menu .scope-dropdown-item')).find(i => i.getAttribute('data-scope-label') === toRm);
-                                if (targetItem) targetItem.click();
-                              });
-                            });
-                          }
-                        }
-                      }}
-                    >
-                      <div className="scope-item-left">
-                        <span className="scope-item-sparkle">✦</span>
-                        <span>{option.label}</span>
-                      </div>
-                      <div className="scope-item-check">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Removable Tag Badges */}
-              <div className="scope-selected-tags-row" id="scope-selected-tags-row" />
-            </div>
-
-            {/* 2-Column Responsive Name & Email */}
+            {/* Step 1: Name & Email */}
             <div className="form-row-dual">
               <div className="form-group">
                 <label>Your Name</label>
-                <input type="text" name="name" className="form-input" placeholder="e.g. Alex Morgan" required />
+                <input type="text" name="name" className="form-input" placeholder="Alex Morgan" required />
               </div>
               <div className="form-group">
                 <label>Work Email</label>
-                <input type="email" name="email" className="form-input" placeholder="hello@company.com" required />
+                <input type="email" name="email" className="form-input" placeholder="alex@company.com" required />
               </div>
             </div>
 
-            {/* Call Channel Preference (Primary & Default) */}
+            {/* Step 2: Line & Call Channel (Integrated Seamlessly) */}
             <div className="form-group">
-              <div className="field-label-row">
-                <label>Call Channel Preference</label>
-                <span className="field-label-hint">Audio call only (no video)</span>
-              </div>
-              <div className="call-channel-grid">
-                <button 
-                  type="button" 
-                  className="call-channel-btn active" 
-                  data-channel="Direct Phone Call"
-                  onClick={(e) => {
-                    document.querySelectorAll('.call-channel-btn').forEach(b => b.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
-                    const hidden = document.getElementById('contact-call-channel');
-                    if (hidden) hidden.value = 'Direct Phone Call';
-                    const numLabel = document.getElementById('contact-phone-hint');
-                    if (numLabel) numLabel.innerText = 'For direct phone call';
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
-                  <span>Direct Phone Call</span>
-                  <span className="channel-badge">Primary</span>
-                </button>
-                <button 
-                  type="button" 
-                  className="call-channel-btn" 
-                  data-channel="WhatsApp Call"
-                  onClick={(e) => {
-                    document.querySelectorAll('.call-channel-btn').forEach(b => b.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
-                    const hidden = document.getElementById('contact-call-channel');
-                    if (hidden) hidden.value = 'WhatsApp Call';
-                    const numLabel = document.getElementById('contact-phone-hint');
-                    if (numLabel) numLabel.innerText = 'For WhatsApp audio call';
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                  </svg>
-                  <span>WhatsApp Call</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Phone / WhatsApp Line */}
-            <div className="form-group">
-              <div className="field-label-row">
-                <label>Phone / WhatsApp Number</label>
-                <span className="field-label-hint" id="contact-phone-hint">For direct phone call</span>
+              <div className="field-label-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label>Phone / WhatsApp Line</label>
+                <div className="channel-toggle-segmented">
+                  <button 
+                    type="button" 
+                    className="call-channel-btn active" 
+                    data-channel="Direct Phone Call"
+                    onClick={(e) => {
+                      document.querySelectorAll('.call-channel-btn').forEach(b => b.classList.remove('active'));
+                      e.currentTarget.classList.add('active');
+                      const hidden = document.getElementById('contact-call-channel');
+                      if (hidden) hidden.value = 'Direct Phone Call';
+                    }}
+                  >
+                    Direct Phone
+                  </button>
+                  <button 
+                    type="button" 
+                    className="call-channel-btn" 
+                    data-channel="WhatsApp Call"
+                    onClick={(e) => {
+                      document.querySelectorAll('.call-channel-btn').forEach(b => b.classList.remove('active'));
+                      e.currentTarget.classList.add('active');
+                      const hidden = document.getElementById('contact-call-channel');
+                      if (hidden) hidden.value = 'WhatsApp Call';
+                    }}
+                  >
+                    WhatsApp
+                  </button>
+                </div>
               </div>
               <input type="tel" name="whatsapp" className="form-input" placeholder="+1 234 567 8900 / +91 98765 43210" required />
             </div>
 
-            {/* Preferred Call Time (Value-Centric Slots) */}
+            {/* Step 3: Project Scope (Direct 1-Tap Chips) */}
             <div className="form-group">
-              <div className="field-label-row">
-                <label>Preferred Call Time</label>
-                <span className="field-label-hint">We will call you at this time</span>
+              <label style={{ display: 'block', marginBottom: '6px' }}>Project Scope</label>
+              <div className="scope-chip-cloud">
+                {[
+                  { id: 'web', label: 'Web & Apps' },
+                  { id: 'video', label: 'Video & Reels' },
+                  { id: 'cinema', label: 'Cinema & Shoots' },
+                  { id: 'graphics', label: 'Branding & 3D' },
+                  { id: 'smm', label: 'Social Growth' },
+                  { id: 'retainer', label: 'Full Retainer' }
+                ].map((option, idx) => (
+                  <button
+                    type="button"
+                    key={option.id}
+                    className={`scope-chip ${idx === 0 ? 'selected' : ''}`}
+                    data-scope-label={option.label}
+                    onClick={(e) => {
+                      e.currentTarget.classList.toggle('selected');
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                ))}
               </div>
-              <div className="slot-grid">
-                {['⚡ Today (ASAP)', 'Tomorrow 11:00 AM', 'Tomorrow 3:00 PM', 'Tomorrow 6:00 PM', 'Thu 2:00 PM', 'Custom / Flexible'].map((slot, idx) => (
+            </div>
+
+            {/* Step 4: Preferred Call Time (Compact 4-Slot Row) */}
+            <div className="form-group">
+              <label style={{ display: 'block', marginBottom: '6px' }}>Preferred Call Time</label>
+              <div className="slot-grid-clean">
+                {['Today (ASAP)', 'Tomorrow 11 AM', 'Tomorrow 3 PM', 'Custom / Flexible'].map((slot, idx) => (
                   <div 
                     key={slot} 
                     className={`slot-chip ${idx === 0 ? 'active' : ''}`}
@@ -4207,27 +4082,18 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Project Goals / Details */}
+            {/* Step 5: Notes / Links (Clean 1-line) */}
             <div className="form-group">
-              <div className="field-label-row">
-                <label>Project Scope / Brief (Optional)</label>
-                <span className="field-label-hint">Context for our strategy discussion</span>
-              </div>
-              <textarea name="message" className="form-input" placeholder="Tell us what you're building, target launch date, or reference links..." defaultValue={""} rows={2} />
+              <label style={{ display: 'block', marginBottom: '6px' }}>Project Brief (Optional)</label>
+              <input type="text" name="message" className="form-input" placeholder="Target launch date, reference links, or core problem..." />
             </div>
 
-            {/* Reassurance Footnote */}
-            <div className="contact-brief-footnote">
-              <span className="footnote-bullet">✦</span>
-              <span>We will call you directly at your selected time on your chosen line with zero spam.</span>
-            </div>
-
-            {/* 3D Capsule Action Button */}
-            <button type="submit" className="modal-submit-capsule" id="contact-submit">
+            {/* Step 6: 3D Capsule Action Button */}
+            <button type="submit" className="modal-submit-capsule" id="contact-submit" style={{ marginTop: '4px' }}>
               <span className="modal-btn-shimmer" />
               <div className="modal-btn-label">
                 <span className="modal-sparkle">✦</span>
-                <span className="modal-btn-text">Request Strategy Call & Scope Review</span>
+                <span className="modal-btn-text">Book Strategy Call</span>
               </div>
               <div className="modal-action-disc">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
