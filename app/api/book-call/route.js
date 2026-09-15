@@ -191,7 +191,7 @@ async function pingCallMeBot(record) {
 
 async function notifyNtfy(record) {
   try {
-    const topic = process.env.NTFY_TOPIC || 'dripp-leads-7300595147';
+    const topic = process.env.NTFY_TOPIC || 'dripp-leads-7818995147';
     const cleanPhone = (record.whatsapp || '').replace(/[^0-9]/g, '');
     const cleanNumber = cleanPhone.startsWith('91') || cleanPhone.length > 10 ? cleanPhone : `91${cleanPhone}`;
 
