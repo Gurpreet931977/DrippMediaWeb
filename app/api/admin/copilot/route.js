@@ -194,9 +194,9 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
 
 **For "quote" / "package" intent:**
 - Extract all project details from the user prompt:
-  - brandName: The brand/client name (e.g. "Real Estate Brand", "Aura Fitness"). If not explicitly named, infer a clean descriptive name.
-  - packageType: "project" (for one-time web development, branding, or project builds) or "monthly" (for monthly retainers/management).
-  - totalBudget: The total budget as an integer (e.g. "15 K" -> 15000, "50k" -> 50000, "1.5L" -> 150000).
+  - brandName: The brand/client name (e.g. "D9 Dehradun", "Aura Fitness"). If provided in quotes or with hyphens/prefixes like "brand name - 'D9 Dehradun'", extract ONLY the clean brand name ("D9 Dehradun"). NEVER output prefixes like "Brand Name - " or outer quotes!
+  - packageType: "project" (for one-time web development, branding, launch shoots, or project builds) or "monthly" (for monthly retainers/management).
+  - totalBudget: The total budget as an integer (e.g. "15 K" -> 15000, "44k" -> 44000, "1.5L" -> 150000).
   
   - **INCREMENTAL EDITS & NOTES (CRITICAL)**:
     If the user asks to add a note, disclaimer, condition, or modification to the existing proposal (e.g. "add a line to it that domain purchasing is not included in it", "mention that images are provided by client", "add a note about 50% advance"):
@@ -208,7 +208,12 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
     - In "replyMessage", confirm specifically what note or condition you added to the proposal.
 
   - **FLEXIBLE PACKAGING MODES**:
-    1. **SINGLE-SERVICE MODE**: If user explicitly asks for a "single service", "all in one package", "one line item", "bundle it into one", or asks to "define details in PMP / strategy and keep a single service":
+    1. **USER EXPLICIT BREAKDOWN (HIGHEST PRIORITY)**: If the user provides their own breakdown of services, team roles, deliverables, and rates (e.g. "breaking into -10k for edited content, 20k for 2 videographers, 6k for photographer, 8k for drone operator"):
+       - You MUST honor their EXACT breakdown of items and rates!
+       - NEVER lump them into a single generic catalog item like "High-Retention Video Editing" or change their rates!
+       - Map each requested component to a distinct line item with matching rate and clear professional description (e.g. 2 videographers -> qty: 2, rate: 10000 = 20000; drone operator -> qty: 1, rate: 8000; photographer -> qty: 1, rate: 6000; edited reels, video & raw content -> qty: 1, rate: 10000).
+       - Total sum of items MUST equal the user's stated total budget (e.g. 44000).
+    2. **SINGLE-SERVICE MODE**: If user explicitly asks for a "single service", "all in one package", "one line item", "bundle it into one", or asks to "define details in PMP / strategy and keep a single service":
        - packageTiers: Output EXACTLY 1 comprehensive tier with 1 bundled service item matching the user's specific requested domain and deliverables (e.g. for Social Media: "Comprehensive Social Media Management & Creative Growth Retainer", for Video: "Complete High-Retention Video Production Retainer", for Web: "Full-Stack Web Development & Launch Package").
        - The single item's name and desc: Professional all-inclusive title for the user's requested services.
        - The single item's qty: 1.
@@ -216,7 +221,7 @@ You work inside the Dripp Studio alongside the founder. You know the brand insid
        - The single item's details: MUST summarize the ACTUAL requested deliverables from the prompt (e.g. "Comprehensive management across Facebook, Instagram & LinkedIn, 4 creatives + stories on alternate days, 8 promotional videos/month, Meta Ads campaign execution & analytics, and 4 promotional posters").
        - services: Exactly 1 service item at rate = totalBudget.
        - pmpStrategy: Provide a deep, extensive, itemized breakdown tailored specifically to the requested domain (overview, targetAudience, and 3 structured phases) directly in the overview and phases.
-    2. **ITEMIZED MODE (DEFAULT)**: If user does NOT specify a single service:
+    3. **ITEMIZED MODE (DEFAULT)**: If user does NOT specify a single service or explicit breakdown:
        - Break down ALL requested deliverables into distinct service items with appropriate, realistic weighted rates (DO NOT divide budget evenly).
        - Core deliverable should represent ~50-60% of total budget.
        - The sum of (qty * rate) across all items in a tier MUST equal the totalBudget to the exact rupee!
@@ -596,39 +601,126 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
     const extractBrandNameFromPrompt = (prompt) => {
       if (!prompt || typeof prompt !== 'string') return null;
 
-      // Pattern 1: "brand name is XYZ", "brand is XYZ", "client name is XYZ", "brand: XYZ", "client: XYZ", "company is XYZ"
-      const explicitMatch = prompt.match(/(?:brand(?:\s+name)?|client(?:\s+name)?|company(?:\s+name)?)\s*(?:is|:|=|\bas\b)\s*["']?([A-Za-z0-9\s&'.-]+?)(?=["']?(?:[\n\r,.]|\band\b|\bwith\b|\bpricing\b|\bquotation\b|\bquote\b|\bbudget\b|\bfor\b|$))/i);
-      if (explicitMatch && explicitMatch[1]?.trim()) {
-        const val = explicitMatch[1].trim();
+      // Check for quoted brand right after "brand", "client", "for", "named"
+      const quotedBrand = prompt.match(/(?:brand(?:\s+name)?|client(?:\s+name)?|company(?:\s+name)?)\s*(?:is|:|=|-|\bas\b)?\s*['"]([^'"]+)['"]/i);
+      if (quotedBrand && quotedBrand[1]?.trim()) {
+        const val = quotedBrand[1].trim();
         if (!['a', 'an', 'the', 'my', 'our', 'this', 'client', 'brand'].includes(val.toLowerCase())) {
-          return val.replace(/\b\w/g, l => l.toUpperCase());
+          return val;
+        }
+      }
+
+      // Pattern 1: "brand name is XYZ", "brand name - XYZ", "brand: XYZ", "client: XYZ", "company is XYZ"
+      const explicitMatch = prompt.match(/(?:brand(?:\s+name)?|client(?:\s+name)?|company(?:\s+name)?)\s*(?:is|:|=|-|\bas\b)\s*["']?([A-Za-z0-9\s&'.-]+?)(?=["']?(?:[\n\r,.]|\band\b|\bwith\b|\bpricing\b|\bquotation\b|\bquote\b|\bbudget\b|\bfor\b|\blaunch\b|$))/i);
+      if (explicitMatch && explicitMatch[1]?.trim()) {
+        let val = explicitMatch[1].trim();
+        val = val.replace(/^(?:brand(?:\s+name)?|client(?:\s+name)?)\s*[:-]\s*/i, '').replace(/^['"]+|['"]+$/g, '').trim();
+        if (val && !['a', 'an', 'the', 'my', 'our', 'this', 'client', 'brand'].includes(val.toLowerCase())) {
+          return val;
         }
       }
 
       // Pattern 2: "called XYZ", "named XYZ"
       const namedMatch = prompt.match(/(?:named|called)\s+["']?([A-Za-z0-9\s&'.-]+?)(?=["']?(?:[\n\r,.]|\band\b|\bwith\b|\bpricing\b|\bquotation\b|\bquote\b|\bbudget\b|\bfor\b|$))/i);
       if (namedMatch && namedMatch[1]?.trim()) {
-        const val = namedMatch[1].trim();
+        const val = namedMatch[1].trim().replace(/^['"]+|['"]+$/g, '');
         if (!['a', 'an', 'the', 'template', 'package', 'client'].includes(val.toLowerCase())) {
-          return val.replace(/\b\w/g, l => l.toUpperCase());
+          return val;
         }
       }
 
       // Pattern 3: "for [a] [Brand] Brand/Company" or "for Akaaya Events"
       const forMatch = prompt.match(/(?:for\s+(?:a\s+|an\s+)?)([A-Za-z0-9\s&'.-]+?)(?:\s+brand|\s+company|\s+business|[\n\r,.]|\band\b|\bwith\b|\bpricing\b|\bquote\b|\bbudget\b|$)/i);
       if (forMatch && forMatch[1]?.trim()) {
-        const val = forMatch[1].trim();
-        if (!['a', 'an', 'the', 'my', 'our', 'client', 'project', 'him', 'her', 'them', 'me', 'us', 'single', 'monthly'].includes(val.toLowerCase())) {
-          return val.replace(/\b\w/g, l => l.toUpperCase());
+        let val = forMatch[1].trim();
+        val = val.replace(/^(?:brand(?:\s+name)?|client(?:\s+name)?)\s*[:-]\s*/i, '').replace(/^['"]+|['"]+$/g, '').trim();
+        if (val && !['a', 'an', 'the', 'my', 'our', 'client', 'project', 'him', 'her', 'them', 'me', 'us', 'single', 'monthly'].includes(val.toLowerCase())) {
+          return val;
         }
       }
 
       return null;
     };
 
-    // Smart deliverable extractor with realistic weighted pricing & domain-aware single-service support
+    // Smart deliverable extractor with realistic weighted pricing, custom breakdown parser, & domain-aware single-service support
     const generateFallbackDeliverables = (prompt, targetBudget = 0) => {
       const p = (prompt || '').toLowerCase();
+      const budget = targetBudget || parseAmountNumber(prompt) || 20000;
+
+      // 1. Check for user-defined explicit breakdown in prompt
+      // e.g. "breaking into -10k for edited content(reel and video), 20k for 2 videographers, 6k for photographer, 8k for drone operator"
+      const breakdownItems = [];
+      const segments = prompt.split(/[,;\n\r]+|\band\s+(?=\d|\₹)/i);
+      for (const seg of segments) {
+        const sTrim = seg.trim().replace(/^[-–—•*]\s*/, '');
+        if (!sTrim) continue;
+
+        const m1 = sTrim.match(/(?:[-–—]\s*)?(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?\s*(?:k\b|lakhs?|l\b|cr\b|thousands?)|\d{3,7})\s*(?:for|:|-)\s*(.+)/i);
+        const m2 = !m1 ? sTrim.match(/(.+?)\s*(?:for|:|-|=)\s*(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?\s*(?:k\b|lakhs?|l\b|cr\b|thousands?)|\d{3,7})/i) : null;
+
+        const rateStr = m1 ? m1[1] : (m2 ? m2[2] : null);
+        const titleStr = m1 ? m1[2] : (m2 ? m2[1] : null);
+
+        if (rateStr && titleStr) {
+          const rateVal = parseAmountNumber(rateStr);
+          if (rateVal > 0) {
+            let cleanTitle = titleStr.trim()
+              .replace(/^(?:breaking\s*(?:down|into)?|breakdown\s*[:-]?)\s*/i, '')
+              .replace(/\b(?:quote(?:\s*them)?\s*[-:]?\s*)+/i, '')
+              .replace(/\s*\.\s*$/, '')
+              .trim();
+
+            if (cleanTitle.length > 2 && !/^(?:total|budget|package)$/i.test(cleanTitle)) {
+              const qtyMatch = cleanTitle.match(/^(\d+)\s*(?:x\s*)?(videographers?|cameramen?|photographers?|drone\s*operators?|reels?|videos?|posts?|creatives?)/i);
+              let itemQty = 1;
+              let itemRate = rateVal;
+
+              if (qtyMatch) {
+                const parsedQty = parseInt(qtyMatch[1], 10);
+                if (parsedQty > 1) {
+                  itemQty = parsedQty;
+                  itemRate = Math.round(rateVal / parsedQty);
+                }
+              }
+
+              let professionalTitle = cleanTitle;
+              let details = 'Professional service delivery as specified in client brief.';
+
+              const tLower = cleanTitle.toLowerCase();
+              if (tLower.includes('videographer') || tLower.includes('cameraman')) {
+                professionalTitle = itemQty > 1 ? `Cinematic Videography Crew (${itemQty} Videographers)` : `Lead Cinematic Videographer`;
+                details = `On-site cinematic shoot coverage by ${itemQty} professional camera operator${itemQty > 1 ? 's' : ''}, capturing multi-angle dynamic footage and key milestone moments.`;
+              } else if (tLower.includes('drone')) {
+                professionalTitle = `Aerial Drone Cinematography (1 Drone Operator)`;
+                details = `Licensed 4K drone cinematography capturing sweeping aerial reveal shots, property/venue perspectives, and cinematic establishing sequences.`;
+              } else if (tLower.includes('photographer') || tLower.includes('photo')) {
+                professionalTitle = `Event & Brand Photography (1 Photographer)`;
+                details = `Dedicated on-site photographer capturing high-resolution candid moments, VIP arrivals, atmosphere, and color-graded event stills.`;
+              } else if (tLower.includes('edited') || tLower.includes('reel') || tLower.includes('video') || tLower.includes('content')) {
+                const reelsInPrompt = prompt.match(/(\d+)\s*reels?/i);
+                const videosInPrompt = prompt.match(/(\d+)\s*cinematic\s*videos?/i);
+                const reelCount = reelsInPrompt ? reelsInPrompt[1] : '2';
+                const videoCount = videosInPrompt ? videosInPrompt[1] : '1';
+                professionalTitle = `Post-Production & Edited Content (${reelCount} Reels & ${videoCount} Cinematic Film)`;
+                details = `Complete post-production suite including ${reelCount} high-retention launch reels, ${videoCount} cinematic brand showcase video, sound design, color grading, and delivery of 100% raw content.`;
+              }
+
+              breakdownItems.push({
+                name: professionalTitle,
+                desc: professionalTitle,
+                qty: itemQty,
+                rate: itemRate,
+                details
+              });
+            }
+          }
+        }
+      }
+
+      if (breakdownItems.length >= 2) {
+        return breakdownItems;
+      }
+
       const items = [];
 
       const isSocial = p.includes('social') || p.includes('instagram') || p.includes('facebook') || p.includes('linkedin') || p.includes('meta') || p.includes('smm') || p.includes('management');
@@ -640,17 +732,22 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
       const isMaintenance = p.includes('maintenance') || p.includes('bug') || p.includes('error') || p.includes('fixing') || p.includes('support');
       const isReels = p.includes('reel') || p.includes('tiktok') || p.includes('short') || p.includes('video') || p.includes('promotional video');
       const isGraphic = p.includes('graphic') || p.includes('design') || p.includes('post') || p.includes('poster') || p.includes('creative') || p.includes('carousel') || p.includes('branding');
+      const isVideographer = p.includes('videographer') || p.includes('cameraman') || p.includes('camera operator');
+      const isPhotographer = p.includes('photographer') || p.includes('photography');
+      const isDrone = p.includes('drone');
+      const isProduction = isVideographer || isPhotographer || isDrone;
 
       // Check if user specifically requested a single bundled service
       const isSingleService = p.includes('single service') || p.includes('single item') || p.includes('one service') || p.includes('one line item') || p.includes('bundle it') || p.includes('single package') || p.includes('one package item') || (p.includes('in pmp') && (p.includes('single') || p.includes('one'))) || p.includes('as a single') || p.includes('bundled into one');
-
-      const budget = targetBudget || parseAmountNumber(prompt) || 20000;
 
       if (isSingleService) {
         let singleTitle = 'Turnkey Digital Growth & Marketing Package';
         let singleDetails = 'Comprehensive turnkey execution tailored to client deliverables and strategic goals.';
 
-        if (isSocial && (isReels || isGraphic)) {
+        if (isProduction) {
+          singleTitle = 'Complete Brand Launch & Cinematic Media Production Package';
+          singleDetails = 'End-to-end multi-crew video coverage, aerial drone cinematography, brand photography, post-production reels, and full raw content archive.';
+        } else if (isSocial && (isReels || isGraphic)) {
           singleTitle = 'Complete Social Media Management & Creative Growth Retainer';
           singleDetails = 'End-to-end multi-platform social media management (Facebook, Instagram & LinkedIn), content creation, promotional videos, posters & creatives, Meta Ads execution and performance analysis.';
         } else if (isSocial) {
@@ -679,7 +776,53 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         }];
       }
 
-      if (isSocial) {
+      if (isVideographer) {
+        const vCountMatch = p.match(/(\d+)\s*(?:videographers?|cameramen?)/i);
+        const vCount = vCountMatch ? parseInt(vCountMatch[1], 10) : 1;
+        items.push({
+          name: vCount > 1 ? `Cinematic Videography Crew (${vCount} Videographers)` : `Lead Cinematic Videographer`,
+          desc: vCount > 1 ? `Cinematic Videography Crew (${vCount} Videographers)` : `Lead Cinematic Videographer`,
+          qty: vCount,
+          weight: 45,
+          details: `On-site cinematic shoot coverage by ${vCount} professional camera operator${vCount > 1 ? 's' : ''}, capturing multi-angle dynamic footage and key milestone moments.`
+        });
+      }
+
+      if (isDrone) {
+        items.push({
+          name: 'Aerial Drone Cinematography (1 Drone Operator)',
+          desc: 'Aerial Drone Cinematography (1 Drone Operator)',
+          qty: 1,
+          weight: 20,
+          details: 'Licensed 4K drone cinematography capturing sweeping aerial reveal shots, property/venue perspectives, and cinematic establishing sequences.'
+        });
+      }
+
+      if (isPhotographer) {
+        items.push({
+          name: 'Event & Brand Photography (1 Photographer)',
+          desc: 'Event & Brand Photography (1 Photographer)',
+          qty: 1,
+          weight: 15,
+          details: 'Dedicated on-site photographer capturing high-resolution candid moments, VIP arrivals, atmosphere, and color-graded event stills.'
+        });
+      }
+
+      if (isProduction && (isReels || p.includes('edited') || p.includes('cinematic video') || p.includes('raw'))) {
+        const reelMatch = p.match(/(\d+)\s*reels?/i);
+        const reelCount = reelMatch ? reelMatch[1] : '2';
+        const vidMatch = p.match(/(\d+)\s*(?:cinematic\s*)?videos?/i);
+        const vidCount = vidMatch ? vidMatch[1] : '1';
+        items.push({
+          name: `Post-Production & Edited Content (${reelCount} Reels & ${vidCount} Video)`,
+          desc: `Post-Production & Edited Content (${reelCount} Reels & ${vidCount} Video)`,
+          qty: 1,
+          weight: 20,
+          details: `Post-production suite including ${reelCount} high-retention launch reels, ${vidCount} cinematic brand showcase video, audio mastering, color grading, and delivery of 100% raw content archive.`
+        });
+      }
+
+      if (!isProduction && isSocial) {
         items.push({
           name: 'Social Media Management & Strategy (FB, IG & LinkedIn)',
           desc: 'Social Media Management & Strategy (FB, IG & LinkedIn)',
@@ -689,7 +832,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         });
       }
 
-      if (isReels) {
+      if (!isProduction && isReels) {
         const countMatch = p.match(/(\d+)\s*(?:reels?|shorts?|videos?|promotional\s*videos?)/i);
         const count = countMatch ? parseInt(countMatch[1]) : 8;
         items.push({
@@ -701,7 +844,7 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         });
       }
 
-      if (isGraphic) {
+      if (isGraphic && items.length <= 3) {
         items.push({
           name: 'Creative Graphic Design & Promotional Posters',
           desc: 'Creative Graphic Design & Promotional Posters',

@@ -26,7 +26,13 @@ export default function PackageMaker() {
 
   const parsePackagePayload = (payload) => {
     if (!payload) return;
-    if (payload.brandName) setBrandName(payload.brandName);
+    if (payload.brandName) {
+      const cleanBrand = payload.brandName
+        .replace(/^(?:brand(?:\s+name)?|client(?:\s+name)?)\s*[:-]\s*/i, '')
+        .replace(/^['"]+|['"]+$/g, '')
+        .trim();
+      setBrandName(cleanBrand || payload.brandName);
+    }
     if (payload.packageType) {
       const pType = payload.packageType.toLowerCase();
       setPackageType(pType.includes('month') || pType.includes('retain') ? 'monthly' : 'project');

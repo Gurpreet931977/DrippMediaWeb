@@ -1,1 +1,51 @@
-{}
+{
+  "d9-dehradun-05c049": {
+    "id": "d9-dehradun-05c049",
+    "password": "4921",
+    "quote_data": {
+      "type": "standalone_pmp",
+      "clientDetails": {
+        "brandName": "D9 Dehradun",
+        "name": "D9 Dehradun Launch Team",
+        "email": "contact@d9dehradun.com"
+      },
+      "packageType": "project",
+      "total": 44000,
+      "includePMP": true,
+      "pmpStrategy": "Executive Overview:\nEnd-to-end multi-crew media coverage and creative production strategy for the grand launch of D9 Dehradun. Designed to capture high-energy event highlights, luxury ambiance, and cinematic spatial perspectives to drive immediate social media virality and establishing brand authority in Uttarakhand.\n\nTarget Audience:\nHigh-intent patrons, local youth, lifestyle connoisseurs, and regional event attendees across Dehradun and northern India.\n\nExecution Phases:\n- Phase 1: Pre-Production & Drone Flight Mapping: Site survey, lighting check, flight path clearance for aerial reveal shots, and synchronized event shot list.\n- Phase 2: Multi-Crew Live Production: 2 camera operators covering dynamic candid and VIP moments, 1 high-resolution still photographer, and 1 licensed drone pilot for sweeping 4K aerials.\n- Phase 3: Post-Production & Delivery: Turnaround of 2 viral launch reels with sound design and kinetic titles, 1 cinematic 4K brand launch showcase film, and complete uncompressed raw footage archive.",
+      "items": [
+        {
+          "desc": "Cinematic Videography Crew (2 Videographers)",
+          "qty": 2,
+          "rate": 10000,
+          "details": "On-site cinematic shoot coverage by 2 professional camera operators equipped with Sony FX/A7 cinema bodies, prime lenses, and gimbal stabilization."
+        },
+        {
+          "desc": "Aerial Drone Cinematography (1 Drone Operator)",
+          "qty": 1,
+          "rate": 8000,
+          "details": "Licensed 4K aerial drone cinematography capturing sweeping reveal shots, architectural perspectives, and dynamic spatial coverage of the launch."
+        },
+        {
+          "desc": "Event & Brand Photography (1 Photographer)",
+          "qty": 1,
+          "rate": 6000,
+          "details": "Dedicated on-site photographer capturing high-resolution candid moments, VIP arrivals, atmosphere, and color-graded event stills."
+        },
+        {
+          "desc": "Post-Production & Edited Content (2 Reels, 1 Cinematic Video & Raw Content)",
+          "qty": 1,
+          "rate": 10000,
+          "details": "Complete post-production suite including 2 high-retention launch reels, 1 cinematic brand showcase video, sound design, color grading, and delivery of 100% raw content."
+        }
+      ],
+      "quoteDetails": {
+        "projectDuration": "1-Day Shoot & Launch Coverage",
+        "expectedDelivery": "3-5 Working Days for Edited Assets"
+      },
+      "password": "4921"
+    },
+    "created_at": "2026-09-22T19:19:44.034Z",
+    "updated_at": "2026-09-22T19:19:44.035Z"
+  }
+}
