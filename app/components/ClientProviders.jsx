@@ -22,11 +22,17 @@ function GlobalGenzToggle() {
   const isDragActiveRef = React.useRef(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (mobile && isGenz) {
+        setIsGenz(false);
+      }
+    };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [isGenz, setIsGenz]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -255,7 +261,7 @@ function GlobalGenzToggle() {
     return () => window.removeEventListener('resize', handleResize);
   }, [isSnapped, snapCorner]);
 
-  if (!isLoaded) return null; // Prevent hydration mismatch
+  if (!isLoaded || isMobile) return null; // Prevent hydration mismatch and hide on mobile
 
   const handleToggle = () => {
     if (hasMovedRef.current) {

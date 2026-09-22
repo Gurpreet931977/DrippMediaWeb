@@ -9970,248 +9970,278 @@
             z-index: 2;
         }
 
-        /* ============================================
-           MOBILE OPTIMIZATION - COMPONENTS 2, 3, 4, 5, 8
-           All rules below are additive and gated behind
-           media queries. Desktop experience is unchanged.
-        ============================================ */
+        /* ==========================================================================
+           DESKTOP GUARDS (Zero Desktop Alterations)
+        ========================================================================== */
+        .card-mobile-actions,
+        .mobile-direct-card-btn {
+            display: none !important;
+        }
 
-        /* --- Component 8: Hide trail canvas on mobile --- */
+        /* ==========================================================================
+           COMPREHENSIVE MOBILE REDESIGN (Screens <= 768px)
+           Strictly isolated to mobile. Desktop experience (> 768px) is 100% intact.
+        ========================================================================== */
+
+        /* 1. Hide Trail Canvas & Heavy Filter Guards on Mobile */
         @media (max-width: 900px) {
             #trail-canvas {
                 display: none !important;
             }
         }
 
-        /* --- Component 5: Disable backdrop-filter GPU load on mobile --- */
-        @media (max-width: 900px) {
-            * {
-                /* Aggressively disable heavy CSS filters on mobile for buttery smooth 60fps */
-                backdrop-filter: none !important;
-                -webkit-backdrop-filter: none !important;
-                /* Disable mix-blend-mode if not already */
-            }
-            .community-wrapper, .navbar, .nav-links, .glass-label, .c-nav-group, .hero-sub, .builder-right {
-                background-color: rgba(15, 15, 15, 0.95) !important;
-            }
-        }
-
-        /* --- Component 3: Hover state guards for touch devices --- */
-        /* Prevent sticky hover on tooltip */
-        @media (hover: none) {
-            .hero-sub:hover {
-                background: rgba(255, 255, 255, 0.05);
-                border-color: rgba(255, 255, 255, 0.15);
-                transform: none;
+        @media (max-width: 768px) {
+            /* 2. STRICT: Completely Disable Gen-Z Mode on Mobile */
+            .genz-floating-btn,
+            #genz-toggle,
+            [class*="genz-floating"],
+            .genz-floating-btn * {
+                display: none !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
+                width: 0 !important;
+                height: 0 !important;
+                opacity: 0 !important;
             }
 
-            /* Disable hover-triggered tooltip; JS tap will toggle via .tooltip-open class */
-            .hero-sub:hover .creative-tooltip {
-                opacity: 0;
-                visibility: hidden;
-            }
-
-            /* When JS adds .tooltip-open, show the tooltip */
-            .hero-sub.tooltip-open .creative-tooltip {
-                opacity: 1 !important;
-                visibility: visible !important;
-                transform: translateX(-50%) translateY(0) scale(1) !important;
-            }
-
-            .hero-sub.tooltip-open .creative-tooltip::before {
-                opacity: 1;
-            }
-
-            .creative-tooltip {
-                max-width: min(300px, 80vw);
-                font-size: 0.85rem;
-                padding: 16px 18px;
-            }
-
-            /* Prevent sticky 3D transforms */
-
-
-            /* Prevent sticky community card lift */
-            .community-wrapper:hover {
-                transform: none;
-                box-shadow:
-                    0 40px 90px -15px rgba(0, 0, 0, 0.85),
-                    0 20px 45px -10px rgba(0, 0, 0, 0.5),
-                    0 0 0 1px rgba(255, 255, 255, 0.05),
-                    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.6),
-                    inset 1.5px 0 2px 0 rgba(255, 255, 255, 0.28),
-                    inset 0 25px 50px -10px rgba(255, 255, 255, 0.09),
-                    inset 0 -25px 50px -10px rgba(0, 0, 0, 0.75),
-                    inset 0 0 35px 0 rgba(255, 255, 255, 0.03);
-            }
-
-            /* Prevent sticky mega button scale */
-            .mega-project-btn:hover .mega-text-wrapper {
-                transform: none;
-                background: var(--deep-black);
-                box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
-                border-color: rgba(255, 255, 255, 0.15);
-            }
-
-            .mega-project-btn:hover .mega-text.solid {
-                color: var(--brand-yellow);
-            }
-
-            /* Prevent sticky card border spotlight */
-            .card-wrapper:hover .face-bg::before,
-            .card-wrapper:hover .face-bg::after,
-            .card-wrapper:hover .card-grid {
-                opacity: 0;
-            }
-
-            /* Prevent sticky nav group hover */
-            .c-nav-group:hover {
-                background: rgba(255, 255, 255, 0.03);
-                border-color: rgba(255, 255, 255, 0.08);
-                transform: none;
-                box-shadow: none;
-            }
-        }
-
-        /* --- Component 2: Small phone breakpoint (iPhone SE, etc.) --- */
-        @media (max-width: 480px) {
-            section.hero {
-                min-height: 100svh;
-                height: auto !important;
-                padding: 95px 16px 45px 16px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-            }
-
-            section.portfolio {
-                padding: 60px 16px 30px;
-                touch-action: pan-y;
-            }
-
-            .cards-container {
-                touch-action: pan-y;
-            }
-
-            .card-wrapper {
-                width: min(88vw, 310px);
-                height: 410px;
-                touch-action: pan-y;
-            }
-
-            .services-section {
-                padding: 30px 16px 60px 16px;
-            }
-
-            .service-header {
-                margin-bottom: 40px;
-            }
-
-            .floating-services-cloud {
-                height: 380px;
-                touch-action: pan-y;
-            }
-
-            .builder-container {
-                padding: 24px 16px;
-                width: 100%;
-                max-width: 100%;
-                overflow: hidden;
-            }
-
-            .builder-right {
-                min-width: 0 !important;
+            /* 3. Global Mobile Ergonomics & Font Enforcement */
+            body {
+                overflow-x: hidden !important;
                 width: 100% !important;
-                height: auto !important;
-                max-height: none !important;
-                padding: 24px 16px !important;
+                max-width: 100vw !important;
+                font-family: 'Clash Display', sans-serif !important;
+                -webkit-font-smoothing: antialiased;
             }
 
-            .builder-title {
-                font-size: 1.5rem;
+            input, select, textarea {
+                font-size: 16px !important; /* Strictly prevents automatic iOS viewport zoom on tap */
+                font-family: 'Clash Display', sans-serif !important;
             }
 
-            .builder-sub {
-                font-size: 0.9rem;
-            }
-
-            .community-wrapper {
-                padding: 50px 20px;
-                border-radius: 24px;
-            }
-
-            .mega-text-wrapper {
-                padding: 10px 20px;
-                width: max-content;
-                max-width: 90vw;
-            }
-
-            .mega-text {
-                font-size: clamp(0.8rem, 3.5vw, 1.2rem);
-                white-space: normal;
-                text-align: center;
-            }
-
-            .mega-project-btn {
-                padding: 10px;
-                width: max-content;
-                max-width: 90vw;
-                margin: 0 auto;
-                min-width: 0;
-            }
-
-            .client-center {
-                padding: 50px 0;
-            }
-
-            .marquee-content {
-                font-size: 0.9rem;
-            }
-
-            .btn {
-                padding: 16px 32px;
-                font-size: 0.9rem;
-                font-family: 'Clash Display', sans-serif;
-            }
-
+            /* 4. Navbar & Mobile Hamburger Drawer */
             .navbar {
-                padding: 16px 20px;
+                padding: 12px 18px !important;
+                height: 64px !important;
+                background: rgba(8, 8, 8, 0.95) !important;
+                backdrop-filter: blur(16px) !important;
+                -webkit-backdrop-filter: blur(16px) !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
             }
 
             .nav-logo a {
-                font-size: 1.3rem;
+                font-family: 'Panchang', sans-serif !important;
+                font-size: 1.25rem !important;
+                font-weight: 800 !important;
+                letter-spacing: 2px !important;
+            }
+
+            .hamburger {
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-around !important;
+                width: 32px !important;
+                height: 24px !important;
+                cursor: pointer !important;
+                z-index: 10005 !important;
+                padding: 2px 0 !important;
+            }
+
+            .hamburger div {
+                width: 100% !important;
+                height: 2px !important;
+                background: #ffffff !important;
+                border-radius: 2px !important;
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+            }
+
+            .nav-links {
+                display: flex !important;
+                position: fixed !important;
+                top: 0 !important;
+                right: -100% !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                height: 100dvh !important;
+                background: rgba(7, 7, 7, 0.98) !important;
+                backdrop-filter: blur(24px) !important;
+                -webkit-backdrop-filter: blur(24px) !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 22px !important;
+                padding: 70px 24px 40px !important;
+                transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                z-index: 10000 !important;
+                border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+
+            .nav-links.active {
+                right: 0 !important;
+            }
+
+            .nav-links li {
+                width: 100% !important;
+                max-width: 320px !important;
+                text-align: center !important;
+                display: flex !important;
+                justify-content: center !important;
+            }
+
+            .nav-links .nav-link {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 1.5rem !important;
+                font-weight: 600 !important;
+                letter-spacing: 0.8px !important;
+                color: #ffffff !important;
+                padding: 12px 24px !important;
+                display: block !important;
+                border-radius: 100px !important;
+                transition: background 0.2s ease !important;
+            }
+
+            .nav-links .nav-link:active {
+                background: rgba(255, 255, 255, 0.08) !important;
+            }
+
+            .nav-links .c-nav-group {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 12px !important;
+                width: 100% !important;
+                max-width: 300px !important;
+                margin-top: 10px !important;
+            }
+
+            .nav-links .c-nav-btn {
+                width: 100% !important;
+                min-height: 48px !important;
+                border-radius: 100px !important;
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.92rem !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            .nav-links .c-talk {
+                background: var(--brand-yellow) !important;
+                color: #050505 !important;
+                font-weight: 700 !important;
+                box-shadow: 0 8px 24px -4px rgba(255, 230, 0, 0.4) !important;
+            }
+
+            .nav-links .c-community {
+                background: rgba(255, 255, 255, 0.06) !important;
+                border: 1px solid rgba(255, 255, 255, 0.12) !important;
+                color: #ffffff !important;
+            }
+
+            /* 5. Hero Section Mobile Liquidity */
+            section.hero {
+                min-height: 100svh !important;
+                height: auto !important;
+                padding: 95px 18px 45px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+                text-align: center !important;
+                box-sizing: border-box !important;
+            }
+
+            .hero-center-column {
+                width: 100% !important;
+                max-width: 480px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
             }
 
             h1.brand-name {
-                font-size: clamp(2.4rem, 13vw, 3.8rem);
-                line-height: 0.95;
-                flex-direction: column;
-                gap: 2px;
-                margin-bottom: 6px;
-            }
-
-            .section-title {
-                font-size: clamp(20px, 6.5vw, 36px);
-                word-wrap: normal;
-                overflow-wrap: normal;
-                word-break: keep-all;
+                font-family: 'Panchang', sans-serif !important;
+                font-size: clamp(2.3rem, 11.5vw, 3.6rem) !important;
+                font-weight: 900 !important;
+                line-height: 0.96 !important;
+                letter-spacing: -0.5px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 4px !important;
+                margin: 0 0 14px 0 !important;
             }
 
             .hero-sub {
-                font-size: 0.52rem;
-                padding: 6px 14px;
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.74rem !important;
+                letter-spacing: 0.6px !important;
+                padding: 8px 18px !important;
+                border-radius: 100px !important;
+                background: rgba(255, 255, 255, 0.05) !important;
+                border: 1px solid rgba(255, 255, 255, 0.12) !important;
+                color: rgba(255, 255, 255, 0.85) !important;
+                margin-bottom: 26px !important;
+                max-width: 90vw !important;
+            }
+
+            .hero-cta-group {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 12px !important;
+                width: 100% !important;
+                max-width: 340px !important;
+                margin: 0 auto 34px auto !important;
+            }
+
+            .hero-btn {
+                width: 100% !important;
+                min-height: 50px !important;
+                border-radius: 100px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.92rem !important;
+                font-weight: 600 !important;
+                letter-spacing: 0.5px !important;
+                text-decoration: none !important;
+                box-sizing: border-box !important;
+                padding: 12px 24px !important;
+                transition: transform 0.15s ease !important;
+            }
+
+            .hero-btn:active {
+                transform: scale(0.97) !important;
+            }
+
+            .hero-btn-primary {
+                background: var(--brand-yellow) !important;
+                color: #050505 !important;
+                font-weight: 700 !important;
+                box-shadow: 0 10px 30px -6px rgba(255, 230, 0, 0.45) !important;
+            }
+
+            .hero-btn-secondary {
+                background: rgba(255, 255, 255, 0.06) !important;
+                border: 1px solid rgba(255, 255, 255, 0.16) !important;
+                color: #ffffff !important;
             }
 
             .hero-trust-bar {
                 display: grid !important;
                 grid-template-columns: 1fr 1fr !important;
-                gap: 12px 14px !important;
-                padding: 14px 18px !important;
-                border-radius: 18px !important;
+                gap: 12px !important;
+                padding: 16px 18px !important;
+                border-radius: 20px !important;
                 width: 100% !important;
-                max-width: min(340px, 92vw) !important;
-                white-space: normal !important;
+                max-width: 340px !important;
+                background: rgba(255, 255, 255, 0.03) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                box-sizing: border-box !important;
             }
 
             .trust-item {
@@ -10220,15 +10250,20 @@
                 align-items: center !important;
                 justify-content: center !important;
                 text-align: center !important;
-                gap: 4px !important;
+                gap: 3px !important;
             }
 
             .trust-num {
-                font-size: 0.95rem !important;
+                font-family: 'Panchang', sans-serif !important;
+                font-size: 1.05rem !important;
+                font-weight: 800 !important;
+                color: var(--brand-yellow) !important;
             }
 
             .trust-label {
+                font-family: 'Clash Display', sans-serif !important;
                 font-size: 0.72rem !important;
+                color: rgba(255, 255, 255, 0.7) !important;
                 line-height: 1.2 !important;
             }
 
@@ -10236,173 +10271,508 @@
                 display: none !important;
             }
 
+            .scroll-prompt {
+                bottom: 12px !important;
+            }
+
+            .scroll-text {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.65rem !important;
+                letter-spacing: 1.5px !important;
+            }
+
+            /* 6. The Aces Cards Section Mobile Architecture */
+            section.portfolio {
+                padding: 60px 18px 40px !important;
+                touch-action: pan-y !important;
+            }
+
+            .portfolio-title-container {
+                margin-bottom: 28px !important;
+                text-align: center !important;
+            }
+
             .cards-title {
-                font-size: 5.5vw;
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: clamp(1.6rem, 7vw, 2.3rem) !important;
+                line-height: 1.15 !important;
+                text-align: center !important;
             }
 
-            .join-community-section {
-                padding: 60px 16px;
+            .cards-container {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 28px !important;
+                width: 100% !important;
+                height: auto !important;
+                position: static !important;
+                touch-action: pan-y !important;
             }
 
-            .client-connection-section {
-                padding: 80px 0;
-                width: 100%;
-                margin-left: 0;
-                margin-right: 0;
-                min-height: auto;
+            .card-wrapper {
+                width: 100% !important;
+                max-width: 360px !important;
+                height: auto !important;
+                min-height: 430px !important;
+                position: relative !important;
+                left: auto !important;
+                top: auto !important;
+                transform: none !important;
+                margin: 0 auto !important;
+                touch-action: pan-y !important;
             }
 
-            .custom-pkg-section {
-                padding: 20px 16px;
+            .card-inner {
+                width: 100% !important;
+                height: 100% !important;
+                min-height: 430px !important;
             }
 
-            .custom-pkg-title {
-                font-size: 1.3rem;
+            .card-content {
+                padding: 18px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                height: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .card-mockup {
+                height: 135px !important;
+                margin: 10px 0 !important;
+            }
+
+            .card-body {
+                margin-top: 8px !important;
+            }
+
+            .card-body h2 {
+                font-family: 'Panchang', sans-serif !important;
+                font-size: 1.25rem !important;
+                font-weight: 800 !important;
+                line-height: 1.15 !important;
+            }
+
+            .front-desc {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.82rem !important;
+                line-height: 1.35 !important;
+                color: rgba(255, 255, 255, 0.75) !important;
+                margin: 6px 0 10px 0 !important;
+            }
+
+            .card-trust-row {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                margin-bottom: 12px !important;
+            }
+
+            .trust-pill {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.68rem !important;
+                padding: 4px 10px !important;
+                border-radius: 100px !important;
+                background: rgba(255, 255, 255, 0.06) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            }
+
+            /* Front-facing mobile launch button */
+            .card-mobile-actions {
+                display: block !important;
+                width: 100% !important;
+                margin-top: 10px !important;
+                position: relative !important;
+                z-index: 25 !important;
+            }
+
+            .mobile-direct-card-btn {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 8px !important;
+                width: 100% !important;
+                min-height: 44px !important;
+                padding: 10px 16px !important;
+                background: var(--brand-yellow) !important;
+                color: #050505 !important;
+                font-family: 'Panchang', sans-serif !important;
+                font-size: 0.72rem !important;
+                font-weight: 800 !important;
+                letter-spacing: 0.8px !important;
+                text-transform: uppercase !important;
+                text-decoration: none !important;
+                border-radius: 100px !important;
+                box-shadow: 0 8px 24px -4px rgba(255, 230, 0, 0.4) !important;
+                transition: transform 0.12s ease !important;
+            }
+
+            .mobile-direct-card-btn:active {
+                transform: scale(0.97) !important;
+            }
+
+            /* 7. Services Section & Package Builder */
+            .services-section {
+                padding: 50px 18px 60px !important;
+            }
+
+            .service-header {
+                text-align: center !important;
+                margin-bottom: 24px !important;
+            }
+
+            .service-badge span {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.75rem !important;
+                letter-spacing: 1.5px !important;
+            }
+
+            .service-header .section-title {
+                font-family: 'Panchang', sans-serif !important;
+                font-size: clamp(1.75rem, 8vw, 2.5rem) !important;
+                font-weight: 800 !important;
+                margin: 8px 0 12px !important;
+            }
+
+            .service-intro-wrapper {
+                max-width: 90vw !important;
+                margin: 0 auto !important;
+            }
+
+            .service-intro {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.82rem !important;
+                line-height: 1.4 !important;
+            }
+
+            /* Fluid Touch Services Cloud on Mobile */
+            .floating-services-cloud {
+                height: auto !important;
+                min-height: auto !important;
+                padding: 14px 8px !important;
+                display: flex !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 8px !important;
+                overflow: visible !important;
+                touch-action: pan-y !important;
+            }
+
+            .floating-services-cloud .f-pill {
+                position: static !important;
+                transform: none !important;
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.76rem !important;
+                padding: 6px 14px !important;
+                border-radius: 100px !important;
+                background: rgba(255, 255, 255, 0.05) !important;
+                border: 1px solid rgba(255, 255, 255, 0.12) !important;
+                color: #ffffff !important;
+                user-select: none !important;
+                cursor: pointer !important;
+                transition: background 0.15s ease, transform 0.15s ease !important;
+            }
+
+            .floating-services-cloud .f-pill:active {
+                transform: scale(0.96) !important;
+                background: rgba(255, 230, 0, 0.15) !important;
+                border-color: var(--brand-yellow) !important;
+            }
+
+            .cloud-hint {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.72rem !important;
+                margin: 10px 0 24px !important;
+                text-align: center !important;
+                color: rgba(255, 255, 255, 0.6) !important;
+            }
+
+            /* Custom Builder Container on Mobile */
+            .builder-container {
+                display: flex !important;
+                flex-direction: column !important;
+                padding: 20px 16px !important;
+                border-radius: 22px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                gap: 24px !important;
+            }
+
+            .builder-left {
+                width: 100% !important;
+                padding: 0 !important;
+            }
+
+            .section-label {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.7rem !important;
+                letter-spacing: 1.5px !important;
+            }
+
+            .builder-title {
+                font-family: 'Panchang', sans-serif !important;
+                font-size: 1.35rem !important;
+                font-weight: 800 !important;
+                margin: 6px 0 8px 0 !important;
+            }
+
+            .builder-sub {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.82rem !important;
+                color: rgba(255, 255, 255, 0.7) !important;
+                line-height: 1.35 !important;
+            }
+
+            .builder-search-wrap {
+                margin: 14px 0 !important;
+            }
+
+            .builder-search-input {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 16px !important;
+                padding: 12px 14px 12px 38px !important;
+                border-radius: 12px !important;
             }
 
             .builder-tabs {
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                padding-bottom: 5px;
-                -webkit-overflow-scrolling: touch;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                gap: 8px !important;
+                padding-bottom: 8px !important;
+                margin-bottom: 16px !important;
             }
 
             .builder-tabs::-webkit-scrollbar {
-                display: none;
+                display: none !important;
             }
 
             .builder-tab {
-                padding: 7px 14px;
-                font-size: 0.7rem;
-                white-space: nowrap;
-                flex-shrink: 0;
-                font-family: 'Clash Display', sans-serif;
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.76rem !important;
+                white-space: nowrap !important;
+                flex-shrink: 0 !important;
+                padding: 8px 16px !important;
+                border-radius: 100px !important;
+            }
+
+            .tab-glider {
+                display: none !important; /* Cleaner mobile native active tabs */
+            }
+
+            .builder-tab.active {
+                background: var(--brand-yellow) !important;
+                color: #050505 !important;
+                font-weight: 700 !important;
+            }
+
+            .chip-panels {
+                width: 100% !important;
+            }
+
+            .chip-panel {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 8px !important;
             }
 
             .custom-chip {
-                padding: 12px 18px;
-                font-size: 0.85rem;
-                width: 100%;
-                justify-content: space-between;
-                white-space: normal;
-                font-family: 'Clash Display', sans-serif;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                width: 100% !important;
+                min-height: 48px !important;
+                padding: 12px 16px !important;
+                border-radius: 14px !important;
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.88rem !important;
+                font-weight: 500 !important;
+                box-sizing: border-box !important;
+                transition: transform 0.12s ease !important;
             }
 
-            .custom-quote-btn {
-                padding: 12px 14px 12px 18px;
-                font-size: 0.85rem;
+            .custom-chip:active {
+                transform: scale(0.98) !important;
             }
 
-            .whatsapp-scope-btn {
-                padding: 10px 12px;
-                gap: 10px;
+            .custom-chip.selected {
+                background: rgba(255, 230, 0, 0.14) !important;
+                border-color: var(--brand-yellow) !important;
+                color: var(--brand-yellow) !important;
             }
 
-            .wa-title {
-                font-size: 0.82rem;
+            /* Custom Service Adder */
+            .custom-service-creator {
+                margin-top: 20px !important;
+                padding: 18px 14px !important;
+                border-radius: 18px !important;
+                background: rgba(255, 255, 255, 0.02) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
             }
 
-            .wa-sub-badge {
-                font-size: 0.65rem;
+            .custom-service-creator-label {
+                font-family: 'Panchang', sans-serif !important;
+                font-size: 0.82rem !important;
+                font-weight: 700 !important;
             }
 
-            .receipt-item {
-                font-size: 0.8rem;
+            .custom-service-creator-hint {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.74rem !important;
+            }
+
+            .custom-service-input-row {
+                flex-direction: column !important;
+                gap: 10px !important;
+                margin-top: 10px !important;
+            }
+
+            .custom-service-input-wrap {
+                width: 100% !important;
+            }
+
+            .custom-service-input {
+                width: 100% !important;
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 16px !important;
+                min-height: 48px !important;
+                border-radius: 12px !important;
+                padding: 10px 14px !important;
+            }
+
+            .custom-service-add-btn {
+                width: 100% !important;
+                min-height: 48px !important;
+                border-radius: 12px !important;
+                font-family: 'Panchang', sans-serif !important;
+                font-size: 0.78rem !important;
+                font-weight: 800 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            /* Receipt & Quote on Mobile */
+            .builder-right {
+                width: 100% !important;
+                min-width: 100% !important;
+                margin: 10px 0 0 0 !important;
+                border-radius: 20px !important;
+                padding: 22px 16px !important;
+                box-sizing: border-box !important;
+                background: rgba(14, 14, 14, 0.98) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            }
+
+            .receipt-header {
+                font-family: 'Panchang', sans-serif !important;
             }
 
             .receipt-items {
-                max-height: 240px;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
+                max-height: 260px !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
             }
 
-            .footer-email {
-                font-size: clamp(0.9rem, 4.5vw, 1.1rem);
+            .receipt-item {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.82rem !important;
+                padding: 10px 0 !important;
             }
 
-            .footer-phone {
-                font-size: clamp(0.85rem, 4vw, 1rem);
-            }
-
-            /* Preloader text fix */
-            .preloader-title {
-                font-size: clamp(8px, 3vw, 12px);
-                letter-spacing: 2px;
-                gap: 5px;
-                flex-wrap: nowrap;
-                white-space: nowrap;
-                width: 100%;
-                justify-content: center;
-            }
-
-            /* Community button fix */
-            .attract-btn {
-                padding: 14px 24px;
-                font-size: 0.7rem;
-                letter-spacing: 1.5px;
-                font-family: 'Clash Display', sans-serif;
-            }
-
-            .clock-wrapper {
-                flex-direction: row !important;
+            .custom-quote-btn {
+                width: 100% !important;
+                min-height: 50px !important;
+                border-radius: 100px !important;
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.92rem !important;
+                font-weight: 600 !important;
+                display: flex !important;
                 align-items: center !important;
-                justify-content: center !important;
-                gap: 10px !important;
+                justify-content: space-between !important;
+                padding: 12px 18px !important;
+                box-sizing: border-box !important;
             }
 
-            .clock-time {
-                font-size: clamp(1.8rem, 8.5vw, 2.6rem) !important;
+            .whatsapp-scope-btn {
+                width: 100% !important;
+                min-height: 48px !important;
+                border-radius: 100px !important;
+                padding: 10px 16px !important;
+                box-sizing: border-box !important;
+                margin-top: 10px !important;
             }
 
-            .clock-dial {
-                width: 38px !important;
-                height: 38px !important;
+            .wa-title {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.85rem !important;
+                font-weight: 600 !important;
             }
 
-            .dial-seconds {
-                font-size: 13px !important;
-                height: 14px !important;
+            .wa-sub-badge {
+                font-family: 'Clash Display', sans-serif !important;
+                font-size: 0.68rem !important;
             }
 
-            .digit-val {
-                height: 14px !important;
+            /* 8. Modals Mobile Ergonomics (Bottom-Sheet Presentation) */
+            .modal-overlay {
+                align-items: flex-end !important;
+                padding: 0 !important;
             }
 
-            .faq-hotline-card {
-                padding: 20px 16px;
-                border-radius: 20px;
+            .modal-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 24px 24px 0 0 !important;
+                max-height: 90vh !important;
+                max-height: 90dvh !important;
+                padding: 24px 18px 36px !important;
+                margin: 0 !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                box-sizing: border-box !important;
             }
 
-            .faq-hotline-title {
-                font-size: 1.15rem;
+            .contact-modal-grid {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 16px !important;
             }
 
-            .faq-direct-btn {
-                font-size: 0.84rem;
-                padding: 12px 16px;
+            .contact-modal-sidebar {
+                display: none !important; /* Streamline modal intake on phone */
             }
 
-            .daily-intel-console {
-                padding: 20px 16px;
+            .contact-modal-main {
+                padding: 0 !important;
+                width: 100% !important;
             }
 
-            .console-headline {
-                font-size: 1.15rem;
+            /* 9. Touch Ergonomics: Kill Sticky Desktop Hover on Phones */
+            a:active, button:active, .btn:active, .custom-chip:active {
+                transform: scale(0.97) !important;
+                transition: transform 0.08s ease !important;
             }
 
-            .console-insight-text {
-                font-size: 0.85rem;
+            /* 10. Footer Section Mobile */
+            .client-connection-section {
+                padding: 60px 18px !important;
+                width: 100% !important;
+                text-align: center !important;
             }
 
-            .console-footer-actions {
-                width: 100%;
+            .sub-footer {
+                padding: 28px 18px !important;
+                font-family: 'Clash Display', sans-serif !important;
+                text-align: center !important;
             }
 
-            .console-copy-btn {
-                width: 100%;
-                justify-content: center;
-                padding: 12px 16px;
-                font-size: 0.78rem;
+            .footer-email, .footer-phone {
+                font-family: 'Clash Display', sans-serif !important;
+                word-break: break-word !important;
             }
         }
 

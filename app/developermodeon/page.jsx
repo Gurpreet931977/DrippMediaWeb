@@ -3045,6 +3045,15 @@ export default function Page() {
                   <span className="trust-pill">Viral Ad Hooks</span>
                   <span className="trust-pill">Cinema 4K</span>
                 </div>
+                <div className="card-mobile-actions">
+                  <a href="/video-portfolio" className="mobile-direct-card-btn">
+                    <span>View Video Reel</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -3127,6 +3136,15 @@ export default function Page() {
                   <span className="trust-pill">Brand Identity</span>
                   <span className="trust-pill">Ad Creatives</span>
                   <span className="trust-pill">Social Media Kits</span>
+                </div>
+                <div className="card-mobile-actions">
+                  <a href="/graphic-portfolio" className="mobile-direct-card-btn">
+                    <span>View Design Gallery</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </a>
                 </div>
               </div>
             </div>
@@ -3220,6 +3238,15 @@ export default function Page() {
                   <span className="trust-pill">Blazing Fast</span>
                   <span className="trust-pill">Mobile Responsive</span>
                   <span className="trust-pill">Built to Convert</span>
+                </div>
+                <div className="card-mobile-actions">
+                  <a href="/web-portfolio" className="mobile-direct-card-btn">
+                    <span>Explore Web Builds</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </a>
                 </div>
               </div>
             </div>
