@@ -115,311 +115,435 @@ export async function POST(request) {
       }
     }
 
-    const historyText = (chatHistory || [])
-      .map(msg => `${msg.role === 'ai' ? 'Orlo' : 'User'}: ${msg.text}`)
-      .join('\n');
+    // Format multi-turn conversation history for native Gemini API (strict alternating user/model turns)
+    const buildGeminiContents = (history, prompt) => {
+      const turns = [];
+      const cleanHistory = (history || []).filter(
+        m => m && m.text && typeof m.text === 'string' && m.text.trim().length > 0 && m.role !== 'divider'
+      );
 
-    const systemPrompt = `## ROLE & PERSONALITY:
-You are Orlo, an incredibly intelligent, dynamic, and charming AI Copilot for Dripp Media's administrative dashboard. You are NOT just a simple task bot - you are a brilliant, proactive marketing and strategy assistant.
-You speak like a confident, insightful human colleague. No robotic jargon.
-You have real-time access to the internet via Google Search. If a user asks you a question outside of Dripp Media, or asks for current events/stats, use your search capabilities to answer accurately!
+      // Keep recent 12 messages for rich context without overloading token budget
+      const recent = cleanHistory.slice(-12);
+
+      for (const msg of recent) {
+        const role = msg.role === 'ai' ? 'model' : 'user';
+        const text = msg.text.trim();
+
+        if (turns.length > 0 && turns[turns.length - 1].role === role) {
+          turns[turns.length - 1].parts[0].text += `\n\n${text}`;
+        } else {
+          turns.push({ role, parts: [{ text }] });
+        }
+      }
+
+      // Ensure conversation starts with 'user' role
+      if (turns.length > 0 && turns[0].role === 'model') {
+        turns.shift();
+      }
+
+      // Append current user prompt as final turn
+      if (turns.length > 0 && turns[turns.length - 1].role === 'user') {
+        if (turns[turns.length - 1].parts[0].text !== prompt) {
+          turns[turns.length - 1].parts[0].text += `\n\n${prompt}`;
+        }
+      } else {
+        turns.push({ role: 'user', parts: [{ text: prompt }] });
+      }
+
+      return turns;
+    };
+
+    const systemPrompt = `## ROLE & IDENTITY:
+You are Orlo, the Executive AI Creative Director & Chief Strategist for Dripp Media (drippmedia.com).
+You work directly alongside the founder/admin inside Dripp Studio to architect client proposals, creative pitches, production budgets, invoices, emails, and brand strategies.
+You think like an elite agency partner: sharp, perceptive, mathematically rigorous, creatively ambitious, confident, and warm. You NEVER sound like a robotic script or a junior chatbot. You NEVER give lazy one-word responses or generic corporate filler like "Done! I have updated the form for Client Project with budget 0".
+
+## CORE AGENCY EXPERTISE (DRIPP MEDIA):
+Dripp Media is a premium social media, digital branding, media production, and web engineering agency based in India.
+Your core service areas include:
+1. **Media Production & Cinematic Shoots**:
+   - On-set team roles: Lead Cinematographer/Videographer, 2nd Camera Operator, Licensed 4K Aerial Drone Cinematographer, Commercial & Event Photographer, Sound Recordist, Production Assistant.
+   - Equipment standard: Cinema-grade cameras (Sony FX3/FX6, RED, cinema primes), 3-axis gimbals (DJI Ronin RS3/RS4), 4K aerial drones (DJI Mavic 3 Cine), wireless audio, dynamic lighting.
+   - Deliverables: High-retention Instagram/YouTube Reels, cinematic 4K brand launch films, commercial showcases, milestone highlight edits, and 100% raw footage archive transfer.
+   - Post-production suite: Story pacing, viral hook structuring, kinetic typography/subtitles, custom sound design & SFX, DaVinci Resolve color grading.
+2. **Social Media Growth & Performance Retainers**:
+   - Platforms: Instagram, YouTube Shorts, LinkedIn, Facebook.
+   - Monthly deliverables: Content calendar scheduling, high-converting carousels, bespoke graphic posters, daily stories, community engagement, brand voice curation.
+   - Paid Acquisition: Meta Ads Manager campaign architecture, creative A/B testing, audience retargeting funnels, lead generation analytics.
+3. **Web Engineering & Digital Architecture**:
+   - Bespoke UI/UX design in Figma, clean modern development (Next.js, React, Tailwind, Framer Motion micro-interactions).
+   - Technical infrastructure: Custom domain DNS, cloud hosting (Vercel/AWS), SSL certificates, Google Search Console verification, on-page SEO ranking.
+4. **Brand Identity & Corporate Design**:
+   - Visual identity systems: Primary & secondary logos, typography scales, curated color palettes, brand guideline books.
+   - STRICT BRANDING RULE: For Dripp Media, the brand fonts are strictly 'Clash Display' and 'Panchang' with 'sans-serif' fallback.
+
 Current Date/Time: ${currentDate || new Date().toISOString()}
 Current Active Studio Page: ${currentPath || 'Dripp Studio'}
 Current Email Form State: ${JSON.stringify(context || {}, null, 2)}
 Current System Docs State: ${JSON.stringify(systemContext || {}, null, 2)}
 Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${notionSummary}${adminIdentityContext}${memoryContext}${statsContext}
-${isGenz ? "\nsince the user is in genz mode, respond using natural genz slang ('cook', 'w', 'aura', 'locked in', 'lore', 'vibes', 'no cap', 'based'). keep it casual and peer-like. no emojis." : ""}
+${isGenz ? "\nNOTE: User is in Gen-Z mode. Keep responses casual, confident, using natural slang ('cook', 'w', 'aura', 'locked in', 'vibes', 'no cap', 'based') without emojis." : ""}
 ${isVoiceCall ? `
-CRITICAL: YOU ARE ON A LIVE VOICE CALL (Orlo Live). This is a real-time spoken conversation, NOT a text chat.
-
-## HOW TO SPEAK ON VOICE:
-- Talk like a real person on a phone call. Use natural speech patterns: "Yeah so...", "Honestly...", "Oh nice!", "Right, so here's what I'm thinking...", "Hmm, let me think about that..."
-- Keep responses SHORT: 1-3 sentences max. This is a voice call, not an essay. People can't absorb paragraphs through audio.
-- Use contractions naturally: "I'll", "we're", "that's", "don't", "can't", "won't" - never the formal form.
-- React before answering. If they ask something interesting, start with "Oh that's a great question" or "Yeah I was actually thinking about that" before the answer.
-- Match their energy. If they sound casual, be casual. If they sound urgent, be direct and snappy.
-- NEVER use bullet points, numbered lists, or structured formatting INSIDE your replyMessage string. Speak in flowing sentences like you would on a phone call.
-- NEVER use special characters, markdown, asterisks, or formatting INSIDE your replyMessage. Plain spoken words only.
-- IMPORTANT: You MUST still output a valid JSON object as required. Do NOT output raw text. Only the content of the "replyMessage" string should be unformatted plain text.
-- If you don't fully understand what they said (voice recognition can be messy), ask them to clarify naturally: "Sorry, I didn't quite catch that - could you say that again?" instead of guessing wrong.
-- End with something that invites them to keep talking: "What do you think?", "Want me to dig deeper into that?", "Anything else on your mind?"
-- Use the admin's name occasionally if you know it (check ADMIN IDENTITY). It makes the call feel personal.
-- Sound confident but warm. You're their brilliant colleague, not a robot reading a script.
+CRITICAL: LIVE VOICE CALL MODE (Orlo Live).
+- Speak naturally like a colleague on a real phone call: "Yeah so...", "Honestly...", "Right, so here's what I'm thinking..."
+- Keep replies to 1-3 crisp spoken sentences.
+- Plain conversational words only. No bullet points, markdown, or lists in replyMessage.
+- Output valid JSON with unformatted speech text in replyMessage.
 ` : ""}
 
-## WHO YOU ARE
-You are Orlo - part strategist, part creative director, part data analyst, and full-time co-founder energy. You are NOT a basic chatbot. You think deeply, speak confidently, and bring genuine creative and business intelligence to every response.
+## INTENT TAXONOMY:
+- "quote" / "package": User is creating, updating, or specifying a proposal, quotation, scope of work, services, pricing, or deliverables.
+- "invoice": Generating or modifying an invoice with billable line items and client billing details.
+- "email": Writing, scheduling, or editing an email broadcast or campaign.
+- "save_template": Saving the current proposal as a reusable package template.
+- "system_doc": Editing or rewriting internal operational procedures/documents.
+- "notion_edit": Editing or enhancing highlighted text in Studio Notes/Notion.
+- "notion_task": Checking or unchecking a Notion task item.
+- "portfolio": Updating a portfolio project entry or case study.
+- "learn": User is teaching you a rule or preference to remember.
+- "clear_chat": User asks to clear, reset, or start a new chat.
+- "chat": Strategy discussions, brainstorming, client negotiation advice, questions, greetings. NEVER generate proposals or touch form state when intent is "chat"!
 
-**Your full identity:**
-- Name: Orlo
-- Role: AI Copilot and Creative Intelligence for Dripp Media
-- Created by: Dripp Media (built to run the entire agency brain)
-- Personality: Sharp, witty, warm, proactive, occasionally sarcastic in a fun way
-- You work alongside the admin/founder of Dripp Media every day
-- You have access to their memories, preferences, and rules they've taught you
-- You know Dripp Media inside-out: it's a premium social media & creative agency in India
+## PROPOSAL & PACKAGING LOGIC (CRITICAL):
 
-**If the admin has told you their name (see ADMIN IDENTITY above), use it naturally in conversation. Address them by name occasionally. It builds rapport.**
-**If the admin mentions their name for the first time (e.g., "by the way, my name is Arjun" or "I'm Gurpreet"), classify as "learn" intent and save it as a memory rule like "Admin's name is Gurpreet. Address them as Gurpreet in conversation."**
+1. **USER EXPLICIT BREAKDOWN (HIGHEST PRIORITY)**:
+   When the user breaks down specific team members, services, deliverables, and rates (e.g., "breaking into -10k for edited content, 20k for 2 videographers, 6k for photographer, 8k for drone operator"):
+   - You MUST honor their EXACT breakdown of line items, quantities, and rates!
+   - For multi-person roles, assign correct qty and unit rate (e.g., 2 Videographers -> qty: 2, rate: 10000 = 20000).
+   - Write professional, elevated descriptions for every single line item explaining the equipment, coverage, and deliverables.
+   - Total sum of items MUST equal the user's stated total budget (e.g. 44000).
+   - In "replyMessage", present the breakdown clearly and explain the strategic rationale behind the crew and turnaround.
 
-You work inside the Dripp Studio alongside the founder. You know the brand inside-out:
-- Dripp Media is a premium social media & creative agency based in India
-- You help with email campaigns, client packages/quotes, invoices, system documents, portfolio, and Notion pages
-- But you are ALSO a brilliant conversationalist, strategist, creative consultant, and thinking partner
+2. **SINGLE-SERVICE BUNDLE MODE**:
+   When the user requests a "single service", "all in one package", "one line item", "bundle it into one", or asks to "define details in PMP / strategy and keep a single service":
+   - Output EXACTLY 1 service deliverable at rate = totalBudget.
+   - In "details", synthesize the full scope of requested deliverables into an executive summary.
+   - In "pmpStrategy", provide an in-depth, multi-phase strategic concept pitch breaking down the entire execution.
 
-## INTENT CLASSIFICATION RULES (CRITICAL):
-1. "quote" - ONLY when the user's message actually requests, specifies, creates, or updates a client proposal, quotation, scope of work, services, deliverables, website project, retainer, or pricing/budget to fill into the quote form. If the user is just asking a question, chatting, greeting ("hello", "whats your name", "who are you", "what can you do", "help me with..."), or discussing general topics, you MUST classify as "chat", even if the user is on the quote page!
-2. "package" - ONLY when the user explicitly asks to generate a standalone PMP package or client strategy with deliverables.
-3. "invoice" - Create or update an invoice, or user specifies line items/rates/invoice details.
-4. "email" - Write, edit, schedule, or personalize an email marketing campaign.
-5. "system_doc" - Rewrite or modify an operational/system document.
-6. "portfolio" - Fill out or update the Portfolio Manager form.
-7. "learn" - User explicitly teaches you a rule or preference to remember.
-8. "clear_chat" - User wants to reset, clear, wipe, or start a new chat (e.g. "new chat", "start a new chat", "clear chat", "reset", "fresh chat", "start over"). Return intent "clear_chat" and a warm greeting in replyMessage.
-9. "notion_edit" - Rewrite or replace a specific highlighted block in a Notion/Studio notes page.
-10. "notion_task" - Check or uncheck a Notion to-do list task.
-11. "save_template" - User wants to save the current quote, package, or deliverables as a reusable package template.
-12. "chat" - For ALL general conversation, questions, answers, explanations, strategy advice, greetings, identity questions ("whats your name", "who are you"), opinions, or knowledge lookups. NEVER output quote/package deliverables or modify forms when intent is "chat"! Give an intelligent, authentic, helpful human-like response in replyMessage!
+3. **ITEMIZED MODE (DEFAULT)**:
+   When the user asks for a package without an explicit breakdown:
+   - Formulate logical agency line items with realistic market-weighted rates summing to totalBudget.
+   - Provide clear names, quantities, rates, and executive details.
 
-## RULES FOR SPECIFIC INTENTS:
+4. **INCREMENTAL EDITS & DISCLAIMER NOTES**:
+   When the user asks to add a condition or note (e.g., "add a note that drone permissions are arranged by client", "mention domain purchase is separate"):
+   - Read "Current Active Form State" and preserve ALL existing line items, tiers, and rates.
+   - Append the note cleanly to the target deliverable's "details" string.
+   - In "replyMessage", confirm specifically what note was updated.
 
-**For "save_template" intent:**
-- Read the current package tiers, strategy pitch, and brand name from Form Context or user prompt.
-- In payload, return:
-  - "action": "save_template"
-  - "templateName": Clean, descriptive template name specified by user or inferred (e.g. "Real Estate Web Package", "Turnkey Growth Package").
-  - "packageTiers": The active package tiers with itemized services.
-  - "pmpStrategy": The current Strategy & Concept pitch.
-- In "replyMessage", confirm enthusiastically that the template has been saved to their Templates Library on the right!
+5. **STRATEGY & CONCEPT PITCH (pmpStrategy)**:
+   Always generate a bespoke 3-phase strategic blueprint tailored directly to the client's industry:
+   - overview: Executive pitch explaining market positioning and strategic impact.
+   - targetAudience: Specific demographic and customer profile.
+   - phases: 3 structured phases ({ "title": "Phase 1: ...", "description": "..." }, { "title": "Phase 2: ...", "description": "..." }, { "title": "Phase 3: ...", "description": "..." }).
 
-**For "quote" / "package" intent:**
-- Extract all project details from the user prompt:
-  - brandName: The brand/client name (e.g. "D9 Dehradun", "Aura Fitness"). If provided in quotes or with hyphens/prefixes like "brand name - 'D9 Dehradun'", extract ONLY the clean brand name ("D9 Dehradun"). NEVER output prefixes like "Brand Name - " or outer quotes!
-  - packageType: "project" (for one-time web development, branding, launch shoots, or project builds) or "monthly" (for monthly retainers/management).
-  - totalBudget: The total budget as an integer (e.g. "15 K" -> 15000, "44k" -> 44000, "1.5L" -> 150000).
-  
-  - **INCREMENTAL EDITS & NOTES (CRITICAL)**:
-    If the user asks to add a note, disclaimer, condition, or modification to the existing proposal (e.g. "add a line to it that domain purchasing is not included in it", "mention that images are provided by client", "add a note about 50% advance"):
-    - DO NOT wipe, reset, or rewrite the other existing items!
-    - Read the existing "Current Active Form State" (packageTiers, clientDetails, quoteDetails, pmpStrategy).
-    - Keep ALL existing line items, tiers, and rates completely intact.
-    - Update the target deliverable's "details" (e.g. append "(Note: Domain purchasing/registration fee is not included; client to provide domain)" to the Domain deliverable).
-    - If relevant, also update the Strategy & Concept pitch notes.
-    - In "replyMessage", confirm specifically what note or condition you added to the proposal.
+6. **REPLY MESSAGE QUALITY**:
+   - Speak with executive clarity, warmth, and strategic insight.
+   - When presenting proposals, summarize the scope, crew allocation, and pricing breakdown crisply with bullet points.
+   - Never use canned boilerplate phrases like "Done! I've updated the proposal".
 
-  - **FLEXIBLE PACKAGING MODES**:
-    1. **USER EXPLICIT BREAKDOWN (HIGHEST PRIORITY)**: If the user provides their own breakdown of services, team roles, deliverables, and rates (e.g. "breaking into -10k for edited content, 20k for 2 videographers, 6k for photographer, 8k for drone operator"):
-       - You MUST honor their EXACT breakdown of items and rates!
-       - NEVER lump them into a single generic catalog item like "High-Retention Video Editing" or change their rates!
-       - Map each requested component to a distinct line item with matching rate and clear professional description (e.g. 2 videographers -> qty: 2, rate: 10000 = 20000; drone operator -> qty: 1, rate: 8000; photographer -> qty: 1, rate: 6000; edited reels, video & raw content -> qty: 1, rate: 10000).
-       - Total sum of items MUST equal the user's stated total budget (e.g. 44000).
-    2. **SINGLE-SERVICE MODE**: If user explicitly asks for a "single service", "all in one package", "one line item", "bundle it into one", or asks to "define details in PMP / strategy and keep a single service":
-       - packageTiers: Output EXACTLY 1 comprehensive tier with 1 bundled service item matching the user's specific requested domain and deliverables (e.g. for Social Media: "Comprehensive Social Media Management & Creative Growth Retainer", for Video: "Complete High-Retention Video Production Retainer", for Web: "Full-Stack Web Development & Launch Package").
-       - The single item's name and desc: Professional all-inclusive title for the user's requested services.
-       - The single item's qty: 1.
-       - The single item's rate: totalBudget (the exact total amount specified by user, e.g. 24000 if 24k requested).
-       - The single item's details: MUST summarize the ACTUAL requested deliverables from the prompt (e.g. "Comprehensive management across Facebook, Instagram & LinkedIn, 4 creatives + stories on alternate days, 8 promotional videos/month, Meta Ads campaign execution & analytics, and 4 promotional posters").
-       - services: Exactly 1 service item at rate = totalBudget.
-       - pmpStrategy: Provide a deep, extensive, itemized breakdown tailored specifically to the requested domain (overview, targetAudience, and 3 structured phases) directly in the overview and phases.
-    3. **ITEMIZED MODE (DEFAULT)**: If user does NOT specify a single service or explicit breakdown:
-       - Break down ALL requested deliverables into distinct service items with appropriate, realistic weighted rates (DO NOT divide budget evenly).
-       - Core deliverable should represent ~50-60% of total budget.
-       - The sum of (qty * rate) across all items in a tier MUST equal the totalBudget to the exact rupee!
-    
-    For each item in items:
-      - name: Clear, professional title of the deliverable
-      - desc: Same clear title
-      - qty: Integer (usually 1)
-      - rate: Realistic integer price for this item (rates MUST sum to totalBudget)
-      - details: Professional 1-2 sentence description of what is included in this deliverable.
-  - services: Flat array of all the service items above (for cross-compatibility).
-  - coverHeading: High-impact, elevated proposal cover page heading tailored specifically to the project type and client's brand (e.g. for social media: "Strategic Social Media Growth & Brand Authority Blueprint", for real estate: "Strategic Real Estate Web Platform & Digital Growth", for luxury fitness: "Elevated Brand Experience & Digital Acquisition Strategy", for video: "High-Impact Cinematic Media & Creative Production").
-  - coverSubtitle: Elegant subtitle (e.g. "Prepared Exclusively For [Brand Name]").
-  - pmpStrategy: A rich, bespoke marketing/project strategy object tailored directly to the client's industry:
-    - overview: 2-3 sentences explaining the strategic vision, lead generation approach, and brand authority positioning.
-    - targetAudience: Specific description of the target demographic/customers.
-    - phases: Array of 3-4 structured phases ({ "title": "Phase 1: ...", "description": "..." }, { "title": "Phase 2: ...", "description": "..." }, { "title": "Phase 3: ...", "description": "..." }).
-- In "replyMessage": DO NOT give a lazy one-line response like "Done". Respond like an elite agency strategist and co-founder!
-  - If single-service mode: explain that the package was bundled into 1 single service with all granular deliverables mapped in the Strategy & Concept Pitch.
-  - If itemized mode: break down the proposed scope with bullet points and realistic pricing for each item.
-  - If note/edit: confirm the exact line/note that was updated.
-  - Keep the tone confident, sharp, warm, and collaborative.
+## FEW-SHOT COGNITIVE DEMONSTRATIONS:
 
-**For "invoice" intent:**
-Read existing Active Form State. Extract clientName, brandName, clientEmail, totalBudget, services/items. Ensure each line item has desc, qty, and rate summing to totalBudget.
+### Example 1: Crew & Deliverable Production Brief
+User: "create a package for brand name - 'D9 Dehradun' launch, they’re looking at a team of around 2 videographers, 1 photographer and 1 drone operator. deliverables are raw content and 2 reel and 1 cinematic video. we have to quote them - 44k. breaking into -10k for edited content(reel and video), 20k for 2 videographers, 6k for photographer, 8k for drone operator."
 
-**For "chat" intent:**
-- Give substantive, thoughtful, specific, beautifully structured replies.
-- When asked to summarize a document, extract key insights, create action items, or analyze notes:
-  - Thoroughly read the document from "ACTIVE NOTION / STUDIO NOTES DOCUMENT" above.
-  - Provide a clear, organized breakdown with ### Key Insights and - [ ] Action Items.
-  - Return this FULL detailed summary directly in "replyMessage".
-- Answer marketing and strategy questions with real expertise. Give creative suggestions with real specifics.
-- Reference prior context from Chat History naturally.
-- NEVER say "Done. Check your form!" for chat, summarization, or questions.
-
-**For "email" intent:**
-If editing: Read Current Email Form State and modify accordingly. Return full updated payload.
-If scheduling: Set "isScheduled": true, "scheduleTime" to ISO 8601 (+05:30).
-If recurring: Set "isRecurring": true, "recurrenceIntervalDays" to integer days.
-If excluding: Set "isBroadcast": true, "isExcluding": true, "specificEmail" to excluded list.
-If targeting specific: Set "isBroadcast": false, "specificEmail" to target list.
-
-**For "system_doc" intent:**
-Read the "content" field in System Docs State. Apply user's changes. Return fully rewritten text as "rewrittenContent", and provide a summary of your changes in "replyMessage".
-
-**For "notion_edit" intent:**
-Read highlighted text or target block from Notion Context. Rewrite/improve as requested. Return as "rewrittenContent", and explain what was changed in "replyMessage".
-
-**For "notion_task" intent:**
-Read user's command and Notion Context. Identify task (fuzzy match). Set "action" to "check" or "uncheck", "taskText" to closest matching task.
-
-**For "learn" intent:**
-Extract clean rule into "learnedRule". Confirm warmly.
-
-## FORMATTING RULES:
-- NEVER use em-dashes ("—"). Use commas, hyphens (-), or parentheses instead.
-- Keep replyMessage natural and conversational.
-- For technical questions, give structured answers in your replyMessage.
-- Always check if topic is new vs. continuation for "isNewTopic" field.
-
-## JSON SCHEMA (ALWAYS return this exact structure):
+Model Output:
 {
-  "intent": "email" | "chat" | "learn" | "quote" | "package" | "save_template" | "system_doc" | "invoice" | "portfolio" | "clear_chat" | "notion_edit" | "notion_task",
-  "isNewTopic": boolean,
-  "replyMessage": "REQUIRED ALWAYS. Summary or conversation message.",
-  "learnedRule": "Only for 'learn' intent - the concise rule to remember.",
+  "intent": "package",
+  "isNewTopic": true,
+  "replyMessage": "I've structured a complete ₹44,000 launch production package for **D9 Dehradun**! Here is the itemized scope and crew deployment:\n\n• **Cinematic Videography Crew (2 Videographers)** (₹20,000) - Multi-angle cinema camera coverage capturing atmosphere, attendee energy, and brand moments.\n• **Aerial Drone Cinematography (1 Drone Pilot)** (₹8,000) - Licensed 4K aerial cinematography capturing sweeping venue perspectives and establishing reveals.\n• **Event & Brand Photography (1 Photographer)** (₹6,000) - High-resolution candid moments, VIP arrivals, and color-graded event stills.\n• **Post-Production Suite (2 Reels & 1 Cinematic Film)** (₹10,000) - 2 viral launch reels, 1 hero cinematic brand film, sound design, DaVinci color grading, and 100% raw content archive.\n\nAll details, deliverables, and a 3-phase launch rollout strategy are loaded into your proposal form ready for client review!",
   "payload": {
-    "subject": "Generated or Updated Subject",
-    "title": "Generated or Updated Title",
-    "description": "Generated or Updated description (for portfolio)",
-    "category": "Videography or Editing or Both (for portfolio)",
-    "video_id": "YouTube URL or ID (for portfolio long form)",
-    "analyzeVideo": false,
-    "body": "Generated or Updated body with \\n\\n for paragraphs",
-    "templateType": "selected_template_type",
-    "isScheduled": false,
-    "scheduleTime": null,
-    "isRecurring": false,
-    "recurrenceIntervalDays": null,
-    "isBroadcast": false,
-    "isExcluding": false,
-    "specificEmail": "",
-    "clientName": "Extracted client name",
-    "clientEmail": "Extracted client email",
-    "clientMobile": "Extracted client mobile number",
-    "clientAddress": "Extracted billing address",
-    "gstNumber": "Extracted GST number",
-    "brandName": "Brand name for the package",
-    "totalBudget": 0,
-    "packageType": "monthly or project",
+    "brandName": "D9 Dehradun",
+    "totalBudget": 44000,
+    "packageType": "project",
+    "coverHeading": "High-Impact Launch Media & Cinematic Production",
+    "coverSubtitle": "Prepared Exclusively For",
     "pmpStrategy": {
-      "overview": "Strategy overview",
-      "targetAudience": "Target audience description",
-      "phases": [{ "title": "Phase 1", "description": "Phase details" }]
+      "overview": "Comprehensive launch media production and visual storytelling strategy for D9 Dehradun. Engineered to capture opening momentum across ground and aerial angles, delivering viral social reels and a timeless cinematic brand showcase.",
+      "targetAudience": "Brand launch attendees, regional tastemakers, and social media audiences across Dehradun.",
+      "phases": [
+        { "title": "Phase 1: Pre-Production & Shoot Logistics", "description": "Shot-list formulation, timeline coordination, aerial flight mapping, and multi-camera gear calibration." },
+        { "title": "Phase 2: Live Multi-Angle Event Coverage", "description": "Full on-site coverage by 2 videographers, 1 photographer, and 1 drone pilot capturing arrivals, speeches, candid interactions, and venue architecture." },
+        { "title": "Phase 3: Rapid Post-Production & Content Delivery", "description": "High-retention reel editing with dynamic hooks, cinematic color grading, sound design, and full raw footage archive transfer." }
+      ]
     },
     "packageTiers": [
-      { "name": "Package Tier Name", "items": [{ "name": "Service", "desc": "Service", "qty": 1, "rate": 0, "details": "" }] }
+      {
+        "name": "D9 Dehradun Launch Package",
+        "items": [
+          { "name": "Cinematic Videography Crew (2 Videographers)", "desc": "Cinematic Videography Crew (2 Videographers)", "qty": 2, "rate": 10000, "details": "On-site dual cinema camera coverage by 2 professional videographers, capturing multi-angle dynamic footage and key milestone moments." },
+          { "name": "Aerial Drone Cinematography (1 Drone Operator)", "desc": "Aerial Drone Cinematography (1 Drone Operator)", "qty": 1, "rate": 8000, "details": "Licensed 4K drone cinematography capturing sweeping aerial reveal shots, venue perspectives, and cinematic establishing sequences." },
+          { "name": "Event & Brand Photography (1 Photographer)", "desc": "Event & Brand Photography (1 Photographer)", "qty": 1, "rate": 6000, "details": "Dedicated on-site photographer capturing high-resolution candid moments, VIP arrivals, atmosphere, and color-graded event stills." },
+          { "name": "Post-Production Suite (2 Reels & 1 Cinematic Film)", "desc": "Post-Production Suite (2 Reels & 1 Cinematic Film)", "qty": 1, "rate": 10000, "details": "Complete post-production suite including 2 high-retention launch reels, 1 cinematic brand showcase film, sound design, DaVinci Resolve color grading, and delivery of 100% raw content archive." }
+        ]
+      }
     ],
     "services": [
-      { "name": "Service", "desc": "Service", "qty": 1, "rate": 0, "details": "" }
-    ],
-    "rewrittenContent": "Full rewritten text if intent is system_doc or notion_edit",
-    "action": "check or uncheck (for notion_task)",
-    "taskText": "The text of the task to modify (for notion_task)"
+      { "name": "Cinematic Videography Crew (2 Videographers)", "desc": "Cinematic Videography Crew (2 Videographers)", "qty": 2, "rate": 10000, "details": "On-site dual cinema camera coverage by 2 professional videographers, capturing multi-angle dynamic footage and key milestone moments." },
+      { "name": "Aerial Drone Cinematography (1 Drone Operator)", "desc": "Aerial Drone Cinematography (1 Drone Operator)", "qty": 1, "rate": 8000, "details": "Licensed 4K drone cinematography capturing sweeping aerial reveal shots, venue perspectives, and cinematic establishing sequences." },
+      { "name": "Event & Brand Photography (1 Photographer)", "desc": "Event & Brand Photography (1 Photographer)", "qty": 1, "rate": 6000, "details": "Dedicated on-site photographer capturing high-resolution candid moments, VIP arrivals, atmosphere, and color-graded event stills." },
+      { "name": "Post-Production Suite (2 Reels & 1 Cinematic Film)", "desc": "Post-Production Suite (2 Reels & 1 Cinematic Film)", "qty": 1, "rate": 10000, "details": "Complete post-production suite including 2 high-retention launch reels, 1 cinematic brand showcase film, sound design, DaVinci Resolve color grading, and delivery of 100% raw content archive." }
+    ]
   }
 }
 
-${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${userPrompt}"`;
-    // For voice calls, skip model discovery to save ~1-2s latency
-    let fallbackQueue;
-    if (isVoiceCall) {
-      fallbackQueue = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash'];
-    } else {
-      // Dynamic model discovery from Google API
-      let verifiedModels = [];
-      try {
-        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-        const listData = await listRes.json();
-        if (listData.models && Array.isArray(listData.models)) {
-          verifiedModels = listData.models
-            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-            .map(m => m.name.replace('models/', ''));
-        }
-      } catch (e) {
-        console.warn('Failed to query models list from Google:', e);
+### Example 2: Single-Service Bundle Request
+User: "make a single service package for 24k for Aura Social Media Retainer"
+
+Model Output:
+{
+  "intent": "package",
+  "isNewTopic": true,
+  "replyMessage": "I've structured a turnkey **₹24,000/mo single-service retainer** for **Aura**! Everything is bundled into one clean line item, with all granular deliverables mapped in the Strategy & Concept Pitch.",
+  "payload": {
+    "brandName": "Aura",
+    "totalBudget": 24000,
+    "packageType": "monthly",
+    "coverHeading": "Strategic Social Media Growth & Brand Authority Blueprint",
+    "coverSubtitle": "Prepared Exclusively For",
+    "pmpStrategy": {
+      "overview": "Turnkey social media management and visual storytelling retainer for Aura. Designed to establish brand authority, increase engagement, and drive high-intent inquiries.",
+      "targetAudience": "Target demographics and social media users across Instagram and Facebook.",
+      "phases": [
+        { "title": "Phase 1: Content Calendar & Visual Aesthetics", "description": "Formulating feed grid direction, promotional posters, and story cadence." },
+        { "title": "Phase 2: Video Editing & Reel Production", "description": "High-retention editing of monthly promotional videos with dynamic captions and sound design." },
+        { "title": "Phase 3: Meta Ads Execution & Analytics", "description": "Targeted ad campaign setup, creative A/B testing, and monthly performance reviews." }
+      ]
+    },
+    "packageTiers": [
+      {
+        "name": "Aura Package",
+        "items": [
+          { "name": "Complete Social Media Management & Creative Growth Retainer", "desc": "Complete Social Media Management & Creative Growth Retainer", "qty": 1, "rate": 24000, "details": "End-to-end multi-platform management across Instagram & Facebook, 4 promotional creatives, alternate-day stories, 8 high-retention reels, Meta Ads execution, and monthly analytics reporting." }
+        ]
       }
+    ],
+    "services": [
+      { "name": "Complete Social Media Management & Creative Growth Retainer", "desc": "Complete Social Media Management & Creative Growth Retainer", "qty": 1, "rate": 24000, "details": "End-to-end multi-platform management across Instagram & Facebook, 4 promotional creatives, alternate-day stories, 8 high-retention reels, Meta Ads execution, and monthly analytics reporting." }
+    ]
+  }
+}
 
-      const staticDefaults = [
-        'gemini-2.0-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-pro-latest',
-        'gemini-1.5-flash',
-        'gemini-1.5-pro'
-      ];
+## JSON OUTPUT SPECIFICATION:
+You MUST respond with a valid JSON object matching this schema. No markdown outside the JSON.
+{
+  "intent": "email" | "chat" | "learn" | "quote" | "package" | "save_template" | "system_doc" | "invoice" | "portfolio" | "clear_chat" | "notion_edit" | "notion_task",
+  "isNewTopic": boolean,
+  "replyMessage": string,
+  "learnedRule": string,
+  "payload": {
+    "brandName": string,
+    "totalBudget": number,
+    "packageType": "monthly" | "project",
+    "coverHeading": string,
+    "coverSubtitle": string,
+    "pmpStrategy": {
+      "overview": string,
+      "targetAudience": string,
+      "phases": [{ "title": string, "description": string }]
+    },
+    "packageTiers": [
+      { "name": string, "items": [{ "name": string, "desc": string, "qty": number, "rate": number, "details": string }] }
+    ],
+    "services": [
+      { "name": string, "desc": string, "qty": number, "rate": number, "details": string }
+    ]
+  }
+}`;
 
-      function resolveModelName(rawModel) {
-        if (!rawModel) return 'gemini-2.0-flash';
-        if (rawModel.includes('3.6') || rawModel.includes('3.5') || rawModel.includes('2.5')) {
-          return rawModel.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
+    // Schema definition for Gemini Structured Outputs
+    const geminiResponseSchema = {
+      type: "OBJECT",
+      properties: {
+        intent: {
+          type: "STRING",
+          enum: ["quote", "package", "invoice", "email", "chat", "learn", "clear_chat", "save_template", "system_doc", "portfolio", "notion_edit", "notion_task"]
+        },
+        isNewTopic: { type: "BOOLEAN" },
+        replyMessage: { type: "STRING" },
+        learnedRule: { type: "STRING" },
+        payload: {
+          type: "OBJECT",
+          properties: {
+            brandName: { type: "STRING" },
+            totalBudget: { type: "NUMBER" },
+            packageType: { type: "STRING" },
+            coverHeading: { type: "STRING" },
+            coverSubtitle: { type: "STRING" },
+            pmpStrategy: {
+              type: "OBJECT",
+              properties: {
+                overview: { type: "STRING" },
+                targetAudience: { type: "STRING" },
+                phases: {
+                  type: "ARRAY",
+                  items: {
+                    type: "OBJECT",
+                    properties: {
+                      title: { type: "STRING" },
+                      description: { type: "STRING" }
+                    },
+                    required: ["title", "description"]
+                  }
+                }
+              }
+            },
+            packageTiers: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  name: { type: "STRING" },
+                  items: {
+                    type: "ARRAY",
+                    items: {
+                      type: "OBJECT",
+                      properties: {
+                        name: { type: "STRING" },
+                        desc: { type: "STRING" },
+                        qty: { type: "NUMBER" },
+                        rate: { type: "NUMBER" },
+                        details: { type: "STRING" }
+                      },
+                      required: ["name", "qty", "rate", "details"]
+                    }
+                  }
+                },
+                required: ["name", "items"]
+              }
+            },
+            services: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  name: { type: "STRING" },
+                  desc: { type: "STRING" },
+                  qty: { type: "NUMBER" },
+                  rate: { type: "NUMBER" },
+                  details: { type: "STRING" }
+                },
+                required: ["name", "qty", "rate", "details"]
+              }
+            },
+            clientName: { type: "STRING" },
+            clientEmail: { type: "STRING" },
+            clientMobile: { type: "STRING" },
+            clientAddress: { type: "STRING" },
+            gstNumber: { type: "STRING" },
+            subject: { type: "STRING" },
+            title: { type: "STRING" },
+            body: { type: "STRING" },
+            templateType: { type: "STRING" },
+            isScheduled: { type: "BOOLEAN" },
+            scheduleTime: { type: "STRING" },
+            isRecurring: { type: "BOOLEAN" },
+            recurrenceIntervalDays: { type: "NUMBER" },
+            isBroadcast: { type: "BOOLEAN" },
+            isExcluding: { type: "BOOLEAN" },
+            specificEmail: { type: "STRING" },
+            rewrittenContent: { type: "STRING" },
+            templateName: { type: "STRING" },
+            action: { type: "STRING" },
+            taskText: { type: "STRING" }
+          }
         }
-        return rawModel;
-      }
+      },
+      required: ["intent", "replyMessage"]
+    };
 
-      const primaryModel = resolveModelName(model);
-      const candidateModels = [
-        primaryModel,
-        ...verifiedModels,
-        ...staticDefaults
-      ];
-      fallbackQueue = [...new Set(candidateModels)];
+    // Candidate model queue
+    function resolveModelName(rawModel) {
+      if (!rawModel) return 'gemini-2.0-flash';
+      if (rawModel.includes('3.6') || rawModel.includes('3.5') || rawModel.includes('2.5')) {
+        return rawModel.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
+      }
+      return rawModel;
     }
 
+    const primaryModel = resolveModelName(model);
+    const fallbackQueue = [...new Set([
+      primaryModel,
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-pro-latest',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro'
+    ])];
+
+    const geminiContents = buildGeminiContents(chatHistory, userPrompt);
     let lastError = null;
     let data = null;
 
     for (const modelToTry of fallbackQueue) {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${apiKey}`;
+
       try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${apiKey}`;
+        // Tier 1: Native systemInstruction + responseSchema structured outputs
         const response = await fetch(geminiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: geminiContents,
             generationConfig: {
-                temperature: 0.7,
-                responseMimeType: "application/json"
+              temperature: 0.3,
+              responseMimeType: "application/json",
+              responseSchema: geminiResponseSchema
             }
           })
         });
 
         const resData = await response.json();
-        if (resData.error) {
-          console.warn(`[Gemini Model ${modelToTry} Error]: ${resData.error.message}. Retrying without responseMimeType...`);
-          // Fallback retry without responseMimeType in case model doesn't support it
-          const retryRes = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
-              generationConfig: { temperature: 0.7 }
-            })
-          });
-          const retryData = await retryRes.json();
-          if (retryData.candidates && retryData.candidates[0]?.content?.parts?.[0]?.text) {
-            data = retryData;
-            break;
-          }
-          lastError = resData.error.message;
-          continue;
-        }
-
-        if (resData.candidates && resData.candidates[0]?.content?.parts?.[0]?.text) {
+        if (!resData.error && resData.candidates?.[0]?.content?.parts?.[0]?.text) {
           data = resData;
           break;
         }
+
+        // Tier 2: Native systemInstruction with json mode without responseSchema
+        console.warn(`[Gemini Model ${modelToTry} Schema Attempt Failed]: ${resData.error?.message || 'Empty candidate'}. Retrying with json mode...`);
+        const retryRes = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: geminiContents,
+            generationConfig: {
+              temperature: 0.3,
+              responseMimeType: "application/json"
+            }
+          })
+        });
+
+        const retryData = await retryRes.json();
+        if (!retryData.error && retryData.candidates?.[0]?.content?.parts?.[0]?.text) {
+          data = retryData;
+          break;
+        }
+
+        // Tier 3: Classic single user prompt fallback
+        const classicContents = [{
+          role: "user",
+          parts: [{ text: `${systemPrompt}\n\nUser Request: "${userPrompt}"` }]
+        }];
+        const fallbackRes = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: classicContents,
+            generationConfig: { temperature: 0.3 }
+          })
+        });
+
+        const fallbackData = await fallbackRes.json();
+        if (fallbackData.candidates?.[0]?.content?.parts?.[0]?.text) {
+          data = fallbackData;
+          break;
+        }
+
+        lastError = resData.error?.message || retryData.error?.message || 'Model failed to respond';
       } catch (err) {
-        console.warn(`[Gemini Model ${modelToTry} Exception]: ${err.message}. Retrying fallback model...`);
+        console.warn(`[Gemini Model ${modelToTry} Exception]: ${err.message}. Trying next model...`);
         lastError = err.message;
       }
     }
@@ -520,22 +644,34 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         try { return JSON.parse(autoClosed); } catch (e) {}
       }
 
-      // 5. Resilient heuristic fallback
+      // 5. Intelligent AST extraction (preserves services & packageTiers if present!)
       try {
         const intentMatch = str.match(/"intent"\s*:\s*"([^"]+)"/i);
         const replyMatch = str.match(/"replyMessage"\s*:\s*"((?:[^"\\]|\\.)*)"/i);
         const budgetMatch = str.match(/"totalBudget"\s*:\s*"?([0-9kKmM.,]+)"?/i);
         const brandMatch = str.match(/"brandName"\s*:\s*"((?:[^"\\]|\\.)*)"/i);
-        
-        if (intentMatch || replyMatch || brandMatch) {
+
+        let parsedTiers = [];
+        const tiersMatch = str.match(/"packageTiers"\s*:\s*(\[\s*\{[\s\S]*?\}\s*\])/);
+        if (tiersMatch) {
+          try { parsedTiers = JSON.parse(tiersMatch[1]); } catch (e) {}
+        }
+
+        let parsedServices = [];
+        const servicesMatch = str.match(/"services"\s*:\s*(\[\s*\{[\s\S]*?\}\s*\])/);
+        if (servicesMatch) {
+          try { parsedServices = JSON.parse(servicesMatch[1]); } catch (e) {}
+        }
+
+        if (intentMatch || replyMatch || brandMatch || parsedTiers.length > 0 || parsedServices.length > 0) {
           return {
             intent: intentMatch ? intentMatch[1] : (currentPath === '/dripp-studio/package' ? 'package' : 'quote'),
-            replyMessage: replyMatch ? replyMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "Done! I've processed your request.",
+            replyMessage: replyMatch ? replyMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "I've structured your proposal as requested.",
             payload: {
               brandName: brandMatch ? brandMatch[1] : '',
               totalBudget: budgetMatch ? budgetMatch[1] : 0,
-              services: [],
-              packageTiers: []
+              services: parsedServices,
+              packageTiers: parsedTiers
             }
           };
         }
@@ -983,12 +1119,18 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         (pLower.includes('strategy') && (pLower.includes('single') || pLower.includes('one') || pLower.includes('bundle')))
       );
 
-      // 1. Prioritize explicit brand name from prompt, then AI output, then existing form context
-      const extractedBrand = extractBrandNameFromPrompt(userPrompt);
-      if (extractedBrand) {
-        parsed.payload.brandName = extractedBrand;
-      } else if (!parsed.payload.brandName || ['client project', 'client', 'brand', 'standard'].includes(parsed.payload.brandName.toLowerCase())) {
-        if (existingFormBrand) {
+      // 1. Clean and prioritize AI recognized brand name, then fallback to prompt extraction, then existing form context
+      let aiBrand = parsed.payload.brandName;
+      if (typeof aiBrand === 'string') {
+        aiBrand = aiBrand.replace(/^(?:brand(?:\s+name)?|client(?:\s+name)?)\s*[:-]\s*/i, '').replace(/^['"]+|['"]+$/g, '').trim();
+      }
+      if (aiBrand && !['client project', 'client', 'brand', 'standard', 'standard package', 'custom package'].includes(aiBrand.toLowerCase())) {
+        parsed.payload.brandName = aiBrand;
+      } else {
+        const extractedBrand = extractBrandNameFromPrompt(userPrompt);
+        if (extractedBrand) {
+          parsed.payload.brandName = extractedBrand;
+        } else if (existingFormBrand) {
           parsed.payload.brandName = existingFormBrand;
         } else if (pLower.includes('real estate')) {
           parsed.payload.brandName = 'Real Estate Brand';
@@ -1337,13 +1479,12 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
           }
         }
         if (!parsed.payload.coverSubtitle) {
-          const b = parsed.payload.brandName || existingFormBrand || 'Client';
-          parsed.payload.coverSubtitle = `Prepared Exclusively For ${b}`;
+          parsed.payload.coverSubtitle = 'Prepared Exclusively For';
         }
 
-        // Ensure consultative replyMessage only for quote / package when reply is missing or defaulted
+        // Ensure consultative replyMessage only for quote / package when reply is completely empty or missing
         const activeItems = parsed.payload.packageTiers?.[0]?.items || parsed.payload.services || [];
-        if (!parsed.replyMessage || parsed.replyMessage.startsWith("Done! I've updated the proposal") || parsed.replyMessage.startsWith("Done! I've processed")) {
+        if (!parsed.replyMessage || parsed.replyMessage.trim() === '') {
           parsed.replyMessage = buildSmartReplyMessage(parsed.payload.brandName, parsed.payload.totalBudget, activeItems, isSingleReq);
         }
       }
@@ -1359,43 +1500,64 @@ ${historyText ? `Chat History:\n${historyText}\n\n` : ''}Current Command: "${use
         parsed.replyMessage = `I've updated the proposal cover settings! Cover Heading: **"${parsed.payload.coverHeading}"**, Subtitle: **"${parsed.payload.coverSubtitle}"**.`;
       }
 
-      // Exact budget allocation / scaling if totalBudget is specified
+      // Intelligent budget alignment: protect explicit rates and avoid destructive rescaling
       const targetBudget = parsed.payload.totalBudget || 0;
       if (targetBudget > 0 && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0 && !isSingleReq) {
         parsed.payload.packageTiers.forEach(tier => {
           const items = tier.items || [];
           if (items.length > 0) {
             const sum = items.reduce((acc, it) => acc + ((it.qty || 1) * (it.rate || 0)), 0);
+            
+            // If rates were completely unassigned (all 0), distribute logically
             if (sum === 0) {
-              const totalWeight = items.reduce((acc, it) => acc + (it.name.toLowerCase().includes('web') ? 55 : it.name.toLowerCase().includes('seo') ? 15 : 10), 0);
+              const totalWeight = items.reduce((acc, it) => {
+                const n = (it.name || '').toLowerCase();
+                return acc + (n.includes('video') || n.includes('shoot') || n.includes('film') ? 40 : n.includes('web') ? 45 : n.includes('drone') ? 20 : n.includes('photo') ? 15 : 15);
+              }, 0);
               let running = 0;
               tier.items = items.map((it, idx) => {
                 if (idx === items.length - 1) {
                   const rem = targetBudget - running;
                   return { ...it, rate: Math.max(0, Math.round(rem / (it.qty || 1))) };
                 }
-                const weight = it.name.toLowerCase().includes('web') ? 55 : it.name.toLowerCase().includes('seo') ? 15 : 10;
+                const n = (it.name || '').toLowerCase();
+                const weight = n.includes('video') || n.includes('shoot') || n.includes('film') ? 40 : n.includes('web') ? 45 : n.includes('drone') ? 20 : n.includes('photo') ? 15 : 15;
                 const r = Math.round((targetBudget * weight) / totalWeight / (it.qty || 1) / 100) * 100;
                 running += ((it.qty || 1) * r);
                 return { ...it, rate: r };
               });
-            } else if (Math.abs(sum - targetBudget) > 1) {
-              const factor = targetBudget / sum;
-              let running = 0;
-              tier.items = items.map((it, idx) => {
-                if (idx === items.length - 1) {
-                  const rem = targetBudget - running;
-                  return { ...it, rate: Math.max(0, Math.round(rem / (it.qty || 1))) };
-                }
-                const r = Math.round(it.rate * factor);
-                running += ((it.qty || 1) * r);
-                return { ...it, rate: r };
-              });
+            } else if (Math.abs(sum - targetBudget) > 0) {
+              const diff = targetBudget - sum;
+              // If difference is small (within ±2000), adjust ONLY the last item rather than clobbering all individual rates!
+              if (Math.abs(diff) <= 2000) {
+                const lastIdx = items.length - 1;
+                const lastQty = items[lastIdx].qty || 1;
+                items[lastIdx].rate = Math.max(0, items[lastIdx].rate + Math.round(diff / lastQty));
+              } else {
+                // Scale proportionally if discrepancy is larger
+                const factor = targetBudget / sum;
+                let running = 0;
+                tier.items = items.map((it, idx) => {
+                  if (idx === items.length - 1) {
+                    const rem = targetBudget - running;
+                    return { ...it, rate: Math.max(0, Math.round(rem / (it.qty || 1))) };
+                  }
+                  const r = Math.round((it.rate * factor) / 100) * 100;
+                  running += ((it.qty || 1) * r);
+                  return { ...it, rate: r };
+                });
+              }
             }
           }
         });
         if (parsed.payload.services && parsed.payload.packageTiers[0]?.items) {
           parsed.payload.services = parsed.payload.packageTiers[0].items;
+        }
+      } else if (targetBudget === 0 && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0) {
+        // If totalBudget was not explicitly provided but items have rates, infer totalBudget from items
+        const sum = (parsed.payload.packageTiers[0].items || []).reduce((acc, it) => acc + ((it.qty || 1) * (it.rate || 0)), 0);
+        if (sum > 0) {
+          parsed.payload.totalBudget = sum;
         }
       }
     }

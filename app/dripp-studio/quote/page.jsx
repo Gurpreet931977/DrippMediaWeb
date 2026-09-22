@@ -710,7 +710,7 @@ export default function QuoteMaker() {
           return {
             ...p,
             title: (p.title === 'Immersive Visual Narratives & Strategic Growth' ? autoTitle : p.title),
-            subtitle: `Prepared Exclusively For ${bName}`
+            subtitle: 'Prepared Exclusively For'
           };
         }
         return p;
@@ -1969,8 +1969,8 @@ export default function QuoteMaker() {
             {packageType === 'project' && (
                <div style={{ textAlign: 'right' }}>
                  <h3 style={{ color: '#ebd73f', fontSize: '1rem', marginBottom: '10px' }}>PROJECT DETAILS:</h3>
-                 <p style={{ margin: '0 0 5px 0' }}>Duration: {quoteDetails.projectDuration}</p>
-                 <p style={{ margin: 0 }}>Expected Delivery: {quoteDetails.expectedDelivery}</p>
+                 <p style={{ margin: '0 0 5px 0' }}>Duration: {quoteDetails.projectDuration?.trim() || 'N/A'}</p>
+                 <p style={{ margin: 0 }}>Expected Delivery: {quoteDetails.expectedDelivery?.trim() || 'N/A'}</p>
                </div>
             )}
             {packageType === 'monthly' && (
@@ -2028,8 +2028,8 @@ export default function QuoteMaker() {
                   
                   {/* Common Header if not hidden and not cover/investment */}
                   {!page.hideHeading && page.type !== 'cover' && page.type !== 'investment' && (
-                      <div style={{ marginBottom: '60px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
-                          <h1 className={styles.pdfTitle} style={{ margin: 0, fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
+                      <div style={{ marginBottom: '40px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '24px' }}>
+                          <h1 className={styles.pdfTitle} style={{ margin: 0, fontSize: '56px', fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
                       </div>
                   )}
 
@@ -2038,24 +2038,34 @@ export default function QuoteMaker() {
                       <>
                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                              <h1 style={{ fontSize: '120px', color: '#ebd73f', margin: 0, letterSpacing: '-4px', fontWeight: '900', fontFamily: "'Panchang', sans-serif" }}>DRIPP MEDIA</h1>
-                             {!page.hideHeading && <p style={{ fontSize: '32px', color: '#888', margin: '10px 0 0 0', fontWeight: '300' }}>{page.title}</p>}
+                             {!page.hideHeading && <p style={{ fontSize: '32px', color: '#888', margin: '10px 0 0 0', fontWeight: '300', fontFamily: "'Clash Display', sans-serif" }}>{page.title}</p>}
                          </div>
                          
                          <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                             <p style={{ fontSize: '24px', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px' }}>{page.subtitle}</p>
+                             <p style={{ fontSize: '24px', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px', fontFamily: "'Clash Display', sans-serif", fontWeight: '600' }}>
+                                 {(() => {
+                                     let sub = page.subtitle || 'Prepared Exclusively For';
+                                     const bName = clientDetails.brandName || clientDetails.name;
+                                     if (bName) {
+                                         const escaped = bName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                         sub = sub.replace(new RegExp(`\\s*(?:for\\s+)?${escaped}\\s*$`, 'i'), (m) => m.toLowerCase().includes('for') ? ' Prepared Exclusively For' : '').trim();
+                                     }
+                                     return sub || 'PREPARED EXCLUSIVELY FOR';
+                                 })()}
+                             </p>
                              <h2 style={{ fontSize: '80px', color: '#fff', margin: '0 0 10px 0', lineHeight: 1.1, fontFamily: "'Panchang', sans-serif" }}>{clientDetails.brandName || clientDetails.name || 'Client'}</h2>
-                             <p style={{ fontSize: '30px', color: '#aaa', margin: 0 }}>{clientDetails.name ? clientDetails.name + ' | ' : ''}{clientDetails.email}</p>
-                             {clientDetails.gst && <p style={{ fontSize: '24px', color: '#aaa', margin: '10px 0 0 0' }}>GST: {clientDetails.gst}</p>}
+                             <p style={{ fontSize: '30px', color: '#aaa', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>{clientDetails.name ? clientDetails.name + ' | ' : ''}{clientDetails.email}</p>
+                             {clientDetails.gst && <p style={{ fontSize: '24px', color: '#aaa', margin: '10px 0 0 0', fontFamily: "'Clash Display', sans-serif" }}>GST: {clientDetails.gst}</p>}
                          </div>
                          
                          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid rgba(235, 215, 63, 0.3)', paddingTop: '40px', marginTop: 'auto' }}>
                              <div>
-                                 <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Date</p>
-                                 <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{clientDetails.date}</p>
+                                 <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0', fontFamily: "'Clash Display', sans-serif" }}>Date</p>
+                                 <p style={{ fontSize: '28px', color: '#fff', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>{clientDetails.date}</p>
                              </div>
                              <div style={{ textAlign: 'right' }}>
-                                 <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0' }}>Proposal Number</p>
-                                 <p style={{ fontSize: '28px', color: '#fff', margin: 0 }}>{quoteDetails.number}</p>
+                                 <p style={{ fontSize: '20px', color: '#666', margin: '0 0 5px 0', fontFamily: "'Clash Display', sans-serif" }}>Proposal Number</p>
+                                 <p style={{ fontSize: '28px', color: '#fff', margin: 0, fontFamily: "'Panchang', sans-serif" }}>{quoteDetails.number}</p>
                              </div>
                          </div>
                       </>
@@ -2063,67 +2073,171 @@ export default function QuoteMaker() {
 
                   {/* SERVICES PAGE */}
                   {page.type === 'services' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
-                          {!page.hideHeading && (
-                              <div style={{ marginBottom: '40px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
-                                  <h1 className={styles.pdfTitle} style={{ margin: 0, fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
-                              </div>
-                          )}
-                          
+                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                           {packageTiers.length > 1 ? (
-                              packageTiers.map((tier, tIdx) => (
-                                  <div key={tIdx} style={{ marginBottom: '30px' }}>
-                                      <h3 style={{ fontSize: '28px', color: '#ebd73f', margin: '0 0 15px 0' }}>{tier.name || `Option ${tIdx + 1}`}</h3>
-                                      {tier.items.slice(0, 5).map((item, i) => (
-                                          <div key={i} className={styles.pdfServiceCard} style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', marginBottom: '15px' }}>
-                                              <div style={{ flex: 1, paddingRight: '30px' }}>
-                                                  <h4 style={{ margin: '0 0 10px 0', fontSize: '26px', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>{item.desc || 'Service Item'}</h4>
-                                                  {item.details && <p style={{ margin: 0, fontSize: '18px', color: '#888', lineHeight: 1.4 }}>{item.details}</p>}
-                                              </div>
-                                              <div style={{ textAlign: 'right' }}>
-                                                  <div style={{ fontSize: '20px', color: '#888', marginBottom: '5px' }}>QTY: {item.qty}</div>
-                                                  {item.rate > 0 && <div className={styles.pdfAmount} style={{ fontSize: '24px' }}>{quoteDetails.currency} {item.rate.toLocaleString()}</div>}
-                                              </div>
-                                          </div>
-                                      ))}
-                                      {tier.items.length > 5 && (
-                                          <div style={{ fontSize: '20px', color: '#888', textAlign: 'center', marginTop: '10px' }}>
-                                              + {tier.items.length - 5} more items.
-                                          </div>
-                                      )}
-                                  </div>
-                              ))
-                          ) : (
-                              <>
-                                  {packageTiers.flatMap(t => t.items).slice(0, 5).map((item, i) => (
-                                      <div key={i} className={styles.pdfServiceCard}>
-                                          <div style={{ flex: 1, paddingRight: '30px' }}>
-                                              <h4 style={{ margin: '0 0 10px 0', fontSize: '32px', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>{item.desc || 'Service Item'}</h4>
-                                              {item.details && <p style={{ margin: 0, fontSize: '20px', color: '#888', lineHeight: 1.4 }}>{item.details}</p>}
-                                          </div>
-                                          <div style={{ textAlign: 'right' }}>
-                                              <div style={{ fontSize: '24px', color: '#888', marginBottom: '5px' }}>QTY: {item.qty}</div>
-                                              {item.rate > 0 && <div className={styles.pdfAmount}>{quoteDetails.currency} {item.rate.toLocaleString()}</div>}
+                              <div style={{ display: 'grid', gridTemplateColumns: packageTiers.length === 2 ? '1fr 1fr' : 'repeat(3, 1fr)', gap: '24px', flex: 1 }}>
+                                  {packageTiers.map((tier, tIdx) => (
+                                      <div key={tIdx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '16px', padding: '24px 28px', display: 'flex', flexDirection: 'column' }}>
+                                          <h3 style={{ fontSize: '24px', color: '#ebd73f', margin: '0 0 16px 0', fontFamily: "'Panchang', sans-serif" }}>{tier.name || `Option ${tIdx + 1}`}</h3>
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                                              {tier.items.slice(0, 5).map((item, i) => (
+                                                  <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '14px 18px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                      <div style={{ flex: 1, paddingRight: '15px' }}>
+                                                          <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>{item.desc || 'Service Item'}</h4>
+                                                          {item.details && <p style={{ margin: 0, fontSize: '14px', color: '#888', lineHeight: 1.3, fontFamily: "'Clash Display', sans-serif" }}>{item.details}</p>}
+                                                      </div>
+                                                      <div style={{ textAlign: 'right' }}>
+                                                          <div style={{ fontSize: '14px', color: '#888', marginBottom: '3px', fontFamily: "'Clash Display', sans-serif" }}>QTY: {item.qty}</div>
+                                                          {item.rate > 0 && <div className={styles.pdfAmount} style={{ fontSize: '18px', fontFamily: "'Panchang', sans-serif" }}>{quoteDetails.currency} {item.rate.toLocaleString()}</div>}
+                                                      </div>
+                                                  </div>
+                                              ))}
                                           </div>
                                       </div>
                                   ))}
-                                  {packageTiers.flatMap(t => t.items || []).length > 5 && (
-                                      <div style={{ fontSize: '24px', color: '#888', textAlign: 'center', marginTop: '20px' }}>
-                                          + {packageTiers.flatMap(t => t.items || []).length - 5} more items detailed in the full agreement.
+                              </div>
+                          ) : (
+                              (() => {
+                                  const allItems = packageTiers.flatMap(t => t.items || []);
+                                  const useGrid = allItems.length > 4;
+                                  return (
+                                      <div style={useGrid ? {
+                                          display: 'grid',
+                                          gridTemplateColumns: 'repeat(2, 1fr)',
+                                          gap: '16px 24px',
+                                          alignContent: 'start'
+                                      } : {
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          gap: '16px'
+                                      }}>
+                                          {allItems.slice(0, 8).map((item, i) => (
+                                              <div key={i} className={styles.pdfServiceCard} style={{
+                                                  marginBottom: 0,
+                                                  padding: allItems.length <= 3 ? '24px 36px' : (allItems.length <= 4 ? '20px 30px' : '18px 24px'),
+                                                  background: 'rgba(255, 255, 255, 0.025)',
+                                                  border: '1px solid rgba(235, 215, 63, 0.22)',
+                                                  borderRadius: '16px'
+                                              }}>
+                                                  <div style={{ flex: 1, paddingRight: '25px' }}>
+                                                      <h4 style={{
+                                                          margin: '0 0 6px 0',
+                                                          fontSize: allItems.length <= 3 ? '28px' : (allItems.length <= 4 ? '24px' : '20px'),
+                                                          color: '#fff',
+                                                          fontFamily: "'Clash Display', sans-serif",
+                                                          fontWeight: '600'
+                                                      }}>
+                                                          {item.desc || 'Service Item'}
+                                                      </h4>
+                                                      {item.details && (
+                                                          <p style={{
+                                                              margin: 0,
+                                                              fontSize: allItems.length <= 3 ? '18px' : (allItems.length <= 4 ? '16px' : '14px'),
+                                                              color: '#888',
+                                                              lineHeight: 1.4,
+                                                              fontFamily: "'Clash Display', sans-serif"
+                                                          }}>
+                                                              {item.details}
+                                                          </p>
+                                                      )}
+                                                  </div>
+                                                  <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                                      <div style={{
+                                                          fontSize: allItems.length <= 4 ? '18px' : '15px',
+                                                          color: '#888',
+                                                          marginBottom: '4px',
+                                                          fontFamily: "'Clash Display', sans-serif"
+                                                      }}>
+                                                          QTY: {item.qty}
+                                                      </div>
+                                                      {item.rate > 0 && (
+                                                          <div className={styles.pdfAmount} style={{
+                                                              fontSize: allItems.length <= 3 ? '30px' : (allItems.length <= 4 ? '26px' : '22px'),
+                                                              fontFamily: "'Panchang', sans-serif"
+                                                          }}>
+                                                              {quoteDetails.currency} {item.rate.toLocaleString()}
+                                                          </div>
+                                                      )}
+                                                  </div>
+                                              </div>
+                                          ))}
+                                          {allItems.length > 8 && (
+                                              <div style={{ fontSize: '18px', color: '#888', textAlign: 'center', marginTop: '10px', fontFamily: "'Clash Display', sans-serif" }}>
+                                                  + {allItems.length - 8} more deliverables specified in the schedule.
+                                              </div>
+                                          )}
                                       </div>
-                                  )}
-                              </>
+                                  );
+                              })()
                           )}
                       </div>
                   )}
 
                   {/* PMP PAGE */}
                   {page.type === 'pmp' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', flex: 1 }}>
-                          <div style={{ background: 'rgba(255, 255, 255, 0.02)', borderLeft: '8px solid #ebd73f', padding: '50px', borderRadius: '16px', flex: 1, borderTop: '1px solid rgba(255, 255, 255, 0.05)', borderRight: '1px solid rgba(255, 255, 255, 0.05)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
-                              <p style={{ fontSize: '28px', color: '#fff', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>
-                                  {pmpStrategy || 'Strategy outline goes here...'}
-                              </p>
+                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+                          <div style={{
+                              background: 'rgba(255, 255, 255, 0.02)',
+                              borderLeft: '6px solid #ebd73f',
+                              padding: '36px 45px',
+                              borderRadius: '16px',
+                              borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                              borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+                              borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                              boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '18px'
+                          }}>
+                              {(() => {
+                                  const text = pmpStrategy || 'Strategy outline goes here...';
+                                  const paragraphs = text.split(/\n\s*\n/);
+                                  return paragraphs.map((para, pIdx) => {
+                                      const trimmed = para.trim();
+                                      if (!trimmed) return null;
+                                      const headerMatch = trimmed.match(/^([A-Za-z\s&]+:)([\s\S]*)$/);
+                                      if (headerMatch) {
+                                          const sectionTitle = headerMatch[1].trim();
+                                          const sectionBody = headerMatch[2].trim();
+                                          return (
+                                              <div key={pIdx} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                  <span style={{
+                                                      color: '#ebd73f',
+                                                      fontSize: '20px',
+                                                      fontWeight: '700',
+                                                      fontFamily: "'Panchang', sans-serif",
+                                                      letterSpacing: '1px',
+                                                      textTransform: 'uppercase'
+                                                  }}>
+                                                      {sectionTitle}
+                                                  </span>
+                                                  <p style={{
+                                                      color: '#e0e0e0',
+                                                      fontSize: '20px',
+                                                      lineHeight: '1.55',
+                                                      margin: 0,
+                                                      whiteSpace: 'pre-wrap',
+                                                      fontFamily: "'Clash Display', sans-serif"
+                                                  }}>
+                                                      {sectionBody}
+                                                  </p>
+                                              </div>
+                                          );
+                                      }
+                                      return (
+                                          <p key={pIdx} style={{
+                                              color: '#e0e0e0',
+                                              fontSize: '20px',
+                                              lineHeight: '1.55',
+                                              margin: 0,
+                                              whiteSpace: 'pre-wrap',
+                                              fontFamily: "'Clash Display', sans-serif"
+                                          }}>
+                                              {trimmed}
+                                          </p>
+                                      );
+                                  });
+                              })()}
                           </div>
                       </div>
                   )}
@@ -2132,23 +2246,23 @@ export default function QuoteMaker() {
                   {page.type === 'investment' && (
                       <>
                         {!page.hideHeading && (
-                            <div style={{ marginBottom: '80px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '30px' }}>
-                                <h1 className={styles.pdfTitle} style={{ margin: 0, fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
+                            <div style={{ marginBottom: '60px', borderBottom: '2px solid rgba(235, 215, 63, 0.3)', paddingBottom: '24px' }}>
+                                <h1 className={styles.pdfTitle} style={{ margin: 0, fontSize: '56px', fontFamily: "'Panchang', sans-serif" }}>{page.title}</h1>
                             </div>
                         )}
-                        <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '24px', padding: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                            <p style={{ fontSize: '30px', color: '#888', textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px' }}>Total {packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
+                        <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '24px', padding: '60px 80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                            <p style={{ fontSize: '30px', color: '#888', textTransform: 'uppercase', letterSpacing: '4px', marginBottom: '20px', fontFamily: "'Clash Display', sans-serif" }}>Total {packageType === 'monthly' ? 'Monthly ' : ''}Investment</p>
                             
                             {packageTiers.length > 1 ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '40px', width: '100%', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', width: '100%', alignItems: 'center' }}>
                                     {packageTiers.map((tier, tIdx) => {
                                         const tierTotal = tier.items.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.rate || 0)), 0);
                                         return (
-                                            <div key={tIdx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 50px', background: 'rgba(0,0,0,0.2)', borderRadius: '20px', border: '1px solid rgba(235, 215, 63, 0.1)', width: '100%', maxWidth: '800px' }}>
-                                                <span style={{ fontSize: '24px', color: '#888', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '2px' }}>{tier.name || `Option ${tIdx + 1}`}</span>
+                                            <div key={tIdx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 50px', background: 'rgba(0,0,0,0.2)', borderRadius: '20px', border: '1px solid rgba(235, 215, 63, 0.1)', width: '100%', maxWidth: '800px' }}>
+                                                <span style={{ fontSize: '22px', color: '#888', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '2px', fontFamily: "'Clash Display', sans-serif" }}>{tier.name || `Option ${tIdx + 1}`}</span>
                                                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '20px' }}>
-                                                    <span style={{ fontSize: '50px', color: '#ebd73f', fontWeight: '500' }}>{quoteDetails.currency}</span>
-                                                    <span style={{ fontSize: '130px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-3px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{tierTotal.toLocaleString()}</span>
+                                                    <span style={{ fontSize: '45px', color: '#ebd73f', fontWeight: '500', fontFamily: "'Panchang', sans-serif" }}>{quoteDetails.currency}</span>
+                                                    <span style={{ fontSize: '110px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-3px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{tierTotal.toLocaleString()}</span>
                                                 </div>
                                             </div>
                                         );
@@ -2156,18 +2270,18 @@ export default function QuoteMaker() {
                                 </div>
                             ) : (
                                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '20px' }}>
-                                    <span style={{ fontSize: '60px', color: '#ebd73f', fontWeight: '500' }}>{quoteDetails.currency}</span>
-                                    <span style={{ fontSize: '180px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-5px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{total.toLocaleString()}</span>
+                                    <span style={{ fontSize: '60px', color: '#ebd73f', fontWeight: '500', fontFamily: "'Panchang', sans-serif" }}>{quoteDetails.currency}</span>
+                                    <span style={{ fontSize: '160px', color: '#ebd73f', fontWeight: '900', letterSpacing: '-5px', lineHeight: 1, fontFamily: "'Panchang', sans-serif" }}>{total.toLocaleString()}</span>
                                 </div>
                             )}
                             
                             {packageType === 'monthly' && (
-                                <p style={{ fontSize: '24px', color: '#aaa', marginTop: '40px' }}>*Billed monthly. Cancel anytime with 30 days notice.</p>
+                                <p style={{ fontSize: '24px', color: '#aaa', marginTop: '40px', fontFamily: "'Clash Display', sans-serif" }}>*Billed monthly. Cancel anytime with 30 days notice.</p>
                             )}
                             {packageType === 'project' && (
                                 <div style={{ display: 'flex', gap: '40px', marginTop: '40px' }}>
-                                    <p style={{ fontSize: '24px', color: '#aaa' }}><strong style={{color: '#fff'}}>Duration:</strong> {quoteDetails.projectDuration}</p>
-                                    <p style={{ fontSize: '24px', color: '#aaa' }}><strong style={{color: '#fff'}}>Delivery:</strong> {quoteDetails.expectedDelivery}</p>
+                                    <p style={{ fontSize: '24px', color: '#aaa', fontFamily: "'Clash Display', sans-serif" }}><strong style={{color: '#fff'}}>Duration:</strong> {quoteDetails.projectDuration?.trim() || 'N/A'}</p>
+                                    <p style={{ fontSize: '24px', color: '#aaa', fontFamily: "'Clash Display', sans-serif" }}><strong style={{color: '#fff'}}>Delivery:</strong> {quoteDetails.expectedDelivery?.trim() || 'N/A'}</p>
                                 </div>
                             )}
                         </div>

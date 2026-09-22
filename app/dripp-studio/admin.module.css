@@ -425,38 +425,41 @@
 
 .pdfTitle {
   font-family: 'Panchang', sans-serif;
-  font-size: 80px;
+  font-size: 64px;
   font-weight: 800;
   color: #ebd73f;
   margin-bottom: 20px;
-  letter-spacing: -2px;
+  letter-spacing: -1.5px;
   text-shadow: 0 0 20px rgba(235, 215, 63, 0.5);
 }
 
 .pdfSubtitle {
-  font-size: 30px;
+  font-family: 'Clash Display', sans-serif;
+  font-size: 26px;
   color: #888888;
   font-weight: 400;
 }
 
 .pdfServiceCard {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(235, 215, 63, 0.2);
   border-radius: 16px;
-  padding: 40px;
-  margin-bottom: 30px;
+  padding: 22px 32px;
+  margin-bottom: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .pdfAmount {
-  font-size: 32px;
+  font-family: 'Panchang', sans-serif;
+  font-size: 28px;
   font-weight: bold;
   color: #ebd73f;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-shadow: 0 0 15px rgba(235, 215, 63, 0.4);
 }
 
