@@ -1268,6 +1268,29 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           animation: expandRing 2s infinite linear;
           pointer-events: none;
         }
+
+        /* Dormant state when chat window is open: stops glowing, hides breathing lines, stops icon breathe */
+        .copilot-orb.chat-open {
+          animation: none !important;
+          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
+          border-color: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        .copilot-orb.chat-open:hover {
+          animation: none !important;
+          box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6) !important;
+          border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        .copilot-orb.chat-open .copilot-ring {
+          display: none !important;
+          animation: none !important;
+          opacity: 0 !important;
+        }
+
+        .copilot-orb.chat-open .orlo-icon-svg {
+          animation: none !important;
+        }
         
         .profile-modal, .post-modal {
           position: absolute;
@@ -2357,18 +2380,18 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       )}
 
       <div className="copilot-wrapper">
-        <div className={`speech-bubble ${speechBubble ? 'show' : ''}`}>
+        <div className={`speech-bubble ${speechBubble && !isOpen ? 'show' : ''}`}>
           {speechBubble}
         </div>
         <div 
-          className="copilot-orb" 
+          className={`copilot-orb ${isOpen ? 'chat-open' : ''}`}
           onClick={toggleChat} 
           ref={btnRef}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
+          style={{ transform: isHovered ? (isOpen ? 'scale(1.05)' : 'scale(1.1)') : 'scale(1)' }}
         >
-          <div className="copilot-ring"></div>
+          {!isOpen && <div className="copilot-ring"></div>}
           <OrloIcon size={32} color="#ebd73f" className="orlo-icon-svg" emotion={isOpen ? emotion : (speechBubble ? emotion : (isHovered ? 'excited' : 'idle'))} />
         </div>
       </div>

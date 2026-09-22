@@ -249,10 +249,10 @@ export default function SharedQuote() {
           {/* Client Details */}
           <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', backdropFilter: 'blur(10px)', width: '100%', boxSizing: 'border-box' }}>
             <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.9rem)', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px' }}>Prepared For</p>
-            <h2 style={{ fontSize: 'clamp(1.8rem, 7vw, 2.5rem)', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", wordBreak: 'break-word' }}>{quoteData.clientDetails.brandName || quoteData.clientDetails.name}</h2>
-            {quoteData.clientDetails.brandName && <p style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#aaa', margin: '0 0 5px 0' }}>{quoteData.clientDetails.name}</p>}
-            <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#666', margin: '0 0 5px 0', wordBreak: 'break-all' }}>{quoteData.clientDetails.email}</p>
-            {quoteData.clientDetails.gst && <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#888', margin: '0 0 20px 0' }}>GST: {quoteData.clientDetails.gst}</p>}
+            <h2 style={{ fontSize: 'clamp(1.8rem, 7vw, 2.5rem)', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", wordBreak: 'break-word' }}>{quoteData.clientDetails?.brandName || quoteData.clientDetails?.name || 'Client'}</h2>
+            {quoteData.clientDetails?.brandName && <p style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#aaa', margin: '0 0 5px 0' }}>{quoteData.clientDetails?.name}</p>}
+            <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#666', margin: '0 0 5px 0', wordBreak: 'break-all' }}>{quoteData.clientDetails?.email || ''}</p>
+            {quoteData.clientDetails?.gst && <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#888', margin: '0 0 20px 0' }}>GST: {quoteData.clientDetails.gst}</p>}
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px', textAlign: 'left', marginTop: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
@@ -597,13 +597,22 @@ function SignatureBlock({ quoteId, quoteData, setQuoteData }) {
       return;
     }
     
-    // Check if canvas is empty (simplified check)
+    // Check if canvas is empty
     const canvas = canvasRef.current;
+    if (!canvas) {
+      setError('Signature pad is not ready.');
+      return;
+    }
     const blank = document.createElement('canvas');
     blank.width = canvas.width;
     blank.height = canvas.height;
     if (canvas.toDataURL() === blank.toDataURL()) {
       setError('Please draw your signature in the box.');
+      return;
+    }
+
+    if (!quoteId) {
+      setError('Package reference is missing.');
       return;
     }
 
@@ -613,7 +622,7 @@ function SignatureBlock({ quoteId, quoteData, setQuoteData }) {
     try {
       const signatureImage = canvas.toDataURL('image/png');
       
-      const res = await fetch(`/api/quote/${quoteId}`, {
+      const res = await fetch(`/api/quote/${encodeURIComponent(quoteId)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -623,8 +632,9 @@ function SignatureBlock({ quoteId, quoteData, setQuoteData }) {
         })
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data?.quote) {
         setQuoteData(data.quote);
 
         // Wait for the UI to render the 'Proposal Accepted' state before capturing PDF
@@ -632,12 +642,12 @@ function SignatureBlock({ quoteId, quoteData, setQuoteData }) {
            generateAndSendPDF(data.quote);
         }, 1500);
       } else {
-        const err = await res.json();
-        setError(err.error || 'Failed to save signature.');
+        setError(data?.error || 'Failed to save signature.');
         setSaving(false);
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      console.error('Signature submit error:', err);
+      setError('A network or server error occurred. Please try again.');
       setSaving(false);
     }
   };

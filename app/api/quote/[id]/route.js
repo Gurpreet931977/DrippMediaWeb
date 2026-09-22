@@ -1,97 +1,62 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseKey) return null;
-  return createClient(supabaseUrl, supabaseKey);
-}
+import { getQuoteRecord, updateQuoteSignature } from '@/app/lib/quoteStore';
 
 export async function POST(request, context) {
   try {
-    const supabase = getSupabaseClient();
-    if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+    const params = await (context?.params || {});
+    const id = params?.id;
+    if (!id) {
+      return NextResponse.json({ error: 'Quote ID missing' }, { status: 400 });
+    }
 
     const { password } = await request.json();
-    const { id } = await context.params;
-    
-    // Fetch the quote from Supabase
-    const { data, error } = await supabase
-      .from('shared_quotes')
-      .select('*')
-      .eq('id', id)
-      .single();
 
-    if (error || !data) {
+    // Fetch quote record from resilient dual-layer store
+    const record = await getQuoteRecord(id);
+
+    if (!record) {
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
     }
 
-    if (data.password !== password) {
+    if (record.password && record.password !== String(password || '').trim()) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
-    // If password matches, return the quote data
-    return NextResponse.json({ quote: data.quote_data }, { status: 200 });
+    // Return the quote data
+    return NextResponse.json({ quote: record.quote_data }, { status: 200 });
 
   } catch (err) {
-    console.error('API Error:', err);
+    console.error('API Error [POST /api/quote/[id]]:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
 export async function PATCH(request, context) {
   try {
-    const supabase = getSupabaseClient();
-    if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+    const params = await (context?.params || {});
+    const id = params?.id;
+    if (!id) {
+      return NextResponse.json({ error: 'Quote ID missing' }, { status: 400 });
+    }
 
-    const { signatureImage, signedBy, signedAt } = await request.json();
-    const { id } = await context.params;
+    const body = await request.json().catch(() => ({}));
+    const { signatureImage, signedBy, signedAt } = body;
 
     if (!signatureImage || !signedBy) {
-       return NextResponse.json({ error: 'Signature data missing' }, { status: 400 });
+      return NextResponse.json({ error: 'Signature data missing' }, { status: 400 });
     }
 
-    // 1. Fetch current quote
-    const { data: existingData, error: fetchError } = await supabase
-      .from('shared_quotes')
-      .select('quote_data')
-      .eq('id', id)
-      .single();
+    // Process digital signature update (enforces single-entry lock and dual-layer persistence)
+    const result = await updateQuoteSignature(id, signatureImage, signedBy, signedAt);
 
-    if (fetchError || !existingData) {
-      return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
+    if (!result.success) {
+      return NextResponse.json({ error: result.error }, { status: result.status || 400 });
     }
 
-    // Single-entry enforcement: block re-signing if already signed
-    if (existingData.quote_data?.signature || existingData.quote_data?.signedBy) {
-      return NextResponse.json({ 
-        error: `This proposal package has already been signed by ${existingData.quote_data.signedBy || 'client'}. Only one signature entry is allowed per package link.` 
-      }, { status: 409 });
-    }
-
-    // 2. Append signature data
-    const updatedQuoteData = {
-      ...existingData.quote_data,
-      signature: signatureImage,
-      signedBy: signedBy,
-      signedAt: signedAt || new Date().toISOString()
-    };
-
-    // 3. Save back
-    const { error: updateError } = await supabase
-      .from('shared_quotes')
-      .update({ quote_data: updatedQuoteData })
-      .eq('id', id);
-
-    if (updateError) {
-       return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, quote: updatedQuoteData }, { status: 200 });
+    return NextResponse.json({ success: true, quote: result.quote }, { status: 200 });
 
   } catch (err) {
-    console.error('API Error:', err);
+    console.error('API Error [PATCH /api/quote/[id]]:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

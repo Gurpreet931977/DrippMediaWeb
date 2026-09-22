@@ -4,20 +4,13 @@ import { randomBytes } from 'crypto';
 import { rateLimit } from '@/app/lib/rateLimit';
 import { withCors, corsHeaders } from '@/app/lib/cors';
 
-// ── Supabase ───────────────────────────────────────────────────────────────────
-// Never hardcode credentials - always read from env
-function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) throw new Error('Supabase env vars missing');
-  return createClient(url, key);
-}
+import { saveQuoteRecord } from '@/app/lib/quoteStore';
 
 // 10 quote saves per minute per IP
 const limiter = rateLimit({ limit: 10, windowMs: 60_000 });
 
-// Maximum allowed body size for a quote payload (50 KB)
-const MAX_BODY_BYTES = 50 * 1024;
+// Maximum allowed body size for a quote payload (500 KB)
+const MAX_BODY_BYTES = 500 * 1024;
 
 export async function POST(request) {
   // ── Rate limit ─────────────────────────────────────────────────────────────
@@ -48,28 +41,12 @@ export async function POST(request) {
 
     // Generate a cryptographically secure unique ID (instead of Math.random)
     const id = randomBytes(6).toString('base64url');
+    const password = typeof data.password === 'string' ? data.password.slice(0, 128) : null;
 
-    try {
-      const supabase = getSupabase();
-      const payload = {
-        id,
-        password: typeof data.password === 'string' ? data.password.slice(0, 128) : null,
-        quote_data: data,
-      };
+    // Guaranteed dual-layer persistence (local disk storage + Supabase sync)
+    await saveQuoteRecord(id, password, data);
 
-      const { error } = await supabase
-        .from('shared_quotes')
-        .insert([payload]);
-
-      if (!error) {
-        return withCors(NextResponse.json({ id, ok: true }, { status: 200 }), request);
-      }
-      console.warn('[quote] DB insert error, proceeding with payload fallback:', error?.message);
-    } catch (dbErr) {
-      console.warn('[quote] Supabase not configured or unreachable:', dbErr?.message);
-    }
-
-    return withCors(NextResponse.json({ id, ok: true, fallback: true }, { status: 200 }), request);
+    return withCors(NextResponse.json({ id, ok: true }, { status: 200 }), request);
   } catch (err) {
     console.error('[quote] Unexpected error:', err?.message);
     return withCors(NextResponse.json({ error: err.message }, { status: 500 }), request);

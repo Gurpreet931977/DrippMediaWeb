@@ -8461,18 +8461,19 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.25) !important;
         }
 
-        /* Mobile GEN-Z button */
-        @media (max-width: 768px) {
-            body.light-theme .genz-floating-btn.state-default {
-                background: rgba(255, 255, 255, 0.95) !important;
-                color: var(--deep-black) !important;
-                border: 1px solid rgba(0, 0, 0, 0.2) !important;
-                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
-            }
-            body:not(.light-theme) .genz-floating-btn.state-default {
-                background: rgba(20, 20, 20, 0.9) !important;
-                color: rgba(255, 255, 255, 0.85) !important;
-                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        /* Mobile & Touch GEN-Z button completely removed */
+        @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+            .genz-toggle-container,
+            .genz-floating-btn,
+            #genz-toggle,
+            [class*="genz-floating"],
+            .genz-toggle-container * {
+                display: none !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
+                width: 0 !important;
+                height: 0 !important;
+                opacity: 0 !important;
             }
         }
 
@@ -9990,12 +9991,13 @@
             }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
             /* 2. STRICT: Completely Disable Gen-Z Mode on Mobile */
+            .genz-toggle-container,
             .genz-floating-btn,
             #genz-toggle,
             [class*="genz-floating"],
-            .genz-floating-btn * {
+            .genz-toggle-container * {
                 display: none !important;
                 visibility: hidden !important;
                 pointer-events: none !important;
@@ -10003,7 +10005,9 @@
                 height: 0 !important;
                 opacity: 0 !important;
             }
+        }
 
+        @media (max-width: 768px) {
             /* 3. Global Mobile Ergonomics & Font Enforcement */
             body {
                 overflow-x: hidden !important;
