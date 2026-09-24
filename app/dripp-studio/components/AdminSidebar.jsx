@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video, AlertTriangle, BookOpen, ChevronLeft, Menu, X, ClipboardList, Layers } from 'lucide-react';
 import CreativeSpark from './CreativeSpark';
 import styles from '../admin.module.css';
