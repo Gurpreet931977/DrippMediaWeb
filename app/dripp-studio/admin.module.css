@@ -40,6 +40,14 @@
   cursor: auto !important;
 }
 
+.adminContainer a,
+.adminContainer a:link,
+.adminContainer a:visited {
+  color: inherit;
+  text-decoration: none;
+  font-family: inherit;
+}
+
 /* Glassmorphic Sidebar */
 .sidebar {
   width: 280px;

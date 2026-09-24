@@ -60,6 +60,13 @@ export default function ComingSoon() {
 
   useEffect(() => {
     try {
+      if (typeof window !== 'undefined') {
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
+        if (isTouchDevice) {
+          setIsTouch(true);
+        }
+      }
+
       const storedCount = localStorage.getItem('dripp_playCount');
       if (storedCount) setPlayCount(parseInt(storedCount, 10));
       
@@ -282,7 +289,10 @@ export default function ComingSoon() {
           mouseRef.current = { x: e.clientX, y: e.clientY };
           const cursorElem = document.querySelector('.cursor');
           if (cursorElem && cursorElem.style.display === 'none') {
-             cursorElem.style.display = 'flex'; // Restore cursor on mouse move
+             const isTouchNow = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 768;
+             if (!isTouchNow) {
+                cursorElem.style.display = 'flex'; // Restore cursor on mouse move only for desktop
+             }
           }
         }
       }
@@ -1602,12 +1612,28 @@ export default function ComingSoon() {
            height: 70px !important;
            box-shadow: 0 0 30px rgba(255, 255, 255, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
         }
-        
+        @media (max-width: 768px), (pointer: coarse), (hover: none) {
+           .cursor {
+              display: none !important;
+              opacity: 0 !important;
+              visibility: hidden !important;
+              pointer-events: none !important;
+           }
+        }
       `}</style>
       {!isTouch && <CustomCursor />}
 
       <style>{`
         @media (max-width: 768px) {
+           .hide-intro-btn {
+              display: none !important;
+           }
+           .cursor {
+              display: none !important;
+              opacity: 0 !important;
+              visibility: hidden !important;
+              pointer-events: none !important;
+           }
            .control-buttons-wrapper {
               top: 2% !important;
               left: 4% !important;
@@ -1806,6 +1832,7 @@ export default function ComingSoon() {
         </button>
         
         <button 
+          className="hide-intro-btn"
           onClick={() => {
              if (activeGame !== 'none') setHideHero(prev => !prev);
           }}

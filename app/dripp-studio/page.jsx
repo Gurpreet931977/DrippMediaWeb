@@ -248,7 +248,7 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-      <style jsx>{`
+      <style>{`
         /* --- DASHBOARD HERO --- */
         .dashboard-hero-wrap {
           display: flex;
@@ -587,34 +587,42 @@ export default function AdminDashboard() {
           letter-spacing: -0.2px;
         }
 
-        .tasks-workspace-btn {
+        .tasks-workspace-btn,
+        a.tasks-workspace-btn,
+        a.tasks-workspace-btn:link,
+        a.tasks-workspace-btn:visited,
+        a.tasks-workspace-btn:active {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           padding: 6px 14px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(235, 215, 63, 0.05);
+          border: 1px solid rgba(235, 215, 63, 0.25);
           border-radius: 6px;
-          color: rgba(255, 255, 255, 0.7);
+          color: #ebd73f !important;
           font-size: 0.76rem;
           font-weight: 600;
-          text-decoration: none;
-          font-family: 'Clash Display', sans-serif;
+          text-decoration: none !important;
+          font-family: 'Clash Display', sans-serif !important;
           transition: all 0.2s ease;
         }
 
-        .tasks-workspace-btn:hover {
-          background: rgba(235, 215, 63, 0.06);
-          border-color: rgba(235, 215, 63, 0.3);
-          color: #ebd73f;
+        .tasks-workspace-btn:hover,
+        a.tasks-workspace-btn:hover {
+          background: rgba(235, 215, 63, 0.12) !important;
+          border-color: rgba(235, 215, 63, 0.45) !important;
+          color: #ffffff !important;
         }
 
         .workspace-chevron {
           transition: transform 0.2s ease;
+          color: #ebd73f;
         }
 
-        .tasks-workspace-btn:hover .workspace-chevron {
+        .tasks-workspace-btn:hover .workspace-chevron,
+        a.tasks-workspace-btn:hover .workspace-chevron {
           transform: translateX(3px);
+          color: #ffffff !important;
         }
 
         .tasks-empty-state {
@@ -778,22 +786,28 @@ export default function AdminDashboard() {
           white-space: nowrap;
         }
 
-        .task-jump-link {
+        .task-jump-link,
+        a.task-jump-link,
+        a.task-jump-link:link,
+        a.task-jump-link:visited,
+        a.task-jump-link:active {
           display: inline-flex;
           align-items: center;
           gap: 3px;
-          color: #ebd73f;
-          font-family: 'Clash Display', sans-serif;
+          color: #ebd73f !important;
+          font-family: 'Clash Display', sans-serif !important;
           font-size: 0.72rem;
           font-weight: 600;
           letter-spacing: 0.2px;
-          text-decoration: none;
+          text-decoration: none !important;
           opacity: 0.85;
-          transition: opacity 0.2s, transform 0.2s;
+          transition: opacity 0.2s, transform 0.2s, color 0.2s;
         }
 
-        .task-jump-link:hover {
+        .task-jump-link:hover,
+        a.task-jump-link:hover {
           opacity: 1;
+          color: #ffffff !important;
           transform: translateX(2px);
         }
 
@@ -861,27 +875,32 @@ export default function AdminDashboard() {
           flex: 1;
         }
 
-        .tool-card-btn {
+        .tool-card-btn,
+        a.tool-card-btn,
+        a.tool-card-btn:link,
+        a.tool-card-btn:visited,
+        a.tool-card-btn:active {
           display: block;
           width: 100%;
           text-align: center;
           padding: 0.7rem 1rem;
           border-radius: 8px;
-          font-family: 'Clash Display', sans-serif;
+          font-family: 'Clash Display', sans-serif !important;
           font-size: 0.8rem;
           font-weight: 600;
           letter-spacing: 0.2px;
-          text-decoration: none;
+          text-decoration: none !important;
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.85);
+          color: rgba(255, 255, 255, 0.85) !important;
           transition: all 0.2s ease;
         }
 
-        .tool-card-btn:hover {
-          background: #ebd73f;
-          border-color: #ebd73f;
-          color: #050505;
+        .tool-card-btn:hover,
+        a.tool-card-btn:hover {
+          background: #ebd73f !important;
+          border-color: #ebd73f !important;
+          color: #050505 !important;
           transform: translateY(-1px);
           box-shadow: 0 4px 16px rgba(235, 215, 63, 0.25);
         }
@@ -1131,9 +1150,14 @@ export default function AdminDashboard() {
           <Link 
             href={pendingTasksDocId ? `/dripp-studio/notes-and-planning?docId=${pendingTasksDocId}` : '/dripp-studio/notes-and-planning'} 
             className="tasks-workspace-btn"
+            style={{
+              color: '#ebd73f',
+              textDecoration: 'none',
+              fontFamily: "'Clash Display', sans-serif"
+            }}
           >
-            <span>Open in Workspace</span>
-            <ChevronRight size={14} className="workspace-chevron" />
+            <span style={{ color: 'inherit', fontFamily: "'Clash Display', sans-serif" }}>Open in Workspace</span>
+            <ChevronRight size={14} className="workspace-chevron" color="#ebd73f" />
           </Link>
         </div>
 
@@ -1180,9 +1204,14 @@ export default function AdminDashboard() {
                     <Link 
                       href={`/dripp-studio/notes-and-planning?docId=${task.docId}&blockId=${task.id}`}
                       className="task-jump-link"
+                      style={{
+                        color: '#ebd73f',
+                        textDecoration: 'none',
+                        fontFamily: "'Clash Display', sans-serif"
+                      }}
                     >
-                      <span>Jump to Doc</span>
-                      <ChevronRight size={12} />
+                      <span style={{ color: 'inherit', fontFamily: "'Clash Display', sans-serif" }}>Jump to Doc</span>
+                      <ChevronRight size={12} color="#ebd73f" />
                     </Link>
                   </div>
                 </div>

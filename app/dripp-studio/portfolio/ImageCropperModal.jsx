@@ -11,6 +11,7 @@ import CreativeSpark from '../components/CreativeSpark';
 export default function ImageCropperModal({ 
   isOpen, 
   imageSrc, 
+  frameOptions = [], // [{ id: 'preloader', label: '01 • PRELOADER', sublabel: 'Initial Splash / Intro Logo', image_url: '...' }, ...]
   onClose, 
   onSave, 
   projectTitle = 'Web Project',
@@ -22,6 +23,7 @@ export default function ImageCropperModal({
   aspectRatio = 16 / 10 // Exact 1600x1000 ratio matching main page chassis
 }) {
   const [mounted, setMounted] = useState(false);
+  const [activeImageSrc, setActiveImageSrc] = useState(imageSrc);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
@@ -29,12 +31,20 @@ export default function ImageCropperModal({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [previewTab, setPreviewTab] = useState('crop'); // 'crop' | 'preview'
   const [imageLoaded, setImageLoaded] = useState(false);
-  // 3 Frame Presets: 'top' (Hero Fold) | 'center' (Center Showcase) | 'bottom' (Lower Fold) | 'custom'
-  const [selectedPreset, setSelectedPreset] = useState('top');
+  // 3 Frame Presets: 'preloader' | 'hero' | 'middle' | 'top' | 'center' | 'bottom' | 'custom'
+  const [selectedPreset, setSelectedPreset] = useState('hero');
   const [isExporting, setIsExporting] = useState(false);
 
   const containerRef = useRef(null);
   const imageRef = useRef(null);
+
+  useEffect(() => {
+    setActiveImageSrc(imageSrc);
+    if (frameOptions && frameOptions.length > 0) {
+      const match = frameOptions.find(o => o.image_url === imageSrc);
+      setSelectedPreset(match ? match.id : (frameOptions.find(o => o.id === 'hero')?.id || frameOptions[0].id));
+    }
+  }, [imageSrc, frameOptions]);
 
   useEffect(() => {
     setMounted(true);
@@ -238,19 +248,21 @@ export default function ImageCropperModal({
         ctx.restore();
       }
 
+      const currentImg = activeImageSrc || imageSrc;
       let croppedDataUrl = null;
       try {
         croppedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
       } catch (taintErr) {
         console.warn('Canvas export tainted by cross-origin, fallback to original image source:', taintErr);
-        croppedDataUrl = imageSrc;
+        croppedDataUrl = currentImg;
       }
 
-      onSave(croppedDataUrl || imageSrc);
+      onSave(croppedDataUrl || currentImg);
       onClose();
     } catch (err) {
       console.error('Cropper export exception, falling back to original image:', err);
-      onSave(imageSrc);
+      const currentImg = activeImageSrc || imageSrc;
+      onSave(currentImg);
       onClose();
     } finally {
       setIsExporting(false);
@@ -458,131 +470,216 @@ export default function ImageCropperModal({
                   color: '#ffffff',
                   letterSpacing: '0.8px'
                 }}>
-                  <CreativeSpark size={15} color="#ebd73f" /> CHOOSE FRAME OPTION (3 PRESETS)
+                  <CreativeSpark size={15} color="#ebd73f" /> 
+                  {frameOptions && frameOptions.length > 0 
+                    ? 'CHOOSE CAPTURED FRAME (3 SITE OPTIONS)' 
+                    : 'CHOOSE FRAME OPTION (3 PRESETS)'}
                 </div>
                 <span style={{
                   fontFamily: "'Clash Display', sans-serif",
                   fontSize: '0.7rem',
-                  color: selectedPreset === 'custom' ? '#ebd73f' : 'rgba(255, 255, 255, 0.5)',
-                  fontWeight: selectedPreset === 'custom' ? 600 : 400
+                  color: '#ebd73f',
+                  fontWeight: 600
                 }}>
-                  {selectedPreset === 'custom' ? '• Custom Drag / Zoom Frame' : '• 1-Click Frame Presets'}
+                  {frameOptions && frameOptions.length > 0 
+                    ? '• Live Website Snapshots' 
+                    : (selectedPreset === 'custom' ? '• Custom Drag / Zoom Frame' : '• 1-Click Frame Presets')}
                 </span>
               </div>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '10px'
-              }}>
-                {/* Frame Option 1 */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectPreset('top')}
-                  style={{
-                    background: selectedPreset === 'top' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(255, 255, 255, 0.03)',
-                    border: selectedPreset === 'top' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    padding: '10px 12px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s ease',
-                    boxShadow: selectedPreset === 'top' ? '0 0 15px rgba(235, 215, 63, 0.2)' : 'none'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{
-                      fontFamily: "'Panchang', sans-serif",
-                      fontSize: '0.64rem',
-                      fontWeight: 800,
-                      color: selectedPreset === 'top' ? '#ebd73f' : '#ffffff',
-                      letterSpacing: '0.5px'
+              {frameOptions && frameOptions.length > 0 ? (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '10px'
+                }}>
+                  {frameOptions.map((opt, idx) => {
+                    const isSelected = (activeImageSrc === opt.image_url) || (selectedPreset === opt.id);
+                    return (
+                      <button
+                        key={opt.id || idx}
+                        type="button"
+                        onClick={() => {
+                          setSelectedPreset(opt.id);
+                          setActiveImageSrc(opt.image_url);
+                          setScale(1);
+                          setPosition({ x: 0, y: 0 });
+                          setRotation(0);
+                        }}
+                        style={{
+                          background: isSelected ? 'rgba(235, 215, 63, 0.16)' : 'rgba(255, 255, 255, 0.03)',
+                          border: isSelected ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '12px',
+                          padding: '10px 12px',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.2s ease',
+                          boxShadow: isSelected ? '0 0 16px rgba(235, 215, 63, 0.25)' : 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px'
+                        }}
+                      >
+                        {opt.image_url && (
+                          <img 
+                            src={opt.image_url} 
+                            alt={opt.label} 
+                            style={{
+                              width: '46px',
+                              height: '30px',
+                              borderRadius: '6px',
+                              objectFit: 'cover',
+                              border: isSelected ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.15)',
+                              flexShrink: 0
+                            }}
+                          />
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                            <span style={{
+                              fontFamily: "'Panchang', sans-serif",
+                              fontSize: '0.62rem',
+                              fontWeight: 800,
+                              color: isSelected ? '#ebd73f' : '#ffffff',
+                              letterSpacing: '0.5px',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}>
+                              {opt.label}
+                            </span>
+                            {isSelected && <Check size={12} color="#ebd73f" />}
+                          </div>
+                          <div style={{
+                            fontFamily: "'Clash Display', sans-serif",
+                            fontSize: '0.66rem',
+                            color: isSelected ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.5)',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {opt.sublabel}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '10px'
+                }}>
+                  {/* Frame Option 1 */}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPreset('top')}
+                    style={{
+                      background: selectedPreset === 'top' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(255, 255, 255, 0.03)',
+                      border: selectedPreset === 'top' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s ease',
+                      boxShadow: selectedPreset === 'top' ? '0 0 15px rgba(235, 215, 63, 0.2)' : 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{
+                        fontFamily: "'Panchang', sans-serif",
+                        fontSize: '0.64rem',
+                        fontWeight: 800,
+                        color: selectedPreset === 'top' ? '#ebd73f' : '#ffffff',
+                        letterSpacing: '0.5px'
+                      }}>
+                        01 • HERO FOLD
+                      </span>
+                      <ArrowUp size={13} color={selectedPreset === 'top' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
+                    </div>
+                    <div style={{
+                      fontFamily: "'Clash Display', sans-serif",
+                      fontSize: '0.68rem',
+                      color: selectedPreset === 'top' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)'
                     }}>
-                      01 • HERO FOLD
-                    </span>
-                    <ArrowUp size={13} color={selectedPreset === 'top' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
-                  </div>
-                  <div style={{
-                    fontFamily: "'Clash Display', sans-serif",
-                    fontSize: '0.68rem',
-                    color: selectedPreset === 'top' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)'
-                  }}>
-                    Header & Main Visual
-                  </div>
-                </button>
+                      Header & Main Visual
+                    </div>
+                  </button>
 
-                {/* Frame Option 2 */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectPreset('center')}
-                  style={{
-                    background: selectedPreset === 'center' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(255, 255, 255, 0.03)',
-                    border: selectedPreset === 'center' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    padding: '10px 12px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s ease',
-                    boxShadow: selectedPreset === 'center' ? '0 0 15px rgba(235, 215, 63, 0.2)' : 'none'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{
-                      fontFamily: "'Panchang', sans-serif",
-                      fontSize: '0.64rem',
-                      fontWeight: 800,
-                      color: selectedPreset === 'center' ? '#ebd73f' : '#ffffff',
-                      letterSpacing: '0.5px'
+                  {/* Frame Option 2 */}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPreset('center')}
+                    style={{
+                      background: selectedPreset === 'center' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(255, 255, 255, 0.03)',
+                      border: selectedPreset === 'center' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s ease',
+                      boxShadow: selectedPreset === 'center' ? '0 0 15px rgba(235, 215, 63, 0.2)' : 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{
+                        fontFamily: "'Panchang', sans-serif",
+                        fontSize: '0.64rem',
+                        fontWeight: 800,
+                        color: selectedPreset === 'center' ? '#ebd73f' : '#ffffff',
+                        letterSpacing: '0.5px'
+                      }}>
+                        02 • CENTER FOCUS
+                      </span>
+                      <AlignCenter size={13} color={selectedPreset === 'center' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
+                    </div>
+                    <div style={{
+                      fontFamily: "'Clash Display', sans-serif",
+                      fontSize: '0.68rem',
+                      color: selectedPreset === 'center' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)'
                     }}>
-                      02 • CENTER FOCUS
-                    </span>
-                    <AlignCenter size={13} color={selectedPreset === 'center' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
-                  </div>
-                  <div style={{
-                    fontFamily: "'Clash Display', sans-serif",
-                    fontSize: '0.68rem',
-                    color: selectedPreset === 'center' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)'
-                  }}>
-                    Balanced Central View
-                  </div>
-                </button>
+                      Balanced Central View
+                    </div>
+                  </button>
 
-                {/* Frame Option 3 */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectPreset('bottom')}
-                  style={{
-                    background: selectedPreset === 'bottom' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(255, 255, 255, 0.03)',
-                    border: selectedPreset === 'bottom' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    padding: '10px 12px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s ease',
-                    boxShadow: selectedPreset === 'bottom' ? '0 0 15px rgba(235, 215, 63, 0.2)' : 'none'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{
-                      fontFamily: "'Panchang', sans-serif",
-                      fontSize: '0.64rem',
-                      fontWeight: 800,
-                      color: selectedPreset === 'bottom' ? '#ebd73f' : '#ffffff',
-                      letterSpacing: '0.5px'
+                  {/* Frame Option 3 */}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPreset('bottom')}
+                    style={{
+                      background: selectedPreset === 'bottom' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(255, 255, 255, 0.03)',
+                      border: selectedPreset === 'bottom' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s ease',
+                      boxShadow: selectedPreset === 'bottom' ? '0 0 15px rgba(235, 215, 63, 0.2)' : 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{
+                        fontFamily: "'Panchang', sans-serif",
+                        fontSize: '0.64rem',
+                        fontWeight: 800,
+                        color: selectedPreset === 'bottom' ? '#ebd73f' : '#ffffff',
+                        letterSpacing: '0.5px'
+                      }}>
+                        03 • LOWER FOLD
+                      </span>
+                      <ArrowDown size={13} color={selectedPreset === 'bottom' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
+                    </div>
+                    <div style={{
+                      fontFamily: "'Clash Display', sans-serif",
+                      fontSize: '0.68rem',
+                      color: selectedPreset === 'bottom' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)'
                     }}>
-                      03 • LOWER FOLD
-                    </span>
-                    <ArrowDown size={13} color={selectedPreset === 'bottom' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
-                  </div>
-                  <div style={{
-                    fontFamily: "'Clash Display', sans-serif",
-                    fontSize: '0.68rem',
-                    color: selectedPreset === 'bottom' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)'
-                  }}>
-                    Features & UI Depth
-                  </div>
-                </button>
-              </div>
+                      Features & UI Depth
+                    </div>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Cropping Work Area */}
@@ -619,7 +716,7 @@ export default function ImageCropperModal({
               }}>
                 <img
                   ref={imageRef}
-                  src={imageSrc}
+                  src={activeImageSrc || imageSrc}
                   alt="crop target"
                   onLoad={handleImageLoad}
                   crossOrigin="anonymous"
@@ -1033,7 +1130,7 @@ export default function ImageCropperModal({
                       transition: 'transform 0.15s ease-out'
                     }}>
                       <img
-                        src={imageSrc}
+                        src={activeImageSrc || imageSrc}
                         alt="simulation"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />

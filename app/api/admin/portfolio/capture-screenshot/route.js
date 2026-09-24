@@ -7,7 +7,7 @@ const execAsync = promisify(exec);
 
 // Validate whether a buffer is a real, high-resolution desktop screenshot (and not a loading GIF / placeholder / error HTML)
 function isValidScreenshot(buffer, contentType = '') {
-  if (!buffer || buffer.byteLength < 25000) return false;
+  if (!buffer || buffer.byteLength < 20000) return false;
   
   const ct = (contentType || '').toLowerCase();
   if (ct.includes('gif') || ct.includes('html') || ct.includes('json') || ct.includes('text')) {
@@ -41,6 +41,48 @@ function getImageExt(mime) {
   if (mime === 'image/png') return '.png';
   if (mime === 'image/webp') return '.webp';
   return '.jpg';
+}
+
+async function captureFromEndpoints(endpoints, cleanSlug, prefix, publicDir, isFsWritable) {
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        redirect: 'follow',
+        signal: AbortSignal.timeout(9000)
+      });
+
+      if (response.ok) {
+        const ct = response.headers.get('content-type') || '';
+        const buffer = await response.arrayBuffer();
+
+        if (isValidScreenshot(buffer, ct)) {
+          const buf = Buffer.from(buffer);
+          const mime = getImageMime(buf);
+          const ext = getImageExt(mime);
+          const filename = `${cleanSlug}-${prefix}-${Date.now()}${ext}`;
+          const outputPath = path.join(publicDir, filename);
+
+          if (isFsWritable) {
+            try {
+              fs.writeFileSync(outputPath, buf);
+              return `/images/web-portfolio/${filename}`;
+            } catch (writeErr) {
+              // Fallback to data URL
+            }
+          }
+
+          const base64 = buf.toString('base64');
+          return `data:${mime};base64,${base64}`;
+        }
+      }
+    } catch (err) {
+      // Continue to next endpoint candidate
+    }
+  }
+  return null;
 }
 
 export async function POST(request) {
@@ -94,82 +136,82 @@ export async function POST(request) {
       isFsWritable = false;
     }
 
-    let finalImageUrl = null;
-    const chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-
-    // Strategy 1: Ultra-reliable high-res cloud screenshot engines
-    // 1. Thum.io (fastest, pristine 1600x1000 PNG viewport)
-    // 2. Microlink (full headless Chromium cloud capture)
-    // 3. WordPress mshots (ONLY accepted if valid JPEG/PNG > 25KB, rejecting loading GIFs)
-    const cloudEngines = [
+    // 3 Distinct Capture Targets Requested by User:
+    // 1. Preloader / Initial Brand Intro (immediate 500ms load state before animations end)
+    // 2. Hero Section (full load, 3.5s delay for complete animations)
+    // 3. In Between the Site / Mid-Page (scrolled down ~850-900px to feature content)
+    const targets = [
       {
-        name: 'Thum.io',
-        url: `https://image.thum.io/get/width/1600/crop/1000/noanimate/${resolvedUrl}`
+        id: 'preloader',
+        label: '01 • PRELOADER / INTRO',
+        sublabel: 'Initial Splash & Opening Logo',
+        endpoints: [
+          `https://image.thum.io/get/width/1600/crop/1000/noanimate/${resolvedUrl}`,
+          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&waitForTimeout=500`,
+          `https://s.wordpress.com/mshots/v1/${encodeURIComponent(resolvedUrl)}?w=1600`
+        ]
       },
       {
-        name: 'Microlink',
-        url: `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000`
+        id: 'hero',
+        label: '02 • HERO SECTION',
+        sublabel: 'Header & Main Hero Fold',
+        endpoints: [
+          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&waitForTimeout=3500`,
+          `https://image.thum.io/get/width/1600/crop/1000/wait/4/${resolvedUrl}`,
+          `https://image.thum.io/get/width/1600/crop/1000/${resolvedUrl}`
+        ]
       },
       {
-        name: 'WordPress mshots',
-        url: `https://s.wordpress.com/mshots/v1/${encodeURIComponent(resolvedUrl)}?w=1600`
+        id: 'middle',
+        label: '03 • IN BETWEEN SITE',
+        sublabel: 'Mid-Page Features & Showcase',
+        endpoints: [
+          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&scrollTo=900&waitForTimeout=1000`,
+          `https://image.thum.io/get/width/1600/crop/1000/scroll/850/${resolvedUrl}`,
+          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&scrollTo=600`,
+          `https://image.thum.io/get/width/1600/crop/1000/scroll/1200/${resolvedUrl}`
+        ]
       }
     ];
 
-    for (const engine of cloudEngines) {
-      try {
-        const response = await fetch(engine.url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          },
-          redirect: 'follow',
-          signal: AbortSignal.timeout(9000)
+    // Run all 3 captures in parallel
+    const captureResults = await Promise.allSettled(
+      targets.map(t => captureFromEndpoints(t.endpoints, cleanSlug, t.id, publicDir, isFsWritable))
+    );
+
+    const capturedOptions = [];
+    targets.forEach((t, idx) => {
+      const res = captureResults[idx];
+      const imgUrl = res.status === 'fulfilled' ? res.value : null;
+      if (imgUrl) {
+        capturedOptions.push({
+          id: t.id,
+          label: t.label,
+          sublabel: t.sublabel,
+          image_url: imgUrl
         });
-
-        if (response.ok) {
-          const ct = response.headers.get('content-type') || '';
-          const buffer = await response.arrayBuffer();
-
-          if (isValidScreenshot(buffer, ct)) {
-            const buf = Buffer.from(buffer);
-            const mime = getImageMime(buf);
-            const ext = getImageExt(mime);
-            const filename = `${cleanSlug}-${Date.now()}${ext}`;
-            const outputPath = path.join(publicDir, filename);
-
-            if (isFsWritable) {
-              try {
-                fs.writeFileSync(outputPath, buf);
-                finalImageUrl = `/images/web-portfolio/${filename}`;
-                break;
-              } catch (writeErr) {
-                // In serverless / read-only environment, fallback to data URL
-              }
-            }
-
-            // Serverless / Read-only fallback: Return verified high-res Data URL
-            const base64 = buf.toString('base64');
-            finalImageUrl = `data:${mime};base64,${base64}`;
-            break;
-          }
-        }
-      } catch (engineErr) {
-        console.warn(`Engine ${engine.name} capture attempt skipped:`, engineErr.message);
       }
-    }
+    });
 
-    // Strategy 2: Local Chrome Headless fallback (macOS dev environment)
-    if (!finalImageUrl && isFsWritable && fs.existsSync(chromePath)) {
+    // Strategy 2: Local Chrome Headless fallback if needed
+    const chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    if (capturedOptions.length === 0 && isFsWritable && fs.existsSync(chromePath)) {
       try {
-        const localFilename = `${cleanSlug}-${Date.now()}.png`;
+        const localFilename = `${cleanSlug}-hero-${Date.now()}.png`;
         const localOutputPath = path.join(publicDir, localFilename);
-        const command = `"${chromePath}" --headless=new --disable-gpu --no-sandbox --disable-dev-shm-usage --window-size=1600,1000 --hide-scrollbars --virtual-time-budget=8000 --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" --screenshot="${localOutputPath}" "${resolvedUrl}"`;
+        const command = `"${chromePath}" --headless=new --disable-gpu --no-sandbox --disable-dev-shm-usage --window-size=1600,1000 --hide-scrollbars --virtual-time-budget=6000 --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" --screenshot="${localOutputPath}" "${resolvedUrl}"`;
         await execAsync(command).catch(() => {});
 
         if (fs.existsSync(localOutputPath)) {
           const stats = fs.statSync(localOutputPath);
-          if (stats.size > 25000) {
-            finalImageUrl = `/images/web-portfolio/${localFilename}`;
+          if (stats.size > 20000) {
+            const localUrl = `/images/web-portfolio/${localFilename}`;
+            capturedOptions.push({
+              id: 'hero',
+              label: '02 • HERO SECTION',
+              sublabel: 'Header & Main Hero Fold',
+              image_url: localUrl
+            });
           }
         }
       } catch (err) {
@@ -177,10 +219,14 @@ export async function POST(request) {
       }
     }
 
-    if (finalImageUrl) {
+    if (capturedOptions.length > 0) {
+      // Prioritize hero as primary default image, or first available
+      const primaryOption = capturedOptions.find(o => o.id === 'hero') || capturedOptions[0];
+
       return Response.json({
         success: true,
-        image_url: finalImageUrl,
+        image_url: primaryOption.image_url,
+        options: capturedOptions,
         normalized_url: resolvedUrl,
         suggested_title: title || domainName.split('.')[0].replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
       });
@@ -188,7 +234,7 @@ export async function POST(request) {
 
     return Response.json({ 
       success: false, 
-      error: `Could not capture live screenshot from "${resolvedUrl}". Please verify the URL or upload a screenshot directly.` 
+      error: `Could not capture live frames from "${resolvedUrl}". Please verify the URL or upload a screenshot directly.` 
     }, { status: 422 });
 
   } catch (err) {

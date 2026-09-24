@@ -58,6 +58,7 @@ export default function WebPortfolioManager() {
     url: '',
     display_url: '',
     image_url: '',
+    frame_options: [],
     video_url: '',
     tech_stack: ['Next.js 14', 'TypeScript', 'Tailwind CSS'],
     stats: [
@@ -82,6 +83,7 @@ export default function WebPortfolioManager() {
   const [cropperModal, setCropperModal] = useState({
     isOpen: false,
     imageSrc: '',
+    frameOptions: [],
     target: 'create', // 'create' | 'edit'
     projectTitle: ''
   });
@@ -266,6 +268,7 @@ export default function WebPortfolioManager() {
     setCropperModal({
       isOpen: true,
       imageSrc,
+      frameOptions: item.frame_options || [],
       target,
       projectTitle: title || item.title || '',
       category: item.category || 'Enterprise Digital Platform',
@@ -358,6 +361,7 @@ export default function WebPortfolioManager() {
         tagline: aiData.tagline || prev.tagline,
         category: aiData.category || prev.category,
         image_url: imageUrl,
+        frame_options: screenshotData.options || [],
         case_study_challenge: aiData.challenge || prev.case_study_challenge,
         case_study_solution: aiData.solution || prev.case_study_solution,
         pillars: Array.isArray(aiData.pillars) && aiData.pillars.length > 0 ? aiData.pillars : prev.pillars,
@@ -524,16 +528,18 @@ export default function WebPortfolioManager() {
       if (res.ok && data.success && data.image_url) {
         const domain = rawUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '');
         const suggestedTitle = targetFormData.title || data.suggested_title || '';
+        const frameOpts = data.options || [];
         
         setTargetForm(prev => ({ 
           ...prev, 
           url: rawUrl,
           display_url: prev.display_url || domain,
           title: prev.title || suggestedTitle,
-          image_url: data.image_url 
+          image_url: data.image_url,
+          frame_options: frameOpts
         }));
 
-        showNotification('success', '✨ Live screenshot captured! Opening Cropper to adjust frame...');
+        showNotification('success', '✨ 3 live site frames captured! Opening frame selector...');
         
         const isCreate = targetFormData === formData;
         const itemIndex = isCreate ? items.length + 1 : (items.findIndex(it => it.id === targetFormData.id) + 1 || 1);
@@ -541,6 +547,7 @@ export default function WebPortfolioManager() {
         setCropperModal({
           isOpen: true,
           imageSrc: data.image_url,
+          frameOptions: frameOpts,
           target: isCreate ? 'create' : 'edit',
           projectTitle: suggestedTitle || targetFormData.title || '',
           category: targetFormData.category || 'Enterprise Digital Platform',
@@ -1128,6 +1135,53 @@ export default function WebPortfolioManager() {
                         fontFamily: 'Clash Display, sans-serif'
                       }}
                     />
+                    {formData.frame_options && formData.frame_options.length > 0 && (
+                      <div style={{ marginTop: '12px' }}>
+                        <span style={{ fontSize: '0.68rem', fontFamily: 'Panchang, sans-serif', color: '#ebd73f', display: 'block', marginBottom: '6px', fontWeight: 700 }}>
+                          ⚡ 1-CLICK SITE FRAME OPTIONS (3 CAPTURES):
+                        </span>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {formData.frame_options.map((opt) => {
+                            const isSel = formData.image_url === opt.image_url;
+                            return (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, image_url: opt.image_url }))}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  background: isSel ? 'rgba(235, 215, 63, 0.16)' : 'rgba(255, 255, 255, 0.04)',
+                                  border: isSel ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.12)',
+                                  borderRadius: '8px',
+                                  padding: '5px 10px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: isSel ? '0 0 10px rgba(235, 215, 63, 0.2)' : 'none'
+                                }}
+                              >
+                                {opt.image_url && (
+                                  <img 
+                                    src={opt.image_url} 
+                                    alt={opt.label} 
+                                    style={{ width: '28px', height: '18px', objectFit: 'cover', borderRadius: '4px' }} 
+                                  />
+                                )}
+                                <span style={{
+                                  fontFamily: "'Panchang', sans-serif",
+                                  fontSize: '0.62rem',
+                                  fontWeight: 700,
+                                  color: isSel ? '#ebd73f' : '#ffffff'
+                                }}>
+                                  {opt.label}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -2371,16 +2425,68 @@ export default function WebPortfolioManager() {
                       CROP 16:10
                     </div>
                   </div>
-                  <input 
-                    type="text" 
-                    value={editItemModal.item.image_url || editItemModal.item.image || ''} 
-                    onChange={(e) => setEditItemModal({
-                      ...editItemModal,
-                      item: { ...editItemModal.item, image_url: e.target.value, image: e.target.value }
-                    })}
-                    placeholder="/images/web-portfolio/... or https://..."
-                    style={{ width: '100%', background: '#121218', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 14px', color: '#fff', fontSize: '0.82rem', fontFamily: 'Clash Display, sans-serif' }}
-                  />
+                  <div>
+                    <input 
+                      type="text" 
+                      value={editItemModal.item.image_url || editItemModal.item.image || ''} 
+                      onChange={(e) => setEditItemModal({
+                        ...editItemModal,
+                        item: { ...editItemModal.item, image_url: e.target.value, image: e.target.value }
+                      })}
+                      placeholder="/images/web-portfolio/... or https://..."
+                      style={{ width: '100%', background: '#121218', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 14px', color: '#fff', fontSize: '0.82rem', fontFamily: 'Clash Display, sans-serif' }}
+                    />
+                    {editItemModal.item.frame_options && editItemModal.item.frame_options.length > 0 && (
+                      <div style={{ marginTop: '12px' }}>
+                        <span style={{ fontSize: '0.68rem', fontFamily: 'Panchang, sans-serif', color: '#ebd73f', display: 'block', marginBottom: '6px', fontWeight: 700 }}>
+                          ⚡ 1-CLICK SITE FRAME OPTIONS (3 CAPTURES):
+                        </span>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {editItemModal.item.frame_options.map((opt) => {
+                            const isSel = (editItemModal.item.image_url || editItemModal.item.image) === opt.image_url;
+                            return (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => setEditItemModal(prev => ({
+                                  ...prev,
+                                  item: { ...prev.item, image_url: opt.image_url, image: opt.image_url }
+                                }))}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  background: isSel ? 'rgba(235, 215, 63, 0.16)' : 'rgba(255, 255, 255, 0.04)',
+                                  border: isSel ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.12)',
+                                  borderRadius: '8px',
+                                  padding: '5px 10px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  boxShadow: isSel ? '0 0 10px rgba(235, 215, 63, 0.2)' : 'none'
+                                }}
+                              >
+                                {opt.image_url && (
+                                  <img 
+                                    src={opt.image_url} 
+                                    alt={opt.label} 
+                                    style={{ width: '28px', height: '18px', objectFit: 'cover', borderRadius: '4px' }} 
+                                  />
+                                )}
+                                <span style={{
+                                  fontFamily: "'Panchang', sans-serif",
+                                  fontSize: '0.62rem',
+                                  fontWeight: 700,
+                                  color: isSel ? '#ebd73f' : '#ffffff'
+                                }}>
+                                  {opt.label}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -2823,6 +2929,7 @@ export default function WebPortfolioManager() {
       <ImageCropperModal
         isOpen={cropperModal.isOpen}
         imageSrc={cropperModal.imageSrc}
+        frameOptions={cropperModal.frameOptions || []}
         onClose={() => setCropperModal(prev => ({ ...prev, isOpen: false }))}
         onSave={handleSaveCroppedImage}
         projectTitle={cropperModal.projectTitle}

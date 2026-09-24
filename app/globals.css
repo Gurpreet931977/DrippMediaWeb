@@ -50,6 +50,13 @@
             will-change: background-color, color;
         }
 
+        /* Universal Link Reset - Enforce Brand Colors and Fonts */
+        a, a:link, a:visited {
+            color: inherit;
+            text-decoration: none;
+            font-family: inherit;
+        }
+
         /* Unified Smooth Theme Transition Layer for Responsive Theme Switching */
         .navbar,
         .nav-link,
@@ -376,8 +383,14 @@
                 padding: 0 10px !important;
                 font-size: 0.65rem !important;
             }
+            .hide-intro-btn {
+                display: none !important;
+            }
             .cursor {
                 display: none !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
             }
             .hero-title-container {
                 flex-direction: column !important;
@@ -393,6 +406,15 @@
                 align-items: center;
                 width: 100%;
                 max-width: 250px;
+            }
+        }
+        
+        @media (pointer: coarse), (hover: none) {
+            .cursor {
+                display: none !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
             }
         }
         

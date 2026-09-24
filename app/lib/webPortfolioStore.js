@@ -170,12 +170,28 @@ export async function getWebPortfolioItems() {
         .select('*')
         .order('sort_order', { ascending: false });
 
-      if (!error && Array.isArray(data) && data.length > 0) {
-        return data;
+      if (error) {
+        console.warn('[webPortfolioStore] Supabase fetch error:', error.message);
+      } else if (Array.isArray(data) && data.length > 0) {
+        return data.map(item => ({
+          ...item,
+          displayUrl: item.display_url || item.displayUrl || (item.url ? item.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : ''),
+          display_url: item.display_url || item.displayUrl || (item.url ? item.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : ''),
+          image: item.image_url || item.image || '/images/web-portfolio/bharatup.jpg',
+          image_url: item.image_url || item.image || '/images/web-portfolio/bharatup.jpg',
+          video: item.video_url || item.video || '',
+          video_url: item.video_url || item.video || '',
+          techStack: Array.isArray(item.tech_stack) ? item.tech_stack : (Array.isArray(item.techStack) ? item.techStack : []),
+          tech_stack: Array.isArray(item.tech_stack) ? item.tech_stack : (Array.isArray(item.techStack) ? item.techStack : []),
+          challenge: item.case_study_challenge || item.challenge || '',
+          case_study_challenge: item.case_study_challenge || item.challenge || '',
+          solution: item.case_study_solution || item.solution || '',
+          case_study_solution: item.case_study_solution || item.solution || ''
+        }));
       }
     }
   } catch (e) {
-    // Supabase table may not exist yet, proceed to local store
+    console.warn('[webPortfolioStore] Supabase connection error:', e.message);
   }
 
   const local = readLocalWebItems();
@@ -195,6 +211,7 @@ export async function addWebPortfolioItem(itemData) {
     display_url: itemData.display_url || itemData.displayUrl || (itemData.url ? itemData.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : ''),
     image: itemData.image_url || itemData.image || '/images/web-portfolio/bharatup.jpg',
     image_url: itemData.image_url || itemData.image || '/images/web-portfolio/bharatup.jpg',
+    frame_options: Array.isArray(itemData.frame_options) ? itemData.frame_options : [],
     video: itemData.video_url || itemData.video || '',
     video_url: itemData.video_url || itemData.video || '',
     color: itemData.color || '#ebd73f',
@@ -210,13 +227,38 @@ export async function addWebPortfolioItem(itemData) {
     sort_order: itemData.sort_order || Date.now()
   };
 
-  // Try Supabase insert
+  // Try Supabase insert with clean DB schema keys
   try {
     const supabase = getSupabase();
     if (supabase) {
-      await supabase.from('portfolio_web').insert([newItem]);
+      const dbRow = {
+        id: newItem.id,
+        title: newItem.title,
+        tagline: newItem.tagline,
+        category: newItem.category,
+        badge: newItem.badge,
+        desc: newItem.desc,
+        url: newItem.url,
+        display_url: newItem.display_url,
+        image_url: newItem.image_url,
+        video_url: newItem.video_url,
+        color: newItem.color,
+        stats: newItem.stats,
+        pillars: newItem.pillars,
+        tech_stack: newItem.tech_stack,
+        case_study_challenge: newItem.case_study_challenge,
+        case_study_solution: newItem.case_study_solution,
+        is_visible: newItem.is_visible,
+        sort_order: newItem.sort_order
+      };
+      const { error } = await supabase.from('portfolio_web').insert([dbRow]);
+      if (error) {
+        console.warn('[webPortfolioStore] Supabase insert warning:', error.message);
+      }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('[webPortfolioStore] Supabase insert exception:', e.message);
+  }
 
   // Update local file store
   const current = readLocalWebItems();
@@ -230,9 +272,28 @@ export async function updateWebPortfolioItem(id, updates) {
   try {
     const supabase = getSupabase();
     if (supabase) {
-      await supabase.from('portfolio_web').update(updates).eq('id', id);
+      const dbUpdates = {};
+      const allowedCols = [
+        'title', 'tagline', 'category', 'badge', 'desc', 'url', 'display_url',
+        'image_url', 'video_url', 'color', 'stats', 'pillars', 'tech_stack',
+        'case_study_challenge', 'case_study_solution', 'is_visible', 'sort_order'
+      ];
+      for (const [k, v] of Object.entries(updates)) {
+        if (allowedCols.includes(k)) dbUpdates[k] = v;
+        if (k === 'displayUrl') dbUpdates.display_url = v;
+        if (k === 'image' || k === 'imageUrl') dbUpdates.image_url = v;
+        if (k === 'video' || k === 'videoUrl') dbUpdates.video_url = v;
+        if (k === 'techStack') dbUpdates.tech_stack = v;
+        if (k === 'challenge') dbUpdates.case_study_challenge = v;
+        if (k === 'solution') dbUpdates.case_study_solution = v;
+      }
+      if (Object.keys(dbUpdates).length > 0) {
+        await supabase.from('portfolio_web').update(dbUpdates).eq('id', id);
+      }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('[webPortfolioStore] Supabase update exception:', e.message);
+  }
 
   // Update local file store
   const current = readLocalWebItems();
@@ -253,7 +314,9 @@ export async function deleteWebPortfolioItem(id) {
     if (supabase) {
       await supabase.from('portfolio_web').delete().eq('id', id);
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('[webPortfolioStore] Supabase delete exception:', e.message);
+  }
 
   // Update local file store
   const current = readLocalWebItems();
