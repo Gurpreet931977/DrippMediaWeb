@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
-  Globe, PlusCircle, Sparkles, Camera, ArrowUp, ArrowDown, 
+  Globe, PlusCircle, Camera, ArrowUp, ArrowDown, 
   Edit2, Trash2, Eye, EyeOff, ExternalLink, Check, X, 
   AlertCircle, CheckCircle2, RefreshCw, Layers, Cpu, BarChart3,
   FileText, ShieldCheck, UploadCloud, Crop, Maximize2, Image as ImageIcon,
   Video, Film, Play
 } from 'lucide-react';
 import ImageCropperModal from './ImageCropperModal';
+import CreativeSpark from '../components/CreativeSpark';
 
 const DEFAULT_WEB_CATEGORIES = [
   'Enterprise Digital Platform',
@@ -31,6 +33,7 @@ const POPULAR_TECH_STACKS = [
 ];
 
 export default function WebPortfolioManager() {
+  const [mounted, setMounted] = useState(false);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,6 +45,10 @@ export default function WebPortfolioManager() {
   const [customCategories, setCustomCategories] = useState([]);
   const [newCustomCatInput, setNewCustomCatInput] = useState('');
   const [showCustomCatInput, setShowCustomCatInput] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -186,6 +193,64 @@ export default function WebPortfolioManager() {
       }));
     }
     showNotification('success', 'Video recording removed');
+  };
+
+  // Lock body scroll when edit modal is open
+  useEffect(() => {
+    if (editItemModal.show) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [editItemModal.show]);
+
+  // Extract a frame from the attached screen recording video to crop for 16:10 thumbnail
+  const handleExtractFrameFromVideo = async (target = 'create') => {
+    const videoUrl = target === 'create' ? formData.video_url : editItemModal.item?.video_url;
+    if (!videoUrl) {
+      showNotification('error', 'Please attach or upload a video first.');
+      return;
+    }
+    showNotification('success', 'Extracting frame from video...');
+    try {
+      const metaVideo = document.createElement('video');
+      metaVideo.crossOrigin = 'anonymous';
+      metaVideo.preload = 'auto';
+      metaVideo.src = videoUrl;
+      metaVideo.muted = true;
+      metaVideo.playsInline = true;
+
+      await new Promise((resolve) => {
+        metaVideo.onloadeddata = resolve;
+        metaVideo.onloadedmetadata = resolve;
+        metaVideo.onerror = resolve;
+      });
+
+      const targetTime = (metaVideo.duration && isFinite(metaVideo.duration)) ? metaVideo.duration * 0.15 : 1;
+      metaVideo.currentTime = targetTime;
+      await new Promise((resolve) => {
+        metaVideo.onseeked = resolve;
+        metaVideo.onerror = resolve;
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = metaVideo.videoWidth || 1600;
+      canvas.height = metaVideo.videoHeight || 1000;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(metaVideo, 0, 0, canvas.width, canvas.height);
+      const frameDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+      handleOpenCropper(
+        frameDataUrl,
+        target,
+        target === 'create' ? formData.title : editItemModal.item?.title
+      );
+    } catch (err) {
+      console.error('Failed to capture frame from video:', err);
+      showNotification('error', 'Could not extract video frame. You can upload a screenshot directly.');
+    }
   };
 
   // Open Cropper on existing image
@@ -729,7 +794,7 @@ export default function WebPortfolioManager() {
             marginBottom: '24px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <Sparkles size={16} color="#ebd73f" />
+              <CreativeSpark size={18} color="#ebd73f" />
               <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.8rem', fontWeight: 800, color: '#ebd73f', letterSpacing: '0.4px' }}>
                 1-CLICK AI AUTOPILOT
               </span>
@@ -787,7 +852,7 @@ export default function WebPortfolioManager() {
                   whiteSpace: 'nowrap'
                 }}
               >
-                <Sparkles size={14} />
+                <CreativeSpark size={15} />
                 {(isGeneratingAI || isCapturingScreenshot) ? 'Building...' : 'Auto-Build'}
               </button>
             </div>
@@ -1137,22 +1202,45 @@ export default function WebPortfolioManager() {
                   </button>
 
                   {formData.video_url && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveVideo('create')}
-                      style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        borderRadius: '10px',
-                        padding: '8px 12px',
-                        color: '#ef4444',
-                        fontSize: '0.75rem',
-                        cursor: 'pointer'
-                      }}
-                      title="Remove video"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleExtractFrameFromVideo('create')}
+                        style={{
+                          background: 'rgba(235, 215, 63, 0.15)',
+                          border: '1px solid rgba(235, 215, 63, 0.4)',
+                          borderRadius: '10px',
+                          padding: '8px 14px',
+                          color: '#ebd73f',
+                          fontSize: '0.75rem',
+                          fontFamily: "'Clash Display', sans-serif",
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                        title="Extract a frame from this video to frame into 16:10 thumbnail"
+                      >
+                        <Camera size={14} /> Capture Thumbnail Frame
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveVideo('create')}
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '10px',
+                          padding: '8px 12px',
+                          color: '#ef4444',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer'
+                        }}
+                        title="Remove video"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -1341,7 +1429,7 @@ export default function WebPortfolioManager() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Sparkles size={18} color="#ebd73f" />
+                  <CreativeSpark size={18} color="#ebd73f" />
                   <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.85rem', fontWeight: 800, color: '#ebd73f' }}>
                     ORLO AI CASE STUDY SYNTHESIZER
                   </span>
@@ -1366,7 +1454,7 @@ export default function WebPortfolioManager() {
                     boxShadow: '0 4px 20px rgba(235, 215, 63, 0.3)'
                   }}
                 >
-                  <Sparkles size={14} />
+                  <CreativeSpark size={14} />
                   {isGeneratingAI ? 'Synthesizing...' : '✦ Generate Case Study with Orlo AI'}
                 </button>
               </div>
@@ -1890,7 +1978,7 @@ export default function WebPortfolioManager() {
       </div>
 
       {/* Edit Web Project Modal (Full Capabilities - Fixed Header/Footer Chassis) */}
-      {editItemModal.show && editItemModal.item && (
+      {mounted && editItemModal.show && editItemModal.item && createPortal(
         <div 
           onClick={() => setEditItemModal({ show: false, item: null })}
           style={{
@@ -1901,27 +1989,29 @@ export default function WebPortfolioManager() {
             bottom: 0,
             width: '100vw',
             height: '100vh',
-            background: 'rgba(4, 4, 8, 0.88)',
+            background: 'rgba(4, 4, 8, 0.9)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            zIndex: 99999,
+            zIndex: 100000,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'center',
             padding: '24px 16px',
+            overflowY: 'auto',
             boxSizing: 'border-box'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             style={{
+              margin: 'auto 0',
               background: '#0a0a0f',
               border: '1px solid rgba(255, 255, 255, 0.14)',
               borderTop: '1px solid rgba(235, 215, 63, 0.4)',
               borderRadius: '24px',
               width: '100%',
               maxWidth: '880px',
-              maxHeight: 'min(90vh, 880px)',
+              maxHeight: 'calc(100vh - 48px)',
               height: 'auto',
               display: 'flex',
               flexDirection: 'column',
@@ -2335,21 +2425,44 @@ export default function WebPortfolioManager() {
                     </button>
 
                     {(editItemModal.item.video_url || editItemModal.item.video) && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveVideo('edit')}
-                        style={{
-                          background: 'rgba(239, 68, 68, 0.1)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: '8px',
-                          padding: '6px 10px',
-                          color: '#ef4444',
-                          cursor: 'pointer'
-                        }}
-                        title="Remove video"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleExtractFrameFromVideo('edit')}
+                          style={{
+                            background: 'rgba(235, 215, 63, 0.15)',
+                            border: '1px solid rgba(235, 215, 63, 0.4)',
+                            borderRadius: '8px',
+                            padding: '6px 12px',
+                            color: '#ebd73f',
+                            fontSize: '0.72rem',
+                            fontFamily: "'Clash Display', sans-serif",
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}
+                          title="Extract a frame from this video to frame into 16:10 thumbnail"
+                        >
+                          <Camera size={13} /> Capture Thumbnail Frame
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveVideo('edit')}
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '8px',
+                            padding: '6px 10px',
+                            color: '#ef4444',
+                            cursor: 'pointer'
+                          }}
+                          title="Remove video"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -2500,7 +2613,7 @@ export default function WebPortfolioManager() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Sparkles size={16} color="#ebd73f" />
+                    <CreativeSpark size={18} color="#ebd73f" />
                     <span style={{ fontFamily: 'Panchang, sans-serif', fontSize: '0.82rem', fontWeight: 800, color: '#ebd73f', letterSpacing: '0.5px' }}>
                       ORLO AI CASE STUDY SYNTHESIZER
                     </span>
@@ -2528,7 +2641,7 @@ export default function WebPortfolioManager() {
                       boxShadow: '0 2px 10px rgba(235, 215, 63, 0.3)'
                     }}
                   >
-                    <Sparkles size={12} /> {isGeneratingAI ? 'Synthesizing...' : 'Regenerate with Orlo AI'}
+                    <CreativeSpark size={13} /> {isGeneratingAI ? 'Synthesizing...' : 'Regenerate with Orlo AI'}
                   </button>
                 </div>
 
@@ -2702,7 +2815,8 @@ export default function WebPortfolioManager() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Interactive Screenshot Cropper & Framing Modal */}

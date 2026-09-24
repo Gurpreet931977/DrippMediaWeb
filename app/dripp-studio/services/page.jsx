@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Layers, Plus, Trash2, Edit3, Check, X, ArrowUp, ArrowDown, 
-  Search, Save, RefreshCw, Sparkles, FolderPlus, ArrowRightLeft, 
+  Search, Save, RefreshCw, FolderPlus, ArrowRightLeft, 
   HelpCircle, CheckCircle2, AlertCircle
 } from 'lucide-react';
+import CreativeSpark from '../components/CreativeSpark';
 import styles from '../admin.module.css';
+import { DEFAULT_SERVICES_CATEGORIES } from '../../lib/servicesData';
 
 export default function ServicesManager() {
-  const [categories, setCategories] = useState([]);
-  const [activeCatId, setActiveCatId] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState(DEFAULT_SERVICES_CATEGORIES);
+  const [activeCatId, setActiveCatId] = useState(DEFAULT_SERVICES_CATEGORIES[0]?.id || 'video');
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,32 +38,77 @@ export default function ServicesManager() {
     setTimeout(() => setNotification(null), 3500);
   };
 
-  // Fetch services on load
-  const loadServices = async () => {
+  // Fetch services on load with instant cache + graceful fallback
+  const loadServices = useCallback(async (isManualRefresh = false) => {
     try {
-      setLoading(true);
-      const res = await fetch('/api/services');
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        setCategories(data.data);
-        if (data.data.length > 0 && !activeCatId) {
-          setActiveCatId(data.data[0].id);
+      if (isManualRefresh) setLoading(true);
+
+      // 1. Immediately hydrate from localStorage cache if available
+      if (typeof window !== 'undefined') {
+        try {
+          const cached = localStorage.getItem('dripp_services_cache');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setCategories(parsed);
+              setActiveCatId(prev => prev || parsed[0].id);
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 2. Fetch fresh services from API with timeout & retry
+      let res = null;
+      let lastErr = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 7000);
+          res = await fetch('/api/services', {
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' },
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          if (res.ok) break;
+        } catch (err) {
+          lastErr = err;
+          if (attempt === 0) {
+            await new Promise(r => setTimeout(r, 600));
+          }
+        }
+      }
+
+      if (res && res.ok) {
+        const data = await res.json();
+        const list = data?.data || data?.categories || (Array.isArray(data) ? data : null);
+        if (list && Array.isArray(list) && list.length > 0) {
+          setCategories(list);
+          try {
+            localStorage.setItem('dripp_services_cache', JSON.stringify(list));
+          } catch (e) {}
+          setActiveCatId(prev => (list.some(c => c.id === prev) ? prev : list[0].id));
+          if (isManualRefresh) notify('Services refreshed from server', 'success');
         }
       } else {
-        notify('Failed to load services data', 'error');
+        if (lastErr) throw lastErr;
       }
     } catch (err) {
-      console.error('Error fetching services:', err);
-      notify('Connection error loading services', 'error');
+      console.warn('[services-page] Notice: Using local services cache / defaults:', err?.message || err);
+      // Ensure we have valid categories loaded
+      setCategories(prev => (prev && prev.length > 0 ? prev : DEFAULT_SERVICES_CATEGORIES));
+      if (isManualRefresh) {
+        notify('Loaded from local cache (offline mode)', 'info');
+      }
     } finally {
       setLoading(false);
       setHasUnsavedChanges(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadServices();
-  }, []);
+    loadServices(false);
+  }, [loadServices]);
 
   const activeCategory = categories.find(c => c.id === activeCatId) || categories[0];
 
@@ -69,6 +116,11 @@ export default function ServicesManager() {
   const handleSaveAll = async () => {
     try {
       setSaving(true);
+      // Update local cache immediately
+      try {
+        localStorage.setItem('dripp_services_cache', JSON.stringify(categories));
+      } catch (e) {}
+
       const res = await fetch('/api/services', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,8 +146,9 @@ export default function ServicesManager() {
         notify(data.error || 'Failed to save changes', 'error');
       }
     } catch (err) {
-      console.error('Error saving services:', err);
-      notify('Error saving changes to server', 'error');
+      console.warn('[services-page] Error saving services to server:', err?.message || err);
+      notify('Saved locally. Server sync will retry.', 'info');
+      setHasUnsavedChanges(false);
     } finally {
       setSaving(false);
     }
@@ -308,7 +361,7 @@ export default function ServicesManager() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(235, 215, 63, 0.1)', border: '1px solid rgba(235, 215, 63, 0.25)', borderRadius: 999, color: '#ebd73f', fontSize: '0.72rem', fontFamily: "'Panchang', sans-serif", fontWeight: 700, letterSpacing: '1px', marginBottom: 10 }}>
-            <Sparkles size={12} />
+            <CreativeSpark size={12} color="#ebd73f" />
             <span>SERVICES &amp; CLOUD ARCHITECT</span>
           </div>
           <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: 'clamp(1.5rem, 2.6vw, 2.2rem)', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>

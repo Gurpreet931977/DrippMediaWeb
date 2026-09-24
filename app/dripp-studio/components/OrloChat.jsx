@@ -145,11 +145,13 @@ export default function OrloChat() {
   const [emotion, setEmotion] = useState('idle');
   const [isHovered, setIsHovered] = useState(false);
   const [speechBubble, setSpeechBubble] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemini-2.0-flash');
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
   const [availableModels, setAvailableModels] = useState([
+    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
     { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
     { id: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash' },
-    { id: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro' }
+    { id: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro' },
+    { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }
   ]);
   
   const chatRef = useRef(null);
@@ -219,8 +221,11 @@ export default function OrloChat() {
     
     let savedModel = localStorage.getItem('orlo_preferred_model');
     if (savedModel) {
-      if (savedModel.includes('3.6') || savedModel.includes('3.5') || savedModel.includes('2.5')) {
-        savedModel = savedModel.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
+      if (savedModel === 'gemini-1.5-pro' || savedModel === 'models/gemini-1.5-pro') {
+        savedModel = 'gemini-1.5-pro-latest';
+        localStorage.setItem('orlo_preferred_model', savedModel);
+      } else if (savedModel.includes('3.6') || savedModel.includes('3.5')) {
+        savedModel = 'gemini-2.5-flash';
         localStorage.setItem('orlo_preferred_model', savedModel);
       }
       setSelectedModel(savedModel);

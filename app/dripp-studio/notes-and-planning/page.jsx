@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   BookOpen, Search, RefreshCw, ExternalLink, ChevronRight, ChevronLeft,
-  FileText, Database, CheckSquare, Sparkles, Info, LayoutList, Plus, Maximize2, Minimize2, Star,
+  FileText, Database, CheckSquare, Info, LayoutList, Plus, Maximize2, Minimize2, Star,
   List, ListOrdered, Type, Heading1, Heading2, Heading3, Quote, Code, ToggleLeft,
   Home, Command, Activity, CheckCircle2, AlertCircle, Trash2, Undo2, Redo2, Copy, MoreHorizontal, Layers, X
 } from 'lucide-react';
+import CreativeSpark from '../components/CreativeSpark';
 import { useGenz } from '../../contexts/GenzContext';
 import { 
   LottieCheck, 
@@ -2357,7 +2358,7 @@ export default function NotionHubPage() {
                         fontFamily: "'Clash Display', sans-serif"
                       }}
                     >
-                      <Sparkles size={13} /> Ask Orlo to write about this
+                      <CreativeSpark size={13} /> Ask Orlo to write about this
                     </button>
                   </div>
                 )}
@@ -2409,7 +2410,7 @@ export default function NotionHubPage() {
             }}
             title="Ask Orlo AI Copilot"
           >
-            <Sparkles size={14} color="#ebd73f" />
+            <CreativeSpark size={14} color="#ebd73f" />
             <span>Ask Orlo</span>
           </button>
 
@@ -2646,7 +2647,7 @@ export default function NotionHubPage() {
             }}
             title="Ask Orlo AI Copilot"
           >
-            <Sparkles size={13} color="#ebd73f" />
+            <CreativeSpark size={13} color="#ebd73f" />
             <span>Ask Orlo</span>
           </button>
 
@@ -3219,7 +3220,7 @@ export default function NotionHubPage() {
                     }}
                     title="Ask Orlo AI Copilot to summarize, brainstorm, or organize"
                   >
-                    <Sparkles size={14} color="#ebd73f" />
+                    <CreativeSpark size={14} color="#ebd73f" />
                     <span>Ask Orlo</span>
                   </button>
 

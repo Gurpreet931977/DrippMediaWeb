@@ -10,16 +10,25 @@ export async function GET() {
       // Filter out beta/preview/experimental/gemma/nano models to keep the UI clean
       const validModels = data.models
         .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-        .map(m => m.name.replace('models/', ''))
+        .map(m => {
+          const name = m.name.replace(/^models\//, '').trim();
+          // Normalize dead unversioned 1.5 aliases to active supported endpoints
+          if (name === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
+          if (name === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
+          return name;
+        })
         .filter(name => {
           // Only allow core Gemini 1.5, 2.0, and 2.5 models
           if (!name.startsWith('gemini-')) return false;
           if (name.includes('preview') || name.includes('experimental') || name.includes('lite') || name.includes('vision') || name.includes('001') || name.includes('002')) return false;
+          // Never output the deprecated unpinned gemini-1.5-pro alias
+          if (name === 'gemini-1.5-pro') return false;
           return true;
         });
         
-      // Ensure we don't have duplicates
-      const uniqueModels = [...new Set(validModels)];
+      // Ensure we don't have duplicates and default to modern verified models
+      const defaults = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-2.5-pro'];
+      const uniqueModels = [...new Set([...validModels, ...defaults])].filter(m => m !== 'gemini-1.5-pro');
       return Response.json({ models: uniqueModels });
     }
     

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sparkles, Plus, Edit2, Trash2, ArrowUp, ArrowDown, Rocket, CheckCircle2, AlertCircle, RefreshCw, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, Rocket, CheckCircle2, AlertCircle, RefreshCw, X } from 'lucide-react';
+import CreativeSpark from '../components/CreativeSpark';
 import styles from '../admin.module.css';
 
 const CATEGORIES = [
@@ -255,7 +256,7 @@ export default function DailyTipsManager() {
               fontWeight: 700,
               letterSpacing: '1px'
             }}>
-              <Sparkles size={12} />
+              <CreativeSpark size={12} color="#ebd73f" />
               LIVE ON HOMEPAGE
             </span>
           </div>

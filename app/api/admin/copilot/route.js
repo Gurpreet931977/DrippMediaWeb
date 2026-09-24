@@ -454,22 +454,25 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
 
     // Candidate model queue
     function resolveModelName(rawModel) {
-      if (!rawModel) return 'gemini-2.0-flash';
-      if (rawModel.includes('3.6') || rawModel.includes('3.5') || rawModel.includes('2.5')) {
-        return rawModel.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
+      if (!rawModel) return 'gemini-2.5-flash';
+      const clean = String(rawModel).replace(/^models\//, '').trim();
+      if (clean === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
+      if (clean === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
+      if (clean.includes('3.6') || clean.includes('3.5')) {
+        return clean.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.5-flash';
       }
-      return rawModel;
+      return clean;
     }
 
     const primaryModel = resolveModelName(model);
     const fallbackQueue = [...new Set([
       primaryModel,
+      'gemini-2.5-flash',
       'gemini-2.0-flash',
       'gemini-1.5-flash-latest',
       'gemini-1.5-pro-latest',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro'
-    ])];
+      'gemini-2.5-pro'
+    ])].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro');
 
     const geminiContents = buildGeminiContents(chatHistory, userPrompt);
     let lastError = null;
@@ -498,6 +501,13 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         if (!resData.error && resData.candidates?.[0]?.content?.parts?.[0]?.text) {
           data = resData;
           break;
+        }
+
+        // If the model does not exist (404) or is unsupported, skip immediately to next model in queue
+        if (response.status === 404 || resData.error?.code === 404 || resData.error?.status === 'NOT_FOUND') {
+          console.warn(`[Gemini Model ${modelToTry} Not Found / Unsupported]: ${resData.error?.message}. Trying next model...`);
+          lastError = resData.error?.message || `Model ${modelToTry} not found`;
+          continue;
         }
 
         // Tier 2: Native systemInstruction with json mode without responseSchema
@@ -536,12 +546,12 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         });
 
         const fallbackData = await fallbackRes.json();
-        if (fallbackData.candidates?.[0]?.content?.parts?.[0]?.text) {
+        if (!fallbackData.error && fallbackData.candidates?.[0]?.content?.parts?.[0]?.text) {
           data = fallbackData;
           break;
         }
 
-        lastError = resData.error?.message || retryData.error?.message || 'Model failed to respond';
+        lastError = fallbackData.error?.message || retryData.error?.message || resData.error?.message || 'Model failed to respond';
       } catch (err) {
         console.warn(`[Gemini Model ${modelToTry} Exception]: ${err.message}. Trying next model...`);
         lastError = err.message;

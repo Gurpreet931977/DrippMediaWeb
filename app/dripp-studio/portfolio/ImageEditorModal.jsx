@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { X, Save, RotateCcw, Crop as CropIcon, Sliders, Sparkles, FlipHorizontal, FlipVertical, Frame, Type } from 'lucide-react';
+import { X, Save, RotateCcw, Crop as CropIcon, Sliders, FlipHorizontal, FlipVertical, Frame, Type } from 'lucide-react';
+import CreativeSpark from '../components/CreativeSpark';
 
 export default function ImageEditorModal({ isOpen, onClose, imageUrl, onSave }) {
     const [crop, setCrop] = useState();
@@ -240,7 +241,7 @@ export default function ImageEditorModal({ isOpen, onClose, imageUrl, onSave }) 
                         onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
                     >
                         {preset}
-                        <Sparkles size={16} />
+                        <CreativeSpark size={16} />
                     </button>
                 ))}
             </div>
@@ -337,7 +338,7 @@ export default function ImageEditorModal({ isOpen, onClose, imageUrl, onSave }) 
                     <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                         <div onClick={() => setCurrentTab('crop')} style={tabStyle('crop')}><CropIcon size={14}/> Crop</div>
                         <div onClick={() => setCurrentTab('adjust')} style={tabStyle('adjust')}><Sliders size={14}/> Adjust</div>
-                        <div onClick={() => setCurrentTab('filters')} style={tabStyle('filters')}><Sparkles size={14}/> Filters</div>
+                        <div onClick={() => setCurrentTab('filters')} style={tabStyle('filters')}><CreativeSpark size={14}/> Filters</div>
                         <div onClick={() => setCurrentTab('frames')} style={tabStyle('frames')}><Frame size={14}/> Frames</div>
                         <div onClick={() => setCurrentTab('watermark')} style={tabStyle('watermark')}><Type size={14}/> Text</div>
                     </div>

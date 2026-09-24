@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, Globe, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Sparkles, Edit2, BookOpen, Info, Crop, Activity, RefreshCw, ShieldAlert, Check, X, Play, AlertTriangle } from 'lucide-react';
+import { Upload, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle2, Smartphone, MonitorPlay, Image as ImageIcon, Globe, PlusCircle, UploadCloud, ArrowUp, ArrowDown, Edit2, BookOpen, Info, Crop, Activity, RefreshCw, ShieldAlert, Check, X, Play, AlertTriangle } from 'lucide-react';
 import styles from '../admin.module.css';
 import ImageEditorModal from './ImageEditorModal';
 import WebPortfolioManager from './WebPortfolioManager';
+import CreativeSpark from '../components/CreativeSpark';
 
 const TABS = {
   REELS: 'reels',
@@ -61,7 +62,7 @@ export default function PortfolioManager() {
 
   const [notification, setNotification] = useState(null);
   const [uploadPopup, setUploadPopup] = useState({ show: false, type: '', message: '' });
-  const [editPopup, setEditPopup] = useState({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], scrubPercent: 0, generatingFilmstrip: false });
+  const [editPopup, setEditPopup] = useState({ show: false, id: null, field: '', value: '', isUploading: false, progress: 0, filmstrip: [], frameOptions: [], selectedFrameOption: 'frame_1', scrubPercent: 0, generatingFilmstrip: false });
   const [fileSizes, setFileSizes] = useState({});
   const [showCustomGraphicCategory, setShowCustomGraphicCategory] = useState(false);
   const [editorConfig, setEditorConfig] = useState({ show: false, item: null });
@@ -122,7 +123,7 @@ export default function PortfolioManager() {
   };
 
   const generateFilmstrip = async (videoUrl) => {
-    setEditPopup(prev => ({ ...prev, generatingFilmstrip: true, filmstrip: [] }));
+    setEditPopup(prev => ({ ...prev, generatingFilmstrip: true, filmstrip: [], frameOptions: [] }));
     const metaVideo = document.createElement('video');
     metaVideo.crossOrigin = 'anonymous';
     metaVideo.preload = 'auto';
@@ -136,24 +137,64 @@ export default function PortfolioManager() {
         return;
     }
 
-    const frames = [];
-    const numFrames = 5;
+    const duration = metaVideo.duration;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
+
+    // 3 distinct candidate frame options:
+    // Option 1: Opening Hook (~15% timestamp)
+    // Option 2: Core Peak (~50% timestamp)
+    // Option 3: Climax Closer (~85% timestamp)
+    const presets = [
+      { id: 'frame_1', label: 'FRAME 01 • OPENING HOOK', sub: 'Intro 15%', time: Math.max(0.1, duration * 0.15), percent: 15 },
+      { id: 'frame_2', label: 'FRAME 02 • PEAK ACTION', sub: 'Core Midpoint 50%', time: duration * 0.5, percent: 50 },
+      { id: 'frame_3', label: 'FRAME 03 • CLIMAX REVEAL', sub: 'Showcase Closer 85%', time: Math.min(duration - 0.1, duration * 0.85), percent: 85 }
+    ];
+
+    const frameOptions = [];
+    for (const opt of presets) {
+      metaVideo.currentTime = opt.time;
+      await new Promise(r => { metaVideo.onseeked = r; metaVideo.onerror = r; });
+      const w = metaVideo.videoWidth ? Math.min(360, metaVideo.videoWidth) : 240;
+      const h = metaVideo.videoHeight ? Math.round((w / metaVideo.videoWidth) * metaVideo.videoHeight) : 426;
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(metaVideo, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const mins = Math.floor(opt.time / 60);
+      const secs = Math.floor(opt.time % 60);
+      frameOptions.push({
+        ...opt,
+        timeFormatted: `${mins}:${secs.toString().padStart(2, '0')}`,
+        dataUrl
+      });
+    }
+
+    const frames = [];
+    const numFrames = 5;
     for (let i = 0; i < numFrames; i++) {
-        const time = (metaVideo.duration / numFrames) * i + (metaVideo.duration / numFrames / 2);
+        const time = (duration / numFrames) * i + (duration / numFrames / 2);
         metaVideo.currentTime = time;
         await new Promise(r => { metaVideo.onseeked = r; metaVideo.onerror = r; });
-        if (i === 0) {
-            canvas.width = metaVideo.videoWidth / 4;
-            canvas.height = metaVideo.videoHeight / 4;
-        }
+        canvas.width = (metaVideo.videoWidth || 1080) / 4;
+        canvas.height = (metaVideo.videoHeight || 1920) / 4;
         ctx.drawImage(metaVideo, 0, 0, canvas.width, canvas.height);
         frames.push(canvas.toDataURL('image/jpeg', 0.5));
     }
     
-    setEditPopup(prev => ({ ...prev, filmstrip: frames, generatingFilmstrip: false }));
+    setEditPopup(prev => ({ 
+      ...prev, 
+      filmstrip: frames, 
+      frameOptions, 
+      selectedFrameOption: 'frame_1',
+      scrubPercent: 15,
+      generatingFilmstrip: false 
+    }));
+
+    const mainVideo = document.getElementById('frame-extractor-video');
+    if (mainVideo) {
+      mainVideo.currentTime = Math.max(0.1, duration * 0.15);
+    }
   };
 
   useEffect(() => {
@@ -1847,7 +1888,7 @@ export default function PortfolioManager() {
                                   }
                               }}
                           >
-                              <Sparkles size={16} /> Ask Orlo to Fill All
+                              <CreativeSpark size={16} /> Ask Orlo to Fill All
                           </button>
                       </div>
                   )}
@@ -1894,7 +1935,7 @@ export default function PortfolioManager() {
                                         }
                                     }}
                                   >
-                                      <Sparkles size={12} /> Ask Orlo to Fill
+                                      <CreativeSpark size={12} /> Ask Orlo to Fill
                                   </button>
                               </div>
                               <input 
@@ -2040,7 +2081,7 @@ export default function PortfolioManager() {
                                             }
                                         }}
                                       >
-                                          <Sparkles size={12} /> Ask Orlo to Fill
+                                          <CreativeSpark size={12} /> Ask Orlo to Fill
                                       </button>
                                   </div>
                                   <textarea 
@@ -2081,7 +2122,7 @@ export default function PortfolioManager() {
                           autoFocus
                       />
                   ) : editPopup.field === 'extract_frame' ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', width: '100%' }}>
                           <div style={{ position: 'relative', width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(235, 215, 63, 0.4)', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', background: '#000', marginBottom: '20px' }}>
                               <video 
                                   id="frame-extractor-video"
@@ -2099,9 +2140,94 @@ export default function PortfolioManager() {
                                   }}
                               />
                           </div>
+
+                          {/* 3 Selectable Candidate Frame Options */}
+                          <div style={{ width: '100%', marginBottom: '20px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                  <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.68rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <CreativeSpark size={13} color="#ebd73f" /> CHOOSE FRAME OPTION (3 PRESETS)
+                                  </span>
+                                  <span style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)' }}>
+                                      Select an option or scrub manually
+                                  </span>
+                              </div>
+
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                                  {editPopup.generatingFilmstrip ? (
+                                      [1, 2, 3].map((n) => (
+                                          <div key={n} style={{ height: '110px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.68rem', fontFamily: "'Clash Display', sans-serif" }}>
+                                              <RefreshCw size={14} style={{ animation: 'spin 1.2s linear infinite', marginBottom: '6px', color: '#ebd73f' }} />
+                                              <span>Generating Option {n}...</span>
+                                          </div>
+                                      ))
+                                  ) : editPopup.frameOptions && editPopup.frameOptions.length > 0 ? (
+                                      editPopup.frameOptions.map((opt) => {
+                                          const isSelected = editPopup.selectedFrameOption === opt.id;
+                                          return (
+                                              <div 
+                                                  key={opt.id}
+                                                  onClick={() => {
+                                                      setEditPopup(prev => ({ ...prev, selectedFrameOption: opt.id, scrubPercent: opt.percent }));
+                                                      const videoEl = document.getElementById('frame-extractor-video');
+                                                      if (videoEl) {
+                                                          videoEl.currentTime = opt.time;
+                                                      }
+                                                  }}
+                                                  style={{
+                                                      borderRadius: '12px',
+                                                      overflow: 'hidden',
+                                                      border: isSelected ? '2px solid #ebd73f' : '1px solid rgba(255,255,255,0.12)',
+                                                      background: '#0d0d14',
+                                                      cursor: 'pointer',
+                                                      boxShadow: isSelected ? '0 0 16px rgba(235, 215, 63, 0.35)' : 'none',
+                                                      transition: 'all 0.2s ease',
+                                                      display: 'flex',
+                                                      flexDirection: 'column'
+                                                  }}
+                                              >
+                                                  <div style={{ position: 'relative', width: '100%', height: '80px', background: '#000', overflow: 'hidden' }}>
+                                                      <img 
+                                                          src={opt.dataUrl} 
+                                                          alt={opt.label} 
+                                                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                                      />
+                                                      <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.8)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.6rem', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>
+                                                          {opt.timeFormatted}
+                                                      </div>
+                                                      {isSelected && (
+                                                          <div style={{ position: 'absolute', top: '4px', left: '4px', background: '#ebd73f', color: '#050505', padding: '1px 6px', borderRadius: '8px', fontSize: '0.52rem', fontFamily: "'Panchang', sans-serif", fontWeight: 800 }}>
+                                                              ✓ ACTIVE
+                                                          </div>
+                                                      )}
+                                                  </div>
+                                                  <div style={{ padding: '6px 8px', background: isSelected ? 'rgba(235, 215, 63, 0.12)' : 'rgba(255,255,255,0.02)', textAlign: 'center' }}>
+                                                      <div style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.58rem', fontWeight: 800, color: isSelected ? '#ebd73f' : '#ffffff', letterSpacing: '0.3px' }}>
+                                                          {opt.label}
+                                                      </div>
+                                                      <div style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.64rem', color: isSelected ? '#ebd73f' : 'rgba(255,255,255,0.5)', marginTop: '1px' }}>
+                                                          {opt.sub}
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          );
+                                      })
+                                  ) : null}
+                              </div>
+                          </div>
+
+                          {/* Manual Scrubber Fine-Tune Bar */}
+                          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                              <span style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)' }}>
+                                  Manual Scrubber Fine-Tune
+                              </span>
+                              <span style={{ fontFamily: "'Panchang', sans-serif", fontSize: '0.65rem', color: '#ebd73f', fontWeight: 800 }}>
+                                  {Math.round(editPopup.scrubPercent)}%
+                              </span>
+                          </div>
+
                           <div style={{ position: 'relative', width: '100%', height: '60px', display: 'flex', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: '#111' }}>
                               {editPopup.generatingFilmstrip ? (
-                                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '0.8rem', fontFamily: 'Clash Display, sans-serif' }}>
+                                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '0.8rem', fontFamily: "'Clash Display', sans-serif" }}>
                                       <div style={{ animation: 'pulse 1.5s infinite' }}>Generating frames...</div>
                                   </div>
                               ) : editPopup.filmstrip && editPopup.filmstrip.length > 0 ? (
@@ -2138,7 +2264,7 @@ export default function PortfolioManager() {
                                           onTouchEnd={() => setEditPopup(prev => ({ ...prev, isScrubbing: false }))}
                                           onChange={(e) => {
                                               const percent = parseFloat(e.target.value);
-                                              setEditPopup(prev => ({ ...prev, scrubPercent: percent }));
+                                              setEditPopup(prev => ({ ...prev, scrubPercent: percent, selectedFrameOption: null }));
                                               const videoEl = document.getElementById('frame-extractor-video');
                                               if (videoEl && videoEl.duration) {
                                                   videoEl.currentTime = (percent / 100) * videoEl.duration;
@@ -2156,7 +2282,7 @@ export default function PortfolioManager() {
                                       />
                                   </>
                               ) : (
-                                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '0.8rem', fontFamily: 'Clash Display, sans-serif' }}>
+                                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '0.8rem', fontFamily: "'Clash Display', sans-serif" }}>
                                       No frames available
                                   </div>
                               )}
@@ -2658,7 +2784,7 @@ export default function PortfolioManager() {
                             e.currentTarget.style.background = 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)';
                         }}
                         >
-                            <Sparkles size={16} /> Ask Orlo
+                            <CreativeSpark size={16} /> Ask Orlo
                         </button>
                      </div>
                      <input type="text" placeholder={activeTab === TABS.GRAPHICS ? "Graphic Title..." : "Video Title..."} value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required={activeTab === TABS.LONG_FORM} />
@@ -2701,7 +2827,7 @@ export default function PortfolioManager() {
                                 e.currentTarget.style.background = 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(212, 188, 28, 0.05) 100%)';
                             }}
                             >
-                                <Sparkles size={16} /> Ask Orlo
+                                <CreativeSpark size={16} /> Ask Orlo
                             </button>
                         )}
                      </div>

@@ -4,11 +4,12 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useGenz } from '../../contexts/GenzContext';
 import { 
-  Book, ChevronRight, FileText, AlertCircle, Search, Sparkles, 
+  Book, ChevronRight, FileText, AlertCircle, Search, 
   Clock, CheckCircle2, Copy, Check, ExternalLink, ShieldCheck, 
   Zap, Layers, Video, FolderCheck, ArrowUpRight, X, UserCheck, 
   Send, SlidersHorizontal, Flame, Eye, RefreshCw
 } from 'lucide-react';
+import CreativeSpark from '../components/CreativeSpark';
 import styles from '../admin.module.css';
 
 export default function SOPPage() {
@@ -225,7 +226,7 @@ export default function SOPPage() {
       <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
         <div style={{ maxWidth: '680px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px', borderRadius: '20px', background: 'rgba(235, 215, 63, 0.12)', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>
-            <Sparkles size={12} />
+            <CreativeSpark size={12} color="#ebd73f" />
             {isGenz ? 'dripp production playbook' : 'Dripp Studio Operating System'}
           </div>
           <h1 style={{ fontFamily: "'Panchang', sans-serif", fontSize: '2.4rem', fontWeight: 800, margin: '0 0 0.6rem 0', letterSpacing: '-0.03em', lineHeight: 1.15 }}>
@@ -712,7 +713,7 @@ export default function SOPPage() {
                   gap: '6px'
                 }}
               >
-                <Sparkles size={14} /> Ask Orlo to adapt this SOP
+                <CreativeSpark size={14} /> Ask Orlo to adapt this SOP
               </button>
               <button
                 type="button"

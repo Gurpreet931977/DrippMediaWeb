@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video, AlertTriangle, BookOpen, ChevronLeft, Menu, X, Sparkles, ClipboardList, Layers } from 'lucide-react';
+import { LayoutDashboard, FileText, PackagePlus, LogOut, Mail, Settings, Video, AlertTriangle, BookOpen, ChevronLeft, Menu, X, ClipboardList, Layers } from 'lucide-react';
+import CreativeSpark from './CreativeSpark';
 import styles from '../admin.module.css';
 import { useGenz } from '../../contexts/GenzContext';
 import { useState, useEffect } from 'react';
@@ -38,7 +38,7 @@ export default function AdminSidebar() {
     { name: isGenz ? 'cook a pitch' : 'Quotes & Packages', path: '/dripp-studio/quote', icon: PackagePlus },
     { name: isGenz ? "masterplans" : 'PMP Maker', path: '/dripp-studio/package', icon: PackagePlus },
     { name: isGenz ? 'the showcase' : 'Portfolio Manager', path: '/dripp-studio/portfolio', icon: Video },
-    { name: isGenz ? 'daily tips' : 'Daily Tips', path: '/dripp-studio/daily-tips', icon: Sparkles },
+    { name: isGenz ? 'daily tips' : 'Daily Tips', path: '/dripp-studio/daily-tips', icon: CreativeSpark },
     { name: isGenz ? 'email blasts' : 'Email Campaigns', path: '/dripp-studio/email', icon: Mail },
     { name: isGenz ? 'glitches' : 'Error Logs', path: '/dripp-studio/errors', icon: AlertTriangle },
     { name: isGenz ? 'the engine' : 'System', path: '/dripp-studio/system', icon: Settings },

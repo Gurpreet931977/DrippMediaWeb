@@ -33,15 +33,17 @@ const ALLOWED_ORIGINS =
  * @returns {Record<string, string>}
  */
 export function corsHeaders(request) {
-  const origin = request.headers.get('origin') || '';
+  const origin = request?.headers?.get('origin') || '';
   const headers = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Origin, X-Requested-With',
     'Access-Control-Max-Age': '86400',
   };
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    headers['Access-Control-Allow-Origin'] = origin;
-    headers['Vary'] = 'Origin';
+  if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+    if (origin) {
+      headers['Access-Control-Allow-Origin'] = origin;
+      headers['Vary'] = 'Origin';
+    }
   }
   return headers;
 }

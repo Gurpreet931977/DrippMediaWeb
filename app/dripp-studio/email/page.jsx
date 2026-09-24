@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Mail, Send, Users, AlertCircle, CheckCircle2, Info, Sparkles, LayoutTemplate, PenTool, RefreshCw, Clock, Calendar, Edit2, Trash2 } from 'lucide-react';
+import { Mail, Send, Users, AlertCircle, CheckCircle2, Info, LayoutTemplate, PenTool, RefreshCw, Clock, Calendar, Edit2, Trash2 } from 'lucide-react';
 import DrippDatePicker from '../components/DrippDatePicker';
 import OrloIcon from '../components/OrloIcon';
 import RefreshIcon from '../components/RefreshIcon';

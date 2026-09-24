@@ -5,7 +5,8 @@ import AdminSidebar from './components/AdminSidebar';
 import OrloChat from './components/OrloChat';
 import styles from './admin.module.css';
 import { useRouter, usePathname } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, AlertTriangle, X, RefreshCw, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertTriangle, X, RefreshCw } from 'lucide-react';
+import CreativeSpark from './components/CreativeSpark';
 import { useErrorLog } from '../contexts/ErrorLogContext';
 
 export default function AdminLayout({ children }) {
@@ -246,7 +247,7 @@ export default function AdminLayout({ children }) {
               color: '#ebd73f',
               boxShadow: '0 0 20px rgba(235, 215, 63, 0.15)'
             }}>
-              <Sparkles size={24} />
+              <CreativeSpark size={24} color="#ebd73f" />
             </div>
             <h2 className="login-hero-title" style={{ color: '#fff', marginBottom: '8px', fontFamily: "'Panchang', sans-serif", fontSize: '2rem', letterSpacing: '1.5px', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
               DRIPP <span style={{ color: '#ebd73f' }}>STUDIO</span>

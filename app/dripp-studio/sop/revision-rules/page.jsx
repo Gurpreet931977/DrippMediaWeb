@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useGenz } from '../../../contexts/GenzContext';
 import { 
   ChevronLeft, AlertTriangle, CheckCircle2, XCircle, Copy, Check, 
-  Sparkles, ShieldCheck, Scale, Clock, MessageSquare, AlertCircle, FileCheck 
+  ShieldCheck, Scale, Clock, MessageSquare, AlertCircle, FileCheck 
 } from 'lucide-react';
 import styles from '../../admin.module.css';
 

@@ -36,28 +36,31 @@ export async function POST(request) {
     }
 
     const staticDefaults = [
+      'gemini-2.5-flash',
       'gemini-2.0-flash',
       'gemini-1.5-flash-latest',
       'gemini-1.5-pro-latest',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro'
+      'gemini-2.5-pro'
     ];
 
     function resolveModelName(rawModel) {
-      if (!rawModel) return 'gemini-2.0-flash';
-      if (rawModel.includes('3.6') || rawModel.includes('3.5') || rawModel.includes('2.5')) {
-        return rawModel.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
+      if (!rawModel) return 'gemini-2.5-flash';
+      const clean = String(rawModel).replace(/^models\//, '').trim();
+      if (clean === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
+      if (clean === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
+      if (clean.includes('3.6') || clean.includes('3.5')) {
+        return clean.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.5-flash';
       }
-      return rawModel;
+      return clean;
     }
 
     const primaryModel = resolveModelName(model);
     const candidateModels = [
       primaryModel,
-      ...verifiedModels,
+      ...verifiedModels.map(m => m === 'gemini-1.5-pro' ? 'gemini-1.5-pro-latest' : m),
       ...staticDefaults
     ];
-    const fallbackQueue = [...new Set(candidateModels)];
+    const fallbackQueue = [...new Set(candidateModels)].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro');
 
     // Construct inline data for each frame
     const imageParts = frames.map(b64 => ({
