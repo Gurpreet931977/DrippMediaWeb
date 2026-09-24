@@ -59,6 +59,7 @@ export default function WebPortfolioManager() {
     display_url: '',
     image_url: '',
     frame_options: [],
+    selected_frame_id: 'hero',
     video_url: '',
     tech_stack: ['Next.js 14', 'TypeScript', 'Tailwind CSS'],
     stats: [
@@ -536,7 +537,8 @@ export default function WebPortfolioManager() {
           display_url: prev.display_url || domain,
           title: prev.title || suggestedTitle,
           image_url: data.image_url,
-          frame_options: frameOpts
+          frame_options: frameOpts,
+          selected_frame_id: 'hero'
         }));
 
         showNotification('success', '✨ 3 live site frames captured! Opening frame selector...');
@@ -1142,12 +1144,18 @@ export default function WebPortfolioManager() {
                         </span>
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                           {formData.frame_options.map((opt) => {
-                            const isSel = formData.image_url === opt.image_url;
+                            const isSel = formData.selected_frame_id
+                              ? formData.selected_frame_id === opt.id
+                              : formData.image_url === opt.image_url;
                             return (
                               <button
                                 key={opt.id}
                                 type="button"
-                                onClick={() => setFormData(prev => ({ ...prev, image_url: opt.image_url }))}
+                                onClick={() => setFormData(prev => ({ 
+                                  ...prev, 
+                                  image_url: opt.image_url, 
+                                  selected_frame_id: opt.id 
+                                }))}
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',

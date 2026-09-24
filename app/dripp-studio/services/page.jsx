@@ -355,7 +355,26 @@ export default function ServicesManager() {
   );
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', background: '#0d0d11', padding: '32px 36px 120px', position: 'relative' }}>
+    <div style={{ flex: 1, overflowY: 'auto', background: '#0d0d11', padding: 'clamp(20px, 3vw, 32px) clamp(16px, 3vw, 36px) 120px', position: 'relative', width: '100%', boxSizing: 'border-box' }}>
+      <style>{`
+        .services-save-prompt {
+          left: 320px;
+        }
+        @media (max-width: 1024px) {
+          .services-save-prompt {
+            left: 16px !important;
+            right: 16px !important;
+            bottom: 16px !important;
+            padding: 12px 16px !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+          }
+          .services-save-prompt > div:last-child {
+            justify-content: flex-end;
+          }
+        }
+      `}</style>
       
       {/* Top Banner & Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
@@ -477,13 +496,21 @@ export default function ServicesManager() {
           </div>
         )}
 
-        {/* Tab Pills */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none' }}>
+        {/* Tab Pills - Clean wrapping layout prevents horizontal clipping and cut-off buttons */}
+        <div style={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: 10, 
+          padding: '4px 2px 8px 2px', 
+          overflow: 'visible',
+          width: '100%'
+        }}>
           {categories.map((cat) => {
             const isActive = cat.id === activeCatId;
             return (
-              <div
+              <button
                 key={cat.id}
+                type="button"
                 onClick={() => setActiveCatId(cat.id)}
                 style={{
                   display: 'inline-flex',
@@ -493,7 +520,7 @@ export default function ServicesManager() {
                   borderRadius: 12,
                   background: isActive ? '#ebd73f' : 'rgba(255,255,255,0.03)',
                   color: isActive ? '#000' : 'rgba(255,255,255,0.7)',
-                  border: isActive ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.08)',
+                  border: isActive ? '1.5px solid #ebd73f' : '1px solid rgba(255,255,255,0.08)',
                   fontFamily: "'Panchang', sans-serif",
                   fontSize: '0.72rem',
                   fontWeight: 800,
@@ -516,7 +543,7 @@ export default function ServicesManager() {
                 }}>
                   {cat.services?.length || 0}
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -853,11 +880,10 @@ export default function ServicesManager() {
       )}
 
       {/* Floating Save Prompt Bar (Smooth non-abrupt slide-up entrance) */}
-      <div style={{
+      <div className="services-save-prompt" style={{
         position: 'fixed',
         bottom: 24,
         right: 36,
-        left: 320,
         background: 'rgba(20, 20, 26, 0.96)',
         border: '1px solid rgba(235, 215, 63, 0.4)',
         borderRadius: 16,

@@ -494,7 +494,7 @@ export default function ImageCropperModal({
                   gap: '10px'
                 }}>
                   {frameOptions.map((opt, idx) => {
-                    const isSelected = (activeImageSrc === opt.image_url) || (selectedPreset === opt.id);
+                    const isSelected = selectedPreset ? (selectedPreset === opt.id) : (activeImageSrc === opt.image_url);
                     return (
                       <button
                         key={opt.id || idx}
