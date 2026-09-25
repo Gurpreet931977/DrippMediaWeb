@@ -14,16 +14,25 @@ import CreativeSpark from '../components/CreativeSpark';
 
 const DEFAULT_WEB_CATEGORIES = [
   'Enterprise Digital Platform',
+  'E-Commerce & Online Store',
+  'High-Converting Landing Page',
+  'SaaS & B2B Web App',
+  'Portfolio & Creative Studio',
   'Healthcare & Clinical Web',
   'Luxury Fragrance & Commerce',
   'AI Companion & Product Web',
-  'SaaS & B2B Web App',
-  'E-Learning & EdTech Platform',
-  'Web3 & Digital Culture',
-  'Portfolio & Creative Studio',
   'Fintech & Payment Systems',
+  'E-Learning & EdTech Platform',
+  'Startup & Product Launch',
+  'Creative Agency & Studio',
+  'Corporate & Business Web',
   'Hospitality & Real Estate',
-  'B2B Industrial & Global Trade'
+  'Restaurant, Food & Beverage',
+  'B2B Industrial & Global Trade',
+  'Mobile App Showcase & Micro-Site',
+  'Web3 & Digital Culture',
+  'Media, Editorial & Publication',
+  'Personal Brand & Creator'
 ];
 
 const POPULAR_TECH_STACKS = [
@@ -758,25 +767,61 @@ export default function WebPortfolioManager() {
     <div style={{ padding: '10px 0' }}>
       {/* Toast Notification */}
       {notification && (
-        <div style={{
-          position: 'fixed',
-          bottom: '30px',
-          right: '30px',
-          zIndex: 9999,
-          background: notification.type === 'error' ? '#ef4444' : '#10b981',
-          color: '#ffffff',
-          padding: '14px 24px',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          fontFamily: 'Clash Display, sans-serif',
-          fontWeight: '600',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.6)'
-        }}>
-          {notification.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
-          <span>{notification.message}</span>
-        </div>
+        <>
+          <style>{`
+            @keyframes webToastSlideIn {
+              0% { opacity: 0; transform: translate(-50%, -20px) scale(0.96); }
+              100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+            }
+          `}</style>
+          <div style={{
+            position: 'fixed',
+            top: '32px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            background: notification.type === 'error' 
+              ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95))' 
+              : 'linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95))',
+            color: '#ffffff',
+            padding: '12px 20px',
+            borderRadius: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontFamily: "'Clash Display', sans-serif",
+            fontWeight: '600',
+            fontSize: '0.88rem',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(20px)',
+            animation: 'webToastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            maxWidth: '92vw'
+          }}>
+            {notification.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+            <span>{notification.message}</span>
+            <button
+              type="button"
+              onClick={() => setNotification(null)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '20px',
+                height: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                cursor: 'pointer',
+                marginLeft: '6px',
+                padding: 0
+              }}
+              title="Dismiss notification"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        </>
       )}
 
       {/* Upload / Create Web Project Card */}

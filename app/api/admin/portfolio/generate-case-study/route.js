@@ -105,7 +105,7 @@ Return ONLY a valid JSON object matching this exact schema (no markdown, no back
 {
   "title": "${derivedTitle}",
   "tagline": "Punchy, elite one-sentence value proposition hook (under 10 words)",
-  "category": "Pick best match: Enterprise Digital Platform | Healthcare & Clinical Web | Luxury Fragrance & Commerce | AI Companion & Product Web | SaaS & B2B Web App | E-Learning & EdTech Platform | Web3 & Digital Culture | Portfolio & Creative Studio | Fintech & Payment Systems | Hospitality & Real Estate | B2B Industrial & Global Trade",
+  "category": "Pick best match: Enterprise Digital Platform | E-Commerce & Online Store | High-Converting Landing Page | SaaS & B2B Web App | Portfolio & Creative Studio | Healthcare & Clinical Web | Luxury Fragrance & Commerce | AI Companion & Product Web | Fintech & Payment Systems | E-Learning & EdTech Platform | Startup & Product Launch | Creative Agency & Studio | Corporate & Business Web | Hospitality & Real Estate | Restaurant, Food & Beverage | B2B Industrial & Global Trade | Mobile App Showcase & Micro-Site | Web3 & Digital Culture | Media, Editorial & Publication | Personal Brand & Creator",
   "displayUrl": "${cleanDomain || 'example.com'}",
   "challenge": "2-3 sentences explaining the client problem, legacy blockers, or industry challenges",
   "solution": "2-3 sentences explaining the bespoke architecture, kinetic motion design, and performance optimizations delivered",
@@ -163,6 +163,10 @@ Return ONLY a valid JSON object matching this exact schema (no markdown, no back
     if (!inputCategory || inputCategory === 'Enterprise Digital Platform') {
       if (/\b(metal|metals|metallurg|metallist|scrap|steel|aluminium|aluminum|copper|brass|bronze|zinc|lead|nickel|alloy|alloys|furnace|furnaces|foundry|foundries|industrial|manufactur|commodity|commodities|logistics|freight|shipping|cargo|import|export|trade\s*house|raw\s*material|circular\s*economy|recycle\s*cans?|smelting)\b/i.test(textCorpus)) {
         category = 'B2B Industrial & Global Trade';
+      } else if (/\b(shop|store|cart|checkout|ecommerce|e-commerce|shopify|woocommerce|catalog|retail|merch|buy\s*online|order\s*now)\b/i.test(textCorpus)) {
+        category = 'E-Commerce & Online Store';
+      } else if (/\b(landing\s*page|waitlist|lead\s*gen|lead\s*capture|pre-order|campaign|launch\s*page|funnel|get\s*early\s*access)\b/i.test(textCorpus)) {
+        category = 'High-Converting Landing Page';
       } else if (/\b(clinic|health|doctor|skin|medical|laser|dermatolog|dental|hospital|patient|wellness\s*clinic)\b/i.test(textCorpus)) {
         category = 'Healthcare & Clinical Web';
       } else if (/\b(fragrance|perfume|cologne|scent|decant|luxury\s*apparel|luxury\s*fashion|couture)\b/i.test(textCorpus)) {
@@ -171,12 +175,18 @@ Return ONLY a valid JSON object matching this exact schema (no markdown, no back
         category = 'AI Companion & Product Web';
       } else if (/\b(saas|cloud\s*software|dashboard|workflow|crm|erp|b2b\s*app|platform\s*app)\b/i.test(textCorpus)) {
         category = 'SaaS & B2B Web App';
+      } else if (/\b(startup|stealth|seed\s*round|beta\s*release|product\s*hunt|join\s*waitlist)\b/i.test(textCorpus)) {
+        category = 'Startup & Product Launch';
+      } else if (/\b(restaurant|cafe|bistro|dining|culinary|food|coffee|bakery|menu|chef)\b/i.test(textCorpus)) {
+        category = 'Restaurant, Food & Beverage';
       } else if (/\b(edtech|e-learning|curriculum|academy|students?|syllabus|courses?|tuition|bootcamp|pedagogy|tutoring|university|school)\b/i.test(textCorpus) && !/\b(terms|learn\s*more|footer)\b/i.test(textCorpus)) {
         category = 'E-Learning & EdTech Platform';
       } else if (/\b(fintech|payment|neobank|banking|investing|hedge\s*fund|defi|crypto|token|wallet|invoice|billing|credit\s*card|checkout)\b/i.test(textCorpus)) {
         category = 'Fintech & Payment Systems';
       } else if (/\b(hotel|resort|real\s*estate|property|villa|stay|travel|architect|interior)\b/i.test(textCorpus)) {
         category = 'Hospitality & Real Estate';
+      } else if (/\b(mobile\s*app|ios\s*app|android\s*app|app\s*store|testflight|download\s*app)\b/i.test(textCorpus)) {
+        category = 'Mobile App Showcase & Micro-Site';
       } else if (/\b(studio|creative\s*agency|branding\s*agency|motion\s*design|portfolio)\b/i.test(textCorpus)) {
         category = 'Portfolio & Creative Studio';
       } else if (/\b(web3|nft|blockchain|dao|metaverse)\b/i.test(textCorpus)) {
@@ -211,7 +221,33 @@ Return ONLY a valid JSON object matching this exact schema (no markdown, no back
       { label: 'Conversion Growth', value: '+280%' }
     ];
 
-    if (category === 'B2B Industrial & Global Trade') {
+    if (category === 'E-Commerce & Online Store') {
+      challenge = `High mobile cart abandonment, sluggish product catalog navigation, and slow checkout friction severely erode revenue in modern online shopping.`;
+      solution = `Engineered a lightning-fast headless e-commerce store for ${derivedTitle} with sub-second product filtering, kinetic micro-interactions, and a frictionless 1-tap checkout pipeline.`;
+      pillars = [
+        { title: '01 / SUB-SECOND CATALOG', desc: 'Instant product filtering and zero-latency variant switching powered by edge caching.' },
+        { title: '02 / 1-TAP CHECKOUT', desc: 'Friction-free mobile checkout pipeline eliminating cart abandonment drop-offs.' },
+        { title: '03 / KINETIC SHOWCASE', desc: 'High-definition 60 FPS visual merchandising that commands premium brand positioning.' }
+      ];
+      stats = [
+        { label: 'Page Load Time', value: '0.31s' },
+        { label: 'SEO Score', value: '100%' },
+        { label: 'Checkout Conversion', value: '+260%' }
+      ];
+    } else if (category === 'High-Converting Landing Page') {
+      challenge = `High bounce rates on paid traffic and low inquiry rates caused by slow hero renders and unclear, template-driven value propositions.`;
+      solution = `Architected a high-converting, kinetic landing page for ${derivedTitle} featuring sub-second global edge rendering, persuasive visual storytelling, and a friction-free lead capture funnel.`;
+      pillars = [
+        { title: '01 / SUB-SECOND HERO', desc: 'Instant first contentful paint ensuring visitors engage before bouncing.' },
+        { title: '02 / CONVERSION FUNNEL', desc: 'Strategically paced visual hierarchy guiding visitors directly into inquiry triggers.' },
+        { title: '03 / 60 FPS POLISH', desc: 'Bespoke physics-driven micro-interactions that elevate brand trust and credibility.' }
+      ];
+      stats = [
+        { label: 'Page Load Time', value: '0.24s' },
+        { label: 'SEO Score', value: '100%' },
+        { label: 'Lead Capture Growth', value: '+380%' }
+      ];
+    } else if (category === 'B2B Industrial & Global Trade') {
       challenge = scrapedData.description
         ? `Global scrap, metals, and industrial commodity trading relies on rock-solid trust, transparent material specifications, and cross-border logistics across multiple continents. Traditional static websites fail to convey metallurgical standards, causing friction in direct procurement inquiries.`
         : `Legacy trade platforms suffer from slow load times, unverified specifications, and fragmented buyer inquiry workflows that reduce high-value deal conversion.`;
