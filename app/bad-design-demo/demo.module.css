@@ -11,6 +11,18 @@
   box-sizing: border-box;
 }
 
+.pageContainer * {
+  cursor: default !important;
+}
+
+.pageContainer button,
+.pageContainer a,
+.pageContainer [role="button"],
+.pageContainer li,
+.pageContainer input[type="button"] {
+  cursor: pointer !important;
+}
+
 /* ─────────────────────────────────────────────────────────────
    TOP FLOATING CONTROLLER FOR THE CONTENT SHOOT
    ───────────────────────────────────────────────────────────── */

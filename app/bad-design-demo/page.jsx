@@ -27,6 +27,13 @@ export default function BadDesignDemoPage() {
   const [activeFlawIndex, setActiveFlawIndex] = useState(null);
   const [hideToolbar, setHideToolbar] = useState(false);
 
+  // Ensure body is visible (globals.css sets body opacity: 0 until .loaded is added)
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('loaded');
+    }
+  }, []);
+
   // Keyboard shortcuts for seamless screen recording
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -113,6 +120,12 @@ export default function BadDesignDemoPage() {
 
   return (
     <div className={styles.pageContainer}>
+      {/* Ensure body is 100% visible immediately */}
+      <style>{`
+        body {
+          opacity: 1 !important;
+        }
+      `}</style>
       {/* ─────────────────────────────────────────────────────────────
           FLOATING SHOOT CONTROLLER
           (Can be minimized or toggled via keyboard keys: 1, 2, A, H)
