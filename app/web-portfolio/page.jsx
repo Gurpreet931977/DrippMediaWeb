@@ -2525,7 +2525,7 @@ export default function Page() {
 
             {/* Primary High-Impact CTA Button */}
             <a
-              href="mailto:contact@drippmedia.com?subject=Project Inquiry: Custom Website Build"
+              href="mailto:gurpreet@drippmedia.com?subject=Project Inquiry: Custom Website Build"
               onClick={(e) => {
                 e.stopPropagation();
                 playSound('click');

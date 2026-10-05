@@ -17,7 +17,7 @@ def _get_config():
         "port":          int(os.getenv("SMTP_PORT", 587)),
         "user":          os.getenv("SMTP_USER", ""),
         "password":      os.getenv("SMTP_PASS", ""),
-        "agency_email":  os.getenv("AGENCY_EMAIL", "mediadripp@gmail.com"),
+        "agency_email":  os.getenv("AGENCY_EMAIL", "gurpreet@drippmedia.com"),
     }
 
 
@@ -150,7 +150,7 @@ def send_client_autoreply(lead: dict):
             In the meantime, feel free to check out our portfolio or connect with us on social media.
           </p>
           <div style="margin-top:32px;text-align:center;">
-            <a href="mailto:mediadripp@gmail.com"
+            <a href="mailto:gurpreet@drippmedia.com"
                style="display:inline-block;background:#ebd73f;color:#050505;padding:14px 32px;border-radius:8px;
                       font-weight:800;font-size:14px;text-decoration:none;letter-spacing:1px;">
               REPLY TO THIS EMAIL
@@ -158,7 +158,7 @@ def send_client_autoreply(lead: dict):
           </div>
         </div>
         <div style="padding:20px 32px;border-top:1px solid #1a1a1a;text-align:center;">
-          <p style="color:#333;font-size:11px;margin:0;">© 2026 Dripp Media · mediadripp@gmail.com</p>
+          <p style="color:#333;font-size:11px;margin:0;">© 2026 Dripp Media · gurpreet@drippmedia.com</p>
         </div>
       </div>
     </body>
@@ -190,7 +190,7 @@ def send_community_welcome(email: str):
             Get ready for exclusive drops, premium creative resources, behind-the-scenes content, 
             and early access to everything Dripp Media creates. Pure creative chaos awaits.
           </p>
-          <a href="mailto:mediadripp@gmail.com"
+          <a href="mailto:gurpreet@drippmedia.com"
              style="display:inline-block;background:#ebd73f;color:#050505;padding:14px 32px;border-radius:8px;
                     font-weight:800;font-size:14px;text-decoration:none;letter-spacing:1px;">
             SAY HI TO THE TEAM

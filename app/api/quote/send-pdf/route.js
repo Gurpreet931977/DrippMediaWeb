@@ -14,7 +14,7 @@ export async function POST(request) {
     const pdfBuffer = Buffer.from(pdfBase64, 'base64');
     
     // We send to both the Admin and the Client
-    const adminEmail = 'mediadripp@gmail.com';
+    const adminEmail = 'gurpreet@drippmedia.com';
     const toEmails = [adminEmail];
     
     // Add client email if available and valid

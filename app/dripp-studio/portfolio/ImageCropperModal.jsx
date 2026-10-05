@@ -8,6 +8,51 @@ import {
 } from 'lucide-react';
 import CreativeSpark from '../components/CreativeSpark';
 
+function FrameThumbnail({ url, alt, isSelected }) {
+  const [hasError, setHasError] = useState(false);
+
+  return (
+    <div style={{
+      width: '54px',
+      height: '34px',
+      borderRadius: '8px',
+      overflow: 'hidden',
+      background: '#12121a',
+      border: isSelected ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.12)',
+      boxShadow: isSelected ? '0 0 12px rgba(235, 215, 63, 0.25)' : 'inset 0 1px 3px rgba(0,0,0,0.5)',
+      flexShrink: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative'
+    }}>
+      {url && !hasError ? (
+        <img
+          src={url}
+          alt={alt || 'Frame preview'}
+          onError={() => setHasError(true)}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+        />
+      ) : (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          color: isSelected ? '#ebd73f' : 'rgba(255, 255, 255, 0.35)'
+        }}>
+          <ImageIcon size={14} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ImageCropperModal({ 
   isOpen, 
   imageSrc, 
@@ -70,8 +115,8 @@ export default function ImageCropperModal({
     setScale(1);
     setRotation(0);
 
-    let boxW = 780;
-    let boxH = 487.5; // 16:10
+    let boxW = 740;
+    let boxH = 462.5; // 16:10
     if (box && box.offsetWidth > 0 && box.offsetHeight > 0) {
       boxW = box.offsetWidth;
       boxH = box.offsetHeight;
@@ -203,8 +248,8 @@ export default function ImageCropperModal({
       ctx.fillStyle = '#0a0a0e';
       ctx.fillRect(0, 0, outputWidth, outputHeight);
 
-      let boxWidth = 780;
-      let boxHeight = 487.5;
+      let boxWidth = 740;
+      let boxHeight = 462.5;
       if (cropBox) {
         const rect = cropBox.getBoundingClientRect();
         if (rect.width > 0 && rect.height > 0) {
@@ -287,9 +332,9 @@ export default function ImageCropperModal({
         WebkitBackdropFilter: 'blur(20px)',
         zIndex: 100010,
         display: 'flex',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px 16px',
+        padding: '16px',
         overflowY: 'auto',
         boxSizing: 'border-box'
       }}
@@ -298,48 +343,48 @@ export default function ImageCropperModal({
         onClick={(e) => e.stopPropagation()}
         style={{
           margin: 'auto 0',
-          background: '#0d0d12',
-          border: '1px solid rgba(255, 255, 255, 0.14)',
-          borderTop: '1px solid rgba(235, 215, 63, 0.5)',
+          background: '#0a0a0f',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderTop: '1px solid rgba(235, 215, 63, 0.4)',
           borderRadius: '24px',
           width: '100%',
-          maxWidth: '1020px',
-          maxHeight: 'calc(100vh - 48px)',
+          maxWidth: '960px',
+          maxHeight: 'calc(100vh - 36px)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 0 1px rgba(235, 215, 63, 0.15)',
+          boxShadow: '0 30px 90px rgba(0,0,0,0.95), 0 0 35px rgba(235, 215, 63, 0.1)',
           boxSizing: 'border-box'
         }}
       >
         {/* Modal Header */}
         <div style={{
-          padding: '18px 26px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          padding: '14px 22px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(18, 18, 24, 0.9)',
+          background: 'rgba(16, 16, 22, 0.95)',
           flexShrink: 0
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
-              width: '38px',
-              height: '38px',
+              width: '36px',
+              height: '36px',
               borderRadius: '10px',
               background: 'rgba(235, 215, 63, 0.15)',
-              border: '1px solid rgba(235, 215, 63, 0.3)',
+              border: '1px solid rgba(235, 215, 63, 0.35)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#ebd73f'
             }}>
-              <ImageIcon size={20} />
+              <ImageIcon size={18} />
             </div>
             <div>
               <h3 style={{
                 fontFamily: "'Panchang', sans-serif",
-                fontSize: '1rem',
+                fontSize: '0.92rem',
                 fontWeight: 800,
                 color: '#ffffff',
                 margin: 0,
@@ -349,11 +394,11 @@ export default function ImageCropperModal({
               </h3>
               <p style={{
                 fontFamily: "'Clash Display', sans-serif",
-                fontSize: '0.78rem',
+                fontSize: '0.74rem',
                 color: 'rgba(255, 255, 255, 0.55)',
                 margin: '2px 0 0 0'
               }}>
-                Fixed 16:10 chassis frame • Choose from 3 frame options or drag to adjust
+                Fixed 16:10 chassis frame • Select captured fold or pan & zoom to customize
               </p>
             </div>
           </div>
@@ -376,9 +421,9 @@ export default function ImageCropperModal({
                   color: previewTab === 'crop' ? '#050505' : 'rgba(255,255,255,0.7)',
                   border: 'none',
                   borderRadius: '16px',
-                  padding: '6px 14px',
+                  padding: '5px 13px',
                   fontFamily: "'Panchang', sans-serif",
-                  fontSize: '0.65rem',
+                  fontSize: '0.62rem',
                   fontWeight: 800,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
@@ -394,9 +439,9 @@ export default function ImageCropperModal({
                   color: previewTab === 'preview' ? '#050505' : 'rgba(255,255,255,0.7)',
                   border: 'none',
                   borderRadius: '16px',
-                  padding: '6px 14px',
+                  padding: '5px 13px',
                   fontFamily: "'Panchang', sans-serif",
-                  fontSize: '0.65rem',
+                  fontSize: '0.62rem',
                   fontWeight: 800,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
@@ -413,8 +458,8 @@ export default function ImageCropperModal({
                 background: 'rgba(255, 255, 255, 0.08)',
                 border: '1px solid rgba(255, 255, 255, 0.15)',
                 borderRadius: '50%',
-                width: '36px',
-                height: '36px',
+                width: '34px',
+                height: '34px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -423,7 +468,7 @@ export default function ImageCropperModal({
               }}
               title="Close modal"
             >
-              <X size={18} />
+              <X size={17} />
             </button>
           </div>
         </div>
@@ -432,7 +477,7 @@ export default function ImageCropperModal({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '24px 28px',
+          padding: '16px 22px',
           boxSizing: 'border-box',
           minHeight: 0
         }}>
@@ -441,43 +486,43 @@ export default function ImageCropperModal({
             display: previewTab === 'crop' ? 'flex' : 'none',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '18px',
+            gap: '12px',
             width: '100%'
           }}>
             {/* 3 Interactive Frame Options Bar */}
             <div style={{
               width: '100%',
-              maxWidth: '780px',
+              maxWidth: '740px',
               background: 'rgba(15, 15, 22, 0.95)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '16px',
-              padding: '14px 18px',
+              padding: '10px 14px',
               boxSizing: 'border-box'
             }}>
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '10px'
+                marginBottom: '8px'
               }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: '6px',
                   fontFamily: "'Panchang', sans-serif",
-                  fontSize: '0.68rem',
+                  fontSize: '0.62rem',
                   fontWeight: 800,
                   color: '#ffffff',
-                  letterSpacing: '0.8px'
+                  letterSpacing: '0.6px'
                 }}>
-                  <CreativeSpark size={15} color="#ebd73f" /> 
+                  <CreativeSpark size={13} color="#ebd73f" /> 
                   {frameOptions && frameOptions.length > 0 
                     ? 'CHOOSE CAPTURED FRAME (3 SITE OPTIONS)' 
                     : 'CHOOSE FRAME OPTION (3 PRESETS)'}
                 </div>
                 <span style={{
                   fontFamily: "'Clash Display', sans-serif",
-                  fontSize: '0.7rem',
+                  fontSize: '0.65rem',
                   color: '#ebd73f',
                   fontWeight: 600
                 }}>
@@ -491,7 +536,7 @@ export default function ImageCropperModal({
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '10px'
+                  gap: '8px'
                 }}>
                   {frameOptions.map((opt, idx) => {
                     const isSelected = selectedPreset ? (selectedPreset === opt.id) : (activeImageSrc === opt.image_url);
@@ -507,53 +552,40 @@ export default function ImageCropperModal({
                           setRotation(0);
                         }}
                         style={{
-                          background: isSelected ? 'rgba(235, 215, 63, 0.16)' : 'rgba(255, 255, 255, 0.03)',
-                          border: isSelected ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
+                          background: isSelected ? 'rgba(235, 215, 63, 0.14)' : 'rgba(255, 255, 255, 0.03)',
+                          border: isSelected ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.08)',
                           borderRadius: '12px',
-                          padding: '10px 12px',
+                          padding: '8px 10px',
                           cursor: 'pointer',
                           textAlign: 'left',
                           transition: 'all 0.2s ease',
-                          boxShadow: isSelected ? '0 0 16px rgba(235, 215, 63, 0.25)' : 'none',
+                          boxShadow: isSelected ? '0 0 16px rgba(235, 215, 63, 0.22)' : 'none',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '10px'
                         }}
                       >
-                        {opt.image_url && (
-                          <img 
-                            src={opt.image_url} 
-                            alt={opt.label} 
-                            style={{
-                              width: '46px',
-                              height: '30px',
-                              borderRadius: '6px',
-                              objectFit: 'cover',
-                              border: isSelected ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.15)',
-                              flexShrink: 0
-                            }}
-                          />
-                        )}
+                        <FrameThumbnail url={opt.image_url} alt={opt.label} isSelected={isSelected} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
                             <span style={{
                               fontFamily: "'Panchang', sans-serif",
-                              fontSize: '0.62rem',
+                              fontSize: '0.6rem',
                               fontWeight: 800,
                               color: isSelected ? '#ebd73f' : '#ffffff',
-                              letterSpacing: '0.5px',
+                              letterSpacing: '0.4px',
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis'
                             }}>
                               {opt.label}
                             </span>
-                            {isSelected && <Check size={12} color="#ebd73f" />}
+                            {isSelected && <Check size={11} color="#ebd73f" />}
                           </div>
                           <div style={{
                             fontFamily: "'Clash Display', sans-serif",
-                            fontSize: '0.66rem',
-                            color: isSelected ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.5)',
+                            fontSize: '0.64rem',
+                            color: isSelected ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.45)',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis'
@@ -569,7 +601,7 @@ export default function ImageCropperModal({
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '10px'
+                  gap: '8px'
                 }}>
                   {/* Frame Option 1 */}
                   <button
@@ -577,31 +609,31 @@ export default function ImageCropperModal({
                     onClick={() => handleSelectPreset('top')}
                     style={{
                       background: selectedPreset === 'top' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(255, 255, 255, 0.03)',
-                      border: selectedPreset === 'top' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
+                      border: selectedPreset === 'top' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.08)',
                       borderRadius: '12px',
-                      padding: '10px 12px',
+                      padding: '8px 10px',
                       cursor: 'pointer',
                       textAlign: 'left',
                       transition: 'all 0.2s ease',
-                      boxShadow: selectedPreset === 'top' ? '0 0 15px rgba(235, 215, 63, 0.2)' : 'none'
+                      boxShadow: selectedPreset === 'top' ? '0 0 14px rgba(235, 215, 63, 0.2)' : 'none'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
                       <span style={{
                         fontFamily: "'Panchang', sans-serif",
-                        fontSize: '0.64rem',
+                        fontSize: '0.62rem',
                         fontWeight: 800,
                         color: selectedPreset === 'top' ? '#ebd73f' : '#ffffff',
-                        letterSpacing: '0.5px'
+                        letterSpacing: '0.4px'
                       }}>
                         01 • HERO FOLD
                       </span>
-                      <ArrowUp size={13} color={selectedPreset === 'top' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
+                      <ArrowUp size={12} color={selectedPreset === 'top' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
                     </div>
                     <div style={{
                       fontFamily: "'Clash Display', sans-serif",
-                      fontSize: '0.68rem',
-                      color: selectedPreset === 'top' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)'
+                      fontSize: '0.65rem',
+                      color: selectedPreset === 'top' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.45)'
                     }}>
                       Header & Main Visual
                     </div>
@@ -613,31 +645,31 @@ export default function ImageCropperModal({
                     onClick={() => handleSelectPreset('center')}
                     style={{
                       background: selectedPreset === 'center' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(255, 255, 255, 0.03)',
-                      border: selectedPreset === 'center' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
+                      border: selectedPreset === 'center' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.08)',
                       borderRadius: '12px',
-                      padding: '10px 12px',
+                      padding: '8px 10px',
                       cursor: 'pointer',
                       textAlign: 'left',
                       transition: 'all 0.2s ease',
-                      boxShadow: selectedPreset === 'center' ? '0 0 15px rgba(235, 215, 63, 0.2)' : 'none'
+                      boxShadow: selectedPreset === 'center' ? '0 0 14px rgba(235, 215, 63, 0.2)' : 'none'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
                       <span style={{
                         fontFamily: "'Panchang', sans-serif",
-                        fontSize: '0.64rem',
+                        fontSize: '0.62rem',
                         fontWeight: 800,
                         color: selectedPreset === 'center' ? '#ebd73f' : '#ffffff',
-                        letterSpacing: '0.5px'
+                        letterSpacing: '0.4px'
                       }}>
                         02 • CENTER FOCUS
                       </span>
-                      <AlignCenter size={13} color={selectedPreset === 'center' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
+                      <AlignCenter size={12} color={selectedPreset === 'center' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
                     </div>
                     <div style={{
                       fontFamily: "'Clash Display', sans-serif",
-                      fontSize: '0.68rem',
-                      color: selectedPreset === 'center' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)'
+                      fontSize: '0.65rem',
+                      color: selectedPreset === 'center' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.45)'
                     }}>
                       Balanced Central View
                     </div>
@@ -649,31 +681,31 @@ export default function ImageCropperModal({
                     onClick={() => handleSelectPreset('bottom')}
                     style={{
                       background: selectedPreset === 'bottom' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(255, 255, 255, 0.03)',
-                      border: selectedPreset === 'bottom' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
+                      border: selectedPreset === 'bottom' ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.08)',
                       borderRadius: '12px',
-                      padding: '10px 12px',
+                      padding: '8px 10px',
                       cursor: 'pointer',
                       textAlign: 'left',
                       transition: 'all 0.2s ease',
-                      boxShadow: selectedPreset === 'bottom' ? '0 0 15px rgba(235, 215, 63, 0.2)' : 'none'
+                      boxShadow: selectedPreset === 'bottom' ? '0 0 14px rgba(235, 215, 63, 0.2)' : 'none'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
                       <span style={{
                         fontFamily: "'Panchang', sans-serif",
-                        fontSize: '0.64rem',
+                        fontSize: '0.62rem',
                         fontWeight: 800,
                         color: selectedPreset === 'bottom' ? '#ebd73f' : '#ffffff',
-                        letterSpacing: '0.5px'
+                        letterSpacing: '0.4px'
                       }}>
                         03 • LOWER FOLD
                       </span>
-                      <ArrowDown size={13} color={selectedPreset === 'bottom' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
+                      <ArrowDown size={12} color={selectedPreset === 'bottom' ? '#ebd73f' : 'rgba(255,255,255,0.4)'} />
                     </div>
                     <div style={{
                       fontFamily: "'Clash Display', sans-serif",
-                      fontSize: '0.68rem',
-                      color: selectedPreset === 'bottom' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)'
+                      fontSize: '0.65rem',
+                      color: selectedPreset === 'bottom' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.45)'
                     }}>
                       Features & UI Depth
                     </div>
@@ -682,7 +714,7 @@ export default function ImageCropperModal({
               )}
             </div>
 
-            {/* Cropping Work Area */}
+            {/* Cropping Work Area with Studio Chassis Frame */}
             <div 
               ref={containerRef}
               onWheel={handleWheel}
@@ -690,15 +722,16 @@ export default function ImageCropperModal({
               onTouchStart={handlePointerDown}
               style={{
                 width: '100%',
-                maxWidth: '780px',
+                maxWidth: '740px',
                 aspectRatio: '16 / 10',
-                borderRadius: '16px',
-                background: '#050508',
-                border: '2px solid #ebd73f',
+                maxHeight: 'min(42vh, 440px)',
+                borderRadius: '18px',
+                background: '#060609',
+                border: '1.5px solid rgba(235, 215, 63, 0.85)',
                 position: 'relative',
                 overflow: 'hidden',
                 cursor: isDragging ? 'grabbing' : 'grab',
-                boxShadow: '0 15px 45px rgba(0,0,0,0.8), 0 0 30px rgba(235, 215, 63, 0.15)',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.85), 0 0 25px rgba(235, 215, 63, 0.12)',
                 userSelect: 'none',
                 touchAction: 'none'
               }}
@@ -730,6 +763,12 @@ export default function ImageCropperModal({
                 />
               </div>
 
+              {/* 4 Professional Studio Corner Crop Brackets */}
+              <div style={{ position: 'absolute', top: '10px', left: '10px', width: '16px', height: '16px', borderTop: '2.5px solid #ebd73f', borderLeft: '2.5px solid #ebd73f', pointerEvents: 'none', borderRadius: '3px 0 0 0' }} />
+              <div style={{ position: 'absolute', top: '10px', right: '10px', width: '16px', height: '16px', borderTop: '2.5px solid #ebd73f', borderRight: '2.5px solid #ebd73f', pointerEvents: 'none', borderRadius: '0 3px 0 0' }} />
+              <div style={{ position: 'absolute', bottom: '10px', left: '10px', width: '16px', height: '16px', borderBottom: '2.5px solid #ebd73f', borderLeft: '2.5px solid #ebd73f', pointerEvents: 'none', borderRadius: '0 0 0 3px' }} />
+              <div style={{ position: 'absolute', bottom: '10px', right: '10px', width: '16px', height: '16px', borderBottom: '2.5px solid #ebd73f', borderRight: '2.5px solid #ebd73f', pointerEvents: 'none', borderRadius: '0 0 3px 0' }} />
+
               {/* Rule of Thirds Crop Overlay */}
               <div style={{
                 position: 'absolute',
@@ -737,57 +776,83 @@ export default function ImageCropperModal({
                 pointerEvents: 'none',
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr 1fr',
-                gridTemplateRows: '1fr 1fr 1fr',
-                border: '1px solid rgba(235, 215, 63, 0.4)'
+                gridTemplateRows: '1fr 1fr 1fr'
               }}>
-                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.3)', borderBottom: '1px dashed rgba(235, 215, 63, 0.3)' }} />
-                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.3)', borderBottom: '1px dashed rgba(235, 215, 63, 0.3)' }} />
-                <div style={{ borderBottom: '1px dashed rgba(235, 215, 63, 0.3)' }} />
-                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.3)', borderBottom: '1px dashed rgba(235, 215, 63, 0.3)' }} />
-                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.3)', borderBottom: '1px dashed rgba(235, 215, 63, 0.3)' }} />
-                <div style={{ borderBottom: '1px dashed rgba(235, 215, 63, 0.3)' }} />
-                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.3)' }} />
-                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.3)' }} />
+                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.22)', borderBottom: '1px dashed rgba(235, 215, 63, 0.22)' }} />
+                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.22)', borderBottom: '1px dashed rgba(235, 215, 63, 0.22)' }} />
+                <div style={{ borderBottom: '1px dashed rgba(235, 215, 63, 0.22)' }} />
+                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.22)', borderBottom: '1px dashed rgba(235, 215, 63, 0.22)' }} />
+                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.22)', borderBottom: '1px dashed rgba(235, 215, 63, 0.22)' }} />
+                <div style={{ borderBottom: '1px dashed rgba(235, 215, 63, 0.22)' }} />
+                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.22)' }} />
+                <div style={{ borderRight: '1px dashed rgba(235, 215, 63, 0.22)' }} />
                 <div />
               </div>
 
-              {/* Crop Badge Info */}
+              {/* Crop Badge Info (Top Left) */}
               <div style={{
                 position: 'absolute',
                 top: '12px',
                 left: '12px',
-                background: 'rgba(10, 10, 15, 0.85)',
-                border: '1px solid rgba(235, 215, 63, 0.4)',
+                background: 'rgba(8, 8, 12, 0.82)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                border: '1px solid rgba(235, 215, 63, 0.35)',
                 padding: '4px 10px',
                 borderRadius: '12px',
                 fontFamily: "'Panchang', sans-serif",
-                fontSize: '0.62rem',
+                fontSize: '0.58rem',
                 color: '#ebd73f',
                 fontWeight: 800,
+                letterSpacing: '0.5px',
+                pointerEvents: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ebd73f' }} />
+                <span>16:10 CHASSIS FRAME</span>
+              </div>
+
+              {/* Drag / Pan Hint (Bottom Center) */}
+              <div style={{
+                position: 'absolute',
+                bottom: '10px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'rgba(8, 8, 12, 0.75)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '3px 10px',
+                borderRadius: '12px',
+                fontFamily: "'Clash Display', sans-serif",
+                fontSize: '0.62rem',
+                color: 'rgba(255, 255, 255, 0.65)',
+                fontWeight: 500,
                 pointerEvents: 'none'
               }}>
-                16:10 CHASSIS FRAME
+                Drag to reposition • Scroll to zoom
               </div>
             </div>
 
-            {/* Toolbar Controls */}
+            {/* Compact Integrated Studio Toolbar */}
             <div style={{
               width: '100%',
-              maxWidth: '780px',
-              background: 'rgba(18, 18, 24, 0.7)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '18px',
-              padding: '16px 20px',
+              maxWidth: '740px',
+              background: 'rgba(14, 14, 20, 0.85)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '14px',
+              padding: '8px 14px',
               display: 'flex',
-              flexWrap: 'wrap',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: '16px',
+              gap: '12px',
               boxSizing: 'border-box'
             }}>
               {/* Zoom Control */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 240px' }}>
-                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', fontFamily: "'Panchang', sans-serif", fontWeight: 700 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 200px' }}>
+                <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', fontFamily: "'Panchang', sans-serif", fontWeight: 700, letterSpacing: '0.5px' }}>
                   ZOOM
                 </span>
                 <button
@@ -797,16 +862,19 @@ export default function ImageCropperModal({
                     setScale(prev => Math.max(0.4, prev - 0.15));
                   }}
                   style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '8px',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
                     color: '#fff',
-                    padding: '6px',
-                    cursor: 'pointer'
+                    padding: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                   title="Zoom Out"
                 >
-                  <ZoomOut size={16} />
+                  <ZoomOut size={13} />
                 </button>
                 <input
                   type="range"
@@ -818,7 +886,7 @@ export default function ImageCropperModal({
                     setSelectedPreset('custom');
                     setScale(parseFloat(e.target.value));
                   }}
-                  style={{ flex: 1, accentColor: '#ebd73f' }}
+                  style={{ flex: 1, accentColor: '#ebd73f', height: '4px', cursor: 'pointer' }}
                 />
                 <button
                   type="button"
@@ -827,85 +895,100 @@ export default function ImageCropperModal({
                     setScale(prev => Math.min(3.5, prev + 0.15));
                   }}
                   style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '8px',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
                     color: '#fff',
-                    padding: '6px',
-                    cursor: 'pointer'
+                    padding: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                   title="Zoom In"
                 >
-                  <ZoomIn size={16} />
+                  <ZoomIn size={13} />
                 </button>
-                <span style={{ fontSize: '0.75rem', color: '#ebd73f', fontFamily: "'Panchang', sans-serif", minWidth: '42px', fontWeight: 800 }}>
+                <span style={{ fontSize: '0.68rem', color: '#ebd73f', fontFamily: "'Panchang', sans-serif", minWidth: '38px', fontWeight: 800 }}>
                   {Math.round(scale * 100)}%
                 </span>
               </div>
 
-              {/* Presets & Rotation Controls */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {/* Vertical divider */}
+              <div style={{ width: '1px', height: '22px', background: 'rgba(255,255,255,0.1)' }} />
+
+              {/* Presets Quick Align */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <button
                   type="button"
                   onClick={() => handleSelectPreset('top')}
                   style={{
-                    background: selectedPreset === 'top' ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255,255,255,0.08)',
-                    border: selectedPreset === 'top' ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '8px',
-                    color: selectedPreset === 'top' ? '#ebd73f' : '#fff',
-                    padding: '7px 12px',
-                    fontSize: '0.72rem',
+                    background: selectedPreset === 'top' ? 'rgba(235, 215, 63, 0.18)' : 'rgba(255,255,255,0.05)',
+                    border: selectedPreset === 'top' ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
+                    color: selectedPreset === 'top' ? '#ebd73f' : 'rgba(255,255,255,0.8)',
+                    padding: '5px 10px',
+                    fontSize: '0.65rem',
                     fontFamily: "'Clash Display', sans-serif",
+                    fontWeight: 600,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '5px'
+                    gap: '4px'
                   }}
                   title="Align Top (Header Banner)"
                 >
-                  <ArrowUp size={14} /> Top
+                  <ArrowUp size={12} /> Top
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSelectPreset('center')}
                   style={{
-                    background: selectedPreset === 'center' ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255,255,255,0.08)',
-                    border: selectedPreset === 'center' ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '8px',
-                    color: selectedPreset === 'center' ? '#ebd73f' : '#fff',
-                    padding: '7px 12px',
-                    fontSize: '0.72rem',
+                    background: selectedPreset === 'center' ? 'rgba(235, 215, 63, 0.18)' : 'rgba(255,255,255,0.05)',
+                    border: selectedPreset === 'center' ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
+                    color: selectedPreset === 'center' ? '#ebd73f' : 'rgba(255,255,255,0.8)',
+                    padding: '5px 10px',
+                    fontSize: '0.65rem',
                     fontFamily: "'Clash Display', sans-serif",
+                    fontWeight: 600,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '5px'
+                    gap: '4px'
                   }}
                   title="Center Hero"
                 >
-                  <AlignCenter size={14} /> Center
+                  <AlignCenter size={12} /> Center
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSelectPreset('bottom')}
                   style={{
-                    background: selectedPreset === 'bottom' ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255,255,255,0.08)',
-                    border: selectedPreset === 'bottom' ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '8px',
-                    color: selectedPreset === 'bottom' ? '#ebd73f' : '#fff',
-                    padding: '7px 12px',
-                    fontSize: '0.72rem',
+                    background: selectedPreset === 'bottom' ? 'rgba(235, 215, 63, 0.18)' : 'rgba(255,255,255,0.05)',
+                    border: selectedPreset === 'bottom' ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
+                    color: selectedPreset === 'bottom' ? '#ebd73f' : 'rgba(255,255,255,0.8)',
+                    padding: '5px 10px',
+                    fontSize: '0.65rem',
                     fontFamily: "'Clash Display', sans-serif",
+                    fontWeight: 600,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '5px'
+                    gap: '4px'
                   }}
                   title="Align Bottom"
                 >
-                  <ArrowDown size={14} /> Bottom
+                  <ArrowDown size={12} /> Bottom
                 </button>
+              </div>
 
+              {/* Vertical divider */}
+              <div style={{ width: '1px', height: '22px', background: 'rgba(255,255,255,0.1)' }} />
+
+              {/* Transform & Reset */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <button
                   type="button"
                   onClick={() => {
@@ -913,32 +996,39 @@ export default function ImageCropperModal({
                     setRotation(prev => (prev + 90) % 360);
                   }}
                   style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '8px',
-                    color: '#fff',
-                    padding: '7px 10px',
-                    cursor: 'pointer'
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
+                    color: 'rgba(255,255,255,0.8)',
+                    padding: '5px 8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.65rem',
+                    fontFamily: "'Clash Display', sans-serif"
                   }}
                   title="Rotate 90°"
                 >
-                  <RotateCw size={14} />
+                  <RotateCw size={12} /> 90°
                 </button>
 
                 <button
                   type="button"
                   onClick={resetAll}
                   style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '8px',
-                    color: '#aaa',
-                    padding: '7px 10px',
-                    cursor: 'pointer'
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
+                    color: 'rgba(255,255,255,0.5)',
+                    padding: '5px 8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center'
                   }}
                   title="Reset to Top Hero Frame"
                 >
-                  <RefreshCw size={14} />
+                  <RefreshCw size={12} />
                 </button>
               </div>
             </div>

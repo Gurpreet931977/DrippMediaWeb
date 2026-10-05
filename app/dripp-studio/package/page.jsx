@@ -855,6 +855,39 @@ export default function PackageMaker() {
            </div>
         </div>
 
+        {/* SLIDE 4: Contact Us */}
+        <div className="standalone-pdf-slide" style={{ width: '1920px', height: '1080px', background: '#050505', color: 'white', padding: '100px', boxSizing: 'border-box', position: 'relative', display: 'none', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
+           <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(235,215,63,0.15) 0%, transparent 70%)', filter: 'blur(60px)', zIndex: 0 }} />
+           
+           <div style={{ zIndex: 1 }}>
+              <h2 style={{ fontSize: '50px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>Get In Touch</h2>
+              <p style={{ fontSize: '28px', color: '#888', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>Let's bring this personal marketing plan to life.</p>
+           </div>
+           
+           <div style={{ zIndex: 1, background: '#111', padding: '60px', borderRadius: '24px', border: '1px solid rgba(235, 215, 63, 0.2)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+              <div>
+                 <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>How to Proceed</h3>
+                 <ol style={{ fontSize: '24px', color: '#ccc', lineHeight: 1.8, margin: 0, paddingLeft: '30px', fontFamily: "'Clash Display', sans-serif" }}>
+                    <li>Review this plan and confirm the scope.</li>
+                    <li>Let us know if you need any adjustments.</li>
+                    <li>Once approved, we will send over the formal agreement.</li>
+                 </ol>
+              </div>
+              <div>
+                 <h3 style={{ fontSize: '32px', color: '#ebd73f', margin: '0 0 20px 0', fontFamily: "'Panchang', sans-serif" }}>Contact Us</h3>
+                 <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0', fontFamily: "'Clash Display', sans-serif" }}>Founder: Gurpreet Singh</p>
+                 <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0', fontFamily: "'Clash Display', sans-serif" }}>Email: gurpreet@drippmedia.com</p>
+                 <p style={{ fontSize: '24px', color: '#ccc', margin: '0 0 10px 0', fontFamily: "'Clash Display', sans-serif" }}>Instagram: @drippmedia_</p>
+                 <p style={{ fontSize: '24px', color: '#ccc', margin: '0', fontFamily: "'Clash Display', sans-serif" }}>Web: www.drippmedia.com</p>
+              </div>
+           </div>
+           
+           <div style={{ zIndex: 1, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ fontSize: '20px', color: '#666', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>DRIPP MEDIA CREATIVE STUDIO</p>
+              <p style={{ fontSize: '20px', color: '#ebd73f', margin: 0, fontFamily: "'Clash Display', sans-serif" }}>gurpreet@drippmedia.com</p>
+           </div>
+        </div>
+
       </div>
 
     </div>

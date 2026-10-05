@@ -28,7 +28,7 @@ export default function InvoiceMaker() {
   const [myDetails, setMyDetails] = useState({
     companyName: 'Dripp Media',
     address: '123 Business St, Creative District\nNew Delhi, India',
-    email: 'mediadripp@gmail.com',
+    email: 'gurpreet@drippmedia.com',
     phone: '',
     gst: '07AAACD1234E1Z5'
   });

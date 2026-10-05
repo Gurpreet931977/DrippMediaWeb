@@ -1771,7 +1771,7 @@ export default function Page() {
 
             if (selectedServices.size === 0) {
                 receiptItemsContainer.innerHTML = '<div class="empty-receipt">No services selected...</div>';
-                if (customQuoteBtn) customQuoteBtn.href = 'mailto:hello@dripmedia.com';
+                if (customQuoteBtn) customQuoteBtn.href = 'mailto:gurpreet@drippmedia.com';
                 const clearBtn = document.getElementById('clear-cart-btn');
                 if (clearBtn) clearBtn.style.display = 'none';
                 renderCustomChips();
@@ -1868,7 +1868,7 @@ export default function Page() {
             if (customQuoteBtn) {
                 const subj = encodeURIComponent('Custom Package Enquiry');
                 const body = encodeURIComponent(`Hi Dripp Media,\n\nI'd like a quote for:\n${list.join(', ')}\n\nPlease get back to me with pricing and availability.\n\nThanks`);
-                customQuoteBtn.href = `mailto:hello@dripmedia.com?subject=${subj}&body=${body}`;
+                customQuoteBtn.href = `mailto:gurpreet@drippmedia.com?subject=${subj}&body=${body}`;
             }
         }
 
@@ -3933,7 +3933,7 @@ export default function Page() {
         <div className="client-footer-content">
           <p style={{fontSize: '1.2rem', marginBottom: 10, fontWeight: 500, textAlign: 'center'}}>Ready to
             create something surreal?</p>
-          <a href="#" className="footer-email" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `openContactModal(event)`, target: event.currentTarget, originalEvent: event } }))}>mediadripp@gmail.com</a>
+          <a href="#" className="footer-email" onClick={(event) => window.dispatchEvent(new CustomEvent('inline-click', { detail: { action: `openContactModal(event)`, target: event.currentTarget, originalEvent: event } }))}>gurpreet@drippmedia.com</a>
           <a href="tel:+917818995147" className="footer-phone">+91 78189 95147</a>
         </div>
       </div>

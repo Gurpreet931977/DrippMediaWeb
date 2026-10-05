@@ -2,19 +2,91 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
+import zlib from 'zlib';
 
 const execAsync = promisify(exec);
 
-// Validate whether a buffer is a real, high-resolution desktop screenshot (and not a loading GIF / placeholder / error HTML)
+// Detect whether an image buffer is essentially a blank/solid unrendered canvas
+// (e.g. solid white or pastel preloader screen with >95% identical pixel values).
+function isImageBlank(input) {
+  if (!input) return true;
+  const buf = Buffer.isBuffer(input) ? input : Buffer.from(input);
+  if (buf.length < 500) return true;
+
+  // Check PNG
+  const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47;
+  if (isPng) {
+    try {
+      let offset = 8;
+      const idatChunks = [];
+      let width = 0, height = 0, colorType = 0;
+      while (offset < buf.length) {
+        const len = buf.readUInt32BE(offset);
+        const type = buf.toString('ascii', offset + 4, offset + 8);
+        if (type === 'IHDR') {
+          width = buf.readUInt32BE(offset + 8);
+          height = buf.readUInt32BE(offset + 12);
+          colorType = buf[offset + 17];
+        } else if (type === 'IDAT') {
+          idatChunks.push(buf.subarray(offset + 8, offset + 8 + len));
+        }
+        offset += 12 + len;
+      }
+      if (idatChunks.length === 0 || width < 10 || height < 10) return true;
+
+      const raw = zlib.inflateSync(Buffer.concat(idatChunks));
+      const bytesPerPixel = colorType === 6 ? 4 : colorType === 2 ? 3 : 1;
+      const stride = 1 + width * bytesPerPixel;
+
+      let diffCount = 0;
+      let totalSamples = 0;
+      const firstPixel = [raw[1], raw[2], raw[3]];
+      const stepY = Math.max(1, Math.floor(height / 20));
+      const stepX = Math.max(1, Math.floor(width / 20));
+
+      for (let y = Math.floor(height * 0.1); y < height * 0.9; y += stepY) {
+        const rowOffset = y * stride;
+        for (let x = Math.floor(width * 0.1); x < width * 0.9; x += stepX) {
+          const pxOffset = rowOffset + 1 + x * bytesPerPixel;
+          if (pxOffset + 2 < raw.length) {
+            totalSamples++;
+            const r = raw[pxOffset];
+            const g = raw[pxOffset + 1];
+            const b = raw[pxOffset + 2];
+            if (Math.abs(r - firstPixel[0]) > 12 || Math.abs(g - firstPixel[1]) > 12 || Math.abs(b - firstPixel[2]) > 12) {
+              diffCount++;
+            }
+          }
+        }
+      }
+      // If fewer than 5% of pixels differ from the baseline, it's an unrendered/blank canvas
+      return totalSamples > 0 && (diffCount / totalSamples < 0.05);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Check JPEG
+  const isJpg = buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF;
+  if (isJpg) {
+    if (buf.length < 22000) return true;
+  }
+
+  return false;
+}
+
+// Validate whether a buffer is a real, high-resolution desktop screenshot (and not a loading GIF / placeholder / error HTML / blank image)
 function isValidScreenshot(buffer, contentType = '') {
-  if (!buffer || buffer.byteLength < 20000) return false;
+  if (!buffer) return false;
+  const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+  if (buf.byteLength < 25000) return false;
   
   const ct = (contentType || '').toLowerCase();
   if (ct.includes('gif') || ct.includes('html') || ct.includes('json') || ct.includes('text')) {
     return false;
   }
 
-  const header = Buffer.from(buffer.slice(0, 8));
+  const header = buf.subarray(0, 8);
   
   // Reject GIF magic header ('GIF87a' or 'GIF89a' = 47 49 46 38)
   if (header[0] === 0x47 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x38) {
@@ -24,9 +96,16 @@ function isValidScreenshot(buffer, contentType = '') {
   // Check valid image signatures
   const isJpg = header[0] === 0xFF && header[1] === 0xD8 && header[2] === 0xFF;
   const isPng = header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4E && header[3] === 0x47;
-  const isWebp = header.toString('ascii', 0, 4) === 'RIFF' && buffer.slice(8, 12).toString('ascii') === 'WEBP';
+  const isWebp = header.toString('ascii', 0, 4) === 'RIFF' && buf.subarray(8, 12).toString('ascii') === 'WEBP';
 
-  return isJpg || isPng || isWebp;
+  if (!isJpg && !isPng && !isWebp) return false;
+
+  // Reject blank / solid unrendered canvases
+  if (isImageBlank(buf)) {
+    return false;
+  }
+
+  return true;
 }
 
 function getImageMime(buffer) {
@@ -51,7 +130,7 @@ async function captureFromEndpoints(endpoints, cleanSlug, prefix, publicDir, isF
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         },
         redirect: 'follow',
-        signal: AbortSignal.timeout(9000)
+        signal: AbortSignal.timeout(18000)
       });
 
       if (response.ok) {
@@ -136,19 +215,19 @@ export async function POST(request) {
       isFsWritable = false;
     }
 
-    // 3 Distinct Capture Targets Requested by User:
-    // 1. Preloader / Initial Brand Intro (immediate 500ms load state before animations end)
-    // 2. Hero Section (full load, 3.5s delay for complete animations)
-    // 3. In Between the Site / Mid-Page (scrolled down ~850-900px to feature content)
+    // 3 Distinct Capture Targets:
+    // 1. Preloader / Initial Brand Intro (1.8s delay to capture splash/opening logo without being blank)
+    // 2. Hero Section (full load, 6.5s delay to let client preloaders finish and animations settle)
+    // 3. In Between Site / Mid-Page (scrolled down ~850px with 6.5s delay)
     const targets = [
       {
         id: 'preloader',
         label: '01 • PRELOADER / INTRO',
         sublabel: 'Initial Splash & Opening Logo',
         endpoints: [
-          `https://image.thum.io/get/width/1600/crop/1000/noanimate/${resolvedUrl}`,
-          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&waitForTimeout=500`,
-          `https://s.wordpress.com/mshots/v1/${encodeURIComponent(resolvedUrl)}?w=1600`
+          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&waitForTimeout=1800`,
+          `https://image.thum.io/get/width/1600/crop/1000/wait/2/${resolvedUrl}`,
+          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&waitForTimeout=1000`
         ]
       },
       {
@@ -156,9 +235,10 @@ export async function POST(request) {
         label: '02 • HERO SECTION',
         sublabel: 'Header & Main Hero Fold',
         endpoints: [
-          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&waitForTimeout=3500`,
-          `https://image.thum.io/get/width/1600/crop/1000/wait/4/${resolvedUrl}`,
-          `https://image.thum.io/get/width/1600/crop/1000/${resolvedUrl}`
+          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&waitForTimeout=6500`,
+          `https://image.thum.io/get/width/1600/crop/1000/wait/7/${resolvedUrl}`,
+          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&waitForTimeout=4000`,
+          `https://image.thum.io/get/width/1600/crop/1000/wait/4/${resolvedUrl}`
         ]
       },
       {
@@ -166,10 +246,10 @@ export async function POST(request) {
         label: '03 • IN BETWEEN SITE',
         sublabel: 'Mid-Page Features & Showcase',
         endpoints: [
-          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&scrollTo=900&waitForTimeout=1000`,
+          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&scrollTo=850&waitForTimeout=6500`,
+          `https://image.thum.io/get/width/1600/crop/1000/scroll/850/wait/6/${resolvedUrl}`,
           `https://image.thum.io/get/width/1600/crop/1000/scroll/850/${resolvedUrl}`,
-          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&scrollTo=600`,
-          `https://image.thum.io/get/width/1600/crop/1000/scroll/1200/${resolvedUrl}`
+          `https://api.microlink.io/?url=${encodeURIComponent(resolvedUrl)}&screenshot=true&meta=false&embed=screenshot.url&viewport.width=1600&viewport.height=1000&scrollTo=700`
         ]
       }
     ];
@@ -222,11 +302,23 @@ export async function POST(request) {
     if (capturedOptions.length > 0) {
       // Prioritize hero as primary default image, or first available
       const primaryOption = capturedOptions.find(o => o.id === 'hero') || capturedOptions[0];
+      const fallbackUrl = primaryOption.image_url;
+
+      // Ensure all 3 standard targets have non-blank options for the interactive UI
+      const finalOptions = targets.map(t => {
+        const found = capturedOptions.find(o => o.id === t.id);
+        return {
+          id: t.id,
+          label: t.label,
+          sublabel: t.sublabel,
+          image_url: (found && found.image_url) ? found.image_url : fallbackUrl
+        };
+      });
 
       return Response.json({
         success: true,
         image_url: primaryOption.image_url,
-        options: capturedOptions,
+        options: finalOptions,
         normalized_url: resolvedUrl,
         suggested_title: title || domainName.split('.')[0].replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
       });

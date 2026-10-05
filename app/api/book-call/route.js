@@ -130,7 +130,7 @@ async function notifyEmail(record) {
     if (!resendKey) return { success: false, reason: 'RESEND_API_KEY not set' };
 
     const resend = new Resend(resendKey);
-    const toEmail = process.env.ADMIN_ALERT_EMAIL || 'mediadripp@gmail.com';
+    const toEmail = process.env.ADMIN_ALERT_EMAIL || 'gurpreet@drippmedia.com';
 
     await resend.emails.send({
       from: 'Dripp Media Alerts <hello@drippmedia.com>',
