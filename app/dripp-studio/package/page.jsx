@@ -119,7 +119,7 @@ export default function PackageMaker() {
       });
     }
 
-    const targetBudget = parseNum(payload.totalBudget);
+    const targetBudget = parseNum(payload.totalBudget) || parseNum(payload.budget) || parseNum(payload.total) || 0;
     if (extracted.length > 0) {
       if (targetBudget > 0) {
         const sum = extracted.reduce((acc, it) => acc + (it.qty * it.rate), 0);

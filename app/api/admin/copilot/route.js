@@ -255,11 +255,13 @@ CRITICAL: LIVE VOICE CALL MODE (Orlo Live).
    - Total sum of items MUST equal the user's stated total budget (e.g. 44000).
    - In "replyMessage", present the breakdown clearly and explain the strategic rationale behind the crew and turnaround.
 
-2. **SINGLE-SERVICE BUNDLE MODE**:
-   When the user requests a "single service", "all in one package", "one line item", "bundle it into one", or asks to "define details in PMP / strategy and keep a single service":
-   - Output EXACTLY 1 service deliverable at rate = totalBudget.
-   - In "details", synthesize the full scope of requested deliverables into an executive summary.
-   - In "pmpStrategy", provide an in-depth, multi-phase strategic concept pitch breaking down the entire execution.
+2. **SINGLE-SERVICE BUNDLE & MONTHLY RETAINER MODE**:
+   When the user requests a "single service", "all in one package", "one line item", "bundle it into one", or asks to "define details in PMP / strategy and keep a single service", OR when the user asks to create a monthly retainer or package (e.g. for social media management, content creation, reels, marketing) with a single quoted price (e.g. "quote them 32k/month") without an explicit line-by-line price breakdown:
+   - Treat this as a UNIFIED MONTHLY RETAINER PACKAGE!
+   - Output EXACTLY 1 comprehensive service deliverable at rate = totalBudget (e.g. "Social Media Management & Content Retainer (15 Reels, Shoots & Ads)" with qty: 1, rate: totalBudget).
+   - In "details", summarize the complete scope (e.g. 15 reels/month, 2-4 on-site shoot sessions, feed management & scheduling, and Meta ads management).
+   - In "pmpStrategy", detail the 3-phase strategic roadmap (Shoot Production, Reel Publishing & Feed Aesthetics, Meta Ads & Growth).
+   - NEVER splinter a unified monthly retainer into arbitrary separate 0-cost line items! Rates must NEVER be 0.
 
 3. **ITEMIZED MODE (DEFAULT)**:
    When the user asks for a package without an explicit breakdown:
@@ -361,6 +363,55 @@ Model Output:
     ],
     "services": [
       { "name": "Complete Social Media Management & Creative Growth Retainer", "desc": "Complete Social Media Management & Creative Growth Retainer", "qty": 1, "rate": 24000, "details": "End-to-end multi-platform management across Instagram & Facebook, 4 promotional creatives, alternate-day stories, 8 high-retention reels, Meta Ads execution, and monthly analytics reporting." }
+    ]
+  }
+}
+
+### Example 3: Monthly Social Media Retainer (Single Price Quoted, No Sub-Price Breakdown)
+User: "create a package for Sipkart, which is a 24/7 convenience store. they need 15 reels per month and social media management. with 2-4 shooting sessions and ads management. we will quote them 32k per month"
+
+Model Output:
+{
+  "intent": "package",
+  "isNewTopic": true,
+  "replyMessage": "I've structured a complete ₹32,000/mo Social Media Management & Creative Retainer for **Sipkart**! All deliverables (15 reels, 2-4 shooting sessions, account management, and Meta ads) are bundled into a unified monthly retainer deliverable, with strategic execution mapped in the Strategy & Concept Pitch.",
+  "payload": {
+    "brandName": "Sipkart",
+    "totalBudget": 32000,
+    "packageType": "monthly",
+    "coverHeading": "Omnichannel Retail Visibility & Social Growth Retainer",
+    "coverSubtitle": "Prepared Exclusively For",
+    "pmpStrategy": {
+      "overview": "Omnichannel social media growth and high-frequency content strategy tailored for Sipkart's 24/7 convenience retail model. Designed to drive local footfall, highlight midnight convenience, and build neighborhood brand recall through viral reels and targeted Meta ads.",
+      "targetAudience": "Local residents, night owls, students, and urban shoppers within a 5km radius of Sipkart stores.",
+      "phases": [
+        { "title": "Phase 1: Brand Content Direction & On-Site Shoots", "description": "Conducting 2-4 dedicated on-site shooting sessions to capture store vibes, top-selling SKUs, late-night convenience, and customer interactions." },
+        { "title": "Phase 2: High-Retention Reel Production & Publishing", "description": "Editing and publishing 15 high-retention reels per month with dynamic hooks, trend-jacking audio, and professional color grading." },
+        { "title": "Phase 3: Hyperlocal Meta Ads & Footfall Conversion", "description": "Setting up geo-targeted Instagram and Facebook ad campaigns highlighting 24/7 hours, special offers, and instant delivery to maximize footfall." }
+      ]
+    },
+    "packageTiers": [
+      {
+        "name": "Sipkart Retainer Package",
+        "items": [
+          {
+            "name": "Social Media Management & Content Retainer (15 Reels, Shoots & Ads)",
+            "desc": "Social Media Management & Content Retainer (15 Reels, Shoots & Ads)",
+            "qty": 1,
+            "rate": 32000,
+            "details": "Comprehensive monthly growth retainer: 15 high-retention reels/month, 2-4 on-site shoot sessions, multi-channel feed management & scheduling, and Meta ads campaign execution."
+          }
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "Social Media Management & Content Retainer (15 Reels, Shoots & Ads)",
+        "desc": "Social Media Management & Content Retainer (15 Reels, Shoots & Ads)",
+        "qty": 1,
+        "rate": 32000,
+        "details": "Comprehensive monthly growth retainer: 15 high-retention reels/month, 2-4 on-site shoot sessions, multi-channel feed management & scheduling, and Meta ads campaign execution."
+      }
     ]
   }
 }
@@ -884,6 +935,100 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
       return null;
     };
 
+    // Robust budget extractor from user prompt (handles "quote them 32k", "quote 32k/month", "budget: 50k", "at 44k", "we will quote them 32k", etc.)
+    const extractBudgetFromPrompt = (text) => {
+      if (!text || typeof text !== 'string') return null;
+      const targeted = text.match(/(?:quote|budget|price|rate|cost|charge|quote\s+them|quote\s+him|quote\s+her|total\s+budget|total|for|at|around|package\s+of)\s*(?:them|him|her|it|is|of)?\s*[-:=]?\s*(?:₹|rs\.?|inr)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*(k\b|thousands?|lakhs?|lacs?|lac\b|l\b|cr\b|crores?|m\b|millions?)?(?:\s*\/\s*mo|\s*per\s*month|\s*month|\b)/i);
+      if (targeted) {
+        let raw = targeted[1].replace(/,/g, '');
+        let num = parseFloat(raw);
+        const unit = (targeted[2] || '').toLowerCase();
+        if (unit.startsWith('k') || unit.startsWith('thous')) num *= 1000;
+        else if (unit.startsWith('l')) num *= 100000;
+        else if (unit.startsWith('cr')) num *= 10000000;
+        else if (unit.startsWith('m')) num *= 1000000;
+        if (!isNaN(num) && num > 0) return Math.round(num);
+      }
+      return null;
+    };
+
+    // Synthesize single turnkey deliverable for monthly retainers and bundled scopes
+    const synthesizeSingleDeliverable = (prompt, budgetVal, rawServices = []) => {
+      const pLower = (prompt || '').toLowerCase();
+      
+      const hasReels = pLower.includes('reel');
+      const reelCountMatch = prompt.match(/(\d+)\s*reels?/i);
+      const reelCount = reelCountMatch ? reelCountMatch[1] : null;
+
+      const hasShoots = pLower.includes('shoot') || pLower.includes('shooting') || pLower.includes('videographer');
+      const shootCountMatch = prompt.match(/(\d+(?:\s*-\s*\d+)?)\s*(?:shooting\s+sessions?|shoot\s+sessions?|shoots?|shooting)/i);
+      const shootCount = shootCountMatch ? shootCountMatch[1] : null;
+
+      const hasAds = pLower.includes('ad') || pLower.includes('meta ad') || pLower.includes('facebook ad') || pLower.includes('ads management');
+      const hasSMM = pLower.includes('social media') || pLower.includes('smm') || pLower.includes('management');
+
+      let title = 'Complete Turnkey Growth Package';
+      if (hasSMM || hasReels) {
+        const subtitleParts = [];
+        if (reelCount) subtitleParts.push(`${reelCount} Reels`);
+        else if (hasReels) subtitleParts.push('Reels');
+        if (shootCount) subtitleParts.push(`${shootCount} Shoots`);
+        else if (hasShoots) subtitleParts.push('Shoots');
+        if (hasAds) subtitleParts.push('Meta Ads');
+
+        if (subtitleParts.length > 0) {
+          title = `Social Media Management & Content Retainer (${subtitleParts.join(', ')})`;
+        } else {
+          title = 'Comprehensive Social Media Management & Creative Growth Retainer';
+        }
+      } else if (rawServices && rawServices.length > 0) {
+        const combinedNames = rawServices.map(s => s.name || s.desc).filter(Boolean);
+        title = combinedNames[0]?.includes('Social') 
+          ? 'Comprehensive Social Media Management & Creative Growth Retainer' 
+          : (combinedNames[0] || 'Complete Turnkey Growth Package');
+      }
+
+      let details = '';
+      if (hasSMM || hasReels || hasShoots || hasAds) {
+        const detailParts = [];
+        if (reelCount) {
+          detailParts.push(`${reelCount} high-retention reels/month (hook ideation, editing, subtitles, and sound design)`);
+        } else if (hasReels) {
+          detailParts.push('Monthly high-retention reels production and editing');
+        }
+
+        if (shootCount) {
+          detailParts.push(`${shootCount} on-site shooting sessions`);
+        } else if (hasShoots) {
+          detailParts.push('On-site shooting coverage');
+        }
+
+        if (hasSMM) {
+          detailParts.push('End-to-end feed curation, post scheduling, and community engagement');
+        }
+
+        if (hasAds) {
+          detailParts.push('Meta Ads campaign setup, targeting, A/B testing, and performance optimization');
+        }
+
+        details = `Comprehensive monthly retainer scope: ${detailParts.join('; ')}.`;
+      } else if (rawServices && rawServices.length > 0) {
+        const combinedDetails = rawServices.map(s => s.details).filter(Boolean).join('; ');
+        const combinedNames = rawServices.map(s => s.name || s.desc).filter(Boolean);
+        details = combinedDetails || `Comprehensive turnkey execution including ${combinedNames.join(', ')}.`;
+      } else {
+        details = 'Comprehensive turnkey execution and monthly retainer delivery as per client brief.';
+      }
+
+      return {
+        name: title,
+        desc: title,
+        qty: 1,
+        rate: budgetVal,
+        details
+      };
+    };
+
     // Smart deliverable extractor with realistic weighted pricing, custom breakdown parser, & domain-aware single-service support
     const generateFallbackDeliverables = (prompt, targetBudget = 0) => {
       const p = (prompt || '').toLowerCase();
@@ -1205,12 +1350,24 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
       const existingFormBudget = formContext?.quoteDetails?.total || formContext?.total || (formContext?.packageTiers && Array.isArray(formContext.packageTiers) ? formContext.packageTiers.reduce((acc, t) => acc + (t.items || []).reduce((s, it) => s + ((it.qty || 1) * (it.rate || 0)), 0), 0) : 0);
       const existingFormBrand = formContext?.clientDetails?.brandName || formContext?.clientDetails?.name || '';
 
-      if (!parsed.payload.totalBudget && existingFormBudget > 0) {
-        parsed.payload.totalBudget = existingFormBudget;
+      const promptBudget = extractBudgetFromPrompt(userPrompt) || parseAmountNumber(userPrompt);
+      if (!parsed.payload.totalBudget || parsed.payload.totalBudget === 0) {
+        parsed.payload.totalBudget = promptBudget || existingFormBudget || 0;
       }
 
       const pLower = userPrompt.toLowerCase();
-      const isSingleReq = (
+      const hasItemizedBreakdown = /breaking\s+into|break\s+into|breakdown|divided\s+into|split\s+into|itemized|itemise|separate\s+rates|separate\s+items|tiers?\b/i.test(userPrompt);
+
+      const isRetainerOrSmmPackage = (
+        /(?:create|make|build|give|design|generate)?\s*(?:a|an)?\s*(?:package|retainer|proposal|quote)\b/i.test(userPrompt) ||
+        /(?:social\s+media|smm|retainer|reels|content\s+creation|monthly)/i.test(userPrompt)
+      ) && (
+        /(?:social\s+media|smm|reels|shooting|shoots|ads\s+management|content)/i.test(userPrompt)
+      ) && (
+        promptBudget > 0 || /quote|month|per\s+month|\/mo/i.test(userPrompt)
+      ) && !hasItemizedBreakdown;
+
+      const isExplicitSingle = (
         pLower.includes('single service') ||
         pLower.includes('single item') ||
         pLower.includes('one service') ||
@@ -1224,6 +1381,8 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         (pLower.includes('pmp') && (pLower.includes('single') || pLower.includes('one') || pLower.includes('everything else') || pLower.includes('all details'))) ||
         (pLower.includes('strategy') && (pLower.includes('single') || pLower.includes('one') || pLower.includes('bundle')))
       );
+
+      const isSingleReq = isExplicitSingle || isRetainerOrSmmPackage;
 
       // 1. Clean and prioritize AI recognized brand name, then fallback to prompt extraction, then existing form context
       const extractedBrand = extractBrandNameFromPrompt(userPrompt);
@@ -1380,15 +1539,14 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         }
       }
 
-      // If user requested a single service, normalize tiers/services into a single bundled line item
+      // If user requested a single service or monthly retainer bundle, normalize tiers/services into a single bundled line item
       if (isSingleReq && !isSaveTemplateReq && !isEditOrNoteReq) {
-        const promptBudget = parseAmountNumber(userPrompt);
         const budgetVal = parsed.payload.totalBudget || promptBudget || existingFormBudget || 20000;
         const brandName = parsed.payload.brandName || existingFormBrand || 'Client';
         
         let singleDeliverable = null;
-        // Check if AI already produced exactly 1 service/tier item matching the prompt
-        if (parsed.payload.services && parsed.payload.services.length === 1) {
+        // Check if AI already produced exactly 1 service/tier item matching the prompt with a valid positive rate
+        if (parsed.payload.services && parsed.payload.services.length === 1 && (parsed.payload.services[0].rate > 0 || parsed.payload.services[0].name?.includes('Retainer'))) {
           const s = parsed.payload.services[0];
           singleDeliverable = {
             name: s.name || s.desc || 'Turnkey Marketing & Growth Package',
@@ -1397,7 +1555,7 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
             rate: budgetVal,
             details: s.details || 'Comprehensive turnkey execution as per client brief.'
           };
-        } else if (parsed.payload.packageTiers && parsed.payload.packageTiers.length === 1 && parsed.payload.packageTiers[0].items?.length === 1) {
+        } else if (parsed.payload.packageTiers && parsed.payload.packageTiers.length === 1 && parsed.payload.packageTiers[0].items?.length === 1 && (parsed.payload.packageTiers[0].items[0].rate > 0 || parsed.payload.packageTiers[0].items[0].name?.includes('Retainer'))) {
           const s = parsed.payload.packageTiers[0].items[0];
           singleDeliverable = {
             name: s.name || s.desc || 'Turnkey Marketing & Growth Package',
@@ -1406,21 +1564,9 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
             rate: budgetVal,
             details: s.details || 'Comprehensive turnkey execution as per client brief.'
           };
-        } else if (parsed.payload.services && parsed.payload.services.length > 1) {
-          // AI produced multiple items; bundle them together cleanly
-          const combinedNames = parsed.payload.services.map(s => s.name || s.desc).filter(Boolean);
-          const combinedDetails = parsed.payload.services.map(s => s.details).filter(Boolean).join('; ');
-          const title = combinedNames[0]?.includes('Social') ? 'Comprehensive Social Media Management & Creative Growth Retainer' : (combinedNames[0] || 'Complete Turnkey Growth Package');
-          singleDeliverable = {
-            name: title,
-            desc: title,
-            qty: 1,
-            rate: budgetVal,
-            details: combinedDetails || `Comprehensive turnkey execution including ${combinedNames.join(', ')}.`
-          };
         } else {
-          const fallback = generateFallbackDeliverables(userPrompt, budgetVal);
-          singleDeliverable = fallback[0];
+          // Synthesize high-impact single deliverable from prompt & any parsed services
+          singleDeliverable = synthesizeSingleDeliverable(userPrompt, budgetVal, parsed.payload.services || parsed.payload.packageTiers?.[0]?.items || []);
         }
 
         parsed.payload.totalBudget = budgetVal;
@@ -1429,6 +1575,10 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
           name: `${brandName} Package`,
           items: [singleDeliverable]
         }];
+
+        if (isRetainerOrSmmPackage || isExplicitSingle) {
+          parsed.replyMessage = `I've structured a complete ₹${Number(budgetVal).toLocaleString()}/mo Social Media Management & Creative Retainer for **${brandName}**!\n\n• **${singleDeliverable.name}** (₹${Number(singleDeliverable.rate).toLocaleString()}) - ${singleDeliverable.details}\n\nAll deliverables (15 reels, 2-4 shooting sessions, account management, and Meta ads) are consolidated into a turnkey monthly package, with a bespoke 3-phase growth roadmap configured in your **Strategy & Concept Pitch**!`;
+        }
       }
 
       // Check if prompt describes a quote/package or if items exist
@@ -1530,10 +1680,21 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         // Ensure rich Strategy & Concept Pitch (PMP strategy)
         if (!parsed.payload.pmpStrategy || typeof parsed.payload.pmpStrategy !== 'object' || !parsed.payload.pmpStrategy.phases || parsed.payload.pmpStrategy.phases.length === 0) {
           const brand = parsed.payload.brandName || existingFormBrand || 'Client';
+          const isConvenienceOrRetail = pLower.includes('convenience') || pLower.includes('store') || pLower.includes('retail') || pLower.includes('sipkart');
           const isSocialPmp = pLower.includes('social') || pLower.includes('media') || pLower.includes('instagram') || pLower.includes('facebook') || pLower.includes('ads') || pLower.includes('meta') || pLower.includes('smm');
           const isReelPmp = pLower.includes('reel') || pLower.includes('video') || pLower.includes('short');
 
-          if (isSocialPmp) {
+          if (isConvenienceOrRetail && isSocialPmp) {
+            parsed.payload.pmpStrategy = {
+              overview: `Omnichannel social media growth and high-frequency content strategy tailored for ${brand}'s 24/7 convenience retail model. Designed to drive local footfall, highlight late-night convenience, and build neighborhood brand recall through viral reels and targeted Meta ads.`,
+              targetAudience: `Local residents, night owls, students, and urban shoppers seeking rapid convenience and trusted products from ${brand}.`,
+              phases: [
+                { title: "Phase 1: Content Direction & On-Site Shoots", description: "Conducting 2-4 dedicated on-site shooting sessions capturing store ambiance, midnight cravings, top-selling inventory, and customer experiences." },
+                { title: "Phase 2: High-Retention Video Production & Publishing", description: "Editing and scheduling 15 high-retention monthly reels with hook optimization, trending audio, dynamic subtitles, and brand aesthetic feed curation." },
+                { title: "Phase 3: Hyperlocal Meta Ads & Footfall Conversion", description: "Deploying geo-targeted Instagram and Facebook ad campaigns highlighting 24/7 availability and exclusive promotions to maximize footfall and brand awareness." }
+              ]
+            };
+          } else if (isSocialPmp) {
             parsed.payload.pmpStrategy = {
               overview: `Comprehensive social media growth and performance marketing strategy for ${brand}. Designed to scale organic reach, create high-retention promotional videos, and generate high-intent inquiries via Meta Ads campaign management.`,
               targetAudience: `Target demographics, potential customers, and social media audiences across Instagram, Facebook, and LinkedIn.`,
@@ -1588,6 +1749,67 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
           parsed.payload.coverSubtitle = 'Prepared Exclusively For';
         }
 
+        // Intelligent budget alignment: protect explicit rates and avoid destructive rescaling
+        const targetBudget = parsed.payload.totalBudget || 0;
+        if (targetBudget > 0 && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0 && !isSingleReq) {
+          parsed.payload.packageTiers.forEach(tier => {
+            const items = tier.items || [];
+            if (items.length > 0) {
+              const sum = items.reduce((acc, it) => acc + ((it.qty || 1) * (it.rate || 0)), 0);
+              
+              // If rates were completely unassigned (all 0), distribute logically
+              if (sum === 0) {
+                const totalWeight = items.reduce((acc, it) => {
+                  const n = (it.name || '').toLowerCase();
+                  return acc + (n.includes('video') || n.includes('shoot') || n.includes('film') ? 40 : n.includes('web') ? 45 : n.includes('drone') ? 20 : n.includes('photo') ? 15 : 15);
+                }, 0);
+                let running = 0;
+                tier.items = items.map((it, idx) => {
+                  if (idx === items.length - 1) {
+                    const rem = targetBudget - running;
+                    return { ...it, rate: Math.max(0, Math.round(rem / (it.qty || 1))) };
+                  }
+                  const n = (it.name || '').toLowerCase();
+                  const weight = n.includes('video') || n.includes('shoot') || n.includes('film') ? 40 : n.includes('web') ? 45 : n.includes('drone') ? 20 : n.includes('photo') ? 15 : 15;
+                  const r = Math.round((targetBudget * weight) / totalWeight / (it.qty || 1) / 100) * 100;
+                  running += ((it.qty || 1) * r);
+                  return { ...it, rate: r };
+                });
+              } else if (Math.abs(sum - targetBudget) > 0) {
+                const diff = targetBudget - sum;
+                // If difference is small (within ±2000), adjust ONLY the last item rather than clobbering all individual rates!
+                if (Math.abs(diff) <= 2000) {
+                  const lastIdx = items.length - 1;
+                  const lastQty = items[lastIdx].qty || 1;
+                  items[lastIdx].rate = Math.max(0, items[lastIdx].rate + Math.round(diff / lastQty));
+                } else {
+                  // Scale proportionally if discrepancy is larger
+                  const factor = targetBudget / sum;
+                  let running = 0;
+                  tier.items = items.map((it, idx) => {
+                    if (idx === items.length - 1) {
+                      const rem = targetBudget - running;
+                      return { ...it, rate: Math.max(0, Math.round(rem / (it.qty || 1))) };
+                    }
+                    const r = Math.round((it.rate * factor) / 100) * 100;
+                    running += ((it.qty || 1) * r);
+                    return { ...it, rate: r };
+                  });
+                }
+              }
+            }
+          });
+          if (parsed.payload.services && parsed.payload.packageTiers[0]?.items) {
+            parsed.payload.services = parsed.payload.packageTiers[0].items;
+          }
+        } else if (targetBudget === 0 && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0) {
+          // If totalBudget was not explicitly provided but items have rates, infer totalBudget from items
+          const sum = (parsed.payload.packageTiers[0].items || []).reduce((acc, it) => acc + ((it.qty || 1) * (it.rate || 0)), 0);
+          if (sum > 0) {
+            parsed.payload.totalBudget = sum;
+          }
+        }
+
         // Ensure consultative replyMessage only for quote / package when reply is completely empty or missing
         const activeItems = parsed.payload.packageTiers?.[0]?.items || parsed.payload.services || [];
         if (!parsed.replyMessage || parsed.replyMessage.trim() === '') {
@@ -1604,67 +1826,6 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         if (formContext?.packageTiers) parsed.payload.packageTiers = formContext.packageTiers;
         if (formContext?.pmpStrategy) parsed.payload.pmpStrategy = formContext.pmpStrategy;
         parsed.replyMessage = `I've updated the proposal cover settings! Cover Heading: **"${parsed.payload.coverHeading}"**, Subtitle: **"${parsed.payload.coverSubtitle}"**.`;
-      }
-
-      // Intelligent budget alignment: protect explicit rates and avoid destructive rescaling
-      const targetBudget = parsed.payload.totalBudget || 0;
-      if (targetBudget > 0 && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0 && !isSingleReq) {
-        parsed.payload.packageTiers.forEach(tier => {
-          const items = tier.items || [];
-          if (items.length > 0) {
-            const sum = items.reduce((acc, it) => acc + ((it.qty || 1) * (it.rate || 0)), 0);
-            
-            // If rates were completely unassigned (all 0), distribute logically
-            if (sum === 0) {
-              const totalWeight = items.reduce((acc, it) => {
-                const n = (it.name || '').toLowerCase();
-                return acc + (n.includes('video') || n.includes('shoot') || n.includes('film') ? 40 : n.includes('web') ? 45 : n.includes('drone') ? 20 : n.includes('photo') ? 15 : 15);
-              }, 0);
-              let running = 0;
-              tier.items = items.map((it, idx) => {
-                if (idx === items.length - 1) {
-                  const rem = targetBudget - running;
-                  return { ...it, rate: Math.max(0, Math.round(rem / (it.qty || 1))) };
-                }
-                const n = (it.name || '').toLowerCase();
-                const weight = n.includes('video') || n.includes('shoot') || n.includes('film') ? 40 : n.includes('web') ? 45 : n.includes('drone') ? 20 : n.includes('photo') ? 15 : 15;
-                const r = Math.round((targetBudget * weight) / totalWeight / (it.qty || 1) / 100) * 100;
-                running += ((it.qty || 1) * r);
-                return { ...it, rate: r };
-              });
-            } else if (Math.abs(sum - targetBudget) > 0) {
-              const diff = targetBudget - sum;
-              // If difference is small (within ±2000), adjust ONLY the last item rather than clobbering all individual rates!
-              if (Math.abs(diff) <= 2000) {
-                const lastIdx = items.length - 1;
-                const lastQty = items[lastIdx].qty || 1;
-                items[lastIdx].rate = Math.max(0, items[lastIdx].rate + Math.round(diff / lastQty));
-              } else {
-                // Scale proportionally if discrepancy is larger
-                const factor = targetBudget / sum;
-                let running = 0;
-                tier.items = items.map((it, idx) => {
-                  if (idx === items.length - 1) {
-                    const rem = targetBudget - running;
-                    return { ...it, rate: Math.max(0, Math.round(rem / (it.qty || 1))) };
-                  }
-                  const r = Math.round((it.rate * factor) / 100) * 100;
-                  running += ((it.qty || 1) * r);
-                  return { ...it, rate: r };
-                });
-              }
-            }
-          }
-        });
-        if (parsed.payload.services && parsed.payload.packageTiers[0]?.items) {
-          parsed.payload.services = parsed.payload.packageTiers[0].items;
-        }
-      } else if (targetBudget === 0 && parsed.payload.packageTiers && parsed.payload.packageTiers.length > 0) {
-        // If totalBudget was not explicitly provided but items have rates, infer totalBudget from items
-        const sum = (parsed.payload.packageTiers[0].items || []).reduce((acc, it) => acc + ((it.qty || 1) * (it.rate || 0)), 0);
-        if (sum > 0) {
-          parsed.payload.totalBudget = sum;
-        }
       }
     }
 

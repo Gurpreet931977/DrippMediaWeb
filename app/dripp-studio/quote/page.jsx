@@ -747,7 +747,7 @@ export default function QuoteMaker() {
       return 0;
     };
 
-    const targetBudget = parseNum(payload.totalBudget);
+    const targetBudget = parseNum(payload.totalBudget) || parseNum(payload.budget) || parseNum(payload.total) || 0;
     const normalizeItems = (rawItems) => {
       let mapped = (rawItems || []).map(s => {
         const title = typeof s === 'string' ? s : (s.desc || s.name || 'Service Item');
