@@ -145,8 +145,22 @@ export default function OrloChat() {
   const [emotion, setEmotion] = useState('idle');
   const [isHovered, setIsHovered] = useState(false);
   const [speechBubble, setSpeechBubble] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+  const formatModelLabel = (m) => {
+    if (!m) return 'Gemini';
+    if (m === 'auto') return '⚡ Auto (Smart)';
+    if (m.includes('3.1') && m.includes('pro')) return 'Gemini 3.1 Pro';
+    if (m.includes('2.5') && m.includes('pro')) return 'Gemini 3.1 Pro';
+    if (m.includes('2.5') && m.includes('flash')) return 'Gemini 2.5 Flash';
+    if (m.includes('2.0') && m.includes('flash')) return 'Gemini 2.0 Flash';
+    if (m.includes('1.5') && m.includes('pro')) return 'Gemini 1.5 Pro';
+    if (m.includes('1.5') && m.includes('flash')) return 'Gemini 1.5 Flash';
+    return m.replace('gemini-', 'Gemini ').replace(/-/g, ' ');
+  };
+
+  const [selectedModel, setSelectedModel] = useState('auto');
+  const [activeModelUsed, setActiveModelUsed] = useState('gemini-2.5-flash');
   const [availableModels, setAvailableModels] = useState([
+    { id: 'auto', label: '⚡ Auto (Smart)' },
     { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
     { id: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro' },
     { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
@@ -220,37 +234,28 @@ export default function OrloChat() {
     }
     
     let savedModel = localStorage.getItem('orlo_preferred_model');
-    if (savedModel) {
-      if (savedModel === 'gemini-1.5-pro' || savedModel === 'models/gemini-1.5-pro') {
-        savedModel = 'gemini-1.5-pro-latest';
-        localStorage.setItem('orlo_preferred_model', savedModel);
-      } else if (savedModel === 'gemini-2.5-pro' || savedModel === 'models/gemini-2.5-pro') {
-        savedModel = 'gemini-3.1-pro-preview';
-        localStorage.setItem('orlo_preferred_model', savedModel);
-      } else if (savedModel.includes('3.6') || savedModel.includes('3.5')) {
-        savedModel = 'gemini-2.5-flash';
-        localStorage.setItem('orlo_preferred_model', savedModel);
-      }
-      setSelectedModel(savedModel);
+    if (!savedModel || savedModel === 'gemini-1.5-pro' || savedModel === 'models/gemini-1.5-pro' || savedModel === 'gemini-2.5-pro' || savedModel === 'models/gemini-2.5-pro' || savedModel.includes('3.6') || savedModel.includes('3.5')) {
+      savedModel = 'auto';
+      localStorage.setItem('orlo_preferred_model', 'auto');
     }
+    setSelectedModel(savedModel);
 
     // Query active models dynamically
     fetch('/api/admin/copilot/test-models')
       .then(res => res.json())
       .then(data => {
+        if (data.recommended) {
+          setActiveModelUsed(data.recommended);
+        }
         if (data.models && Array.isArray(data.models) && data.models.length > 0) {
-          const formatted = data.models.map(m => {
-            let label = 'Gemini Model';
-            if (m.includes('3.1') && m.includes('pro')) label = 'Gemini 3.1 Pro';
-            else if (m.includes('2.0') && m.includes('flash')) label = 'Gemini 2.0 Flash';
-            else if (m.includes('1.5') && m.includes('pro')) label = 'Gemini 1.5 Pro';
-            else if (m.includes('1.5') && m.includes('flash')) label = 'Gemini 1.5 Flash';
-            else if (m.includes('2.5') && m.includes('pro')) label = 'Gemini 3.1 Pro';
-            else if (m.includes('2.5') && m.includes('flash')) label = 'Gemini 2.5 Flash';
-            else label = m.replace('gemini-', 'Gemini ').replace(/-/g, ' ');
-            return { id: m, label };
-          });
-          setAvailableModels(formatted);
+          const formatted = data.models.map(m => ({
+            id: m,
+            label: formatModelLabel(m)
+          }));
+          setAvailableModels([
+            { id: 'auto', label: '⚡ Auto (Smart)' },
+            ...formatted.filter(m => m.id !== 'auto')
+          ]);
         }
       })
       .catch(err => console.warn('Failed to load dynamic model list:', err));
@@ -935,6 +940,10 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       
       if (!res.ok) throw new Error(data.error || 'Failed to process voice command');
 
+      if (data.activeModel) {
+        setActiveModelUsed(data.activeModel);
+      }
+
       setEmotion('success');
       setTimeout(() => setEmotion('idle'), 3000);
 
@@ -1061,6 +1070,10 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       const data = await res.json();
       
       if (!res.ok) throw new Error(data.error || 'Failed to process command');
+
+      if (data.activeModel) {
+        setActiveModelUsed(data.activeModel);
+      }
 
       if (data.intent === 'unsupported' || (!data.payload && data.intent !== 'learn' && data.intent !== 'chat' && data.intent !== 'clear_chat')) {
         setEmotion('disappointed');
@@ -2060,35 +2073,70 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                 <Plus size={13} />
                 <span>New</span>
               </button>
-              <select 
-                value={selectedModel} 
-                onChange={(e) => {
-                  setSelectedModel(e.target.value);
-                  localStorage.setItem('orlo_preferred_model', e.target.value);
-                }}
-                style={{
-                  background: 'rgba(235, 215, 63, 0.08)',
-                  border: '1px solid rgba(235, 215, 63, 0.3)',
-                  color: '#ebd73f',
-                  padding: '5px 12px',
-                  borderRadius: '20px',
-                  fontSize: '0.75rem',
-                  fontFamily: "'Clash Display', sans-serif",
-                  fontWeight: '600',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  maxWidth: '125px',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden'
-                }}
-              >
-                {availableModels.map(m => (
-                  <option key={m.id} value={m.id} style={{ background: '#181818', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <select 
+                  value={selectedModel} 
+                  onChange={(e) => {
+                    setSelectedModel(e.target.value);
+                    localStorage.setItem('orlo_preferred_model', e.target.value);
+                  }}
+                  title={selectedModel === 'auto' 
+                    ? `Auto Mode Active (Currently running on ${formatModelLabel(activeModelUsed)} with self-healing failover)` 
+                    : `Manual Override: ${selectedModel}`}
+                  style={{
+                    background: selectedModel === 'auto' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(235, 215, 63, 0.08)',
+                    border: selectedModel === 'auto' ? '1px solid rgba(235, 215, 63, 0.6)' : '1px solid rgba(235, 215, 63, 0.3)',
+                    color: '#ebd73f',
+                    padding: '5px 10px',
+                    borderRadius: '20px',
+                    fontSize: '0.75rem',
+                    fontFamily: "'Clash Display', sans-serif",
+                    fontWeight: '600',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    maxWidth: '140px',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {availableModels.map(m => {
+                    const label = m.id === 'auto' && activeModelUsed 
+                      ? `⚡ Auto (${formatModelLabel(activeModelUsed)})` 
+                      : m.label;
+                    return (
+                      <option key={m.id} value={m.id} style={{ background: '#181818', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                </select>
+                {selectedModel === 'auto' && (
+                  <span 
+                    title={`Live Auto-Select: Running on ${formatModelLabel(activeModelUsed)}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '3px 7px',
+                      borderRadius: '12px',
+                      background: 'rgba(74, 222, 128, 0.12)',
+                      border: '1px solid rgba(74, 222, 128, 0.35)',
+                      color: '#4ade80',
+                      fontSize: '0.62rem',
+                      fontWeight: '700',
+                      fontFamily: "'Clash Display', sans-serif",
+                      whiteSpace: 'nowrap',
+                      cursor: 'default',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 5px #4ade80' }} />
+                    Live
+                  </span>
+                )}
+              </div>
               <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='#888'}>
                 <X size={20} />
               </button>

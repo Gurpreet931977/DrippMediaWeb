@@ -31,11 +31,14 @@ export async function GET() {
       // Ensure we don't have duplicates and default to modern verified models
       const defaults = ['gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
       const uniqueModels = [...new Set([...validModels, ...defaults])].filter(m => m !== 'gemini-1.5-pro' && m !== 'gemini-2.5-pro');
-      return Response.json({ models: uniqueModels });
+      const recommended = uniqueModels.find(m => m === 'gemini-2.5-flash') || uniqueModels[0] || 'gemini-2.5-flash';
+      return Response.json({ recommended, models: uniqueModels });
     }
     
-    return Response.json({ error: data.error?.message || 'Failed to list models' }, { status: 400 });
+    const defaults = ['gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
+    return Response.json({ recommended: 'gemini-2.5-flash', models: defaults });
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    const defaults = ['gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
+    return Response.json({ recommended: 'gemini-2.5-flash', models: defaults, error: err.message });
   }
 }

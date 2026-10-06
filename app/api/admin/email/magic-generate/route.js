@@ -1,5 +1,7 @@
 import { verifyCookie } from '@/app/lib/adminAuth';
 
+let cachedWorkingModel = 'gemini-2.5-flash';
+
 export async function POST(request) {
   try {
     // 1. Authenticate Admin
@@ -123,9 +125,12 @@ Ensure the output is creative, original, and does not just repeat or slightly re
       'gemini-1.5-pro-latest'
     ];
 
+    const isAutoMode = (!selectedModel || selectedModel === 'auto');
+
     function resolveModelName(rawModel) {
-      if (!rawModel) return 'gemini-2.5-flash';
+      if (!rawModel || rawModel === 'auto') return cachedWorkingModel || 'gemini-2.5-flash';
       const clean = String(rawModel).replace(/^models\//, '').trim();
+      if (clean === 'auto') return cachedWorkingModel || 'gemini-2.5-flash';
       if (clean === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
       if (clean === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
       if (clean === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
@@ -136,15 +141,26 @@ Ensure the output is creative, original, and does not just repeat or slightly re
     }
 
     const primaryModel = resolveModelName(selectedModel);
-    const candidateModels = [
-      primaryModel,
-      ...verifiedModels.map(m => {
-        if (m === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
-        if (m === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
-        return m;
-      }),
-      ...staticDefaults
-    ];
+    const candidateModels = isAutoMode
+      ? [
+          cachedWorkingModel,
+          ...staticDefaults,
+          ...verifiedModels.map(m => {
+            if (m === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
+            if (m === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
+            return m;
+          })
+        ]
+      : [
+          primaryModel,
+          cachedWorkingModel,
+          ...verifiedModels.map(m => {
+            if (m === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
+            if (m === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
+            return m;
+          }),
+          ...staticDefaults
+        ];
     const fallbackQueue = [...new Set(candidateModels)].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro' && m !== 'gemini-2.5-pro' && m !== 'models/gemini-2.5-pro');
 
     let data = null;
@@ -175,6 +191,7 @@ Ensure the output is creative, original, and does not just repeat or slightly re
         const resData = await response.json();
         if (resData.candidates?.[0]?.content?.parts?.[0]?.text) {
           data = resData;
+          cachedWorkingModel = modelToTry;
           break;
         }
       } catch (err) {

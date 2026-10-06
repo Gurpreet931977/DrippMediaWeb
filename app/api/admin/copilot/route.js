@@ -8,6 +8,9 @@ const getSupabase = () => {
   if (!supabaseUrl || !supabaseKey) return null;
   return createClient(supabaseUrl, supabaseKey);
 };
+// Global in-memory cache for the most responsive verified Gemini model
+let cachedWorkingModel = 'gemini-2.5-flash';
+
 export async function POST(request) {
   try {
     const cookieHeader = request.headers.get('cookie') || '';
@@ -452,10 +455,13 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
       required: ["intent", "replyMessage"]
     };
 
+    const isAutoMode = (!model || model === 'auto');
+
     // Candidate model queue
     function resolveModelName(rawModel) {
-      if (!rawModel) return 'gemini-2.5-flash';
+      if (!rawModel || rawModel === 'auto') return cachedWorkingModel || 'gemini-2.5-flash';
       const clean = String(rawModel).replace(/^models\//, '').trim();
+      if (clean === 'auto') return cachedWorkingModel || 'gemini-2.5-flash';
       if (clean === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
       if (clean === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
       if (clean === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
@@ -466,18 +472,16 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
     }
 
     const primaryModel = resolveModelName(model);
-    const fallbackQueue = [...new Set([
-      primaryModel,
-      'gemini-2.5-flash',
-      'gemini-3.1-pro-preview',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro-latest'
-    ])].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro' && m !== 'gemini-2.5-pro' && m !== 'models/gemini-2.5-pro');
+    const candidateList = isAutoMode
+      ? [cachedWorkingModel, 'gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest']
+      : [primaryModel, cachedWorkingModel, 'gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
+
+    const fallbackQueue = [...new Set(candidateList)].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro' && m !== 'gemini-2.5-pro' && m !== 'models/gemini-2.5-pro');
 
     const geminiContents = buildGeminiContents(chatHistory, userPrompt);
     let lastError = null;
     let data = null;
+    let usedModel = null;
 
     for (const modelToTry of fallbackQueue) {
       const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${apiKey}`;
@@ -501,6 +505,8 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         const resData = await response.json();
         if (!resData.error && resData.candidates?.[0]?.content?.parts?.[0]?.text) {
           data = resData;
+          usedModel = modelToTry;
+          cachedWorkingModel = modelToTry;
           break;
         }
 
@@ -537,6 +543,8 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         const retryData = await retryRes.json();
         if (!retryData.error && retryData.candidates?.[0]?.content?.parts?.[0]?.text) {
           data = retryData;
+          usedModel = modelToTry;
+          cachedWorkingModel = modelToTry;
           break;
         }
 
@@ -571,6 +579,8 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         const fallbackData = await fallbackRes.json();
         if (!fallbackData.error && fallbackData.candidates?.[0]?.content?.parts?.[0]?.text) {
           data = fallbackData;
+          usedModel = modelToTry;
+          cachedWorkingModel = modelToTry;
           break;
         }
 
@@ -1666,6 +1676,9 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         parsed.replyMessage = "I'm right here! How can I help you today?";
       }
     }
+
+    parsed.activeModel = usedModel || cachedWorkingModel;
+    parsed.isAutoSelected = isAutoMode;
 
     return Response.json(parsed);
   } catch (error) {
