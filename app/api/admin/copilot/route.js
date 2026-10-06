@@ -1226,6 +1226,7 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
       );
 
       // 1. Clean and prioritize AI recognized brand name, then fallback to prompt extraction, then existing form context
+      const extractedBrand = extractBrandNameFromPrompt(userPrompt);
       let aiBrand = parsed.payload.brandName;
       if (typeof aiBrand === 'string') {
         aiBrand = aiBrand.replace(/^(?:brand(?:\s+name)?|client(?:\s+name)?)\s*[:-]\s*/i, '').replace(/^['"]+|['"]+$/g, '').trim();
@@ -1233,7 +1234,6 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
       if (aiBrand && !['client project', 'client', 'brand', 'standard', 'standard package', 'custom package'].includes(aiBrand.toLowerCase())) {
         parsed.payload.brandName = aiBrand;
       } else {
-        const extractedBrand = extractBrandNameFromPrompt(userPrompt);
         if (extractedBrand) {
           parsed.payload.brandName = extractedBrand;
         } else if (existingFormBrand) {

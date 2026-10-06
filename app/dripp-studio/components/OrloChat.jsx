@@ -2019,11 +2019,11 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           <div style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
           <div className="chat-header">
             {/* Left: Avatar + Title + Status */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexShrink: 0 }}>
               <div 
                 style={{ 
-                  width: '34px', 
-                  height: '34px', 
+                  width: '32px', 
+                  height: '32px', 
                   borderRadius: '50%', 
                   position: 'relative', 
                   overflow: 'hidden', 
@@ -2037,20 +2037,21 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                 onMouseOver={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)'}
                 onMouseOut={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
               >
-                <ProfileScene size={34} />
+                <ProfileScene size={32} />
               </div>
-              <div>
+              <div style={{ flexShrink: 0 }}>
                 <h3 
                   style={{ 
                     margin: 0, 
-                    fontSize: '0.95rem', 
+                    fontSize: '0.92rem', 
                     color: '#ffffff', 
                     fontWeight: '600', 
                     fontFamily: "'Clash Display', sans-serif",
                     cursor: 'pointer', 
                     display: 'flex', 
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '6px',
+                    whiteSpace: 'nowrap'
                   }}
                   onClick={() => setShowProfile(true)}
                   title="View Orlo's Profile"
@@ -2060,30 +2061,32 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                     <AudioVisualizer active={true} mode={isSpeaking ? 'speaking' : 'listening'} />
                   )}
                 </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '1px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '1px', whiteSpace: 'nowrap' }}>
                   <span style={{ 
                     width: '5px', 
                     height: '5px', 
                     borderRadius: '50%', 
                     background: '#22c55e', 
                     boxShadow: '0 0 6px rgba(34, 197, 94, 0.6)',
-                    display: 'inline-block'
+                    display: 'inline-block',
+                    flexShrink: 0
                   }} />
                   <span style={{ 
                     margin: 0, 
                     fontSize: '0.68rem', 
                     color: '#a1a1aa',
                     fontFamily: "'Clash Display', sans-serif",
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    whiteSpace: 'nowrap'
                   }}>
-                    {isSpeaking ? 'Speaking...' : isListening ? 'Listening...' : 'Online & Ready'}
+                    {isSpeaking ? 'Speaking...' : isListening ? 'Listening...' : 'Online'}
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Right: Actions (New + Model Selector + Close) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
               <button 
                 type="button"
                 onClick={() => {
