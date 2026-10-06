@@ -158,6 +158,12 @@ export default function OrloChat() {
     return clean.replace('gemini-', 'Gemini ').replace(/-/g, ' ');
   };
 
+  const getShortModelLabel = (m) => {
+    if (!m || m === 'auto') return 'Auto';
+    const label = formatModelLabel(m);
+    return label.replace(/^Gemini\s+/i, '');
+  };
+
   const [selectedModel, setSelectedModel] = useState('auto');
   const [activeModelUsed, setActiveModelUsed] = useState('gemini-2.0-flash');
   const [availableModels, setAvailableModels] = useState([
@@ -1477,7 +1483,8 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           position: fixed;
           bottom: 110px;
           right: 30px;
-          width: 380px;
+          width: 400px;
+          max-width: calc(100vw - 32px);
           height: 550px;
           background: rgba(10, 10, 10, 0.85);
           backdrop-filter: blur(40px);
@@ -1498,7 +1505,8 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: rgba(14, 14, 16, 0.98);
+          gap: 16px;
+          background: #0e0e10;
           backdrop-filter: blur(25px);
           -webkit-backdrop-filter: blur(25px);
           position: relative;
@@ -2098,7 +2106,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
             </div>
 
             {/* Right: Actions (New + Model Selector + Close) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: 'auto' }}>
               <button 
                 type="button"
                 onClick={() => {
@@ -2109,7 +2117,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                 }}
                 style={{
                   height: '28px',
-                  padding: '0 10px',
+                  padding: '0 9px',
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '14px',
@@ -2122,7 +2130,8 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   alignItems: 'center',
                   gap: '4px',
                   transition: 'all 0.15s ease',
-                  whiteSpace: 'nowrap'
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
                 }}
                 onMouseOver={e => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
@@ -2140,19 +2149,21 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                 <span>New</span>
               </button>
 
-              {/* Minimal Model Selector Pill */}
+              {/* Minimal Compact Model Selector Pill */}
               <div 
                 style={{ 
                   position: 'relative',
                   height: '28px',
                   display: 'inline-flex', 
                   alignItems: 'center', 
+                  gap: '4px',
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '14px',
-                  padding: '0 8px 0 10px',
+                  padding: '0 8px',
                   transition: 'all 0.15s ease',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  flexShrink: 0
                 }}
                 onMouseOver={e => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
@@ -2166,6 +2177,27 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   ? `Auto Failover Active (Running on ${formatModelLabel(activeModelUsed)})` 
                   : `Model: ${formatModelLabel(selectedModel)}`}
               >
+                <span 
+                  style={{
+                    color: '#e4e4e7',
+                    fontSize: '0.72rem',
+                    fontFamily: "'Clash Display', sans-serif",
+                    fontWeight: '500',
+                    whiteSpace: 'nowrap',
+                    pointerEvents: 'none'
+                  }}
+                >
+                  {getShortModelLabel(selectedModel)}
+                </span>
+                <ChevronDown 
+                  size={11} 
+                  strokeWidth={2.4} 
+                  style={{ 
+                    color: '#a1a1aa',
+                    pointerEvents: 'none',
+                    flexShrink: 0
+                  }} 
+                />
                 <select 
                   value={selectedModel} 
                   onChange={(e) => {
@@ -2173,18 +2205,13 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                     localStorage.setItem('orlo_preferred_model', e.target.value);
                   }}
                   style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#e4e4e7',
-                    fontSize: '0.72rem',
-                    fontFamily: "'Clash Display', sans-serif",
-                    fontWeight: '500',
-                    outline: 'none',
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    opacity: 0,
                     cursor: 'pointer',
-                    padding: '0 12px 0 0',
-                    appearance: 'none',
-                    WebkitAppearance: 'none',
-                    MozAppearance: 'none'
+                    fontFamily: "'Clash Display', sans-serif"
                   }}
                 >
                   {availableModels.map(m => (
@@ -2193,16 +2220,6 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                     </option>
                   ))}
                 </select>
-                <ChevronDown 
-                  size={11} 
-                  strokeWidth={2.4} 
-                  style={{ 
-                    position: 'absolute', 
-                    right: '8px', 
-                    pointerEvents: 'none', 
-                    color: '#a1a1aa' 
-                  }} 
-                />
               </div>
 
               {/* Close Button */}
