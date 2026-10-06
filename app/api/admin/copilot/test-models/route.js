@@ -12,23 +12,25 @@ export async function GET() {
         .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
         .map(m => {
           const name = m.name.replace(/^models\//, '').trim();
-          // Normalize dead unversioned 1.5 aliases to active supported endpoints
+          // Normalize dead unversioned or deprecated aliases to active supported endpoints
           if (name === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
           if (name === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
+          if (name === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
           return name;
         })
         .filter(name => {
-          // Only allow core Gemini 1.5, 2.0, and 2.5 models
           if (!name.startsWith('gemini-')) return false;
+          // Never output deprecated aliases
+          if (name === 'gemini-1.5-pro' || name === 'gemini-2.5-pro') return false;
+          // Explicitly allow gemini-3.1-pro-preview
+          if (name === 'gemini-3.1-pro-preview') return true;
           if (name.includes('preview') || name.includes('experimental') || name.includes('lite') || name.includes('vision') || name.includes('001') || name.includes('002')) return false;
-          // Never output the deprecated unpinned gemini-1.5-pro alias
-          if (name === 'gemini-1.5-pro') return false;
           return true;
         });
         
       // Ensure we don't have duplicates and default to modern verified models
-      const defaults = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-2.5-pro'];
-      const uniqueModels = [...new Set([...validModels, ...defaults])].filter(m => m !== 'gemini-1.5-pro');
+      const defaults = ['gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
+      const uniqueModels = [...new Set([...validModels, ...defaults])].filter(m => m !== 'gemini-1.5-pro' && m !== 'gemini-2.5-pro');
       return Response.json({ models: uniqueModels });
     }
     

@@ -148,10 +148,10 @@ export default function OrloChat() {
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
   const [availableModels, setAvailableModels] = useState([
     { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+    { id: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro' },
     { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
     { id: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash' },
-    { id: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro' },
-    { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }
+    { id: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro' }
   ]);
   
   const chatRef = useRef(null);
@@ -224,6 +224,9 @@ export default function OrloChat() {
       if (savedModel === 'gemini-1.5-pro' || savedModel === 'models/gemini-1.5-pro') {
         savedModel = 'gemini-1.5-pro-latest';
         localStorage.setItem('orlo_preferred_model', savedModel);
+      } else if (savedModel === 'gemini-2.5-pro' || savedModel === 'models/gemini-2.5-pro') {
+        savedModel = 'gemini-3.1-pro-preview';
+        localStorage.setItem('orlo_preferred_model', savedModel);
       } else if (savedModel.includes('3.6') || savedModel.includes('3.5')) {
         savedModel = 'gemini-2.5-flash';
         localStorage.setItem('orlo_preferred_model', savedModel);
@@ -238,10 +241,11 @@ export default function OrloChat() {
         if (data.models && Array.isArray(data.models) && data.models.length > 0) {
           const formatted = data.models.map(m => {
             let label = 'Gemini Model';
-            if (m.includes('2.0') && m.includes('flash')) label = 'Gemini 2.0 Flash';
+            if (m.includes('3.1') && m.includes('pro')) label = 'Gemini 3.1 Pro';
+            else if (m.includes('2.0') && m.includes('flash')) label = 'Gemini 2.0 Flash';
             else if (m.includes('1.5') && m.includes('pro')) label = 'Gemini 1.5 Pro';
             else if (m.includes('1.5') && m.includes('flash')) label = 'Gemini 1.5 Flash';
-            else if (m.includes('2.5') && m.includes('pro')) label = 'Gemini 2.5 Pro';
+            else if (m.includes('2.5') && m.includes('pro')) label = 'Gemini 3.1 Pro';
             else if (m.includes('2.5') && m.includes('flash')) label = 'Gemini 2.5 Flash';
             else label = m.replace('gemini-', 'Gemini ').replace(/-/g, ' ');
             return { id: m, label };

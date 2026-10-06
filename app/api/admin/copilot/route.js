@@ -458,8 +458,9 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
       const clean = String(rawModel).replace(/^models\//, '').trim();
       if (clean === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
       if (clean === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
+      if (clean === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
       if (clean.includes('3.6') || clean.includes('3.5')) {
-        return clean.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.5-flash';
+        return clean.includes('pro') ? 'gemini-3.1-pro-preview' : 'gemini-2.5-flash';
       }
       return clean;
     }
@@ -468,11 +469,11 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
     const fallbackQueue = [...new Set([
       primaryModel,
       'gemini-2.5-flash',
+      'gemini-3.1-pro-preview',
       'gemini-2.0-flash',
       'gemini-1.5-flash-latest',
-      'gemini-1.5-pro-latest',
-      'gemini-2.5-pro'
-    ])].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro');
+      'gemini-1.5-pro-latest'
+    ])].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro' && m !== 'gemini-2.5-pro' && m !== 'models/gemini-2.5-pro');
 
     const geminiContents = buildGeminiContents(chatHistory, userPrompt);
     let lastError = null;
@@ -503,10 +504,18 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
           break;
         }
 
-        // If the model does not exist (404) or is unsupported, skip immediately to next model in queue
-        if (response.status === 404 || resData.error?.code === 404 || resData.error?.status === 'NOT_FOUND') {
-          console.warn(`[Gemini Model ${modelToTry} Not Found / Unsupported]: ${resData.error?.message}. Trying next model...`);
-          lastError = resData.error?.message || `Model ${modelToTry} not found`;
+        // If the model does not exist (404), is deprecated, or is unsupported, skip immediately to next model in queue
+        const isModelUnavailable = 
+          response.status === 404 || 
+          resData.error?.code === 404 || 
+          resData.error?.status === 'NOT_FOUND' ||
+          resData.error?.message?.toLowerCase().includes('no longer available') ||
+          resData.error?.message?.toLowerCase().includes('not found') ||
+          resData.error?.message?.toLowerCase().includes('not supported');
+
+        if (isModelUnavailable) {
+          console.warn(`[Gemini Model ${modelToTry} Unavailable]: ${resData.error?.message}. Trying next model...`);
+          lastError = resData.error?.message || `Model ${modelToTry} unavailable`;
           continue;
         }
 
@@ -529,6 +538,20 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         if (!retryData.error && retryData.candidates?.[0]?.content?.parts?.[0]?.text) {
           data = retryData;
           break;
+        }
+
+        const isRetryUnavailable = 
+          retryRes.status === 404 || 
+          retryData.error?.code === 404 || 
+          retryData.error?.status === 'NOT_FOUND' ||
+          retryData.error?.message?.toLowerCase().includes('no longer available') ||
+          retryData.error?.message?.toLowerCase().includes('not found') ||
+          retryData.error?.message?.toLowerCase().includes('not supported');
+
+        if (isRetryUnavailable) {
+          console.warn(`[Gemini Model ${modelToTry} Unavailable]: ${retryData.error?.message}. Trying next model...`);
+          lastError = retryData.error?.message || `Model ${modelToTry} unavailable`;
+          continue;
         }
 
         // Tier 3: Classic single user prompt fallback

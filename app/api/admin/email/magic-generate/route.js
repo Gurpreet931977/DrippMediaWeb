@@ -117,10 +117,10 @@ Ensure the output is creative, original, and does not just repeat or slightly re
 
     const staticDefaults = [
       'gemini-2.5-flash',
+      'gemini-3.1-pro-preview',
       'gemini-2.0-flash',
       'gemini-1.5-flash-latest',
-      'gemini-1.5-pro-latest',
-      'gemini-2.5-pro'
+      'gemini-1.5-pro-latest'
     ];
 
     function resolveModelName(rawModel) {
@@ -128,8 +128,9 @@ Ensure the output is creative, original, and does not just repeat or slightly re
       const clean = String(rawModel).replace(/^models\//, '').trim();
       if (clean === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
       if (clean === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
+      if (clean === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
       if (clean.includes('3.6') || clean.includes('3.5')) {
-        return clean.includes('pro') ? 'gemini-1.5-pro-latest' : 'gemini-2.5-flash';
+        return clean.includes('pro') ? 'gemini-3.1-pro-preview' : 'gemini-2.5-flash';
       }
       return clean;
     }
@@ -137,10 +138,14 @@ Ensure the output is creative, original, and does not just repeat or slightly re
     const primaryModel = resolveModelName(selectedModel);
     const candidateModels = [
       primaryModel,
-      ...verifiedModels.map(m => m === 'gemini-1.5-pro' ? 'gemini-1.5-pro-latest' : m),
+      ...verifiedModels.map(m => {
+        if (m === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
+        if (m === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
+        return m;
+      }),
       ...staticDefaults
     ];
-    const fallbackQueue = [...new Set(candidateModels)].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro');
+    const fallbackQueue = [...new Set(candidateModels)].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro' && m !== 'gemini-2.5-pro' && m !== 'models/gemini-2.5-pro');
 
     let data = null;
     let lastError = null;
