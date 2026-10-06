@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Send, ChevronLeft, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon, Mic, MicOff, ArrowDown, Square, RotateCcw, Plus } from 'lucide-react';
+import { X, Send, ChevronLeft, ChevronDown, Grid, Bookmark, MoreHorizontal, ArrowLeft, Heart, MessageCircle, Send as SendIcon, Bookmark as BookmarkIcon, Mic, MicOff, ArrowDown, Square, RotateCcw, Plus } from 'lucide-react';
 import OrloIcon from './OrloIcon';
 import gsap from 'gsap';
 import { useGenz } from '../../contexts/GenzContext';
@@ -1493,23 +1493,27 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         }
         
         .chat-header {
-          padding: 14px 18px;
+          padding: 12px 16px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: rgba(18, 18, 20, 0.75);
-          backdrop-filter: blur(20px);
+          background: rgba(14, 14, 16, 0.98);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
           position: relative;
+          z-index: 10;
+          flex-shrink: 0;
         }
         
         .chat-body {
           flex: 1;
-          padding: 24px 20px;
+          padding: 20px 16px;
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 16px;
+          scroll-padding-top: 12px;
         }
         
         .chat-body::-webkit-scrollbar {
@@ -2019,34 +2023,42 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           <div style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
           <div className="chat-header">
             {/* Left: Avatar + Title + Status */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
               <div 
                 style={{ 
-                  width: '32px', 
-                  height: '32px', 
+                  width: '34px', 
+                  height: '34px', 
                   borderRadius: '50%', 
                   position: 'relative', 
                   overflow: 'hidden', 
                   cursor: 'pointer', 
                   border: '1px solid rgba(255, 255, 255, 0.12)',
-                  transition: 'border-color 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.35)',
+                  transition: 'border-color 0.2s ease, transform 0.2s ease',
                   flexShrink: 0
                 }}
                 onClick={() => setShowProfile(true)}
                 title="View Orlo's Profile"
-                onMouseOver={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)'}
-                onMouseOut={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
+                onMouseOver={e => {
+                  e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.4)';
+                  e.currentTarget.style.transform = 'scale(1.04)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
-                <ProfileScene size={32} />
+                <ProfileScene size={34} />
               </div>
-              <div style={{ flexShrink: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flexShrink: 0 }}>
                 <h3 
                   style={{ 
                     margin: 0, 
-                    fontSize: '0.92rem', 
+                    fontSize: '0.94rem', 
                     color: '#ffffff', 
                     fontWeight: '600', 
                     fontFamily: "'Clash Display', sans-serif",
+                    lineHeight: 1.15,
                     cursor: 'pointer', 
                     display: 'flex', 
                     alignItems: 'center',
@@ -2061,20 +2073,20 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                     <AudioVisualizer active={true} mode={isSpeaking ? 'speaking' : 'listening'} />
                   )}
                 </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '1px', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px', whiteSpace: 'nowrap' }}>
                   <span style={{ 
-                    width: '5px', 
-                    height: '5px', 
+                    width: '6px', 
+                    height: '6px', 
                     borderRadius: '50%', 
                     background: '#22c55e', 
-                    boxShadow: '0 0 6px rgba(34, 197, 94, 0.6)',
+                    boxShadow: '0 0 6px rgba(34, 197, 94, 0.7)',
                     display: 'inline-block',
                     flexShrink: 0
                   }} />
                   <span style={{ 
                     margin: 0, 
-                    fontSize: '0.68rem', 
-                    color: '#a1a1aa',
+                    fontSize: '0.69rem', 
+                    color: '#71717a',
                     fontFamily: "'Clash Display', sans-serif",
                     fontWeight: '500',
                     whiteSpace: 'nowrap'
@@ -2096,24 +2108,26 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   showToast('Started a new chat');
                 }}
                 style={{
+                  height: '28px',
+                  padding: '0 10px',
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '14px',
                   color: '#d4d4d8',
-                  padding: '4px 9px',
-                  borderRadius: '16px',
-                  fontSize: '0.7rem',
+                  fontSize: '0.72rem',
                   fontFamily: "'Clash Display', sans-serif",
                   fontWeight: '500',
                   cursor: 'pointer',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.15s ease',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={e => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                   e.currentTarget.style.color = '#ffffff';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.16)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
                 }}
                 onMouseOut={e => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
@@ -2122,25 +2136,27 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                 }}
                 title="Start a new chat"
               >
-                <Plus size={11} strokeWidth={2.2} />
+                <Plus size={12} strokeWidth={2.4} />
                 <span>New</span>
               </button>
 
               {/* Minimal Model Selector Pill */}
               <div 
                 style={{ 
+                  position: 'relative',
+                  height: '28px',
                   display: 'inline-flex', 
                   alignItems: 'center', 
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '16px',
-                  padding: '3px 8px',
-                  gap: '5px',
-                  transition: 'all 0.15s ease'
+                  borderRadius: '14px',
+                  padding: '0 8px 0 10px',
+                  transition: 'all 0.15s ease',
+                  cursor: 'pointer'
                 }}
                 onMouseOver={e => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.16)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
                 }}
                 onMouseOut={e => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
@@ -2150,16 +2166,6 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   ? `Auto Failover Active (Running on ${formatModelLabel(activeModelUsed)})` 
                   : `Model: ${formatModelLabel(selectedModel)}`}
               >
-                {selectedModel === 'auto' && (
-                  <span style={{ 
-                    width: '4px', 
-                    height: '4px', 
-                    borderRadius: '50%', 
-                    background: '#22c55e', 
-                    boxShadow: '0 0 5px rgba(34, 197, 94, 0.5)',
-                    display: 'inline-block'
-                  }} />
-                )}
                 <select 
                   value={selectedModel} 
                   onChange={(e) => {
@@ -2170,12 +2176,15 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                     background: 'transparent',
                     border: 'none',
                     color: '#e4e4e7',
-                    fontSize: '0.7rem',
+                    fontSize: '0.72rem',
                     fontFamily: "'Clash Display', sans-serif",
                     fontWeight: '500',
                     outline: 'none',
                     cursor: 'pointer',
-                    padding: '1px 0'
+                    padding: '0 12px 0 0',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none'
                   }}
                 >
                   {availableModels.map(m => (
@@ -2184,6 +2193,16 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                     </option>
                   ))}
                 </select>
+                <ChevronDown 
+                  size={11} 
+                  strokeWidth={2.4} 
+                  style={{ 
+                    position: 'absolute', 
+                    right: '8px', 
+                    pointerEvents: 'none', 
+                    color: '#a1a1aa' 
+                  }} 
+                />
               </div>
 
               {/* Close Button */}
@@ -2191,23 +2210,24 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                 type="button"
                 onClick={toggleChat} 
                 style={{ 
+                  width: '28px',
+                  height: '28px',
                   background: 'rgba(255, 255, 255, 0.04)', 
                   border: '1px solid rgba(255, 255, 255, 0.08)', 
                   borderRadius: '50%',
-                  width: '26px',
-                  height: '26px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#71717a', 
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
-                  padding: 0
+                  padding: 0,
+                  flexShrink: 0
                 }} 
                 onMouseOver={e => {
                   e.currentTarget.style.color = '#ffffff';
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.16)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
                 }} 
                 onMouseOut={e => {
                   e.currentTarget.style.color = '#71717a';
