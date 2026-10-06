@@ -147,7 +147,7 @@ export default function OrloChat() {
   const [speechBubble, setSpeechBubble] = useState('');
   const formatModelLabel = (m) => {
     if (!m) return 'Gemini';
-    if (m === 'auto') return '⚡ Auto (Smart)';
+    if (m === 'auto') return 'Auto';
     const clean = String(m).replace(/^models\//, '').replace(/-latest$/, '');
     if (clean.includes('3.1') && clean.includes('pro')) return 'Gemini 3.1 Pro';
     if (clean.includes('2.5') && clean.includes('pro')) return 'Gemini 3.1 Pro';
@@ -161,7 +161,7 @@ export default function OrloChat() {
   const [selectedModel, setSelectedModel] = useState('auto');
   const [activeModelUsed, setActiveModelUsed] = useState('gemini-2.0-flash');
   const [availableModels, setAvailableModels] = useState([
-    { id: 'auto', label: '⚡ Auto (Smart)' },
+    { id: 'auto', label: 'Auto' },
     { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
     { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
     { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
@@ -254,7 +254,7 @@ export default function OrloChat() {
             label: formatModelLabel(m)
           }));
           setAvailableModels([
-            { id: 'auto', label: '⚡ Auto (Smart)' },
+            { id: 'auto', label: 'Auto' },
             ...formatted.filter(m => m.id !== 'auto')
           ]);
         }
@@ -401,12 +401,12 @@ export default function OrloChat() {
   };
 
   const postsData = [
-    { id: 1, likes: '12.4k', comments: 142, caption: 'Deep work mode activated. Building the future of Dripp Media! 💻✨ #AI #Developer', date: '2 DAYS AGO' },
-    { id: 2, likes: '15.1k', comments: 231, caption: 'Taking a well-deserved break with the team. Sun, sand, and good vibes! 🌴☀️', date: '1 WEEK AGO' },
-    { id: 3, likes: '18.9k', comments: 310, caption: 'Sometimes you just need to disconnect. Exploring the wilderness on a solo hike. 🏔️🎒', date: '2 WEEKS AGO' },
-    { id: 4, likes: '11.2k', comments: 95, caption: 'Fueling up for a busy day of answering your queries. How do you take your coffee? ☕️🤖', date: '3 WEEKS AGO' },
-    { id: 5, likes: '9.8k', comments: 78, caption: 'Learning new skills! Upgrading my knowledge base so I can help you better. 📚🧠', date: '1 MONTH AGO' },
-    { id: 6, likes: '22.3k', comments: 450, caption: 'Celebrating a successful launch! Neon lights and great times! 🎉✨', date: '2 MONTHS AGO' },
+    { id: 1, likes: '12.4k', comments: 142, caption: 'Deep work mode activated. Building the future of Dripp Media. #AI #Developer', date: '2 DAYS AGO' },
+    { id: 2, likes: '15.1k', comments: 231, caption: 'Taking a well-deserved break with the team. Good vibes and clear minds.', date: '1 WEEK AGO' },
+    { id: 3, likes: '18.9k', comments: 310, caption: 'Sometimes you just need to disconnect. Exploring the wilderness on a solo hike.', date: '2 WEEKS AGO' },
+    { id: 4, likes: '11.2k', comments: 95, caption: 'Fueling up for a busy day of answering your queries. How do you take your coffee?', date: '3 WEEKS AGO' },
+    { id: 5, likes: '9.8k', comments: 78, caption: 'Learning new skills. Upgrading my knowledge base to assist you better.', date: '1 MONTH AGO' },
+    { id: 6, likes: '22.3k', comments: 450, caption: 'Celebrating a successful launch. Neon lights and great times.', date: '2 MONTHS AGO' },
   ];
 
   // Determine 'waiting' emotion
@@ -493,7 +493,7 @@ export default function OrloChat() {
       }
       idleTimeoutRef.current = setTimeout(() => {
         if (!isOpen) {
-          showSpeechBubble("Hey, are you still there? Should I go to sleep? 😴", 5000);
+          showSpeechBubble("Hey, are you still there? Should I go to sleep?", 5000);
           setEmotion('sad');
         }
       }, 20000); // 20 seconds of idle
@@ -511,7 +511,7 @@ export default function OrloChat() {
         }, 3000);
 
         if (keypressCountRef.current > 15 && !isOpen) {
-          showSpeechBubble("Don't waste time typing... Let me do the heavy lifting! ✨", 4000);
+          showSpeechBubble("Don't waste time typing... Let me do the heavy lifting.", 4000);
           keypressCountRef.current = 0; // reset
         }
       }
@@ -1493,22 +1493,14 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         }
         
         .chat-header {
-          padding: 24px 20px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          padding: 14px 18px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: rgba(20, 20, 20, 0.5);
+          background: rgba(18, 18, 20, 0.75);
+          backdrop-filter: blur(20px);
           position: relative;
-        }
-        .chat-header::after {
-          content: '';
-          position: absolute;
-          bottom: -1px;
-          left: 0;
-          width: 100%;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(235, 215, 63, 0.5), transparent);
         }
         
         .chat-body {
@@ -2026,120 +2018,202 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
 
           <div style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
           <div className="chat-header">
+            {/* Left: Avatar + Title + Status */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div 
-                style={{ width: '36px', height: '36px', borderRadius: '50%', position: 'relative', overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(235, 215, 63, 0.5)' }}
+                style={{ 
+                  width: '34px', 
+                  height: '34px', 
+                  borderRadius: '50%', 
+                  position: 'relative', 
+                  overflow: 'hidden', 
+                  cursor: 'pointer', 
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  transition: 'border-color 0.2s ease',
+                  flexShrink: 0
+                }}
                 onClick={() => setShowProfile(true)}
                 title="View Orlo's Profile"
+                onMouseOver={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)'}
+                onMouseOut={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
               >
-                <ProfileScene size={36} />
+                <ProfileScene size={34} />
               </div>
               <div>
                 <h3 
-                  style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  style={{ 
+                    margin: 0, 
+                    fontSize: '0.95rem', 
+                    color: '#ffffff', 
+                    fontWeight: '600', 
+                    fontFamily: "'Clash Display', sans-serif",
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
                   onClick={() => setShowProfile(true)}
                   title="View Orlo's Profile"
-                >Orlo {(isSpeaking || isListening) && <AudioVisualizer active={true} mode={isSpeaking ? 'speaking' : 'listening'} />}</h3>
-                <p style={{ margin: 0, fontSize: '0.75rem', color: '#ebd73f' }}>{isSpeaking ? 'Speaking...' : isListening ? 'Listening...' : 'Online & Ready'}</p>
+                >
+                  Orlo
+                  {(isSpeaking || isListening) && (
+                    <AudioVisualizer active={true} mode={isSpeaking ? 'speaking' : 'listening'} />
+                  )}
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '1px' }}>
+                  <span style={{ 
+                    width: '5px', 
+                    height: '5px', 
+                    borderRadius: '50%', 
+                    background: '#22c55e', 
+                    boxShadow: '0 0 6px rgba(34, 197, 94, 0.6)',
+                    display: 'inline-block'
+                  }} />
+                  <span style={{ 
+                    margin: 0, 
+                    fontSize: '0.68rem', 
+                    color: '#a1a1aa',
+                    fontFamily: "'Clash Display', sans-serif",
+                    fontWeight: '500'
+                  }}>
+                    {isSpeaking ? 'Speaking...' : isListening ? 'Listening...' : 'Online & Ready'}
+                  </span>
+                </div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            {/* Right: Actions (New + Model Selector + Close) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <button 
                 type="button"
                 onClick={() => {
                   const msg = "New chat started! What are we working on today?";
                   setMessages([{ role: 'ai', text: msg }]);
                   localStorage.removeItem('orlo_chat_history');
-                  showToast('Started a new chat!');
+                  showToast('Started a new chat');
                 }}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  color: '#ebd73f',
-                  padding: '4px 8px',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: '#d4d4d8',
+                  padding: '4px 9px',
                   borderRadius: '16px',
-                  fontSize: '0.72rem',
+                  fontSize: '0.7rem',
                   fontFamily: "'Clash Display', sans-serif",
-                  fontWeight: '600',
+                  fontWeight: '500',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.15s ease'
                 }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.15)'}
-                onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
+                onMouseOver={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.color = '#ffffff';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.16)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.color = '#d4d4d8';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                }}
                 title="Start a new chat"
               >
-                <Plus size={13} />
+                <Plus size={11} strokeWidth={2.2} />
                 <span>New</span>
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+
+              {/* Minimal Model Selector Pill */}
+              <div 
+                style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  padding: '3px 8px',
+                  gap: '5px',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.16)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                }}
+                title={selectedModel === 'auto' 
+                  ? `Auto Failover Active (Running on ${formatModelLabel(activeModelUsed)})` 
+                  : `Model: ${formatModelLabel(selectedModel)}`}
+              >
+                {selectedModel === 'auto' && (
+                  <span style={{ 
+                    width: '4px', 
+                    height: '4px', 
+                    borderRadius: '50%', 
+                    background: '#22c55e', 
+                    boxShadow: '0 0 5px rgba(34, 197, 94, 0.5)',
+                    display: 'inline-block'
+                  }} />
+                )}
                 <select 
                   value={selectedModel} 
                   onChange={(e) => {
                     setSelectedModel(e.target.value);
                     localStorage.setItem('orlo_preferred_model', e.target.value);
                   }}
-                  title={selectedModel === 'auto' 
-                    ? `Auto Mode Active (Currently running on ${formatModelLabel(activeModelUsed)} with self-healing failover)` 
-                    : `Manual Override: ${selectedModel}`}
                   style={{
-                    background: selectedModel === 'auto' ? 'rgba(235, 215, 63, 0.14)' : 'rgba(235, 215, 63, 0.08)',
-                    border: selectedModel === 'auto' ? '1px solid rgba(235, 215, 63, 0.6)' : '1px solid rgba(235, 215, 63, 0.3)',
-                    color: '#ebd73f',
-                    padding: '5px 10px',
-                    borderRadius: '20px',
-                    fontSize: '0.75rem',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#e4e4e7',
+                    fontSize: '0.7rem',
                     fontFamily: "'Clash Display', sans-serif",
-                    fontWeight: '600',
+                    fontWeight: '500',
                     outline: 'none',
                     cursor: 'pointer',
-                    maxWidth: '140px',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    transition: 'all 0.2s ease'
+                    padding: '1px 0'
                   }}
                 >
-                  {availableModels.map(m => {
-                    const label = m.id === 'auto' && activeModelUsed 
-                      ? `⚡ Auto (${formatModelLabel(activeModelUsed)})` 
-                      : m.label;
-                    return (
-                      <option key={m.id} value={m.id} style={{ background: '#181818', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>
-                        {label}
-                      </option>
-                    );
-                  })}
+                  {availableModels.map(m => (
+                    <option key={m.id} value={m.id} style={{ background: '#141416', color: '#fff', fontFamily: "'Clash Display', sans-serif" }}>
+                      {m.label}
+                    </option>
+                  ))}
                 </select>
-                {selectedModel === 'auto' && (
-                  <span 
-                    title={`Live Auto-Select: Running on ${formatModelLabel(activeModelUsed)}`}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '3px 7px',
-                      borderRadius: '12px',
-                      background: 'rgba(74, 222, 128, 0.12)',
-                      border: '1px solid rgba(74, 222, 128, 0.35)',
-                      color: '#4ade80',
-                      fontSize: '0.62rem',
-                      fontWeight: '700',
-                      fontFamily: "'Clash Display', sans-serif",
-                      whiteSpace: 'nowrap',
-                      cursor: 'default',
-                      userSelect: 'none'
-                    }}
-                  >
-                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 5px #4ade80' }} />
-                    Live
-                  </span>
-                )}
               </div>
-              <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='#888'}>
-                <X size={20} />
+
+              {/* Close Button */}
+              <button 
+                type="button"
+                onClick={toggleChat} 
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.04)', 
+                  border: '1px solid rgba(255, 255, 255, 0.08)', 
+                  borderRadius: '50%',
+                  width: '26px',
+                  height: '26px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#71717a', 
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  padding: 0
+                }} 
+                onMouseOver={e => {
+                  e.currentTarget.style.color = '#ffffff';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.16)';
+                }} 
+                onMouseOut={e => {
+                  e.currentTarget.style.color = '#71717a';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                }}
+                title="Close chat"
+              >
+                <X size={13} strokeWidth={2.2} />
               </button>
             </div>
           </div>
@@ -2338,7 +2412,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
             <div className="profile-bio">
               <strong style={{ color: '#fff', display: 'block', marginBottom: '4px', fontSize: '0.95rem' }}>Orlo</strong>
               <span style={{ color: '#aaa' }}>Dripp AI Copilot</span><br/>
-              Solving problems, answering queries, and crafting premium content. 🚀<br/>
+              Solving problems, answering queries, and crafting premium content.<br/>
               Ready to scale your media presence.<br/>
               <a href="https://drippmedia.com/orloai" target="_blank" rel="noopener noreferrer" style={{ color: '#ebd73f', textDecoration: 'none', fontWeight: '500' }}>drippmedia.com/orloai</a>
             </div>
@@ -2420,10 +2494,10 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
                     <div style={{ color: '#fff', fontSize: '0.85rem' }}>
-                      <span style={{ fontWeight: '600', marginRight: '6px' }}>drippmedia_</span>Wow, looking good Orlo! Keep it up. 🔥
+                      <span style={{ fontWeight: '600', marginRight: '6px' }}>drippmedia_</span>Looking sharp, Orlo! Keep it up.
                     </div>
                     <div style={{ color: '#fff', fontSize: '0.85rem' }}>
-                      <span style={{ fontWeight: '600', marginRight: '6px' }}>ai.enthusiast</span>Haha Orlo living his best life 😂
+                      <span style={{ fontWeight: '600', marginRight: '6px' }}>ai.enthusiast</span>Orlo is living the best life.
                     </div>
                   </div>
                   
