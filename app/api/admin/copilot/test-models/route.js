@@ -11,34 +11,29 @@ export async function GET() {
       const validModels = data.models
         .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
         .map(m => {
-          const name = m.name.replace(/^models\//, '').trim();
-          // Normalize dead unversioned or deprecated aliases to active supported endpoints
-          if (name === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
-          if (name === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
+          const name = m.name.replace(/^models\//, '').replace(/-latest$/, '').trim();
           if (name === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
           return name;
         })
         .filter(name => {
           if (!name.startsWith('gemini-')) return false;
-          // Never output deprecated aliases
-          if (name === 'gemini-1.5-pro' || name === 'gemini-2.5-pro') return false;
-          // Explicitly allow gemini-3.1-pro-preview
+          if (name === 'gemini-2.5-pro') return false;
           if (name === 'gemini-3.1-pro-preview') return true;
           if (name.includes('preview') || name.includes('experimental') || name.includes('lite') || name.includes('vision') || name.includes('001') || name.includes('002')) return false;
           return true;
         });
         
       // Ensure we don't have duplicates and default to modern verified models
-      const defaults = ['gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
-      const uniqueModels = [...new Set([...validModels, ...defaults])].filter(m => m !== 'gemini-1.5-pro' && m !== 'gemini-2.5-pro');
-      const recommended = uniqueModels.find(m => m === 'gemini-2.5-flash') || uniqueModels[0] || 'gemini-2.5-flash';
+      const defaults = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.5-flash', 'gemini-3.1-pro-preview'];
+      const uniqueModels = [...new Set([...validModels, ...defaults])].filter(m => m !== 'gemini-2.5-pro' && !m.endsWith('-latest'));
+      const recommended = uniqueModels.find(m => m === 'gemini-2.0-flash') || uniqueModels.find(m => m.includes('flash')) || uniqueModels[0] || 'gemini-2.0-flash';
       return Response.json({ recommended, models: uniqueModels });
     }
     
-    const defaults = ['gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
-    return Response.json({ recommended: 'gemini-2.5-flash', models: defaults });
+    const defaults = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.5-flash', 'gemini-3.1-pro-preview'];
+    return Response.json({ recommended: 'gemini-2.0-flash', models: defaults });
   } catch (err) {
-    const defaults = ['gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
-    return Response.json({ recommended: 'gemini-2.5-flash', models: defaults, error: err.message });
+    const defaults = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.5-flash', 'gemini-3.1-pro-preview'];
+    return Response.json({ recommended: 'gemini-2.0-flash', models: defaults, error: err.message });
   }
 }

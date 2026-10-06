@@ -38,50 +38,41 @@ export async function POST(request) {
     }
 
     const staticDefaults = [
-      'gemini-2.5-flash',
-      'gemini-3.1-pro-preview',
       'gemini-2.0-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro-latest'
+      'gemini-1.5-flash',
+      'gemini-1.5-pro',
+      'gemini-2.5-flash',
+      'gemini-3.1-pro-preview'
     ];
 
     const isAutoMode = (!model || model === 'auto');
 
     function resolveModelName(rawModel) {
-      if (!rawModel || rawModel === 'auto') return cachedWorkingModel || 'gemini-2.5-flash';
-      const clean = String(rawModel).replace(/^models\//, '').trim();
-      if (clean === 'auto') return cachedWorkingModel || 'gemini-2.5-flash';
-      if (clean === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
-      if (clean === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
+      if (!rawModel || rawModel === 'auto') return cachedWorkingModel || 'gemini-2.0-flash';
+      const clean = String(rawModel).replace(/^models\//, '').replace(/-latest$/, '').trim();
+      if (clean === 'auto') return cachedWorkingModel || 'gemini-2.0-flash';
       if (clean === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
       if (clean.includes('3.6') || clean.includes('3.5')) {
-        return clean.includes('pro') ? 'gemini-3.1-pro-preview' : 'gemini-2.5-flash';
+        return clean.includes('pro') ? 'gemini-1.5-pro' : 'gemini-2.0-flash';
       }
       return clean;
     }
 
     const primaryModel = resolveModelName(model);
+    const cleanVerified = verifiedModels.map(m => m.replace(/-latest$/, ''));
     const candidateModels = isAutoMode
       ? [
           cachedWorkingModel,
-          ...staticDefaults,
-          ...verifiedModels.map(m => {
-            if (m === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
-            if (m === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
-            return m;
-          })
+          ...cleanVerified,
+          ...staticDefaults
         ]
       : [
           primaryModel,
           cachedWorkingModel,
-          ...verifiedModels.map(m => {
-            if (m === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
-            if (m === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
-            return m;
-          }),
+          ...cleanVerified,
           ...staticDefaults
         ];
-    const fallbackQueue = [...new Set(candidateModels)].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro' && m !== 'gemini-2.5-pro' && m !== 'models/gemini-2.5-pro');
+    const fallbackQueue = [...new Set(candidateModels)].filter(m => m && m !== 'gemini-2.5-pro' && m !== 'models/gemini-2.5-pro' && !m.endsWith('-latest'));
 
     // Construct inline data for each frame
     const imageParts = frames.map(b64 => ({

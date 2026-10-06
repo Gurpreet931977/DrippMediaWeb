@@ -148,24 +148,25 @@ export default function OrloChat() {
   const formatModelLabel = (m) => {
     if (!m) return 'Gemini';
     if (m === 'auto') return '⚡ Auto (Smart)';
-    if (m.includes('3.1') && m.includes('pro')) return 'Gemini 3.1 Pro';
-    if (m.includes('2.5') && m.includes('pro')) return 'Gemini 3.1 Pro';
-    if (m.includes('2.5') && m.includes('flash')) return 'Gemini 2.5 Flash';
-    if (m.includes('2.0') && m.includes('flash')) return 'Gemini 2.0 Flash';
-    if (m.includes('1.5') && m.includes('pro')) return 'Gemini 1.5 Pro';
-    if (m.includes('1.5') && m.includes('flash')) return 'Gemini 1.5 Flash';
-    return m.replace('gemini-', 'Gemini ').replace(/-/g, ' ');
+    const clean = String(m).replace(/^models\//, '').replace(/-latest$/, '');
+    if (clean.includes('3.1') && clean.includes('pro')) return 'Gemini 3.1 Pro';
+    if (clean.includes('2.5') && clean.includes('pro')) return 'Gemini 3.1 Pro';
+    if (clean.includes('2.5') && clean.includes('flash')) return 'Gemini 2.5 Flash';
+    if (clean.includes('2.0') && clean.includes('flash')) return 'Gemini 2.0 Flash';
+    if (clean.includes('1.5') && clean.includes('pro')) return 'Gemini 1.5 Pro';
+    if (clean.includes('1.5') && clean.includes('flash')) return 'Gemini 1.5 Flash';
+    return clean.replace('gemini-', 'Gemini ').replace(/-/g, ' ');
   };
 
   const [selectedModel, setSelectedModel] = useState('auto');
-  const [activeModelUsed, setActiveModelUsed] = useState('gemini-2.5-flash');
+  const [activeModelUsed, setActiveModelUsed] = useState('gemini-2.0-flash');
   const [availableModels, setAvailableModels] = useState([
     { id: 'auto', label: '⚡ Auto (Smart)' },
-    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { id: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro' },
     { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-    { id: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash' },
-    { id: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro' }
+    { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+    { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+    { id: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro' }
   ]);
   
   const chatRef = useRef(null);
@@ -234,7 +235,7 @@ export default function OrloChat() {
     }
     
     let savedModel = localStorage.getItem('orlo_preferred_model');
-    if (!savedModel || savedModel === 'gemini-1.5-pro' || savedModel === 'models/gemini-1.5-pro' || savedModel === 'gemini-2.5-pro' || savedModel === 'models/gemini-2.5-pro' || savedModel.includes('3.6') || savedModel.includes('3.5')) {
+    if (!savedModel || savedModel.includes('-latest') || savedModel === 'gemini-1.5-pro' || savedModel === 'models/gemini-1.5-pro' || savedModel === 'gemini-2.5-pro' || savedModel === 'models/gemini-2.5-pro' || savedModel.includes('3.6') || savedModel.includes('3.5')) {
       savedModel = 'auto';
       localStorage.setItem('orlo_preferred_model', 'auto');
     }

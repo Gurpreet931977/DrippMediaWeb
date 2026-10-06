@@ -9,7 +9,45 @@ const getSupabase = () => {
   return createClient(supabaseUrl, supabaseKey);
 };
 // Global in-memory cache for the most responsive verified Gemini model
-let cachedWorkingModel = 'gemini-2.5-flash';
+let cachedWorkingModel = 'gemini-2.0-flash';
+let cachedVerifiedModels = null;
+let lastModelFetchTime = 0;
+
+async function getAvailableGeminiModels(apiKey) {
+  const now = Date.now();
+  if (cachedVerifiedModels && (now - lastModelFetchTime) < 5 * 60 * 1000) {
+    return cachedVerifiedModels;
+  }
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    const data = await res.json();
+    if (data.models && Array.isArray(data.models)) {
+      const active = data.models
+        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+        .map(m => m.name.replace(/^models\//, '').replace(/-latest$/, '').trim())
+        .filter(name => {
+          if (!name.startsWith('gemini-')) return false;
+          if (name === 'gemini-2.5-pro') return false; // deprecated for new users
+          if (name.includes('vision') || name.includes('embedding') || name.includes('aqa') || name.includes('imagen')) return false;
+          return true;
+        });
+      if (active.length > 0) {
+        cachedVerifiedModels = [...new Set(active)];
+        lastModelFetchTime = now;
+        return cachedVerifiedModels;
+      }
+    }
+  } catch (err) {
+    console.warn('[Copilot ListModels Error]:', err.message);
+  }
+  return cachedVerifiedModels || [
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
+    'gemini-2.5-flash',
+    'gemini-3.1-pro-preview'
+  ];
+}
 
 export async function POST(request) {
   try {
@@ -459,24 +497,41 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
 
     // Candidate model queue
     function resolveModelName(rawModel) {
-      if (!rawModel || rawModel === 'auto') return cachedWorkingModel || 'gemini-2.5-flash';
-      const clean = String(rawModel).replace(/^models\//, '').trim();
-      if (clean === 'auto') return cachedWorkingModel || 'gemini-2.5-flash';
-      if (clean === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
-      if (clean === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
+      if (!rawModel || rawModel === 'auto') return cachedWorkingModel || 'gemini-2.0-flash';
+      const clean = String(rawModel).replace(/^models\//, '').replace(/-latest$/, '').trim();
+      if (clean === 'auto') return cachedWorkingModel || 'gemini-2.0-flash';
       if (clean === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
       if (clean.includes('3.6') || clean.includes('3.5')) {
-        return clean.includes('pro') ? 'gemini-3.1-pro-preview' : 'gemini-2.5-flash';
+        return clean.includes('pro') ? 'gemini-1.5-pro' : 'gemini-2.0-flash';
       }
       return clean;
     }
 
-    const primaryModel = resolveModelName(model);
-    const candidateList = isAutoMode
-      ? [cachedWorkingModel, 'gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest']
-      : [primaryModel, cachedWorkingModel, 'gemini-2.5-flash', 'gemini-3.1-pro-preview', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
+    const verifiedModels = await getAvailableGeminiModels(apiKey);
 
-    const fallbackQueue = [...new Set(candidateList)].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro' && m !== 'gemini-2.5-pro' && m !== 'models/gemini-2.5-pro');
+    const rankModel = (name) => {
+      if (name === cachedWorkingModel) return 0;
+      if (name.includes('2.0') && name.includes('flash')) return 1;
+      if (name.includes('1.5') && name.includes('flash')) return 2;
+      if (name.includes('2.5') && name.includes('flash')) return 3;
+      if (name.includes('1.5') && name.includes('pro')) return 4;
+      if (name.includes('3.1')) return 5;
+      return 10;
+    };
+
+    const sortedVerified = [...verifiedModels].sort((a, b) => rankModel(a) - rankModel(b));
+    const primaryModel = resolveModelName(model);
+
+    const candidateList = isAutoMode
+      ? [cachedWorkingModel, ...sortedVerified, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
+      : [primaryModel, cachedWorkingModel, ...sortedVerified, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+
+    const fallbackQueue = [...new Set(candidateList)].filter(m => 
+      m && 
+      m !== 'gemini-2.5-pro' && 
+      m !== 'models/gemini-2.5-pro' && 
+      !m.endsWith('-latest')
+    );
 
     const geminiContents = buildGeminiContents(chatHistory, userPrompt);
     let lastError = null;
@@ -513,11 +568,15 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         // If the model does not exist (404), is deprecated, or is unsupported, skip immediately to next model in queue
         const isModelUnavailable = 
           response.status === 404 || 
+          response.status === 429 ||
           resData.error?.code === 404 || 
+          resData.error?.code === 429 ||
           resData.error?.status === 'NOT_FOUND' ||
           resData.error?.message?.toLowerCase().includes('no longer available') ||
           resData.error?.message?.toLowerCase().includes('not found') ||
-          resData.error?.message?.toLowerCase().includes('not supported');
+          resData.error?.message?.toLowerCase().includes('not supported') ||
+          resData.error?.message?.toLowerCase().includes('quota') ||
+          resData.error?.message?.toLowerCase().includes('resource has been exhausted');
 
         if (isModelUnavailable) {
           console.warn(`[Gemini Model ${modelToTry} Unavailable]: ${resData.error?.message}. Trying next model...`);
@@ -550,11 +609,15 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
 
         const isRetryUnavailable = 
           retryRes.status === 404 || 
+          retryRes.status === 429 ||
           retryData.error?.code === 404 || 
+          retryData.error?.code === 429 ||
           retryData.error?.status === 'NOT_FOUND' ||
           retryData.error?.message?.toLowerCase().includes('no longer available') ||
           retryData.error?.message?.toLowerCase().includes('not found') ||
-          retryData.error?.message?.toLowerCase().includes('not supported');
+          retryData.error?.message?.toLowerCase().includes('not supported') ||
+          retryData.error?.message?.toLowerCase().includes('quota') ||
+          retryData.error?.message?.toLowerCase().includes('resource has been exhausted');
 
         if (isRetryUnavailable) {
           console.warn(`[Gemini Model ${modelToTry} Unavailable]: ${retryData.error?.message}. Trying next model...`);

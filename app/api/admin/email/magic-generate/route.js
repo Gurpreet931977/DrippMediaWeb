@@ -1,6 +1,6 @@
 import { verifyCookie } from '@/app/lib/adminAuth';
 
-let cachedWorkingModel = 'gemini-2.5-flash';
+let cachedWorkingModel = 'gemini-2.0-flash';
 
 export async function POST(request) {
   try {
@@ -111,31 +111,34 @@ Ensure the output is creative, original, and does not just repeat or slightly re
       if (listData.models && Array.isArray(listData.models)) {
         verifiedModels = listData.models
           .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-          .map(m => m.name.replace('models/', ''));
+          .map(m => m.name.replace(/^models\//, '').replace(/-latest$/, '').trim())
+          .filter(name => {
+            if (!name.startsWith('gemini-')) return false;
+            if (name === 'gemini-2.5-pro') return false;
+            return true;
+          });
       }
     } catch (e) {
       console.warn('Failed to query models list from Google:', e);
     }
 
     const staticDefaults = [
-      'gemini-2.5-flash',
-      'gemini-3.1-pro-preview',
       'gemini-2.0-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro-latest'
+      'gemini-1.5-flash',
+      'gemini-1.5-pro',
+      'gemini-2.5-flash',
+      'gemini-3.1-pro-preview'
     ];
 
     const isAutoMode = (!selectedModel || selectedModel === 'auto');
 
     function resolveModelName(rawModel) {
-      if (!rawModel || rawModel === 'auto') return cachedWorkingModel || 'gemini-2.5-flash';
-      const clean = String(rawModel).replace(/^models\//, '').trim();
-      if (clean === 'auto') return cachedWorkingModel || 'gemini-2.5-flash';
-      if (clean === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
-      if (clean === 'gemini-1.5-flash') return 'gemini-1.5-flash-latest';
+      if (!rawModel || rawModel === 'auto') return cachedWorkingModel || 'gemini-2.0-flash';
+      const clean = String(rawModel).replace(/^models\//, '').replace(/-latest$/, '').trim();
+      if (clean === 'auto') return cachedWorkingModel || 'gemini-2.0-flash';
       if (clean === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
       if (clean.includes('3.6') || clean.includes('3.5')) {
-        return clean.includes('pro') ? 'gemini-3.1-pro-preview' : 'gemini-2.5-flash';
+        return clean.includes('pro') ? 'gemini-1.5-pro' : 'gemini-2.0-flash';
       }
       return clean;
     }
@@ -145,23 +148,20 @@ Ensure the output is creative, original, and does not just repeat or slightly re
       ? [
           cachedWorkingModel,
           ...staticDefaults,
-          ...verifiedModels.map(m => {
-            if (m === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
-            if (m === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
-            return m;
-          })
+          ...verifiedModels
         ]
       : [
           primaryModel,
           cachedWorkingModel,
-          ...verifiedModels.map(m => {
-            if (m === 'gemini-1.5-pro') return 'gemini-1.5-pro-latest';
-            if (m === 'gemini-2.5-pro') return 'gemini-3.1-pro-preview';
-            return m;
-          }),
+          ...verifiedModels,
           ...staticDefaults
         ];
-    const fallbackQueue = [...new Set(candidateModels)].filter(m => m && m !== 'gemini-1.5-pro' && m !== 'models/gemini-1.5-pro' && m !== 'gemini-2.5-pro' && m !== 'models/gemini-2.5-pro');
+    const fallbackQueue = [...new Set(candidateModels)].filter(m => 
+      m && 
+      m !== 'gemini-2.5-pro' && 
+      m !== 'models/gemini-2.5-pro' && 
+      !m.endsWith('-latest')
+    );
 
     let data = null;
     let lastError = null;
