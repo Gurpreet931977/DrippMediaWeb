@@ -2925,25 +2925,6 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         >
           {!isOpen && <div className="copilot-ring"></div>}
           <OrloIcon size={32} color="#ebd73f" className="orlo-icon-svg" emotion={isOpen ? emotion : (speechBubble ? emotion : (isHovered ? 'excited' : 'idle'))} />
-          {!isOpen && (
-            <span 
-              className={currentStatus.pulse ? 'status-dot-pulse' : ''}
-              style={{
-                position: 'absolute',
-                top: '6px',
-                right: '6px',
-                width: '10px',
-                height: '10px',
-                borderRadius: '50%',
-                background: currentStatus.color,
-                boxShadow: `0 0 10px ${currentStatus.glow}`,
-                border: '2px solid #09090b',
-                display: 'inline-block',
-                zIndex: 4,
-                pointerEvents: 'none'
-              }}
-            />
-          )}
         </div>
       </div>
     </>
