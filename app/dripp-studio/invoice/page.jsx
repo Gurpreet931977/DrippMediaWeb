@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle, ExternalLink } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle, ExternalLink, ChevronDown } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
@@ -444,7 +444,7 @@ export default function InvoiceMaker() {
     newItems[index][field] = value;
     setItems(newItems);
   };
-  const addItem = () => setItems([...items, { desc: '', qty: 1, rate: 0 }]);
+  const addItem = () => setItems([...items, { desc: '', qty: 1, rate: 0, details: '' }]);
   const removeItem = (index) => setItems(items.filter((_, i) => i !== index));
 
   const total = items.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.rate || 0)), 0);
@@ -1361,136 +1361,492 @@ export default function InvoiceMaker() {
           </div>
 
           {/* Section 3: Services & Rates */}
-          <div className={styles.card}>
-            <h3 style={{ marginBottom: '15px', color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: '0.98rem', fontWeight: 700 }}>Line Items</h3>
+          <div className={styles.card} style={{ position: 'relative', overflow: 'visible' }}>
+            {/* Header with Title, Count Badge, and Quick Action */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: '#ebd73f',
+                  boxShadow: '0 0 12px rgba(235, 215, 63, 0.8)'
+                }} />
+                <h3 style={{
+                  margin: 0,
+                  color: '#ebd73f',
+                  fontFamily: "'Panchang', sans-serif",
+                  fontSize: '1.02rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px'
+                }}>
+                  Line Items
+                </h3>
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '3px 10px',
+                  borderRadius: '999px',
+                  background: 'rgba(235, 215, 63, 0.08)',
+                  border: '1px solid rgba(235, 215, 63, 0.25)',
+                  color: '#ebd73f',
+                  fontSize: '0.74rem',
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontWeight: 600,
+                  letterSpacing: '0.4px'
+                }}>
+                  {items.length} {items.length === 1 ? 'Item' : 'Items'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={addItem}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(235, 215, 63, 0.1)',
+                  color: '#ebd73f',
+                  border: '1px solid rgba(235, 215, 63, 0.3)',
+                  padding: '7px 14px',
+                  borderRadius: '8px',
+                  fontSize: '0.8rem',
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#ebd73f';
+                  e.currentTarget.style.color = '#000';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)';
+                  e.currentTarget.style.color = '#ebd73f';
+                }}
+              >
+                <Plus size={14} /> Add Item
+              </button>
+            </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+            {/* List of Line Items */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '22px' }}>
               {items.map((item, index) => (
-                <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
-                  <div style={{ flex: '2 1 250px', minWidth: '250px', position: 'relative' }}>
-                    <div style={{ position: 'relative' }}>
-                      <input 
-                         type="text" 
-                         value={item.desc} 
-                         onChange={(e) => handleItemChange(index, 'desc', e.target.value)}
-                         placeholder="Item Title"
-                         className={styles.inputModern}
-                         onFocus={() => setActiveDropdown(index)}
-                         onBlur={() => setTimeout(() => setActiveDropdown(null), 200)}
-                         style={{ padding: '12px 40px 12px 15px', width: '100%', boxSizing: 'border-box' }}
-                      />
-                      <div style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#ebd73f', pointerEvents: 'none', fontSize: '0.8rem' }}>
-                         ▼
+                <div 
+                  key={index} 
+                  style={{ 
+                    position: 'relative',
+                    background: 'linear-gradient(180deg, rgba(24, 24, 28, 0.85) 0%, rgba(14, 14, 18, 0.95) 100%)', 
+                    border: '1px solid rgba(255, 255, 255, 0.08)', 
+                    borderRadius: '16px', 
+                    padding: '18px 20px',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+                    transition: 'border-color 0.2s, box-shadow 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(235, 215, 63, 0.04)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.35)';
+                  }}
+                >
+                  {/* Top Bar: Item Index, Title Dropdown, and Delete Button */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                    <div style={{
+                      flexShrink: 0,
+                      width: '34px',
+                      height: '34px',
+                      borderRadius: '8px',
+                      background: 'rgba(235, 215, 63, 0.1)',
+                      border: '1px solid rgba(235, 215, 63, 0.25)',
+                      color: '#ebd73f',
+                      fontFamily: "'Panchang', sans-serif",
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {String(index + 1).padStart(2, '0')}
+                    </div>
+
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <input 
+                          type="text" 
+                          value={item.desc} 
+                          onChange={(e) => handleItemChange(index, 'desc', e.target.value)}
+                          placeholder="Deliverable / Service title (e.g. 4K Commercial Shoot)"
+                          className={styles.inputModern}
+                          onFocus={() => setActiveDropdown(index)}
+                          onBlur={() => setTimeout(() => setActiveDropdown(null), 250)}
+                          style={{ 
+                            padding: '11px 40px 11px 14px', 
+                            width: '100%', 
+                            boxSizing: 'border-box',
+                            background: 'rgba(8, 8, 10, 0.8)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '10px',
+                            color: '#ffffff',
+                            fontFamily: "'Clash Display', sans-serif",
+                            fontSize: '0.94rem',
+                            fontWeight: 600
+                          }}
+                        />
+                        <div style={{ 
+                          position: 'absolute', 
+                          right: '12px', 
+                          color: activeDropdown === index ? '#ebd73f' : '#888', 
+                          pointerEvents: 'none', 
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'color 0.2s, transform 0.2s',
+                          transform: activeDropdown === index ? 'rotate(180deg)' : 'none'
+                        }}>
+                          <ChevronDown size={15} />
+                        </div>
+                      </div>
+
+                      {activeDropdown === index && (
+                        <div style={{ 
+                          position: 'absolute', 
+                          top: 'calc(100% + 6px)', 
+                          left: 0, 
+                          right: 0, 
+                          background: '#121216', 
+                          border: '1px solid rgba(235, 215, 63, 0.35)', 
+                          borderRadius: '12px', 
+                          zIndex: 60, 
+                          boxShadow: '0 16px 45px rgba(0,0,0,0.85), 0 0 20px rgba(235, 215, 63, 0.08)',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{
+                            padding: '8px 16px',
+                            background: 'rgba(235, 215, 63, 0.05)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                            fontSize: '0.7rem',
+                            color: '#ebd73f',
+                            fontFamily: "'Panchang', sans-serif",
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.8px'
+                          }}>
+                            Select Quick Preset
+                          </div>
+                          <div style={{ padding: '6px 0', maxHeight: '220px', overflowY: 'auto' }}>
+                            {DEFAULT_SERVICES.map((s, i) => (
+                              <div 
+                                key={s} 
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleItemChange(index, 'desc', s);
+                                  setActiveDropdown(null);
+                                }}
+                                style={{ 
+                                  padding: '10px 16px', 
+                                  cursor: 'pointer', 
+                                  color: '#eee', 
+                                  fontWeight: 500, 
+                                  fontSize: '0.88rem', 
+                                  fontFamily: "'Clash Display', sans-serif",
+                                  transition: 'background 0.15s, color 0.15s',
+                                  borderBottom: i < DEFAULT_SERVICES.length - 1 ? '1px solid rgba(255, 255, 255, 0.04)' : 'none',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '10px'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = 'rgba(235, 215, 63, 0.12)';
+                                  e.currentTarget.style.color = '#ebd73f';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'transparent';
+                                  e.currentTarget.style.color = '#eee';
+                                }}
+                              >
+                                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#ebd73f', opacity: 0.7 }} />
+                                {s}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={() => removeItem(index)} 
+                      title="Remove item"
+                      style={{ 
+                        flexShrink: 0,
+                        width: '38px', 
+                        height: '38px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        background: 'rgba(255, 77, 77, 0.08)', 
+                        border: '1px solid rgba(255, 77, 77, 0.22)', 
+                        color: '#ff5c5c', 
+                        borderRadius: '10px', 
+                        cursor: 'pointer', 
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 77, 77, 0.22)';
+                        e.currentTarget.style.borderColor = '#ff4d4d';
+                        e.currentTarget.style.color = '#ff4d4d';
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 77, 77, 0.08)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 77, 77, 0.22)';
+                        e.currentTarget.style.color = '#ff5c5c';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  {/* Middle: Scope & Deliverables Textarea */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '6px',
+                      color: '#888',
+                      fontSize: '0.7rem',
+                      fontFamily: "'Panchang', sans-serif",
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.8px'
+                    }}>
+                      Scope & Deliverables (Optional)
+                    </label>
+                    <textarea 
+                      value={item.details || ''} 
+                      onChange={(e) => handleItemChange(index, 'details', e.target.value)}
+                      placeholder="e.g. Includes 5 custom pages, responsive design, interactive animations, and 1 year hosting..."
+                      className={styles.inputModern}
+                      style={{ 
+                        padding: '10px 14px', 
+                        fontSize: '0.88rem', 
+                        width: '100%', 
+                        minHeight: '58px',
+                        boxSizing: 'border-box',
+                        background: 'rgba(8, 8, 10, 0.6)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '10px',
+                        color: '#ddd',
+                        fontFamily: "'Clash Display', sans-serif",
+                        lineHeight: '1.45',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+
+                  {/* Bottom: Financial Controls (Qty, Rate, Line Total) */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'rgba(0, 0, 0, 0.35)',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    borderRadius: '12px',
+                    padding: '12px 16px',
+                    flexWrap: 'wrap',
+                    gap: '14px'
+                  }}>
+                    {/* Left: Quantity & Rate with dedicated minimum widths */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                      {/* Quantity */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{
+                          color: '#888',
+                          fontSize: '0.66rem',
+                          fontFamily: "'Panchang', sans-serif",
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.8px'
+                        }}>
+                          Qty
+                        </label>
+                        <input 
+                          type="number" 
+                          min="1"
+                          step="1"
+                          value={item.qty} 
+                          onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
+                          placeholder="1"
+                          className={styles.inputModern}
+                          style={{ 
+                            width: '84px',
+                            padding: '8px 12px',
+                            textAlign: 'center',
+                            background: 'rgba(12, 12, 16, 0.9)',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            fontWeight: 600,
+                            fontFamily: "'Clash Display', sans-serif",
+                            fontSize: '0.92rem'
+                          }}
+                        />
+                      </div>
+
+                      {/* Unit Rate */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{
+                          color: '#888',
+                          fontSize: '0.66rem',
+                          fontFamily: "'Panchang', sans-serif",
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.8px'
+                        }}>
+                          Rate ({invoiceDetails.currency})
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '0 12px',
+                            height: '38px',
+                            background: 'rgba(235, 215, 63, 0.1)',
+                            border: '1px solid rgba(235, 215, 63, 0.25)',
+                            borderRight: 'none',
+                            borderRadius: '8px 0 0 8px',
+                            color: '#ebd73f',
+                            fontFamily: "'Panchang', sans-serif",
+                            fontWeight: 700,
+                            fontSize: '0.85rem'
+                          }}>
+                            {invoiceDetails.currency}
+                          </span>
+                          <input 
+                            type="number" 
+                            min="0"
+                            step="any"
+                            value={item.rate} 
+                            onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
+                            placeholder="0.00"
+                            className={styles.inputModern}
+                            style={{ 
+                              width: '150px',
+                              minWidth: '130px',
+                              height: '38px',
+                              padding: '8px 12px',
+                              background: 'rgba(12, 12, 16, 0.9)',
+                              border: '1px solid rgba(255, 255, 255, 0.12)',
+                              borderRadius: '0 8px 8px 0',
+                              color: '#fff',
+                              fontWeight: 600,
+                              fontFamily: "'Clash Display', sans-serif",
+                              fontSize: '0.92rem'
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
-                    {activeDropdown === index && (
-                      <div style={{ 
-                        position: 'absolute', 
-                        top: 'calc(100% + 8px)', 
-                        left: 0, 
-                        width: '100%', 
-                        background: '#1a1a1a', 
-                        border: '1px solid #333', 
-                        borderRadius: '12px', 
-                        zIndex: 50, 
-                        boxShadow: '0 10px 40px rgba(0,0,0,0.8)' 
+
+                    {/* Right: Calculated Line Total */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', marginLeft: 'auto' }}>
+                      <span style={{
+                        color: '#777',
+                        fontSize: '0.66rem',
+                        fontFamily: "'Panchang', sans-serif",
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.8px'
                       }}>
-                         <div style={{ position: 'absolute', top: '-6px', left: '20px', width: '12px', height: '12px', background: '#1a1a1a', borderTop: '1px solid #333', borderLeft: '1px solid #333', transform: 'rotate(45deg)' }} />
-                         <div style={{ padding: '10px 0', position: 'relative', zIndex: 2, background: '#1a1a1a', borderRadius: '12px' }}>
-                           {DEFAULT_SERVICES.map((s, i) => (
-                              <div 
-                                 key={s} 
-                                 onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    handleItemChange(index, 'desc', s);
-                                    setActiveDropdown(null);
-                                 }}
-                                 style={{ 
-                                   padding: '12px 20px', 
-                                   cursor: 'pointer', 
-                                   color: '#fff', 
-                                   fontWeight: '500',
-                                   fontSize: '0.9rem',
-                                   transition: 'background 0.2s',
-                                   borderBottom: i < DEFAULT_SERVICES.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
-                                 }}
-                                 onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
-                                 onMouseOut={(e) => e.target.style.background = 'transparent'}
-                              >
-                                 {s}
-                              </div>
-                           ))}
-                         </div>
+                        Item Total
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ color: '#555', fontFamily: "'Clash Display', sans-serif", fontSize: '0.9rem' }}>=</span>
+                        <span style={{
+                          color: '#ebd73f',
+                          fontFamily: "'Panchang', sans-serif",
+                          fontWeight: 700,
+                          fontSize: '1.08rem',
+                          letterSpacing: '0.5px'
+                        }}>
+                          {invoiceDetails.currency}{((parseFloat(item.qty) || 0) * (parseFloat(item.rate) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{color: '#888'}}>Qty</span>
-                    <input 
-                      type="number" 
-                      value={item.qty} 
-                      onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
-                      placeholder="1"
-                      className={styles.inputModern}
-                      style={{ padding: '8px 12px' }}
-                    />
-                  </div>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{color: '#888'}}>{invoiceDetails.currency}</span>
-                    <input 
-                      type="number" 
-                      value={item.rate} 
-                      onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-                      placeholder="0"
-                      className={styles.inputModern}
-                      style={{ padding: '8px 12px' }}
-                    />
-                  </div>
-                  <div style={{ padding: '0 10px', color: '#ebd73f', fontWeight: 'bold', fontSize: '0.9rem', width: '100px', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
-                     <span style={{color: '#666', fontWeight: 'normal'}}>=</span> {invoiceDetails.currency}{(item.qty * item.rate).toFixed(2)}
-                  </div>
-                  <button onClick={() => removeItem(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '5px', opacity: 0.7, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity=1} onMouseOut={(e) => e.currentTarget.style.opacity=0.7}>
-                    <Trash2 size={18} />
-                  </button>
-                  <div style={{ flexBasis: '100%', marginTop: '10px' }}>
-                     <textarea 
-                       value={item.details || ''} 
-                       onChange={(e) => handleItemChange(index, 'details', e.target.value)}
-                       placeholder="e.g. Includes 5 custom pages, responsive design, and 1 year of hosting..."
-                       className={styles.inputModern}
-                       style={{ padding: '8px 12px', fontSize: '0.9rem', width: '100%', minHeight: '60px' }}
-                     />
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
+            {/* Add Another Item Button */}
             <button 
+              type="button"
               onClick={addItem} 
               style={{
-                display: 'inline-flex',
+                width: '100%',
+                display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
-                background: '#1a1a1a',
-                color: '#fff',
-                border: '1px solid #333',
-                padding: '12px 24px',
-                borderRadius: '8px',
+                gap: '10px',
+                background: 'rgba(235, 215, 63, 0.04)',
+                border: '1.5px dashed rgba(235, 215, 63, 0.35)',
+                color: '#ebd73f',
+                padding: '15px 24px',
+                borderRadius: '14px',
                 cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '0.9rem',
-                transition: 'all 0.2s'
+                fontWeight: 600,
+                fontSize: '0.92rem',
+                fontFamily: "'Clash Display', sans-serif",
+                transition: 'all 0.25s ease',
+                letterSpacing: '0.3px'
               }}
-              onMouseOver={(e) => { e.currentTarget.style.background = '#2a2a2a'; e.currentTarget.style.borderColor = '#ebd73f'; e.currentTarget.style.color = '#ebd73f'; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#fff'; }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(235, 215, 63, 0.12)';
+                e.currentTarget.style.borderColor = '#ebd73f';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(235, 215, 63, 0.12)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(235, 215, 63, 0.04)';
+                e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.35)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'none';
+              }}
             >
-              <Plus size={16} /> Another Item
+              <Plus size={18} /> Add Line Item
             </button>
             
-            <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-               <span style={{ fontSize: '1.1rem', color: '#888' }}>Total Amount:</span>
-               <span style={{ fontSize: '1.3rem', color: '#ebd73f', fontWeight: 'bold' }}>{invoiceDetails.currency}{total.toFixed(2)}</span>
+            {/* Grand Total Summary Box */}
+            <div style={{ 
+              marginTop: '20px', 
+              padding: '18px 22px', 
+              background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(20, 20, 24, 0.8) 100%)', 
+              border: '1px solid rgba(235, 215, 63, 0.3)', 
+              borderRadius: '14px', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(235, 215, 63, 0.2)',
+              flexWrap: 'wrap',
+              gap: '12px'
+            }}>
+               <div>
+                 <div style={{ fontSize: '0.74rem', color: '#999', fontFamily: "'Panchang', sans-serif", textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
+                   Total Amount Due
+                 </div>
+                 <div style={{ fontSize: '0.85rem', color: '#666', fontFamily: "'Clash Display', sans-serif" }}>
+                   Calculated across {items.length} {items.length === 1 ? 'item' : 'items'}
+                 </div>
+               </div>
+               <div style={{ 
+                 fontSize: '1.45rem', 
+                 color: '#ebd73f', 
+                 fontFamily: "'Panchang', sans-serif", 
+                 fontWeight: 700, 
+                 letterSpacing: '0.5px',
+                 textShadow: '0 0 20px rgba(235, 215, 63, 0.3)'
+               }}>
+                 {invoiceDetails.currency}{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+               </div>
             </div>
           </div>
           
