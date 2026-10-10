@@ -14,7 +14,11 @@ export default function SharedQuote() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const pinRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
+  const pin0Ref = useRef(null);
+  const pin1Ref = useRef(null);
+  const pin2Ref = useRef(null);
+  const pin3Ref = useRef(null);
+  const pinRefs = [pin0Ref, pin1Ref, pin2Ref, pin3Ref];
 
   const handlePinChange = (index, value) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -45,6 +49,10 @@ export default function SharedQuote() {
 
   useEffect(() => {
     setMounted(true);
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('loaded');
+      document.body.style.opacity = '1';
+    }
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const pwdParam = urlParams.get('pwd') || urlParams.get('pin');
@@ -181,10 +189,10 @@ export default function SharedQuote() {
   }
 
   // Calculate Subtotals
-  const isInvoice = quoteData.type === 'invoice';
-  const isStandalone = quoteData.type === 'standalone_pmp';
-  const details = isInvoice ? quoteData.invoiceDetails : (quoteData.quoteDetails || {});
-  const items = quoteData.items || [];
+  const isInvoice = quoteData?.type === 'invoice';
+  const isStandalone = quoteData?.type === 'standalone_pmp';
+  const details = isInvoice ? (quoteData?.invoiceDetails || {}) : (quoteData?.quoteDetails || {});
+  const items = Array.isArray(quoteData?.items) ? quoteData.items : [];
   const currency = details?.currency || '₹';
 
   return (

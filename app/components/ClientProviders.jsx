@@ -347,6 +347,13 @@ import CustomValidationHandler from './CustomValidationHandler';
 import ErrorBoundary from './ErrorBoundary';
 
 export default function ClientProviders({ children }) {
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('loaded');
+      document.body.style.opacity = '1';
+    }
+  }, []);
+
   return (
     <ErrorLogProvider>
       <ErrorBoundary>
