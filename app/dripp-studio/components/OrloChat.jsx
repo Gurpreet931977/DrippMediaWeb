@@ -149,8 +149,12 @@ export default function OrloChat() {
     if (!m) return 'Gemini';
     if (m === 'auto') return 'Auto';
     const clean = String(m).replace(/^models\//, '').replace(/-latest$/, '');
+    if (clean.includes('3.8')) return 'Gemini 3.8 Flash';
+    if (clean.includes('3.5')) return 'Gemini 3.5 Flash';
+    if (clean.includes('3.1') && clean.includes('lite')) return 'Gemini 3.1 Flash Lite';
+    if (clean.includes('3.6')) return 'Gemini 3.6 Flash';
+    if (clean.includes('3.7')) return 'Gemini 3.7 Flash';
     if (clean.includes('3.1') && clean.includes('pro')) return 'Gemini 3.1 Pro';
-    if (clean.includes('2.5') && clean.includes('pro')) return 'Gemini 3.1 Pro';
     if (clean.includes('2.5') && clean.includes('flash')) return 'Gemini 2.5 Flash';
     if (clean.includes('2.0') && clean.includes('flash')) return 'Gemini 2.0 Flash';
     if (clean.includes('1.5') && clean.includes('pro')) return 'Gemini 1.5 Pro';
@@ -165,14 +169,14 @@ export default function OrloChat() {
   };
 
   const [selectedModel, setSelectedModel] = useState('auto');
-  const [activeModelUsed, setActiveModelUsed] = useState('gemini-2.0-flash');
+  const [activeModelUsed, setActiveModelUsed] = useState('gemini-3.8-flash');
   const [availableModels, setAvailableModels] = useState([
     { id: 'auto', label: 'Auto' },
-    { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-    { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
-    { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
-    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { id: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro' }
+    { id: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash' },
+    { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' },
+    { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite' },
+    { id: 'gemini-3.6-flash', label: 'Gemini 3.6 Flash' },
+    { id: 'gemini-3.7-flash', label: 'Gemini 3.7 Flash' }
   ]);
   
   const chatRef = useRef(null);
@@ -198,6 +202,90 @@ export default function OrloChat() {
   const voiceHistoryRef = useRef([]);
   const autoRelistenRef = useRef(false);
   const abortControllerRef = useRef(null);
+
+  const [aiHealth, setAiHealth] = useState({
+    status: 'checking',
+    healthy: true,
+    activeModel: 'gemini-3.8-flash',
+    latency: null,
+    message: 'Checking AI status...',
+    lastChecked: null
+  });
+
+  const checkAiHealth = async (isManual = false) => {
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      setAiHealth({
+        status: 'offline',
+        healthy: false,
+        activeModel: null,
+        message: 'No internet connection',
+        lastChecked: Date.now()
+      });
+      return;
+    }
+
+    try {
+      const query = isManual ? '?fresh=true' : '';
+      const res = await fetch(`/api/admin/copilot/health${query}`, {
+        signal: AbortSignal.timeout(6000)
+      });
+      const data = await res.json();
+      if (res.ok && data) {
+        setAiHealth({
+          status: data.status || 'online',
+          healthy: data.healthy !== false,
+          activeModel: data.activeModel || 'gemini-3.8-flash',
+          latency: data.latency,
+          message: data.message || (data.status === 'online' ? 'Gemini AI operational' : data.reason || 'AI ready'),
+          lastChecked: Date.now()
+        });
+        if (data.activeModel && data.activeModel !== 'orlo-resilient-nlp') {
+          setActiveModelUsed(data.activeModel);
+        }
+      } else {
+        setAiHealth({
+          status: 'offline',
+          healthy: false,
+          activeModel: null,
+          message: data?.reason || 'AI service unavailable',
+          lastChecked: Date.now()
+        });
+      }
+    } catch (err) {
+      setAiHealth({
+        status: 'offline',
+        healthy: false,
+        activeModel: null,
+        message: 'Cannot reach AI server',
+        lastChecked: Date.now()
+      });
+    }
+  };
+
+  useEffect(() => {
+    checkAiHealth();
+    const handleOnline = () => checkAiHealth(true);
+    const handleOffline = () => {
+      setAiHealth(prev => ({
+        ...prev,
+        status: 'offline',
+        healthy: false,
+        message: 'Internet disconnected'
+      }));
+    };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    const interval = setInterval(() => {
+      if (isOpen) checkAiHealth();
+    }, 45000);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
+    };
+  }, [isOpen]);
 
   const handleCancelGeneration = () => {
     if (abortControllerRef.current) {
@@ -241,7 +329,7 @@ export default function OrloChat() {
     }
     
     let savedModel = localStorage.getItem('orlo_preferred_model');
-    if (!savedModel || savedModel.includes('-latest') || savedModel === 'gemini-1.5-pro' || savedModel === 'models/gemini-1.5-pro' || savedModel === 'gemini-2.5-pro' || savedModel === 'models/gemini-2.5-pro' || savedModel.includes('3.6') || savedModel.includes('3.5')) {
+    if (!savedModel || savedModel.includes('-latest') || savedModel === 'gemini-1.5-pro' || savedModel === 'models/gemini-1.5-pro' || savedModel === 'gemini-2.5-pro' || savedModel === 'models/gemini-2.5-pro' || savedModel === 'gemini-2.0-flash' || savedModel === 'gemini-1.5-flash') {
       savedModel = 'auto';
       localStorage.setItem('orlo_preferred_model', 'auto');
     }
@@ -949,6 +1037,22 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
 
       if (data.activeModel) {
         setActiveModelUsed(data.activeModel);
+        if (data.activeModel === 'orlo-resilient-nlp') {
+          setAiHealth(prev => ({
+            ...prev,
+            status: 'degraded',
+            activeModel: 'orlo-resilient-nlp',
+            message: 'Resilient Mode (Live API busy)'
+          }));
+        } else {
+          setAiHealth(prev => ({
+            ...prev,
+            status: 'online',
+            healthy: true,
+            activeModel: data.activeModel,
+            message: 'Gemini AI operational'
+          }));
+        }
       }
 
       setEmotion('success');
@@ -989,6 +1093,12 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         }
       }
     } catch (e) {
+      setAiHealth(prev => ({
+        ...prev,
+        status: 'offline',
+        healthy: false,
+        message: e.message || 'Voice processing error'
+      }));
       const errMsg = "Sorry, I couldn't process that. Try again.";
       voiceHistoryRef.current.push({ role: 'ai', text: errMsg });
       setVoiceCallTranscript(prev => ({ ...prev, ai: errMsg }));
@@ -1057,29 +1167,60 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       
       const currentPathName = typeof window !== 'undefined' ? window.location.pathname : '';
 
-      const res = await fetch('/api/admin/copilot', {
-        method: 'POST',
-        signal: abortControllerRef.current.signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userPrompt: userText,
-          chatHistory: messages,
-          context: currentContext, 
-          systemContext: systemContext,
-          formContext: formContext,
-          notionContext: window._notionContext || {},
-          currentDate: new Date().toString(),
-          currentPath: currentPathName,
-          model: selectedModel,
-          isGenz: isGenz
-        })
-      });
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.error || 'Failed to process command');
+      const copilotPayload = { 
+        userPrompt: userText,
+        chatHistory: messages,
+        context: currentContext, 
+        systemContext: systemContext,
+        formContext: formContext,
+        notionContext: window._notionContext || {},
+        currentDate: new Date().toString(),
+        currentPath: currentPathName,
+        model: selectedModel,
+        isGenz: isGenz
+      };
 
+      let res;
+      let data;
+      try {
+        res = await fetch('/api/admin/copilot', {
+          method: 'POST',
+          signal: abortControllerRef.current.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(copilotPayload)
+        });
+        data = await res.json();
+      } catch (fetchErr) {
+        if (fetchErr.name === 'AbortError') throw fetchErr;
+        // Fast retry once on network hiccup
+        await new Promise(r => setTimeout(r, 600));
+        res = await fetch('/api/admin/copilot', {
+          method: 'POST',
+          signal: abortControllerRef.current.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(copilotPayload)
+        });
+        data = await res.json();
+      }
+      
       if (data.activeModel) {
         setActiveModelUsed(data.activeModel);
+        if (data.activeModel === 'orlo-resilient-nlp') {
+          setAiHealth(prev => ({
+            ...prev,
+            status: 'degraded',
+            activeModel: 'orlo-resilient-nlp',
+            message: 'Resilient Mode (Live API busy)'
+          }));
+        } else {
+          setAiHealth(prev => ({
+            ...prev,
+            status: 'online',
+            healthy: true,
+            activeModel: data.activeModel,
+            message: 'Gemini AI operational'
+          }));
+        }
       }
 
       if (data.intent === 'unsupported' || (!data.payload && data.intent !== 'learn' && data.intent !== 'chat' && data.intent !== 'clear_chat')) {
@@ -1169,7 +1310,16 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       }
       setEmotion('disappointed');
       setTimeout(() => setEmotion('idle'), 4000);
-      setMessages(prev => [...prev, { role: 'ai', text: `Error: ${error.message}` }]);
+      const friendlyError = error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')
+        ? "Network connection hiccup. Please try sending your message again in a moment!"
+        : (error.message?.startsWith('Error:') ? error.message : `Error: ${error.message}`);
+      setAiHealth(prev => ({
+        ...prev,
+        status: 'offline',
+        healthy: false,
+        message: error.message || 'AI request failed'
+      }));
+      setMessages(prev => [...prev, { role: 'ai', text: friendlyError }]);
       setIsProcessingVoice(false);
     } finally {
       setIsTyping(false);
@@ -1181,6 +1331,82 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
   };
+
+  const getStatusDisplay = () => {
+    if (isSpeaking) {
+      return {
+        label: 'Speaking...',
+        color: '#ebd73f',
+        glow: 'rgba(235, 215, 63, 0.75)',
+        pulse: true,
+        tooltip: 'Orlo is speaking',
+        clickable: false
+      };
+    }
+    if (isListening) {
+      return {
+        label: 'Listening...',
+        color: '#a855f7',
+        glow: 'rgba(168, 85, 247, 0.75)',
+        pulse: true,
+        tooltip: 'Listening for voice input...',
+        clickable: false
+      };
+    }
+    if (isTyping) {
+      return {
+        label: 'Thinking...',
+        color: '#38bdf8',
+        glow: 'rgba(56, 189, 248, 0.75)',
+        pulse: true,
+        tooltip: 'Orlo is generating a response...',
+        clickable: false
+      };
+    }
+    if (aiHealth.status === 'checking') {
+      return {
+        label: 'Connecting...',
+        color: '#94a3b8',
+        glow: 'rgba(148, 163, 184, 0.6)',
+        pulse: true,
+        tooltip: 'Verifying live connection to Gemini AI...',
+        clickable: true
+      };
+    }
+    if (aiHealth.status === 'degraded') {
+      return {
+        label: 'Resilient Mode',
+        color: '#f59e0b',
+        glow: 'rgba(245, 158, 11, 0.8)',
+        pulse: false,
+        tooltip: `${aiHealth.message || 'Gemini quota reached • Resilient NLP active'}. Click to test reconnection.`,
+        clickable: true
+      };
+    }
+    if (aiHealth.status === 'offline') {
+      return {
+        label: 'Offline',
+        color: '#ef4444',
+        glow: 'rgba(239, 68, 68, 0.85)',
+        pulse: true,
+        tooltip: `${aiHealth.message || 'AI service unavailable'}. Click to reconnect.`,
+        clickable: true
+      };
+    }
+    // Default online
+    const model = aiHealth.activeModel || activeModelUsed || 'gemini-3.8-flash';
+    const latency = aiHealth.latency ? ` • ${aiHealth.latency}ms` : '';
+    return {
+      label: 'Online',
+      color: '#22c55e',
+      glow: 'rgba(34, 197, 94, 0.8)',
+      pulse: false,
+      tooltip: `Gemini AI live & operational (${model}${latency}). Click to re-check.`,
+      clickable: true
+    };
+  };
+
+  const currentStatus = getStatusDisplay();
 
   return (
     <>
@@ -1196,6 +1422,36 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         @keyframes expandRing {
           0% { transform: scale(1); opacity: 1; }
           100% { transform: scale(1.8); opacity: 0; }
+        }
+        @keyframes statusDotPulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.4); opacity: 0.55; }
+        }
+        
+        .status-dot-pulse {
+          animation: statusDotPulse 1.8s ease-in-out infinite;
+        }
+
+        .live-status-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 3px;
+          padding: 2px 7px 2px 5px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          cursor: pointer;
+          user-select: none;
+        }
+        .live-status-pill:hover {
+          background: rgba(255, 255, 255, 0.09);
+          border-color: rgba(255, 255, 255, 0.18);
+          transform: translateY(-0.5px);
+        }
+        .live-status-pill:active {
+          transform: scale(0.97);
         }
         
         .orlo-icon-svg {
@@ -2081,25 +2337,45 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                     <AudioVisualizer active={true} mode={isSpeaking ? 'speaking' : 'listening'} />
                   )}
                 </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px', whiteSpace: 'nowrap' }}>
-                  <span style={{ 
-                    width: '6px', 
-                    height: '6px', 
-                    borderRadius: '50%', 
-                    background: '#22c55e', 
-                    boxShadow: '0 0 6px rgba(34, 197, 94, 0.7)',
-                    display: 'inline-block',
-                    flexShrink: 0
-                  }} />
+                <div 
+                  className="live-status-pill"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (!currentStatus.clickable) return;
+                    showToast(aiHealth.status === 'offline' ? 'Checking AI connection...' : 'Verifying live AI heartbeat...');
+                    await checkAiHealth(true);
+                  }}
+                  title={currentStatus.tooltip}
+                  style={{
+                    borderColor: aiHealth.status === 'offline' 
+                      ? 'rgba(239, 68, 68, 0.35)' 
+                      : aiHealth.status === 'degraded'
+                      ? 'rgba(245, 158, 11, 0.35)'
+                      : undefined
+                  }}
+                >
+                  <span 
+                    className={currentStatus.pulse ? 'status-dot-pulse' : ''}
+                    style={{ 
+                      width: '6.5px', 
+                      height: '6.5px', 
+                      borderRadius: '50%', 
+                      background: currentStatus.color, 
+                      boxShadow: `0 0 7px ${currentStatus.glow}`,
+                      display: 'inline-block',
+                      flexShrink: 0
+                    }} 
+                  />
                   <span style={{ 
                     margin: 0, 
-                    fontSize: '0.69rem', 
-                    color: '#71717a',
+                    fontSize: '0.68rem', 
+                    color: aiHealth.status === 'offline' ? '#f87171' : aiHealth.status === 'degraded' ? '#fbbf24' : '#a1a1aa',
                     fontFamily: "'Clash Display', sans-serif",
-                    fontWeight: '500',
+                    fontWeight: '600',
+                    letterSpacing: '0.02em',
                     whiteSpace: 'nowrap'
                   }}>
-                    {isSpeaking ? 'Speaking...' : isListening ? 'Listening...' : 'Online'}
+                    {currentStatus.label}
                   </span>
                 </div>
               </div>
@@ -2257,6 +2533,89 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
               </button>
             </div>
           </div>
+          
+          {/* Live AI Status Alert Bar */}
+          {aiHealth.status === 'offline' && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.1)',
+              borderBottom: '1px solid rgba(239, 68, 68, 0.25)',
+              padding: '6px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '10px',
+              fontSize: '0.73rem',
+              color: '#fca5a5',
+              fontFamily: "'Clash Display', sans-serif",
+              flexShrink: 0
+            }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="status-dot-pulse" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                AI offline: {aiHealth.message || 'Cannot reach AI'}
+              </span>
+              <button
+                type="button"
+                onClick={async () => {
+                  showToast('Reconnecting to AI server...');
+                  await checkAiHealth(true);
+                }}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.22)',
+                  border: '1px solid rgba(239, 68, 68, 0.45)',
+                  borderRadius: '6px',
+                  color: '#fff',
+                  padding: '2px 9px',
+                  fontSize: '0.68rem',
+                  fontFamily: "'Clash Display', sans-serif",
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Reconnect
+              </button>
+            </div>
+          )}
+
+          {aiHealth.status === 'degraded' && (
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              borderBottom: '1px solid rgba(245, 158, 11, 0.25)',
+              padding: '6px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '10px',
+              fontSize: '0.73rem',
+              color: '#fcd34d',
+              fontFamily: "'Clash Display', sans-serif",
+              flexShrink: 0
+            }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                Resilient Mode: Local engine active
+              </span>
+              <button
+                type="button"
+                onClick={async () => {
+                  showToast('Testing live Gemini AI availability...');
+                  await checkAiHealth(true);
+                }}
+                style={{
+                  background: 'rgba(245, 158, 11, 0.22)',
+                  border: '1px solid rgba(245, 158, 11, 0.45)',
+                  borderRadius: '6px',
+                  color: '#fff',
+                  padding: '2px 9px',
+                  fontSize: '0.68rem',
+                  fontFamily: "'Clash Display', sans-serif",
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Retry Live
+              </button>
+            </div>
+          )}
           
           <div className="chat-body" ref={chatBodyRef} onScroll={handleScroll}>
             {messages.map((m, i) => {
@@ -2561,10 +2920,30 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
           ref={btnRef}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          style={{ transform: isHovered ? (isOpen ? 'scale(1.05)' : 'scale(1.1)') : 'scale(1)' }}
+          style={{ transform: isHovered ? (isOpen ? 'scale(1.05)' : 'scale(1.1)') : 'scale(1)', position: 'relative' }}
+          title={isOpen ? "Close Orlo" : `Orlo AI • ${currentStatus.label}`}
         >
           {!isOpen && <div className="copilot-ring"></div>}
           <OrloIcon size={32} color="#ebd73f" className="orlo-icon-svg" emotion={isOpen ? emotion : (speechBubble ? emotion : (isHovered ? 'excited' : 'idle'))} />
+          {!isOpen && (
+            <span 
+              className={currentStatus.pulse ? 'status-dot-pulse' : ''}
+              style={{
+                position: 'absolute',
+                top: '6px',
+                right: '6px',
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: currentStatus.color,
+                boxShadow: `0 0 10px ${currentStatus.glow}`,
+                border: '2px solid #09090b',
+                display: 'inline-block',
+                zIndex: 4,
+                pointerEvents: 'none'
+              }}
+            />
+          )}
         </div>
       </div>
     </>

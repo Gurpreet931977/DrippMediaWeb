@@ -212,6 +212,11 @@ export default function InvoiceMaker() {
     if (payload.clientMobile) setClientDetails(prev => ({ ...prev, mobile: payload.clientMobile }));
     if (payload.clientAddress) setClientDetails(prev => ({ ...prev, address: payload.clientAddress }));
     if (payload.gstNumber) setClientDetails(prev => ({ ...prev, gst: payload.gstNumber }));
+    if (payload.notes) setInvoiceDetails(prev => ({ ...prev, notes: payload.notes }));
+    if (payload.dueDate) setInvoiceDetails(prev => ({ ...prev, dueDate: payload.dueDate }));
+    if (payload.invoiceNumber) setInvoiceDetails(prev => ({ ...prev, number: payload.invoiceNumber }));
+    if (payload.currency) setInvoiceDetails(prev => ({ ...prev, currency: payload.currency }));
+    if (payload.includeGST !== undefined) setIncludeGST(Boolean(payload.includeGST));
     
     // Number parser helper
     const parseNum = (val) => {
