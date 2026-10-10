@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, Copy, MessageCircle, ExternalLink } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
@@ -101,6 +101,8 @@ export default function InvoiceMaker() {
   const [smartText, setSmartText] = useState('');
   const [shareLink, setShareLink] = useState('');
   const [sharePassword, setSharePassword] = useState('');
+  const [copiedItem, setCopiedItem] = useState(null); // 'link' | 'password' | 'message'
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   // 'idle' | 'logging' | 'success' | 'skipped' | 'error'
   const [sheetLogStatus, setSheetLogStatus] = useState('idle');
 
@@ -858,18 +860,32 @@ export default function InvoiceMaker() {
     logToSalesSheet({ clientDetails, invoiceDetails, items, total, shareLink: shareLink || '', trigger: 'pdf' });
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = (text, type = null) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    }
+    if (type) {
+      setCopiedItem(type);
+      setTimeout(() => setCopiedItem(null), 2200);
+    }
   };
 
   const handleCopyMessage = () => {
     const clientName = clientDetails.name ? clientDetails.name.split(' ')[0] : 'Client';
-    const msg = `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 Password: ${sharePassword}\n\nLet me know if you have any questions!`;
-    copyToClipboard(msg);
-    showAlert('Message copied to clipboard!');
+    const msg = `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 Password: ${sharePassword}\n\nTotal Due: ${invoiceDetails.currency}${total.toFixed(2)}\n\nLet me know if you have any questions!`;
+    copyToClipboard(msg, 'message');
+  };
+
+  const handleWhatsAppShare = () => {
+    const clientName = clientDetails.name ? clientDetails.name.split(' ')[0] : 'Client';
+    const msg = `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 Password: ${sharePassword}\n\nTotal Due: ${invoiceDetails.currency}${total.toFixed(2)}`;
+    const phone = clientDetails.phone ? clientDetails.phone.replace(/[^0-9]/g, '') : '';
+    const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
   };
 
   const generateSecureLink = async () => {
+    setIsGeneratingLink(true);
     const pass = Math.floor(1000 + Math.random() * 9000).toString();
     setSharePassword(pass);
     try {
@@ -899,6 +915,8 @@ export default function InvoiceMaker() {
         }
     } catch(err) {
         showAlert("API error while generating secure link.");
+    } finally {
+        setIsGeneratingLink(false);
     }
   };
 
@@ -1207,7 +1225,7 @@ export default function InvoiceMaker() {
           
           {/* Smart Paste Section */}
           <div className={styles.smartPasteCard}>
-            <h3 style={{ marginBottom: '10px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ marginBottom: '10px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'Panchang', sans-serif", fontSize: '0.98rem', fontWeight: 700 }}>
               <Search size={20} /> {isGenz ? 'ai brain dump' : 'AI Smart Paste'}
             </h3>
             <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '15px', lineHeight: 1.4 }}>
@@ -1344,7 +1362,7 @@ export default function InvoiceMaker() {
 
           {/* Section 3: Services & Rates */}
           <div className={styles.card}>
-            <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Line Items</h3>
+            <h3 style={{ marginBottom: '15px', color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: '0.98rem', fontWeight: 700 }}>Line Items</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {items.map((item, index) => (
@@ -1579,86 +1597,500 @@ export default function InvoiceMaker() {
               />
            </div>
 
-           {/* Actions */}
-           <div className={styles.card} style={{ background: 'linear-gradient(145deg, #1a1a1a, #111)' }}>
-             <h3 style={{ marginBottom: '15px', color: '#ebd73f' }}>Export & Share</h3>
+           {/* Modern Executive Export & Share Card */}
+           <div 
+             style={{ 
+               background: 'linear-gradient(180deg, #16161a 0%, #0d0d0f 100%)',
+               border: '1px solid rgba(255, 255, 255, 0.08)',
+               borderRadius: '18px',
+               padding: '24px',
+               boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
+               position: 'relative',
+               overflow: 'hidden'
+             }}
+           >
+             {/* Soft ambient highlight */}
+             <div 
+               style={{ 
+                 position: 'absolute', 
+                 top: 0, 
+                 right: 0, 
+                 width: '180px', 
+                 height: '180px', 
+                 background: 'radial-gradient(circle at 100% 0%, rgba(235, 215, 63, 0.12) 0%, transparent 70%)', 
+                 pointerEvents: 'none', 
+                 zIndex: 0 
+               }} 
+             />
+
+             {/* Card Header */}
+             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', position: 'relative', zIndex: 1 }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                 <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ebd73f', boxShadow: '0 0 10px #ebd73f' }} />
+                 <h3 
+                   style={{ 
+                     margin: 0, 
+                     fontSize: '0.98rem', 
+                     color: '#ffffff', 
+                     fontFamily: "'Panchang', sans-serif",
+                     fontWeight: '700',
+                     letterSpacing: '0.03em'
+                   }}
+                 >
+                   Export & Share
+                 </h3>
+               </div>
+               <span 
+                 style={{ 
+                   fontSize: '0.72rem', 
+                   color: '#a1a1aa', 
+                   fontFamily: "'Clash Display', sans-serif",
+                   fontWeight: '500',
+                   background: 'rgba(255, 255, 255, 0.04)',
+                   padding: '3px 9px',
+                   borderRadius: '999px',
+                   border: '1px solid rgba(255, 255, 255, 0.07)'
+                 }}
+               >
+                 Invoice #{invoiceDetails.number || '001'}
+               </span>
+             </div>
              
-             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '15px' }}>
-                <strong style={{ fontSize: '1.1rem', whiteSpace: 'nowrap' }}>Total Due:</strong>
-                <strong style={{ fontSize: '1.2rem', color: '#ebd73f', wordBreak: 'break-word', textAlign: 'right' }}>{invoiceDetails.currency}{total.toFixed(2)}</strong>
+             {/* Total Due Callout */}
+             <div 
+               style={{ 
+                 background: 'rgba(255, 255, 255, 0.025)',
+                 border: '1px solid rgba(255, 255, 255, 0.07)',
+                 borderRadius: '14px',
+                 padding: '16px 18px',
+                 marginBottom: '18px',
+                 display: 'flex',
+                 alignItems: 'center',
+                 justifyContent: 'space-between',
+                 position: 'relative',
+                 zIndex: 1
+               }}
+             >
+               <div>
+                 <div 
+                   style={{ 
+                     fontFamily: "'Clash Display', sans-serif",
+                     fontSize: '0.72rem',
+                     fontWeight: '600',
+                     letterSpacing: '0.08em',
+                     textTransform: 'uppercase',
+                     color: '#71717a',
+                     marginBottom: '3px'
+                   }}
+                 >
+                   Total Due
+                 </div>
+                 <div 
+                   style={{ 
+                     fontFamily: "'Clash Display', sans-serif",
+                     fontSize: '0.75rem',
+                     color: '#a1a1aa'
+                   }}
+                 >
+                   {items.length} {items.length === 1 ? 'item' : 'items'} billed
+                 </div>
+               </div>
+               <div 
+                 style={{ 
+                   fontFamily: "'Clash Display', sans-serif",
+                   fontSize: '1.45rem',
+                   fontWeight: '700',
+                   color: '#ebd73f',
+                   letterSpacing: '0.02em',
+                   textShadow: '0 0 20px rgba(235, 215, 63, 0.25)'
+                 }}
+               >
+                 {invoiceDetails.currency}{total.toFixed(2)}
+               </div>
              </div>
 
-             <button onClick={generatePDF} className={styles.btnPrimary} style={{ width: '100%', padding: '12px', justifyContent: 'center', marginBottom: '15px' }}>
-               <Download size={18} /> Download Invoice PDF
-             </button>
-             <button onClick={generateSecureLink} className={styles.addServiceBtn} style={{ width: '100%', padding: '12px', justifyContent: 'center' }}>
-               <Lock size={18} /> Generate Secure Link
-             </button>
+             {/* Main Actions */}
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative', zIndex: 1 }}>
+               <button 
+                 onClick={generatePDF} 
+                 style={{ 
+                   width: '100%', 
+                   padding: '14px 20px', 
+                   background: 'linear-gradient(135deg, #f7e76d 0%, #ebd73f 60%, #deb823 100%)',
+                   color: '#09090b',
+                   border: 'none',
+                   borderRadius: '12px',
+                   fontFamily: "'Clash Display', sans-serif",
+                   fontSize: '0.92rem',
+                   fontWeight: '650',
+                   letterSpacing: '0.01em',
+                   cursor: 'pointer',
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   gap: '9px',
+                   boxShadow: '0 8px 22px -5px rgba(235, 215, 63, 0.38)',
+                   transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                 }}
+                 onMouseOver={e => {
+                   e.currentTarget.style.transform = 'translateY(-1.5px)';
+                   e.currentTarget.style.boxShadow = '0 12px 28px -5px rgba(235, 215, 63, 0.48)';
+                 }}
+                 onMouseOut={e => {
+                   e.currentTarget.style.transform = 'translateY(0)';
+                   e.currentTarget.style.boxShadow = '0 8px 22px -5px rgba(235, 215, 63, 0.38)';
+                 }}
+               >
+                 <Download size={18} strokeWidth={2.4} /> Download Invoice PDF
+               </button>
+
+               <button 
+                 onClick={generateSecureLink} 
+                 disabled={isGeneratingLink}
+                 style={{ 
+                   width: '100%', 
+                   padding: '13px 20px', 
+                   background: 'rgba(255, 255, 255, 0.04)',
+                   border: '1px solid rgba(255, 255, 255, 0.1)',
+                   color: '#ffffff',
+                   borderRadius: '12px',
+                   fontFamily: "'Clash Display', sans-serif",
+                   fontSize: '0.9rem',
+                   fontWeight: '600',
+                   cursor: isGeneratingLink ? 'not-allowed' : 'pointer',
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   gap: '8px',
+                   transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                 }}
+                 onMouseOver={e => {
+                   if (!isGeneratingLink) {
+                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)';
+                     e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.35)';
+                     e.currentTarget.style.color = '#ebd73f';
+                   }
+                 }}
+                 onMouseOut={e => {
+                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                   e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                   e.currentTarget.style.color = '#ffffff';
+                 }}
+               >
+                 {isGeneratingLink ? (
+                   <>
+                     <Loader size={17} className={styles.spin} /> Generating Link...
+                   </>
+                 ) : (
+                   <>
+                     <Lock size={17} strokeWidth={2.2} /> Generate Secure Link
+                   </>
+                 )}
+               </button>
+             </div>
              
+             {/* Generated Secure Portal Section */}
              {shareLink && (
-                <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '0.75rem' }}>
-                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Secure Link Generated:</p>
-                   <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                      <input type="text" readOnly value={shareLink} onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} className={styles.inputModern} style={{ padding: '8px', flex: 1, cursor: 'pointer' }} title="Click to open link directly" />
-                      <button onClick={() => copyToClipboard(shareLink)} className={styles.addServiceBtn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Link"><Copy size={16} /></button>
+               <div 
+                 style={{ 
+                   marginTop: '20px', 
+                   padding: '18px', 
+                   background: 'rgba(12, 12, 14, 0.85)', 
+                   border: '1px solid rgba(235, 215, 63, 0.25)', 
+                   borderRadius: '14px',
+                   boxShadow: '0 12px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(235, 215, 63, 0.15)',
+                   position: 'relative',
+                   zIndex: 1
+                 }}
+               >
+                 {/* Status header */}
+                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontFamily: "'Clash Display', sans-serif", fontSize: '0.8rem', fontWeight: '600', color: '#ebd73f', letterSpacing: '0.02em' }}>
+                     <ShieldCheck size={16} /> Secure Portal Ready
                    </div>
-                   <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Client Password:</p>
-                   <div style={{ display: 'flex', gap: '8px' }}>
-                     <input type="text" readOnly value={sharePassword} className={styles.inputModern} style={{ padding: '8px', letterSpacing: '2px', fontWeight: 'bold', flex: 1 }} />
-                     <button onClick={() => copyToClipboard(sharePassword)} className={styles.addServiceBtn} style={{ padding: '8px', background: 'rgba(235, 215, 63, 0.1)', borderColor: 'rgba(235, 215, 63, 0.3)' }} title="Copy Password"><Copy size={16} /></button>
+                   <span style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.7rem', color: '#71717a', background: 'rgba(255, 255, 255, 0.05)', padding: '2px 8px', borderRadius: '999px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                     Encrypted
+                   </span>
+                 </div>
+
+                 {/* Secure Link Field */}
+                 <div style={{ marginBottom: '14px' }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                     <label style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.72rem', fontWeight: '600', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#a1a1aa' }}>
+                       Client Portal URL
+                     </label>
+                     <span style={{ fontFamily: "'Clash Display', sans-serif", fontSize: '0.68rem', color: '#71717a' }}>
+                       Click link to preview
+                     </span>
                    </div>
-                   <button onClick={handleCopyMessage} className={styles.btnShare}>
-                     <Share2 size={18} /> Copy Share Message
+
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 0, 0, 0.55)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', padding: '4px 6px 4px 12px', minWidth: 0 }}>
+                     <input 
+                       type="text" 
+                       readOnly 
+                       value={shareLink} 
+                       onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} 
+                       title="Click to open link directly" 
+                       style={{ 
+                         flex: 1, 
+                         minWidth: 0, 
+                         background: 'transparent', 
+                         border: 'none', 
+                         outline: 'none', 
+                         color: '#f4f4f5', 
+                         fontFamily: "'Clash Display', sans-serif", 
+                         fontSize: '0.82rem', 
+                         cursor: 'pointer', 
+                         padding: '6px 0', 
+                         textOverflow: 'ellipsis', 
+                         overflow: 'hidden', 
+                         whiteSpace: 'nowrap' 
+                       }} 
+                     />
+
+                     <button 
+                       type="button"
+                       onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')} 
+                       title="Open portal in new tab"
+                       style={{ 
+                         background: 'rgba(255, 255, 255, 0.05)', 
+                         border: '1px solid rgba(255, 255, 255, 0.1)', 
+                         borderRadius: '7px', 
+                         color: '#d4d4d8', 
+                         padding: '7px 9px', 
+                         cursor: 'pointer', 
+                         display: 'flex', 
+                         alignItems: 'center', 
+                         justifyContent: 'center', 
+                         flexShrink: 0,
+                         transition: 'all 0.15s ease'
+                       }}
+                       onMouseOver={e => {
+                         e.currentTarget.style.color = '#ebd73f';
+                         e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.35)';
+                       }}
+                       onMouseOut={e => {
+                         e.currentTarget.style.color = '#d4d4d8';
+                         e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                       }}
+                     >
+                       <ExternalLink size={14} />
+                     </button>
+
+                     <button 
+                       type="button"
+                       onClick={() => copyToClipboard(shareLink, 'link')} 
+                       title="Copy portal link"
+                       style={{ 
+                         background: copiedItem === 'link' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(235, 215, 63, 0.1)', 
+                         border: `1px solid ${copiedItem === 'link' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(235, 215, 63, 0.3)'}`, 
+                         borderRadius: '7px', 
+                         color: copiedItem === 'link' ? '#4ade80' : '#ebd73f', 
+                         padding: '7px 12px', 
+                         fontFamily: "'Clash Display', sans-serif", 
+                         fontSize: '0.75rem', 
+                         fontWeight: '600', 
+                         cursor: 'pointer', 
+                         display: 'flex', 
+                         alignItems: 'center', 
+                         gap: '5px', 
+                         flexShrink: 0,
+                         transition: 'all 0.15s ease'
+                       }}
+                     >
+                       {copiedItem === 'link' ? (
+                         <>
+                           <CheckCircle2 size={13} />
+                           <span>Copied!</span>
+                         </>
+                       ) : (
+                         <>
+                           <Copy size={13} />
+                           <span>Copy</span>
+                         </>
+                       )}
+                     </button>
+                   </div>
+                 </div>
+
+                 {/* Client Password Field */}
+                 <div style={{ marginBottom: '16px' }}>
+                   <label style={{ display: 'block', fontFamily: "'Clash Display', sans-serif", fontSize: '0.72rem', fontWeight: '600', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#a1a1aa', marginBottom: '6px' }}>
+                     Client Access PIN
+                   </label>
+
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 0, 0, 0.55)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', padding: '4px 6px 4px 14px', minWidth: 0 }}>
+                     <div style={{ flex: 1, minWidth: 0, fontFamily: "'Clash Display', sans-serif", fontSize: '1rem', fontWeight: '700', letterSpacing: '0.22em', color: '#ebd73f', padding: '5px 0' }}>
+                       {sharePassword}
+                     </div>
+
+                     <button 
+                       type="button"
+                       onClick={() => copyToClipboard(sharePassword, 'password')} 
+                       title="Copy PIN"
+                       style={{ 
+                         background: copiedItem === 'password' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(235, 215, 63, 0.1)', 
+                         border: `1px solid ${copiedItem === 'password' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(235, 215, 63, 0.3)'}`, 
+                         borderRadius: '7px', 
+                         color: copiedItem === 'password' ? '#4ade80' : '#ebd73f', 
+                         padding: '7px 12px', 
+                         fontFamily: "'Clash Display', sans-serif", 
+                         fontSize: '0.75rem', 
+                         fontWeight: '600', 
+                         cursor: 'pointer', 
+                         display: 'flex', 
+                         alignItems: 'center', 
+                         gap: '5px', 
+                         flexShrink: 0,
+                         transition: 'all 0.15s ease'
+                       }}
+                     >
+                       {copiedItem === 'password' ? (
+                         <>
+                           <CheckCircle2 size={13} />
+                           <span>Copied!</span>
+                         </>
+                       ) : (
+                         <>
+                           <Copy size={13} />
+                           <span>Copy PIN</span>
+                         </>
+                       )}
+                     </button>
+                   </div>
+                 </div>
+
+                 {/* Share Actions Grid */}
+                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                   <button 
+                     type="button"
+                     onClick={handleCopyMessage} 
+                     style={{ 
+                       padding: '10px 12px', 
+                       background: copiedItem === 'message' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255, 255, 255, 0.05)', 
+                       border: `1px solid ${copiedItem === 'message' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(255, 255, 255, 0.12)'}`, 
+                       borderRadius: '9px', 
+                       color: copiedItem === 'message' ? '#4ade80' : '#ffffff', 
+                       fontFamily: "'Clash Display', sans-serif", 
+                       fontSize: '0.8rem', 
+                       fontWeight: '600', 
+                       cursor: 'pointer', 
+                       display: 'flex', 
+                       alignItems: 'center', 
+                       justifyContent: 'center', 
+                       gap: '6px',
+                       transition: 'all 0.15s ease'
+                     }}
+                     onMouseOver={e => {
+                       if (copiedItem !== 'message') {
+                         e.currentTarget.style.background = 'rgba(255, 255, 255, 0.09)';
+                         e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.35)';
+                         e.currentTarget.style.color = '#ebd73f';
+                       }
+                     }}
+                     onMouseOut={e => {
+                       if (copiedItem !== 'message') {
+                         e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                         e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                         e.currentTarget.style.color = '#ffffff';
+                       }
+                     }}
+                   >
+                     {copiedItem === 'message' ? (
+                       <>
+                         <CheckCircle2 size={15} />
+                         <span>Copied!</span>
+                       </>
+                     ) : (
+                       <>
+                         <Share2 size={15} />
+                         <span>Copy Message</span>
+                       </>
+                     )}
                    </button>
 
-                   {/* Google Sheets log status badge */}
-                   {sheetLogStatus !== 'idle' && (
-                     <div style={{
-                       marginTop: '12px',
-                       display: 'flex',
-                       alignItems: 'center',
-                       gap: '8px',
-                       padding: '8px 14px',
-                       borderRadius: '8px',
-                       fontSize: '0.8rem',
-                       fontWeight: '600',
-                       background: sheetLogStatus === 'success'
-                         ? 'rgba(34, 197, 94, 0.12)'
+                   <button 
+                     type="button"
+                     onClick={handleWhatsAppShare} 
+                     style={{ 
+                       padding: '10px 12px', 
+                       background: 'rgba(37, 211, 102, 0.1)', 
+                       border: '1px solid rgba(37, 211, 102, 0.3)', 
+                       borderRadius: '9px', 
+                       color: '#25d366', 
+                       fontFamily: "'Clash Display', sans-serif", 
+                       fontSize: '0.8rem', 
+                       fontWeight: '600', 
+                       cursor: 'pointer', 
+                       display: 'flex', 
+                       alignItems: 'center', 
+                       justifyContent: 'center', 
+                       gap: '6px',
+                       transition: 'all 0.15s ease'
+                     }}
+                     onMouseOver={e => {
+                       e.currentTarget.style.background = 'rgba(37, 211, 102, 0.18)';
+                       e.currentTarget.style.borderColor = 'rgba(37, 211, 102, 0.5)';
+                     }}
+                     onMouseOut={e => {
+                       e.currentTarget.style.background = 'rgba(37, 211, 102, 0.1)';
+                       e.currentTarget.style.borderColor = 'rgba(37, 211, 102, 0.3)';
+                     }}
+                   >
+                     <MessageCircle size={15} />
+                     <span>WhatsApp</span>
+                   </button>
+                 </div>
+
+                 {/* Google Sheets log status badge */}
+                 {sheetLogStatus !== 'idle' && (
+                   <div style={{
+                     marginTop: '14px',
+                     display: 'flex',
+                     alignItems: 'center',
+                     gap: '8px',
+                     padding: '8px 12px',
+                     borderRadius: '9px',
+                     fontSize: '0.75rem',
+                     fontFamily: "'Clash Display', sans-serif",
+                     fontWeight: '600',
+                     background: sheetLogStatus === 'success'
+                       ? 'rgba(34, 197, 94, 0.1)'
+                       : sheetLogStatus === 'logging'
+                       ? 'rgba(235, 215, 63, 0.08)'
+                       : sheetLogStatus === 'skipped'
+                       ? 'rgba(156, 163, 175, 0.08)'
+                       : 'rgba(239, 68, 68, 0.1)',
+                     border: `1px solid ${
+                       sheetLogStatus === 'success'
+                         ? 'rgba(34, 197, 94, 0.25)'
                          : sheetLogStatus === 'logging'
-                         ? 'rgba(235, 215, 63, 0.08)'
+                         ? 'rgba(235, 215, 63, 0.2)'
                          : sheetLogStatus === 'skipped'
-                         ? 'rgba(156, 163, 175, 0.1)'
-                         : 'rgba(239, 68, 68, 0.1)',
-                       border: `1px solid ${
-                         sheetLogStatus === 'success'
-                           ? 'rgba(34, 197, 94, 0.3)'
-                           : sheetLogStatus === 'logging'
-                           ? 'rgba(235, 215, 63, 0.2)'
-                           : sheetLogStatus === 'skipped'
-                           ? 'rgba(156, 163, 175, 0.2)'
-                           : 'rgba(239, 68, 68, 0.3)'
-                       }`,
-                       color: sheetLogStatus === 'success'
-                         ? '#4ade80'
-                         : sheetLogStatus === 'logging'
-                         ? '#ebd73f'
-                         : sheetLogStatus === 'skipped'
-                         ? '#9ca3af'
-                         : '#f87171',
-                     }}>
-                       <span style={{ fontSize: '1rem' }}>
-                         {sheetLogStatus === 'logging' && '⏳'}
-                         {sheetLogStatus === 'success' && '✅'}
-                         {sheetLogStatus === 'skipped' && 'ℹ️'}
-                         {sheetLogStatus === 'error' && '⚠️'}
-                       </span>
-                       {sheetLogStatus === 'logging' && 'Logging to Sales Sheet…'}
-                       {sheetLogStatus === 'success' && 'Logged to Sales Sheet'}
-                       {sheetLogStatus === 'skipped' && 'Sheets not configured (see setup guide)'}
-                       {sheetLogStatus === 'error' && 'Sheet log failed (invoice saved OK)'}
-                     </div>
-                   )}
-                </div>
+                         ? 'rgba(156, 163, 175, 0.15)'
+                         : 'rgba(239, 68, 68, 0.25)'
+                     }`,
+                     color: sheetLogStatus === 'success'
+                       ? '#4ade80'
+                       : sheetLogStatus === 'logging'
+                       ? '#ebd73f'
+                       : sheetLogStatus === 'skipped'
+                       ? '#9ca3af'
+                       : '#f87171',
+                   }}>
+                     <span>
+                       {sheetLogStatus === 'logging' && '⏳'}
+                       {sheetLogStatus === 'success' && '✅'}
+                       {sheetLogStatus === 'skipped' && 'ℹ️'}
+                       {sheetLogStatus === 'error' && '⚠️'}
+                     </span>
+                     {sheetLogStatus === 'logging' && 'Logging to Sales Sheet…'}
+                     {sheetLogStatus === 'success' && 'Logged to Sales Sheet'}
+                     {sheetLogStatus === 'skipped' && 'Sheets not configured'}
+                     {sheetLogStatus === 'error' && 'Sheet log failed (invoice saved OK)'}
+                   </div>
+                 )}
+               </div>
              )}
            </div>
 
