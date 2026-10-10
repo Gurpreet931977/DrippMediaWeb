@@ -2633,6 +2633,7 @@ export default function Page() {
             const email = communityForm.email.value.trim();
             const whatsapp = communityForm.whatsapp ? communityForm.whatsapp.value.trim() : '';
             const expertise = communityForm.expertise ? communityForm.expertise.value.trim() : '';
+            const member_type = document.getElementById('community-member-type-input')?.value?.trim() || '';
 
             if (!email) return;
 
@@ -2648,7 +2649,7 @@ export default function Page() {
                 await fetch('/api/community', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, whatsapp, expertise })
+                    body: JSON.stringify({ email, whatsapp, expertise, member_type })
                 }).catch(() => {});
             } catch (err) {}
 
@@ -4193,6 +4194,45 @@ export default function Page() {
       </div>
 
       <form className="modal-form" id="community-form">
+        {/* MEMBER TYPE */}
+        <div className="form-group">
+          <div className="field-label-row">
+            <label>{isGenz ? 'you are...' : 'I am joining as a'}</label>
+            <span className="field-label-hint">{isGenz ? 'pick one' : 'Select one'}</span>
+          </div>
+          <div className="scope-chip-grid community-chips-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+            {[
+              {
+                id: 'creator',
+                label: isGenz ? 'content creator' : 'Content Creator',
+                desc: isGenz ? 'i make stuff' : 'I create content',
+              },
+              {
+                id: 'freelancer',
+                label: isGenz ? 'freelancer' : 'Freelancer',
+                desc: isGenz ? 'i take gigs' : 'I offer services',
+              },
+            ].map((chip) => (
+              <button
+                key={chip.id}
+                type="button"
+                className="scope-chip community-chip community-type-chip"
+                onClick={(e) => {
+                  // Single-select: clear other type chips first
+                  document.querySelectorAll('.community-type-chip').forEach(c => c.classList.remove('active'));
+                  e.currentTarget.classList.add('active');
+                  const input = document.getElementById('community-member-type-input');
+                  if (input) input.value = chip.id;
+                }}
+              >
+                <span className="scope-chip-indicator">✦</span>
+                <span className="chip-text">{chip.label}</span>
+              </button>
+            ))}
+          </div>
+          <input type="hidden" name="member_type" id="community-member-type-input" />
+        </div>
+
         <div className="form-group">
           <label>{isGenz ? 'your email' : 'Email Address'}</label>
           <div className="community-input-wrap">

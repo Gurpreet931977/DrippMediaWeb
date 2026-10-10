@@ -52,6 +52,7 @@ export async function POST(request) {
     const email = (data.email || '').trim();
     const whatsapp = (data.whatsapp || '').trim();
     const expertise = (data.expertise || '').trim();
+    const member_type = (data.member_type || '').trim(); // 'creator' | 'freelancer'
 
     if (!email || !email.includes('@')) {
       return withCors(
@@ -71,6 +72,7 @@ export async function POST(request) {
       email,
       whatsapp,
       expertise,
+      member_type: member_type || null,
       created_at: new Date().toISOString(),
     };
 
