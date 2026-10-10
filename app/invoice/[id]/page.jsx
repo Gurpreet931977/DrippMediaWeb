@@ -2,9 +2,25 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Lock, FileText, CheckCircle2, Globe, Mail, AtSign, Printer, ArrowLeft, Download, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { 
+  Lock, 
+  FileText, 
+  CheckCircle2, 
+  Globe, 
+  Mail, 
+  AtSign, 
+  Printer, 
+  Image as ImageIcon, 
+  Loader2, 
+  Copy, 
+  Check, 
+  Sparkles,
+  ShieldCheck
+} from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import QRCode from 'qrcode';
+import gsap from 'gsap';
 
 export default function SharedInvoice() {
   const params = useParams();
@@ -19,7 +35,10 @@ export default function SharedInvoice() {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isDownloadingImage, setIsDownloadingImage] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(null);
+  const [copiedField, setCopiedField] = useState(null);
+  const [qrDataUrl, setQrDataUrl] = useState('');
   const invoiceDocRef = useRef(null);
+  const cursorRef = useRef(null);
 
   // Dedicated refs for 4 PIN boxes
   const pin0Ref = useRef(null);
@@ -27,6 +46,17 @@ export default function SharedInvoice() {
   const pin2Ref = useRef(null);
   const pin3Ref = useRef(null);
   const pinRefs = [pin0Ref, pin1Ref, pin2Ref, pin3Ref];
+
+  // Helper to cleanly separate integer rupees from grey paisa (.00)
+  const formatCurrencyParts = (amount) => {
+    const num = parseFloat(amount || 0);
+    const formatted = num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const parts = formatted.split('.');
+    return {
+      whole: parts[0] || '0',
+      decimal: parts[1] || '00'
+    };
+  };
 
   const handlePinChange = (index, value) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -54,6 +84,77 @@ export default function SharedInvoice() {
     pinRefs[Math.min(text.length, 3)].current?.focus();
     e.preventDefault();
   };
+
+  const handleCopy = (text, fieldName) => {
+    if (!text) return;
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      setTimeout(() => setCopiedField(null), 2000);
+    }
+  };
+
+  // Custom Cursor Movement & Interaction
+  useEffect(() => {
+    if (!mounted || typeof window === 'undefined') return;
+
+    const isTouch = window.matchMedia && (
+      window.matchMedia('(pointer: coarse)').matches || 
+      window.matchMedia('(hover: none)').matches
+    );
+    if (isTouch) return;
+
+    const cursor = cursorRef.current || document.getElementById('invoice-custom-cursor');
+    if (!cursor) return;
+
+    gsap.set(cursor, { xPercent: -50, yPercent: -50, opacity: 0 });
+    const xTo = gsap.quickTo(cursor, "x", { duration: 0.12, ease: "power2.out" });
+    const yTo = gsap.quickTo(cursor, "y", { duration: 0.12, ease: "power2.out" });
+
+    let isVisible = false;
+
+    const onMouseMove = (e) => {
+      if (!isVisible) {
+        gsap.to(cursor, { opacity: 1, duration: 0.2 });
+        isVisible = true;
+      }
+      xTo(e.clientX);
+      yTo(e.clientY);
+    };
+
+    const onMouseOver = (e) => {
+      const target = e.target;
+      if (!target || !target.closest) return;
+      if (target.closest('button, a, input, [role="button"], .copy-action-btn, .interactive-cell')) {
+        cursor.classList.add('active');
+      }
+    };
+
+    const onMouseOut = (e) => {
+      const target = e.target;
+      if (!target || !target.closest) return;
+      if (target.closest('button, a, input, [role="button"], .copy-action-btn, .interactive-cell')) {
+        cursor.classList.remove('active');
+      }
+    };
+
+    const onMouseLeave = () => {
+      gsap.to(cursor, { opacity: 0, duration: 0.2 });
+      isVisible = false;
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseover', onMouseOver);
+    document.addEventListener('mouseout', onMouseOut);
+    document.addEventListener('mouseleave', onMouseLeave);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseover', onMouseOver);
+      document.removeEventListener('mouseout', onMouseOut);
+      document.removeEventListener('mouseleave', onMouseLeave);
+    };
+  }, [mounted, isLocked]);
 
   useEffect(() => {
     setMounted(true);
@@ -120,6 +221,39 @@ export default function SharedInvoice() {
     }
   };
 
+  // Automatically generate high-res UPI QR code if UPI exists and qrCode is missing or needed
+  useEffect(() => {
+    const bank = quoteData?.selectedBank || (quoteData?.type === 'invoice' ? {
+      bankName: 'HDFC Bank',
+      accountName: 'Dripp Media',
+      accountNumber: '50200012345678',
+      ifsc: 'HDFC0001234',
+      upi: 'drippmedia@okhdfcbank'
+    } : null);
+
+    if (bank) {
+      if (bank.qrCode && bank.qrCode.startsWith('data:image')) {
+        setQrDataUrl(bank.qrCode);
+      } else if (bank.upi) {
+        const upiString = bank.upi.includes('://') 
+          ? bank.upi 
+          : `upi://pay?pa=${bank.upi}&pn=Dripp%20Media&cu=INR`;
+        QRCode.toDataURL(upiString, { 
+          margin: 1, 
+          width: 320,
+          color: { dark: '#000000', light: '#ffffff' } 
+        })
+          .then(url => setQrDataUrl(url))
+          .catch(err => {
+            console.error('QR generation error:', err);
+            if (bank.qrCode) setQrDataUrl(bank.qrCode);
+          });
+      } else if (bank.qrCode) {
+        setQrDataUrl(bank.qrCode);
+      }
+    }
+  }, [quoteData]);
+
   const handleDownloadPdf = async () => {
     if (!invoiceDocRef.current || isDownloadingPdf) return;
     setIsDownloadingPdf(true);
@@ -133,6 +267,7 @@ export default function SharedInvoice() {
         scale: 2,
         backgroundColor: '#050505',
         useCORS: true,
+        allowTaint: true,
         logging: false,
         windowWidth: 1200,
         onclone: (clonedDoc) => {
@@ -143,6 +278,36 @@ export default function SharedInvoice() {
             clonedGrid.style.padding = '36px';
             clonedGrid.style.background = '#050505';
             clonedGrid.style.borderRadius = '24px';
+            clonedGrid.style.display = 'grid';
+            clonedGrid.style.gridTemplateColumns = '1fr 1.35fr';
+            clonedGrid.style.gap = '40px';
+          }
+          const clonedLeft = clonedDoc.querySelector('.invoice-left');
+          if (clonedLeft) clonedLeft.style.display = 'flex';
+          const clonedRight = clonedDoc.querySelector('.invoice-right');
+          if (clonedRight) clonedRight.style.display = 'flex';
+          const clonedCursor = clonedDoc.getElementById('invoice-custom-cursor');
+          if (clonedCursor) clonedCursor.remove();
+
+          // Ensure QR Code is rendered directly as a crisp Canvas to prevent blank white square
+          const origQr = document.getElementById('invoice-qr-img');
+          const clonedQr = clonedDoc.getElementById('invoice-qr-img');
+          if (origQr && clonedQr && origQr.complete && origQr.naturalWidth > 0) {
+            try {
+              const qrCanvas = clonedDoc.createElement('canvas');
+              qrCanvas.width = origQr.naturalWidth || 280;
+              qrCanvas.height = origQr.naturalHeight || 280;
+              qrCanvas.style.width = '140px';
+              qrCanvas.style.height = '140px';
+              qrCanvas.style.display = 'block';
+              qrCanvas.style.borderRadius = '8px';
+              const ctx = qrCanvas.getContext('2d');
+              ctx.drawImage(origQr, 0, 0);
+              clonedQr.parentNode.replaceChild(qrCanvas, clonedQr);
+            } catch (qrErr) {
+              console.warn('QR canvas replacement fallback:', qrErr);
+              clonedQr.src = origQr.src;
+            }
           }
         }
       });
@@ -186,6 +351,7 @@ export default function SharedInvoice() {
         scale: 2,
         backgroundColor: '#050505',
         useCORS: true,
+        allowTaint: true,
         logging: false,
         windowWidth: 1200,
         onclone: (clonedDoc) => {
@@ -196,6 +362,36 @@ export default function SharedInvoice() {
             clonedGrid.style.padding = '36px';
             clonedGrid.style.background = '#050505';
             clonedGrid.style.borderRadius = '24px';
+            clonedGrid.style.display = 'grid';
+            clonedGrid.style.gridTemplateColumns = '1fr 1.35fr';
+            clonedGrid.style.gap = '40px';
+          }
+          const clonedLeft = clonedDoc.querySelector('.invoice-left');
+          if (clonedLeft) clonedLeft.style.display = 'flex';
+          const clonedRight = clonedDoc.querySelector('.invoice-right');
+          if (clonedRight) clonedRight.style.display = 'flex';
+          const clonedCursor = clonedDoc.getElementById('invoice-custom-cursor');
+          if (clonedCursor) clonedCursor.remove();
+
+          // Ensure QR Code is rendered directly as a crisp Canvas to prevent blank white square
+          const origQr = document.getElementById('invoice-qr-img');
+          const clonedQr = clonedDoc.getElementById('invoice-qr-img');
+          if (origQr && clonedQr && origQr.complete && origQr.naturalWidth > 0) {
+            try {
+              const qrCanvas = clonedDoc.createElement('canvas');
+              qrCanvas.width = origQr.naturalWidth || 280;
+              qrCanvas.height = origQr.naturalHeight || 280;
+              qrCanvas.style.width = '140px';
+              qrCanvas.style.height = '140px';
+              qrCanvas.style.display = 'block';
+              qrCanvas.style.borderRadius = '8px';
+              const ctx = qrCanvas.getContext('2d');
+              ctx.drawImage(origQr, 0, 0);
+              clonedQr.parentNode.replaceChild(qrCanvas, clonedQr);
+            } catch (qrErr) {
+              console.warn('QR canvas replacement fallback:', qrErr);
+              clonedQr.src = origQr.src;
+            }
           }
         }
       });
@@ -226,29 +422,35 @@ export default function SharedInvoice() {
     );
   }
 
+  // LOCKED STATE: Secure PIN Screen
   if (isLocked) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', justifyContent: 'center', alignItems: 'center', background: '#050505', color: '#ffffff', position: 'relative', overflow: 'hidden', padding: '20px' }}>
-        {/* Ambient Glows */}
-        <div style={{ position: 'absolute', top: '10%', left: '10%', width: '40vw', height: '40vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.06) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '30vw', height: '30vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.04) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }} />
+      <div className="invoice-page-wrap" style={{ display: 'flex', minHeight: '100vh', justifyContent: 'center', alignItems: 'center', background: '#050505', color: '#ffffff', position: 'relative', overflow: 'visible', padding: '20px', fontFamily: "'Clash Display', sans-serif" }}>
+        {/* Custom Kinetic Cursor */}
+        <div id="invoice-custom-cursor" ref={cursorRef} className="cursor" />
 
-        <form onSubmit={handleUnlock} style={{ position: 'relative', zIndex: 1, background: 'rgba(255, 255, 255, 0.02)', padding: 'clamp(35px, 6vw, 55px) clamp(20px, 5vw, 40px)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '2px solid #ebd73f', textAlign: 'center', maxWidth: '440px', width: '100%', backdropFilter: 'blur(20px)', boxShadow: '0 20px 50px rgba(0,0,0,0.85)' }}>
-          <div style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', width: '76px', height: '76px', borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', marginBottom: '22px', boxShadow: '0 0 30px rgba(235, 215, 63, 0.25)' }}>
-            <Lock size={36} color="#ebd73f" />
+        {/* Ambient Glows Layer - Clipped within container */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+          <div style={{ position: 'absolute', top: '10%', left: '10%', width: '40vw', height: '40vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.06) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%' }} />
+          <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '30vw', height: '30vw', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.04) 0%, rgba(5, 5, 5, 0) 70%)', borderRadius: '50%' }} />
+        </div>
+
+        <form onSubmit={handleUnlock} style={{ position: 'relative', zIndex: 1, background: 'rgba(255, 255, 255, 0.02)', padding: 'clamp(32px, 6vw, 55px) clamp(20px, 5vw, 40px)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '2px solid #ebd73f', textAlign: 'center', maxWidth: '440px', width: '100%', backdropFilter: 'blur(20px)', boxShadow: '0 20px 50px rgba(0,0,0,0.85)' }}>
+          <div style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(235, 215, 63, 0.1)', marginBottom: '20px', boxShadow: '0 0 30px rgba(235, 215, 63, 0.25)' }}>
+            <Lock size={34} color="#ebd73f" />
           </div>
           
-          <h2 style={{ marginBottom: '8px', fontSize: 'clamp(1.5rem, 5vw, 1.85rem)', fontFamily: "'Panchang', sans-serif", letterSpacing: '0.02em', color: '#ffffff' }}>Secure Invoice</h2>
-          <p style={{ color: '#888888', marginBottom: '32px', fontSize: 'clamp(0.85rem, 3vw, 0.92rem)', lineHeight: '1.6', fontFamily: "'Clash Display', sans-serif" }}>
+          <h2 style={{ marginBottom: '8px', fontSize: 'clamp(1.4rem, 5vw, 1.85rem)', fontFamily: "'Panchang', sans-serif", letterSpacing: '0.02em', color: '#ffffff' }}>Secure Invoice</h2>
+          <p style={{ color: '#888888', marginBottom: '28px', fontSize: 'clamp(0.85rem, 3vw, 0.92rem)', lineHeight: '1.6', fontFamily: "'Clash Display', sans-serif" }}>
             Enter the 4-digit PIN provided by Dripp Media to access your official invoice.
           </p>
           
           {/* PIN Input Boxes */}
-          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', marginBottom: '22px' }}>
+          <div style={{ display: 'flex', gap: 'clamp(8px, 2.8vw, 14px)', justifyContent: 'center', marginBottom: '22px' }}>
             {pin.map((digit, index) => (
               <div key={index} style={{
-                width: 'clamp(56px, 14vw, 68px)',
-                height: 'clamp(66px, 16vw, 78px)',
+                width: 'clamp(54px, 14vw, 68px)',
+                height: 'clamp(64px, 16vw, 78px)',
                 background: focusedIndex === index ? 'rgba(235, 215, 63, 0.06)' : 'rgba(255, 255, 255, 0.03)',
                 border: `2px solid ${focusedIndex === index ? '#ebd73f' : (digit ? 'rgba(235, 215, 63, 0.55)' : 'rgba(255, 255, 255, 0.1)')}`,
                 borderRadius: '16px',
@@ -265,6 +467,7 @@ export default function SharedInvoice() {
                   ref={pinRefs[index]}
                   type="tel"
                   inputMode="numeric"
+                  pattern="[0-9]*"
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handlePinChange(index, e.target.value)}
@@ -279,7 +482,7 @@ export default function SharedInvoice() {
                     border: 'none',
                     outline: 'none',
                     textAlign: 'center',
-                    fontSize: 'clamp(1.7rem, 5vw, 2.3rem)',
+                    fontSize: 'clamp(1.6rem, 5vw, 2.3rem)',
                     fontWeight: '700',
                     color: '#ebd73f',
                     caretColor: '#ebd73f',
@@ -312,27 +515,56 @@ export default function SharedInvoice() {
               borderRadius: '12px', 
               fontSize: '0.96rem', 
               fontWeight: '700', 
-              cursor: loading ? 'not-allowed' : 'pointer', 
               fontFamily: "'Clash Display', sans-serif", 
               letterSpacing: '0.04em', 
               textTransform: 'uppercase', 
               boxShadow: '0 8px 24px -5px rgba(235, 215, 63, 0.35)',
               transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)' 
             }}
-            onMouseEnter={(e) => { 
-              if (!loading) {
-                e.currentTarget.style.transform = 'translateY(-2px)'; 
-                e.currentTarget.style.boxShadow = '0 12px 28px -4px rgba(235, 215, 63, 0.45)'; 
-              }
-            }}
-            onMouseLeave={(e) => { 
-              e.currentTarget.style.transform = 'translateY(0)'; 
-              e.currentTarget.style.boxShadow = '0 8px 24px -5px rgba(235, 215, 63, 0.35)'; 
-            }}
           >
             {loading ? 'Decrypting Invoice...' : 'View Invoice'}
           </button>
         </form>
+
+        <style>{`
+          .cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ebd73f;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999999;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 14px rgba(235, 215, 63, 0.45);
+            transition: width 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), 
+                        height 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), 
+                        background-color 0.25s ease, 
+                        border-color 0.25s ease,
+                        box-shadow 0.25s ease,
+                        opacity 0.25s ease;
+          }
+          .cursor.active {
+            width: 55px;
+            height: 55px;
+            background-color: rgba(235, 215, 63, 0.16);
+            border-color: #ebd73f;
+            box-shadow: 0 0 25px rgba(235, 215, 63, 0.6);
+            backdrop-filter: blur(2px);
+          }
+          @media (pointer: fine) and (hover: hover) {
+            .invoice-page-wrap,
+            .invoice-page-wrap * {
+              cursor: none !important;
+            }
+          }
+          @media (pointer: coarse), (hover: none) {
+            .cursor { display: none !important; }
+            * { cursor: auto !important; }
+          }
+        `}</style>
       </div>
     );
   }
@@ -343,7 +575,7 @@ export default function SharedInvoice() {
       <div style={{ minHeight: '100vh', background: '#050505', color: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', textAlign: 'center', fontFamily: "'Clash Display', sans-serif" }}>
         <p style={{ color: '#ebd73f', fontSize: '1.2rem', marginBottom: '16px', fontFamily: "'Panchang', sans-serif" }}>Invoice Data Unavailable</p>
         <p style={{ color: '#888888', maxWidth: '420px', marginBottom: '24px' }}>Unable to display this invoice record. Please verify the link or contact Dripp Media.</p>
-        <button onClick={() => setIsLocked(true)} style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#ffffff', borderRadius: '10px', cursor: 'pointer', fontFamily: "'Clash Display', sans-serif" }}>
+        <button onClick={() => setIsLocked(true)} style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#ffffff', borderRadius: '10px', fontFamily: "'Clash Display', sans-serif" }}>
           Re-enter PIN
         </button>
       </div>
@@ -355,41 +587,119 @@ export default function SharedInvoice() {
   const items = Array.isArray(quoteData.items) ? quoteData.items : [];
   const currency = details?.currency || '₹';
   const client = quoteData.clientDetails || {};
-  const selectedBank = quoteData.selectedBank || null;
+  const selectedBank = quoteData.selectedBank || (isInvoice ? {
+    bankName: 'HDFC Bank',
+    accountName: 'Dripp Media',
+    accountNumber: '50200012345678',
+    ifsc: 'HDFC0001234',
+    upi: 'drippmedia@okhdfcbank'
+  } : null);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: '#ffffff', padding: 'clamp(20px, 5vw, 60px) clamp(15px, 4vw, 20px)', fontFamily: "'Clash Display', sans-serif", position: 'relative', overflowX: 'hidden' }}>
-      {/* Background Ambient Glows */}
-      <div style={{ position: 'absolute', top: '-15%', right: '-10%', width: 'clamp(400px, 80vw, 800px)', height: 'clamp(400px, 80vw, 800px)', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.08) 0%, rgba(5, 5, 5, 0) 60%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-15%', left: '-10%', width: 'clamp(300px, 60vw, 600px)', height: 'clamp(300px, 60vw, 600px)', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(5, 5, 5, 0) 60%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' }} />
+    <div className="invoice-page-wrap" style={{ 
+      minHeight: '100vh', 
+      background: '#050505', 
+      color: '#ffffff', 
+      padding: 'clamp(14px, 4vw, 48px) clamp(12px, 3.5vw, 24px)', 
+      fontFamily: "'Clash Display', sans-serif", 
+      position: 'relative', 
+      overflow: 'visible',
+      width: '100%'
+    }}>
+      
+      {/* Custom Kinetic Cursor */}
+      <div id="invoice-custom-cursor" ref={cursorRef} className="cursor" />
+
+      {/* Ambient Glows Layer - Clipped cleanly to prevent document scroll height inflation */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: 'clamp(350px, 70vw, 800px)', height: 'clamp(350px, 70vw, 800px)', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.08) 0%, rgba(5, 5, 5, 0) 60%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: 'clamp(300px, 60vw, 600px)', height: 'clamp(300px, 60vw, 600px)', background: 'radial-gradient(circle, rgba(235, 215, 63, 0.05) 0%, rgba(5, 5, 5, 0) 60%)', borderRadius: '50%' }} />
+      </div>
 
       <style>{`
+        /* Global & Document Scroll Normalization (Fixes scroll locking & provides smooth native momentum) */
+        html, body {
+          width: 100%;
+          min-height: 100%;
+          margin: 0;
+          padding: 0;
+          overflow-x: hidden;
+          overscroll-behavior-y: auto;
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        .cursor {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 20px;
+          height: 20px;
+          border: 2px solid #ebd73f;
+          border-radius: 50%;
+          pointer-events: none;
+          z-index: 9999999;
+          transform: translate(-50%, -50%);
+          box-shadow: 0 0 14px rgba(235, 215, 63, 0.45);
+          transition: width 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), 
+                      height 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), 
+                      background-color 0.25s ease, 
+                      border-color 0.25s ease,
+                      box-shadow 0.25s ease,
+                      opacity 0.25s ease;
+        }
+
+        .cursor.active {
+          width: 55px;
+          height: 55px;
+          background-color: rgba(235, 215, 63, 0.16);
+          border-color: #ebd73f;
+          box-shadow: 0 0 25px rgba(235, 215, 63, 0.6);
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
+        }
+
+        /* Desktop cursor concealment for kinetic custom cursor */
+        @media (pointer: fine) and (hover: hover) {
+          .invoice-page-wrap,
+          .invoice-page-wrap button,
+          .invoice-page-wrap a,
+          .invoice-page-wrap input {
+            cursor: none !important;
+          }
+        }
+
+        /* Touch / Mobile: completely disable custom cursor and restore native pointer behavior */
+        @media (pointer: coarse), (hover: none) {
+          .cursor {
+            display: none !important;
+          }
+          * {
+            cursor: auto !important;
+          }
+        }
+
+        /* Base Grid Structure */
         .invoice-grid {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 30px;
+          gap: 24px;
           position: relative;
           z-index: 1;
           max-width: 1200px;
           margin: 0 auto;
+          width: 100%;
         }
+
         .invoice-header {
           text-align: center;
-          padding: clamp(24px, 6vw, 48px) 0;
+          padding: clamp(20px, 4vw, 44px) 0 20px 0;
           border-bottom: 1px solid rgba(235, 215, 63, 0.2);
-          margin-bottom: 20px;
+          margin-bottom: 12px;
           position: relative;
+          width: 100%;
         }
-        .invoice-left {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        .invoice-right {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
+
+        /* --- DESKTOP (>= 950px) --- */
         @media (min-width: 950px) {
           .invoice-grid {
             grid-template-columns: 1fr 1.35fr;
@@ -400,33 +710,385 @@ export default function SharedInvoice() {
             grid-column: 1 / -1;
             padding: 36px 0;
           }
+          /* Natural Document Flow: No position:sticky to eliminate scroll locking & cutoff bugs */
           .invoice-left {
-            position: sticky;
-            top: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+          }
+          .invoice-right {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+          }
+          .desktop-only-action {
+            display: inline-flex !important;
           }
         }
+
+        /* --- MOBILE & TABLET (< 950px) OPTIMIZATION & PLACEMENTS --- */
+        @media (max-width: 949px) {
+          .invoice-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            width: 100%;
+          }
+          .invoice-header {
+            order: 1;
+            padding: 16px 0 16px 0;
+            margin-bottom: 4px;
+          }
+          
+          /* Dissolve desktop column wrappers so children flow sequentially */
+          .invoice-left {
+            display: contents;
+          }
+          .invoice-right {
+            display: contents;
+          }
+
+          /* Optimized Mobile Structural Hierarchy (Placements) */
+          .card-billed-to {
+            order: 2;
+          }
+          .card-billed-items {
+            order: 3;
+          }
+          .card-total-due {
+            order: 4;
+          }
+          .card-payment-details {
+            order: 5;
+          }
+          .card-notes {
+            order: 6;
+          }
+          .invoice-footer {
+            order: 7;
+          }
+
+          /* Mobile Action Bar */
+          .action-bar-container {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            padding: 14px 16px !important;
+            gap: 12px !important;
+            border-radius: 18px !important;
+          }
+          .action-bar-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+          }
+          .action-bar-btns-row {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+          }
+          .action-bar-btns-row button {
+            justify-content: center;
+            padding: 12px 14px !important;
+            font-size: 0.85rem !important;
+            min-height: 44px;
+          }
+          .desktop-only-action {
+            display: none !important;
+          }
+
+          /* Mobile Line Items */
+          .invoice-item-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 12px !important;
+          }
+          .invoice-item-bottom-bar {
+            display: flex !important;
+            width: 100% !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding-top: 10px !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+          }
+
+          /* Mobile Billed To Info Strip */
+          .billed-info-strip {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+          }
+          .billed-info-cell-invnum {
+            grid-column: span 2 !important;
+            text-align: left !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+          }
+
+          /* Mobile Footer Card */
+          .footer-pill {
+            border-radius: 20px !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 14px !important;
+            padding: 18px 20px !important;
+            width: 100% !important;
+            max-width: 420px !important;
+          }
+        }
+
         @media print {
-          body {
+          @page {
+            size: A4 portrait;
+            margin: 10mm 12mm;
+          }
+
+          /* Hide interactive screen UI */
+          .no-print,
+          #invoice-custom-cursor,
+          .cursor,
+          .action-bar-container,
+          .desktop-only-action,
+          .copy-action-btn,
+          button {
+            display: none !important;
+          }
+
+          /* Clean High-Contrast Print Canvas */
+          html, body {
             background: #ffffff !important;
+            color: #111111 !important;
+            width: 100% !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .invoice-page-wrap {
+            background: #ffffff !important;
+            color: #111111 !important;
+            padding: 0 !important;
+            min-height: auto !important;
+            overflow: visible !important;
+          }
+
+          /* Hide ambient blur layers */
+          .invoice-page-wrap > div:first-of-type {
+            display: none !important;
+          }
+
+          /* Balanced 2-Column Print Grid */
+          .invoice-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1.3fr !important;
+            gap: 20px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            page-break-inside: auto;
+          }
+
+          /* Print Header */
+          .invoice-header {
+            grid-column: 1 / -1 !important;
+            padding: 8px 0 12px 0 !important;
+            margin-bottom: 8px !important;
+            border-bottom: 2px solid #111111 !important;
+            text-align: center !important;
+          }
+
+          .invoice-header h1 {
+            color: #050505 !important;
+            font-size: 2.2rem !important;
+            text-shadow: none !important;
+            margin-bottom: 2px !important;
+            font-family: "'Panchang', sans-serif" !important;
+          }
+
+          .invoice-header p {
+            color: #555555 !important;
+            font-size: 0.8rem !important;
+            letter-spacing: 3px !important;
+            font-family: "'Clash Display', sans-serif" !important;
+          }
+
+          .invoice-left,
+          .invoice-right {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 14px !important;
+          }
+
+          /* Crisp Print Cards */
+          .card-billed-to,
+          .card-payment-details,
+          .card-notes,
+          .card-billed-items {
+            background: #ffffff !important;
+            border: 1px solid #d4d4d8 !important;
+            border-radius: 12px !important;
+            padding: 14px 16px !important;
+            color: #111111 !important;
+            box-shadow: none !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          .card-billed-to h2 {
+            color: #050505 !important;
+            font-size: 1.5rem !important;
+            font-family: "'Panchang', sans-serif" !important;
+          }
+
+          .card-billed-to p,
+          .card-notes p,
+          .card-payment-details p {
+            color: #111111 !important;
+          }
+
+          .card-billed-to p[style*="uppercase"],
+          .card-payment-details p[style*="uppercase"],
+          .card-notes p[style*="uppercase"] {
+            color: #000000 !important;
+            font-weight: 700 !important;
+          }
+
+          .card-billed-items h3 {
+            color: #050505 !important;
+            font-size: 1.15rem !important;
+            margin-bottom: 12px !important;
+            font-family: "'Panchang', sans-serif" !important;
+          }
+
+          /* Billed To Info Strip */
+          .billed-info-strip > div {
+            background: #f4f4f5 !important;
+            border: 1px solid #e4e4e7 !important;
+            border-radius: 8px !important;
+            padding: 8px 10px !important;
+          }
+
+          .billed-info-strip p {
+            color: #18181b !important;
+          }
+
+          .billed-info-strip p:first-child {
+            color: #71717a !important;
+          }
+
+          .billed-info-cell-invnum p:last-child {
+            color: #050505 !important;
+          }
+
+          /* Total Due Card */
+          .card-total-due {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            margin-top: 0 !important;
+          }
+
+          .card-total-due > div {
+            background: #f4f4f5 !important;
+            border: 2px solid #000000 !important;
+            border-radius: 14px !important;
+            padding: 18px 20px !important;
+            box-shadow: none !important;
+          }
+
+          .card-total-due span {
+            text-shadow: none !important;
+          }
+
+          .card-total-due span:nth-child(1),
+          .card-total-due span:nth-child(2) {
             color: #000000 !important;
           }
-          .no-print {
-            display: none !important;
+
+          .card-total-due span:nth-child(3) {
+            color: #666666 !important;
+          }
+
+          /* Billed Item Rows */
+          .invoice-item-row {
+            background: #fafafa !important;
+            border: 1px solid #e4e4e7 !important;
+            border-radius: 10px !important;
+            padding: 10px 14px !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          .invoice-item-row h4 {
+            color: #050505 !important;
+            font-size: 0.95rem !important;
+          }
+
+          .invoice-item-bottom-bar > div:first-child {
+            background: #f4f4f5 !important;
+            border: 1px solid #e4e4e7 !important;
+            color: #18181b !important;
+          }
+
+          .invoice-item-bottom-bar > div:first-child strong {
+            color: #000000 !important;
+          }
+
+          .invoice-item-bottom-bar > div:last-child span {
+            text-shadow: none !important;
+          }
+
+          .invoice-item-bottom-bar > div:last-child span:nth-child(2) {
+            color: #000000 !important;
+          }
+
+          .invoice-item-bottom-bar > div:last-child span:nth-child(3) {
+            color: #666666 !important;
+          }
+
+          /* Print QR Code */
+          .invoice-qr-box {
+            border: 1px solid #d4d4d8 !important;
+            box-shadow: none !important;
+            padding: 8px !important;
+          }
+
+          /* Print Footer */
+          .invoice-footer {
+            grid-column: 1 / -1 !important;
+            padding-top: 10px !important;
+            margin-top: 4px !important;
+          }
+
+          .footer-pill {
+            background: #f4f4f5 !important;
+            border: 1px solid #e4e4e7 !important;
+            color: #18181b !important;
+            box-shadow: none !important;
+            padding: 8px 16px !important;
+          }
+
+          .footer-pill a,
+          .footer-pill span {
+            color: #18181b !important;
           }
         }
       `}</style>
 
-      {/* Modern, Minimal Client Action Bar */}
-      <div className="no-print" style={{
+      {/* Modern, Minimal & Mobile-Optimized Client Action Bar */}
+      <div className="no-print action-bar-container" style={{
         maxWidth: '1200px',
-        margin: '0 auto 24px auto',
+        margin: '0 auto 20px auto',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: '12px',
         padding: '12px 20px',
-        background: 'rgba(18, 18, 22, 0.85)',
+        background: 'rgba(18, 18, 22, 0.92)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         borderRadius: '16px',
         backdropFilter: 'blur(16px)',
@@ -434,46 +1096,50 @@ export default function SharedInvoice() {
         position: 'relative',
         zIndex: 10
       }}>
-        {/* Left: Document Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '24px',
-            height: '24px',
-            borderRadius: '6px',
-            background: 'rgba(235, 215, 63, 0.1)',
-            border: '1px solid rgba(235, 215, 63, 0.25)',
-            flexShrink: 0
-          }}>
-            <FileText size={13} color="#ebd73f" />
+        {/* Document Badge */}
+        <div className="action-bar-top-row" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '26px',
+              height: '26px',
+              borderRadius: '7px',
+              background: 'rgba(235, 215, 63, 0.12)',
+              border: '1px solid rgba(235, 215, 63, 0.3)',
+              flexShrink: 0
+            }}>
+              <FileText size={14} color="#ebd73f" />
+            </div>
+            <span style={{
+              fontFamily: "'Panchang', sans-serif",
+              fontSize: 'clamp(0.76rem, 2.8vw, 0.82rem)',
+              fontWeight: 700,
+              color: '#ffffff',
+              letterSpacing: '0.4px'
+            }}>
+              {isInvoice ? 'Official Invoice' : 'Official Proposal'}
+            </span>
           </div>
-          <span style={{
-            fontFamily: "'Panchang', sans-serif",
-            fontSize: '0.78rem',
-            fontWeight: 700,
-            color: '#ffffff',
-            letterSpacing: '0.5px'
-          }}>
-            {isInvoice ? 'Official Invoice' : 'Official Proposal'}
-          </span>
+
           <span style={{
             fontFamily: "'Clash Display', sans-serif",
-            fontSize: '0.8rem',
+            fontSize: '0.82rem',
             color: '#ebd73f',
             background: 'rgba(235, 215, 63, 0.08)',
-            border: '1px solid rgba(235, 215, 63, 0.25)',
-            padding: '2px 8px',
+            border: '1px solid rgba(235, 215, 63, 0.28)',
+            padding: '3px 10px',
             borderRadius: '6px',
-            fontWeight: 600
+            fontWeight: 600,
+            letterSpacing: '0.5px'
           }}>
             #{details?.number || '001'}
           </span>
         </div>
 
-        {/* Right: Modern & Minimal Download Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        {/* Action Buttons */}
+        <div className="action-bar-btns-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {/* Download PDF button */}
           <button
             type="button"
@@ -483,14 +1149,13 @@ export default function SharedInvoice() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '7px',
-              padding: '8px 16px',
+              padding: '9px 18px',
               background: downloadSuccess === 'pdf' ? 'rgba(235, 215, 63, 0.22)' : 'rgba(235, 215, 63, 0.12)',
               border: `1px solid ${downloadSuccess === 'pdf' ? 'rgba(235, 215, 63, 0.6)' : 'rgba(235, 215, 63, 0.35)'}`,
               borderRadius: '10px',
               color: '#ebd73f',
-              fontSize: '0.82rem',
+              fontSize: '0.84rem',
               fontWeight: '600',
-              cursor: isDownloadingPdf ? 'not-allowed' : 'pointer',
               fontFamily: "'Clash Display', sans-serif",
               transition: 'all 0.2s ease',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
@@ -513,7 +1178,7 @@ export default function SharedInvoice() {
             {isDownloadingPdf ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                <span>Generating PDF...</span>
+                <span>Generating...</span>
               </>
             ) : downloadSuccess === 'pdf' ? (
               <>
@@ -537,14 +1202,13 @@ export default function SharedInvoice() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '7px',
-              padding: '8px 16px',
+              padding: '9px 18px',
               background: downloadSuccess === 'image' ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255, 255, 255, 0.05)',
               border: `1px solid ${downloadSuccess === 'image' ? 'rgba(235, 215, 63, 0.5)' : 'rgba(255, 255, 255, 0.14)'}`,
               borderRadius: '10px',
               color: downloadSuccess === 'image' ? '#ebd73f' : '#ffffff',
-              fontSize: '0.82rem',
+              fontSize: '0.84rem',
               fontWeight: '600',
-              cursor: isDownloadingImage ? 'not-allowed' : 'pointer',
               fontFamily: "'Clash Display', sans-serif",
               transition: 'all 0.2s ease'
             }}
@@ -583,32 +1247,31 @@ export default function SharedInvoice() {
             )}
           </button>
 
-          {/* Print button */}
+          {/* Print button (desktop only) */}
           <button
             type="button"
+            className="desktop-only-action"
             onClick={() => window.print()}
             style={{
-              display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '8px 14px',
+              padding: '9px 15px',
               background: 'transparent',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '10px',
               color: '#888888',
-              fontSize: '0.82rem',
+              fontSize: '0.84rem',
               fontWeight: '500',
-              cursor: 'pointer',
               fontFamily: "'Clash Display', sans-serif",
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={e => {
               e.currentTarget.style.color = '#ffffff';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
             }}
             onMouseLeave={e => {
               e.currentTarget.style.color = '#888888';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
             }}
           >
             <Printer size={14} />
@@ -621,67 +1284,142 @@ export default function SharedInvoice() {
         
         {/* Cover Header Section */}
         <div className="invoice-header">
-          <h1 style={{ fontSize: 'clamp(2.4rem, 9vw, 3.8rem)', color: '#ebd73f', margin: '0 0 8px 0', letterSpacing: '-0.02em', fontWeight: '900', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 25px rgba(235, 215, 63, 0.35)', wordBreak: 'break-word' }}>
+          <h1 style={{ 
+            fontSize: 'clamp(2.1rem, 8vw, 3.8rem)', 
+            color: '#ebd73f', 
+            margin: '0 0 8px 0', 
+            letterSpacing: '-0.02em', 
+            fontWeight: '900', 
+            fontFamily: "'Panchang', sans-serif", 
+            textShadow: '0 0 25px rgba(235, 215, 63, 0.35)', 
+            wordBreak: 'break-word',
+            lineHeight: '1.15'
+          }}>
             DRIPP MEDIA
           </h1>
-          <p style={{ fontSize: 'clamp(0.85rem, 3.5vw, 1.1rem)', color: '#a1a1aa', margin: 0, textTransform: 'uppercase', letterSpacing: '3px', fontWeight: '600' }}>
+          <p style={{ 
+            fontSize: 'clamp(0.8rem, 3.2vw, 1.05rem)', 
+            color: '#a1a1aa', 
+            margin: 0, 
+            textTransform: 'uppercase', 
+            letterSpacing: 'clamp(2px, 0.8vw, 3.5px)', 
+            fontWeight: '600',
+            fontFamily: "'Clash Display', sans-serif"
+          }}>
             {isInvoice ? 'TAX INVOICE' : 'Proposal & Investment Overview'}
           </p>
         </div>
 
-        {/* LEFT PANEL */}
+        {/* LEFT PANEL (On mobile dissolved via display:contents so children reorder logically) */}
         <div className="invoice-left">
-          {/* Client Details */}
-          <div style={{ background: 'rgba(255, 255, 255, 0.025)', border: '1px solid rgba(255, 255, 255, 0.07)', padding: 'clamp(20px, 5vw, 36px)', borderRadius: '22px', backdropFilter: 'blur(10px)', width: '100%', boxSizing: 'border-box' }}>
-            <p style={{ fontSize: '0.75rem', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '14px', fontWeight: '600' }}>Billed To</p>
-            <h2 style={{ fontSize: 'clamp(1.6rem, 6vw, 2.2rem)', color: '#ffffff', margin: '0 0 8px 0', fontFamily: "'Panchang', sans-serif", wordBreak: 'break-word' }}>
+          
+          {/* Card: Client Details / Billed To */}
+          <div className="card-billed-to" style={{ 
+            background: 'rgba(255, 255, 255, 0.025)', 
+            border: '1px solid rgba(255, 255, 255, 0.07)', 
+            padding: 'clamp(20px, 4.5vw, 34px)', 
+            borderRadius: '22px', 
+            backdropFilter: 'blur(10px)', 
+            width: '100%', 
+            boxSizing: 'border-box' 
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <p style={{ fontSize: '0.74rem', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', margin: 0, fontWeight: '600' }}>
+                Billed To
+              </p>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', color: '#71717a' }}>
+                <ShieldCheck size={13} color="#ebd73f" /> Verified Client
+              </span>
+            </div>
+
+            <h2 style={{ 
+              fontSize: 'clamp(1.5rem, 5.5vw, 2.2rem)', 
+              color: '#ffffff', 
+              margin: '0 0 6px 0', 
+              fontFamily: "'Panchang', sans-serif", 
+              wordBreak: 'break-word',
+              lineHeight: '1.25'
+            }}>
               {client.brandName || client.name || 'Client'}
             </h2>
+
             {client.brandName && client.name && (
-              <p style={{ fontSize: '0.98rem', color: '#cccccc', margin: '0 0 6px 0' }}>{client.name}</p>
+              <p style={{ fontSize: '0.98rem', color: '#cccccc', margin: '0 0 6px 0', fontFamily: "'Clash Display', sans-serif" }}>
+                {client.name}
+              </p>
             )}
             {client.email && (
-              <p style={{ fontSize: '0.88rem', color: '#888888', margin: '0 0 6px 0', wordBreak: 'break-all' }}>{client.email}</p>
+              <p style={{ fontSize: '0.88rem', color: '#888888', margin: '0 0 6px 0', wordBreak: 'break-all', fontFamily: "'Clash Display', sans-serif" }}>
+                {client.email}
+              </p>
             )}
             {client.phone && (
-              <p style={{ fontSize: '0.88rem', color: '#888888', margin: '0 0 6px 0' }}>{client.phone}</p>
+              <p style={{ fontSize: '0.88rem', color: '#888888', margin: '0 0 6px 0', fontFamily: "'Clash Display', sans-serif" }}>
+                {client.phone}
+              </p>
             )}
             {client.gst && (
-              <p style={{ fontSize: '0.86rem', color: '#ebd73f', margin: '4px 0 16px 0', fontWeight: '500' }}>GSTIN: {client.gst}</p>
+              <p style={{ fontSize: '0.86rem', color: '#ebd73f', margin: '4px 0 12px 0', fontWeight: '500', fontFamily: "'Clash Display', sans-serif" }}>
+                GSTIN: {client.gst}
+              </p>
             )}
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '18px', textAlign: 'left', marginTop: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                 <div style={{ flex: '1 1 auto' }}>
-                    <p style={{ fontSize: '0.72rem', color: '#71717a', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Invoice Date</p>
+            {/* Meta Information Strip */}
+            <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '16px', marginTop: '14px' }}>
+              <div className="billed-info-strip" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                 <div className="interactive-cell" style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)', flex: '1 1 auto' }}>
+                    <p style={{ fontSize: '0.7rem', color: '#71717a', margin: '0 0 3px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Invoice Date</p>
                     <p style={{ fontSize: '0.92rem', color: '#e4e4e7', margin: 0, fontWeight: '500' }}>{details?.date || client?.date || 'N/A'}</p>
                  </div>
                  {details?.dueDate && (
-                   <div style={{ flex: '1 1 auto' }}>
-                      <p style={{ fontSize: '0.72rem', color: '#71717a', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Due Date</p>
-                      <p style={{ fontSize: '0.92rem', color: '#e4e4e7', margin: 0, fontWeight: '500' }}>{details.dueDate}</p>
+                   <div className="interactive-cell" style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)', flex: '1 1 auto' }}>
+                      <p style={{ fontSize: '0.7rem', color: '#71717a', margin: '0 0 3px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Due Date</p>
+                      {details.dueDate.toLowerCase().includes('receipt') || details.dueDate.toLowerCase().includes('urgent') ? (
+                        <span style={{
+                          display: 'inline-block',
+                          color: '#ebd73f',
+                          background: 'rgba(235, 215, 63, 0.1)',
+                          border: '1px solid rgba(235, 215, 63, 0.3)',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontSize: '0.82rem',
+                          fontWeight: '700',
+                          letterSpacing: '0.3px',
+                          fontFamily: "'Clash Display', sans-serif"
+                        }}>
+                          {details.dueDate}
+                        </span>
+                      ) : (
+                        <p style={{ fontSize: '0.92rem', color: '#e4e4e7', margin: 0, fontWeight: '500' }}>{details.dueDate}</p>
+                      )}
                    </div>
                  )}
-                 <div style={{ textAlign: 'right', flex: '1 1 auto' }}>
-                    <p style={{ fontSize: '0.72rem', color: '#71717a', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Invoice #</p>
-                    <p style={{ fontSize: '0.95rem', color: '#ebd73f', margin: 0, fontWeight: '700' }}>{details?.number || '001'}</p>
+                 <div className="billed-info-cell-invnum interactive-cell" style={{ background: 'rgba(235, 215, 63, 0.04)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.16)', textAlign: 'right', flex: '1 1 auto' }}>
+                    <p style={{ fontSize: '0.7rem', color: '#a1a1aa', margin: '0 0 3px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Invoice #</p>
+                    <p style={{ fontSize: '0.95rem', color: '#ebd73f', margin: 0, fontWeight: '700', fontFamily: "'Panchang', sans-serif" }}>{details?.number || '001'}</p>
                  </div>
               </div>
             </div>
           </div>
 
-          {/* Notes / Message Section */}
-          {details?.notes && (
-            <div style={{ background: 'rgba(235, 215, 63, 0.03)', padding: '24px', borderRadius: '20px', borderLeft: '3px solid #ebd73f', border: '1px solid rgba(235, 215, 63, 0.12)' }}>
-              <p style={{ fontSize: '0.72rem', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px', fontWeight: '600' }}>Notes</p>
-              <p style={{ margin: 0, lineHeight: '1.6', color: '#d4d4d8', fontSize: '0.92rem', whiteSpace: 'pre-wrap' }}>{details.notes}</p>
-            </div>
-          )}
-          
-          {/* Bank / Payment Details Section */}
+          {/* Card: Bank / Payment Details */}
           {selectedBank && (
-            <div style={{ background: 'rgba(255, 255, 255, 0.025)', border: '1px solid rgba(255, 255, 255, 0.07)', padding: 'clamp(20px, 5vw, 36px)', borderRadius: '22px', backdropFilter: 'blur(10px)', width: '100%', boxSizing: 'border-box' }}>
-                <p style={{ fontSize: '0.75rem', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '16px', fontWeight: '600' }}>Payment Details</p>
+            <div className="card-payment-details" style={{ 
+              background: 'rgba(255, 255, 255, 0.025)', 
+              border: '1px solid rgba(255, 255, 255, 0.07)', 
+              padding: 'clamp(20px, 4.5vw, 34px)', 
+              borderRadius: '22px', 
+              backdropFilter: 'blur(10px)', 
+              width: '100%', 
+              boxSizing: 'border-box' 
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <p style={{ fontSize: '0.74rem', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', margin: 0, fontWeight: '600' }}>
+                    Payment Details
+                  </p>
+                  <span style={{ fontSize: '0.72rem', color: '#888888' }}>Direct Wire & UPI</span>
+                </div>
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     {selectedBank.details && !selectedBank.bankName ? (
                         <div style={{ color: '#ffffff', fontSize: '0.95rem', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
@@ -690,87 +1428,249 @@ export default function SharedInvoice() {
                     ) : (
                         <>
                             {selectedBank.bankName && (
-                                <div>
-                                    <p style={{ fontSize: '0.72rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 3px 0' }}>Bank Name</p>
+                                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                                    <p style={{ fontSize: '0.7rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 2px 0' }}>Bank Name</p>
                                     <p style={{ fontSize: '0.95rem', color: '#ffffff', margin: 0, fontWeight: '600' }}>{selectedBank.bankName}</p>
                                 </div>
                             )}
                             {selectedBank.accountName && (
-                                <div>
-                                    <p style={{ fontSize: '0.72rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 3px 0' }}>Beneficiary / Account Name</p>
+                                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                                    <p style={{ fontSize: '0.7rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 2px 0' }}>Beneficiary / Account Name</p>
                                     <p style={{ fontSize: '0.95rem', color: '#ffffff', margin: 0, fontWeight: '600' }}>{selectedBank.accountName}</p>
                                 </div>
                             )}
                             {selectedBank.accountNumber && (
-                                <div>
-                                    <p style={{ fontSize: '0.72rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 3px 0' }}>Account Number</p>
-                                    <p style={{ fontSize: '0.95rem', color: '#ebd73f', margin: 0, fontWeight: '700', letterSpacing: '0.05em' }}>{selectedBank.accountNumber}</p>
+                                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                      <p style={{ fontSize: '0.7rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 2px 0' }}>Account Number</p>
+                                      <p style={{ fontSize: '0.98rem', color: '#ebd73f', margin: 0, fontWeight: '700', letterSpacing: '0.05em' }}>{selectedBank.accountNumber}</p>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="copy-action-btn"
+                                      onClick={() => handleCopy(selectedBank.accountNumber, 'acc')}
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '5px',
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        background: copiedField === 'acc' ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255, 255, 255, 0.06)',
+                                        border: `1px solid ${copiedField === 'acc' ? 'rgba(235, 215, 63, 0.5)' : 'rgba(255, 255, 255, 0.12)'}`,
+                                        color: copiedField === 'acc' ? '#ebd73f' : '#cccccc',
+                                        fontSize: '0.75rem',
+                                        fontFamily: "'Clash Display', sans-serif",
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                    >
+                                      {copiedField === 'acc' ? <Check size={12} color="#ebd73f" /> : <Copy size={12} />}
+                                      <span>{copiedField === 'acc' ? 'Copied' : 'Copy'}</span>
+                                    </button>
                                 </div>
                             )}
                             {selectedBank.ifsc && (
-                                <div>
-                                    <p style={{ fontSize: '0.72rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 3px 0' }}>IFSC / Routing</p>
-                                    <p style={{ fontSize: '0.95rem', color: '#ffffff', margin: 0, fontWeight: '600' }}>{selectedBank.ifsc}</p>
+                                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                      <p style={{ fontSize: '0.7rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 2px 0' }}>IFSC / Routing</p>
+                                      <p style={{ fontSize: '0.95rem', color: '#ffffff', margin: 0, fontWeight: '600' }}>{selectedBank.ifsc}</p>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="copy-action-btn"
+                                      onClick={() => handleCopy(selectedBank.ifsc, 'ifsc')}
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '5px',
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        background: copiedField === 'ifsc' ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255, 255, 255, 0.06)',
+                                        border: `1px solid ${copiedField === 'ifsc' ? 'rgba(235, 215, 63, 0.5)' : 'rgba(255, 255, 255, 0.12)'}`,
+                                        color: copiedField === 'ifsc' ? '#ebd73f' : '#cccccc',
+                                        fontSize: '0.75rem',
+                                        fontFamily: "'Clash Display', sans-serif",
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                    >
+                                      {copiedField === 'ifsc' ? <Check size={12} color="#ebd73f" /> : <Copy size={12} />}
+                                      <span>{copiedField === 'ifsc' ? 'Copied' : 'Copy'}</span>
+                                    </button>
                                 </div>
                             )}
                             {selectedBank.swift && (
-                                <div>
-                                    <p style={{ fontSize: '0.72rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 3px 0' }}>SWIFT Code</p>
+                                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                                    <p style={{ fontSize: '0.7rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 2px 0' }}>SWIFT Code</p>
                                     <p style={{ fontSize: '0.95rem', color: '#ffffff', margin: 0, fontWeight: '600' }}>{selectedBank.swift}</p>
                                 </div>
                             )}
                             {selectedBank.upi && (
-                                <div>
-                                    <p style={{ fontSize: '0.72rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 3px 0' }}>UPI ID</p>
-                                    <p style={{ fontSize: '0.95rem', color: '#ebd73f', margin: 0, fontWeight: '600' }}>{selectedBank.upi}</p>
+                                <div style={{ background: 'rgba(235, 215, 63, 0.04)', padding: '12px 14px', borderRadius: '12px', border: '1px solid rgba(235, 215, 63, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                      <p style={{ fontSize: '0.7rem', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 2px 0' }}>UPI ID</p>
+                                      <p style={{ fontSize: '0.98rem', color: '#ebd73f', margin: 0, fontWeight: '600' }}>{selectedBank.upi}</p>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="copy-action-btn"
+                                      onClick={() => handleCopy(selectedBank.upi, 'upi')}
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '5px',
+                                        padding: '7px 14px',
+                                        borderRadius: '8px',
+                                        background: copiedField === 'upi' ? 'rgba(235, 215, 63, 0.3)' : '#ebd73f',
+                                        border: 'none',
+                                        color: '#050505',
+                                        fontSize: '0.78rem',
+                                        fontWeight: '700',
+                                        fontFamily: "'Clash Display', sans-serif",
+                                        boxShadow: '0 2px 10px rgba(235, 215, 63, 0.25)',
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                    >
+                                      {copiedField === 'upi' ? <Check size={12} color="#050505" /> : <Copy size={12} />}
+                                      <span>{copiedField === 'upi' ? 'Copied' : 'Copy UPI'}</span>
+                                    </button>
                                 </div>
                             )}
                         </>
                     )}
                     
-                    {selectedBank.qrCode && (
-                        <div style={{ marginTop: '12px', textAlign: 'center', paddingTop: '14px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                            <p style={{ fontSize: '0.72rem', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 10px 0' }}>Scan to Pay with UPI</p>
-                            <div style={{ background: '#ffffff', padding: '10px', borderRadius: '14px', display: 'inline-block', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
-                                <img src={selectedBank.qrCode} alt="Payment QR Code" style={{ width: '140px', height: '140px', objectFit: 'contain', display: 'block' }} />
+                    {(qrDataUrl || selectedBank.qrCode || selectedBank.upi) && (
+                        <div className="card-qr-section" style={{ marginTop: '8px', textAlign: 'center', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                            <p style={{ fontSize: '0.72rem', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '1.2px', margin: '0 0 12px 0', fontFamily: "'Clash Display', sans-serif" }}>
+                              Scan to Pay with Any UPI App
+                            </p>
+                            <div className="invoice-qr-box" style={{ background: '#ffffff', padding: '12px', borderRadius: '16px', display: 'inline-block', boxShadow: '0 10px 30px rgba(0,0,0,0.6)' }}>
+                                <img 
+                                  id="invoice-qr-img"
+                                  crossOrigin={(qrDataUrl || selectedBank.qrCode)?.startsWith('data:') ? undefined : 'anonymous'}
+                                  src={qrDataUrl || selectedBank.qrCode} 
+                                  alt="Payment QR Code" 
+                                  style={{ width: '140px', height: '140px', objectFit: 'contain', display: 'block' }} 
+                                />
                             </div>
                         </div>
                     )}
                 </div>
             </div>
           )}
+
+          {/* Card: Notes / Payment Terms */}
+          {details?.notes && (
+            <div className="card-notes" style={{ 
+              background: 'rgba(235, 215, 63, 0.03)', 
+              padding: 'clamp(18px, 4vw, 24px)', 
+              borderRadius: '20px', 
+              borderLeft: '3px solid #ebd73f', 
+              border: '1px solid rgba(235, 215, 63, 0.14)',
+              boxSizing: 'border-box',
+              width: '100%'
+            }}>
+              <p style={{ fontSize: '0.72rem', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px', fontWeight: '600' }}>
+                Notes & Terms
+              </p>
+              <p style={{ margin: 0, lineHeight: '1.6', color: '#d4d4d8', fontSize: '0.92rem', whiteSpace: 'pre-wrap' }}>
+                {details.notes}
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* RIGHT PANEL */}
+        {/* RIGHT PANEL (Services & Total) */}
         <div className="invoice-right">
-          {/* Services / Line Items Section */}
-          <div>
-            <h3 style={{ fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', color: '#ebd73f', margin: '0 0 18px 0', fontFamily: "'Panchang', sans-serif", textAlign: 'left' }}>
+          
+          {/* Card: Billed Items / Services */}
+          <div className="card-billed-items" style={{ width: '100%' }}>
+            <h3 style={{ 
+              fontSize: 'clamp(1.15rem, 3.8vw, 1.45rem)', 
+              color: '#ebd73f', 
+              margin: '0 0 16px 0', 
+              fontFamily: "'Panchang', sans-serif", 
+              textAlign: 'left',
+              letterSpacing: '0.3px'
+            }}>
               {isInvoice ? 'Billed Items' : 'Proposed Services'}
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', width: '100%' }}>
               {items.map((item, i) => {
                 const qty = parseFloat(item.qty || 0);
                 const rate = parseFloat(item.rate || 0);
                 const rowTotal = qty * rate;
+                const { whole: rateWhole, decimal: rateDecimal } = formatCurrencyParts(rate);
+                const { whole: rowWhole, decimal: rowDecimal } = formatCurrencyParts(rowTotal);
                 return (
-                  <div key={i} style={{ background: 'rgba(255, 255, 255, 0.025)', border: '1px solid rgba(235, 215, 63, 0.16)', borderRadius: '16px', padding: 'clamp(16px, 3vw, 22px)', display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center' }}>
-                     <div style={{ flex: '1 1 220px' }}>
-                        <h4 style={{ fontSize: 'clamp(0.98rem, 3.5vw, 1.15rem)', color: '#ffffff', margin: '0 0 6px 0', fontFamily: "'Panchang', sans-serif" }}>
+                  <div key={i} className="invoice-item-row" style={{ 
+                    background: 'rgba(255, 255, 255, 0.025)', 
+                    border: '1px solid rgba(235, 215, 63, 0.16)', 
+                    borderRadius: '18px', 
+                    padding: 'clamp(16px, 3.5vw, 22px)', 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    gap: '16px',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}>
+                     <div style={{ flex: '1 1 auto', width: '100%' }}>
+                        <h4 style={{ 
+                          fontSize: 'clamp(0.96rem, 3.5vw, 1.15rem)', 
+                          color: '#ffffff', 
+                          margin: '0 0 6px 0', 
+                          fontFamily: "'Panchang', sans-serif",
+                          lineHeight: '1.35'
+                        }}>
                           {item.desc || 'Service Item'}
                         </h4>
                         {item.details && (
-                          <p style={{ fontSize: '0.88rem', color: '#a1a1aa', margin: '0 0 8px 0', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                          <p style={{ 
+                            fontSize: '0.88rem', 
+                            color: '#a1a1aa', 
+                            margin: '0 0 8px 0', 
+                            whiteSpace: 'pre-wrap', 
+                            lineHeight: '1.5' 
+                          }}>
                             {item.details}
                           </p>
                         )}
-                        <p style={{ fontSize: '0.8rem', color: '#71717a', margin: 0 }}>
-                          Qty: {item.qty} &nbsp;|&nbsp; Rate: {currency}{rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
                      </div>
-                     <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: '700', color: '#ebd73f', textShadow: '0 0 10px rgba(235, 215, 63, 0.25)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#71717a', fontSize: '0.9rem', fontWeight: 'normal' }}>=</span> 
-                        {currency}{rowTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+
+                     <div className="invoice-item-bottom-bar" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
+                        <div style={{
+                          fontSize: 'clamp(0.78rem, 2.6vw, 0.82rem)',
+                          color: '#888888',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          padding: '5px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255, 255, 255, 0.06)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}>
+                          <span>Qty: <strong style={{ color: '#ffffff' }}>{item.qty}</strong></span>
+                          <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+                          <span>
+                            Rate: <strong style={{ color: '#ffffff' }}>{currency}{rateWhole}</strong>
+                            <span style={{ color: '#71717a', fontSize: '0.86em', fontWeight: '500' }}>.{rateDecimal}</span>
+                          </span>
+                        </div>
+
+                        <div style={{ 
+                          fontSize: 'clamp(1.1rem, 3.8vw, 1.35rem)', 
+                          fontWeight: '700', 
+                          color: '#ebd73f', 
+                          display: 'inline-flex', 
+                          alignItems: 'baseline', 
+                          gap: '2px',
+                          fontFamily: "'Panchang', sans-serif",
+                          flexShrink: 0
+                        }}>
+                          <span style={{ color: '#71717a', fontSize: '0.88rem', fontWeight: 'normal', fontFamily: "'Clash Display', sans-serif", marginRight: '3px' }}>=</span> 
+                          <span style={{ color: '#ebd73f', textShadow: '0 0 12px rgba(235, 215, 63, 0.3)' }}>{currency}{rowWhole}</span>
+                          <span style={{ color: '#71717a', fontSize: '0.68em', fontWeight: '600', fontFamily: "'Clash Display', sans-serif", letterSpacing: '0.5px' }}>.{rowDecimal}</span>
+                        </div>
                      </div>
                   </div>
                 );
@@ -778,22 +1678,86 @@ export default function SharedInvoice() {
             </div>
           </div>
 
-          {/* Total Due Section */}
-          <div style={{ marginTop: '16px' }}>
-            <div style={{ background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '22px', padding: 'clamp(36px, 5vw, 50px) clamp(20px, 4vw, 36px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', width: '100%', boxSizing: 'border-box' }}>
-                <p style={{ fontSize: '0.85rem', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 10px 0', textAlign: 'center', fontWeight: '600' }}>
-                  {isInvoice ? 'Total Due' : 'Total Investment'}
-                </p>
-                
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', textShadow: '0 0 25px rgba(235, 215, 63, 0.45)', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
-                    <span style={{ fontSize: 'clamp(1.4rem, 4vw, 2rem)', color: '#ebd73f', fontWeight: '600' }}>{currency}</span>
-                    <span style={{ fontSize: 'clamp(2.2rem, 7vw, 3.6rem)', color: '#ebd73f', fontWeight: '900', fontFamily: "'Panchang', sans-serif", letterSpacing: '-0.02em', wordBreak: 'break-word', textAlign: 'center' }}>
-                      {parseFloat(quoteData.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
+          {/* Card: Total Due / Investment */}
+          <div className="card-total-due" style={{ width: '100%', marginTop: '6px' }}>
+            <div style={{ 
+              background: 'linear-gradient(180deg, rgba(235, 215, 63, 0.08) 0%, rgba(235, 215, 63, 0.02) 100%)', 
+              border: '1px solid rgba(235, 215, 63, 0.35)', 
+              borderRadius: '24px', 
+              padding: 'clamp(32px, 6vw, 48px) clamp(20px, 4vw, 36px)', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              boxShadow: '0 16px 45px rgba(0,0,0,0.7), 0 0 30px rgba(235, 215, 63, 0.08)', 
+              width: '100%', 
+              boxSizing: 'border-box',
+              position: 'relative'
+            }}>
+                <div style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  background: 'rgba(235, 215, 63, 0.1)', 
+                  border: '1px solid rgba(235, 215, 63, 0.25)', 
+                  padding: '4px 12px', 
+                  borderRadius: '100px', 
+                  marginBottom: '14px' 
+                }}>
+                  <Sparkles size={12} color="#ebd73f" />
+                  <span style={{ 
+                    fontSize: '0.76rem', 
+                    color: '#ebd73f', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '2px', 
+                    fontWeight: '700' 
+                  }}>
+                    {isInvoice ? 'Total Due' : 'Total Investment'}
+                  </span>
                 </div>
+                
+                {(() => {
+                  const { whole: totalWhole, decimal: totalDecimal } = formatCurrencyParts(quoteData.total);
+                  return (
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'baseline', 
+                      gap: '4px', 
+                      flexWrap: 'wrap', 
+                      justifyContent: 'center', 
+                      width: '100%',
+                      lineHeight: '1.1'
+                    }}>
+                        <span style={{ fontSize: 'clamp(1.5rem, 5vw, 2.2rem)', color: '#ebd73f', fontWeight: '600', textShadow: '0 0 25px rgba(235, 215, 63, 0.45)' }}>{currency}</span>
+                        <span style={{ 
+                          fontSize: 'clamp(2.2rem, 7.5vw, 3.6rem)', 
+                          color: '#ebd73f', 
+                          fontWeight: '900', 
+                          fontFamily: "'Panchang', sans-serif", 
+                          letterSpacing: '-0.02em', 
+                          wordBreak: 'break-word', 
+                          textAlign: 'center',
+                          textShadow: '0 0 30px rgba(235, 215, 63, 0.5)'
+                        }}>
+                          {totalWhole}
+                        </span>
+                        <span style={{ 
+                          fontSize: 'clamp(1rem, 3vw, 1.55rem)', 
+                          color: '#71717a', 
+                          fontWeight: '600', 
+                          fontFamily: "'Clash Display', sans-serif", 
+                          letterSpacing: '0.5px',
+                          marginLeft: '2px',
+                          textShadow: 'none'
+                        }}>
+                          .{totalDecimal}
+                        </span>
+                    </div>
+                  );
+                })()}
 
-                <div style={{ marginTop: '28px', textAlign: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '18px', width: '100%', maxWidth: '340px' }}>
-                    <p style={{ color: '#a1a1aa', fontSize: '0.88rem', margin: '0 0 4px 0' }}>Thank you for your business.</p>
+                <div style={{ marginTop: '26px', textAlign: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '18px', width: '100%', maxWidth: '340px' }}>
+                    <p style={{ color: '#d4d4d8', fontSize: '0.88rem', margin: '0 0 4px 0', fontWeight: '500' }}>Thank you for your business.</p>
                     <p style={{ color: '#71717a', fontSize: '0.78rem', margin: 0 }}>Dripp Media | Creative & Digital Agency</p>
                 </div>
             </div>
@@ -801,22 +1765,44 @@ export default function SharedInvoice() {
         </div>
 
         {/* Footer Section */}
-        <div className="no-print" style={{ gridColumn: '1 / -1', marginTop: '30px', paddingTop: '36px', paddingBottom: '20px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '30px', alignItems: 'center' }}>
+        <div className="no-print invoice-footer" style={{ 
+          gridColumn: '1 / -1', 
+          marginTop: '24px', 
+          paddingTop: '28px', 
+          paddingBottom: '20px', 
+          textAlign: 'center', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '24px', 
+          alignItems: 'center',
+          width: '100%'
+        }}>
             
-            <div style={{ background: 'rgba(235, 215, 63, 0.05)', padding: '16px clamp(24px, 5vw, 48px)', borderRadius: '100px', border: '1px solid rgba(235, 215, 63, 0.2)', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(16px, 4vw, 36px)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-                <a href="https://www.drippmedia.com" target="_blank" rel="noopener noreferrer" style={{ color: '#aaaaaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', transition: 'all 0.25s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaaaaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-                   <Globe size={16} color="#ebd73f" /> www.drippmedia.com
+            <div className="footer-pill" style={{ 
+              background: 'rgba(235, 215, 63, 0.05)', 
+              padding: '14px clamp(20px, 4vw, 40px)', 
+              borderRadius: '100px', 
+              border: '1px solid rgba(235, 215, 63, 0.2)', 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              justifyContent: 'center', 
+              gap: 'clamp(14px, 3.5vw, 32px)', 
+              backdropFilter: 'blur(10px)', 
+              boxShadow: '0 10px 30px rgba(0,0,0,0.5)' 
+            }}>
+                <a href="https://www.drippmedia.com" target="_blank" rel="noopener noreferrer" style={{ color: '#aaaaaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.86rem', transition: 'all 0.25s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaaaaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                   <Globe size={15} color="#ebd73f" /> www.drippmedia.com
                 </a>
-                <a href="mailto:gurpreet@drippmedia.com" style={{ color: '#aaaaaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', transition: 'all 0.25s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaaaaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-                   <Mail size={16} color="#ebd73f" /> gurpreet@drippmedia.com
+                <a href="mailto:gurpreet@drippmedia.com" style={{ color: '#aaaaaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.86rem', transition: 'all 0.25s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaaaaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                   <Mail size={15} color="#ebd73f" /> gurpreet@drippmedia.com
                 </a>
-                <a href="https://instagram.com/drippmedia_" target="_blank" rel="noopener noreferrer" style={{ color: '#aaaaaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', transition: 'all 0.25s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaaaaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-                   <AtSign size={16} color="#ebd73f" /> instagram.com/drippmedia_
+                <a href="https://instagram.com/drippmedia_" target="_blank" rel="noopener noreferrer" style={{ color: '#aaaaaa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.86rem', transition: 'all 0.25s ease' }} onMouseEnter={e => { e.currentTarget.style.color = '#ebd73f'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.color = '#aaaaaa'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                   <AtSign size={15} color="#ebd73f" /> instagram.com/drippmedia_
                 </a>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-              <div style={{ background: 'linear-gradient(90deg, rgba(235, 215, 63, 0) 0%, rgba(235, 215, 63, 0.3) 50%, rgba(235, 215, 63, 0) 100%)', width: '220px', height: '2px' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              <div style={{ background: 'linear-gradient(90deg, rgba(235, 215, 63, 0) 0%, rgba(235, 215, 63, 0.3) 50%, rgba(235, 215, 63, 0) 100%)', width: '200px', height: '2px' }} />
               <p style={{ margin: 0, color: '#888888', fontSize: '0.82rem', letterSpacing: '1px', textTransform: 'uppercase' }}>Founded by <span style={{ color: '#ebd73f', fontWeight: 'bold' }}>Gurpreet Singh</span></p>
             </div>
             

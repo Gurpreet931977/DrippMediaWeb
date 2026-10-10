@@ -66,16 +66,21 @@ export default function InvoiceMaker() {
     number: 'INV-' + Math.floor(1000 + Math.random() * 9000),
     date: new Date().toISOString().split('T')[0],
     currency: '₹',
-    dueDate: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
-    notes: 'Payment is due within 15 days. Thank you for your business!'
+    dueTerm: 'Due Upon Receipt',
+    dueDate: 'Due Upon Receipt',
+    notes: 'Payment is due upon delivery. Thank you for your business!'
   });
 
   // Fix timezone issue on mount
   useEffect(() => {
     const tzOffsetMs = new Date().getTimezoneOffset() * 60000;
     const localDate = new Date(Date.now() - tzOffsetMs).toISOString().split('T')[0];
-    const dueLocalDate = new Date(Date.now() - tzOffsetMs + 15 * 86400000).toISOString().split('T')[0];
-    setInvoiceDetails(prev => ({ ...prev, date: localDate, dueDate: dueLocalDate }));
+    setInvoiceDetails(prev => ({ 
+      ...prev, 
+      date: localDate, 
+      dueDate: prev.dueDate || 'Due Upon Receipt',
+      dueTerm: prev.dueTerm || 'Due Upon Receipt'
+    }));
   }, []);
 
   
@@ -1331,7 +1336,7 @@ export default function InvoiceMaker() {
               <FileText size={20} /> Invoice & Client Info
             </h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginBottom: '20px' }}>
               <div>
                  <label className={styles.label}>Invoice Number</label>
                  <input type="text" value={invoiceDetails.number} onChange={e => handleInvoiceChange('number', e.target.value)} className={styles.inputModern} />
@@ -1345,9 +1350,81 @@ export default function InvoiceMaker() {
                  </select>
               </div>
               <div>
-                 <label className={styles.label}>Date</label>
-                 <input type="date" value={invoiceDetails.date} onChange={e => handleInvoiceChange('date', e.target.value)} className={styles.inputModern} />
+                 <label className={styles.label}>Invoice Date</label>
+                 <input 
+                   type="date" 
+                   value={invoiceDetails.date} 
+                   onChange={e => {
+                     const newDate = e.target.value;
+                     setInvoiceDetails(prev => {
+                       let newDueDate = prev.dueDate;
+                       if (prev.dueTerm === 'Net 7') {
+                         newDueDate = new Date(new Date(newDate).getTime() + 7 * 86400000).toISOString().split('T')[0];
+                       } else if (prev.dueTerm === 'Net 15') {
+                         newDueDate = new Date(new Date(newDate).getTime() + 15 * 86400000).toISOString().split('T')[0];
+                       } else if (prev.dueTerm === 'Net 30') {
+                         newDueDate = new Date(new Date(newDate).getTime() + 30 * 86400000).toISOString().split('T')[0];
+                       } else if (prev.dueTerm === 'Due Upon Receipt' || !prev.dueTerm) {
+                         newDueDate = 'Due Upon Receipt';
+                       }
+                       return { ...prev, date: newDate, dueDate: newDueDate };
+                     });
+                   }} 
+                   className={styles.inputModern} 
+                 />
               </div>
+              <div>
+                 <label className={styles.label}>Due Date / Terms</label>
+                 <select 
+                   value={invoiceDetails.dueTerm || 'Due Upon Receipt'} 
+                   onChange={e => {
+                     const term = e.target.value;
+                     const baseDate = new Date(invoiceDetails.date || Date.now());
+                     let computedDue = 'Due Upon Receipt';
+                     if (term === 'Net 7') {
+                       computedDue = new Date(baseDate.getTime() + 7 * 86400000).toISOString().split('T')[0];
+                     } else if (term === 'Net 15') {
+                       computedDue = new Date(baseDate.getTime() + 15 * 86400000).toISOString().split('T')[0];
+                     } else if (term === 'Net 30') {
+                       computedDue = new Date(baseDate.getTime() + 30 * 86400000).toISOString().split('T')[0];
+                     } else if (term === 'custom') {
+                       computedDue = invoiceDetails.dueDate && invoiceDetails.dueDate !== 'Due Upon Receipt' ? invoiceDetails.dueDate : invoiceDetails.date;
+                     } else {
+                       computedDue = 'Due Upon Receipt';
+                     }
+                     setInvoiceDetails(prev => ({
+                       ...prev,
+                       dueTerm: term,
+                       dueDate: computedDue,
+                       notes: term === 'Due Upon Receipt'
+                         ? 'Payment is due upon delivery. Thank you for your business!'
+                         : `Payment is due within ${term === 'Net 7' ? '7 days' : term === 'Net 15' ? '15 days' : '30 days'}. Thank you for your business!`
+                     }));
+                   }} 
+                   className={styles.inputModern}
+                   style={{
+                     color: (!invoiceDetails.dueTerm || invoiceDetails.dueTerm === 'Due Upon Receipt') ? '#ebd73f' : '#ffffff',
+                     fontWeight: (!invoiceDetails.dueTerm || invoiceDetails.dueTerm === 'Due Upon Receipt') ? 600 : 400
+                   }}
+                 >
+                    <option value="Due Upon Receipt">Due Upon Receipt (Immediate / Urgent)</option>
+                    <option value="Net 7">Net 7 (Within 7 Days)</option>
+                    <option value="Net 15">Net 15 (Within 15 Days)</option>
+                    <option value="Net 30">Net 30 (Within 30 Days)</option>
+                    <option value="custom">Specific Custom Date...</option>
+                 </select>
+              </div>
+              {invoiceDetails.dueTerm === 'custom' && (
+                <div>
+                   <label className={styles.label}>Custom Due Date</label>
+                   <input 
+                     type="date" 
+                     value={invoiceDetails.dueDate && invoiceDetails.dueDate !== 'Due Upon Receipt' ? invoiceDetails.dueDate : invoiceDetails.date} 
+                     onChange={e => setInvoiceDetails(prev => ({ ...prev, dueDate: e.target.value }))} 
+                     className={styles.inputModern} 
+                   />
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>

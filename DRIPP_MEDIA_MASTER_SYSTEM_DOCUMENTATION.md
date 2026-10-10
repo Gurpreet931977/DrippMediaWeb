@@ -110,6 +110,27 @@ All interfaces, tools, public pages, client documents, and exports MUST strictly
 ### 3.7 Secret Developer Dashboard (`/developermodeon`)
 - Diagnostics and development utility portal for testing models, cookies, and local database stores.
 
+### 3.8 The Creative Community ("The Collective")
+- **Route / Trigger:** Public homepage (`#community`) and interactive modal (`#community-modal`).
+- **Core Purpose & Philosophy:**
+  - "The Collective" is Dripp Media's curated, invite-only creative network uniting top-tier **Content Creators** and elite **Freelancers** (video editors, 3D motion designers, graphic artists, VFX specialists, and web engineers).
+  - **For Content Creators:**
+    - A collaborative hub to seek feedback, exchange creative perspectives on viral hooks, sound design, and retention pacing.
+    - Share creative assets, presets, and color grades.
+    - Connect with peer creators to cross-pollinate audiences and co-produce original content.
+  - **For Freelancers:**
+    - A dedicated technical craft community where talent can connect with peers to seek help for production roadblocks, rendering glitches, 3D asset sourcing, or technical software troubleshooting.
+    - **Strict Non-Commercial Agency Boundary:** Direct peer-to-peer client pitching, freelance job poaching, or unauthorized business transactions are strictly prohibited within community discussion channels.
+    - **Dripp Media as the Central Agency:** Because Dripp Media operates as a full-service creative agency, the agency itself sources, pitches, signs, and manages high-value brand clients. Dripp Media shares vetted project opportunities directly with qualified community members, providing client management, contract security, and transparent commission structures.
+- **Join Community Modal & Form:**
+  - **Member Type Toggle:** Single-select interactive chip grid:
+    - `Content Creator` ("I create content")
+    - `Freelancer` ("I offer services / take gigs")
+  - **Fields:** Email Address (required, validated format), WhatsApp Phone (required for direct invite drops), Niche / Primary Expertise.
+  - **Dual-Layer Ingestion Pipeline (`/api/community`):**
+    1. *Local Disk Store:* Appends record immediately to `data/community_signups.json` for zero-loss lead preservation.
+    2. *Cloud Sync:* Asynchronously upserts to Supabase `community` table with deduplication on email (`onConflict: 'email'`).
+
 ---
 
 ## 4. SECURE CLIENT PORTAL SYSTEM (INVOICES & QUOTES)
@@ -149,20 +170,43 @@ The client portal allows clients to access their proposals and invoices via secu
 
 ### 4.3 Modern & Minimal Client Experience (`/invoice/[id]` & `/quote/[id]`)
 - **Branded Layout:** Obsidian `#050505` luxury layout, Panchang typography for client brand names and invoice totals, Clash Display for item descriptions and dates.
+- **Paisa Decimal Styling & Currency Hierarchy:**
+  - Whole rupee amounts are rendered in high-impact `#ebd73f` Electric Gold using `'Panchang', sans-serif` with a subtle luxury glow.
+  - Decimal paisa digits (`.00`) are cleanly split via `formatCurrencyParts()` and rendered in discreet `#71717a` grey using `'Clash Display', sans-serif` at reduced scale (`0.68em` in line item rows, `clamp(1rem, 3vw, 1.55rem)` in Total Due) with zero text-shadow.
+  - This eliminates client confusion between decimal zeroes and thousands while maintaining luxury aesthetic polish.
+- **Dynamic Non-Locking Viewport Scrolling:**
+  - Viewport scroll behavior on `html` and `body` uses non-locking `overflow-x: hidden` and `overscroll-behavior-y: auto`.
+  - Outer page wrappers (`.invoice-page-wrap`) use `overflow: visible` across PIN gate and unlocked states, completely eliminating nested scroll container conflicts, iOS Safari rubber-band locks, and desktop sticky stutter.
 - **Payment & Bank Module:**
-  - Displays Bank Name, Beneficiary Account Name, Account Number, IFSC/Routing, SWIFT Code, and UPI ID.
-  - Renders a live **Scan-to-Pay UPI QR Code** generated using `qrcode`.
+  - Displays Bank Name, Beneficiary Account Name, Account Number, IFSC/Routing, SWIFT Code, and UPI ID with 1-tap copy action buttons.
+  - Renders a live **Scan-to-Pay UPI QR Code** generated using `qrcode` from `selectedBank.upi` or custom QR assets.
 - **Modern Minimal Action Bar (`no-print`):**
   - Gold document badge with invoice number (`#INV-001`).
   - **Download PDF Button:**
     - Uses `html2canvas` and `jsPDF`.
     - Awaits `document.fonts.ready` before rasterization to eliminate font flickering.
-    - Uses `onclone` to enforce full 1200px desktop dimensions and generous 36px padding even when clicked from a narrow smartphone screen.
+    - Uses an `onclone` DOM hook that intercepts the cloned document, measures the active `<img id="invoice-qr-img">`, and draws it directly onto an in-memory `<canvas>` using `ctx.drawImage()`. This eliminates asynchronous image load failures inside `html2canvas`'s virtual iframe, ensuring QR codes are always sharp and never blank.
+    - Enforces full 1200px desktop dimensions and generous 36px padding even when triggered from a mobile smartphone viewport.
     - Saves crisp, vector-scaled PDF document named `Dripp_Media_Invoice_[Brand]_[Number].pdf`.
   - **Download Image Button:**
-    - Generates a lossless 2x scale PNG with obsidian background and gold typography.
-  - **Print Button:**
-    - Triggers native `window.print()` with `@media print` styling that hides action bars and formats clean white/black printouts for physical records.
+    - Generates a lossless 2x scale PNG with obsidian background, gold typography, and synchronous canvas-backed QR code drawing.
+  - **Print Button & Print System Architecture (`@media print`):**
+    - Triggers native `window.print()` (⌘+P).
+    - Custom `@page { size: A4 portrait; margin: 10mm 12mm; }`.
+    - Automatically filters out screen-only interactive elements (`.no-print`, `#invoice-custom-cursor`, action bars, copy buttons, hover rings).
+    - Converts all surfaces to pure white `#ffffff`, typography to high-contrast `#050505` and `#111111`, and borders to subtle grey `#d4d4d8` (zero faint yellow or grey-on-white illegibility).
+    - Uses strict `break-inside: avoid` / `page-break-inside: avoid` card hygiene so the entire invoice fits cleanly onto **one single portrait page**.
+    - Dynamically omits `crossOrigin` on `data:` URIs, preventing headless Chromium CORS drops during print emulation.
+
+### 4.4 Payment Terms & Due Date Architecture
+- **Due Date Selector & Defaults:**
+  - Standard options: `"Due Upon Receipt (Immediate / Urgent)"`, `"Net 7"`, `"Net 15"`, `"Net 30"`, and `"Specific Custom Date..."`.
+  - Default value across new invoices is strictly `"Due Upon Receipt"`.
+  - Changing the Invoice Date dynamically recalculates Net 7, 15, and 30 target dates automatically.
+- **Client Presentation Badge:**
+  - On public invoice pages (`/invoice/[id]`), if terms are "Due Upon Receipt" or contain urgency indicators, a dedicated gold urgency badge (`.invoice-due-badge`) renders below the client brand block:
+    `[ ✦ DUE UPON RECEIPT ]` with a gold border and subtle glow.
+  - For standard calendar dates, renders the formatted due date cleanly alongside the invoice issuance date.
 
 ---
 
@@ -179,6 +223,9 @@ Dripp Studio is the private operational OS of the agency. It is protected by coo
 - **AI Natural Language Generation:** Integrated directly with Orlo AI. Enter natural prompts like:
   > *"Create an invoice for Apex Brands, client Rohan Mehta, +91 98765 43210 for 3D Product Animation at 65000 and Creative Direction at 25000 with HDFC bank"*
   and Orlo instantly parses the client name, phone, address, items, quantities, rates, and bank details.
+- **Payment Terms & Due Date Selector:**
+  - Dedicated Payment Terms control with options: `Due Upon Receipt (Immediate / Urgent)` (Default), `Net 7`, `Net 15`, `Net 30`, and `Specific Custom Date...`.
+  - Built-in date math automatically syncs target payment dates when invoice date is modified.
 - **Manual Precision Controls:** Add, remove, and reorder line items, adjust quantities, toggle currencies (₹ INR, $ USD, € EUR, £ GBP, etc.), calculate GST percentages, and select bank accounts with instant QR code generation.
 - **Service-Aware Copy Message (Zero Prices):**
   - **Single Service:**
@@ -371,5 +418,129 @@ When showcasing Dripp Media to potential clients, partners, or investors:
 
 ---
 
+## 10. DATABASE SCHEMAS & SUPABASE SQL MIGRATIONS
+
+Below are the production-grade PostgreSQL schemas and Row Level Security (RLS) policies configured in Supabase:
+
+### 10.1 Creative Community ("The Collective") Schema
+This table stores content creator and freelancer roster applications from the public website and `#community-modal`.
+
+```sql
+-- ============================================================================
+-- A. IF TABLE ALREADY EXISTS: Run this migration to add missing columns safely
+-- ============================================================================
+ALTER TABLE public.community 
+ADD COLUMN IF NOT EXISTS member_type TEXT;
+
+ALTER TABLE public.community 
+ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+
+ALTER TABLE public.community 
+ADD COLUMN IF NOT EXISTS notes TEXT;
+
+ALTER TABLE public.community 
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+
+-- Add constraint safely if not present
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'community_member_type_check'
+    ) THEN
+        ALTER TABLE public.community 
+        ADD CONSTRAINT community_member_type_check 
+        CHECK (member_type IN ('creator', 'freelancer') OR member_type IS NULL);
+    END IF;
+END $$;
+
+-- ============================================================================
+-- B. FRESH INSTALL: If creating the table for the first time
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.community (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT UNIQUE NOT NULL,
+    whatsapp TEXT NOT NULL,
+    expertise TEXT,
+    member_type TEXT CHECK (member_type IN ('creator', 'freelancer') OR member_type IS NULL),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'vip')),
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ============================================================================
+-- C. INDEXES (Safe for both new and existing tables)
+-- ============================================================================
+CREATE INDEX IF NOT EXISTS idx_community_email ON public.community (email);
+CREATE INDEX IF NOT EXISTS idx_community_member_type ON public.community (member_type);
+CREATE INDEX IF NOT EXISTS idx_community_created_at ON public.community (created_at DESC);
+
+-- ============================================================================
+-- D. ROW LEVEL SECURITY (RLS) POLICIES
+-- ============================================================================
+ALTER TABLE public.community ENABLE ROW LEVEL SECURITY;
+
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'community' AND policyname = 'Allow public insert to community'
+    ) THEN
+        CREATE POLICY "Allow public insert to community"
+        ON public.community FOR INSERT TO public WITH CHECK (true);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'community' AND policyname = 'Allow public update on own email conflict'
+    ) THEN
+        CREATE POLICY "Allow public update on own email conflict"
+        ON public.community FOR UPDATE TO public USING (true) WITH CHECK (true);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'community' AND policyname = 'Allow service role full access to community'
+    ) THEN
+        CREATE POLICY "Allow service role full access to community"
+        ON public.community FOR ALL TO service_role USING (true) WITH CHECK (true);
+    END IF;
+END $$;
+```
+
+### 10.2 Client Portal & Invoices Schema (`shared_quotes`)
+Stores PIN-protected client invoices, proposals, and production master plans (PMPs).
+
+```sql
+-- 1. Create shared_quotes table
+CREATE TABLE IF NOT EXISTS public.shared_quotes (
+    id TEXT PRIMARY KEY,
+    password TEXT,
+    quote_data JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 2. Index for lookup
+CREATE INDEX IF NOT EXISTS idx_shared_quotes_created_at ON public.shared_quotes (created_at DESC);
+
+-- 3. Enable Row Level Security (RLS)
+ALTER TABLE public.shared_quotes ENABLE ROW LEVEL SECURITY;
+
+-- 4. Allow public read by ID (PIN gate enforced in application layer)
+CREATE POLICY "Allow public read by quote id"
+ON public.shared_quotes
+FOR SELECT
+TO public
+USING (true);
+
+-- 5. Allow quote/invoice generation from Studio
+CREATE POLICY "Allow public insert of quotes"
+ON public.shared_quotes
+FOR INSERT
+TO public
+WITH CHECK (true);
+```
+
+---
+
 *Document compiled and verified for Dripp Media Web Platform.*  
 *Maintained under version control at repository root.*
+

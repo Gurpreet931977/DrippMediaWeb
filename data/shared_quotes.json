@@ -47,5 +47,43 @@
     },
     "created_at": "2026-09-22T19:19:44.034Z",
     "updated_at": "2026-09-22T19:19:44.035Z"
+  },
+  "d0kf7y4K": {
+    "id": "d0kf7y4K",
+    "password": "8268",
+    "quote_data": {
+      "type": "invoice",
+      "clientDetails": {
+        "brandName": "Sipkart",
+        "name": "Prabhdeep",
+        "email": "",
+        "phone": "",
+        "date": "2026-10-11"
+      },
+      "invoiceDetails": {
+        "number": "INV-9575",
+        "date": "2026-10-11",
+        "dueDate": "2026-10-26",
+        "notes": "Payment is due upon delivery. Thank you for your business!"
+      },
+      "total": 3000,
+      "selectedBank": {
+        "bankName": "HDFC Bank",
+        "accountName": "Dripp Media",
+        "accountNumber": "50200012345678",
+        "ifsc": "HDFC0001234",
+        "upi": "drippmedia@okhdfcbank"
+      },
+      "items": [
+        {
+          "desc": "Sample Shoot & Sample Edit Production",
+          "qty": 1,
+          "rate": 3000,
+          "details": ""
+        }
+      ]
+    },
+    "created_at": "2026-10-11T00:00:00.000Z",
+    "updated_at": "2026-10-11T00:00:00.000Z"
   }
 }
