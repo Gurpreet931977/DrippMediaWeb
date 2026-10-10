@@ -870,15 +870,33 @@ export default function InvoiceMaker() {
     }
   };
 
+  const getInvoiceShareMessage = () => {
+    const clientName = clientDetails.name ? clientDetails.name.split(' ')[0].trim() : (clientDetails.brandName ? clientDetails.brandName.trim() : 'there');
+
+    // Extract unique, non-empty service titles
+    const activeServices = Array.from(new Set(
+      (items || [])
+        .map(item => item.desc?.trim())
+        .filter(Boolean)
+    ));
+
+    if (activeServices.length === 1) {
+      return `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media for ${activeServices[0]}.\n\n🔗 Link: ${shareLink}\n🔑 PIN: ${sharePassword}\n\nLet me know if you have any questions!`;
+    } else if (activeServices.length > 1) {
+      const servicesList = activeServices.map(s => `• ${s}`).join('\n');
+      return `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media.\n\n📋 Services Included:\n${servicesList}\n\n🔗 Link: ${shareLink}\n🔑 PIN: ${sharePassword}\n\nLet me know if you have any questions!`;
+    } else {
+      return `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 PIN: ${sharePassword}\n\nLet me know if you have any questions!`;
+    }
+  };
+
   const handleCopyMessage = () => {
-    const clientName = clientDetails.name ? clientDetails.name.split(' ')[0] : 'Client';
-    const msg = `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 Password: ${sharePassword}\n\nTotal Due: ${invoiceDetails.currency}${total.toFixed(2)}\n\nLet me know if you have any questions!`;
+    const msg = getInvoiceShareMessage();
     copyToClipboard(msg, 'message');
   };
 
   const handleWhatsAppShare = () => {
-    const clientName = clientDetails.name ? clientDetails.name.split(' ')[0] : 'Client';
-    const msg = `Hey ${clientName}!\n\nHere is your secure invoice from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 Password: ${sharePassword}\n\nTotal Due: ${invoiceDetails.currency}${total.toFixed(2)}`;
+    const msg = getInvoiceShareMessage();
     const phone = clientDetails.phone ? clientDetails.phone.replace(/[^0-9]/g, '') : '';
     const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
@@ -2396,6 +2414,56 @@ export default function InvoiceMaker() {
                      <MessageCircle size={15} />
                      <span>WhatsApp</span>
                    </button>
+                 </div>
+
+                 {/* Generated Message Preview */}
+                 <div style={{
+                   marginTop: '12px',
+                   padding: '10px 12px',
+                   background: 'rgba(0, 0, 0, 0.45)',
+                   border: '1px solid rgba(255, 255, 255, 0.08)',
+                   borderRadius: '9px',
+                   textAlign: 'left'
+                 }}>
+                   <div style={{
+                     display: 'flex',
+                     alignItems: 'center',
+                     justifyContent: 'space-between',
+                     marginBottom: '6px'
+                   }}>
+                     <span style={{
+                       fontFamily: "'Clash Display', sans-serif",
+                       fontSize: '0.68rem',
+                       fontWeight: '600',
+                       textTransform: 'uppercase',
+                       letterSpacing: '0.06em',
+                       color: '#ebd73f'
+                     }}>
+                       Client Message Preview
+                     </span>
+                     <span style={{
+                       fontFamily: "'Clash Display', sans-serif",
+                       fontSize: '0.65rem',
+                       color: '#71717a'
+                     }}>
+                       Zero Prices Shown
+                     </span>
+                   </div>
+                   <div style={{
+                     fontFamily: "'Clash Display', sans-serif",
+                     fontSize: '0.74rem',
+                     lineHeight: '1.45',
+                     color: '#d4d4d8',
+                     whiteSpace: 'pre-wrap',
+                     maxHeight: '90px',
+                     overflowY: 'auto',
+                     background: 'rgba(255, 255, 255, 0.02)',
+                     padding: '6px 8px',
+                     borderRadius: '6px',
+                     border: '1px solid rgba(255, 255, 255, 0.04)'
+                   }}>
+                     {getInvoiceShareMessage()}
+                   </div>
                  </div>
 
                  {/* Google Sheets log status badge */}

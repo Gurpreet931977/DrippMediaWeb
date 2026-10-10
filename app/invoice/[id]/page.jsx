@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Lock, FileText, CheckCircle2, Globe, Mail, AtSign, Printer, ArrowLeft } from 'lucide-react';
+import { Lock, FileText, CheckCircle2, Globe, Mail, AtSign, Printer, ArrowLeft, Download, Image as ImageIcon, Loader2 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function SharedInvoice() {
   const params = useParams();
@@ -14,6 +16,10 @@ export default function SharedInvoice() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isDownloadingImage, setIsDownloadingImage] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(null);
+  const invoiceDocRef = useRef(null);
 
   // Dedicated refs for 4 PIN boxes
   const pin0Ref = useRef(null);
@@ -111,6 +117,104 @@ export default function SharedInvoice() {
       setError('Connection error. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!invoiceDocRef.current || isDownloadingPdf) return;
+    setIsDownloadingPdf(true);
+    setDownloadSuccess(null);
+    try {
+      if (typeof document !== 'undefined' && document.fonts) {
+        await document.fonts.ready;
+      }
+      const element = invoiceDocRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: '#050505',
+        useCORS: true,
+        logging: false,
+        windowWidth: 1200,
+        onclone: (clonedDoc) => {
+          const clonedGrid = clonedDoc.querySelector('.invoice-grid');
+          if (clonedGrid) {
+            clonedGrid.style.width = '1200px';
+            clonedGrid.style.maxWidth = '1200px';
+            clonedGrid.style.padding = '36px';
+            clonedGrid.style.background = '#050505';
+            clonedGrid.style.borderRadius = '24px';
+          }
+        }
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+
+      const pdf = new jsPDF({
+        orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [imgWidth, imgHeight]
+      });
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+      const invNum = quoteData?.invoiceDetails?.number || quoteData?.quoteDetails?.number || 'INV';
+      const brandStr = quoteData?.clientDetails?.brandName 
+        ? `_${quoteData.clientDetails.brandName.replace(/\s+/g, '_')}` 
+        : (quoteData?.clientDetails?.name ? `_${quoteData.clientDetails.name.replace(/\s+/g, '_')}` : '');
+      pdf.save(`Dripp_Media_Invoice${brandStr}_${invNum}.pdf`);
+      setDownloadSuccess('pdf');
+      setTimeout(() => setDownloadSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      window.print();
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    if (!invoiceDocRef.current || isDownloadingImage) return;
+    setIsDownloadingImage(true);
+    setDownloadSuccess(null);
+    try {
+      if (typeof document !== 'undefined' && document.fonts) {
+        await document.fonts.ready;
+      }
+      const element = invoiceDocRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: '#050505',
+        useCORS: true,
+        logging: false,
+        windowWidth: 1200,
+        onclone: (clonedDoc) => {
+          const clonedGrid = clonedDoc.querySelector('.invoice-grid');
+          if (clonedGrid) {
+            clonedGrid.style.width = '1200px';
+            clonedGrid.style.maxWidth = '1200px';
+            clonedGrid.style.padding = '36px';
+            clonedGrid.style.background = '#050505';
+            clonedGrid.style.borderRadius = '24px';
+          }
+        }
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const invNum = quoteData?.invoiceDetails?.number || quoteData?.quoteDetails?.number || 'INV';
+      const brandStr = quoteData?.clientDetails?.brandName 
+        ? `_${quoteData.clientDetails.brandName.replace(/\s+/g, '_')}` 
+        : (quoteData?.clientDetails?.name ? `_${quoteData.clientDetails.name.replace(/\s+/g, '_')}` : '');
+      const link = document.createElement('a');
+      link.download = `Dripp_Media_Invoice${brandStr}_${invNum}.png`;
+      link.href = imgData;
+      link.click();
+      setDownloadSuccess('image');
+      setTimeout(() => setDownloadSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error generating image:', err);
+    } finally {
+      setIsDownloadingImage(false);
     }
   };
 
@@ -312,36 +416,211 @@ export default function SharedInvoice() {
         }
       `}</style>
 
-      <div className="invoice-grid">
+      {/* Modern, Minimal Client Action Bar */}
+      <div className="no-print" style={{
+        maxWidth: '1200px',
+        margin: '0 auto 24px auto',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '12px',
+        padding: '12px 20px',
+        background: 'rgba(18, 18, 22, 0.85)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: '16px',
+        backdropFilter: 'blur(16px)',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.45)',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        {/* Left: Document Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '24px',
+            height: '24px',
+            borderRadius: '6px',
+            background: 'rgba(235, 215, 63, 0.1)',
+            border: '1px solid rgba(235, 215, 63, 0.25)',
+            flexShrink: 0
+          }}>
+            <FileText size={13} color="#ebd73f" />
+          </div>
+          <span style={{
+            fontFamily: "'Panchang', sans-serif",
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            color: '#ffffff',
+            letterSpacing: '0.5px'
+          }}>
+            {isInvoice ? 'Official Invoice' : 'Official Proposal'}
+          </span>
+          <span style={{
+            fontFamily: "'Clash Display', sans-serif",
+            fontSize: '0.8rem',
+            color: '#ebd73f',
+            background: 'rgba(235, 215, 63, 0.08)',
+            border: '1px solid rgba(235, 215, 63, 0.25)',
+            padding: '2px 8px',
+            borderRadius: '6px',
+            fontWeight: 600
+          }}>
+            #{details?.number || '001'}
+          </span>
+        </div>
+
+        {/* Right: Modern & Minimal Download Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {/* Download PDF button */}
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '7px',
+              padding: '8px 16px',
+              background: downloadSuccess === 'pdf' ? 'rgba(235, 215, 63, 0.22)' : 'rgba(235, 215, 63, 0.12)',
+              border: `1px solid ${downloadSuccess === 'pdf' ? 'rgba(235, 215, 63, 0.6)' : 'rgba(235, 215, 63, 0.35)'}`,
+              borderRadius: '10px',
+              color: '#ebd73f',
+              fontSize: '0.82rem',
+              fontWeight: '600',
+              cursor: isDownloadingPdf ? 'not-allowed' : 'pointer',
+              fontFamily: "'Clash Display', sans-serif",
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+            }}
+            onMouseEnter={e => {
+              if (!isDownloadingPdf && downloadSuccess !== 'pdf') {
+                e.currentTarget.style.background = '#ebd73f';
+                e.currentTarget.style.color = '#000000';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }
+            }}
+            onMouseLeave={e => {
+              if (!isDownloadingPdf && downloadSuccess !== 'pdf') {
+                e.currentTarget.style.background = 'rgba(235, 215, 63, 0.12)';
+                e.currentTarget.style.color = '#ebd73f';
+                e.currentTarget.style.transform = 'none';
+              }
+            }}
+          >
+            {isDownloadingPdf ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                <span>Generating PDF...</span>
+              </>
+            ) : downloadSuccess === 'pdf' ? (
+              <>
+                <CheckCircle2 size={14} color="#ebd73f" />
+                <span>Downloaded!</span>
+              </>
+            ) : (
+              <>
+                <FileText size={14} />
+                <span>Download PDF</span>
+              </>
+            )}
+          </button>
+
+          {/* Download Image button */}
+          <button
+            type="button"
+            onClick={handleDownloadImage}
+            disabled={isDownloadingImage}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '7px',
+              padding: '8px 16px',
+              background: downloadSuccess === 'image' ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${downloadSuccess === 'image' ? 'rgba(235, 215, 63, 0.5)' : 'rgba(255, 255, 255, 0.14)'}`,
+              borderRadius: '10px',
+              color: downloadSuccess === 'image' ? '#ebd73f' : '#ffffff',
+              fontSize: '0.82rem',
+              fontWeight: '600',
+              cursor: isDownloadingImage ? 'not-allowed' : 'pointer',
+              fontFamily: "'Clash Display', sans-serif",
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={e => {
+              if (!isDownloadingImage && downloadSuccess !== 'image') {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+                e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.4)';
+                e.currentTarget.style.color = '#ebd73f';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }
+            }}
+            onMouseLeave={e => {
+              if (!isDownloadingImage && downloadSuccess !== 'image') {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.transform = 'none';
+              }
+            }}
+          >
+            {isDownloadingImage ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                <span>Saving Image...</span>
+              </>
+            ) : downloadSuccess === 'image' ? (
+              <>
+                <CheckCircle2 size={14} color="#ebd73f" />
+                <span>Saved Image!</span>
+              </>
+            ) : (
+              <>
+                <ImageIcon size={14} />
+                <span>Download Image</span>
+              </>
+            )}
+          </button>
+
+          {/* Print button */}
+          <button
+            type="button"
+            onClick={() => window.print()}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              background: 'transparent',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '10px',
+              color: '#888888',
+              fontSize: '0.82rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              fontFamily: "'Clash Display', sans-serif",
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = '#888888';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+            }}
+          >
+            <Printer size={14} />
+            <span>Print</span>
+          </button>
+        </div>
+      </div>
+
+      <div ref={invoiceDocRef} className="invoice-grid">
         
         {/* Cover Header Section */}
         <div className="invoice-header">
-          {/* Action buttons on desktop */}
-          <div className="no-print" style={{ position: 'absolute', right: 0, top: '20px', display: 'flex', gap: '10px' }}>
-            <button
-              onClick={() => window.print()}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '9px 18px',
-                background: 'rgba(235, 215, 63, 0.1)',
-                border: '1px solid rgba(235, 215, 63, 0.35)',
-                borderRadius: '10px',
-                color: '#ebd73f',
-                fontSize: '0.84rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontFamily: "'Clash Display', sans-serif",
-                transition: 'all 0.2s ease'
-              }}
-              onMouseOver={e => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.2)'}
-              onMouseOut={e => e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)'}
-            >
-              <Printer size={16} /> Print / Save PDF
-            </button>
-          </div>
-
           <h1 style={{ fontSize: 'clamp(2.4rem, 9vw, 3.8rem)', color: '#ebd73f', margin: '0 0 8px 0', letterSpacing: '-0.02em', fontWeight: '900', fontFamily: "'Panchang', sans-serif", textShadow: '0 0 25px rgba(235, 215, 63, 0.35)', wordBreak: 'break-word' }}>
             DRIPP MEDIA
           </h1>
