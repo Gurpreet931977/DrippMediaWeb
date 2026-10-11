@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { 
   Lock, 
@@ -38,6 +38,7 @@ export default function SharedInvoice() {
   const [copiedField, setCopiedField] = useState(null);
   const [qrDataUrl, setQrDataUrl] = useState('');
   const invoiceDocRef = useRef(null);
+  const qrCanvasRef = useRef(null);
   const cursorRef = useRef(null);
 
   // Dedicated refs for 4 PIN boxes
@@ -221,8 +222,48 @@ export default function SharedInvoice() {
     }
   };
 
-  // Automatically generate high-res UPI QR code if UPI exists and qrCode is missing or needed
+  // Dedicated renderer for in-memory & live DOM QR Canvas
+  const renderQrCanvas = useCallback(() => {
+    const liveCvs = qrCanvasRef.current || (typeof document !== 'undefined' ? document.getElementById('invoice-qr-canvas') : null);
+    if (!liveCvs) return;
+
+    const bank = quoteData?.selectedBank || (quoteData?.type === 'invoice' ? {
+      bankName: 'HDFC Bank',
+      accountName: 'Dripp Media',
+      accountNumber: '50200012345678',
+      ifsc: 'HDFC0001234',
+      upi: 'drippmedia@okhdfcbank'
+    } : null);
+
+    if (!bank) return;
+
+    if (bank.qrCode && bank.qrCode.startsWith('data:image')) {
+      const img = new Image();
+      img.onload = () => {
+        const ctx = liveCvs.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, liveCvs.width, liveCvs.height);
+          ctx.drawImage(img, 0, 0, liveCvs.width, liveCvs.height);
+        }
+      };
+      img.src = bank.qrCode;
+    } else if (bank.upi) {
+      const upiString = bank.upi.includes('://') 
+        ? bank.upi 
+        : `upi://pay?pa=${bank.upi}&pn=Dripp%20Media&cu=INR`;
+      QRCode.toCanvas(liveCvs, upiString, { 
+        margin: 1, 
+        width: 280,
+        color: { dark: '#000000', light: '#ffffff' } 
+      }).catch(err => console.error('Canvas QR render error:', err));
+    }
+  }, [quoteData]);
+
+  // Automatically render QR canvas and generate high-res data URL
   useEffect(() => {
+    renderQrCanvas();
+
     const bank = quoteData?.selectedBank || (quoteData?.type === 'invoice' ? {
       bankName: 'HDFC Bank',
       accountName: 'Dripp Media',
@@ -252,7 +293,7 @@ export default function SharedInvoice() {
         setQrDataUrl(bank.qrCode);
       }
     }
-  }, [quoteData]);
+  }, [quoteData, renderQrCanvas]);
 
   const handleDownloadPdf = async () => {
     if (!invoiceDocRef.current || isDownloadingPdf) return;
@@ -263,6 +304,7 @@ export default function SharedInvoice() {
         await document.fonts.ready;
       }
       const element = invoiceDocRef.current;
+      let qrCoords = null;
       const canvas = await html2canvas(element, {
         scale: 2,
         backgroundColor: '#050505',
@@ -289,28 +331,82 @@ export default function SharedInvoice() {
           const clonedCursor = clonedDoc.getElementById('invoice-custom-cursor');
           if (clonedCursor) clonedCursor.remove();
 
-          // Ensure QR Code is rendered directly as a crisp Canvas to prevent blank white square
-          const origQr = document.getElementById('invoice-qr-img');
-          const clonedQr = clonedDoc.getElementById('invoice-qr-img');
-          if (origQr && clonedQr && origQr.complete && origQr.naturalWidth > 0) {
+          // Sync live canvas bitmap to cloned canvas
+          const liveQr = qrCanvasRef.current || document.getElementById('invoice-qr-canvas');
+          const clonedQrCvs = clonedDoc.getElementById('invoice-qr-canvas');
+          if (liveQr && clonedQrCvs) {
             try {
-              const qrCanvas = clonedDoc.createElement('canvas');
-              qrCanvas.width = origQr.naturalWidth || 280;
-              qrCanvas.height = origQr.naturalHeight || 280;
-              qrCanvas.style.width = '140px';
-              qrCanvas.style.height = '140px';
-              qrCanvas.style.display = 'block';
-              qrCanvas.style.borderRadius = '8px';
-              const ctx = qrCanvas.getContext('2d');
-              ctx.drawImage(origQr, 0, 0);
-              clonedQr.parentNode.replaceChild(qrCanvas, clonedQr);
-            } catch (qrErr) {
-              console.warn('QR canvas replacement fallback:', qrErr);
-              clonedQr.src = origQr.src;
+              clonedQrCvs.width = liveQr.width;
+              clonedQrCvs.height = liveQr.height;
+              const clCtx = clonedQrCvs.getContext('2d');
+              clCtx.drawImage(liveQr, 0, 0);
+            } catch (e) {
+              console.warn('Canvas sync error in clone:', e);
             }
+          }
+
+          // Calculate exact position of QR code relative to invoice-grid
+          const clonedBox = clonedDoc.querySelector('.invoice-qr-box');
+          if (clonedBox && clonedGrid) {
+            const boxRect = clonedBox.getBoundingClientRect();
+            const gridRect = clonedGrid.getBoundingClientRect();
+            const pad = 12;
+            qrCoords = {
+              x: (boxRect.left - gridRect.left) + pad,
+              y: (boxRect.top - gridRect.top) + pad,
+              w: Math.max(120, boxRect.width - (pad * 2)),
+              h: Math.max(120, boxRect.height - (pad * 2)),
+              gridW: gridRect.width || 1200
+            };
+          } else if (clonedQrCvs && clonedGrid) {
+            const targetRect = clonedQrCvs.getBoundingClientRect();
+            const gridRect = clonedGrid.getBoundingClientRect();
+            qrCoords = {
+              x: targetRect.left - gridRect.left,
+              y: targetRect.top - gridRect.top,
+              w: targetRect.width || 140,
+              h: targetRect.height || 140,
+              gridW: gridRect.width || 1200
+            };
           }
         }
       });
+
+      // Post-Render Direct Canvas Stamping: 100% guarantee QR code is drawn onto output canvas
+      if (qrCoords) {
+        try {
+          let sourceCanvas = qrCanvasRef.current || document.getElementById('invoice-qr-canvas');
+          if (!sourceCanvas) {
+            sourceCanvas = document.createElement('canvas');
+            const upiStr = quoteData?.selectedBank?.upi?.includes('://')
+              ? quoteData.selectedBank.upi
+              : `upi://pay?pa=${quoteData?.selectedBank?.upi || 'drippmedia@okhdfcbank'}&pn=Dripp%20Media&cu=INR`;
+            await QRCode.toCanvas(sourceCanvas, upiStr, {
+              width: 320,
+              margin: 1,
+              color: { dark: '#000000', light: '#ffffff' }
+            });
+          }
+
+          if (sourceCanvas && sourceCanvas.width > 0) {
+            const scale = canvas.width / (qrCoords.gridW || 1200);
+            const ctx = canvas.getContext('2d');
+            ctx.resetTransform();
+            const destX = Math.round(qrCoords.x * scale);
+            const destY = Math.round(qrCoords.y * scale);
+            const destW = Math.round(qrCoords.w * scale);
+            const destH = Math.round(qrCoords.h * scale);
+            
+            // Clean white background first
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(destX, destY, destW, destH);
+            // Draw QR code with crisp pixels directly from active rasterized canvas
+            ctx.drawImage(sourceCanvas, destX, destY, destW, destH);
+          }
+        } catch (stampErr) {
+          console.warn('Direct QR stamping error in PDF:', stampErr);
+        }
+      }
 
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
       const imgWidth = canvas.width;
@@ -347,6 +443,7 @@ export default function SharedInvoice() {
         await document.fonts.ready;
       }
       const element = invoiceDocRef.current;
+      let qrCoords = null;
       const canvas = await html2canvas(element, {
         scale: 2,
         backgroundColor: '#050505',
@@ -373,28 +470,82 @@ export default function SharedInvoice() {
           const clonedCursor = clonedDoc.getElementById('invoice-custom-cursor');
           if (clonedCursor) clonedCursor.remove();
 
-          // Ensure QR Code is rendered directly as a crisp Canvas to prevent blank white square
-          const origQr = document.getElementById('invoice-qr-img');
-          const clonedQr = clonedDoc.getElementById('invoice-qr-img');
-          if (origQr && clonedQr && origQr.complete && origQr.naturalWidth > 0) {
+          // Sync live canvas bitmap to cloned canvas
+          const liveQr = qrCanvasRef.current || document.getElementById('invoice-qr-canvas');
+          const clonedQrCvs = clonedDoc.getElementById('invoice-qr-canvas');
+          if (liveQr && clonedQrCvs) {
             try {
-              const qrCanvas = clonedDoc.createElement('canvas');
-              qrCanvas.width = origQr.naturalWidth || 280;
-              qrCanvas.height = origQr.naturalHeight || 280;
-              qrCanvas.style.width = '140px';
-              qrCanvas.style.height = '140px';
-              qrCanvas.style.display = 'block';
-              qrCanvas.style.borderRadius = '8px';
-              const ctx = qrCanvas.getContext('2d');
-              ctx.drawImage(origQr, 0, 0);
-              clonedQr.parentNode.replaceChild(qrCanvas, clonedQr);
-            } catch (qrErr) {
-              console.warn('QR canvas replacement fallback:', qrErr);
-              clonedQr.src = origQr.src;
+              clonedQrCvs.width = liveQr.width;
+              clonedQrCvs.height = liveQr.height;
+              const clCtx = clonedQrCvs.getContext('2d');
+              clCtx.drawImage(liveQr, 0, 0);
+            } catch (e) {
+              console.warn('Canvas sync error in clone:', e);
             }
+          }
+
+          // Calculate exact position of QR code relative to invoice-grid
+          const clonedBox = clonedDoc.querySelector('.invoice-qr-box');
+          if (clonedBox && clonedGrid) {
+            const boxRect = clonedBox.getBoundingClientRect();
+            const gridRect = clonedGrid.getBoundingClientRect();
+            const pad = 12;
+            qrCoords = {
+              x: (boxRect.left - gridRect.left) + pad,
+              y: (boxRect.top - gridRect.top) + pad,
+              w: Math.max(120, boxRect.width - (pad * 2)),
+              h: Math.max(120, boxRect.height - (pad * 2)),
+              gridW: gridRect.width || 1200
+            };
+          } else if (clonedQrCvs && clonedGrid) {
+            const targetRect = clonedQrCvs.getBoundingClientRect();
+            const gridRect = clonedGrid.getBoundingClientRect();
+            qrCoords = {
+              x: targetRect.left - gridRect.left,
+              y: targetRect.top - gridRect.top,
+              w: targetRect.width || 140,
+              h: targetRect.height || 140,
+              gridW: gridRect.width || 1200
+            };
           }
         }
       });
+
+      // Post-Render Direct Canvas Stamping: 100% guarantee QR code is drawn onto output canvas
+      if (qrCoords) {
+        try {
+          let sourceCanvas = qrCanvasRef.current || document.getElementById('invoice-qr-canvas');
+          if (!sourceCanvas) {
+            sourceCanvas = document.createElement('canvas');
+            const upiStr = quoteData?.selectedBank?.upi?.includes('://')
+              ? quoteData.selectedBank.upi
+              : `upi://pay?pa=${quoteData?.selectedBank?.upi || 'drippmedia@okhdfcbank'}&pn=Dripp%20Media&cu=INR`;
+            await QRCode.toCanvas(sourceCanvas, upiStr, {
+              width: 320,
+              margin: 1,
+              color: { dark: '#000000', light: '#ffffff' }
+            });
+          }
+
+          if (sourceCanvas && sourceCanvas.width > 0) {
+            const scale = canvas.width / (qrCoords.gridW || 1200);
+            const ctx = canvas.getContext('2d');
+            ctx.resetTransform();
+            const destX = Math.round(qrCoords.x * scale);
+            const destY = Math.round(qrCoords.y * scale);
+            const destW = Math.round(qrCoords.w * scale);
+            const destH = Math.round(qrCoords.h * scale);
+            
+            // Clean white background first
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(destX, destY, destW, destH);
+            // Draw QR code with crisp pixels directly from active rasterized canvas
+            ctx.drawImage(sourceCanvas, destX, destY, destW, destH);
+          }
+        } catch (stampErr) {
+          console.warn('Direct QR stamping error in Image:', stampErr);
+        }
+      }
 
       const imgData = canvas.toDataURL('image/png');
       const invNum = quoteData?.invoiceDetails?.number || quoteData?.quoteDetails?.number || 'INV';
@@ -700,7 +851,7 @@ export default function SharedInvoice() {
         }
 
         /* --- DESKTOP (>= 950px) --- */
-        @media (min-width: 950px) {
+        @media screen and (min-width: 950px) {
           .invoice-grid {
             grid-template-columns: 1fr 1.35fr;
             align-items: flex-start;
@@ -727,7 +878,7 @@ export default function SharedInvoice() {
         }
 
         /* --- MOBILE & TABLET (< 950px) OPTIMIZATION & PLACEMENTS --- */
-        @media (max-width: 949px) {
+        @media screen and (max-width: 949px) {
           .invoice-grid {
             display: flex;
             flex-direction: column;
@@ -839,13 +990,20 @@ export default function SharedInvoice() {
           }
         }
 
+        @media screen and (min-width: 950px) {
+          .mobile-only-gpay-wrap {
+            display: none !important;
+          }
+        }
+
+        /* --- PRINT SYSTEM DESIGN: EXACT MATCH TO LUXURY DARK PDF --- */
         @media print {
           @page {
             size: A4 portrait;
-            margin: 10mm 12mm;
+            margin: 0;
           }
 
-          /* Hide interactive screen UI */
+          /* Hide interactive screen UI and action bars */
           .no-print,
           #invoice-custom-cursor,
           .cursor,
@@ -856,224 +1014,347 @@ export default function SharedInvoice() {
             display: none !important;
           }
 
-          /* Clean High-Contrast Print Canvas */
+          /* Force browser print engine to reproduce deep obsidian black background */
           html, body {
-            background: #ffffff !important;
-            color: #111111 !important;
+            background-color: #050505 !important;
+            background: #050505 !important;
+            color: #ffffff !important;
             width: 100% !important;
             height: auto !important;
+            min-height: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            font-family: 'Clash Display', sans-serif !important;
           }
 
           .invoice-page-wrap {
-            background: #ffffff !important;
-            color: #111111 !important;
-            padding: 0 !important;
-            min-height: auto !important;
+            background-color: #050505 !important;
+            background: #050505 !important;
+            color: #ffffff !important;
+            padding: 24px 28px !important;
+            margin: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            min-height: 100vh !important;
             overflow: visible !important;
           }
 
-          /* Hide ambient blur layers */
+          /* Hide ambient decorative glow orbs */
           .invoice-page-wrap > div:first-of-type {
             display: none !important;
           }
 
-          /* Balanced 2-Column Print Grid */
+          /* High-Luxury 2-Column Print Grid matching PDF */
           .invoice-grid {
             display: grid !important;
-            grid-template-columns: 1fr 1.3fr !important;
-            gap: 20px !important;
+            grid-template-columns: 1fr 1.35fr !important;
+            gap: 24px !important;
             width: 100% !important;
             max-width: 100% !important;
-            margin: 0 !important;
-            page-break-inside: auto;
-          }
-
-          /* Print Header */
-          .invoice-header {
-            grid-column: 1 / -1 !important;
-            padding: 8px 0 12px 0 !important;
-            margin-bottom: 8px !important;
-            border-bottom: 2px solid #111111 !important;
-            text-align: center !important;
-          }
-
-          .invoice-header h1 {
-            color: #050505 !important;
-            font-size: 2.2rem !important;
-            text-shadow: none !important;
-            margin-bottom: 2px !important;
-            font-family: "'Panchang', sans-serif" !important;
-          }
-
-          .invoice-header p {
-            color: #555555 !important;
-            font-size: 0.8rem !important;
-            letter-spacing: 3px !important;
-            font-family: "'Clash Display', sans-serif" !important;
-          }
-
-          .invoice-left,
-          .invoice-right {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 14px !important;
-          }
-
-          /* Crisp Print Cards */
-          .card-billed-to,
-          .card-payment-details,
-          .card-notes,
-          .card-billed-items {
-            background: #ffffff !important;
-            border: 1px solid #d4d4d8 !important;
-            border-radius: 12px !important;
-            padding: 14px 16px !important;
-            color: #111111 !important;
-            box-shadow: none !important;
+            margin: 0 auto !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
           }
 
+          /* Print Header at Top with Gold Panchang Typography */
+          .invoice-header {
+            grid-column: 1 / -1 !important;
+            order: -1 !important;
+            text-align: center !important;
+            padding: 4px 0 14px 0 !important;
+            margin-bottom: 8px !important;
+            border-bottom: 1px solid rgba(235, 215, 63, 0.25) !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          .invoice-header h1 {
+            color: #ebd73f !important;
+            font-size: 2.3rem !important;
+            font-weight: 900 !important;
+            letter-spacing: -0.02em !important;
+            margin: 0 0 4px 0 !important;
+            text-shadow: 0 0 20px rgba(235, 215, 63, 0.35) !important;
+            font-family: 'Panchang', sans-serif !important;
+          }
+
+          .invoice-header p {
+            color: #a1a1aa !important;
+            font-size: 0.82rem !important;
+            letter-spacing: 3.5px !important;
+            text-transform: uppercase !important;
+            font-weight: 600 !important;
+            margin: 0 !important;
+            font-family: 'Clash Display', sans-serif !important;
+          }
+
+          .invoice-left {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 16px !important;
+            order: 1 !important;
+          }
+
+          .invoice-right {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 16px !important;
+            order: 2 !important;
+          }
+
+          /* Dark Glassmorphism Print Cards matching PDF */
+          .card-billed-to,
+          .card-payment-details,
+          .card-notes,
+          .card-billed-items {
+            background: rgba(255, 255, 255, 0.025) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 18px !important;
+            padding: 16px 20px !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            order: unset !important;
+          }
+
           .card-billed-to h2 {
-            color: #050505 !important;
-            font-size: 1.5rem !important;
-            font-family: "'Panchang', sans-serif" !important;
+            color: #ffffff !important;
+            font-size: 1.55rem !important;
+            font-family: 'Panchang', sans-serif !important;
+            margin: 0 0 4px 0 !important;
           }
 
           .card-billed-to p,
           .card-notes p,
           .card-payment-details p {
-            color: #111111 !important;
+            color: #cccccc !important;
+            font-family: 'Clash Display', sans-serif !important;
           }
 
           .card-billed-to p[style*="uppercase"],
-          .card-payment-details p[style*="uppercase"],
-          .card-notes p[style*="uppercase"] {
-            color: #000000 !important;
-            font-weight: 700 !important;
-          }
-
-          .card-billed-items h3 {
-            color: #050505 !important;
-            font-size: 1.15rem !important;
-            margin-bottom: 12px !important;
-            font-family: "'Panchang', sans-serif" !important;
+          .card-payment-details p[style*="uppercase"] {
+            color: #ebd73f !important;
+            font-weight: 600 !important;
+            font-size: 0.72rem !important;
+            letter-spacing: 2px !important;
           }
 
           /* Billed To Info Strip */
-          .billed-info-strip > div {
-            background: #f4f4f5 !important;
-            border: 1px solid #e4e4e7 !important;
-            border-radius: 8px !important;
-            padding: 8px 10px !important;
+          .billed-info-strip {
+            display: flex !important;
+            gap: 10px !important;
+          }
+
+          .billed-info-strip .interactive-cell,
+          .billed-info-cell-invnum {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            flex: 1 1 auto !important;
+          }
+
+          .billed-info-cell-invnum {
+            background: rgba(235, 215, 63, 0.04) !important;
+            border: 1px solid rgba(235, 215, 63, 0.18) !important;
           }
 
           .billed-info-strip p {
-            color: #18181b !important;
+            color: #e4e4e7 !important;
+            font-family: 'Clash Display', sans-serif !important;
           }
 
           .billed-info-strip p:first-child {
             color: #71717a !important;
+            font-size: 0.7rem !important;
           }
 
           .billed-info-cell-invnum p:last-child {
-            color: #050505 !important;
+            color: #ebd73f !important;
+            font-family: 'Panchang', sans-serif !important;
+            font-weight: 700 !important;
           }
 
-          /* Total Due Card */
-          .card-total-due {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-            margin-top: 0 !important;
-          }
-
-          .card-total-due > div {
-            background: #f4f4f5 !important;
-            border: 2px solid #000000 !important;
-            border-radius: 14px !important;
-            padding: 18px 20px !important;
-            box-shadow: none !important;
-          }
-
-          .card-total-due span {
-            text-shadow: none !important;
-          }
-
-          .card-total-due span:nth-child(1),
-          .card-total-due span:nth-child(2) {
-            color: #000000 !important;
-          }
-
-          .card-total-due span:nth-child(3) {
-            color: #666666 !important;
-          }
-
-          /* Billed Item Rows */
-          .invoice-item-row {
-            background: #fafafa !important;
-            border: 1px solid #e4e4e7 !important;
+          /* Payment Details Card */
+          .card-payment-details > div > div {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid rgba(255, 255, 255, 0.04) !important;
             border-radius: 10px !important;
-            padding: 10px 14px !important;
+            padding: 8px 12px !important;
+          }
+
+          .card-qr-section {
+            margin-top: 6px !important;
+            text-align: center !important;
+            padding-top: 12px !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+          }
+
+          .card-qr-section p {
+            color: #a1a1aa !important;
+            font-family: 'Clash Display', sans-serif !important;
+            font-size: 0.72rem !important;
+            letter-spacing: 1.2px !important;
+            text-transform: uppercase !important;
+          }
+
+          .invoice-qr-box {
+            background: #ffffff !important;
+            padding: 10px !important;
+            border-radius: 14px !important;
+            display: inline-block !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+          }
+
+          .invoice-qr-box img,
+          .invoice-qr-box canvas {
+            width: 125px !important;
+            height: 125px !important;
+            display: block !important;
+          }
+
+          /* Notes & Terms Card */
+          .card-notes {
+            background: rgba(235, 215, 63, 0.03) !important;
+            border: 1px solid rgba(235, 215, 63, 0.16) !important;
+            border-left: 3px solid #ebd73f !important;
+            border-radius: 16px !important;
+            padding: 14px 18px !important;
+          }
+
+          .card-notes p:first-child {
+            color: #ebd73f !important;
+            font-family: 'Clash Display', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 0.72rem !important;
+            letter-spacing: 1.5px !important;
+          }
+
+          .card-notes p:last-child {
+            color: #d4d4d8 !important;
+            font-family: 'Clash Display', sans-serif !important;
+            font-size: 0.88rem !important;
+          }
+
+          /* Billed Items Card */
+          .card-billed-items h3 {
+            color: #ebd73f !important;
+            font-size: 1.25rem !important;
+            margin-bottom: 12px !important;
+            font-family: 'Panchang', sans-serif !important;
+          }
+
+          .invoice-item-row {
+            background: rgba(255, 255, 255, 0.025) !important;
+            border: 1px solid rgba(235, 215, 63, 0.18) !important;
+            border-radius: 16px !important;
+            padding: 14px 18px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 14px !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
           }
 
           .invoice-item-row h4 {
-            color: #050505 !important;
-            font-size: 0.95rem !important;
+            color: #ffffff !important;
+            font-family: 'Panchang', sans-serif !important;
+            font-size: 1.05rem !important;
+            margin: 0 0 4px 0 !important;
+          }
+
+          .invoice-item-bottom-bar {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
           }
 
           .invoice-item-bottom-bar > div:first-child {
-            background: #f4f4f5 !important;
-            border: 1px solid #e4e4e7 !important;
-            color: #18181b !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            color: #888888 !important;
+            font-family: 'Clash Display', sans-serif !important;
+            border-radius: 6px !important;
+            padding: 4px 8px !important;
           }
 
           .invoice-item-bottom-bar > div:first-child strong {
-            color: #000000 !important;
+            color: #ffffff !important;
           }
 
-          .invoice-item-bottom-bar > div:last-child span {
-            text-shadow: none !important;
+          .invoice-item-bottom-bar > div:last-child {
+            font-family: 'Panchang', sans-serif !important;
+            color: #ebd73f !important;
           }
 
-          .invoice-item-bottom-bar > div:last-child span:nth-child(2) {
-            color: #000000 !important;
-          }
-
-          .invoice-item-bottom-bar > div:last-child span:nth-child(3) {
-            color: #666666 !important;
-          }
-
-          /* Print QR Code */
-          .invoice-qr-box {
-            border: 1px solid #d4d4d8 !important;
-            box-shadow: none !important;
-            padding: 8px !important;
-          }
-
-          /* Print Footer */
-          .invoice-footer {
-            grid-column: 1 / -1 !important;
-            padding-top: 10px !important;
+          /* Total Due Card matching PDF */
+          .card-total-due {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            order: unset !important;
             margin-top: 4px !important;
           }
 
-          .footer-pill {
-            background: #f4f4f5 !important;
-            border: 1px solid #e4e4e7 !important;
-            color: #18181b !important;
+          .card-total-due > div {
+            background: linear-gradient(180deg, rgba(235, 215, 63, 0.08) 0%, rgba(235, 215, 63, 0.02) 100%) !important;
+            border: 1px solid rgba(235, 215, 63, 0.35) !important;
+            border-radius: 20px !important;
+            padding: 24px 20px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
             box-shadow: none !important;
-            padding: 8px 16px !important;
           }
 
-          .footer-pill a,
-          .footer-pill span {
-            color: #18181b !important;
+          .card-total-due > div > div:first-child {
+            background: rgba(235, 215, 63, 0.1) !important;
+            border: 1px solid rgba(235, 215, 63, 0.25) !important;
+            border-radius: 100px !important;
+            padding: 4px 12px !important;
+            margin-bottom: 12px !important;
+            color: #ebd73f !important;
+            font-family: 'Clash Display', sans-serif !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 2px !important;
+            font-size: 0.74rem !important;
+          }
+
+          .card-total-due span:nth-child(1) {
+            color: #ebd73f !important;
+            font-size: 1.8rem !important;
+            font-weight: 600 !important;
+            font-family: 'Clash Display', sans-serif !important;
+          }
+
+          .card-total-due span:nth-child(2) {
+            color: #ebd73f !important;
+            font-size: 3rem !important;
+            font-family: 'Panchang', sans-serif !important;
+            font-weight: 900 !important;
+            text-shadow: 0 0 25px rgba(235, 215, 63, 0.4) !important;
+          }
+
+          .card-total-due span:nth-child(3) {
+            color: #71717a !important;
+            font-size: 1.35rem !important;
+            font-family: 'Clash Display', sans-serif !important;
+            font-weight: 600 !important;
+            margin-left: 2px !important;
+          }
+
+          .card-total-due p {
+            font-family: 'Clash Display', sans-serif !important;
+          }
+
+          /* Hide Web Footer in Print for Clean 1-Page PDF Fit */
+          .invoice-footer {
+            display: none !important;
           }
         }
       `}</style>
@@ -1537,18 +1818,64 @@ export default function SharedInvoice() {
                         </>
                     )}
                     
+                    {/* Mobile Direct Google Pay / UPI Intent Button */}
+                    {selectedBank?.upi && (
+                      <div className="mobile-only-gpay-wrap no-print" style={{ margin: '14px 0 10px 0', width: '100%' }}>
+                        <a
+                          href={`upi://pay?pa=${encodeURIComponent(selectedBank.upi)}&pn=${encodeURIComponent(selectedBank.accountName || 'Dripp Media')}&am=${encodeURIComponent(quoteData?.total || '')}&cu=INR&tn=${encodeURIComponent('Invoice ' + (details?.number || ''))}`}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            width: '100%',
+                            padding: '14px 18px',
+                            borderRadius: '14px',
+                            background: '#ffffff',
+                            color: '#000000',
+                            textDecoration: 'none',
+                            fontWeight: '700',
+                            fontSize: '0.92rem',
+                            fontFamily: "'Clash Display', sans-serif",
+                            boxShadow: '0 4px 20px rgba(255, 255, 255, 0.12)',
+                            transition: 'all 0.2s ease',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                          </svg>
+                          <span style={{ whiteSpace: 'nowrap', fontFamily: "'Clash Display', sans-serif" }}>Pay with Google Pay</span>
+                          <span style={{ fontSize: '0.82rem', color: '#555555', fontWeight: '600', whiteSpace: 'nowrap', fontFamily: "'Clash Display', sans-serif" }}>• {currency}{quoteData?.total?.toLocaleString()}</span>
+                        </a>
+                      </div>
+                    )}
+                    
                     {(qrDataUrl || selectedBank.qrCode || selectedBank.upi) && (
                         <div className="card-qr-section" style={{ marginTop: '8px', textAlign: 'center', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
                             <p style={{ fontSize: '0.72rem', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '1.2px', margin: '0 0 12px 0', fontFamily: "'Clash Display', sans-serif" }}>
                               Scan to Pay with Any UPI App
                             </p>
                             <div className="invoice-qr-box" style={{ background: '#ffffff', padding: '12px', borderRadius: '16px', display: 'inline-block', boxShadow: '0 10px 30px rgba(0,0,0,0.6)' }}>
+                                <canvas 
+                                  ref={(el) => { 
+                                    qrCanvasRef.current = el; 
+                                    if (el) renderQrCanvas(); 
+                                  }}
+                                  id="invoice-qr-canvas"
+                                  width="280"
+                                  height="280"
+                                  style={{ width: '140px', height: '140px', display: 'block', borderRadius: '8px' }}
+                                />
                                 <img 
                                   id="invoice-qr-img"
                                   crossOrigin={(qrDataUrl || selectedBank.qrCode)?.startsWith('data:') ? undefined : 'anonymous'}
                                   src={qrDataUrl || selectedBank.qrCode} 
                                   alt="Payment QR Code" 
-                                  style={{ width: '140px', height: '140px', objectFit: 'contain', display: 'block' }} 
+                                  style={{ display: 'none' }} 
                                 />
                             </div>
                         </div>
