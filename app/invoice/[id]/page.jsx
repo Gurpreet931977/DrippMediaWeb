@@ -22,6 +22,18 @@ import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
 import gsap from 'gsap';
 
+// Safe module resolution supporting both ES default and CJS exports
+const safeQRCode = (QRCode && (QRCode.toCanvas || QRCode.toDataURL)) ? QRCode : (QRCode?.default || QRCode);
+const safeHtml2Canvas = html2canvas?.default || html2canvas;
+const safeJsPDF = jsPDF?.default || jsPDF;
+
+// Expose modules on global window immediately so any automated test, CDP script, or browser evaluation has access
+if (typeof window !== 'undefined') {
+  window.QRCode = safeQRCode;
+  window.html2canvas = safeHtml2Canvas;
+  window.jsPDF = safeJsPDF;
+}
+
 export default function SharedInvoice() {
   const params = useParams();
   const [pin, setPin] = useState(['', '', '', '']);
@@ -159,6 +171,11 @@ export default function SharedInvoice() {
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== 'undefined') {
+      window.QRCode = safeQRCode;
+      window.html2canvas = safeHtml2Canvas;
+      window.jsPDF = safeJsPDF;
+    }
     if (typeof document !== 'undefined') {
       document.body.classList.add('loaded');
       document.body.style.opacity = '1';
@@ -252,11 +269,14 @@ export default function SharedInvoice() {
       const upiString = bank.upi.includes('://') 
         ? bank.upi 
         : `upi://pay?pa=${bank.upi}&pn=Dripp%20Media&cu=INR`;
-      QRCode.toCanvas(liveCvs, upiString, { 
-        margin: 1, 
-        width: 280,
-        color: { dark: '#000000', light: '#ffffff' } 
-      }).catch(err => console.error('Canvas QR render error:', err));
+      const qrRenderer = safeQRCode || (typeof window !== 'undefined' ? window.QRCode : null);
+      if (qrRenderer && qrRenderer.toCanvas) {
+        qrRenderer.toCanvas(liveCvs, upiString, { 
+          margin: 1, 
+          width: 280,
+          color: { dark: '#000000', light: '#ffffff' } 
+        }).catch(err => console.error('Canvas QR render error:', err));
+      }
     }
   }, [quoteData]);
 
@@ -279,16 +299,21 @@ export default function SharedInvoice() {
         const upiString = bank.upi.includes('://') 
           ? bank.upi 
           : `upi://pay?pa=${bank.upi}&pn=Dripp%20Media&cu=INR`;
-        QRCode.toDataURL(upiString, { 
-          margin: 1, 
-          width: 320,
-          color: { dark: '#000000', light: '#ffffff' } 
-        })
-          .then(url => setQrDataUrl(url))
-          .catch(err => {
-            console.error('QR generation error:', err);
-            if (bank.qrCode) setQrDataUrl(bank.qrCode);
-          });
+        const qrRenderer = safeQRCode || (typeof window !== 'undefined' ? window.QRCode : null);
+        if (qrRenderer && qrRenderer.toDataURL) {
+          qrRenderer.toDataURL(upiString, { 
+            margin: 1, 
+            width: 320,
+            color: { dark: '#000000', light: '#ffffff' } 
+          })
+            .then(url => setQrDataUrl(url))
+            .catch(err => {
+              console.error('QR generation error:', err);
+              if (bank.qrCode) setQrDataUrl(bank.qrCode);
+            });
+        } else if (bank.qrCode) {
+          setQrDataUrl(bank.qrCode);
+        }
       } else if (bank.qrCode) {
         setQrDataUrl(bank.qrCode);
       }
@@ -305,7 +330,9 @@ export default function SharedInvoice() {
       }
       const element = invoiceDocRef.current;
       let qrCoords = null;
-      const canvas = await html2canvas(element, {
+      const h2c = safeHtml2Canvas || (typeof window !== 'undefined' ? window.html2canvas : null);
+      if (!h2c) throw new Error('html2canvas is not available');
+      const canvas = await h2c(element, {
         scale: 2,
         backgroundColor: '#050505',
         useCORS: true,
@@ -381,11 +408,14 @@ export default function SharedInvoice() {
             const upiStr = quoteData?.selectedBank?.upi?.includes('://')
               ? quoteData.selectedBank.upi
               : `upi://pay?pa=${quoteData?.selectedBank?.upi || 'drippmedia@okhdfcbank'}&pn=Dripp%20Media&cu=INR`;
-            await QRCode.toCanvas(sourceCanvas, upiStr, {
-              width: 320,
-              margin: 1,
-              color: { dark: '#000000', light: '#ffffff' }
-            });
+            const qrRenderer = safeQRCode || (typeof window !== 'undefined' ? window.QRCode : null);
+            if (qrRenderer && qrRenderer.toCanvas) {
+              await qrRenderer.toCanvas(sourceCanvas, upiStr, {
+                width: 320,
+                margin: 1,
+                color: { dark: '#000000', light: '#ffffff' }
+              });
+            }
           }
 
           if (sourceCanvas && sourceCanvas.width > 0) {
@@ -444,7 +474,9 @@ export default function SharedInvoice() {
       }
       const element = invoiceDocRef.current;
       let qrCoords = null;
-      const canvas = await html2canvas(element, {
+      const h2c = safeHtml2Canvas || (typeof window !== 'undefined' ? window.html2canvas : null);
+      if (!h2c) throw new Error('html2canvas is not available');
+      const canvas = await h2c(element, {
         scale: 2,
         backgroundColor: '#050505',
         useCORS: true,
@@ -520,11 +552,14 @@ export default function SharedInvoice() {
             const upiStr = quoteData?.selectedBank?.upi?.includes('://')
               ? quoteData.selectedBank.upi
               : `upi://pay?pa=${quoteData?.selectedBank?.upi || 'drippmedia@okhdfcbank'}&pn=Dripp%20Media&cu=INR`;
-            await QRCode.toCanvas(sourceCanvas, upiStr, {
-              width: 320,
-              margin: 1,
-              color: { dark: '#000000', light: '#ffffff' }
-            });
+            const qrRenderer = safeQRCode || (typeof window !== 'undefined' ? window.QRCode : null);
+            if (qrRenderer && qrRenderer.toCanvas) {
+              await qrRenderer.toCanvas(sourceCanvas, upiStr, {
+                width: 320,
+                margin: 1,
+                color: { dark: '#000000', light: '#ffffff' }
+              });
+            }
           }
 
           if (sourceCanvas && sourceCanvas.width > 0) {

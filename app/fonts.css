@@ -1,0 +1,137 @@
+/* ==========================================================================
+   Brand Fonts: Panchang & Clash Display
+   Self-Hosted Locally in /public/fonts/ (Zero External CDN Dependency & 100% Offline-Safe)
+   Strict Branding Enforcement: Only 'Clash Display' and 'Panchang'
+   ========================================================================== */
+
+/* ── Panchang (Extralight to Extrabold / Black) ─────────────────────────── */
+@font-face {
+  font-family: 'Panchang';
+  src: url('/fonts/panchang/panchang-200.woff2') format('woff2');
+  font-weight: 200;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Panchang';
+  src: url('/fonts/panchang/panchang-300.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Panchang';
+  src: url('/fonts/panchang/panchang-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Panchang';
+  src: url('/fonts/panchang/panchang-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Panchang';
+  src: url('/fonts/panchang/panchang-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Panchang';
+  src: url('/fonts/panchang/panchang-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Panchang';
+  src: url('/fonts/panchang/panchang-800.woff2') format('woff2');
+  font-weight: 800;
+  font-display: swap;
+  font-style: normal;
+}
+
+/* Also map 900 to the heaviest weight 800 for seamless rendering */
+@font-face {
+  font-family: 'Panchang';
+  src: url('/fonts/panchang/panchang-800.woff2') format('woff2');
+  font-weight: 900;
+  font-display: swap;
+  font-style: normal;
+}
+
+/* ── Clash Display (Extralight to Bold / Black) ─────────────────────────── */
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display/clash-display-200.woff2') format('woff2');
+  font-weight: 200;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display/clash-display-300.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display/clash-display-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display/clash-display-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display/clash-display-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display/clash-display-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+/* Also map 800 and 900 to the boldest weight 700 for seamless rendering */
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display/clash-display-700.woff2') format('woff2');
+  font-weight: 800;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display/clash-display-700.woff2') format('woff2');
+  font-weight: 900;
+  font-display: swap;
+  font-style: normal;
+}

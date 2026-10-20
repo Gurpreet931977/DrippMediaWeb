@@ -1,3 +1,4 @@
+import './fonts.css';
 import './globals.css';
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -540,13 +541,6 @@ export default function RootLayout({ children }) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-        {/* ── Fonts ─────────────────────────────────────────────────────── */}
-        <link rel="preconnect" href="https://api.fontshare.com" />
-        <link rel="preconnect" href="https://cdn.fontshare.com" />
-        <link
-          href="https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&f[]=clash-display@200,300,400,500,600,700&display=swap"
-          rel="stylesheet"
         />
         {/* ── Unicons ───────────────────────────────────────────────────── */}
         <link rel="preconnect" href="https://unicons.iconscout.com" />

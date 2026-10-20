@@ -352,6 +352,24 @@ export default function ClientProviders({ children }) {
       document.body.classList.add('loaded');
       document.body.style.opacity = '1';
     }
+    if (typeof window !== 'undefined') {
+      if (!window.QRCode) {
+        import('qrcode').then(m => {
+          const mod = (m && (m.toCanvas || m.toDataURL)) ? m : (m.default?.toCanvas ? m.default : (m.default || m));
+          window.QRCode = mod;
+        }).catch(() => {});
+      }
+      if (!window.html2canvas) {
+        import('html2canvas').then(m => {
+          window.html2canvas = m.default || m;
+        }).catch(() => {});
+      }
+      if (!window.jsPDF) {
+        import('jspdf').then(m => {
+          window.jsPDF = m.default || m;
+        }).catch(() => {});
+      }
+    }
   }, []);
 
   return (

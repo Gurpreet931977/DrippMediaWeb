@@ -28,7 +28,6 @@ export default function ArcadePage() {
   if (!isAuthenticated) {
     return (
       <div style={{ width: '100vw', height: '100vh', backgroundColor: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <style>{`@import url('https://api.fontshare.com/v2/css?f[]=panchang@200,500,700,800&display=swap');`}</style>
         <span style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: '1.2rem', letterSpacing: '2px', animation: 'pulse 1.5s infinite' }}>
           AUTHENTICATING...
         </span>

@@ -71,7 +71,7 @@ export default function GlobalError({ error, reset }) {
   return (
     <html lang="en">
       <head>
-        <link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,400,500,600,700&f[]=panchang@200,300,400,500,600,700,800&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="/fonts.css" />
         <style>{`
           body {
             margin: 0;

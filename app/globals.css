@@ -1,5 +1,7 @@
 /* Global styles */
-        :root {
+@import './fonts.css';
+
+:root {
             --brand-yellow: #ebd73f;
             --brand-orange: #f39c12;
             --brand-glow: rgba(235, 215, 63, 0.4);

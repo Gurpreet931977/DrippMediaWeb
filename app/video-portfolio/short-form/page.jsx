@@ -2643,8 +2643,6 @@ export default function Page() {
   <meta charSet="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dripp Media | Short Form Portfolio</title>
-  {/* Fonts */}
-  <link href="https://api.fontshare.com/v2/css?f[]=panchang@200,300,400,500,600,700,800&f[]=clash-display@200,300,400,500,600,700&display=swap" rel="stylesheet" />
   {/* GSAP */}
   <a href="/video-portfolio" className="nav-back"><i className="uil uil-arrow-left" /></a>
   
