@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Lock, FileText, CheckCircle2, Globe, Mail, AtSign, PenTool } from 'lucide-react';
+import { Lock, FileText, CheckCircle2, Globe, Mail, AtSign, PenTool, Copy, Check, Sparkles } from 'lucide-react';
 
 export default function SharedQuote() {
   const params = useParams();
@@ -14,6 +14,7 @@ export default function SharedQuote() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [copiedSmartPaste, setCopiedSmartPaste] = useState(false);
   const pin0Ref = useRef(null);
   const pin1Ref = useRef(null);
   const pin2Ref = useRef(null);
@@ -106,6 +107,93 @@ export default function SharedQuote() {
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCopySmartPaste = () => {
+    if (!quoteData) return;
+    const client = quoteData.clientDetails || {};
+    const brand = client.brandName || client.name || 'Client';
+    const cName = client.name || '';
+    const email = client.email || '';
+    const phone = client.phone || client.mobile || '';
+    const address = client.address || '';
+    const gst = client.gst || client.gstNumber || '';
+    const pType = quoteData.packageType === 'monthly' ? 'Monthly' : 'Project';
+    const curr = quoteData.quoteDetails?.currency || quoteData.invoiceDetails?.currency || '₹';
+    const tot = quoteData.total || '';
+    const pmp = quoteData.pmpStrategy || '';
+    const msg = quoteData.quoteDetails?.message || quoteData.invoiceDetails?.message || '';
+
+    const lines = [];
+    lines.push(`Brand Name: ${brand}`);
+    if (cName) lines.push(`Client Name: ${cName}`);
+    if (email) lines.push(`Email: ${email}`);
+    if (phone) lines.push(`Phone: ${phone}`);
+    if (address) lines.push(`Address: ${address}`);
+    if (gst) lines.push(`GST: ${gst}`);
+    lines.push(`Package Type: ${pType}`);
+    lines.push(`Currency: ${curr}`);
+    if (tot) lines.push(`Total Budget: ${curr}${tot}`);
+
+    lines.push('');
+    lines.push('Deliverables:');
+
+    if (quoteData.packageTiers && Array.isArray(quoteData.packageTiers) && quoteData.packageTiers.length > 0) {
+      quoteData.packageTiers.forEach((tier, tIdx) => {
+        if (quoteData.packageTiers.length > 1) {
+          lines.push(`-- Tier ${tIdx + 1}: ${tier.name || 'Package Option'} --`);
+        }
+        (tier.items || []).forEach(it => {
+          const title = it.desc || it.name || 'Service Item';
+          const qty = it.qty || 1;
+          const rate = it.rate || 0;
+          const detailSuffix = it.details ? ` (${it.details})` : '';
+          lines.push(`- ${title} (${qty}) : ${curr}${rate} each${detailSuffix}`);
+        });
+      });
+    } else if (quoteData.items && Array.isArray(quoteData.items)) {
+      quoteData.items.forEach(it => {
+        const title = it.desc || it.name || 'Service Item';
+        const qty = it.qty || 1;
+        const rate = it.rate || 0;
+        const detailSuffix = it.details ? ` (${it.details})` : '';
+        lines.push(`- ${title} (${qty}) : ${curr}${rate} each${detailSuffix}`);
+      });
+    } else if (quoteData.services && Array.isArray(quoteData.services)) {
+      quoteData.services.forEach(it => {
+        const title = it.name || it.desc || 'Service Item';
+        const qty = it.qty || 1;
+        const rate = it.rate || 0;
+        const detailSuffix = it.details ? ` (${it.details})` : '';
+        lines.push(`- ${title} (${qty}) : ${curr}${rate} each${detailSuffix}`);
+      });
+    }
+
+    if (pmp) {
+      lines.push('');
+      lines.push('PMP Strategy:');
+      const stratStr = typeof pmp === 'object' ?
+        `Overview: ${pmp.overview || ''}\nTarget Audience: ${pmp.targetAudience || ''}\nPhases: ${(pmp.phases || []).map(p => `${p.title}: ${p.description}`).join('; ')}` :
+        pmp;
+      lines.push(stratStr);
+    }
+
+    if (msg) {
+      lines.push('');
+      lines.push('Notes:');
+      lines.push(msg);
+    }
+
+    const text = lines.join('\n');
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      }
+      setCopiedSmartPaste(true);
+      setTimeout(() => setCopiedSmartPaste(false), 3000);
+    } catch (e) {
+      console.warn('Failed to copy package details:', e);
     }
   };
 
@@ -244,6 +332,82 @@ export default function SharedQuote() {
         }
       `}</style>
 
+      {/* Top Floating Control Bar with Copy Icon for AI Smart Paste & Live Edit */}
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto 20px auto',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '12px',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{
+            fontSize: '0.78rem',
+            color: '#888',
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
+            fontFamily: "'Clash Display', sans-serif"
+          }}>
+            Package Link ID: <strong style={{ color: '#ebd73f' }}>{params?.id}</strong>
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Small copy icon button */}
+          <button
+            onClick={handleCopySmartPaste}
+            title="Copy package details to clipboard for Quote Maker AI Smart Paste"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 14px',
+              background: copiedSmartPaste ? 'rgba(74, 222, 128, 0.15)' : 'rgba(235, 215, 63, 0.12)',
+              border: `1px solid ${copiedSmartPaste ? '#4ade80' : 'rgba(235, 215, 63, 0.4)'}`,
+              borderRadius: '8px',
+              color: copiedSmartPaste ? '#4ade80' : '#ebd73f',
+              fontFamily: "'Clash Display', sans-serif",
+              fontSize: '0.8rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+              backdropFilter: 'blur(8px)'
+            }}
+          >
+            {copiedSmartPaste ? <Check size={14} color="#4ade80" /> : <Copy size={14} color="#ebd73f" />}
+            <span>{copiedSmartPaste ? 'Details Copied!' : 'Copy for AI Smart Paste'}</span>
+          </button>
+
+          <a
+            href={`/dripp-studio/quote?loadId=${encodeURIComponent(params?.id)}`}
+            title="Edit this package live in Quote Maker"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 12px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '8px',
+              color: '#ccc',
+              fontFamily: "'Clash Display', sans-serif",
+              fontSize: '0.8rem',
+              fontWeight: '500',
+              textDecoration: 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <PenTool size={13} color="#ebd73f" />
+            <span>Edit Live</span>
+          </a>
+        </div>
+      </div>
+
       <div className="quote-grid" id="quote-document">
         
         {/* Cover Header Section */}
@@ -256,7 +420,31 @@ export default function SharedQuote() {
         <div className="quote-left">
           {/* Client Details */}
           <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '24px', backdropFilter: 'blur(10px)', width: '100%', boxSizing: 'border-box' }}>
-            <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.9rem)', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px' }}>Prepared For</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <p style={{ fontSize: 'clamp(0.7rem, 3vw, 0.9rem)', color: '#ebd73f', textTransform: 'uppercase', letterSpacing: '2px', margin: 0 }}>Prepared For</p>
+              <button
+                onClick={handleCopySmartPaste}
+                title="Copy package details to clipboard for Quote Maker AI Smart Paste"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  background: copiedSmartPaste ? 'rgba(74, 222, 128, 0.2)' : 'rgba(235, 215, 63, 0.1)',
+                  border: `1px solid ${copiedSmartPaste ? '#4ade80' : 'rgba(235, 215, 63, 0.3)'}`,
+                  color: copiedSmartPaste ? '#4ade80' : '#ebd73f',
+                  borderRadius: '6px',
+                  padding: '4px 8px',
+                  fontSize: '0.72rem',
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {copiedSmartPaste ? <Check size={12} /> : <Copy size={12} />}
+                <span>{copiedSmartPaste ? 'Copied' : 'Copy Details'}</span>
+              </button>
+            </div>
             <h2 style={{ fontSize: 'clamp(1.8rem, 7vw, 2.5rem)', color: '#fff', margin: '0 0 10px 0', fontFamily: "'Panchang', sans-serif", wordBreak: 'break-word' }}>{quoteData.clientDetails?.brandName || quoteData.clientDetails?.name || 'Client'}</h2>
             {quoteData.clientDetails?.brandName && <p style={{ fontSize: 'clamp(1rem, 4vw, 1.2rem)', color: '#aaa', margin: '0 0 5px 0' }}>{quoteData.clientDetails?.name}</p>}
             <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#666', margin: '0 0 5px 0', wordBreak: 'break-all' }}>{quoteData.clientDetails?.email || ''}</p>

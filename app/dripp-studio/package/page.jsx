@@ -337,6 +337,37 @@ export default function PackageMaker() {
     }
   };
 
+  const copyPackageForSmartPaste = () => {
+    const lines = [];
+    lines.push(`Brand Name: ${brandName || 'Client'}`);
+    lines.push(`Package Type: ${packageType === 'monthly' ? 'Monthly' : 'Project'}`);
+    lines.push(`Currency: ₹`);
+    if (totalBudget) lines.push(`Total Budget: ₹${totalBudget}`);
+    lines.push('');
+    lines.push('Deliverables:');
+    (services || []).forEach(it => {
+      const title = it.name || it.desc || 'Service Item';
+      const qty = it.qty || 1;
+      const rate = it.rate || 0;
+      const detailSuffix = it.details ? ` (${it.details})` : '';
+      lines.push(`- ${title} (${qty}) : ₹${rate} each${detailSuffix}`);
+    });
+    if (pmpStrategy) {
+      lines.push('');
+      lines.push('PMP Strategy:');
+      lines.push(pmpStrategy);
+    }
+    const text = lines.join('\n');
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      }
+      alert('✅ Package details copied to clipboard! You can paste this directly into AI Smart Paste in Quote Maker.');
+    } catch (e) {
+      console.warn('Failed to copy', e);
+    }
+  };
+
   if (!isClient) return <div style={{ padding: '50px', color: 'white' }}>Loading PMP Maker...</div>;
 
   return (
@@ -479,11 +510,18 @@ export default function PackageMaker() {
           <h1 className="header-title">PERSONAL <span className="accent-text">MARKETING</span> PLAN</h1>
           <p style={{ color: '#888', marginTop: '8px', fontFamily: "'Clash Display', sans-serif" }}>Design a personalized PMP for your clients</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', width: '100%', maxWidth: '400px' }}>
-          <button className="btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={generatePDF}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', width: '100%', maxWidth: '560px' }}>
+          <a 
+            href="/dripp-studio/quote"
+            className="btn-secondary" 
+            style={{ flex: 1, justifyContent: 'center', textDecoration: 'none', minWidth: '150px' }}
+          >
+            Package History
+          </a>
+          <button className="btn-secondary" style={{ flex: 1, justifyContent: 'center', minWidth: '130px' }} onClick={generatePDF}>
             <Download size={18} /> Export PDF
           </button>
-          <button className="btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={generateShareLink} disabled={isGeneratingLink}>
+          <button className="btn-primary" style={{ flex: 1, justifyContent: 'center', minWidth: '130px' }} onClick={generateShareLink} disabled={isGeneratingLink}>
             {copiedLink ? <CheckCircle2 size={18} /> : <Share2 size={18} />}
             {copiedLink ? 'COPIED' : (isGeneratingLink ? 'GENERATING...' : 'SHARE')}
           </button>
@@ -557,16 +595,23 @@ export default function PackageMaker() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '100%', flexWrap: 'wrap' }}>
               <button 
                 onClick={() => {
                   const msg = `Hey!\n\nHere is your custom Personal Marketing Plan from Dripp Media.\n\n🔗 Link: ${generatedLink}\n🔑 PIN: ${sharePin}`;
                   navigator.clipboard.writeText(msg);
                   alert("Full message copied!");
                 }}
-                style={{ background: '#ebd73f', border: 'none', color: '#000', padding: '12px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+                style={{ background: '#ebd73f', border: 'none', color: '#000', padding: '12px 18px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', fontFamily: "'Clash Display', sans-serif" }}
               >
-                <Share2 size={16} /> Copy Full Message
+                <Share2 size={16} /> Copy Message
+              </button>
+              <button 
+                onClick={copyPackageForSmartPaste}
+                title="Copy package formatted for Quote Maker AI Smart Paste"
+                style={{ background: 'rgba(235, 215, 63, 0.15)', border: '1px solid #ebd73f', color: '#ebd73f', padding: '12px 18px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', fontFamily: "'Clash Display', sans-serif" }}
+              >
+                <Copy size={16} /> Copy for Smart Paste
               </button>
             </div>
           </div>

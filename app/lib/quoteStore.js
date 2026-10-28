@@ -255,3 +255,163 @@ export async function updateQuoteSignature(id, signatureImage, signedBy, signedA
     supabaseUpdated
   };
 }
+
+/**
+ * Retrieves all stored quote records from Supabase and resilient local storage.
+ * Merges records and returns sorted by newest first.
+ */
+export async function getAllQuoteRecords() {
+  const mergedMap = new Map();
+
+  // 1. Read from local resilient disk store
+  try {
+    const local = readLocalQuotes();
+    if (local && typeof local === 'object') {
+      Object.entries(local).forEach(([id, rec]) => {
+        if (rec && typeof rec === 'object') {
+          mergedMap.set(id, {
+            ...rec,
+            id: rec.id || id
+          });
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('[quoteStore] Error reading local quotes:', err.message);
+  }
+
+  // 2. Fetch from Supabase (if configured and reachable)
+  try {
+    const supabase = getSupabase();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('shared_quotes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(data)) {
+        data.forEach(item => {
+          if (item && item.id) {
+            mergedMap.set(item.id, {
+              id: item.id,
+              password: item.password,
+              quote_data: item.quote_data,
+              created_at: item.created_at || new Date().toISOString(),
+              updated_at: item.updated_at || item.created_at || new Date().toISOString()
+            });
+          }
+        });
+      } else if (error) {
+        console.warn('[quoteStore] Supabase fetch all notice:', error.message);
+      }
+    }
+  } catch (err) {
+    console.warn('[quoteStore] Supabase unreachable while fetching all quotes:', err.message);
+  }
+
+  // 3. Format and enrich records
+  const list = Array.from(mergedMap.values()).map(rec => {
+    const qData = rec.quote_data || {};
+    const client = qData.clientDetails || {};
+    const brandName = client.brandName || qData.brandName || client.name || 'Untitled Client';
+    const total = qData.total || (qData.packageTiers ? Math.max(0, ...qData.packageTiers.map(t => (t.items || []).reduce((s, it) => s + (parseFloat(it.qty || 1) * parseFloat(it.rate || 0)), 0))) : 0);
+    const itemsCount = qData.items?.length || (qData.packageTiers ? qData.packageTiers.flatMap(t => t.items || []).length : 0);
+    const tiersCount = qData.packageTiers?.length || 1;
+
+    return {
+      id: rec.id,
+      password: rec.password,
+      brandName,
+      clientName: client.name || '',
+      email: client.email || '',
+      phone: client.phone || client.mobile || '',
+      packageType: qData.packageType || qData.type || 'project',
+      total,
+      currency: qData.quoteDetails?.currency || '₹',
+      itemsCount,
+      tiersCount,
+      created_at: rec.created_at || new Date().toISOString(),
+      updated_at: rec.updated_at || rec.created_at || new Date().toISOString(),
+      quote_data: qData
+    };
+  });
+
+  // Sort newest first
+  list.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+
+  return list;
+}
+
+/**
+ * Updates an existing quote record in local storage and mirrors to Supabase.
+ */
+export async function updateQuoteRecord(id, password, quoteData) {
+  if (!id) return { success: false, error: 'Quote ID is required' };
+
+  const existing = await getQuoteRecord(id);
+  const now = new Date().toISOString();
+  const record = {
+    id,
+    password: typeof password === 'string' && password.trim() ? password.trim() : (existing?.password || null),
+    quote_data: quoteData,
+    created_at: existing?.created_at || now,
+    updated_at: now
+  };
+
+  // 1. Update local store
+  const quotes = readLocalQuotes();
+  quotes[id] = record;
+  writeLocalQuotes(quotes);
+
+  // 2. Sync to Supabase
+  let supabaseSynced = false;
+  try {
+    const supabase = getSupabase();
+    if (supabase) {
+      const { error } = await supabase
+        .from('shared_quotes')
+        .upsert([{ id, password: record.password, quote_data: quoteData }]);
+
+      if (!error) {
+        supabaseSynced = true;
+      } else {
+        console.warn('[quoteStore] Supabase upsert notice:', error.message);
+      }
+    }
+  } catch (err) {
+    console.warn('[quoteStore] Supabase update unreachable:', err.message);
+  }
+
+  return { success: true, id, record, supabaseSynced };
+}
+
+/**
+ * Deletes a quote record from local storage and Supabase.
+ */
+export async function deleteQuoteRecord(id) {
+  if (!id) return { success: false, error: 'Quote ID is required' };
+
+  // 1. Delete from local store
+  const quotes = readLocalQuotes();
+  if (quotes[id]) {
+    delete quotes[id];
+    writeLocalQuotes(quotes);
+  }
+
+  // 2. Delete from Supabase
+  let supabaseDeleted = false;
+  try {
+    const supabase = getSupabase();
+    if (supabase) {
+      const { error } = await supabase
+        .from('shared_quotes')
+        .delete()
+        .eq('id', id);
+      if (!error) supabaseDeleted = true;
+    }
+  } catch (err) {
+    console.warn('[quoteStore] Supabase delete notice:', err.message);
+  }
+
+  return { success: true, id, supabaseDeleted };
+}

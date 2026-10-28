@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, ArrowUp, ArrowDown, Layers, Type, Image, EyeOff, Eye, Copy, MessageCircle } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, ArrowUp, ArrowDown, Layers, Type, Image, EyeOff, Eye, Copy, MessageCircle, History, Clock, ExternalLink, RefreshCw, ClipboardCheck, Sparkles } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import styles from '../admin.module.css';
@@ -155,6 +155,16 @@ export default function QuoteMaker() {
   const [savedPackages, setSavedPackages] = useState([]);
   const [searchTemplate, setSearchTemplate] = useState('');
   
+  // Package / Quote History State
+  const [historyQuotes, setHistoryQuotes] = useState([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [searchHistory, setSearchHistory] = useState('');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState('history'); // 'history' | 'templates'
+  const [historyTypeFilter, setHistoryTypeFilter] = useState('all'); // 'all' | 'project' | 'monthly'
+  const [activeEditingQuote, setActiveEditingQuote] = useState(null); // { id, password, brandName }
+  const [isUpdatingLive, setIsUpdatingLive] = useState(false);
+
   // Sharing
   const [shareLink, setShareLink] = useState('');
   const [sharePassword, setSharePassword] = useState('');
@@ -173,8 +183,261 @@ export default function QuoteMaker() {
   const [currentConflictIdx, setCurrentConflictIdx] = useState(0);
   const [pendingAutoFillData, setPendingAutoFillData] = useState(null);
 
+  // Fetch all quotes / packages history from cloud & resilient storage
+  const fetchHistoryQuotes = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const res = await fetch('/api/quote');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.quotes && Array.isArray(data.quotes)) {
+          setHistoryQuotes(data.quotes);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch package history:', err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  // Format any package into structured text tailored specifically for AI Smart Paste
+  const formatPackageForSmartPaste = (pkg) => {
+    if (!pkg) return '';
+    const qData = pkg.quote_data || pkg;
+    const client = qData.clientDetails || {};
+    const brand = client.brandName || qData.brandName || 'Client Brand';
+    const cName = client.name || '';
+    const email = client.email || '';
+    const phone = client.phone || client.mobile || '';
+    const address = client.address || '';
+    const gst = client.gst || client.gstNumber || '';
+    const pType = qData.packageType || qData.type || 'project';
+    const curr = qData.quoteDetails?.currency || '₹';
+    const tot = qData.total || '';
+    const pmp = qData.pmpStrategy || '';
+    const msg = qData.quoteDetails?.message || qData.message || '';
+
+    const lines = [];
+    lines.push(`Brand Name: ${brand}`);
+    if (cName) lines.push(`Client Name: ${cName}`);
+    if (email) lines.push(`Email: ${email}`);
+    if (phone) lines.push(`Phone: ${phone}`);
+    if (address) lines.push(`Address: ${address}`);
+    if (gst) lines.push(`GST: ${gst}`);
+    lines.push(`Package Type: ${pType}`);
+    lines.push(`Currency: ${curr}`);
+    if (tot) lines.push(`Total Budget: ${curr}${tot}`);
+
+    lines.push('');
+    lines.push('Deliverables:');
+
+    if (qData.packageTiers && Array.isArray(qData.packageTiers) && qData.packageTiers.length > 0) {
+      qData.packageTiers.forEach((tier, tIdx) => {
+        if (qData.packageTiers.length > 1) {
+          lines.push(`-- Tier ${tIdx + 1}: ${tier.name || 'Package Option'} --`);
+        }
+        (tier.items || []).forEach(it => {
+          const title = it.desc || it.name || 'Service Item';
+          const qty = it.qty || 1;
+          const rate = it.rate || 0;
+          const detailSuffix = it.details ? ` (${it.details})` : '';
+          lines.push(`- ${title} (${qty}) : ${curr}${rate} each${detailSuffix}`);
+        });
+      });
+    } else if (qData.items && Array.isArray(qData.items)) {
+      qData.items.forEach(it => {
+        const title = it.desc || it.name || 'Service Item';
+        const qty = it.qty || 1;
+        const rate = it.rate || 0;
+        const detailSuffix = it.details ? ` (${it.details})` : '';
+        lines.push(`- ${title} (${qty}) : ${curr}${rate} each${detailSuffix}`);
+      });
+    } else if (qData.services && Array.isArray(qData.services)) {
+      qData.services.forEach(it => {
+        const title = it.name || it.desc || 'Service Item';
+        const qty = it.qty || 1;
+        const rate = it.rate || 0;
+        const detailSuffix = it.details ? ` (${it.details})` : '';
+        lines.push(`- ${title} (${qty}) : ${curr}${rate} each${detailSuffix}`);
+      });
+    }
+
+    if (pmp) {
+      lines.push('');
+      lines.push('PMP Strategy:');
+      const stratStr = typeof pmp === 'object' ?
+        `Overview: ${pmp.overview || ''}\nTarget Audience: ${pmp.targetAudience || ''}\nPhases: ${(pmp.phases || []).map(p => `${p.title}: ${p.description}`).join('; ')}` :
+        pmp;
+      lines.push(stratStr);
+    }
+
+    if (msg) {
+      lines.push('');
+      lines.push('Notes:');
+      lines.push(msg);
+    }
+
+    return lines.join('\n');
+  };
+
+  // Copy full package details for AI Smart Paste with visual feedback
+  const copyPackageForSmartPaste = (pkg, itemId = null) => {
+    const text = formatPackageForSmartPaste(pkg);
+    if (!text) return;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      }
+      setCopiedItem(itemId || 'smartPasteCopy');
+      setTimeout(() => setCopiedItem(null), 2500);
+      showAlert('✅ Package details copied to clipboard! You can paste this directly into AI Smart Paste.');
+    } catch (err) {
+      console.warn('Clipboard write error:', err);
+    }
+  };
+
+  // Load a package from history directly into the live editor
+  const loadQuoteFromHistory = (rec, skipConfirm = false) => {
+    const doLoad = () => {
+      const qData = rec.quote_data || rec;
+      setActiveEditingQuote({
+        id: rec.id,
+        password: rec.password || '',
+        brandName: rec.brandName || 'Client'
+      });
+      setShareLink(`${window.location.origin}/quote/${rec.id}`);
+      setSharePassword(rec.password || '');
+
+      parseQuotePayload(qData);
+
+      if (qData.quoteDetails) {
+        setQuoteDetails(prev => ({ ...prev, ...(qData.quoteDetails || {}) }));
+      }
+      if (qData.packageTiers && Array.isArray(qData.packageTiers) && qData.packageTiers.length > 0) {
+        setPackageTiers(JSON.parse(JSON.stringify(qData.packageTiers)));
+      } else if (qData.items && Array.isArray(qData.items)) {
+        setPackageTiers([{ id: Date.now(), name: 'Standard Package', items: JSON.parse(JSON.stringify(qData.items)) }]);
+      }
+      if (qData.packageType) {
+        setPackageType(qData.packageType);
+      }
+      if (qData.pmpStrategy) {
+        const strat = typeof qData.pmpStrategy === 'object' ?
+          `Overview:\n${qData.pmpStrategy.overview || ''}\n\nTarget Audience:\n${qData.pmpStrategy.targetAudience || ''}\n\nPhases:\n${(qData.pmpStrategy.phases || []).map(p => `- ${p.title}: ${p.description}`).join('\n')}` :
+          qData.pmpStrategy;
+        setPmpStrategy(strat);
+        setIncludePMP(true);
+      }
+
+      setShowHistoryModal(false);
+      showAlert(`⚡ Package for "${rec.brandName}" is now LIVE in the editor! You can make edits and click "Save Changes to Live Link" to update the client link.`);
+    };
+
+    if (skipConfirm) {
+      doLoad();
+    } else {
+      showConfirm(
+        `Load package for "${rec.brandName}"? This will populate the editor live with all client info, services, and strategy.`,
+        doLoad,
+        () => {},
+        'Load Package into Editor'
+      );
+    }
+  };
+
+  // Save changes back into the existing active package link in Supabase & cloud storage
+  const updateLiveQuote = async () => {
+    if (!activeEditingQuote?.id) return;
+    setIsUpdatingLive(true);
+    try {
+      const payload = {
+        clientDetails,
+        quoteDetails,
+        packageTiers,
+        packageType,
+        total,
+        includePMP,
+        pmpStrategy,
+        password: sharePassword || activeEditingQuote.password
+      };
+
+      const res = await fetch('/api/quote', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: activeEditingQuote.id,
+          password: sharePassword || activeEditingQuote.password,
+          quote_data: payload
+        })
+      });
+
+      if (res.ok) {
+        showAlert(`✅ Package for "${activeEditingQuote.brandName}" updated live! The existing client link now reflects your latest edits.`);
+        fetchHistoryQuotes();
+      } else {
+        showAlert('Failed to update live package. Please check network.');
+      }
+    } catch (err) {
+      console.error('Error updating live quote:', err);
+      showAlert('API error updating live package.');
+    } finally {
+      setIsUpdatingLive(false);
+    }
+  };
+
+  // Delete a package from history
+  const deleteHistoryQuote = (id, name) => {
+    showConfirm(
+      `Are you sure you want to delete the package for "${name}"? This cannot be undone.`,
+      async () => {
+        try {
+          const res = await fetch(`/api/quote?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+          if (res.ok) {
+            showAlert(`Package for "${name}" deleted.`);
+            if (activeEditingQuote?.id === id) {
+              setActiveEditingQuote(null);
+            }
+            fetchHistoryQuotes();
+          }
+        } catch (e) {
+          showAlert('Failed to delete package.');
+        }
+      },
+      () => {},
+      'Delete Package'
+    );
+  };
+
   const handleSmartPaste = async () => {
     if (!smartText.trim()) return;
+
+    // Check if user pasted structured JSON from a package export
+    const trimmed = smartText.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        const json = JSON.parse(trimmed);
+        const qData = json.quote_data || json;
+        parseQuotePayload(qData);
+        if (qData.quoteDetails) setQuoteDetails(prev => ({ ...prev, ...(qData.quoteDetails || {}) }));
+        if (qData.packageTiers && Array.isArray(qData.packageTiers) && qData.packageTiers.length > 0) {
+          setPackageTiers(JSON.parse(JSON.stringify(qData.packageTiers)));
+        } else if (qData.items && Array.isArray(qData.items)) {
+          setPackageTiers([{ id: Date.now(), name: 'Standard Package', items: JSON.parse(JSON.stringify(qData.items)) }]);
+        }
+        if (qData.pmpStrategy) {
+          setPmpStrategy(typeof qData.pmpStrategy === 'object' ? JSON.stringify(qData.pmpStrategy) : qData.pmpStrategy);
+          setIncludePMP(true);
+        }
+        setSmartText('');
+        setIsAutoFillSuccess(true);
+        setTimeout(() => setIsAutoFillSuccess(false), 2000);
+        showAlert('✅ Package loaded directly from pasted JSON with 100% precision!');
+        return;
+      } catch (e) {
+        // Continue to regular parser if JSON parsing fails
+      }
+    }
 
     setIsAutoFilling(true);
     await new Promise(r => setTimeout(r, 800));
@@ -193,7 +456,6 @@ export default function QuoteMaker() {
     const gstMatch = smartText.match(/GST(?:[\s:-]+)?([0-9A-Z]{15})/i);
     if (gstMatch) {
         gstFound = gstMatch[1].toUpperCase();
-        // Remove GST from individual lines to prevent it matching as an item
         for (let i = 0; i < lines.length; i++) {
             if (lines[i].toLowerCase().includes('gst')) {
                 lines[i] = lines[i].replace(/GST(?:[\s:-]+)?([0-9A-Z]{15})/i, '').trim();
@@ -234,7 +496,7 @@ export default function QuoteMaker() {
     let normalizedText = smartText.replace(/(\d+)\s*k\b/gi, (match, p1) => `${parseInt(p1) * 1000}`);
 
     // 4. Extract Name & Brand
-    const brandPatternMatch = normalizedText.match(/(?:brand\s*name\s*[-:]?\s*|for\s+brand\s+)([\w\s]+?)(?=\.|\n|,|$)/i);
+    const brandPatternMatch = normalizedText.match(/(?:brand\s*name\s*[-:]?\s*|brand\s*[-:]?\s*|for\s+brand\s+)([\w\s&'-]+?)(?=\.|\n|,|$)/i);
     if (brandPatternMatch) {
         parsedClient.brands = [brandPatternMatch[1].trim()];
     } else {
@@ -252,37 +514,58 @@ export default function QuoteMaker() {
         }
     }
 
-    const people = doc.people().out('array');
-    if (people.length > 0) {
-        parsedClient.names = [people[0].replace(/[.,;:!?]$/, '').trim()];
+    const clientNameMatch = normalizedText.match(/(?:client\s*name\s*[-:]?\s*|client\s*[-:]?\s*|name\s*[-:]?\s*)([a-zA-Z0-9\s&'-]+?)(?=\.|\n|,|$)/i);
+    if (clientNameMatch) {
+        parsedClient.names = [clientNameMatch[1].trim()];
     } else {
-        const nameMatch = normalizedText.match(/(?:name|client):\s*([a-zA-Z\s]+)/i);
-        if (nameMatch) parsedClient.names = [nameMatch[1].trim()];
+        const people = doc.people().out('array');
+        if (people.length > 0) {
+            parsedClient.names = [people[0].replace(/[.,;:!?]$/, '').trim()];
+        }
     }
 
-    // 5. Extract Items/Prices using Advanced Heuristics + NLP
+    // 5. Extract PMP Strategy
+    const pmpMatch = smartText.match(/(?:PMP\s*Strategy|Strategy\s*Overview|Strategy\s*Pitch|Strategy):\s*([\s\S]+?)(?=\nNotes:|\n---|\nDeliverables:|$)/i);
+    if (pmpMatch) {
+        parsedQuote.pmpStrategy = pmpMatch[1].trim();
+    }
+
+    // Explicit Address extraction
+    const addressExplicit = smartText.match(/Address:\s*([^\n]+)/i);
+    if (addressExplicit) {
+        parsedClient.address = [addressExplicit[1].trim()];
+    }
+
+    // 6. Extract Items/Prices using Advanced Heuristics + NLP
     const parsedItems = [];
     
     lines.forEach(line => {
         if (!line) return;
         if (line.match(/\bTotal\b/i) && !line.match(/each/i) && line.match(/=/)) return;
-        if (line.match(/Total Investment/i)) return;
+        if (line.match(/Total Investment/i) || line.match(/Total Budget/i)) return;
         if (line.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/)) return;
-        // Don't parse phones as items if they were confirmed
+        if (line.match(/^Deliverables:/i) || line.match(/^---/)) return;
+        if (line.match(/^PMP Strategy:/i) || line.match(/^Notes:/i)) return;
+        
         let isPhoneLine = false;
         for (let cp of confirmedPhones) {
              if (line.includes(cp)) isPhoneLine = true;
         }
         if (isPhoneLine) return;
-        if (line.match(/^(?:name|client|brand|company|for):\s*/i)) return;
+        if (line.match(/^(?:name|client|brand|company|for|package type|currency|address):\s*/i)) return;
         
         let qty = 1;
         let rate = 0;
         let desc = "";
         
-        let m1 = line.match(/^[-*•]?\s*(.*?)\s*\((\d+)\)\s*[:-]?\s*[$€£₹]?\s*([\d,.]+)\s*each/i);
+        let m1 = line.match(/^[-*•]?\s*(.*?)\s*\((\d+)\)\s*[:-]?\s*[$€£₹]?\s*([\d,.]+)\s*each(?:\s*\((.*?)\))?/i);
         if (m1) {
-            parsedItems.push({desc: m1[1].trim(), qty: parseInt(m1[2]), rate: parseFloat(m1[3].replace(/,/g, ''))});
+            parsedItems.push({
+              desc: m1[1].trim(), 
+              qty: parseInt(m1[2]), 
+              rate: parseFloat(m1[3].replace(/,/g, '')),
+              details: m1[4] ? m1[4].trim() : ''
+            });
             return;
         }
         
@@ -320,28 +603,22 @@ export default function QuoteMaker() {
             }
         }
         
-        addressLines.push(line);
+        if (!addressExplicit) {
+          addressLines.push(line);
+        }
     });
 
-    if (addressLines.length > 0) {
+    if (!addressExplicit && addressLines.length > 0) {
         let rawAddress = addressLines.join('\n');
-        
-        // Remove typical address labels before the colon (e.g., "Building No./Flat No.:", "State:")
         let cleaned = rawAddress.replace(/(?:[a-zA-Z /.-]+:)/g, ',');
-        
-        // Split by commas or newlines, trim, and remove empty
         let parts = cleaned.replace(/\n/g, ',').split(',').map(s => s.trim()).filter(s => s);
-        
-        // Deduplicate sequential or identical words
         let uniqueParts = [];
         parts.forEach(p => {
             if (!uniqueParts.some(u => u.toLowerCase() === p.toLowerCase())) {
                 uniqueParts.push(p);
             }
         });
-        
         let finalAddress = uniqueParts.join(', ');
-        
         if (finalAddress) {
             parsedClient.address = [finalAddress];
         }
@@ -371,7 +648,6 @@ export default function QuoteMaker() {
     // --- CONFLICT DETECTION ---
     const detectedConflicts = [];
 
-    // Helper for scalar fields
     const checkScalarConflict = (fieldName, parsedValues, currentValue, label) => {
         if (!parsedValues || parsedValues.length === 0) return;
         const uniqueValues = [...new Set(parsedValues)];
@@ -393,7 +669,6 @@ export default function QuoteMaker() {
                 currentValue
             });
         } else {
-            // No conflict, just stage it
             if (!parsedClient.staged) parsedClient.staged = {};
             parsedClient.staged[fieldName] = uniqueValues[0];
         }
@@ -406,10 +681,7 @@ export default function QuoteMaker() {
     checkScalarConflict('address', parsedClient.address, clientDetails.address, 'Address');
     checkScalarConflict('gst', parsedClient.gst, clientDetails.gst, 'GST Number');
 
-    // Helper for Items
     const pendingItems = [];
-    
-    // First, consolidate parsed items themselves
     const consolidatedParsedItems = [];
     parsedItems.forEach(pi => {
         const sim = consolidatedParsedItems.find(c => c.desc.toLowerCase().replace(/s$/, '') === pi.desc.toLowerCase().replace(/s$/, ''));
@@ -473,12 +745,15 @@ export default function QuoteMaker() {
       if (data.parsedQuote.message) updatedQuote.message = data.parsedQuote.message;
       if (data.parsedQuote.currency) updatedQuote.currency = data.parsedQuote.currency;
       if (data.parsedQuote.packageType) setPackageType(data.parsedQuote.packageType);
+      if (data.parsedQuote.pmpStrategy) {
+          setPmpStrategy(data.parsedQuote.pmpStrategy);
+          setIncludePMP(true);
+      }
       
       setClientDetails(updatedClient);
       setQuoteDetails(updatedQuote);
       
       if (data.pendingItems.length > 0) {
-          // Add non-empty items to Tier 1
           const validCurrent = packageTiers[0]?.items?.filter(i => i.desc || i.rate > 0) || [];
           const newTiers = [...packageTiers];
           if(newTiers.length === 0) newTiers.push({ id: Date.now(), name: 'Standard Package', items: [] });
@@ -570,6 +845,7 @@ export default function QuoteMaker() {
 
   useEffect(() => {
     setIsClient(true);
+    fetchHistoryQuotes();
     const localPackages = localStorage.getItem('dripp_advanced_packages');
     
     const defaultTemplates = [
@@ -643,6 +919,21 @@ export default function QuoteMaker() {
     } else {
       setSavedPackages(defaultTemplates);
       localStorage.setItem('dripp_advanced_packages', JSON.stringify(defaultTemplates));
+    }
+
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const loadId = urlParams.get('loadId') || urlParams.get('quoteId') || urlParams.get('id');
+      if (loadId) {
+        fetch(`/api/quote?id=${encodeURIComponent(loadId)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.quote) {
+              loadQuoteFromHistory(data.quote, true);
+            }
+          })
+          .catch(e => console.warn('Could not auto-load quote from param:', e));
+      }
     }
   }, []);
 
@@ -1057,6 +1348,12 @@ export default function QuoteMaker() {
         if (response.ok) {
             const data = await response.json();
             setShareLink(`${window.location.origin}/quote/${data.id}`);
+            setActiveEditingQuote({
+              id: data.id,
+              password: pass,
+              brandName: clientDetails.brandName || clientDetails.name || 'Client'
+            });
+            fetchHistoryQuotes();
         } else {
             showAlert("Failed to save quote securely.");
         }
@@ -1248,12 +1545,286 @@ export default function QuoteMaker() {
           </div>
         </div>
       )}
+
+      {/* PACKAGE HISTORY MODAL - ALL PACKAGES FROM SUPABASE & RESILIENT STORAGE */}
+      {showHistoryModal && createPortal(
+        <div 
+          className={styles.modalOverlay}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowHistoryModal(false); }}
+        >
+          <div 
+            className={styles.modalCard}
+            style={{ maxWidth: '980px', width: '92vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={styles.modalHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <History size={22} color="#ebd73f" />
+                  <h3 className={styles.modalTitle} style={{ color: '#ebd73f', fontFamily: "'Panchang', sans-serif", fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
+                    PACKAGE & PROPOSAL HISTORY
+                  </h3>
+                </div>
+                <p className={styles.modalSubtitle} style={{ marginTop: '6px', fontFamily: "'Clash Display', sans-serif" }}>
+                  Every package created till now stored in Supabase & cloud. Edit lively or copy full details directly into AI Smart Paste.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  onClick={fetchHistoryQuotes}
+                  className={styles.btn}
+                  style={{ padding: '8px 14px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Clash Display', sans-serif" }}
+                  title="Refresh from Supabase"
+                >
+                  <RefreshCw size={14} className={isLoadingHistory ? 'spin' : ''} /> Refresh
+                </button>
+                <button 
+                  onClick={() => setShowHistoryModal(false)}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#aaa', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '1.1rem' }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Filter toolbar */}
+            <div style={{ padding: '16px 24px', background: 'rgba(0,0,0,0.25)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ position: 'relative', flex: '1 1 300px' }}>
+                <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
+                <input
+                  type="text"
+                  placeholder="Search by Brand Name, Client, or Link ID..."
+                  value={searchHistory}
+                  onChange={e => setSearchHistory(e.target.value)}
+                  className={styles.inputField}
+                  style={{ paddingLeft: '40px', fontSize: '0.9rem', fontFamily: "'Clash Display', sans-serif" }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {['all', 'project', 'monthly'].map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setHistoryTypeFilter(t)}
+                    style={{
+                      background: historyTypeFilter === t ? '#ebd73f' : 'rgba(255,255,255,0.05)',
+                      color: historyTypeFilter === t ? '#000' : '#888',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      padding: '6px 14px',
+                      borderRadius: '8px',
+                      fontSize: '0.74rem',
+                      fontWeight: 800,
+                      fontFamily: "'Panchang', sans-serif",
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {t === 'all' ? `All (${historyQuotes.length})` : t.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Body: Package list */}
+            <div className={styles.modalBody} style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, maxHeight: '60vh' }}>
+              {isLoadingHistory && historyQuotes.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#888', fontFamily: "'Clash Display', sans-serif" }}>
+                  <Loader size={28} className="spin" style={{ margin: '0 auto 12px auto', color: '#ebd73f' }} />
+                  Loading history from Supabase & cloud storage...
+                </div>
+              ) : historyQuotes.length === 0 ? (
+                <div style={{ padding: '50px 20px', textAlign: 'center', color: '#777', fontFamily: "'Clash Display', sans-serif" }}>
+                  <History size={36} color="#444" style={{ margin: '0 auto 14px auto' }} />
+                  <h4 style={{ color: '#fff', margin: '0 0 6px 0', fontFamily: "'Panchang', sans-serif" }}>No Packages Created Yet</h4>
+                  <p style={{ margin: 0, fontSize: '0.88rem' }}>When you create proposal links or standalone packages, they will automatically appear here with their Brand Names and details.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '16px' }}>
+                  {historyQuotes
+                    .filter(pkg => {
+                      if (historyTypeFilter !== 'all' && (pkg.packageType || '').toLowerCase() !== historyTypeFilter) return false;
+                      const q = searchHistory.toLowerCase().trim();
+                      if (!q) return true;
+                      return (
+                        (pkg.brandName || '').toLowerCase().includes(q) ||
+                        (pkg.clientName || '').toLowerCase().includes(q) ||
+                        (pkg.id || '').toLowerCase().includes(q)
+                      );
+                    })
+                    .map(pkg => {
+                      const isLive = activeEditingQuote?.id === pkg.id;
+                      return (
+                        <div
+                          key={pkg.id}
+                          style={{
+                            background: isLive ? 'rgba(235, 215, 63, 0.08)' : 'rgba(255,255,255,0.03)',
+                            border: isLive ? '1.5px solid #ebd73f' : '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '16px',
+                            padding: '20px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            gap: '16px',
+                            boxShadow: isLive ? '0 0 20px rgba(235, 215, 63, 0.2)' : 'none',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
+                              <div>
+                                <span style={{
+                                  background: (pkg.packageType || '').toLowerCase().includes('month') ? 'rgba(59, 130, 246, 0.15)' : 'rgba(235, 215, 63, 0.15)',
+                                  color: (pkg.packageType || '').toLowerCase().includes('month') ? '#60a5fa' : '#ebd73f',
+                                  border: `1px solid ${(pkg.packageType || '').toLowerCase().includes('month') ? 'rgba(59, 130, 246, 0.3)' : 'rgba(235, 215, 63, 0.3)'}`,
+                                  fontSize: '0.65rem',
+                                  fontWeight: 800,
+                                  fontFamily: "'Panchang', sans-serif",
+                                  padding: '3px 8px',
+                                  borderRadius: '6px',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '1px',
+                                  display: 'inline-block',
+                                  marginBottom: '8px'
+                                }}>
+                                  {pkg.packageType}
+                                </span>
+                                <h4 style={{ color: isLive ? '#ebd73f' : '#fff', fontSize: '1.25rem', margin: 0, fontWeight: 800, fontFamily: "'Panchang', sans-serif" }}>
+                                  {pkg.brandName}
+                                </h4>
+                                {pkg.clientName && (
+                                  <div style={{ fontSize: '0.85rem', color: '#aaa', marginTop: '3px', fontFamily: "'Clash Display', sans-serif" }}>
+                                    Client: {pkg.clientName}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ color: '#ebd73f', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Clash Display', sans-serif" }}>
+                                  {pkg.currency}{Number(pkg.total || 0).toLocaleString()}
+                                </div>
+                                <div style={{ fontSize: '0.72rem', color: '#666', marginTop: '2px', fontFamily: "'Clash Display', sans-serif" }}>
+                                  {pkg.itemsCount} deliverables • {pkg.tiersCount} {pkg.tiersCount === 1 ? 'tier' : 'tiers'}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '10px', padding: '10px 12px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.78rem', color: '#aaa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                                Link ID: <strong style={{ color: '#fff' }}>{pkg.id}</strong>
+                              </span>
+                              <span style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                                PIN: <strong style={{ color: '#ebd73f' }}>{pkg.password || 'None'}</strong>
+                              </span>
+                              <span style={{ color: '#666', fontSize: '0.72rem', fontFamily: "'Clash Display', sans-serif" }}>
+                                {pkg.created_at ? new Date(pkg.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '14px' }}>
+                            <button
+                              onClick={() => loadQuoteFromHistory(pkg)}
+                              style={{
+                                flex: 1,
+                                background: '#ebd73f',
+                                color: '#000',
+                                border: 'none',
+                                padding: '10px 14px',
+                                borderRadius: '8px',
+                                fontWeight: 800,
+                                fontSize: '0.74rem',
+                                cursor: 'pointer',
+                                fontFamily: "'Panchang', sans-serif",
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px'
+                              }}
+                            >
+                              <Edit3 size={14} /> Edit Live
+                            </button>
+
+                            <button
+                              onClick={() => copyPackageForSmartPaste(pkg, `modal_copy_${pkg.id}`)}
+                              style={{
+                                background: copiedItem === `modal_copy_${pkg.id}` ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.06)',
+                                border: copiedItem === `modal_copy_${pkg.id}` ? '1px solid #22c55e' : '1px solid rgba(255,255,255,0.15)',
+                                color: copiedItem === `modal_copy_${pkg.id}` ? '#22c55e' : '#fff',
+                                padding: '10px 14px',
+                                borderRadius: '8px',
+                                fontWeight: 600,
+                                fontSize: '0.82rem',
+                                cursor: 'pointer',
+                                fontFamily: "'Clash Display', sans-serif",
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}
+                              title="Copy every detail of this package formatted for AI Smart Paste"
+                            >
+                              {copiedItem === `modal_copy_${pkg.id}` ? <CheckCircle2 size={14} color="#22c55e" /> : <Copy size={14} />}
+                              {copiedItem === `modal_copy_${pkg.id}` ? 'Copied Details!' : 'Copy for Smart Paste'}
+                            </button>
+
+                            <button
+                              onClick={() => window.open(`${window.location.origin}/quote/${pkg.id}?pwd=${pkg.password}`, '_blank')}
+                              style={{
+                                background: 'transparent',
+                                border: '1px solid rgba(255,255,255,0.12)',
+                                color: '#aaa',
+                                padding: '10px',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
+                              title="Open Client View"
+                            >
+                              <ExternalLink size={15} />
+                            </button>
+
+                            <button
+                              onClick={() => deleteHistoryQuote(pkg.id, pkg.brandName)}
+                              style={{
+                                background: 'transparent',
+                                border: '1px solid rgba(255, 77, 77, 0.2)',
+                                color: '#ff4d4d',
+                                padding: '10px',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
+                              title="Delete Package"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      , document.body)}
+
       <div className={styles.headerTop}>
         <div>
           <h1 className={styles.titleModern}>QUOTES & <span className={styles.titleHighlight}>PACKAGES</span></h1>
           <p className={styles.subtitleModern}>Design customized proposals, tier packages, and client quotations</p>
         </div>
         <div className={styles.headerActions}>
+           <button 
+             onClick={() => setShowHistoryModal(true)} 
+             className={styles.btnModernSecondary} 
+             style={{ borderColor: 'rgba(235, 215, 63, 0.4)', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '8px' }}
+             title="View all packages created in Supabase & cloud"
+           >
+             <History size={18} /> Package History ({historyQuotes.length})
+           </button>
            <button onClick={generatePDF} className={styles.btnModernSecondary}>
              <Download size={18} /> Export PDF
            </button>
@@ -1262,6 +1833,113 @@ export default function QuoteMaker() {
            </button>
         </div>
       </div>
+
+      {/* LIVE EDIT MODE BANNER */}
+      {activeEditingQuote && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.22) 0%, rgba(20, 20, 20, 0.98) 100%)',
+          border: '1.5px solid #ebd73f',
+          borderRadius: '16px',
+          padding: '18px 24px',
+          marginBottom: '28px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '14px',
+          boxShadow: '0 8px 30px rgba(235, 215, 63, 0.2)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ background: '#ebd73f', color: '#000', borderRadius: '8px', padding: '6px 12px', fontWeight: 800, fontSize: '0.72rem', letterSpacing: '1px', fontFamily: "'Panchang', sans-serif" }}>
+              LIVE EDIT
+            </div>
+            <div>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem', fontFamily: "'Clash Display', sans-serif" }}>
+                Editing Package for: <span style={{ color: '#ebd73f', fontWeight: 800 }}>{activeEditingQuote.brandName}</span>
+              </div>
+              <div style={{ color: '#aaa', fontSize: '0.8rem', marginTop: '2px', fontFamily: "'Clash Display', sans-serif" }}>
+                Link ID: <span style={{ color: '#ebd73f' }}>{activeEditingQuote.id}</span> • PIN: {sharePassword || activeEditingQuote.password || 'None'}
+              </div>
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={updateLiveQuote}
+              disabled={isUpdatingLive}
+              style={{
+                background: '#ebd73f',
+                color: '#000',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '8px',
+                fontWeight: 800,
+                cursor: isUpdatingLive ? 'wait' : 'pointer',
+                fontFamily: "'Panchang', sans-serif",
+                fontSize: '0.74rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <Save size={16} /> {isUpdatingLive ? 'Updating...' : 'Save to Live Link'}
+            </button>
+            <button
+              onClick={() => copyPackageForSmartPaste({ clientDetails, quoteDetails, packageTiers, packageType, total, includePMP, pmpStrategy }, 'liveBannerCopy')}
+              style={{
+                background: copiedItem === 'liveBannerCopy' ? '#22c55e' : 'rgba(255,255,255,0.08)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.2)',
+                padding: '10px 16px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontFamily: "'Clash Display', sans-serif",
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              title="Copy every detail to paste in AI Smart Paste"
+            >
+              {copiedItem === 'liveBannerCopy' ? <CheckCircle2 size={15} color="#fff" /> : <Copy size={15} />}
+              {copiedItem === 'liveBannerCopy' ? 'Details Copied!' : 'Copy for Smart Paste'}
+            </button>
+            <button
+              onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                color: '#ddd',
+                border: '1px solid rgba(255,255,255,0.15)',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontFamily: "'Clash Display', sans-serif",
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <ExternalLink size={14} /> Open Live
+            </button>
+            <button
+              onClick={() => setActiveEditingQuote(null)}
+              style={{
+                background: 'transparent',
+                color: '#888',
+                border: 'none',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontFamily: "'Clash Display', sans-serif"
+              }}
+            >
+              Exit Live Edit
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* TOP HEADER SHARE LINK & PIN CARD */}
       {shareLink && (
@@ -1276,7 +1954,7 @@ export default function QuoteMaker() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <CheckCircle2 size={20} color="#ebd73f" />
-              <h4 style={{ margin: 0, color: '#fff', fontSize: '1.1rem', fontFamily: 'Clash Display, sans-serif' }}>
+              <h4 style={{ margin: 0, color: '#fff', fontSize: '1.1rem', fontFamily: "'Clash Display', sans-serif" }}>
                 Secure Proposal Share Link Created!
               </h4>
             </div>
@@ -1345,14 +2023,14 @@ export default function QuoteMaker() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%', gap: '8px' }}>
               <button 
                 onClick={handleCopyMessage}
                 style={{ 
                   background: copiedItem === 'message' ? '#22c55e' : '#ebd73f', 
                   border: 'none', 
                   color: copiedItem === 'message' ? '#fff' : '#000', 
-                  padding: '12px 20px', 
+                  padding: '12px 18px', 
                   borderRadius: '8px', 
                   cursor: 'pointer', 
                   fontWeight: 'bold', 
@@ -1371,8 +2049,37 @@ export default function QuoteMaker() {
                   </>
                 ) : (
                   <>
-                    <Share2 size={16} /> Copy Full Message
+                    <Share2 size={16} /> Copy Message
                   </>
+                )}
+              </button>
+
+              {/* SMALL COPY ICON: COPY FULL DETAILS FOR AI SMART PASTE */}
+              <button 
+                onClick={() => copyPackageForSmartPaste({ clientDetails, quoteDetails, packageTiers, packageType, total, includePMP, pmpStrategy }, 'topSmartPaste')}
+                style={{ 
+                  background: copiedItem === 'topSmartPaste' ? '#22c55e' : 'rgba(235, 215, 63, 0.15)', 
+                  border: copiedItem === 'topSmartPaste' ? '1px solid #22c55e' : '1px solid #ebd73f', 
+                  color: copiedItem === 'topSmartPaste' ? '#fff' : '#ebd73f', 
+                  padding: '12px 18px', 
+                  borderRadius: '8px', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  whiteSpace: 'nowrap',
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: '0.88rem',
+                  transform: copiedItem === 'topSmartPaste' ? 'scale(1.05)' : 'scale(1)',
+                  transition: 'all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                }}
+                title="Copy all details of this package formatted for AI Smart Paste"
+              >
+                {copiedItem === 'topSmartPaste' ? (
+                  <><CheckCircle2 size={16} color="#fff" /> Copied for Smart Paste!</>
+                ) : (
+                  <><Copy size={16} color="#ebd73f" /> Copy Details for Smart Paste</>
                 )}
               </button>
             </div>
@@ -1382,7 +2089,7 @@ export default function QuoteMaker() {
       <style jsx>{`
         .quote-share-grid {
           display: grid;
-          grid-template-columns: 1fr 180px auto;
+          grid-template-columns: 1fr 140px auto;
           gap: 16px;
           align-items: center;
         }
@@ -1759,33 +2466,211 @@ export default function QuoteMaker() {
              )}
            </div>
 
-           {/* Templates Manager */}
-           <div className={styles.card}>
-             <h3 style={{ marginBottom: '15px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
-               Templates
-               <button onClick={saveCurrentAsPackage} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.75rem' }}>Save Current</button>
-             </h3>
-             <div style={{ position: 'relative', marginBottom: '15px' }}>
-               <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
-               <input type="text" placeholder="Search templates..." value={searchTemplate} onChange={e => setSearchTemplate(e.target.value)} className={styles.inputField} style={{ paddingLeft: '40px' }} />
-             </div>
-             
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
-               {filteredTemplates.length === 0 ? (
-                 <p style={{ fontSize: '0.8rem', color: '#666', textAlign: 'center', padding: '20px 0' }}>No templates found.</p>
-               ) : (
-                 filteredTemplates.map((pkg, idx) => (
-                   <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.2s' }}>
-                     <div>
-                       <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{pkg.name}</div>
-                       <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '3px' }}>{pkg.type === 'project' ? 'Project' : 'Monthly'} • {pkg.packageTiers ? pkg.packageTiers.flatMap(t => t.items || []).length : pkg.items?.length || 0} items</div>
-                     </div>
-                     <button onClick={() => loadPackage(pkg)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: 'rgba(235, 215, 63, 0.3)', color: '#ebd73f' }}>Load</button>
-                   </div>
-                 ))
-               )}
-             </div>
-           </div>
+            {/* Package History & Templates Manager */}
+            <div className={styles.card}>
+              <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px', paddingBottom: '10px', gap: '8px', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    onClick={() => setSidebarTab('history')}
+                    style={{
+                      background: sidebarTab === 'history' ? '#ebd73f' : 'transparent',
+                      color: sidebarTab === 'history' ? '#000' : '#888',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
+                      fontFamily: "'Panchang', sans-serif",
+                      fontWeight: 800,
+                      fontSize: '0.68rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <History size={12} /> History ({historyQuotes.length})
+                  </button>
+                  <button
+                    onClick={() => setSidebarTab('templates')}
+                    style={{
+                      background: sidebarTab === 'templates' ? '#ebd73f' : 'transparent',
+                      color: sidebarTab === 'templates' ? '#000' : '#888',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
+                      fontFamily: "'Panchang', sans-serif",
+                      fontWeight: 800,
+                      fontSize: '0.68rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Templates ({savedPackages.length})
+                  </button>
+                </div>
+                
+                {sidebarTab === 'history' ? (
+                  <button 
+                    onClick={fetchHistoryQuotes} 
+                    className={styles.btn} 
+                    style={{ padding: '4px 8px', fontSize: '0.75rem', borderColor: 'rgba(255,255,255,0.15)' }}
+                    title="Refresh history from Supabase"
+                  >
+                    <RefreshCw size={12} className={isLoadingHistory ? 'spin' : ''} />
+                  </button>
+                ) : (
+                  <button onClick={saveCurrentAsPackage} className={styles.btn} style={{ padding: '4px 8px', fontSize: '0.75rem', fontFamily: "'Clash Display', sans-serif" }}>Save Current</button>
+                )}
+              </div>
+
+              {sidebarTab === 'history' ? (
+                <>
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
+                      <input 
+                        type="text" 
+                        placeholder="Search by brand name..." 
+                        value={searchHistory} 
+                        onChange={e => setSearchHistory(e.target.value)} 
+                        className={styles.inputField} 
+                        style={{ paddingLeft: '34px', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }} 
+                      />
+                    </div>
+                    <button
+                      onClick={() => setShowHistoryModal(true)}
+                      style={{
+                        background: 'rgba(235, 215, 63, 0.12)',
+                        border: '1px solid rgba(235, 215, 63, 0.3)',
+                        color: '#ebd73f',
+                        padding: '0 10px',
+                        borderRadius: '8px',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        fontFamily: "'Clash Display', sans-serif",
+                        whiteSpace: 'nowrap'
+                      }}
+                      title="Open full-screen history"
+                    >
+                      View All
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '420px', overflowY: 'auto' }}>
+                    {isLoadingHistory && historyQuotes.length === 0 ? (
+                      <p style={{ fontSize: '0.8rem', color: '#888', textAlign: 'center', padding: '20px 0', fontFamily: "'Clash Display', sans-serif" }}>Loading packages from cloud...</p>
+                    ) : historyQuotes.filter(q => (q.brandName || '').toLowerCase().includes(searchHistory.toLowerCase()) || (q.clientName || '').toLowerCase().includes(searchHistory.toLowerCase())).length === 0 ? (
+                      <p style={{ fontSize: '0.8rem', color: '#666', textAlign: 'center', padding: '20px 0', fontFamily: "'Clash Display', sans-serif" }}>No packages found.</p>
+                    ) : (
+                      historyQuotes
+                        .filter(q => (q.brandName || '').toLowerCase().includes(searchHistory.toLowerCase()) || (q.clientName || '').toLowerCase().includes(searchHistory.toLowerCase()))
+                        .map((pkg) => {
+                          const isLive = activeEditingQuote?.id === pkg.id;
+                          return (
+                            <div 
+                              key={pkg.id} 
+                              style={{ 
+                                background: isLive ? 'rgba(235, 215, 63, 0.08)' : 'rgba(255,255,255,0.02)', 
+                                border: isLive ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.06)', 
+                                padding: '12px', 
+                                borderRadius: '0.75rem', 
+                                display: 'flex', 
+                                flexDirection: 'column',
+                                gap: '8px',
+                                transition: 'all 0.2s' 
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div>
+                                  <div style={{ fontWeight: 800, fontSize: '0.92rem', color: isLive ? '#ebd73f' : '#fff', fontFamily: "'Clash Display', sans-serif" }}>
+                                    {pkg.brandName}
+                                  </div>
+                                  <div style={{ fontSize: '0.74rem', color: '#888', marginTop: '2px', fontFamily: "'Clash Display', sans-serif" }}>
+                                    {pkg.packageType.toUpperCase()} • {pkg.currency}{Number(pkg.total || 0).toLocaleString()} • {pkg.itemsCount} items
+                                  </div>
+                                </div>
+                                {isLive && (
+                                  <span style={{ background: '#ebd73f', color: '#000', fontSize: '0.62rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', fontFamily: "'Panchang', sans-serif" }}>
+                                    LIVE
+                                  </span>
+                                )}
+                              </div>
+
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px', gap: '6px' }}>
+                                <span style={{ fontSize: '0.7rem', color: '#666', fontFamily: "'Clash Display', sans-serif" }}>
+                                  {pkg.created_at ? new Date(pkg.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Saved'}
+                                </span>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  <button
+                                    onClick={() => copyPackageForSmartPaste(pkg, `side_hist_${pkg.id}`)}
+                                    style={{
+                                      background: copiedItem === `side_hist_${pkg.id}` ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255,255,255,0.06)',
+                                      border: copiedItem === `side_hist_${pkg.id}` ? '1px solid #22c55e' : '1px solid rgba(255,255,255,0.12)',
+                                      color: copiedItem === `side_hist_${pkg.id}` ? '#22c55e' : '#aaa',
+                                      padding: '4px 8px',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      fontSize: '0.74rem',
+                                      fontFamily: "'Clash Display', sans-serif",
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px'
+                                    }}
+                                    title="Copy all details to paste in AI Smart Paste"
+                                  >
+                                    {copiedItem === `side_hist_${pkg.id}` ? <CheckCircle2 size={12} color="#22c55e" /> : <Copy size={12} />}
+                                    {copiedItem === `side_hist_${pkg.id}` ? 'Copied' : 'Copy'}
+                                  </button>
+                                  <button 
+                                    onClick={() => loadQuoteFromHistory(pkg)} 
+                                    className={styles.btn} 
+                                    style={{ 
+                                      padding: '4px 10px', 
+                                      fontSize: '0.74rem', 
+                                      borderColor: 'rgba(235, 215, 63, 0.4)', 
+                                      color: '#ebd73f',
+                                      fontFamily: "'Clash Display', sans-serif",
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px'
+                                    }}
+                                  >
+                                    <Edit3 size={12} /> Edit Live
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ position: 'relative', marginBottom: '15px' }}>
+                    <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
+                    <input type="text" placeholder="Search templates..." value={searchTemplate} onChange={e => setSearchTemplate(e.target.value)} className={styles.inputField} style={{ paddingLeft: '40px', fontFamily: "'Clash Display', sans-serif" }} />
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
+                    {filteredTemplates.length === 0 ? (
+                      <p style={{ fontSize: '0.8rem', color: '#666', textAlign: 'center', padding: '20px 0', fontFamily: "'Clash Display', sans-serif" }}>No templates found.</p>
+                    ) : (
+                      filteredTemplates.map((pkg, idx) => (
+                        <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.2s' }}>
+                          <div>
+                            <div style={{ fontWeight: '600', fontSize: '0.9rem', fontFamily: "'Clash Display', sans-serif" }}>{pkg.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '3px', fontFamily: "'Clash Display', sans-serif" }}>{pkg.type === 'project' ? 'Project' : 'Monthly'} • {pkg.packageTiers ? pkg.packageTiers.flatMap(t => t.items || []).length : pkg.items?.length || 0} items</div>
+                          </div>
+                          <button onClick={() => loadPackage(pkg)} className={styles.btn} style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: 'rgba(235, 215, 63, 0.3)', color: '#ebd73f', fontFamily: "'Clash Display', sans-serif" }}>Load</button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
 
         </div>
       </div>
