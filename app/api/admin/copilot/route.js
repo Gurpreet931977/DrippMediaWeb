@@ -1,6 +1,7 @@
 import { verifyCookie } from '@/app/lib/adminAuth';
 import { createClient } from '@supabase/supabase-js';
 import { Client as NotionClient } from '@notionhq/client';
+import { getAllQuoteRecords } from '@/app/lib/quoteStore';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -53,21 +54,228 @@ async function getAvailableGeminiModels(apiKey) {
 }
 
 // Resilient generalized NLP extractor for 100% reliability
-function generateResilientNLPResponse(userPrompt, currentPath, formContext, isGenz) {
+function generateResilientNLPResponse(userPrompt, currentPath, formContext, isGenz, recentPackages = []) {
   const p = (userPrompt || '').trim();
   const pLower = p.toLowerCase();
 
   const extractBudget = (str) => {
-    const match = str.match(/(?:for|total|budget|amount|quote|cost|rate)\s*(?:is|of|at|:)?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?\s*[kKmMlLCcrR]?)/i) ||
+    if (!str) return 0;
+    const match = str.match(/(?:for|total|budget|amount|quote|cost|rate|price)\s*(?:is|of|at|:)?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?\s*[kKmMlLCcrR]?)/i) ||
                   str.match(/(?:₹|rs\.?|inr)\s*(\d+(?:\.\d+)?\s*[kKmMlLCcrR]?)/i) ||
                   str.match(/(\d+(?:\.\d+)?\s*[kKmMlLCcrR])\b/i);
-    if (!match) return 0;
+    if (!match) {
+      const plainNum = str.replace(/,/g, '').match(/\b\d+(?:\.\d+)?\b/);
+      return plainNum ? parseFloat(plainNum[0]) : 0;
+    }
     const val = match[1].toLowerCase().trim();
     if (val.endsWith('k')) return parseFloat(val.slice(0, -1)) * 1000;
     if (val.endsWith('m') || val.endsWith('cr')) return parseFloat(val.slice(0, -2)) * 1000000;
     if (val.endsWith('l') || val.endsWith('lac') || val.endsWith('lakh')) return parseFloat(val.replace(/lakh|lac|l/, '')) * 100000;
     return parseFloat(val) || 0;
   };
+
+  // 1. Dynamic Check: Save Live Package
+  const isSaveLive = /(?:save|sync|update)\s+(?:live|changes?|package|to\s+link|quote|to\s+supabase)/i.test(p);
+  if (isSaveLive) {
+    const active = formContext?.activeEditingQuote;
+    if (active && active.id) {
+      return {
+        intent: 'save_live_package',
+        isNewTopic: false,
+        replyMessage: `I'm syncing the live changes for **${active.brandName || 'this package'}** (Link ID: \`${active.id}\`) directly to the client's shared link and Supabase! The client link now reflects your latest edits.`,
+        payload: {
+          id: active.id,
+          brandName: active.brandName,
+          action: 'save_live'
+        }
+      };
+    } else {
+      return {
+        intent: 'chat',
+        isNewTopic: false,
+        replyMessage: `To save changes live, please load an existing package first using *"load package for [Brand]"* or create a share link. Once loaded, saying *"save package live"* will immediately update the client's link!`,
+        payload: {}
+      };
+    }
+  }
+
+  // 2. Dynamic Check: List / View Packages in History
+  const isListPackages = /(?:list|show|what|view)\s+(?:all\s+)?(?:my\s+)?(?:past\s+|recent\s+|saved\s+)?(?:packages|quotes|history)/i.test(p) ||
+                         pLower === 'packages' || pLower === 'history' || pLower === 'package history';
+  if (isListPackages) {
+    const history = (formContext?.packageHistory && formContext.packageHistory.length > 0)
+      ? formContext.packageHistory
+      : recentPackages;
+    if (history && history.length > 0) {
+      const summary = history.slice(0, 10).map((pkg, idx) => {
+        const b = pkg.brandName || pkg.clientDetails?.brandName || 'Client';
+        const id = pkg.id;
+        const tot = pkg.total || 0;
+        const pType = pkg.packageType === 'monthly' ? '/mo' : '';
+        return `${idx + 1}. **${b}** — ₹${tot.toLocaleString()}${pType} (Link ID: \`${id}\`)`;
+      }).join('\n');
+      return {
+        intent: 'chat',
+        isNewTopic: false,
+        replyMessage: `Here are your recent saved packages in history:\n\n${summary}\n\nYou can ask me to *"load package for [Brand]"* or *"edit package for [Brand]"* anytime to pull it right into the live editor!`,
+        payload: {}
+      };
+    }
+  }
+
+  // 3. Dynamic Check: Load an Existing Package from History / Database
+  const loadMatch = p.match(/(?:load|open|pull\s+up|switch\s+to|fetch)\s+(?:the\s+)?(?:package|quote|proposal)\s+(?:for\s+)?([A-Za-z0-9&'\s\-]+)/i) ||
+                    p.match(/(?:load|open|pull\s+up|switch\s+to)\s+([A-Za-z0-9&'\s\-]+?)\s+(?:package|quote|proposal)/i) ||
+                    p.match(/(?:edit|modify)\s+(?:the\s+)?package\s+for\s+([A-Za-z0-9&'\s\-]+)/i);
+  if (loadMatch) {
+    const query = loadMatch[1].replace(/^(?:the|a|an)\s+/i, '').trim().toLowerCase();
+    const history = (formContext?.packageHistory && formContext.packageHistory.length > 0)
+      ? formContext.packageHistory
+      : recentPackages;
+
+    const matched = (history || []).find(pkg => {
+      const idStr = String(pkg.id || '').toLowerCase();
+      const bStr = String(pkg.brandName || pkg.clientDetails?.brandName || '').toLowerCase();
+      return idStr === query || bStr.includes(query) || query.includes(bStr);
+    });
+
+    if (matched) {
+      const bName = matched.brandName || matched.clientDetails?.brandName || 'Client';
+      const tot = matched.total || 0;
+      return {
+        intent: 'load_package',
+        isNewTopic: false,
+        replyMessage: `I've retrieved the saved package for **${bName}** (Link ID: \`${matched.id}\`, Total: ₹${tot.toLocaleString()}) and loaded it live into your editor! You can now edit any items, change pricing, or ask me to make live modifications.`,
+        payload: {
+          id: matched.id,
+          brandName: bName,
+          quoteData: matched.quote_data || matched,
+          action: 'load_package'
+        }
+      };
+    }
+  }
+
+  // 4. Dynamic Check: Edit Active Package Deliverable (Rate or Quantity)
+  const editRateMatch = p.match(/(?:change|update|set|modify|make)\s+(?:the\s+)?(?:rate|price|cost|amount)\s+(?:of|for)\s+([^0-9\n]+?)\s+to\s+([0-9kKmM.,\s₹rs]+)/i) ||
+                        p.match(/(?:change|update|set|make)\s+([^0-9\n]+?)\s+(?:rate|price|cost)\s*(?:to|as|=)\s*([0-9kKmM.,\s₹rs]+)/i);
+  const editQtyMatch = p.match(/(?:change|update|set|modify)\s+(?:the\s+)?(?:qty|quantity|count)\s+(?:of|for)\s+([^0-9\n]+?)\s+to\s+(\d+)/i);
+
+  if ((editRateMatch || editQtyMatch) && formContext?.packageTiers && formContext.packageTiers.length > 0) {
+    const itemQuery = (editRateMatch ? editRateMatch[1] : editQtyMatch[1]).trim().toLowerCase();
+    const newRateVal = editRateMatch ? extractBudget(editRateMatch[2]) : null;
+    const newQtyVal = editQtyMatch ? parseInt(editQtyMatch[2], 10) : null;
+
+    const updatedTiers = JSON.parse(JSON.stringify(formContext.packageTiers));
+    let matchedItemName = '';
+    let found = false;
+
+    for (const tier of updatedTiers) {
+      for (const it of (tier.items || [])) {
+        const itName = (it.name || it.desc || '').toLowerCase();
+        if (itName.includes(itemQuery) || itemQuery.includes(itName) || itemQuery.split(' ').some(w => w.length > 3 && itName.includes(w))) {
+          matchedItemName = it.name || it.desc;
+          if (newRateVal !== null) it.rate = newRateVal;
+          if (newQtyVal !== null) it.qty = newQtyVal;
+          found = true;
+          break;
+        }
+      }
+      if (found) break;
+    }
+
+    if (found) {
+      const newTotal = updatedTiers.reduce((acc, t) => acc + (t.items || []).reduce((s, it) => s + ((it.qty || 1) * (it.rate || 0)), 0), 0);
+      const bName = formContext.clientDetails?.brandName || formContext.clientDetails?.name || 'Active Client';
+      const updatedServices = updatedTiers.flatMap(t => t.items || []);
+
+      return {
+        intent: 'edit_package',
+        isNewTopic: false,
+        replyMessage: `I've updated **${matchedItemName}** ${newRateVal !== null ? `rate to **₹${newRateVal.toLocaleString()}**` : ''}${newQtyVal !== null ? `quantity to **${newQtyVal}**` : ''} in the active package for **${bName}**! The updated package total is now **₹${newTotal.toLocaleString()}**.`,
+        payload: {
+          brandName: bName,
+          totalBudget: newTotal,
+          packageTiers: updatedTiers,
+          services: updatedServices,
+          action: 'edit_package',
+          itemUpdate: {
+            itemQuery: matchedItemName,
+            newRate: newRateVal,
+            newQty: newQtyVal
+          }
+        }
+      };
+    }
+  }
+
+  // 5. Dynamic Check: Add Deliverable to Active Package
+  const addItemMatch = p.match(/(?:add|include)\s+(?:a\s+|an\s+)?(?:new\s+)?(?:item|service|deliverable)?\s*[:\-]?\s*([^0-9\n]+?)\s+(?:at|for|with\s+rate|rate)\s+([0-9kKmM.,\s₹rs]+)/i);
+  if (addItemMatch && formContext?.packageTiers && formContext.packageTiers.length > 0) {
+    const rawTitle = addItemMatch[1].trim().replace(/^(a|an)\s+/i, '');
+    const title = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
+    const rate = extractBudget(addItemMatch[2]) || 0;
+    const updatedTiers = JSON.parse(JSON.stringify(formContext.packageTiers));
+    if (updatedTiers[0]) {
+      updatedTiers[0].items = updatedTiers[0].items || [];
+      updatedTiers[0].items.push({ name: title, desc: title, qty: 1, rate: rate, details: `${title} deliverable.` });
+    }
+    const newTotal = updatedTiers.reduce((acc, t) => acc + (t.items || []).reduce((s, it) => s + ((it.qty || 1) * (it.rate || 0)), 0), 0);
+    const bName = formContext.clientDetails?.brandName || formContext.clientDetails?.name || 'Active Client';
+    return {
+      intent: 'edit_package',
+      isNewTopic: false,
+      replyMessage: `I've added **${title}** (₹${rate.toLocaleString()}) to the active package for **${bName}**! The updated package total is now **₹${newTotal.toLocaleString()}**.`,
+      payload: {
+        brandName: bName,
+        totalBudget: newTotal,
+        packageTiers: updatedTiers,
+        services: updatedTiers.flatMap(t => t.items || []),
+        action: 'edit_package',
+        addItem: {
+          name: title,
+          rate: rate,
+          qty: 1
+        }
+      }
+    };
+  }
+
+  // 6. Dynamic Check: Remove Deliverable from Active Package
+  const removeItemMatch = p.match(/(?:remove|delete|drop|exclude)\s+(?:the\s+)?(?:item|service|deliverable)?\s*[:\-]?\s*([^.,\n]+)/i);
+  if (removeItemMatch && formContext?.packageTiers && formContext.packageTiers.length > 0) {
+    const rawTarget = removeItemMatch[1].trim().toLowerCase();
+    const updatedTiers = JSON.parse(JSON.stringify(formContext.packageTiers));
+    let removedName = '';
+    for (const t of updatedTiers) {
+      t.items = (t.items || []).filter(it => {
+        const itName = (it.name || it.desc || '').toLowerCase();
+        if (itName.includes(rawTarget) || rawTarget.includes(itName) || rawTarget.split(' ').some(w => w.length > 3 && itName.includes(w))) {
+          removedName = it.name || it.desc;
+          return false;
+        }
+        return true;
+      });
+      if (removedName) break;
+    }
+    if (removedName) {
+      const newTotal = updatedTiers.reduce((acc, t) => acc + (t.items || []).reduce((s, it) => s + ((it.qty || 1) * (it.rate || 0)), 0), 0);
+      const bName = formContext.clientDetails?.brandName || formContext.clientDetails?.name || 'Active Client';
+      return {
+        intent: 'edit_package',
+        isNewTopic: false,
+        replyMessage: `I've removed **${removedName}** from the active package for **${bName}**! The updated package total is now **₹${newTotal.toLocaleString()}**.`,
+        payload: {
+          brandName: bName,
+          totalBudget: newTotal,
+          packageTiers: updatedTiers,
+          services: updatedTiers.flatMap(t => t.items || []),
+          action: 'edit_package',
+          removeItem: removedName
+        }
+      };
+    }
+  }
 
   const isInvoice = /invoice|bill|billing|tax invoice/i.test(p) || currentPath === '/dripp-studio/invoice';
 
@@ -267,6 +475,29 @@ export async function POST(request) {
       }
     }
 
+    let recentPackages = [];
+    let packagesHistoryContext = '';
+    try {
+      const allQuotes = await getAllQuoteRecords();
+      if (allQuotes && Array.isArray(allQuotes) && allQuotes.length > 0) {
+        recentPackages = allQuotes.slice(0, 30);
+        const packageLines = recentPackages.map(q => {
+          const qData = q.quote_data || {};
+          const client = qData.clientDetails || {};
+          const bName = q.brandName || client.brandName || client.name || 'Untitled Project';
+          const cName = client.name || '';
+          const t = q.total || 0;
+          const pType = qData.packageType || 'project';
+          const rawItems = qData.packageTiers?.[0]?.items || qData.items || [];
+          const itemsSummary = rawItems.slice(0, 5).map(it => `${it.name || it.desc} (₹${(it.rate || 0).toLocaleString()})`).join(', ');
+          return `• Link ID: "${q.id}" | Brand: "${bName}"${cName ? ` | Client: "${cName}"` : ''} | Total: ₹${t.toLocaleString()} | Type: ${pType}${itemsSummary ? ` | Scope: [${itemsSummary}]` : ''} | Updated: ${q.updated_at || q.created_at || ''}`;
+        }).join('\n');
+        packagesHistoryContext = `\n\n## SAVED CLIENT PACKAGES & PROPOSALS IN DATABASE (Dynamic History):\n${packageLines}\n(CRITICAL: When user asks to load, edit, update, or inspect any past package by brand name or Link ID, dynamically match them against this list without hardcoding!)`;
+      }
+    } catch (err) {
+      console.warn('[Copilot Route] Notice fetching quote records:', err.message);
+    }
+
     // Format multi-turn conversation history for native Gemini API (strict alternating user/model turns)
     const buildGeminiContents = (history, prompt) => {
       const turns = [];
@@ -333,7 +564,7 @@ Current Date/Time: ${currentDate || new Date().toISOString()}
 Current Active Studio Page: ${currentPath || 'Dripp Studio'}
 Current Email Form State: ${JSON.stringify(context || {}, null, 2)}
 Current System Docs State: ${JSON.stringify(systemContext || {}, null, 2)}
-Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${notionSummary}${adminIdentityContext}${memoryContext}${statsContext}
+Current Active Form State: ${JSON.stringify(formContext || {}, null, 2)}${notionSummary}${adminIdentityContext}${memoryContext}${statsContext}${packagesHistoryContext}
 ${isGenz ? "\nNOTE: User is in Gen-Z mode. Keep responses casual, confident, using natural slang ('cook', 'w', 'aura', 'locked in', 'vibes', 'no cap', 'based') without emojis." : ""}
 ${isVoiceCall ? `
 CRITICAL: LIVE VOICE CALL MODE (Orlo Live).
@@ -345,16 +576,19 @@ CRITICAL: LIVE VOICE CALL MODE (Orlo Live).
 
 ## INTENT TAXONOMY:
 - "quote" / "package": User is creating, updating, or specifying a proposal, quotation, scope of work, services, pricing, or deliverables.
+- "load_package": User asks to load, open, or switch to an existing package/proposal from history or database (e.g. "load package for [brand]", "edit [brand]'s package", "open quote [id]").
+- "edit_package": User is modifying specific line items, rates, quantities, deliverables, client details, or strategy of the active package (e.g. "change rate of videography to 12000", "add drone operator at 8000", "update client name to [name]").
+- "save_live_package": User asks to save live changes back to the client's shared link and Supabase (e.g. "save package live", "sync live edits", "update live quote", "save changes to link"). NEVER use "save_template" when "live" or "link" or "sync" is mentioned!
 - "invoice": Generating or modifying an invoice with billable line items and client billing details.
 - "email": Writing, scheduling, or editing an email broadcast or campaign.
-- "save_template": Saving the current proposal as a reusable package template.
+- "save_template": Saving the current proposal as a reusable package template (ONLY when user explicitly requests "template" or "save as template"). NEVER use this when saving a live package!
 - "system_doc": Editing or rewriting internal operational procedures/documents.
 - "notion_edit": Editing or enhancing highlighted text in Studio Notes/Notion.
 - "notion_task": Checking or unchecking a Notion task item.
 - "portfolio": Updating a portfolio project entry or case study.
 - "learn": User is teaching you a rule or preference to remember.
 - "clear_chat": User asks to clear, reset, or start a new chat.
-- "chat": Strategy discussions, brainstorming, client negotiation advice, questions, greetings. NEVER generate proposals or touch form state when intent is "chat"!
+- "chat": Strategy discussions, brainstorming, client negotiation advice, questions, greetings, or listing past packages. NEVER generate proposals or touch form state when intent is "chat"!
 
 ## PROPOSAL & PACKAGING LOGIC (CRITICAL):
 
@@ -427,6 +661,38 @@ When the user asks to create, make, generate, or update an invoice, or mentions 
      - Line items breakdown (qty × rate)
      - Total invoice payable
      - Confirmation that all fields are pre-filled in Invoice Maker ready for preview and export.
+
+## DYNAMIC PACKAGE EDITING & MANAGEMENT (STRICTLY NO HARDCODING):
+1. **LOAD AN EXISTING PACKAGE ("intent": "load_package")**:
+   - When the user asks to load, edit, or open a past package (e.g., "load package for [brand]", "edit [brand]'s package", "open quote [id]"):
+   - Dynamically search ## SAVED CLIENT PACKAGES & PROPOSALS IN DATABASE or formContext.packageHistory.
+   - Match the target brand name or Link ID.
+   - Set "intent": "load_package".
+   - Set "payload": { "id": matchedId, "brandName": matchedBrandName, "action": "load_package" }.
+   - In "replyMessage", confirm that the package for that brand (with its Link ID and total) has been loaded into the live editor.
+
+2. **EDIT DELIVERABLES & RATES IN ACTIVE PACKAGE ("intent": "edit_package" or "package")**:
+   - When the user asks to edit items in the currently loaded package (e.g., "change rate of [item] to [newRate]", "update qty of [item] to [newQty]", "add [item] at [rate]", "remove [item]", "change package type to monthly"):
+   - Read "Current Active Form State" (formContext.packageTiers, formContext.clientDetails, etc.).
+   - Find the matching item in packageTiers using fuzzy name matching.
+   - Update its rate, qty, or description while preserving other existing items.
+   - Recalculate total budget = sum of (qty × rate).
+   - Set "intent": "edit_package".
+   - Return updated packageTiers, services, totalBudget, and brandName.
+   - In "replyMessage", crisply state what was modified and confirm the updated package total.
+
+3. **SAVE LIVE PACKAGE EDITS ("intent": "save_live_package")**:
+   - When the user asks to save live edits (e.g., "save package live", "update live quote", "save changes to link", "sync to supabase"):
+   - Verify that an active package ID exists in formContext.activeEditingQuote or prompt.
+   - Set "intent": "save_live_package".
+   - Set "payload": { "id": activeId, "brandName": activeBrand, "action": "save_live" }.
+   - In "replyMessage", confirm that the live client link is being updated with the latest package edits.
+
+4. **LIST PACKAGES IN HISTORY ("intent": "chat")**:
+   - When user asks "what packages do I have in history?", "list all packages", "show saved quotes":
+   - Read from ## SAVED CLIENT PACKAGES & PROPOSALS IN DATABASE or formContext.packageHistory.
+   - Set "intent": "chat".
+   - Output a clean bulleted list of saved packages with Brand Name, Link ID, and Total. Never hardcode or invent packages!
 
 ## FEW-SHOT COGNITIVE DEMONSTRATIONS:
 
@@ -596,14 +862,63 @@ Model Output:
   }
 }
 
+### Example 5: Load Saved Package from History
+User: "load package for Habivana Stays"
+
+Model Output:
+{
+  "intent": "load_package",
+  "isNewTopic": false,
+  "replyMessage": "I've retrieved the saved package for **Habivana Stays** from your cloud database and loaded it live into the editor! You can now adjust deliverables, modify pricing, or click 'Save Changes to Live Link' anytime.",
+  "payload": {
+    "id": "X0v3gQ",
+    "brandName": "Habivana Stays",
+    "action": "load_package"
+  }
+}
+
+### Example 6: Edit Deliverable Rate in Active Package
+User: "change rate of cinematic videography to 12000 in current package"
+
+Model Output:
+{
+  "intent": "edit_package",
+  "isNewTopic": false,
+  "replyMessage": "I've updated the rate for **Cinematic Videography** to **₹12,000** in your active package! The updated package total is now **₹48,000**.",
+  "payload": {
+    "brandName": "D9 Dehradun",
+    "totalBudget": 48000,
+    "action": "edit_package",
+    "itemUpdate": {
+      "itemQuery": "Cinematic Videography",
+      "newRate": 12000
+    }
+  }
+}
+
+### Example 7: Save Live Package Edits
+User: "save package live"
+
+Model Output:
+{
+  "intent": "save_live_package",
+  "isNewTopic": false,
+  "replyMessage": "I'm syncing all live changes directly to the client's secure shared link and Supabase! The client's live proposal now reflects your latest edits.",
+  "payload": {
+    "action": "save_live"
+  }
+}
+
 ## JSON OUTPUT SPECIFICATION:
 You MUST respond with a valid JSON object matching this schema. No markdown outside the JSON.
 {
-  "intent": "email" | "chat" | "learn" | "quote" | "package" | "save_template" | "system_doc" | "invoice" | "portfolio" | "clear_chat" | "notion_edit" | "notion_task",
+  "intent": "email" | "chat" | "learn" | "quote" | "package" | "load_package" | "edit_package" | "save_live_package" | "save_template" | "system_doc" | "invoice" | "portfolio" | "clear_chat" | "notion_edit" | "notion_task",
   "isNewTopic": boolean,
   "replyMessage": string,
   "learnedRule": string,
   "payload": {
+    "id": string,
+    "action": string,
     "brandName": string,
     "clientName": string,
     "clientMobile": string,
@@ -641,7 +956,7 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
       properties: {
         intent: {
           type: "STRING",
-          enum: ["quote", "package", "invoice", "email", "chat", "learn", "clear_chat", "save_template", "system_doc", "portfolio", "notion_edit", "notion_task"]
+          enum: ["quote", "package", "load_package", "edit_package", "save_live_package", "invoice", "email", "chat", "learn", "clear_chat", "save_template", "system_doc", "portfolio", "notion_edit", "notion_task"]
         },
         isNewTopic: { type: "BOOLEAN" },
         replyMessage: { type: "STRING" },
@@ -649,6 +964,8 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         payload: {
           type: "OBJECT",
           properties: {
+            id: { type: "STRING" },
+            action: { type: "STRING" },
             brandName: { type: "STRING" },
             clientName: { type: "STRING" },
             clientEmail: { type: "STRING" },
@@ -923,7 +1240,7 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
 
     if (!data) {
       console.warn('[Copilot Route]: All Gemini live models were rate-limited or unavailable. Activating resilient NLP response engine...');
-      const fallbackNLP = generateResilientNLPResponse(userPrompt, currentPath, formContext, isGenz);
+      const fallbackNLP = generateResilientNLPResponse(userPrompt, currentPath, formContext, isGenz, recentPackages);
       return Response.json({
         ...fallbackNLP,
         activeModel: 'orlo-resilient-nlp',
@@ -1023,12 +1340,14 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
         try { return JSON.parse(autoClosed); } catch (e) {}
       }
 
-      // 5. Intelligent AST extraction (preserves services & packageTiers if present!)
+      // 5. Intelligent AST extraction (preserves services, packageTiers, id & action!)
       try {
         const intentMatch = str.match(/"intent"\s*:\s*"([^"]+)"/i);
         const replyMatch = str.match(/"replyMessage"\s*:\s*"((?:[^"\\]|\\.)*)"/i);
         const budgetMatch = str.match(/"totalBudget"\s*:\s*"?([0-9kKmM.,]+)"?/i);
         const brandMatch = str.match(/"brandName"\s*:\s*"((?:[^"\\]|\\.)*)"/i);
+        const idMatch = str.match(/"id"\s*:\s*"([^"]+)"/i);
+        const actionMatch = str.match(/"action"\s*:\s*"([^"]+)"/i);
 
         let parsedTiers = [];
         const tiersMatch = str.match(/"packageTiers"\s*:\s*(\[\s*\{[\s\S]*?\}\s*\])/);
@@ -1042,11 +1361,13 @@ You MUST respond with a valid JSON object matching this schema. No markdown outs
           try { parsedServices = JSON.parse(servicesMatch[1]); } catch (e) {}
         }
 
-        if (intentMatch || replyMatch || brandMatch || parsedTiers.length > 0 || parsedServices.length > 0) {
+        if (intentMatch || replyMatch || brandMatch || idMatch || parsedTiers.length > 0 || parsedServices.length > 0) {
           return {
             intent: intentMatch ? intentMatch[1] : (currentPath === '/dripp-studio/package' ? 'package' : 'quote'),
             replyMessage: replyMatch ? replyMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "I've structured your proposal as requested.",
             payload: {
+              id: idMatch ? idMatch[1] : undefined,
+              action: actionMatch ? actionMatch[1] : undefined,
               brandName: brandMatch ? brandMatch[1] : '',
               totalBudget: budgetMatch ? budgetMatch[1] : 0,
               services: parsedServices,

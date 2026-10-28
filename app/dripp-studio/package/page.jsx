@@ -206,6 +206,49 @@ export default function PackageMaker() {
         } catch (err) {}
         setSavedPackages(updated);
         showAlert(`Template "${tName}" saved successfully!`);
+      } else if (data?.intent === 'edit_package' || data?.payload?.action === 'edit_package') {
+        const itemUp = data.payload?.itemUpdate;
+        const itemUps = Array.isArray(data.payload?.itemUpdates) ? data.payload.itemUpdates : (itemUp ? [itemUp] : []);
+        const addItem = data.payload?.addItem;
+        const removeItem = data.payload?.removeItem || data.payload?.deleteItem;
+
+        if (itemUps.length > 0 || addItem || removeItem) {
+          setServices(prev => {
+            let next = JSON.parse(JSON.stringify(prev || []));
+            for (const up of itemUps) {
+              if (!up?.itemQuery) continue;
+              const q = String(up.itemQuery).toLowerCase().trim();
+              for (const it of next) {
+                const itName = (it.name || it.desc || '').toLowerCase();
+                if (itName.includes(q) || q.includes(itName) || q.split(' ').some(w => w.length > 3 && itName.includes(w))) {
+                  if (up.newRate !== undefined && up.newRate !== null) it.rate = Number(up.newRate);
+                  if (up.newQty !== undefined && up.newQty !== null) it.qty = Number(up.newQty);
+                  break;
+                }
+              }
+            }
+            if (removeItem) {
+              const remQ = String(removeItem).toLowerCase().trim();
+              next = next.filter(it => {
+                const itName = (it.name || it.desc || '').toLowerCase();
+                return !(itName.includes(remQ) || remQ.includes(itName));
+              });
+            }
+            if (addItem) {
+              const name = typeof addItem === 'string' ? addItem : (addItem.name || addItem.desc || 'New Deliverable');
+              next.push({
+                name,
+                qty: Number(addItem.qty || 1),
+                rate: Number(addItem.rate || 0)
+              });
+            }
+            return next;
+          });
+          showAlert(`⚡ Package updated via Orlo!`);
+        }
+        if (data.payload && (data.payload.brandName || data.payload.pmpStrategy || data.payload.packageType)) {
+          parsePackagePayload(data.payload);
+        }
       } else if (data && ['package', 'quote', 'pmp'].includes(data?.intent) && data.payload) {
         parsePackagePayload(data.payload);
       } else if (data?.payload && (data.payload.services || data.payload.packageTiers || data.payload.items || data.payload.totalBudget || data.payload.pmpStrategy)) {

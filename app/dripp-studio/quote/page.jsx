@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, ArrowUp, ArrowDown, Layers, Type, Image, EyeOff, Eye, Copy, MessageCircle, History, Clock, ExternalLink, RefreshCw, ClipboardCheck, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Search, Share2, FileText, Lock, Edit3, Save, CheckCircle, ShieldCheck, Loader, CheckCircle2, ArrowUp, ArrowDown, Layers, Type, Image, EyeOff, Eye, Copy, MessageCircle, History, Clock, ExternalLink, RefreshCw, ClipboardCheck, Sparkles, Globe, X, Check } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import styles from '../admin.module.css';
@@ -291,7 +291,7 @@ export default function QuoteMaker() {
       }
       setCopiedItem(itemId || 'smartPasteCopy');
       setTimeout(() => setCopiedItem(null), 2500);
-      showAlert('✅ Package details copied to clipboard! You can paste this directly into AI Smart Paste.');
+      showAlert('Package details copied to clipboard! You can paste this directly into AI Smart Paste.');
     } catch (err) {
       console.warn('Clipboard write error:', err);
     }
@@ -331,7 +331,7 @@ export default function QuoteMaker() {
       }
 
       setShowHistoryModal(false);
-      showAlert(`⚡ Package for "${rec.brandName}" is now LIVE in the editor! You can make edits and click "Save Changes to Live Link" to update the client link.`);
+      showAlert(`Package for "${rec.brandName}" is now LIVE in the editor! You can make edits and click "Save to Live Link" to update the client link.`);
     };
 
     if (skipConfirm) {
@@ -373,7 +373,7 @@ export default function QuoteMaker() {
       });
 
       if (res.ok) {
-        showAlert(`✅ Package for "${activeEditingQuote.brandName}" updated live! The existing client link now reflects your latest edits.`);
+        showAlert(`Package for "${activeEditingQuote.brandName}" updated live! The existing client link now reflects your latest edits.`);
         fetchHistoryQuotes();
       } else {
         showAlert('Failed to update live package. Please check network.');
@@ -409,6 +409,15 @@ export default function QuoteMaker() {
     );
   };
 
+  const loadQuoteFromHistoryRef = useRef(loadQuoteFromHistory);
+  loadQuoteFromHistoryRef.current = loadQuoteFromHistory;
+  const updateLiveQuoteRef = useRef(updateLiveQuote);
+  updateLiveQuoteRef.current = updateLiveQuote;
+  const historyQuotesRef = useRef(historyQuotes);
+  historyQuotesRef.current = historyQuotes;
+  const activeEditingQuoteRef = useRef(activeEditingQuote);
+  activeEditingQuoteRef.current = activeEditingQuote;
+
   const handleSmartPaste = async () => {
     if (!smartText.trim()) return;
 
@@ -432,7 +441,7 @@ export default function QuoteMaker() {
         setSmartText('');
         setIsAutoFillSuccess(true);
         setTimeout(() => setIsAutoFillSuccess(false), 2000);
-        showAlert('✅ Package loaded directly from pasted JSON with 100% precision!');
+        showAlert('Package loaded directly from pasted JSON with 100% precision!');
         return;
       } catch (e) {
         // Continue to regular parser if JSON parsing fails
@@ -1129,6 +1138,15 @@ export default function QuoteMaker() {
     if (pendingDataStr) {
       try {
         const data = JSON.parse(pendingDataStr);
+        if (data.id) {
+          setActiveEditingQuote({
+            id: data.id,
+            password: data.password || '',
+            brandName: data.brandName || 'Client'
+          });
+          setShareLink(`${window.location.origin}/quote/${data.id}`);
+          if (data.password) setSharePassword(data.password);
+        }
         parseQuotePayload(data);
         sessionStorage.removeItem('pendingPackageData');
       } catch (err) {
@@ -1136,9 +1154,24 @@ export default function QuoteMaker() {
       }
     }
 
+    const pendingCopilotActionStr = sessionStorage.getItem('pendingCopilotAction');
+    if (pendingCopilotActionStr) {
+      try {
+        const actionData = JSON.parse(pendingCopilotActionStr);
+        sessionStorage.removeItem('pendingCopilotAction');
+        setTimeout(() => {
+          handleCopilotAction({ detail: actionData });
+        }, 120);
+      } catch (err) {
+        console.error('Failed to parse pending copilot action', err);
+      }
+    }
+
     const handleCopilotAction = (e) => {
       const data = e.detail;
-      if (data?.intent === 'save_template' || data?.payload?.action === 'save_template' || data?.payload?.saveAsTemplate) {
+      if (!data) return;
+
+      if ((data?.intent === 'save_template' || data?.payload?.action === 'save_template' || data?.payload?.saveAsTemplate) && data?.intent !== 'save_live_package' && data?.payload?.action !== 'save_live' && !String(data?.payload?.templateName || '').toLowerCase().includes('live')) {
         const live = window._drippFormContext || {};
         const liveClient = live.clientDetails || clientDetails || {};
         const liveTiers = live.packageTiers || packageTiers || [];
@@ -1173,9 +1206,147 @@ export default function QuoteMaker() {
         } catch (err) {}
         setSavedPackages(updated);
         showAlert(`Template "${tName}" saved successfully!`);
+      } else if (data?.intent === 'load_package' || data?.payload?.action === 'load_package') {
+        const targetId = data.payload?.id;
+        const targetBrand = (data.payload?.brandName || '').toLowerCase().trim();
+        const quotesList = historyQuotesRef.current || [];
+
+        let match = null;
+        if (targetId) {
+          match = quotesList.find(q => q.id === targetId || String(q.id).toLowerCase() === String(targetId).toLowerCase());
+        }
+        if (!match && targetBrand) {
+          match = quotesList.find(q => {
+            const b = (q.brandName || q.clientDetails?.brandName || q.quote_data?.clientDetails?.brandName || '').toLowerCase();
+            return b.includes(targetBrand) || targetBrand.includes(b);
+          });
+        }
+
+        if (match) {
+          loadQuoteFromHistoryRef.current(match, true);
+          showAlert(`Package for "${match.brandName}" loaded live into editor via Orlo!`);
+        } else if (data.payload?.quoteData || data.payload?.quote_data) {
+          const raw = data.payload.quoteData || data.payload.quote_data;
+          if (data.payload.id) {
+            setActiveEditingQuote({
+              id: data.payload.id,
+              password: data.payload.password || '',
+              brandName: data.payload.brandName || 'Client'
+            });
+            setShareLink(`${window.location.origin}/quote/${data.payload.id}`);
+            setSharePassword(data.payload.password || '');
+          }
+          parseQuotePayload(raw);
+          showAlert(`Loaded package into editor via Orlo!`);
+        } else if (targetId) {
+          fetch(`/api/quote?id=${encodeURIComponent(targetId)}`)
+            .then(r => r.json())
+            .then(res => {
+              if (res.quote) {
+                loadQuoteFromHistoryRef.current(res.quote, true);
+                showAlert(`Package loaded into editor!`);
+              }
+            })
+            .catch(err => console.error('Failed to load quote via ID:', err));
+        }
+      } else if (data?.intent === 'save_live_package' || data?.payload?.action === 'save_live' || String(data?.payload?.templateName || '').toLowerCase().includes('live')) {
+        if (activeEditingQuoteRef.current?.id) {
+          updateLiveQuoteRef.current();
+        } else {
+          showAlert("No live package is currently active in the editor. Load or create a package link first!");
+        }
+      } else if (data?.intent === 'edit_package' || data?.payload?.action === 'edit_package') {
+        const itemUp = data.payload?.itemUpdate;
+        const itemUps = Array.isArray(data.payload?.itemUpdates) ? data.payload.itemUpdates : (itemUp ? [itemUp] : []);
+        const addItem = data.payload?.addItem;
+        const removeItem = data.payload?.removeItem || data.payload?.deleteItem;
+
+        if (itemUps.length > 0 || addItem || removeItem) {
+          setPackageTiers(prev => {
+            const next = JSON.parse(JSON.stringify(prev && prev.length > 0 ? prev : [{ id: Date.now(), name: 'Standard Package', items: [] }]));
+            
+            // 1. Process rate/qty updates
+            for (const up of itemUps) {
+              if (!up?.itemQuery) continue;
+              const q = String(up.itemQuery).toLowerCase().trim();
+              let found = false;
+              for (const t of next) {
+                for (const it of (t.items || [])) {
+                  const itName = (it.name || it.desc || '').toLowerCase();
+                  if (itName.includes(q) || q.includes(itName) || q.split(' ').some(w => w.length > 3 && itName.includes(w))) {
+                    if (up.newRate !== undefined && up.newRate !== null) it.rate = Number(up.newRate);
+                    if (up.newQty !== undefined && up.newQty !== null) it.qty = Number(up.newQty);
+                    found = true;
+                    break;
+                  }
+                }
+                if (found) break;
+              }
+            }
+
+            // 2. Process remove item
+            if (removeItem) {
+              const remQ = String(removeItem).toLowerCase().trim();
+              for (const t of next) {
+                t.items = (t.items || []).filter(it => {
+                  const itName = (it.name || it.desc || '').toLowerCase();
+                  return !(itName.includes(remQ) || remQ.includes(itName));
+                });
+              }
+            }
+
+            // 3. Process add item
+            if (addItem) {
+              const name = typeof addItem === 'string' ? addItem : (addItem.name || addItem.desc || 'New Deliverable');
+              const targetTier = next[0];
+              if (targetTier) {
+                targetTier.items = targetTier.items || [];
+                targetTier.items.push({
+                  id: Date.now(),
+                  name: name,
+                  desc: name,
+                  qty: Number(addItem.qty || 1),
+                  rate: Number(addItem.rate || 0),
+                  details: addItem.details || ''
+                });
+              }
+            }
+
+            return next;
+          });
+
+          const notes = [];
+          if (itemUps.length > 0) notes.push(...itemUps.map(u => u.itemQuery));
+          if (addItem) notes.push(`added ${typeof addItem === 'string' ? addItem : addItem.name}`);
+          if (removeItem) notes.push(`removed ${removeItem}`);
+          showAlert(`Package updated via Orlo (${notes.join(', ')})!`);
+        }
+
+        // Also process any client, brand, or strategy updates included in payload
+        if (data.payload && (data.payload.packageTiers || data.payload.services || data.payload.clientName || data.payload.brandName || data.payload.pmpStrategy || data.payload.packageType)) {
+          parseQuotePayload(data.payload);
+        }
       } else if (['quote', 'package', 'pmp'].includes(data?.intent) && data?.payload) {
+        if (data.payload.id) {
+          setActiveEditingQuote({
+            id: data.payload.id,
+            password: data.payload.password || '',
+            brandName: data.payload.brandName || 'Client'
+          });
+          setShareLink(`${window.location.origin}/quote/${data.payload.id}`);
+          if (data.payload.password) setSharePassword(data.payload.password);
+        }
         parseQuotePayload(data.payload);
       } else if (data?.payload && (data.payload.packageTiers || data.payload.services || data.payload.items || data.payload.totalBudget || data.payload.pmpStrategy)) {
+        if (data.payload.id) {
+          setActiveEditingQuote({
+            id: data.payload.id,
+            password: data.payload.password || '',
+            brandName: data.payload.brandName || 'Client'
+          });
+          setShareLink(`${window.location.origin}/quote/${data.payload.id}`);
+          if (data.payload.password) setSharePassword(data.payload.password);
+        }
         parseQuotePayload(data.payload);
       }
     };
@@ -1202,8 +1373,25 @@ export default function QuoteMaker() {
   }, []);
 
   useEffect(() => {
-    window._drippFormContext = { clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy, pdfPages };
-  }, [clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy, pdfPages]);
+    window._drippFormContext = { 
+      clientDetails, 
+      packageTiers, 
+      quoteDetails, 
+      packageType, 
+      pmpStrategy, 
+      pdfPages,
+      activeEditingQuote,
+      packageHistory: (historyQuotes || []).slice(0, 30).map(p => ({
+        id: p.id,
+        brandName: p.brandName || p.clientDetails?.brandName || 'Untitled Client',
+        clientName: p.clientName || p.clientDetails?.name || '',
+        total: p.total || 0,
+        packageType: p.packageType || 'project',
+        date: p.date || p.created_at || '',
+        items: (p.quote_data?.packageTiers?.[0]?.items || p.quote_data?.items || p.items || []).map(i => `${i.name || i.desc} (₹${i.rate || 0})`).join(', ')
+      }))
+    };
+  }, [clientDetails, packageTiers, quoteDetails, packageType, pmpStrategy, pdfPages, activeEditingQuote, historyQuotes]);
 
   const handleClientChange = (field, value) => setClientDetails(prev => ({ ...prev, [field]: value }));
   const handleQuoteChange = (field, value) => setQuoteDetails(prev => ({ ...prev, [field]: value }));
@@ -1316,7 +1504,7 @@ export default function QuoteMaker() {
 
   const handleCopyMessage = () => {
     const clientName = clientDetails.name ? clientDetails.name.split(' ')[0] : (clientDetails.brandName || 'Client');
-    const msg = `Hey ${clientName}!\n\nHere is your secure proposal from Dripp Media.\n\n🔗 Link: ${shareLink}\n🔑 PIN: ${sharePassword}\n\nLet me know if you have any questions!`;
+    const msg = `Hey ${clientName}!\n\nHere is your secure proposal from Dripp Media.\n\nProposal Link: ${shareLink}\nSecurity PIN: ${sharePassword}\n\nLet me know if you have any questions!`;
     copyToClipboard(msg, 'message');
   };
   const copyShareMessage = handleCopyMessage;
@@ -1581,9 +1769,10 @@ export default function QuoteMaker() {
                 </button>
                 <button 
                   onClick={() => setShowHistoryModal(false)}
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#aaa', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '1.1rem' }}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#aaa', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  title="Close modal"
                 >
-                  ✕
+                  <X size={16} />
                 </button>
               </div>
             </div>
@@ -1653,152 +1842,422 @@ export default function QuoteMaker() {
                     })
                     .map(pkg => {
                       const isLive = activeEditingQuote?.id === pkg.id;
+                      const isMonthly = (pkg.packageType || '').toLowerCase().includes('month') || (pkg.packageType || '').toLowerCase().includes('retain');
+                      const isInvoice = (pkg.packageType || '').toLowerCase().includes('invoice');
+
+                      const brandStr = (pkg.brandName || 'Client').trim();
+                      const initials = brandStr
+                        .replace(/[^a-zA-Z0-9\s]/g, '')
+                        .split(/\s+/)
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map(s => s[0].toUpperCase())
+                        .join('') || brandStr.slice(0, 2).toUpperCase();
+
+                      const formattedDate = pkg.created_at 
+                        ? new Date(pkg.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : 'Saved';
+
                       return (
                         <div
                           key={pkg.id}
                           style={{
-                            background: isLive ? 'rgba(235, 215, 63, 0.08)' : 'rgba(255,255,255,0.03)',
-                            border: isLive ? '1.5px solid #ebd73f' : '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: '16px',
-                            padding: '20px',
+                            background: isLive 
+                              ? 'linear-gradient(145deg, rgba(235, 215, 63, 0.09) 0%, rgba(18, 18, 20, 0.98) 100%)' 
+                              : 'linear-gradient(145deg, rgba(28, 28, 32, 0.75) 0%, rgba(14, 14, 16, 0.95) 100%)',
+                            border: isLive ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '20px',
+                            padding: '22px',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'space-between',
-                            gap: '16px',
-                            boxShadow: isLive ? '0 0 20px rgba(235, 215, 63, 0.2)' : 'none',
-                            transition: 'all 0.2s'
+                            gap: '18px',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            boxShadow: isLive 
+                              ? '0 0 30px rgba(235, 215, 63, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.15)' 
+                              : '0 12px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                            backdropFilter: 'blur(20px)',
+                            WebkitBackdropFilter: 'blur(20px)',
+                            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
                           }}
                         >
+                          {/* Subtle decorative glowing corner accent */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '-30px',
+                            right: '-30px',
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            background: isLive 
+                              ? 'radial-gradient(circle, rgba(235, 215, 63, 0.2) 0%, transparent 70%)'
+                              : isMonthly 
+                              ? 'radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, transparent 70%)'
+                              : 'radial-gradient(circle, rgba(235, 215, 63, 0.1) 0%, transparent 70%)',
+                            pointerEvents: 'none'
+                          }} />
+
+                          {/* Top Header Section */}
                           <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
-                              <div>
+                            {/* Status Badge & Price Row */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '14px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                 <span style={{
-                                  background: (pkg.packageType || '').toLowerCase().includes('month') ? 'rgba(59, 130, 246, 0.15)' : 'rgba(235, 215, 63, 0.15)',
-                                  color: (pkg.packageType || '').toLowerCase().includes('month') ? '#60a5fa' : '#ebd73f',
-                                  border: `1px solid ${(pkg.packageType || '').toLowerCase().includes('month') ? 'rgba(59, 130, 246, 0.3)' : 'rgba(235, 215, 63, 0.3)'}`,
-                                  fontSize: '0.65rem',
-                                  fontWeight: 800,
-                                  fontFamily: "'Panchang', sans-serif",
-                                  padding: '3px 8px',
-                                  borderRadius: '6px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '4px 10px',
+                                  borderRadius: '9999px',
+                                  fontSize: '0.68rem',
+                                  fontWeight: 700,
+                                  letterSpacing: '0.8px',
                                   textTransform: 'uppercase',
-                                  letterSpacing: '1px',
-                                  display: 'inline-block',
-                                  marginBottom: '8px'
+                                  fontFamily: "'Clash Display', sans-serif",
+                                  background: isMonthly 
+                                    ? 'rgba(56, 189, 248, 0.14)' 
+                                    : isInvoice 
+                                    ? 'rgba(74, 222, 128, 0.14)' 
+                                    : 'rgba(235, 215, 63, 0.14)',
+                                  color: isMonthly ? '#38bdf8' : isInvoice ? '#4ade80' : '#ebd73f',
+                                  border: `1px solid ${isMonthly ? 'rgba(56, 189, 248, 0.35)' : isInvoice ? 'rgba(74, 222, 128, 0.35)' : 'rgba(235, 215, 63, 0.35)'}`
                                 }}>
-                                  {pkg.packageType}
+                                  <span style={{
+                                    width: '6px',
+                                    height: '6px',
+                                    borderRadius: '50%',
+                                    background: isMonthly ? '#38bdf8' : isInvoice ? '#4ade80' : '#ebd73f',
+                                    boxShadow: `0 0 8px ${isMonthly ? '#38bdf8' : isInvoice ? '#4ade80' : '#ebd73f'}`
+                                  }} />
+                                  {pkg.packageType || 'PROJECT'}
                                 </span>
-                                <h4 style={{ color: isLive ? '#ebd73f' : '#fff', fontSize: '1.25rem', margin: 0, fontWeight: 800, fontFamily: "'Panchang', sans-serif" }}>
-                                  {pkg.brandName}
-                                </h4>
-                                {pkg.clientName && (
-                                  <div style={{ fontSize: '0.85rem', color: '#aaa', marginTop: '3px', fontFamily: "'Clash Display', sans-serif" }}>
-                                    Client: {pkg.clientName}
-                                  </div>
+
+                                {isLive && (
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    padding: '4px 10px',
+                                    borderRadius: '9999px',
+                                    fontSize: '0.65rem',
+                                    fontWeight: 800,
+                                    letterSpacing: '1px',
+                                    fontFamily: "'Panchang', sans-serif",
+                                    background: '#ebd73f',
+                                    color: '#000',
+                                    boxShadow: '0 0 14px rgba(235, 215, 63, 0.4)'
+                                  }}>
+                                    ● LIVE
+                                  </span>
                                 )}
                               </div>
 
+                              {/* Price & Deliverables stats */}
                               <div style={{ textAlign: 'right' }}>
-                                <div style={{ color: '#ebd73f', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Clash Display', sans-serif" }}>
+                                <div style={{
+                                  color: '#ebd73f',
+                                  fontSize: '1.45rem',
+                                  fontWeight: 800,
+                                  fontFamily: "'Clash Display', sans-serif",
+                                  letterSpacing: '-0.02em',
+                                  lineHeight: '1.1',
+                                  textShadow: '0 0 20px rgba(235, 215, 63, 0.25)'
+                                }}>
                                   {pkg.currency}{Number(pkg.total || 0).toLocaleString()}
                                 </div>
-                                <div style={{ fontSize: '0.72rem', color: '#666', marginTop: '2px', fontFamily: "'Clash Display', sans-serif" }}>
-                                  {pkg.itemsCount} deliverables • {pkg.tiersCount} {pkg.tiersCount === 1 ? 'tier' : 'tiers'}
+                                <div style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  marginTop: '5px',
+                                  fontSize: '0.74rem',
+                                  color: '#cbd5e1',
+                                  fontFamily: "'Clash Display', sans-serif",
+                                  fontWeight: 500
+                                }}>
+                                  <span>{pkg.itemsCount} {pkg.itemsCount === 1 ? 'deliverable' : 'deliverables'}</span>
+                                  <span style={{ color: 'rgba(255,255,255,0.25)' }}>•</span>
+                                  <span>{pkg.tiersCount || 1} {pkg.tiersCount === 1 ? 'tier' : 'tiers'}</span>
                                 </div>
                               </div>
                             </div>
 
-                            <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '10px', padding: '10px 12px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.78rem', color: '#aaa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                                Link ID: <strong style={{ color: '#fff' }}>{pkg.id}</strong>
-                              </span>
-                              <span style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                                PIN: <strong style={{ color: '#ebd73f' }}>{pkg.password || 'None'}</strong>
-                              </span>
-                              <span style={{ color: '#666', fontSize: '0.72rem', fontFamily: "'Clash Display', sans-serif" }}>
-                                {pkg.created_at ? new Date(pkg.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                              </span>
+                            {/* Brand Name & Client Row with Monogram Avatar */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+                              <div style={{
+                                width: '44px',
+                                height: '44px',
+                                borderRadius: '12px',
+                                background: isLive 
+                                  ? 'linear-gradient(135deg, #ebd73f 0%, #ca8a04 100%)' 
+                                  : 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                                color: isLive ? '#000' : '#ebd73f',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontFamily: "'Panchang', sans-serif",
+                                fontWeight: 800,
+                                fontSize: '0.92rem',
+                                letterSpacing: '0.5px',
+                                border: isLive ? 'none' : '1px solid rgba(235, 215, 63, 0.3)',
+                                boxShadow: isLive ? '0 4px 16px rgba(235, 215, 63, 0.4)' : 'inset 0 1px 0 rgba(255,255,255,0.1)',
+                                flexShrink: 0
+                              }}>
+                                {initials}
+                              </div>
+
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <h4 style={{
+                                  color: isLive ? '#ebd73f' : '#ffffff',
+                                  fontSize: '1.35rem',
+                                  margin: 0,
+                                  fontWeight: 700,
+                                  fontFamily: "'Clash Display', sans-serif",
+                                  letterSpacing: '-0.01em',
+                                  lineHeight: '1.25',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  {pkg.brandName}
+                                </h4>
+                                {pkg.clientName && (
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    marginTop: '3px',
+                                    fontSize: '0.86rem',
+                                    color: '#cbd5e1',
+                                    fontFamily: "'Clash Display', sans-serif"
+                                  }}>
+                                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Client:</span>
+                                    <span style={{ color: '#fff', fontWeight: 600 }}>{pkg.clientName}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* High-Visibility Middle Cyber Ribbon */}
+                            <div style={{
+                              background: 'rgba(0, 0, 0, 0.45)',
+                              borderRadius: '12px',
+                              padding: '10px 14px',
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
+                              display: 'grid',
+                              gridTemplateColumns: '1.2fr 1fr 1fr',
+                              gap: '10px',
+                              alignItems: 'center'
+                            }}>
+                              {/* Link ID */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0 }}>
+                                <div style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '6px',
+                                  background: 'rgba(235, 215, 63, 0.1)',
+                                  border: '1px solid rgba(235, 215, 63, 0.25)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0
+                                }}>
+                                  <Globe size={12} color="#ebd73f" />
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                  <div style={{ fontSize: '0.62rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: "'Clash Display', sans-serif" }}>LINK ID</div>
+                                  <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 700, fontFamily: "'Clash Display', sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {pkg.id}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* PIN */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                                <div style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '6px',
+                                  background: 'rgba(235, 215, 63, 0.1)',
+                                  border: '1px solid rgba(235, 215, 63, 0.25)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0
+                                }}>
+                                  <Lock size={12} color="#ebd73f" />
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '0.62rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: "'Clash Display', sans-serif" }}>PIN</div>
+                                  <div style={{ fontSize: '0.88rem', color: '#ebd73f', fontWeight: 800, letterSpacing: '1px', fontFamily: "'Panchang', sans-serif" }}>
+                                    {pkg.password || 'None'}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Date */}
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '0.62rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: "'Clash Display', sans-serif" }}>DATE</div>
+                                <div style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, fontFamily: "'Clash Display', sans-serif" }}>
+                                  {formattedDate}
+                                </div>
+                              </div>
                             </div>
                           </div>
 
                           {/* Action Buttons */}
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '14px' }}>
+                          <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            alignItems: 'center',
+                            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                            paddingTop: '16px'
+                          }}>
+                            {/* Edit Live Button */}
                             <button
                               onClick={() => loadQuoteFromHistory(pkg)}
                               style={{
                                 flex: 1,
-                                background: '#ebd73f',
+                                background: 'linear-gradient(135deg, #ebd73f 0%, #facc15 100%)',
                                 color: '#000',
                                 border: 'none',
-                                padding: '10px 14px',
-                                borderRadius: '8px',
-                                fontWeight: 800,
-                                fontSize: '0.74rem',
+                                padding: '11px 16px',
+                                borderRadius: '10px',
+                                fontWeight: 700,
+                                fontSize: '0.86rem',
                                 cursor: 'pointer',
-                                fontFamily: "'Panchang', sans-serif",
+                                fontFamily: "'Clash Display', sans-serif",
+                                letterSpacing: '0.3px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: '6px'
+                                gap: '7px',
+                                boxShadow: '0 4px 14px rgba(235, 215, 63, 0.25)',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                                e.currentTarget.style.boxShadow = '0 6px 20px rgba(235, 215, 63, 0.4)';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 4px 14px rgba(235, 215, 63, 0.25)';
                               }}
                             >
-                              <Edit3 size={14} /> Edit Live
+                              <Edit3 size={15} color="#000" />
+                              <span>Edit Live</span>
                             </button>
 
+                            {/* Copy for Smart Paste Button */}
                             <button
                               onClick={() => copyPackageForSmartPaste(pkg, `modal_copy_${pkg.id}`)}
                               style={{
-                                background: copiedItem === `modal_copy_${pkg.id}` ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.06)',
-                                border: copiedItem === `modal_copy_${pkg.id}` ? '1px solid #22c55e' : '1px solid rgba(255,255,255,0.15)',
-                                color: copiedItem === `modal_copy_${pkg.id}` ? '#22c55e' : '#fff',
-                                padding: '10px 14px',
-                                borderRadius: '8px',
+                                flex: 1.2,
+                                background: copiedItem === `modal_copy_${pkg.id}` ? 'rgba(235, 215, 63, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                border: copiedItem === `modal_copy_${pkg.id}` ? '1px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.12)',
+                                color: copiedItem === `modal_copy_${pkg.id}` ? '#ebd73f' : '#ffffff',
+                                padding: '11px 14px',
+                                borderRadius: '10px',
                                 fontWeight: 600,
-                                fontSize: '0.82rem',
+                                fontSize: '0.84rem',
                                 cursor: 'pointer',
                                 fontFamily: "'Clash Display', sans-serif",
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '6px'
+                                justifyContent: 'center',
+                                gap: '7px',
+                                transition: 'all 0.2s ease'
                               }}
-                              title="Copy every detail of this package formatted for AI Smart Paste"
+                              title="Copy all details of this package to clipboard for AI Smart Paste"
+                              onMouseEnter={e => {
+                                if (copiedItem !== `modal_copy_${pkg.id}`) {
+                                  e.currentTarget.style.background = 'rgba(235, 215, 63, 0.08)';
+                                  e.currentTarget.style.borderColor = 'rgba(235, 215, 63, 0.35)';
+                                  e.currentTarget.style.color = '#ebd73f';
+                                }
+                              }}
+                              onMouseLeave={e => {
+                                if (copiedItem !== `modal_copy_${pkg.id}`) {
+                                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                                  e.currentTarget.style.color = '#ffffff';
+                                }
+                              }}
                             >
-                              {copiedItem === `modal_copy_${pkg.id}` ? <CheckCircle2 size={14} color="#22c55e" /> : <Copy size={14} />}
-                              {copiedItem === `modal_copy_${pkg.id}` ? 'Copied Details!' : 'Copy for Smart Paste'}
+                              {copiedItem === `modal_copy_${pkg.id}` ? (
+                                <>
+                                  <CheckCircle2 size={15} color="#4ade80" />
+                                  <span>Copied Details!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy size={15} color="#ebd73f" />
+                                  <span>Copy for Smart Paste</span>
+                                </>
+                              )}
                             </button>
 
+                            {/* Open Link Button */}
                             <button
                               onClick={() => window.open(`${window.location.origin}/quote/${pkg.id}?pwd=${pkg.password}`, '_blank')}
                               style={{
-                                background: 'transparent',
-                                border: '1px solid rgba(255,255,255,0.12)',
-                                color: '#aaa',
-                                padding: '10px',
-                                borderRadius: '8px',
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '10px',
+                                background: 'rgba(255, 255, 255, 0.04)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                color: '#cbd5e1',
                                 cursor: 'pointer',
                                 display: 'flex',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s ease',
+                                flexShrink: 0
                               }}
-                              title="Open Client View"
+                              title="Open Client View Link"
+                              onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = '#ebd73f';
+                                e.currentTarget.style.color = '#ebd73f';
+                                e.currentTarget.style.background = 'rgba(235, 215, 63, 0.1)';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                e.currentTarget.style.color = '#cbd5e1';
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                              }}
                             >
-                              <ExternalLink size={15} />
+                              <ExternalLink size={16} />
                             </button>
 
+                            {/* Delete Button */}
                             <button
                               onClick={() => deleteHistoryQuote(pkg.id, pkg.brandName)}
                               style={{
-                                background: 'transparent',
-                                border: '1px solid rgba(255, 77, 77, 0.2)',
-                                color: '#ff4d4d',
-                                padding: '10px',
-                                borderRadius: '8px',
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '10px',
+                                background: 'rgba(239, 68, 68, 0.06)',
+                                border: '1px solid rgba(239, 68, 68, 0.2)',
+                                color: '#ef4444',
                                 cursor: 'pointer',
                                 display: 'flex',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s ease',
+                                flexShrink: 0
                               }}
-                              title="Delete Package"
+                              title="Delete Package from History"
+                              onMouseEnter={e => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)';
+                                e.currentTarget.style.borderColor = '#ef4444';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.06)';
+                                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                              }}
                             >
-                              <Trash2 size={15} />
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </div>
@@ -1834,142 +2293,306 @@ export default function QuoteMaker() {
         </div>
       </div>
 
-      {/* LIVE EDIT MODE BANNER */}
-      {activeEditingQuote && (
+      {/* UNIFIED LIVE EDIT & PROPOSAL SHARE LINK CONTROL BAR */}
+      {activeEditingQuote ? (
         <div style={{
-          background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.22) 0%, rgba(20, 20, 20, 0.98) 100%)',
-          border: '1.5px solid #ebd73f',
+          background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(14, 14, 17, 0.98) 100%)',
+          border: '1px solid rgba(235, 215, 63, 0.35)',
           borderRadius: '16px',
-          padding: '18px 24px',
+          padding: '22px 26px',
           marginBottom: '28px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '14px',
-          boxShadow: '0 8px 30px rgba(235, 215, 63, 0.2)'
+          boxShadow: '0 12px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(235, 215, 63, 0.15)',
+          backdropFilter: 'blur(12px)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ background: '#ebd73f', color: '#000', borderRadius: '8px', padding: '6px 12px', fontWeight: 800, fontSize: '0.72rem', letterSpacing: '1px', fontFamily: "'Panchang', sans-serif" }}>
-              LIVE EDIT
+          {/* Top Row: Status badge, Client Title, ID & PIN badges, Exit Button */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '14px',
+            paddingBottom: '18px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            marginBottom: '18px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: 'rgba(235, 215, 63, 0.12)',
+                border: '1px solid rgba(235, 215, 63, 0.35)',
+                color: '#ebd73f',
+                borderRadius: '8px',
+                padding: '6px 14px',
+                fontFamily: "'Panchang', sans-serif",
+                fontWeight: 800,
+                fontSize: '0.72rem',
+                letterSpacing: '1px'
+              }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ebd73f', boxShadow: '0 0 10px #ebd73f', display: 'inline-block' }} />
+                LIVE EDITING
+              </div>
+
+              <div>
+                <span style={{ color: '#888', fontSize: '0.9rem', fontFamily: "'Clash Display', sans-serif", marginRight: '8px' }}>
+                  Client Package:
+                </span>
+                <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.2rem', fontFamily: "'Clash Display', sans-serif" }}>
+                  {activeEditingQuote.brandName || clientDetails.brandName || 'Untitled Client'}
+                </span>
+              </div>
             </div>
-            <div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem', fontFamily: "'Clash Display', sans-serif" }}>
-                Editing Package for: <span style={{ color: '#ebd73f', fontWeight: 800 }}>{activeEditingQuote.brandName}</span>
+
+            {/* Badges for ID, PIN & Exit Button */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                fontSize: '0.84rem',
+                fontFamily: "'Clash Display', sans-serif",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span style={{ color: '#888' }}>Link ID:</span>
+                <span style={{ color: '#ffffff', fontWeight: 600 }}>{activeEditingQuote.id}</span>
               </div>
-              <div style={{ color: '#aaa', fontSize: '0.8rem', marginTop: '2px', fontFamily: "'Clash Display', sans-serif" }}>
-                Link ID: <span style={{ color: '#ebd73f' }}>{activeEditingQuote.id}</span> • PIN: {sharePassword || activeEditingQuote.password || 'None'}
+
+              <div style={{
+                background: 'rgba(235, 215, 63, 0.08)',
+                border: '1px solid rgba(235, 215, 63, 0.25)',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                fontSize: '0.84rem',
+                fontFamily: "'Clash Display', sans-serif",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span style={{ color: '#888' }}>Security PIN:</span>
+                <span style={{ color: '#ebd73f', fontWeight: 700, letterSpacing: '1.5px' }}>{sharePassword || activeEditingQuote.password || 'None'}</span>
               </div>
+
+              <button
+                onClick={() => setActiveEditingQuote(null)}
+                style={{
+                  background: 'transparent',
+                  color: '#888',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                  fontFamily: "'Clash Display', sans-serif",
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#888'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                title="Exit live edit mode"
+              >
+                <X size={14} />
+                <span>Exit Live</span>
+              </button>
             </div>
           </div>
-          
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <button
-              onClick={updateLiveQuote}
-              disabled={isUpdatingLive}
-              style={{
-                background: '#ebd73f',
-                color: '#000',
-                border: 'none',
-                padding: '10px 20px',
-                borderRadius: '8px',
-                fontWeight: 800,
-                cursor: isUpdatingLive ? 'wait' : 'pointer',
-                fontFamily: "'Panchang', sans-serif",
-                fontSize: '0.74rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-            >
-              <Save size={16} /> {isUpdatingLive ? 'Updating...' : 'Save to Live Link'}
-            </button>
-            <button
-              onClick={() => copyPackageForSmartPaste({ clientDetails, quoteDetails, packageTiers, packageType, total, includePMP, pmpStrategy }, 'liveBannerCopy')}
-              style={{
-                background: copiedItem === 'liveBannerCopy' ? '#22c55e' : 'rgba(255,255,255,0.08)',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.2)',
-                padding: '10px 16px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontFamily: "'Clash Display', sans-serif",
-                fontSize: '0.85rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-              title="Copy every detail to paste in AI Smart Paste"
-            >
-              {copiedItem === 'liveBannerCopy' ? <CheckCircle2 size={15} color="#fff" /> : <Copy size={15} />}
-              {copiedItem === 'liveBannerCopy' ? 'Details Copied!' : 'Copy for Smart Paste'}
-            </button>
-            <button
-              onClick={() => window.open(`${shareLink}?pwd=${sharePassword}`, '_blank')}
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                color: '#ddd',
-                border: '1px solid rgba(255,255,255,0.15)',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontFamily: "'Clash Display', sans-serif",
-                fontSize: '0.85rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <ExternalLink size={14} /> Open Live
-            </button>
-            <button
-              onClick={() => setActiveEditingQuote(null)}
-              style={{
-                background: 'transparent',
-                color: '#888',
-                border: 'none',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                fontFamily: "'Clash Display', sans-serif"
-              }}
-            >
-              Exit Live Edit
-            </button>
+
+          {/* Bottom Row: Direct Link Input with embedded copy button, and primary action buttons */}
+          <div className="quote-live-action-grid">
+            {/* Direct Link Input */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: '#08080a',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '10px',
+              padding: '4px 6px 4px 14px',
+              gap: '10px'
+            }}>
+              <Globe size={15} color="#888" style={{ flexShrink: 0 }} />
+              <input
+                type="text"
+                readOnly
+                value={shareLink || `${window.location.origin}/quote/${activeEditingQuote.id}`}
+                onClick={() => window.open(`${shareLink || `${window.location.origin}/quote/${activeEditingQuote.id}`}?pwd=${sharePassword || activeEditingQuote.password}`, '_blank')}
+                title="Click to preview proposal directly in a new tab"
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: '#ebd73f',
+                  fontSize: '0.88rem',
+                  fontFamily: "'Clash Display', sans-serif",
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              />
+              <button
+                onClick={() => copyToClipboard(shareLink || `${window.location.origin}/quote/${activeEditingQuote.id}`, 'live_link_copy')}
+                style={{
+                  background: copiedItem === 'live_link_copy' ? '#ebd73f' : 'rgba(255, 255, 255, 0.08)',
+                  color: copiedItem === 'live_link_copy' ? '#000000' : '#ffffff',
+                  border: copiedItem === 'live_link_copy' ? '1px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.15)',
+                  padding: '8px 14px',
+                  borderRadius: '7px',
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  fontFamily: "'Clash Display', sans-serif",
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Copy client proposal share link"
+              >
+                {copiedItem === 'live_link_copy' ? <CheckCircle2 size={14} color="#000" /> : <Copy size={14} color="#ebd73f" />}
+                <span>{copiedItem === 'live_link_copy' ? 'Copied' : 'Copy Link'}</span>
+              </button>
+            </div>
+
+            {/* Action Buttons: Save Live, Copy Message, Copy for Smart Paste, Open Live */}
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={updateLiveQuote}
+                disabled={isUpdatingLive}
+                style={{
+                  background: '#ebd73f',
+                  color: '#000000',
+                  border: 'none',
+                  padding: '11px 20px',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  cursor: isUpdatingLive ? 'wait' : 'pointer',
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: '0.88rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 18px rgba(235, 215, 63, 0.25)',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Save size={16} />
+                <span>{isUpdatingLive ? 'Updating Link...' : 'Save to Live Link'}</span>
+              </button>
+
+              <button
+                onClick={handleCopyMessage}
+                style={{
+                  background: copiedItem === 'message' ? '#ebd73f' : 'rgba(255, 255, 255, 0.06)',
+                  color: copiedItem === 'message' ? '#000000' : '#ffffff',
+                  border: copiedItem === 'message' ? '1px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.15)',
+                  padding: '11px 16px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: '0.84rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {copiedItem === 'message' ? <CheckCircle2 size={15} color="#000" /> : <Share2 size={15} color="#ebd73f" />}
+                <span>{copiedItem === 'message' ? 'Message Copied!' : 'Copy Share Message'}</span>
+              </button>
+
+              <button
+                onClick={() => copyPackageForSmartPaste({ clientDetails, quoteDetails, packageTiers, packageType, total, includePMP, pmpStrategy }, 'liveBannerCopy')}
+                style={{
+                  background: copiedItem === 'liveBannerCopy' ? '#ebd73f' : 'rgba(255, 255, 255, 0.06)',
+                  color: copiedItem === 'liveBannerCopy' ? '#000000' : '#ffffff',
+                  border: copiedItem === 'liveBannerCopy' ? '1px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.15)',
+                  padding: '11px 16px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: '0.84rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Copy package details formatted for AI Smart Paste"
+              >
+                {copiedItem === 'liveBannerCopy' ? <CheckCircle2 size={15} color="#000" /> : <Copy size={15} color="#ebd73f" />}
+                <span>{copiedItem === 'liveBannerCopy' ? 'Details Copied!' : 'Copy for Smart Paste'}</span>
+              </button>
+
+              <button
+                onClick={() => window.open(`${shareLink || `${window.location.origin}/quote/${activeEditingQuote.id}`}?pwd=${sharePassword || activeEditingQuote.password}`, '_blank')}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  color: '#cccccc',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  padding: '11px 16px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: '0.84rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Preview client view in new tab"
+              >
+                <ExternalLink size={15} color="#ebd73f" />
+                <span>Open Live</span>
+              </button>
+            </div>
           </div>
         </div>
-      )}
-
-      {/* TOP HEADER SHARE LINK & PIN CARD */}
-      {shareLink && (
+      ) : shareLink ? (
+        /* PROPOSAL SHARE LINK CARD (WHEN NOT ALREADY IN LIVE EDIT MODE) */
         <div style={{
-          background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.15) 0%, rgba(20, 20, 20, 0.95) 100%)',
-          border: '1px solid #ebd73f',
+          background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(14, 14, 17, 0.98) 100%)',
+          border: '1px solid rgba(235, 215, 63, 0.35)',
           borderRadius: '16px',
-          padding: '20px 24px',
-          marginBottom: '30px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          padding: '22px 26px',
+          marginBottom: '28px',
+          boxShadow: '0 12px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(235, 215, 63, 0.15)',
+          backdropFilter: 'blur(12px)'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', paddingBottom: '14px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <CheckCircle2 size={20} color="#ebd73f" />
-              <h4 style={{ margin: 0, color: '#fff', fontSize: '1.1rem', fontFamily: "'Clash Display', sans-serif" }}>
-                Secure Proposal Share Link Created!
+              <div style={{ background: 'rgba(235, 215, 63, 0.15)', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CheckCircle2 size={18} color="#ebd73f" />
+              </div>
+              <h4 style={{ margin: 0, color: '#ffffff', fontSize: '1.15rem', fontFamily: "'Clash Display', sans-serif", fontWeight: 700 }}>
+                Secure Proposal Share Link Created
               </h4>
             </div>
             <button 
               onClick={() => setShareLink('')}
-              style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '1.2rem', padding: '4px 8px' }}
+              style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center' }}
+              title="Dismiss"
             >
-              ✕
+              <X size={16} />
             </button>
           </div>
 
           <div className="quote-share-grid">
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', color: '#aaa', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
-                Secure Link:
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', fontFamily: "'Clash Display', sans-serif" }}>
+                Secure Link
               </label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input 
@@ -1980,112 +2603,112 @@ export default function QuoteMaker() {
                   title="Click to open proposal directly with PIN in a new tab"
                   style={{ 
                     width: '100%', 
-                    background: '#0a0a0a', 
-                    border: '1px solid rgba(255,255,255,0.15)', 
+                    background: '#08080a', 
+                    border: '1px solid rgba(255,255,255,0.12)', 
                     color: '#ebd73f', 
                     padding: '10px 14px', 
                     borderRadius: '8px', 
                     fontFamily: "'Clash Display', sans-serif",
-                    fontSize: '0.9rem',
+                    fontSize: '0.88rem',
                     cursor: 'pointer'
                   }}
                 />
                 <button 
                   onClick={() => copyToClipboard(shareLink, 'link')}
                   style={{ 
-                    background: copiedItem === 'link' ? '#22c55e' : 'rgba(235, 215, 63, 0.2)', 
-                    border: copiedItem === 'link' ? '1px solid #22c55e' : '1px solid #ebd73f', 
-                    color: copiedItem === 'link' ? '#fff' : '#ebd73f', 
+                    background: copiedItem === 'link' ? '#ebd73f' : 'rgba(255, 255, 255, 0.08)', 
+                    border: copiedItem === 'link' ? '1px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.15)', 
+                    color: copiedItem === 'link' ? '#000000' : '#ffffff', 
                     padding: '0 16px', 
                     borderRadius: '8px', 
                     cursor: 'pointer', 
-                    fontWeight: 'bold', 
+                    fontWeight: 600, 
                     whiteSpace: 'nowrap',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    transform: copiedItem === 'link' ? 'scale(1.05)' : 'scale(1)',
-                    boxShadow: copiedItem === 'link' ? '0 0 15px rgba(34, 197, 94, 0.4)' : 'none',
-                    transition: 'all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                    fontFamily: "'Clash Display', sans-serif",
+                    fontSize: '0.84rem',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  {copiedItem === 'link' ? <><CheckCircle2 size={15} color="#fff" /> Copied!</> : 'Copy Link'}
+                  {copiedItem === 'link' ? <CheckCircle2 size={14} color="#000" /> : <Copy size={14} color="#ebd73f" />}
+                  <span>{copiedItem === 'link' ? 'Copied' : 'Copy Link'}</span>
                 </button>
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', color: '#aaa', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
-                Security PIN:
+              <label style={{ display: 'block', fontSize: '0.75rem', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', fontFamily: "'Clash Display', sans-serif" }}>
+                Security PIN
               </label>
-              <div style={{ background: '#0a0a0a', border: '1px solid #ebd73f', color: '#fff', padding: '10px 14px', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '2px', textAlign: 'center' }}>
+              <div style={{ background: '#08080a', border: '1px solid rgba(235, 215, 63, 0.3)', color: '#ebd73f', padding: '10px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '1.05rem', letterSpacing: '2px', textAlign: 'center', fontFamily: "'Clash Display', sans-serif" }}>
                 {sharePassword}
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%', gap: '10px', flexWrap: 'wrap' }}>
               <button 
                 onClick={handleCopyMessage}
                 style={{ 
-                  background: copiedItem === 'message' ? '#22c55e' : '#ebd73f', 
+                  background: copiedItem === 'message' ? '#ebd73f' : '#ebd73f', 
                   border: 'none', 
-                  color: copiedItem === 'message' ? '#fff' : '#000', 
-                  padding: '12px 18px', 
+                  color: '#000000', 
+                  padding: '11px 18px', 
                   borderRadius: '8px', 
                   cursor: 'pointer', 
-                  fontWeight: 'bold', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  whiteSpace: 'nowrap',
-                  transform: copiedItem === 'message' ? 'scale(1.05)' : 'scale(1)',
-                  boxShadow: copiedItem === 'message' ? '0 0 15px rgba(34, 197, 94, 0.4)' : 'none',
-                  transition: 'all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                }}
-              >
-                {copiedItem === 'message' ? (
-                  <>
-                    <CheckCircle2 size={16} color="#fff" /> Copied Message!
-                  </>
-                ) : (
-                  <>
-                    <Share2 size={16} /> Copy Message
-                  </>
-                )}
-              </button>
-
-              {/* SMALL COPY ICON: COPY FULL DETAILS FOR AI SMART PASTE */}
-              <button 
-                onClick={() => copyPackageForSmartPaste({ clientDetails, quoteDetails, packageTiers, packageType, total, includePMP, pmpStrategy }, 'topSmartPaste')}
-                style={{ 
-                  background: copiedItem === 'topSmartPaste' ? '#22c55e' : 'rgba(235, 215, 63, 0.15)', 
-                  border: copiedItem === 'topSmartPaste' ? '1px solid #22c55e' : '1px solid #ebd73f', 
-                  color: copiedItem === 'topSmartPaste' ? '#fff' : '#ebd73f', 
-                  padding: '12px 18px', 
-                  borderRadius: '8px', 
-                  cursor: 'pointer', 
-                  fontWeight: 'bold', 
+                  fontWeight: 700, 
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: '8px', 
                   whiteSpace: 'nowrap',
                   fontFamily: "'Clash Display', sans-serif",
-                  fontSize: '0.88rem',
-                  transform: copiedItem === 'topSmartPaste' ? 'scale(1.05)' : 'scale(1)',
-                  transition: 'all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                  fontSize: '0.86rem',
+                  boxShadow: '0 4px 15px rgba(235, 215, 63, 0.2)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {copiedItem === 'message' ? (
+                  <>
+                    <CheckCircle2 size={15} color="#000" /> Copied Message!
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={15} color="#000" /> Copy Share Message
+                  </>
+                )}
+              </button>
+
+              <button 
+                onClick={() => copyPackageForSmartPaste({ clientDetails, quoteDetails, packageTiers, packageType, total, includePMP, pmpStrategy }, 'topSmartPaste')}
+                style={{ 
+                  background: copiedItem === 'topSmartPaste' ? '#ebd73f' : 'rgba(255, 255, 255, 0.06)', 
+                  border: copiedItem === 'topSmartPaste' ? '1px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.15)', 
+                  color: copiedItem === 'topSmartPaste' ? '#000000' : '#ffffff', 
+                  padding: '11px 16px', 
+                  borderRadius: '8px', 
+                  cursor: 'pointer', 
+                  fontWeight: 600, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  whiteSpace: 'nowrap',
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: '0.84rem',
+                  transition: 'all 0.2s ease'
                 }}
                 title="Copy all details of this package formatted for AI Smart Paste"
               >
                 {copiedItem === 'topSmartPaste' ? (
-                  <><CheckCircle2 size={16} color="#fff" /> Copied for Smart Paste!</>
+                  <><CheckCircle2 size={15} color="#000" /> Copied for Smart Paste!</>
                 ) : (
-                  <><Copy size={16} color="#ebd73f" /> Copy Details for Smart Paste</>
+                  <><Copy size={15} color="#ebd73f" /> Copy Details for Smart Paste</>
                 )}
               </button>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
       <style jsx>{`
         .quote-share-grid {
           display: grid;
@@ -2093,17 +2716,47 @@ export default function QuoteMaker() {
           gap: 16px;
           align-items: center;
         }
+        .quote-live-action-grid {
+          display: grid;
+          grid-template-columns: minmax(280px, 1fr) auto;
+          gap: 16px;
+          align-items: center;
+        }
         .quote-main-grid {
           display: grid;
-          grid-template-columns: 1fr 350px;
-          gap: 30px;
+          grid-template-columns: minmax(0, 1fr) 350px;
+          gap: 25px;
           align-items: start;
+        }
+        .quote-sidebar-sticky {
+          position: sticky;
+          top: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          max-height: calc(100vh - 48px);
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(235, 215, 63, 0.3) transparent;
+        }
+        .quote-sidebar-sticky::-webkit-scrollbar {
+          width: 5px;
+        }
+        .quote-sidebar-sticky::-webkit-scrollbar-thumb {
+          background: rgba(235, 215, 63, 0.3);
+          border-radius: 4px;
         }
         .quote-pdf-builder-grid {
           display: grid;
-          grid-template-columns: 280px 1fr;
-          gap: 40px;
+          grid-template-columns: 240px minmax(0, 1fr);
+          gap: 24px;
           align-items: stretch;
+        }
+        @media (max-width: 1100px) {
+          .quote-pdf-builder-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
         }
         @media (max-width: 1024px) {
           .quote-share-grid {
@@ -2114,9 +2767,10 @@ export default function QuoteMaker() {
             grid-template-columns: 1fr !important;
             gap: 20px !important;
           }
-          .quote-pdf-builder-grid {
-            grid-template-columns: 1fr !important;
-            gap: 20px !important;
+          .quote-sidebar-sticky {
+            position: static !important;
+            max-height: none !important;
+            overflow-y: visible !important;
           }
         }
       `}</style>
@@ -2374,16 +3028,165 @@ export default function QuoteMaker() {
               ))}
             </div>
             
-            <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(235, 215, 63, 0.05)', border: '1px solid rgba(235, 215, 63, 0.2)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-               <span style={{ fontSize: '1.1rem', color: '#888' }}>Total Amount:</span>
-               <span style={{ fontSize: '1.3rem', color: '#ebd73f', fontWeight: 'bold' }}>{quoteDetails.currency}{total.toFixed(2)}</span>
+            <div style={{ marginTop: '20px', padding: '16px 20px', background: 'linear-gradient(135deg, rgba(235, 215, 63, 0.08) 0%, rgba(20, 20, 22, 0.8) 100%)', border: '1px solid rgba(235, 215, 63, 0.3)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+               <span style={{ fontSize: '1.05rem', color: '#aaa', fontFamily: "'Clash Display', sans-serif", fontWeight: 600 }}>Total Amount:</span>
+               <span style={{ fontSize: '1.5rem', color: '#ebd73f', fontWeight: 800, fontFamily: "'Panchang', sans-serif" }}>{quoteDetails.currency}{total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* PDF PAGE BUILDER */}
+          <div className={styles.card} style={{ marginTop: '5px' }}>
+            <h3 style={{ marginBottom: '24px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.35rem', borderBottom: '1px solid rgba(235, 215, 63, 0.2)', paddingBottom: '14px', fontFamily: "'Panchang', sans-serif" }}>
+              <Layers size={20} /> PDF Pages & Layout
+            </h3>
+            
+            <div className="quote-pdf-builder-grid">
+               {/* Left: Page List */}
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {pdfPages.map((page, index) => (
+                      <div key={page.id} 
+                           onClick={() => setSelectedPageIndex(index)}
+                           style={{ 
+                             padding: '12px 14px', 
+                             background: selectedPageIndex === index ? 'linear-gradient(135deg, rgba(235, 215, 63, 0.14) 0%, rgba(20, 20, 22, 0.95) 100%)' : 'rgba(255,255,255,0.02)', 
+                             border: `1px solid ${selectedPageIndex === index ? '#ebd73f' : 'rgba(255,255,255,0.06)'}`, 
+                             borderRadius: '10px', 
+                             cursor: 'pointer',
+                             display: 'flex',
+                             alignItems: 'center',
+                             justifyContent: 'space-between',
+                             transition: 'all 0.2s ease',
+                             boxShadow: selectedPageIndex === index ? '0 0 15px rgba(235, 215, 63, 0.15)' : 'none'
+                           }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                             {page.type === 'cover' && <Image size={16} color={selectedPageIndex === index ? "#ebd73f" : "#888"} />}
+                             {page.type === 'pmp' && <Edit3 size={16} color="#ebd73f" />}
+                             {page.type === 'services' && <FileText size={16} color={selectedPageIndex === index ? "#ebd73f" : "#888"} />}
+                             {page.type === 'investment' && <Package size={16} color={selectedPageIndex === index ? "#ebd73f" : "#888"} />}
+                             {page.type === 'next_steps' && <CheckCircle size={16} color={selectedPageIndex === index ? "#ebd73f" : "#888"} />}
+                             {page.type === 'custom_text' && <Type size={16} color={selectedPageIndex === index ? "#ebd73f" : "#888"} />}
+                             {page.type === 'infographic' && <Layers size={16} color={selectedPageIndex === index ? "#ebd73f" : "#888"} />}
+                             <span style={{ fontSize: '0.86rem', fontWeight: selectedPageIndex === index ? 700 : 500, color: selectedPageIndex === index ? '#fff' : '#aaa', fontFamily: "'Clash Display', sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {page.type === 'pmp' ? 'Strategy & Pitch' : page.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                             </span>
+                          </div>
+                          
+                          <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                             <button onClick={() => movePage(index, 'up')} disabled={index === 0} style={{ background: 'transparent', border: 'none', color: index === 0 ? '#333' : '#ebd73f', cursor: index === 0 ? 'not-allowed' : 'pointer', padding: '3px' }}><ArrowUp size={13} /></button>
+                             <button onClick={() => movePage(index, 'down')} disabled={index === pdfPages.length - 1} style={{ background: 'transparent', border: 'none', color: index === pdfPages.length - 1 ? '#333' : '#ebd73f', cursor: index === pdfPages.length - 1 ? 'not-allowed' : 'pointer', padding: '3px' }}><ArrowDown size={13} /></button>
+                             {pdfPages.length > 1 && (
+                               <button onClick={() => removePage(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '3px' }}><Trash2 size={13} /></button>
+                             )}
+                          </div>
+                      </div>
+                  ))}
+                  
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                      <button onClick={() => addPage('custom_text')} className={styles.btn} style={{ flex: 1, fontSize: '0.78rem', padding: '8px 6px', fontFamily: "'Clash Display', sans-serif" }}>+ Text Page</button>
+                      <button onClick={() => addPage('infographic')} className={styles.btn} style={{ flex: 1, fontSize: '0.78rem', padding: '8px 6px', fontFamily: "'Clash Display', sans-serif" }}>+ Infographic</button>
+                  </div>
+               </div>
+
+               {/* Right: Page Editor */}
+               <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(235, 215, 63, 0.15)', borderRadius: '16px', padding: '24px', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)', position: 'relative' }}>
+                  {pdfPages[selectedPageIndex] && (
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                             <h4 style={{ color: '#ebd73f', margin: 0, textTransform: 'capitalize', fontFamily: "'Panchang', sans-serif", fontSize: '0.92rem' }}>
+                                 {pdfPages[selectedPageIndex].type === 'pmp' ? 'Strategy & Concept Pitch Settings' : (pdfPages[selectedPageIndex].type.replace('_', ' ') + ' Settings')}
+                             </h4>
+                             <button 
+                                onClick={() => updatePage(selectedPageIndex, 'hideHeading', !pdfPages[selectedPageIndex].hideHeading)}
+                                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', padding: '5px 10px', borderRadius: '6px', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', whiteSpace: 'nowrap', fontFamily: "'Clash Display', sans-serif" }}
+                             >
+                                 {pdfPages[selectedPageIndex].hideHeading ? <><EyeOff size={14}/> Heading Hidden</> : <><Eye size={14}/> Heading Visible</>}
+                             </button>
+                         </div>
+                         
+                         {(pdfPages[selectedPageIndex].type === 'cover' || pdfPages[selectedPageIndex].type === 'services' || pdfPages[selectedPageIndex].type === 'investment' || pdfPages[selectedPageIndex].type === 'next_steps' || pdfPages[selectedPageIndex].type === 'custom_text' || pdfPages[selectedPageIndex].type === 'infographic') && (
+                             <div>
+                                <label className={styles.label} style={{ fontFamily: "'Clash Display', sans-serif" }}>Heading Text</label>
+                                <input 
+                                  type="text" 
+                                  value={pdfPages[selectedPageIndex].title || ''} 
+                                  onChange={e => updatePage(selectedPageIndex, 'title', e.target.value)} 
+                                  className={styles.inputField} 
+                                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                                />
+                             </div>
+                         )}
+
+                         {pdfPages[selectedPageIndex].type === 'cover' && (
+                             <div>
+                                <label className={styles.label} style={{ fontFamily: "'Clash Display', sans-serif" }}>Subtitle / Prepared For Label</label>
+                                <input 
+                                  type="text" 
+                                  value={pdfPages[selectedPageIndex].subtitle || ''} 
+                                  onChange={e => updatePage(selectedPageIndex, 'subtitle', e.target.value)} 
+                                  className={styles.inputField} 
+                                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                                />
+                             </div>
+                         )}
+                         
+                         {pdfPages[selectedPageIndex].type === 'custom_text' && (
+                             <div>
+                                <label className={styles.label} style={{ fontFamily: "'Clash Display', sans-serif" }}>Page Content</label>
+                                <textarea 
+                                  value={pdfPages[selectedPageIndex].content || ''} 
+                                  onChange={e => updatePage(selectedPageIndex, 'content', e.target.value)} 
+                                  className={styles.inputField} 
+                                  style={{ minHeight: '200px', resize: 'vertical', fontFamily: "'Clash Display', sans-serif" }}
+                                />
+                             </div>
+                         )}
+
+                         {pdfPages[selectedPageIndex].type === 'infographic' && (
+                             <div>
+                                <label className={styles.label} style={{ marginBottom: '15px', display: 'block', fontFamily: "'Clash Display', sans-serif" }}>Design Cards</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    {pdfPages[selectedPageIndex].cards?.map((card, cIdx) => (
+                                        <div key={cIdx} style={{ background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid #222' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                                <span style={{ fontSize: '0.8rem', color: '#888', fontFamily: "'Clash Display', sans-serif" }}>Card {cIdx + 1}</span>
+                                                <button onClick={() => removeCard(selectedPageIndex, cIdx)} style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer' }}><Trash2 size={12} /></button>
+                                            </div>
+                                            <input type="text" value={card.title} onChange={e => updateCard(selectedPageIndex, cIdx, 'title', e.target.value)} className={styles.inputField} style={{ padding: '8px', marginBottom: '10px', fontSize: '0.9rem', fontFamily: "'Clash Display', sans-serif" }} placeholder="Card Title" />
+                                            <textarea value={card.desc} onChange={e => updateCard(selectedPageIndex, cIdx, 'desc', e.target.value)} className={styles.inputField} style={{ padding: '8px', fontSize: '0.8rem', minHeight: '60px', resize: 'vertical', fontFamily: "'Clash Display', sans-serif" }} placeholder="Card Description" />
+                                        </div>
+                                    ))}
+                                </div>
+                                {pdfPages[selectedPageIndex].cards?.length < 4 && (
+                                    <button onClick={() => addCard(selectedPageIndex)} className={styles.btn} style={{ marginTop: '15px', padding: '8px 15px', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>+ Add Card</button>
+                                )}
+                             </div>
+                         )}
+
+                         {pdfPages[selectedPageIndex].type === 'services' && (
+                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>
+                                 The Scope of Work details are managed in the "Services & Scope" section above. This page simply formats them for the PDF.
+                             </div>
+                         )}
+                         {pdfPages[selectedPageIndex].type === 'investment' && (
+                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>
+                                 The Investment breakdown is calculated automatically from your Services above.
+                             </div>
+                         )}
+                         {pdfPages[selectedPageIndex].type === 'next_steps' && (
+                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem', fontFamily: "'Clash Display', sans-serif" }}>
+                                 The personal message is pulled from the "Quality Promise / Message" field in the Package Configuration section.
+                             </div>
+                         )}
+                     </div>
+                  )}
+               </div>
             </div>
           </div>
 
           </div>
           
         {/* RIGHT COLUMN: TEMPLATES & ACTIONS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="quote-sidebar-sticky">
            
                     {/* PACKAGE SUMMARY */}
           <div className={styles.cardSummary}>
@@ -2405,7 +3208,9 @@ export default function QuoteMaker() {
               <h4 className={styles.summarySectionTitle}>Included Services</h4>
               {includePMP && (
                 <div className={styles.summaryItem}>
-                  <span className={styles.summaryItemIncluded}>✓ Strategy & Scope Pitch</span>
+                  <span className={styles.summaryItemIncluded} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Check size={14} color="#ebd73f" /> Strategy & Scope Pitch
+                  </span>
                   <span className={styles.summaryItemBadge}>INCLUDED</span>
                 </div>
               )}
@@ -2567,76 +3372,127 @@ export default function QuoteMaker() {
                         .filter(q => (q.brandName || '').toLowerCase().includes(searchHistory.toLowerCase()) || (q.clientName || '').toLowerCase().includes(searchHistory.toLowerCase()))
                         .map((pkg) => {
                           const isLive = activeEditingQuote?.id === pkg.id;
+                          const isMonthly = (pkg.packageType || '').toLowerCase().includes('month') || (pkg.packageType || '').toLowerCase().includes('retain');
+                          const brandStr = (pkg.brandName || 'Client').trim();
+                          const initials = brandStr
+                            .replace(/[^a-zA-Z0-9\s]/g, '')
+                            .split(/\s+/)
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .map(s => s[0].toUpperCase())
+                            .join('') || brandStr.slice(0, 2).toUpperCase();
+
                           return (
                             <div 
                               key={pkg.id} 
                               style={{ 
-                                background: isLive ? 'rgba(235, 215, 63, 0.08)' : 'rgba(255,255,255,0.02)', 
-                                border: isLive ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.06)', 
-                                padding: '12px', 
-                                borderRadius: '0.75rem', 
+                                background: isLive 
+                                  ? 'linear-gradient(135deg, rgba(235, 215, 63, 0.12) 0%, rgba(20, 20, 22, 0.95) 100%)' 
+                                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(18, 18, 20, 0.85) 100%)', 
+                                border: isLive ? '1.5px solid #ebd73f' : '1px solid rgba(255, 255, 255, 0.1)', 
+                                padding: '14px', 
+                                borderRadius: '14px', 
                                 display: 'flex', 
                                 flexDirection: 'column',
-                                gap: '8px',
-                                transition: 'all 0.2s' 
+                                gap: '10px',
+                                boxShadow: isLive ? '0 0 20px rgba(235, 215, 63, 0.2)' : '0 4px 15px rgba(0,0,0,0.3)',
+                                transition: 'all 0.2s ease' 
                               }}
                             >
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <div>
-                                  <div style={{ fontWeight: 800, fontSize: '0.92rem', color: isLive ? '#ebd73f' : '#fff', fontFamily: "'Clash Display', sans-serif" }}>
-                                    {pkg.brandName}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                  <div style={{
+                                    width: '32px',
+                                    height: '32px',
+                                    borderRadius: '8px',
+                                    background: isLive ? '#ebd73f' : 'rgba(235, 215, 63, 0.15)',
+                                    color: isLive ? '#000' : '#ebd73f',
+                                    border: isLive ? 'none' : '1px solid rgba(235, 215, 63, 0.3)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontFamily: "'Panchang', sans-serif",
+                                    fontWeight: 800,
+                                    fontSize: '0.74rem',
+                                    flexShrink: 0
+                                  }}>
+                                    {initials}
                                   </div>
-                                  <div style={{ fontSize: '0.74rem', color: '#888', marginTop: '2px', fontFamily: "'Clash Display', sans-serif" }}>
-                                    {pkg.packageType.toUpperCase()} • {pkg.currency}{Number(pkg.total || 0).toLocaleString()} • {pkg.itemsCount} items
+                                  <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontWeight: 700, fontSize: '0.96rem', color: isLive ? '#ebd73f' : '#ffffff', fontFamily: "'Clash Display', sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {pkg.brandName}
+                                    </div>
+                                    <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '2px', fontFamily: "'Clash Display', sans-serif" }}>
+                                      {pkg.clientName ? `Client: ${pkg.clientName}` : `${pkg.itemsCount} deliverables`}
+                                    </div>
                                   </div>
                                 </div>
-                                {isLive && (
-                                  <span style={{ background: '#ebd73f', color: '#000', fontSize: '0.62rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', fontFamily: "'Panchang', sans-serif" }}>
-                                    LIVE
+
+                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                  <div style={{ fontWeight: 800, fontSize: '0.98rem', color: '#ebd73f', fontFamily: "'Clash Display', sans-serif" }}>
+                                    {pkg.currency}{Number(pkg.total || 0).toLocaleString()}
+                                  </div>
+                                  <span style={{
+                                    fontSize: '0.62rem',
+                                    color: isMonthly ? '#38bdf8' : '#ebd73f',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                    fontFamily: "'Clash Display', sans-serif"
+                                  }}>
+                                    {isLive ? '● LIVE' : pkg.packageType}
                                   </span>
-                                )}
+                                </div>
                               </div>
 
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px', gap: '6px' }}>
-                                <span style={{ fontSize: '0.7rem', color: '#666', fontFamily: "'Clash Display', sans-serif" }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', gap: '6px' }}>
+                                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontFamily: "'Clash Display', sans-serif" }}>
                                   {pkg.created_at ? new Date(pkg.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Saved'}
                                 </span>
                                 <div style={{ display: 'flex', gap: '6px' }}>
                                   <button
                                     onClick={() => copyPackageForSmartPaste(pkg, `side_hist_${pkg.id}`)}
                                     style={{
-                                      background: copiedItem === `side_hist_${pkg.id}` ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255,255,255,0.06)',
-                                      border: copiedItem === `side_hist_${pkg.id}` ? '1px solid #22c55e' : '1px solid rgba(255,255,255,0.12)',
-                                      color: copiedItem === `side_hist_${pkg.id}` ? '#22c55e' : '#aaa',
-                                      padding: '4px 8px',
+                                      background: copiedItem === `side_hist_${pkg.id}` ? 'rgba(235, 215, 63, 0.25)' : 'rgba(255,255,255,0.06)',
+                                      border: copiedItem === `side_hist_${pkg.id}` ? '1px solid #ebd73f' : '1px solid rgba(255,255,255,0.14)',
+                                      color: copiedItem === `side_hist_${pkg.id}` ? '#ebd73f' : '#cbd5e1',
+                                      padding: '5px 9px',
                                       borderRadius: '6px',
                                       cursor: 'pointer',
                                       fontSize: '0.74rem',
+                                      fontWeight: 600,
                                       fontFamily: "'Clash Display', sans-serif",
                                       display: 'flex',
                                       alignItems: 'center',
-                                      gap: '4px'
+                                      gap: '4px',
+                                      transition: 'all 0.2s ease'
                                     }}
-                                    title="Copy all details to paste in AI Smart Paste"
+                                    title="Copy all details for AI Smart Paste"
                                   >
-                                    {copiedItem === `side_hist_${pkg.id}` ? <CheckCircle2 size={12} color="#22c55e" /> : <Copy size={12} />}
-                                    {copiedItem === `side_hist_${pkg.id}` ? 'Copied' : 'Copy'}
+                                    {copiedItem === `side_hist_${pkg.id}` ? <CheckCircle2 size={12} color="#ebd73f" /> : <Copy size={12} color="#ebd73f" />}
+                                    <span>{copiedItem === `side_hist_${pkg.id}` ? 'Copied' : 'Copy'}</span>
                                   </button>
                                   <button 
                                     onClick={() => loadQuoteFromHistory(pkg)} 
-                                    className={styles.btn} 
                                     style={{ 
-                                      padding: '4px 10px', 
+                                      background: '#ebd73f', 
+                                      border: 'none', 
+                                      color: '#000',
+                                      padding: '5px 11px', 
+                                      borderRadius: '6px', 
                                       fontSize: '0.74rem', 
-                                      borderColor: 'rgba(235, 215, 63, 0.4)', 
-                                      color: '#ebd73f',
+                                      fontWeight: 700,
                                       fontFamily: "'Clash Display', sans-serif",
                                       display: 'flex',
                                       alignItems: 'center',
-                                      gap: '4px'
+                                      gap: '4px',
+                                      cursor: 'pointer',
+                                      boxShadow: '0 2px 8px rgba(235, 215, 63, 0.3)',
+                                      transition: 'all 0.2s ease'
                                     }}
                                   >
-                                    <Edit3 size={12} /> Edit Live
+                                    <Edit3 size={12} color="#000" />
+                                    <span>Edit Live</span>
                                   </button>
                                 </div>
                               </div>
@@ -2675,161 +3531,9 @@ export default function QuoteMaker() {
         </div>
       </div>
 
-      {/* PDF PAGE BUILDER - FULL WIDTH */}
-      <div style={{ marginTop: "40px" }}>
-          {/* PDF PAGE BUILDER */}
-          <div className={styles.card}>
-            <h3 style={{ marginBottom: '30px', color: '#ebd73f', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', borderBottom: '1px solid rgba(235, 215, 63, 0.2)', paddingBottom: '15px' }}>
-              <Layers size={20} /> PDF Pages & Layout
-            </h3>
-            
-            <div className="quote-pdf-builder-grid">
-               {/* Left: Page List */}
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {pdfPages.map((page, index) => (
-                      <div key={page.id} 
-                           onClick={() => setSelectedPageIndex(index)}
-                           style={{ 
-                             padding: '12px', 
-                             background: selectedPageIndex === index ? 'rgba(235, 215, 63, 0.1)' : 'rgba(255,255,255,0.02)', 
-                             border: `1px solid ${selectedPageIndex === index ? '#ebd73f' : 'rgba(255,255,255,0.05)'}`, 
-                             borderRadius: '8px', 
-                             cursor: 'pointer',
-                             display: 'flex',
-                             alignItems: 'center',
-                             justifyContent: 'space-between',
-                             transition: 'all 0.2s'
-                           }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                             {page.type === 'cover' && <Image size={16} color="#888" />}
-                             {page.type === 'pmp' && <Edit3 size={16} color="#ebd73f" />}
-                             {page.type === 'services' && <FileText size={16} color="#888" />}
-                             {page.type === 'investment' && <Package size={16} color="#888" />}
-                             {page.type === 'next_steps' && <CheckCircle size={16} color="#888" />}
-                             {page.type === 'custom_text' && <Type size={16} color="#888" />}
-                             {page.type === 'infographic' && <Layers size={16} color="#888" />}
-                             <span style={{ fontSize: '0.9rem', color: selectedPageIndex === index ? '#fff' : '#aaa' }}>
-                                {page.type === 'pmp' ? 'Strategy & Concept Pitch' : page.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                             </span>
-                          </div>
-                          
-                          <div style={{ display: 'flex', gap: '5px' }} onClick={e => e.stopPropagation()}>
-                             <button onClick={() => movePage(index, 'up')} disabled={index === 0} style={{ background: 'transparent', border: 'none', color: index === 0 ? '#333' : '#ebd73f', cursor: index === 0 ? 'not-allowed' : 'pointer' }}><ArrowUp size={14} /></button>
-                             <button onClick={() => movePage(index, 'down')} disabled={index === pdfPages.length - 1} style={{ background: 'transparent', border: 'none', color: index === pdfPages.length - 1 ? '#333' : '#ebd73f', cursor: index === pdfPages.length - 1 ? 'not-allowed' : 'pointer' }}><ArrowDown size={14} /></button>
-                             {pdfPages.length > 1 && (
-                               <button onClick={() => removePage(index)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', marginLeft: '5px' }}><Trash2 size={14} /></button>
-                             )}
-                          </div>
-                      </div>
-                  ))}
-                  
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                      <button onClick={() => addPage('custom_text')} className={styles.btn} style={{ flex: 1, fontSize: '0.8rem', padding: '8px' }}>+ Text Page</button>
-                      <button onClick={() => addPage('infographic')} className={styles.btn} style={{ flex: 1, fontSize: '0.8rem', padding: '8px' }}>+ Infographic</button>
-                  </div>
-               </div>
-
-               {/* Right: Page Editor */}
-               <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(235, 215, 63, 0.1)', borderRadius: '16px', padding: '30px', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)', position: 'relative' }}>
-                  {pdfPages[selectedPageIndex] && (
-                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                             <h4 style={{ color: '#ebd73f', margin: 0, textTransform: 'capitalize' }}>
-                                 {pdfPages[selectedPageIndex].type === 'pmp' ? 'Strategy & Concept Pitch Settings' : (pdfPages[selectedPageIndex].type.replace('_', ' ') + ' Settings')}
-                             </h4>
-                             <button 
-                                onClick={() => updatePage(selectedPageIndex, 'hideHeading', !pdfPages[selectedPageIndex].hideHeading)}
-                                style={{ background: 'transparent', border: '1px solid #333', padding: '5px 10px', borderRadius: '6px', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
-                             >
-                                 {pdfPages[selectedPageIndex].hideHeading ? <><EyeOff size={14}/> Heading Hidden</> : <><Eye size={14}/> Heading Visible</>}
-                             </button>
-                         </div>
-                         
-                         {(pdfPages[selectedPageIndex].type === 'cover' || pdfPages[selectedPageIndex].type === 'services' || pdfPages[selectedPageIndex].type === 'investment' || pdfPages[selectedPageIndex].type === 'next_steps' || pdfPages[selectedPageIndex].type === 'custom_text' || pdfPages[selectedPageIndex].type === 'infographic') && (
-                             <div>
-                                <label className={styles.label}>Heading Text</label>
-                                <input 
-                                  type="text" 
-                                  value={pdfPages[selectedPageIndex].title || ''} 
-                                  onChange={e => updatePage(selectedPageIndex, 'title', e.target.value)} 
-                                  className={styles.inputField} 
-                                />
-                             </div>
-                         )}
-
-                         {pdfPages[selectedPageIndex].type === 'cover' && (
-                             <div>
-                                <label className={styles.label}>Subtitle / Prepared For Label</label>
-                                <input 
-                                  type="text" 
-                                  value={pdfPages[selectedPageIndex].subtitle || ''} 
-                                  onChange={e => updatePage(selectedPageIndex, 'subtitle', e.target.value)} 
-                                  className={styles.inputField} 
-                                />
-                             </div>
-                         )}
-                         
-                         {pdfPages[selectedPageIndex].type === 'custom_text' && (
-                             <div>
-                                <label className={styles.label}>Page Content</label>
-                                <textarea 
-                                  value={pdfPages[selectedPageIndex].content || ''} 
-                                  onChange={e => updatePage(selectedPageIndex, 'content', e.target.value)} 
-                                  className={styles.inputField} 
-                                  style={{ minHeight: '200px', resize: 'vertical' }}
-                                />
-                             </div>
-                         )}
-
-                         {pdfPages[selectedPageIndex].type === 'infographic' && (
-                             <div>
-                                <label className={styles.label} style={{ marginBottom: '15px', display: 'block' }}>Design Cards</label>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                    {pdfPages[selectedPageIndex].cards?.map((card, cIdx) => (
-                                        <div key={cIdx} style={{ background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid #222' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                                <span style={{ fontSize: '0.8rem', color: '#888' }}>Card {cIdx + 1}</span>
-                                                <button onClick={() => removeCard(selectedPageIndex, cIdx)} style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer' }}><Trash2 size={12} /></button>
-                                            </div>
-                                            <input type="text" value={card.title} onChange={e => updateCard(selectedPageIndex, cIdx, 'title', e.target.value)} className={styles.inputField} style={{ padding: '8px', marginBottom: '10px', fontSize: '0.9rem' }} placeholder="Card Title" />
-                                            <textarea value={card.desc} onChange={e => updateCard(selectedPageIndex, cIdx, 'desc', e.target.value)} className={styles.inputField} style={{ padding: '8px', fontSize: '0.8rem', minHeight: '60px', resize: 'vertical' }} placeholder="Card Description" />
-                                        </div>
-                                    ))}
-                                </div>
-                                {pdfPages[selectedPageIndex].cards?.length < 4 && (
-                                    <button onClick={() => addCard(selectedPageIndex)} className={styles.btn} style={{ marginTop: '15px', padding: '8px 15px', fontSize: '0.85rem' }}>+ Add Card</button>
-                                )}
-                             </div>
-                         )}
-
-                         {pdfPages[selectedPageIndex].type === 'services' && (
-                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem' }}>
-                                 The Scope of Work details are managed in the "Services & Scope" section above. This page simply formats them for the PDF.
-                             </div>
-                         )}
-                         {pdfPages[selectedPageIndex].type === 'investment' && (
-                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem' }}>
-                                 The Investment breakdown is calculated automatically from your Services above.
-                             </div>
-                         )}
-                         {pdfPages[selectedPageIndex].type === 'next_steps' && (
-                             <div style={{ padding: '15px', background: 'rgba(235, 215, 63, 0.05)', borderRadius: '8px', color: '#888', fontSize: '0.85rem' }}>
-                                 The personal message is pulled from the "Quality Promise / Message" field in the Package Configuration section.
-                             </div>
-                         )}
-                     </div>
-                  )}
-               </div>
-            </div>
-      </div>
-
-
-
       {/* HIDDEN RENDER AREA FOR PDF */}
-
-
       <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-        <div ref={pdfRef} style={{ width: '800px', background: '#0a0a0a', padding: '60px', color: 'white', fontFamily: 'Arial, sans-serif' }}>
+        <div ref={pdfRef} style={{ width: '800px', background: '#0a0a0a', padding: '60px', color: 'white', fontFamily: "'Clash Display', sans-serif" }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #ebd73f', paddingBottom: '30px', marginBottom: '30px' }}>
             <div>
@@ -3229,6 +3933,5 @@ export default function QuoteMaker() {
       </div>
 
     </div>
-  </div>
   );
 }

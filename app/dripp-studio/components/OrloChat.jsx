@@ -1071,13 +1071,16 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
 
       // Dispatch event to window so forms can pick it up
       if (data.intent && data.payload) {
-        if (['quote', 'package', 'pmp', 'invoice'].includes(data.intent)) {
+        if (['quote', 'package', 'pmp', 'invoice', 'load_package', 'edit_package', 'save_live_package'].includes(data.intent)) {
           sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
+          if (['load_package', 'edit_package', 'save_live_package'].includes(data.intent)) {
+            sessionStorage.setItem('pendingCopilotAction', JSON.stringify(data));
+          }
         }
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
         
         const currentPath = window.location.pathname;
-        const targetPath = data.intent === 'quote' ? '/dripp-studio/quote' :
+        const targetPath = (data.intent === 'quote' || data.intent === 'load_package' || data.intent === 'edit_package' || data.intent === 'save_live_package') ? '/dripp-studio/quote' :
                            data.intent === 'package' ? (currentPath === '/dripp-studio/package' ? '/dripp-studio/package' : '/dripp-studio/quote') :
                            data.intent === 'pmp' ? '/dripp-studio/package' :
                            data.intent === 'invoice' ? '/dripp-studio/invoice' : null;
@@ -1250,7 +1253,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         if (!msg) {
           if (data.intent === 'chat' || data.intent === 'notion_edit') {
             msg = "Here is what I've put together for you!";
-          } else if (['quote', 'package', 'invoice', 'email', 'portfolio', 'save_template'].includes(data.intent)) {
+          } else if (['quote', 'package', 'invoice', 'email', 'portfolio', 'save_template', 'load_package', 'edit_package', 'save_live_package'].includes(data.intent)) {
             msg = "I've updated the form with the requested details.";
           } else {
             msg = "I'm right here! How can I help you today?";
@@ -1259,7 +1262,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
         
         // Capture snapshot before applying action to enable Undo
         let undoSnapshot = null;
-        if (data.intent && data.payload && ['quote', 'package', 'invoice', 'email'].includes(data.intent)) {
+        if (data.intent && data.payload && ['quote', 'package', 'invoice', 'email', 'load_package', 'edit_package', 'save_live_package'].includes(data.intent)) {
           undoSnapshot = {
             intent: data.intent,
             path: window.location.pathname,
@@ -1281,13 +1284,16 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
       
       // Dispatch event to window so forms can pick it up
       if (data.intent && data.payload) {
-        if (['quote', 'package', 'pmp', 'invoice'].includes(data.intent)) {
+        if (['quote', 'package', 'pmp', 'invoice', 'load_package', 'edit_package', 'save_live_package'].includes(data.intent)) {
           sessionStorage.setItem('pendingPackageData', JSON.stringify(data.payload));
+          if (['load_package', 'edit_package', 'save_live_package'].includes(data.intent)) {
+            sessionStorage.setItem('pendingCopilotAction', JSON.stringify(data));
+          }
         }
         window.dispatchEvent(new CustomEvent('copilot-action', { detail: data }));
         
         const currentPath = window.location.pathname;
-        const targetPath = data.intent === 'quote' ? '/dripp-studio/quote' :
+        const targetPath = (data.intent === 'quote' || data.intent === 'load_package' || data.intent === 'edit_package' || data.intent === 'save_live_package') ? '/dripp-studio/quote' :
                            data.intent === 'package' ? (currentPath === '/dripp-studio/package' ? '/dripp-studio/package' : '/dripp-studio/quote') :
                            data.intent === 'pmp' ? '/dripp-studio/package' :
                            data.intent === 'invoice' ? '/dripp-studio/invoice' : null;
@@ -2736,7 +2742,7 @@ Return ONLY raw JSON with 'title', 'description', and 'case_study' keys. You can
                   color: '#fff',
                   outline: 'none',
                   fontSize: '1rem',
-                  fontFamily: 'inherit',
+                  fontFamily: "'Clash Display', sans-serif",
                   resize: 'none',
                   maxHeight: '150px',
                   minHeight: '44px',

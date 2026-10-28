@@ -382,29 +382,6 @@ export default function SharedQuote() {
             {copiedSmartPaste ? <Check size={14} color="#4ade80" /> : <Copy size={14} color="#ebd73f" />}
             <span>{copiedSmartPaste ? 'Details Copied!' : 'Copy for AI Smart Paste'}</span>
           </button>
-
-          <a
-            href={`/dripp-studio/quote?loadId=${encodeURIComponent(params?.id)}`}
-            title="Edit this package live in Quote Maker"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '7px 12px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '8px',
-              color: '#ccc',
-              fontFamily: "'Clash Display', sans-serif",
-              fontSize: '0.8rem',
-              fontWeight: '500',
-              textDecoration: 'none',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <PenTool size={13} color="#ebd73f" />
-            <span>Edit Live</span>
-          </a>
         </div>
       </div>
 
